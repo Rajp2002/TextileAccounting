@@ -1,0 +1,3 @@
+-- ⚠️ DEPRECATED: This file is no longer the source of truth.
+-- The authoritative schema is in: supabase/migrations/20240216123000_initial_schema.sql
+-- This file is kept only for historical reference. DO NOT use it for deployments.
