@@ -44,10 +44,11 @@ export function useOfflineSync() {
         for (const mutation of pendingMutations) {
             try {
                 const { table, type, data } = mutation
+                const mutationData = data as Record<string, any>
                 let error = null
 
                 // Force-overwrite org_id with the authenticated user's org_id
-                const securedData = { ...data, org_id: profile.org_id }
+                const securedData = { ...mutationData, org_id: profile.org_id }
 
                 if (type === 'INSERT') {
                     const { error: insertError } = await supabase.from(table).insert({
@@ -57,11 +58,12 @@ export function useOfflineSync() {
                     error = insertError
                 } else if (type === 'UPDATE') {
                     // Assuming data has an id
-                    const { id, ...updateData } = securedData
+                    const { id } = mutationData
+                    const { id: _ignore, ...updateData } = securedData as Record<string, any>
                     const { error: updateError } = await supabase.from(table).update(updateData).eq('id', id)
                     error = updateError
                 } else if (type === 'DELETE') {
-                    const { id } = data
+                    const { id } = mutationData
                     const { error: deleteError } = await supabase.from(table).delete().eq('id', id)
                     error = deleteError
                 }

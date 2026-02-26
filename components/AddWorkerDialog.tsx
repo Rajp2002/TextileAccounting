@@ -19,6 +19,11 @@ import { createClient } from '@/lib/supabase/client'
 import { Loader2, Plus } from 'lucide-react'
 import { formatINR } from '@/lib/finance'
 import { cn } from '@/lib/utils'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import * as Sentry from '@sentry/nextjs'
 
 const FIXED_ROLES = [
     { value: 'master', label: 'Master', defaultSalary: 30000 },
@@ -29,6 +34,33 @@ const FIXED_ROLES = [
     { value: 'daily', label: 'Day-to-Day', defaultSalary: 15000 },
 ]
 
+// Define Zod Schema for validation
+const workerSchema = z.object({
+    workerType: z.enum(['meter', 'fixed']),
+    name: z.string().min(1, 'Worker name is required'),
+    role: z.string().optional(),
+    salary: z.coerce.number().optional()
+}).superRefine((data, ctx) => {
+    if (data.workerType === 'fixed') {
+        if (!data.role) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Role is required",
+                path: ["role"]
+            });
+        }
+        if (data.salary === undefined || data.salary <= 0) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Valid salary is required",
+                path: ["salary"]
+            });
+        }
+    }
+});
+
+type WorkerFormValues = z.infer<typeof workerSchema>
+
 interface AddWorkerDialogProps {
     orgId: string
     onWorkerAdded?: () => void
@@ -36,56 +68,38 @@ interface AddWorkerDialogProps {
 
 export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) {
     const [open, setOpen] = useState(false)
-    const [loading, setLoading] = useState(false)
-    const [workerType, setWorkerType] = useState<'meter' | 'fixed'>('meter')
-    const [name, setName] = useState('')
-    // Fixed worker fields
-    const [role, setRole] = useState('')
-    const [salary, setSalary] = useState('')
-
     const supabase = createClient()
+    const queryClient = useQueryClient()
 
-    const resetForm = () => {
-        setName('')
-        setRole('')
-        setSalary('')
-        setWorkerType('meter')
-    }
-
-    const handleRoleChange = (val: string) => {
-        setRole(val)
-        const defaultSalary = FIXED_ROLES.find(r => r.value === val)?.defaultSalary
-        if (defaultSalary) setSalary(defaultSalary.toString())
-    }
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-
-        if (!name.trim()) {
-            toast.error('Please enter worker name')
-            return
+    const {
+        register,
+        handleSubmit,
+        control,
+        watch,
+        setValue,
+        reset,
+        formState: { errors }
+    } = useForm<WorkerFormValues>({
+        // @ts-expect-error - Zod discriminated union typing mismatch with react-hook-form
+        resolver: zodResolver(workerSchema),
+        defaultValues: {
+            workerType: 'meter',
+            name: '',
+            role: '',
+            salary: 0
         }
+    })
 
-        if (workerType === 'fixed') {
-            if (!role) {
-                toast.error('Please select a role')
-                return
-            }
-            if (!salary || parseFloat(salary) <= 0) {
-                toast.error('Please enter a valid salary')
-                return
-            }
-        }
+    const workerType = watch('workerType')
 
-        setLoading(true)
-
-        try {
-            if (workerType === 'meter') {
+    const mutation = useMutation({
+        mutationFn: async (data: WorkerFormValues) => {
+            if (data.workerType === 'meter') {
                 const { error } = await supabase
                     .from('workers')
                     .insert({
                         org_id: orgId,
-                        name: name.trim(),
+                        name: data.name.trim(),
                         is_active: true,
                     })
                 if (error) throw error
@@ -94,30 +108,51 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                     .from('fixed_workers')
                     .insert({
                         org_id: orgId,
-                        name: name.trim(),
-                        role,
-                        monthly_salary: parseFloat(salary),
+                        name: data.name.trim(),
+                        role: data.role as string,
+                        monthly_salary: data.salary as number,
                         is_active: true,
                     })
                 if (error) throw error
             }
-
-            toast.success(`${name} added as ${workerType === 'meter' ? 'meter' : 'fixed'} worker!`)
+            return data
+        },
+        onSuccess: (data) => {
+            toast.success(`${data.name} added as ${data.workerType === 'meter' ? 'meter' : 'fixed'} worker!`)
+            queryClient.invalidateQueries({ queryKey: ['workers'] })
+            queryClient.invalidateQueries({ queryKey: ['fixed_workers'] })
             setOpen(false)
-            resetForm()
-
+            reset()
             if (onWorkerAdded) {
                 onWorkerAdded()
             }
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to add worker')
-        } finally {
-            setLoading(false)
+        },
+        onError: (error: unknown) => {
+            if (error instanceof Error) {
+                toast.error(error.message || 'Failed to add worker')
+                Sentry.captureException(error)
+            } else {
+                toast.error('An unexpected error occurred')
+                Sentry.captureException(new Error('Unknown error in AddWorkerDialog mutation'))
+            }
+        }
+    })
+
+    // @ts-ignore - Bypass overly strict SubmitHandler generic bound mismatch
+    const onSubmit = (data: WorkerFormValues) => {
+        mutation.mutate(data)
+    }
+
+    const handleRoleChange = (val: string) => {
+        setValue('role', val)
+        const defaultSalary = FIXED_ROLES.find(r => r.value === val)?.defaultSalary
+        if (defaultSalary) {
+            setValue('salary', defaultSalary)
         }
     }
 
     return (
-        <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) resetForm() }}>
+        <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) reset() }}>
             <DialogTrigger asChild>
                 <Button className="gap-2">
                     <Plus className="h-4 w-4" />
@@ -125,7 +160,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit((data) => onSubmit(data as unknown as WorkerFormValues))}>
                     <DialogHeader>
                         <DialogTitle>Add New Worker</DialogTitle>
                         <DialogDescription>
@@ -146,7 +181,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                             ? 'bg-gray-900 text-white'
                                             : 'bg-white text-gray-600 hover:bg-gray-50'
                                     )}
-                                    onClick={() => setWorkerType('meter')}
+                                    onClick={() => setValue('workerType', 'meter')}
                                 >
                                     Meter Worker
                                 </button>
@@ -158,7 +193,12 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                             ? 'bg-gray-900 text-white'
                                             : 'bg-white text-gray-600 hover:bg-gray-50'
                                     )}
-                                    onClick={() => setWorkerType('fixed')}
+                                    onClick={() => {
+                                        setValue('workerType', 'fixed')
+                                        // Initialize required fields to avoid validation errors immediately
+                                        setValue('role', '')
+                                        setValue('salary', 0)
+                                    }}
                                 >
                                     Fixed Salary
                                 </button>
@@ -179,11 +219,10 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                             <Input
                                 id="name"
                                 placeholder="e.g. Rajesh Kumar"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
+                                {...register('name')}
                                 autoFocus
                             />
+                            {errors.name && <span className="text-xs text-red-500">{errors.name.message}</span>}
                         </div>
 
                         {/* Fixed worker fields */}
@@ -191,27 +230,35 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                             <>
                                 <div className="grid gap-2">
                                     <Label>Role <span className="text-red-500">*</span></Label>
-                                    <Select value={role} onValueChange={handleRoleChange}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select role" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {FIXED_ROLES.map(r => (
-                                                <SelectItem key={r.value} value={r.value}>
-                                                    {r.label} — {formatINR(r.defaultSalary)}/mo
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <Controller
+                                        name="role"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select value={field.value} onValueChange={handleRoleChange}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select role" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {FIXED_ROLES.map(r => (
+                                                        <SelectItem key={r.value} value={r.value}>
+                                                            {r.label} — {formatINR(r.defaultSalary)}/mo
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                    {/* Typescript needs to know this might exist depending on the discrimination union */}
+                                    {(errors as any).role && <span className="text-xs text-red-500">{(errors as any).role.message}</span>}
                                 </div>
                                 <div className="grid gap-2">
                                     <Label>Monthly Salary (₹) <span className="text-red-500">*</span></Label>
                                     <Input
                                         type="number"
                                         placeholder="15000"
-                                        value={salary}
-                                        onChange={(e) => setSalary(e.target.value)}
+                                        {...register('salary')}
                                     />
+                                    {(errors as any).salary && <span className="text-xs text-red-500">{(errors as any).salary.message}</span>}
                                 </div>
                             </>
                         )}
@@ -222,12 +269,12 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                             type="button"
                             variant="outline"
                             onClick={() => setOpen(false)}
-                            disabled={loading}
+                            disabled={mutation.isPending}
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={loading}>
-                            {loading ? (
+                        <Button type="submit" disabled={mutation.isPending}>
+                            {mutation.isPending ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     Adding...

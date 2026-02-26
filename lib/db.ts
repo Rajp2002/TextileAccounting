@@ -1,10 +1,10 @@
 import Dexie, { Table } from 'dexie';
 
-export interface OfflineMutation {
+export interface OfflineMutation<T = unknown> {
     id?: number;
     table: string;
     type: 'INSERT' | 'UPDATE' | 'DELETE';
-    data: any;
+    data: T;
     timestamp: number;
     synced: boolean;
 }
@@ -22,7 +22,7 @@ export class TextileDatabase extends Dexie {
 
 export const db = new TextileDatabase();
 
-export async function queueMutation(table: string, type: 'INSERT' | 'UPDATE' | 'DELETE', data: any) {
+export async function queueMutation<T = unknown>(table: string, type: 'INSERT' | 'UPDATE' | 'DELETE', data: T) {
     await db.mutations.add({
         table,
         type,
