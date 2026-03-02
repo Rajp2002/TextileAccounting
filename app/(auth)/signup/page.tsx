@@ -12,6 +12,7 @@ import AuthLayout from '@/components/auth/auth-layout'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { signUpWithEmail } from './actions'
+import { createClient } from '@/lib/supabase/client'
 
 export default function SignupPage() {
     const [loading, setLoading] = useState(false)
@@ -58,7 +59,13 @@ export default function SignupPage() {
             }
 
             if (result.confirmed) {
-                // Email confirmation disabled — user is logged in directly, profile already created
+                // Email confirmation disabled — user is logged in directly, profile already created.
+                // We MUST refresh the session here so Supabase re-runs the JWT custom hook
+                // and injects org_id + user_role claims into the token before the dashboard loads.
+                // Without this, the first page load races against a JWT that has no org_id.
+                const supabase = createClient()
+                await supabase.auth.refreshSession()
+
                 toast.success('Account created!')
                 if (result.role === 'owner') {
                     router.push('/owner/analytics')

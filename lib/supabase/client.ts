@@ -16,10 +16,12 @@ export function createClient() {
     }
 
     if (!isValidUrl(url) || !key) {
-        // Log warning only in development or if strict mode isn't required 
-        // to avoid noise during build if this is expected
+        console.error('[Supabase Client] ENV VARS MISSING!', { url: url ?? 'UNDEFINED', keyPresent: !!key })
+
+        // In the browser, throw a clear error instead of silently using placeholders
         if (typeof window !== 'undefined') {
-            console.warn('Supabase env vars missing or invalid. Using fallback for build.')
+            console.error('NEXT_PUBLIC_SUPABASE_URL:', url)
+            console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY present:', !!key)
         }
 
         return createBrowserClient(
