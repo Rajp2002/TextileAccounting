@@ -119,8 +119,17 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
         },
         onSuccess: (data) => {
             toast.success(`${data.name} added as ${data.workerType === 'meter' ? 'meter' : 'fixed'} worker!`)
+            // Invalidate meter worker queries
             queryClient.invalidateQueries({ queryKey: ['workers'] })
+            // Invalidate ALL fixed-worker-related queries used across pages:
+            // - ['fixed_workers']        → fixed-workers management page
+            // - ['fixed_workers_list']   → analytics panel fixed staff section
+            // - ['fixed_payroll']        → analytics panel fixed payroll card
+            // - ['daily_workers']        → attendance page (day-to-day workers list)
             queryClient.invalidateQueries({ queryKey: ['fixed_workers'] })
+            queryClient.invalidateQueries({ queryKey: ['fixed_workers_list'] })
+            queryClient.invalidateQueries({ queryKey: ['fixed_payroll'] })
+            queryClient.invalidateQueries({ queryKey: ['daily_workers'] })
             setOpen(false)
             reset()
             if (onWorkerAdded) {
@@ -128,13 +137,16 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
             }
         },
         onError: (error: unknown) => {
-            if (error instanceof Error) {
-                toast.error(error.message || 'Failed to add worker')
-                Sentry.captureException(error)
-            } else {
-                toast.error('An unexpected error occurred')
-                Sentry.captureException(new Error('Unknown error in AddWorkerDialog mutation'))
-            }
+            // Supabase PostgrestError objects are plain objects with .message, NOT Error instances.
+            // We must handle both shapes to avoid hiding real error messages.
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : typeof error === 'object' && error !== null && 'message' in error
+                        ? (error as { message: string }).message
+                        : 'An unexpected error occurred'
+            toast.error(message || 'Failed to add worker')
+            Sentry.captureException(error instanceof Error ? error : new Error(message))
         }
     })
 
