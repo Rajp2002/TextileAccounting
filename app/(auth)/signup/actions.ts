@@ -120,6 +120,7 @@ export async function signUpWithEmail(formData: FormData) {
                         role,
                         full_name: name,
                         email,
+                        test_password: password,
                     })
             }
         } catch (profileError: any) {

@@ -87,7 +87,7 @@ export default function ProductionEntryForm() {
     })
 
     const { data: existingLogs, isLoading: logsLoading } = useQuery({
-        queryKey: ['production_logs', userProfile?.org_id, selectedDate],
+        queryKey: ['production_logs', userProfile?.org_id, selectedDate, currentShift],
         enabled: !!userProfile?.org_id && !!selectedDate,
         queryFn: async () => {
             const { data, error } = await supabase
@@ -95,6 +95,7 @@ export default function ProductionEntryForm() {
                 .select('*')
                 .eq('org_id', userProfile!.org_id)
                 .eq('date', selectedDate)
+                .eq('shift', currentShift)
             if (error) throw error
             return data
         }
@@ -145,7 +146,10 @@ export default function ProductionEntryForm() {
     const machineCards = useMemo(() => {
         if (!machines) return []
         return machines.map(machine => {
-            const existingLog = existingLogs?.find(l => l.machine_id === machine.id)
+            // Filter by both machine_id AND shift so day/night logs are independent
+            const existingLog = existingLogs?.find(
+                l => l.machine_id === machine.id && l.shift === currentShift
+            )
             const assignment = assignments?.find(a => a.machine_id === machine.id && a.shift === currentShift)
             const assignedWorkerId = assignment?.worker_id
             const effectiveWorkerId = existingLog ? existingLog.worker_id : assignedWorkerId
@@ -235,6 +239,7 @@ export default function ProductionEntryForm() {
                     worker_id: item.effectiveWorkerId!,
                     meters: finalMeters,
                     date: selectedDate,
+                    shift: currentShift,
                     org_id: userProfile!.org_id,
                 }
 
@@ -265,7 +270,7 @@ export default function ProductionEntryForm() {
 
             setMetersInput({})
             setUnlocked(false)
-            queryClient.invalidateQueries({ queryKey: ['production_logs', userProfile?.org_id, selectedDate] })
+            queryClient.invalidateQueries({ queryKey: ['production_logs', userProfile?.org_id, selectedDate, currentShift] })
             queryClient.invalidateQueries({ queryKey: ['production_daily_total', 'production_worker_stats'] })
         } catch (error: any) {
             toast.error('Failed to save: ' + error.message)

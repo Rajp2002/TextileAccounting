@@ -19,6 +19,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { deleteWorkerWithCode } from '@/app/(dashboard)/supervisor/actions'
+import { cn } from '@/lib/utils'
+
+const ROLE_LABELS: Record<string, string> = {
+    master: 'Master', supervisor: 'Supervisor', helper: 'Helper',
+    mender: 'Mender', sanitation: 'Sanitation', daily: 'Day-to-Day',
+}
+const ROLE_COLORS: Record<string, string> = {
+    master: 'bg-purple-100 text-purple-700', supervisor: 'bg-blue-100 text-blue-700',
+    helper: 'bg-amber-100 text-amber-700', mender: 'bg-teal-100 text-teal-700',
+    sanitation: 'bg-green-100 text-green-700', daily: 'bg-orange-100 text-orange-700',
+}
 
 export default function SupervisorWorkersPage() {
     const supabase = createClient()
@@ -45,8 +56,8 @@ export default function SupervisorWorkersPage() {
         }
     })
 
-    // Fetch Workers
-    const { data: workers, isLoading } = useQuery({
+    // Fetch Meter (piece-rate) Workers
+    const { data: workers, isLoading: workersLoading } = useQuery({
         queryKey: ['workers', userProfile?.org_id],
         enabled: !!userProfile?.org_id,
         queryFn: async () => {
@@ -60,8 +71,26 @@ export default function SupervisorWorkersPage() {
         }
     })
 
+    // Fetch Fixed / Salaried Workers
+    const { data: fixedWorkers, isLoading: fixedLoading } = useQuery({
+        queryKey: ['fixed_workers', userProfile?.org_id],
+        enabled: !!userProfile?.org_id,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('fixed_workers')
+                .select('*')
+                .eq('org_id', userProfile!.org_id)
+                .order('role')
+                .order('name')
+            if (error) throw error
+            return data
+        }
+    })
+
     const handleWorkerAdded = () => {
+        // Invalidate both lists so the new worker appears immediately
         queryClient.invalidateQueries({ queryKey: ['workers', userProfile?.org_id] })
+        queryClient.invalidateQueries({ queryKey: ['fixed_workers', userProfile?.org_id] })
     }
 
     const confirmDelete = (id: number) => {
@@ -71,7 +100,6 @@ export default function SupervisorWorkersPage() {
 
     const executeDelete = async () => {
         if (!workerToDelete || !userProfile?.org_id) return
-
         setDeleting(true)
         try {
             await deleteWorkerWithCode(userProfile.org_id, workerToDelete, accessCode)
@@ -97,12 +125,13 @@ export default function SupervisorWorkersPage() {
                 />
             </div>
 
+            {/* ── Meter Workers ── */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Workers List</CardTitle>
+                    <CardTitle>Meter Workers</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? (
+                    {workersLoading ? (
                         <div className="flex justify-center p-4">
                             <Loader2 className="animate-spin text-gray-400" />
                         </div>
@@ -130,7 +159,43 @@ export default function SupervisorWorkersPage() {
                                 </div>
                             ))}
                             {workers?.length === 0 && (
-                                <p className="text-center text-gray-500 py-8">No workers found. Add one to get started.</p>
+                                <p className="text-center text-gray-500 py-8">No meter workers yet. Add one to get started.</p>
+                            )}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* ── Fixed / Salaried Staff ── */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Fixed Staff</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {fixedLoading ? (
+                        <div className="flex justify-center p-4">
+                            <Loader2 className="animate-spin text-gray-400" />
+                        </div>
+                    ) : (
+                        <div className="divide-y">
+                            {fixedWorkers?.map((worker: any) => (
+                                <div key={worker.id} className="py-3 flex justify-between items-center">
+                                    <div className="flex items-center gap-3">
+                                        <span className={cn(
+                                            'text-xs px-2 py-0.5 rounded-full font-medium',
+                                            ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700'
+                                        )}>
+                                            {ROLE_LABELS[worker.role] || worker.role}
+                                        </span>
+                                        <span className="font-medium text-gray-700">{worker.name}</span>
+                                    </div>
+                                    <span className="text-xs text-gray-400">
+                                        {worker.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                            ))}
+                            {fixedWorkers?.length === 0 && (
+                                <p className="text-center text-gray-500 py-8">No fixed staff yet. Add one to get started.</p>
                             )}
                         </div>
                     )}

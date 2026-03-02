@@ -145,6 +145,14 @@ function FixedWorkerRow({ worker, onSalaryUpdate }: { worker: FixedWorkerData, o
     const [editing, setEditing] = useState(false)
     const [editValue, setEditValue] = useState(worker.monthly_salary.toString())
 
+    // Keep editValue in sync when the parent refreshes worker data from the DB,
+    // but only when the user isn't actively editing (to avoid clobbering live input)
+    useEffect(() => {
+        if (!editing) {
+            setEditValue(worker.monthly_salary.toString())
+        }
+    }, [worker.monthly_salary, editing])
+
     const handleSave = () => {
         const val = parseFloat(editValue)
         if (isNaN(val) || val <= 0) return
