@@ -32,6 +32,7 @@ const FIXED_ROLES = [
     { value: 'mender', label: 'Mender', defaultSalary: 15000 },
     { value: 'sanitation', label: 'Sanitation Worker', defaultSalary: 7000 },
     { value: 'daily', label: 'Day-to-Day', defaultSalary: 15000 },
+    { value: 'other', label: 'Other (Custom Role)', defaultSalary: 0 },
 ]
 
 // Define Zod Schema for validation
@@ -39,6 +40,7 @@ const workerSchema = z.object({
     workerType: z.enum(['meter', 'fixed']),
     name: z.string().min(1, 'Worker name is required'),
     role: z.string().optional(),
+    customRole: z.string().optional(),
     salary: z.coerce.number().optional()
 }).superRefine((data, ctx) => {
     if (data.workerType === 'fixed') {
@@ -47,6 +49,13 @@ const workerSchema = z.object({
                 code: z.ZodIssueCode.custom,
                 message: "Role is required",
                 path: ["role"]
+            });
+        }
+        if (data.role === 'other' && (!data.customRole || data.customRole.trim() === '')) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Custom role name is required",
+                path: ["customRole"]
             });
         }
         if (data.salary === undefined || data.salary <= 0) {
@@ -86,11 +95,13 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
             workerType: 'meter',
             name: '',
             role: '',
+            customRole: '',
             salary: 0
         }
     })
 
     const workerType = watch('workerType')
+    const selectedRole = watch('role')
 
     const mutation = useMutation({
         mutationFn: async (data: WorkerFormValues) => {
@@ -109,7 +120,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                     .insert({
                         org_id: orgId,
                         name: data.name.trim(),
-                        role: data.role as string,
+                        role: data.role === 'other' ? data.customRole?.trim() : data.role,
                         monthly_salary: data.salary as number,
                         is_active: true,
                     })
@@ -158,8 +169,10 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
     const handleRoleChange = (val: string) => {
         setValue('role', val)
         const defaultSalary = FIXED_ROLES.find(r => r.value === val)?.defaultSalary
-        if (defaultSalary) {
+        if (defaultSalary !== undefined && val !== 'other') {
             setValue('salary', defaultSalary)
+        } else if (val === 'other') {
+            setValue('salary', 0)
         }
     }
 
@@ -209,6 +222,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                         setValue('workerType', 'fixed')
                                         // Initialize required fields to avoid validation errors immediately
                                         setValue('role', '')
+                                        setValue('customRole', '')
                                         setValue('salary', 0)
                                     }}
                                 >
@@ -253,7 +267,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                                 <SelectContent>
                                                     {FIXED_ROLES.map(r => (
                                                         <SelectItem key={r.value} value={r.value}>
-                                                            {r.label} — {formatINR(r.defaultSalary)}/mo
+                                                            {r.label}{r.value !== 'other' ? ` — ${formatINR(r.defaultSalary)}/mo` : ''}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -263,6 +277,16 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                     {/* Typescript needs to know this might exist depending on the discrimination union */}
                                     {(errors as any).role && <span className="text-xs text-red-500">{(errors as any).role.message}</span>}
                                 </div>
+                                {selectedRole === 'other' && (
+                                    <div className="grid gap-2">
+                                        <Label>Custom Role Name <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            placeholder="e.g. Plumber, Electrician"
+                                            {...register('customRole')}
+                                        />
+                                        {(errors as any).customRole && <span className="text-xs text-red-500">{(errors as any).customRole.message}</span>}
+                                    </div>
+                                )}
                                 <div className="grid gap-2">
                                     <Label>Monthly Salary (₹) <span className="text-red-500">*</span></Label>
                                     <Input
