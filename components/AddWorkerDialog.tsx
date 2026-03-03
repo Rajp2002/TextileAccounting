@@ -267,7 +267,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                                 <SelectContent>
                                                     {FIXED_ROLES.map(r => (
                                                         <SelectItem key={r.value} value={r.value}>
-                                                            {r.label}{r.value !== 'other' ? ` — ${formatINR(r.defaultSalary)}/mo` : ''}
+                                                            {r.label}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
