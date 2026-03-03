@@ -243,6 +243,32 @@ export default function OwnerDashboard() {
         }
     })
 
+    // Real-time subscription for production logs
+    useEffect(() => {
+        if (!userProfile?.org_id || !selectedDate) return
+
+        const channel = supabase.channel('production_logs_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'production_logs',
+                    filter: `org_id=eq.${userProfile.org_id}`
+                },
+                () => {
+                    // Invalidate queries when production logs change
+                    queryClient.invalidateQueries({ queryKey: ['production_daily_total', userProfile.org_id, selectedDate] })
+                    queryClient.invalidateQueries({ queryKey: ['production_worker_stats', userProfile.org_id, selectedDate] })
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [supabase, queryClient, userProfile?.org_id, selectedDate])
+
     // Fetch daily totals — scoped by org_id and selected date
     const { data: dailyTotal, isLoading } = useQuery({
         queryKey: ['production_daily_total', userProfile?.org_id, selectedDate],
