@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/app/(auth)/actions'
 import { OfflineSyncProvider } from '@/components/offline-sync-provider'
+import { SupervisorNav } from '@/components/navigation/supervisor-nav'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
     // 🔐 F-8 fix: Server-side role check
@@ -36,39 +36,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
                     </div>
                 </div>
 
-                {/* Navigation Tabs */}
-                <div className="flex border-t overflow-x-auto">
-                    <Link
-                        href="/supervisor/production"
-                        className="flex-1 py-3 text-center text-sm font-medium hover:bg-gray-50 border-r border-gray-100 text-gray-700 min-w-[100px]"
-                    >
-                        Production
-                    </Link>
-                    <Link
-                        href="/supervisor/assignments"
-                        className="flex-1 py-3 text-center text-sm font-medium hover:bg-gray-50 border-r border-gray-100 text-gray-700 min-w-[100px]"
-                    >
-                        Assignments
-                    </Link>
-                    <Link
-                        href="/supervisor/workers"
-                        className="flex-1 py-3 text-center text-sm font-medium hover:bg-gray-50 border-r border-gray-100 text-gray-700 min-w-[100px]"
-                    >
-                        Workers
-                    </Link>
-                    <Link
-                        href="/supervisor/machines"
-                        className="flex-1 py-3 text-center text-sm font-medium hover:bg-gray-50 border-r border-gray-100 text-gray-700 min-w-[100px]"
-                    >
-                        Machines
-                    </Link>
-                    <Link
-                        href="/supervisor/attendance"
-                        className="flex-1 py-3 text-center text-sm font-medium hover:bg-gray-50 text-gray-700 min-w-[100px]"
-                    >
-                        Attendance
-                    </Link>
-                </div>
+                <SupervisorNav />
             </header>
 
             <main className="p-4">
