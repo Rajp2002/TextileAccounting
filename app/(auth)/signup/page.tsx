@@ -90,7 +90,7 @@ export default function SignupPage() {
     return (
         <AuthLayout
             title="Create an Account"
-            subtitle="Get started with Textile SaaS today"
+            subtitle="Get started with Vastra today"
         >
             <form onSubmit={handleSignup} className="space-y-5">
                 <div className="space-y-4">
@@ -184,16 +184,16 @@ export default function SignupPage() {
                                 className={cn(
                                     "relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                                     role === 'owner'
-                                        ? "border-indigo-600 bg-indigo-50/50 text-indigo-700 shadow-sm"
+                                        ? "border-amber-600 bg-amber-50/50 text-amber-700 shadow-sm"
                                         : "border-gray-100 bg-white text-gray-600 hover:border-gray-200 hover:bg-gray-50"
                                 )}
                                 onClick={() => setRole('owner')}
                             >
-                                <Building2 className={cn("w-7 h-7", role === 'owner' ? "text-indigo-600" : "text-gray-400")} />
+                                <Building2 className={cn("w-7 h-7", role === 'owner' ? "text-amber-600" : "text-gray-400")} />
                                 <span className="font-semibold text-sm">Factory Owner</span>
                                 {role === 'owner' && (
                                     <div className="absolute top-2 right-2">
-                                        <Check className="w-4 h-4 text-indigo-600" />
+                                        <Check className="w-4 h-4 text-amber-600" />
                                     </div>
                                 )}
                             </button>
@@ -203,16 +203,16 @@ export default function SignupPage() {
                                 className={cn(
                                     "relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
                                     role === 'supervisor'
-                                        ? "border-indigo-600 bg-indigo-50/50 text-indigo-700 shadow-sm"
+                                        ? "border-amber-600 bg-amber-50/50 text-amber-700 shadow-sm"
                                         : "border-gray-100 bg-white text-gray-600 hover:border-gray-200 hover:bg-gray-50"
                                 )}
                                 onClick={() => setRole('supervisor')}
                             >
-                                <HardHat className={cn("w-7 h-7", role === 'supervisor' ? "text-indigo-600" : "text-gray-400")} />
+                                <HardHat className={cn("w-7 h-7", role === 'supervisor' ? "text-amber-600" : "text-gray-400")} />
                                 <span className="font-semibold text-sm">Supervisor</span>
                                 {role === 'supervisor' && (
                                     <div className="absolute top-2 right-2">
-                                        <Check className="w-4 h-4 text-indigo-600" />
+                                        <Check className="w-4 h-4 text-amber-600" />
                                     </div>
                                 )}
                             </button>
@@ -291,7 +291,7 @@ export default function SignupPage() {
 
                 <div className="text-center text-sm text-gray-500">
                     Already have an account?{' '}
-                    <Link href="/login" className="text-indigo-600 hover:underline font-medium">
+                    <Link href="/login" className="text-amber-700 hover:underline font-medium">
                         Log in
                     </Link>
                 </div>

@@ -9,8 +9,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { sumMeters, calculateTotalPay, formatINR } from '@/lib/finance'
 import { toast } from 'sonner'
 import { AddWorkerDialog } from '@/components/AddWorkerDialog'
-import { Calendar as CalendarIcon, RotateCcw, ChevronDown, ChevronRight, HardHat, Briefcase, Pencil, Check, X } from 'lucide-react'
+import { Calendar as CalendarIcon, RotateCcw, ChevronDown, ChevronRight, HardHat, Briefcase, Pencil, Check, X, TrendingUp, IndianRupee, Users2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Define interfaces for better type safety
 interface Worker {
@@ -489,9 +490,17 @@ export default function OwnerDashboard() {
     if (!selectedDate) return null
 
     return (
-        <div className="p-4 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h1 className="text-2xl font-bold">Owner Dashboard</h1>
+        <div className="space-y-8">
+            {/* Welcome Header */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">
+                        {new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'}
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                        {new Date(selectedDate || Date.now()).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                </div>
                 {userProfile?.org_id && (
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2 bg-white rounded-lg border p-1 shadow-sm">
@@ -521,95 +530,133 @@ export default function OwnerDashboard() {
                 )}
             </div>
 
-            {/* Summary Cards */}
+            {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wide">Daily Production</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-gray-900">
-                            {isLoading ? '...' : `${dailyTotal} m`}
+                <Card className="border-l-4 border-l-emerald-500 shadow-sm">
+                    <CardContent className="p-5">
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Daily Production</p>
+                                {isLoading ? (
+                                    <Skeleton className="h-9 w-28 mt-2" />
+                                ) : (
+                                    <p className="text-3xl font-bold text-gray-900 mt-1">{dailyTotal} m</p>
+                                )}
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Output for {new Date(selectedDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
+                                </p>
+                            </div>
+                            <div className="p-2 bg-emerald-50 rounded-lg">
+                                <TrendingUp className="h-5 w-5 text-emerald-600" />
+                            </div>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Output for {new Date(selectedDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
-                        </p>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wide">Production Payroll</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-green-700">
-                            {workersLoading ? '...' : (
-                                workerStats
-                                    ? formatINR(workerStats.reduce((sum: number, w: any) => sum + parseFloat(w.pay), 0))
-                                    : '₹0.00'
-                            )}
+                <Card className="border-l-4 border-l-indigo-500 shadow-sm">
+                    <CardContent className="p-5">
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Production Payroll</p>
+                                {workersLoading ? (
+                                    <Skeleton className="h-9 w-28 mt-2" />
+                                ) : (
+                                    <p className="text-3xl font-bold text-gray-900 mt-1">
+                                        {workerStats
+                                            ? formatINR(workerStats.reduce((sum: number, w: any) => sum + parseFloat(w.pay), 0))
+                                            : '₹0.00'
+                                        }
+                                    </p>
+                                )}
+                                <p className="text-xs text-gray-400 mt-1">Per-meter wages today</p>
+                            </div>
+                            <div className="p-2 bg-indigo-50 rounded-lg">
+                                <IndianRupee className="h-5 w-5 text-indigo-600" />
+                            </div>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Per-meter wages today
-                        </p>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="pb-2">
-                        <div className="flex items-center gap-1.5">
-                            <Briefcase className="h-3.5 w-3.5 text-gray-500" />
-                            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wide">Fixed Payroll</CardTitle>
+                <Card className="border-l-4 border-l-blue-500 shadow-sm">
+                    <CardContent className="p-5">
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Fixed Payroll</p>
+                                {!fixedPayroll ? (
+                                    <Skeleton className="h-9 w-28 mt-2" />
+                                ) : (
+                                    <p className="text-3xl font-bold text-gray-900 mt-1">
+                                        {formatINR(fixedPayroll.total)}
+                                    </p>
+                                )}
+                                <p className="text-xs text-gray-400 mt-1">
+                                    {fixedPayroll ? `${fixedPayroll.fixedCount} salaried + ${fixedPayroll.dailyCount} daily` : ''}
+                                </p>
+                            </div>
+                            <div className="p-2 bg-blue-50 rounded-lg">
+                                <Users2 className="h-5 w-5 text-blue-600" />
+                            </div>
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-blue-700">
-                            {fixedPayroll ? formatINR(fixedPayroll.total) : '...'}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            {fixedPayroll ? `${fixedPayroll.fixedCount} salaried + ${fixedPayroll.dailyCount} daily` : 'Loading...'}
-                        </p>
                     </CardContent>
                 </Card>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 gap-6">
                 {/* Worker Breakdown */}
-                <Card>
-                    <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <HardHat className="h-5 w-5 text-indigo-600" />
-                            <CardTitle>Worker Breakdown</CardTitle>
+                <Card className="shadow-sm">
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <HardHat className="h-5 w-5 text-indigo-600" />
+                                <CardTitle className="text-lg">Worker Breakdown</CardTitle>
+                            </div>
+                            <CardDescription className="mt-0">
+                                {new Date(selectedDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
+                            </CardDescription>
                         </div>
-                        <CardDescription>
-                            Detailed production report per worker and machine
-                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {workersLoading ? (
-                            <div className="py-8 text-center text-gray-500">Loading worker data...</div>
-                        ) : (
-                            <div className="space-y-1">
-                                {workerStats?.map((worker: WorkerStats) => (
-                                    <WorkerRow key={worker.id} worker={worker} />
+                            <div className="space-y-3">
+                                {[...Array(4)].map((_, i) => (
+                                    <div key={i} className="flex justify-between items-center py-3">
+                                        <Skeleton className="h-5 w-32" />
+                                        <Skeleton className="h-5 w-24" />
+                                    </div>
                                 ))}
-                                {workerStats && workerStats.length === 0 && (
-                                    <div className="py-12 text-center border-2 border-dashed rounded-xl">
-                                        <p className="text-gray-500 font-medium">No workers found</p>
-                                        <p className="text-sm text-gray-400 mt-1">Add workers to start tracking production</p>
+                            </div>
+                        ) : (
+                            <>
+                                {workerStats && workerStats.length > 0 && (
+                                    <div className="flex justify-between items-center text-xs font-medium text-gray-400 uppercase tracking-wider px-2 pb-2 border-b mb-1">
+                                        <span className="pl-6">Worker</span>
+                                        <span>Output / Pay</span>
                                     </div>
                                 )}
-                            </div>
+                                <div className="space-y-0.5">
+                                    {workerStats?.map((worker: WorkerStats) => (
+                                        <WorkerRow key={worker.id} worker={worker} />
+                                    ))}
+                                    {workerStats && workerStats.length === 0 && (
+                                        <div className="py-12 text-center border-2 border-dashed rounded-xl">
+                                            <HardHat className="h-8 w-8 mx-auto text-gray-300 mb-2" />
+                                            <p className="text-gray-500 font-medium">No production logged</p>
+                                            <p className="text-sm text-gray-400 mt-1">Workers will appear here once production is logged for this date</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
                         )}
                     </CardContent>
                 </Card>
 
                 {/* Fixed Workers */}
-                <Card>
-                    <CardHeader>
+                <Card className="shadow-sm">
+                    <CardHeader className="pb-3">
                         <div className="flex items-center gap-2">
                             <Briefcase className="h-5 w-5 text-blue-600" />
-                            <CardTitle>Fixed Workers</CardTitle>
+                            <CardTitle className="text-lg">Fixed Workers</CardTitle>
                         </div>
                         <CardDescription>
                             Salaried staff — click the pencil to edit pay

@@ -28,10 +28,10 @@ export default function LandingHeader() {
                 <div className="rounded-full border border-white/20 bg-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 transition-all dark:bg-zinc-950/60 dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
                     <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                         <Link href="/" className="flex items-center gap-3 group">
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-md shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all duration-300 group-hover:scale-105">
-                                <span className="text-white font-bold text-base">T</span>
+                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:shadow-amber-500/40 transition-all duration-300 group-hover:scale-105">
+                                <span className="text-white font-bold text-base">V</span>
                             </div>
-                            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">Textile SaaS</span>
+                            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">Vastra</span>
                         </Link>
 
                         {/* Desktop Nav */}
@@ -43,7 +43,7 @@ export default function LandingHeader() {
                                     className="relative text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white transition-colors group"
                                 >
                                     {link.name}
-                                    <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-full" />
+                                    <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-gradient-to-r from-amber-500 to-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-full" />
                                 </Link>
                             ))}
                         </nav>

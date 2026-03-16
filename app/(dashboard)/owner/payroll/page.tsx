@@ -431,7 +431,7 @@ export default function PayrollPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Monthly Payroll</h1>
-                    <p className="text-sm text-gray-500">Track and mark worker payments</p>
+                    <p className="text-sm text-gray-500 mt-0.5">Track and settle worker payments</p>
                 </div>
                 {/* Month navigator */}
                 <div className="flex items-center gap-2 bg-white border rounded-lg px-3 py-1.5 self-start sm:self-auto">
@@ -475,6 +475,21 @@ export default function PayrollPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Progress bar */}
+            {summary.total > 0 && (
+                <div className="space-y-1.5">
+                    <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                        <div
+                            className="h-full rounded-full bg-green-500 transition-all duration-500"
+                            style={{ width: `${Math.min(100, (summary.paid / summary.total) * 100)}%` }}
+                        />
+                    </div>
+                    <p className="text-xs text-gray-400 text-right">
+                        {Math.round((summary.paid / summary.total) * 100)}% settled
+                    </p>
+                </div>
+            )}
 
             {/* Tabs */}
             <div className="flex rounded-lg border bg-white overflow-hidden">

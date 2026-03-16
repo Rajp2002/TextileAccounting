@@ -2,14 +2,14 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'Textile SaaS',
-        short_name: 'TextileApp',
-        description: 'Textile production management system for India.',
+        name: 'Vastra — Production Management',
+        short_name: 'Vastra',
+        description: 'Track production, manage workers, and automate daily briefs.',
         start_url: '/',
         display: 'standalone',
-        background_color: '#ffffff',
+        background_color: '#fafaf9', // bg-stone-50 tone
         orientation: 'portrait',
-        theme_color: '#000000',
+        theme_color: '#b45309', // amber-700 / terracotta primary
         icons: [
             {
                 src: '/icon-192x192.png',

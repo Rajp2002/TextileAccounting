@@ -52,7 +52,7 @@ export default function LandingFeatures() {
     return (
         <div className="bg-white py-16 sm:py-24 dark:bg-zinc-950 relative overflow-hidden" id="features">
             {/* Background Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60rem] h-[60rem] bg-indigo-500/10 dark:bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60rem] h-[60rem] bg-amber-500/10 dark:bg-amber-500/5 blur-[120px] rounded-full pointer-events-none" />
 
             <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
                 <div className="mx-auto max-w-2xl lg:text-center">
@@ -62,7 +62,7 @@ export default function LandingFeatures() {
                         viewport={{ once: true }}
                         transition={{ duration: 0.5 }}
                     >
-                        <h2 className="text-sm font-bold leading-7 text-indigo-600 dark:text-indigo-400 tracking-widest uppercase">Deploy faster</h2>
+                        <h2 className="text-sm font-bold leading-7 text-amber-700 dark:text-amber-500 tracking-widest uppercase">Deploy faster</h2>
                         <p className="mt-2 text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl dark:text-white">
                             Everything you need to run a modern textile factory
                         </p>
@@ -81,7 +81,7 @@ export default function LandingFeatures() {
                                 whileInView={{ opacity: 1, scale: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                                className={`relative rounded-[2rem] p-8 ring-1 ring-gray-900/5 dark:ring-white/10 group overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 ${feature.className}`}
+                                className={`relative rounded-[2rem] p-8 ring-1 ring-gray-900/5 dark:ring-white/10 group overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/10 hover:-translate-y-1 ${feature.className}`}
                             >
                                 <div className="absolute inset-0 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm -z-10" />
 
@@ -89,7 +89,7 @@ export default function LandingFeatures() {
                                     <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${feature.iconBg} mb-6 shadow-lg shadow-black/10 dark:shadow-black/30 group-hover:scale-110 transition-transform duration-300`}>
                                         <feature.icon className="h-7 w-7 text-white" aria-hidden="true" />
                                     </div>
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-amber-700 dark:group-hover:text-amber-500 transition-colors">
                                         {feature.name}
                                     </h3>
                                     <p className="text-base leading-relaxed text-gray-600 dark:text-gray-300 mt-auto">

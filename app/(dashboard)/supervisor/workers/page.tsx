@@ -102,7 +102,9 @@ export default function SupervisorWorkersPage() {
         if (!workerToDelete || !userProfile?.org_id) return
         setDeleting(true)
         try {
-            await deleteWorkerWithCode(userProfile.org_id, workerToDelete, accessCode)
+            const result = await deleteWorkerWithCode(userProfile.org_id, workerToDelete, accessCode)
+            if (result.error) throw new Error(result.error)
+
             toast.success('Worker deleted successfully')
             setWorkerToDelete(null)
             queryClient.invalidateQueries({ queryKey: ['workers'] })
