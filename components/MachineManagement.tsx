@@ -208,7 +208,9 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
         if (!machineToDelete) return
         setDeleting(true)
         try {
-            await deleteMachineWithCode(orgId, machineToDelete, accessCode)
+            const result = await deleteMachineWithCode(orgId, machineToDelete, accessCode)
+            if (result.error) throw new Error(result.error)
+
             toast.success('Machine deleted successfully')
             setMachineToDelete(null)
             queryClient.invalidateQueries({ queryKey: ['machines'] })

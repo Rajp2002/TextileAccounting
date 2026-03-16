@@ -62,7 +62,7 @@ export default function LoginPage() {
     return (
         <AuthLayout
             title="Welcome Back"
-            subtitle="Sign in to your Textile SaaS account"
+            subtitle="Sign in to your Vastra account"
         >
             <form onSubmit={handleLogin} className="space-y-6">
                 <div className="space-y-4">
@@ -116,7 +116,7 @@ export default function LoginPage() {
 
                 <div className="text-center text-sm text-gray-500">
                     Don't have an account?{' '}
-                    <Link href="/signup" className="text-indigo-600 hover:underline font-medium">
+                    <Link href="/signup" className="text-amber-700 hover:underline font-medium">
                         Create an account
                     </Link>
                 </div>

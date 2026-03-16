@@ -136,7 +136,9 @@ export default function AttendancePage() {
 
             if (codeToUse) {
                 // Secure server action bypass for verified supervisor 
-                await savePastAttendance(userProfile.org_id, selectedDate, recordsToSave, codeToUse)
+                const result = await savePastAttendance(userProfile.org_id, selectedDate, recordsToSave, codeToUse)
+                if (result.error) throw new Error(result.error)
+
                 setVerificationOpen(false)
                 setAccessCode('')
             } else {
@@ -176,8 +178,8 @@ export default function AttendancePage() {
     if (!selectedDate) return null
 
     return (
-        <div className="space-y-4 pb-24">
-            <Card>
+        <div className="space-y-4 pb-28 max-w-2xl mx-auto">
+            <Card className="shadow-sm">
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -233,17 +235,17 @@ export default function AttendancePage() {
                                     <div
                                         key={worker.id}
                                         className={cn(
-                                            'flex justify-between items-center py-3 px-2 rounded-lg cursor-pointer transition-colors',
-                                            isPresent ? 'hover:bg-green-50' : 'hover:bg-red-50 opacity-60'
+                                            'flex justify-between items-center py-4 px-3 min-h-[56px] rounded-lg cursor-pointer transition-colors',
+                                            isPresent ? 'hover:bg-green-50/50' : 'hover:bg-red-50/50 opacity-60'
                                         )}
                                         onClick={() => toggleAttendance(worker.id)}
                                     >
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-4">
                                             <div className={cn(
-                                                'w-8 h-8 rounded-full flex items-center justify-center transition-colors',
+                                                'w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm',
                                                 isPresent ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'
                                             )}>
-                                                {isPresent ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                                                {isPresent ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
                                             </div>
                                             <div>
                                                 <span className={cn('font-medium', !isPresent && 'line-through text-gray-400')}>
@@ -255,7 +257,7 @@ export default function AttendancePage() {
                                             </div>
                                         </div>
                                         <span className={cn(
-                                            'text-xs font-semibold px-2 py-1 rounded-full',
+                                            'text-xs font-semibold px-2.5 py-1 rounded-full',
                                             isPresent ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'
                                         )}>
                                             {isPresent ? 'Present' : 'Absent'}
@@ -268,14 +270,16 @@ export default function AttendancePage() {
                 </Card>
             )}
 
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-center z-10">
-                <Button
-                    onClick={prepareSaveFlow}
-                    disabled={saving || totalCount === 0}
-                    className="w-full max-w-md h-12 text-lg font-semibold shadow-lg"
-                >
-                    {saving ? 'Saving...' : 'Save Attendance'}
-                </Button>
+            <div className="fixed bottom-0 md:bottom-auto md:top-24 left-0 right-0 p-4 md:p-0 bg-background/90 backdrop-blur-sm border-t md:border-t-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:shadow-none flex justify-center z-10 pb-[env(safe-area-inset-bottom,16px)]">
+                <div className="w-full max-w-2xl md:flex md:justify-end md:px-0">
+                    <Button
+                        onClick={prepareSaveFlow}
+                        disabled={saving || totalCount === 0}
+                        className="w-full md:w-auto md:min-w-[200px] h-[52px] text-lg font-semibold shadow-lg bg-teal-600 hover:bg-teal-700 text-white rounded-xl mb-14 md:mb-0"
+                    >
+                        {saving ? 'Saving...' : 'Save Attendance'}
+                    </Button>
+                </div>
             </div>
 
             {/* Access Code Modal (SEC-002) */}

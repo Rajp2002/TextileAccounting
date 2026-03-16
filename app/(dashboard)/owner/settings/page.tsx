@@ -3,10 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/app/(auth)/actions'
-import { LogOut, Copy, ArrowLeft } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Suspense } from 'react'
 import { AccessCodeGenerator } from '@/components/AccessCodeGenerator'
 
 export default async function SettingsPage() {
@@ -35,14 +34,10 @@ export default async function SettingsPage() {
         .single()
 
     return (
-        <div className="p-4 space-y-6 max-w-2xl mx-auto">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" asChild>
-                    <a href="/owner/analytics">
-                        <ArrowLeft className="h-5 w-5" />
-                    </a>
-                </Button>
-                <h1 className="text-2xl font-bold">Settings</h1>
+        <div className="space-y-6 max-w-2xl">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+                <p className="text-sm text-gray-500 mt-0.5">Factory configuration and access codes</p>
             </div>
 
             <Card>

@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 import { calculateDailyPay, formatINR } from '@/lib/finance'
 import { verifyAccessCode } from '@/app/(dashboard)/supervisor/actions'
-import { CalendarDays, KeyRound, Loader2, RotateCcw, Lock } from 'lucide-react'
+import { CalendarDays, KeyRound, Loader2, RotateCcw, Lock, BoxSelect } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 
@@ -179,7 +179,9 @@ export default function ProductionEntryForm() {
         setVerifying(true)
         try {
             if (!userProfile?.org_id) throw new Error("Missing org_id")
-            await verifyAccessCode(userProfile.org_id, accessCode)
+            const result = await verifyAccessCode(userProfile.org_id, accessCode)
+            if (result.error) throw new Error(result.error)
+
             setUnlocked(true)
             setVerificationOpen(false)
             setAccessCode('')
@@ -280,38 +282,18 @@ export default function ProductionEntryForm() {
     }
 
     return (
-        <div className="space-y-4 pb-24">
-            <Card>
-                <CardHeader>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-6 pb-28">
+            <Card className="shadow-sm">
+                <CardHeader className="p-4 sm:p-6 pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
-                            <CalendarDays className="h-5 w-5 text-indigo-600" />
-                            <CardTitle>Log Production</CardTitle>
+                            <CalendarDays className="h-5 w-5 text-teal-600" />
+                            <CardTitle className="text-xl">Log Production</CardTitle>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <div className="flex rounded-lg border overflow-hidden mr-2">
-                                <button
-                                    onClick={() => setCurrentShift('day')}
-                                    className={cn(
-                                        'px-4 py-1.5 text-sm font-medium transition-colors',
-                                        currentShift === 'day' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
-                                    )}
-                                >
-                                    Day Shift
-                                </button>
-                                <button
-                                    onClick={() => setCurrentShift('night')}
-                                    className={cn(
-                                        'px-4 py-1.5 text-sm font-medium transition-colors border-l',
-                                        currentShift === 'night' ? 'bg-indigo-900 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
-                                    )}
-                                >
-                                    Night Shift
-                                </button>
-                            </div>
 
-                            <Button variant="ghost" size="sm" onClick={setToday} className="h-8 px-2 text-xs">
-                                <RotateCcw className="h-3 w-3 mr-1" />
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={setToday} className="h-10 px-3 text-sm flex-1 sm:flex-none">
+                                <RotateCcw className="h-4 w-4 mr-2" />
                                 Today
                             </Button>
                             <Input
@@ -319,11 +301,35 @@ export default function ProductionEntryForm() {
                                 value={selectedDate}
                                 max={new Date().toISOString().split('T')[0]} // Prevent future dates
                                 onChange={(e) => setSelectedDate(e.target.value)}
-                                className="h-8 w-auto text-sm"
+                                className="h-10 w-[140px] text-sm"
                             />
                         </div>
                     </div>
                 </CardHeader>
+
+                {/* Full-width Shift Toggle inside card content */}
+                <CardContent className="p-4 sm:p-6 pt-0">
+                    <div className="flex rounded-xl bg-gray-100 p-1 w-full mt-2">
+                        <button
+                            onClick={() => setCurrentShift('day')}
+                            className={cn(
+                                'flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 shadow-sm',
+                                currentShift === 'day' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700 shadow-none'
+                            )}
+                        >
+                            Day Shift
+                        </button>
+                        <button
+                            onClick={() => setCurrentShift('night')}
+                            className={cn(
+                                'flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 shadow-sm',
+                                currentShift === 'night' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 shadow-none'
+                            )}
+                        >
+                            Night Shift
+                        </button>
+                    </div>
+                </CardContent>
             </Card>
 
             {/* Show unlock banner if there are saved entries and not unlocked */}
@@ -339,9 +345,22 @@ export default function ProductionEntryForm() {
                 </div>
             )}
 
-            {(machinesLoading || logsLoading) && <div className="text-center py-8">Loading data...</div>}
+            {(machinesLoading || logsLoading) ? (
+                <div className="text-center py-12 flex flex-col items-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-teal-600 mb-4" />
+                    <p className="text-gray-500 font-medium">Loading factory data...</p>
+                </div>
+            ) : machineCards.length === 0 ? (
+                <div className="py-16 text-center border-2 border-dashed rounded-xl border-gray-200 bg-white">
+                    <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <BoxSelect className="h-8 w-8" />
+                    </div>
+                    <p className="text-gray-900 font-semibold text-lg">No machines found</p>
+                    <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Please add machines in the owner view before logging production.</p>
+                </div>
+            ) : null}
 
-            <div className="grid gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {machineCards.map(({ machine, assignedWorkerId, effectiveWorkerId, meters, isSaved }) => {
                     const rate = machine.rate_per_meter || 0
 
@@ -374,11 +393,12 @@ export default function ProductionEntryForm() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 pt-1">
+                                <div className="flex items-center gap-3 pt-3">
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        size="sm"
+                                        size="lg"
+                                        className="h-12 w-16 bg-gray-50 hover:bg-gray-100 text-gray-700 text-lg border-gray-200"
                                         disabled={disabled}
                                         onClick={() => handleMetersChange(machine.id, Math.max(0, displayMeters - 10), isSaved)}
                                     >
@@ -390,12 +410,13 @@ export default function ProductionEntryForm() {
                                         disabled={disabled}
                                         onChange={(e) => handleMetersChange(machine.id, Number(e.target.value), isSaved)}
                                         placeholder="0"
-                                        className="text-center text-lg font-bold w-24"
+                                        className="text-center text-xl font-bold h-12 w-full flex-1 border-gray-300 focus:border-teal-500 focus:ring-teal-500 transition-all"
                                     />
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        size="sm"
+                                        size="lg"
+                                        className="h-12 w-16 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-100 text-lg"
                                         disabled={disabled}
                                         onClick={() => handleMetersChange(machine.id, displayMeters + 10, isSaved)}
                                     >
@@ -445,14 +466,16 @@ export default function ProductionEntryForm() {
             </Dialog>
 
             {/* Fixed Save All button */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex justify-center z-10">
-                <Button
-                    onClick={handleSaveAll}
-                    disabled={loading || machineCards.length === 0}
-                    className="w-full max-w-md h-12 text-lg font-semibold shadow-lg"
-                >
-                    {loading ? 'Saving...' : 'Save All Entries'}
-                </Button>
+            <div className="fixed bottom-0 md:bottom-auto md:top-24 left-0 right-0 p-4 md:p-0 bg-background/90 backdrop-blur-sm border-t md:border-t-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:shadow-none flex justify-center z-10 pb-[env(safe-area-inset-bottom,16px)]">
+                <div className="w-full max-w-5xl md:flex md:justify-end md:px-6">
+                    <Button
+                        onClick={handleSaveAll}
+                        disabled={loading || machineCards.length === 0}
+                        className="w-full md:w-auto md:min-w-[200px] h-[52px] text-lg font-semibold shadow-lg bg-teal-600 hover:bg-teal-700 text-white rounded-xl mb-14 md:mb-0"
+                    >
+                        {loading ? 'Saving...' : 'Save All Entries'}
+                    </Button>
+                </div>
             </div>
         </div>
     )

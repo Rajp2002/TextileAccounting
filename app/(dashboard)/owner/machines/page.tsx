@@ -1,8 +1,6 @@
 import { MachineManagement } from '@/components/MachineManagement'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 export default async function MachinesPage() {
     const supabase = await createClient()
@@ -23,14 +21,10 @@ export default async function MachinesPage() {
     }
 
     return (
-        <div className="p-4 space-y-6">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" asChild>
-                    <a href="/owner/analytics">
-                        <ArrowLeft className="h-5 w-5" />
-                    </a>
-                </Button>
-                <h1 className="text-2xl font-bold">Manage Machines</h1>
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">Machines</h1>
+                <p className="text-sm text-gray-500 mt-0.5">Manage rates and machine status</p>
             </div>
 
             <MachineManagement orgId={profile.org_id} />

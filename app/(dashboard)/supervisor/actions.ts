@@ -25,13 +25,13 @@ export async function savePastAttendance(
     const isCodeValid = await validateAndRotateAccessCode(orgId, accessCode)
 
     if (!isCodeValid) {
-        throw new Error('Invalid or expired access code')
+        return { error: 'Invalid or expired access code' }
     }
 
     // 2. Bypassing RLS requires the service role key, because the DB policy 
     // restricts past-date attendance edits to 'owner' only.
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        throw new Error('Missing Supabase environment variables')
+        return { error: 'Missing Supabase environment variables' }
     }
 
     const serviceClient = createServiceClient(
@@ -62,7 +62,7 @@ export async function savePastAttendance(
 
     if (error) {
         console.error('Error saving past attendance:', error)
-        throw new Error('Failed to save attendance records')
+        return { error: 'Failed to save attendance records' }
     }
 
     return { success: true }
@@ -76,7 +76,7 @@ export async function deleteMachineWithCode(orgId: string, machineId: string, ac
 
     const isCodeValid = await validateAndRotateAccessCode(orgId, accessCode)
     if (!isCodeValid) {
-        throw new Error('Invalid or expired access code')
+        return { error: 'Invalid or expired access code' }
     }
 
     const serviceClient = createServiceClient(
@@ -90,7 +90,7 @@ export async function deleteMachineWithCode(orgId: string, machineId: string, ac
         .eq('id', machineId)
         .eq('org_id', orgId)
 
-    if (error) throw new Error('Failed to delete machine')
+    if (error) return { error: 'Failed to delete machine' }
     return { success: true }
 }
 
@@ -102,7 +102,7 @@ export async function deleteWorkerWithCode(orgId: string, workerId: number, acce
 
     const isCodeValid = await validateAndRotateAccessCode(orgId, accessCode)
     if (!isCodeValid) {
-        throw new Error('Invalid or expired access code')
+        return { error: 'Invalid or expired access code' }
     }
 
     const serviceClient = createServiceClient(
@@ -116,7 +116,7 @@ export async function deleteWorkerWithCode(orgId: string, workerId: number, acce
         .eq('id', workerId)
         .eq('org_id', orgId)
 
-    if (error) throw new Error('Failed to delete worker')
+    if (error) return { error: 'Failed to delete worker' }
     return { success: true }
 }
 
@@ -129,7 +129,7 @@ export async function verifyAccessCode(orgId: string, accessCode: string) {
 
     const isCodeValid = await validateAndRotateAccessCode(orgId, accessCode)
     if (!isCodeValid) {
-        throw new Error('Invalid or expired access code')
+        return { error: 'Invalid or expired access code' }
     }
 
     return { success: true }

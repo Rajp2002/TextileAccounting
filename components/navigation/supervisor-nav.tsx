@@ -20,30 +20,32 @@ export function SupervisorNav() {
         <>
             {/* Desktop Top Navigation Tabs */}
             <div className="hidden md:flex flex-row overflow-x-auto border-t border-gray-100 bg-white">
-                {navItems.map((item) => {
-                    const Icon = item.icon
-                    const isActive = pathname.startsWith(item.href)
+                <div className="max-w-5xl w-full mx-auto flex">
+                    {navItems.map((item) => {
+                        const Icon = item.icon
+                        const isActive = pathname.startsWith(item.href)
 
-                    return (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            className={cn(
-                                "flex-1 flex items-center justify-center gap-2 py-3 px-4 text-sm font-medium border-b-2 transition-colors min-w-[120px]",
-                                isActive
-                                    ? "border-blue-600 text-blue-600 bg-blue-50/50"
-                                    : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-200"
-                            )}
-                        >
-                            <Icon className="h-4 w-4" />
-                            {item.name}
-                        </Link>
-                    )
-                })}
+                        return (
+                            <Link
+                                key={item.name}
+                                href={item.href}
+                                className={cn(
+                                    "flex-1 flex items-center justify-center gap-2 py-4 px-4 text-sm font-medium border-b-2 transition-colors min-w-[120px]",
+                                    isActive
+                                        ? "border-teal-600 text-teal-700 bg-teal-50/50"
+                                        : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-stone-50 hover:border-gray-200"
+                                )}
+                            >
+                                <Icon className="h-4 w-4" />
+                                {item.name}
+                            </Link>
+                        )
+                    })}
+                </div>
             </div>
 
             {/* Mobile Bottom Navigation Bar */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center z-50 px-2 py-1 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center z-50 px-2 pb-safe pt-1 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] h-[64px] pb-safe">
                 {navItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname.startsWith(item.href)
@@ -53,17 +55,17 @@ export function SupervisorNav() {
                             key={item.name}
                             href={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center py-1.5 px-1 w-full relative",
-                                isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-900"
+                                "flex flex-col items-center justify-center py-1 px-1 w-full relative h-full",
+                                isActive ? "text-teal-700" : "text-gray-500 hover:text-gray-900"
                             )}
                         >
                             <div className={cn(
-                                "p-1 rounded-full mb-1 transition-colors duration-200",
-                                isActive ? "bg-blue-100/50" : "group-hover:bg-gray-100"
+                                "py-1 px-4 rounded-full mb-1 transition-colors duration-200",
+                                isActive ? "bg-teal-100/50" : "group-hover:bg-gray-100"
                             )}>
-                                <Icon className="h-5 w-5" />
+                                <Icon className={cn("h-5 w-5", isActive && "fill-teal-700/20 text-teal-700")} />
                             </div>
-                            <span className="text-[10px] sm:text-xs font-medium leading-none tracking-tight">{item.name}</span>
+                            <span className="text-[10px] sm:text-xs font-semibold leading-none tracking-tight">{item.name}</span>
                         </Link>
                     )
                 })}
@@ -71,3 +73,4 @@ export function SupervisorNav() {
         </>
     )
 }
+

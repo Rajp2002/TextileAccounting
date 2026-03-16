@@ -16,7 +16,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, org_id')
         .eq('id', user.id)
         .single()
 
@@ -24,14 +24,27 @@ export default async function SupervisorLayout({ children }: { children: React.R
         redirect('/login')
     }
 
+    let factoryName = 'Textile SaaS'
+    if (profile?.org_id) {
+        const { data: org } = await supabase
+            .from('organizations')
+            .select('name')
+            .eq('id', profile.org_id)
+            .single()
+        if (org?.name) factoryName = org.name
+    }
+
     return (
-        <div className="min-h-screen bg-gray-100 pb-20">
-            <header className="bg-white shadow sticky top-0 z-10">
-                <div className="p-4 flex justify-between items-center">
-                    <h1 className="text-xl font-bold text-gray-800">Supervisor</h1>
+        <div className="min-h-screen bg-stone-50 pb-28">
+            <header className="bg-white shadow-sm border-b sticky top-0 z-30">
+                <div className="px-4 py-3 flex justify-between items-center max-w-5xl mx-auto">
+                    <div>
+                        <h1 className="text-lg font-bold text-gray-900 leading-tight truncate max-w-[200px] sm:max-w-xs">{factoryName}</h1>
+                        <span className="text-[10px] uppercase tracking-widest text-teal-600 font-bold">Supervisor</span>
+                    </div>
                     <div className="flex items-center gap-2">
                         <form action={signOut}>
-                            <Button variant="ghost" size="sm">Logout</Button>
+                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-900">Logout</Button>
                         </form>
                     </div>
                 </div>
@@ -39,7 +52,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
                 <SupervisorNav />
             </header>
 
-            <main className="p-4">
+            <main className="max-w-5xl mx-auto p-4 md:p-6">
                 <OfflineSyncProvider>
                     {children}
                 </OfflineSyncProvider>
