@@ -12,6 +12,7 @@ import {
     HardHat, Briefcase, AlertCircle, IndianRupee
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toggleWorkerPaid } from './actions'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface PaymentRecord {
@@ -401,7 +402,6 @@ export default function PayrollPage() {
     // ── Toggle paid ─────────────────────────────────────────────────────────
     const handleTogglePaid = async (workerType: 'meter' | 'fixed', workerId: number, amount: number, currentPaid: boolean) => {
         try {
-            const { toggleWorkerPaid } = await import('./actions')
             const result = await toggleWorkerPaid(workerType, workerId, selectedMonth, currentPaid)
 
             toast.success(result.success ? '✓ Payroll updated successfully' : 'Updated')
