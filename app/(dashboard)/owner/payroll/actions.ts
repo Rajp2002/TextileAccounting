@@ -90,34 +90,22 @@ export async function toggleWorkerPaid(
         amount: calculatedAmount,
         paid: newPaid,
         paid_at: newPaid ? new Date().toISOString() : null,
+        // Explicitly set the other ID to null to avoid any cross-contamination
+        meter_worker_id: workerType === 'meter' ? workerId : null,
+        fixed_worker_id: workerType === 'fixed' ? workerId : null,
     }
 
-    if (workerType === 'meter') {
-        record.meter_worker_id = workerId
-    } else {
-        record.fixed_worker_id = workerId
-    }
+    // Find if a record already exists for this EXACT worker and month
+    const { data: existing, error: existingError } = await supabase
+        .from('payroll_payments')
+        .select('id')
+        .eq('org_id', profile.org_id)
+        .eq('worker_type', workerType)
+        .eq('month', month)
+        .eq(workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', workerId)
+        .maybeSingle()
 
-    let existing: any = null
-    if (workerType === 'meter') {
-        const { data } = await supabase
-            .from('payroll_payments')
-            .select('id')
-            .eq('org_id', profile.org_id)
-            .eq('meter_worker_id', workerId)
-            .eq('month', month)
-            .maybeSingle()
-        existing = data
-    } else {
-        const { data } = await supabase
-            .from('payroll_payments')
-            .select('id')
-            .eq('org_id', profile.org_id)
-            .eq('fixed_worker_id', workerId)
-            .eq('month', month)
-            .maybeSingle()
-        existing = data
-    }
+    if (existingError) throw new Error(`Query failed: ${existingError.message}`)
 
     if (existing) {
         const { error } = await supabase
