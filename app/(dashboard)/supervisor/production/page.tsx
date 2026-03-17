@@ -66,13 +66,13 @@ export default function ProductionEntryForm() {
         }
     }, [])
 
-    // Lock again if date changes
+    const { data: userProfile } = useUserProfile()
+
+    // Lock again if date changes or session changes
     useEffect(() => {
         setUnlocked(false)
         setMetersInput({})
-    }, [selectedDate])
-
-    const { data: userProfile } = useUserProfile()
+    }, [selectedDate, userProfile?.org_id]) // Also clear if org_id changes (session switch)
 
     const { data: existingLogs, isLoading: logsLoading } = useQuery({
         queryKey: ['production_logs', userProfile?.org_id, selectedDate, currentShift],
