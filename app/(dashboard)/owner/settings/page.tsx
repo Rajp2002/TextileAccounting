@@ -3,9 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { signOut } from '@/app/(auth)/actions'
-import { LogOut, Factory, User, ShieldCheck } from 'lucide-react'
+import { Factory, User, ShieldCheck } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { AccessCodeGenerator } from '@/components/AccessCodeGenerator'
@@ -122,15 +120,6 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
             </Card>
-
-            <div className="flex justify-end pt-4">
-                <form action={signOut}>
-                    <Button variant="destructive" className="gap-2 px-6">
-                        <LogOut className="h-4 w-4" />
-                        Log out
-                    </Button>
-                </form>
-            </div>
         </div>
     )
 }
