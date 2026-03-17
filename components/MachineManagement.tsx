@@ -26,6 +26,8 @@ import { toast } from 'sonner'
 import { Loader2, Save, Plus, Trash2, KeyRound } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { deleteMachineWithCode } from '@/app/(dashboard)/supervisor/actions'
+import { useUserProfile } from '@/hooks/use-user-profile'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface Worker {
     id: number
@@ -69,21 +71,8 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
     const [accessCode, setAccessCode] = useState('')
     const [deleting, setDeleting] = useState(false)
 
-    // Fetch User Profile for Role
-    const { data: userProfile } = useQuery({
-        queryKey: ['user_profile_machine_mgmt'],
-        queryFn: async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .single()
-            if (error) throw error
-            return data
-        }
-    })
+    // Use shared profile hook instead of independent fetch
+    const { data: userProfile } = useUserProfile()
 
     // Fetch Machines
     const { data: machines, isLoading: machinesLoading } = useQuery({
@@ -258,7 +247,31 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
         }
     }
 
-    if (machinesLoading) return <div>Loading machines...</div>
+    if (machinesLoading) return (
+        <Card className="animate-pulse">
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div className="space-y-2">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                </div>
+                <Skeleton className="h-9 w-28" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+                {[1, 2, 3].map(i => (
+                    <div key={i} className="p-4 border rounded-lg bg-gray-50/50 space-y-4">
+                        <div className="flex justify-between items-center">
+                            <Skeleton className="h-6 w-32" />
+                            <Skeleton className="h-8 w-24" />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Skeleton className="h-14 w-full" />
+                            <Skeleton className="h-14 w-full" />
+                        </div>
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+    )
 
     return (
         <Card>
