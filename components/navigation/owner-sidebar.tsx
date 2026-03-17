@@ -19,6 +19,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
+import LogoutButton from "@/components/auth/logout-button"
 
 const primaryNavItems = [
     { name: "Dashboard", href: "/owner/analytics", icon: BarChart3 },
@@ -89,15 +90,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                 {userName && (
                     <p className="text-xs text-muted-foreground mb-3 truncate">{userName}</p>
                 )}
-                <form action={signOut}>
-                    <button
-                        type="submit"
-                        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-sidebar-foreground transition-colors w-full"
-                    >
-                        <LogOut className="h-3.5 w-3.5" />
-                        Log out
-                    </button>
-                </form>
+                <LogoutButton />
             </div>
         </div>
     )

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Loader2, ArrowRight, Building2, HardHat, Check, Eye, EyeOff } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
+import LoadingModal from '@/components/auth/loading-modal'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { signUpWithEmail } from './actions'
@@ -16,6 +17,7 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function SignupPage() {
     const [loading, setLoading] = useState(false)
+    const [isRedirecting, setIsRedirecting] = useState(false)
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -55,8 +57,11 @@ export default function SignupPage() {
 
             if (result.error) {
                 toast.error(result.error)
+                setLoading(false)
                 return
             }
+
+            setIsRedirecting(true)
 
             if (result.confirmed) {
                 // Email confirmation disabled — user is logged in directly, profile already created.
@@ -85,7 +90,6 @@ export default function SignupPage() {
         } catch (error: any) {
             console.error('Signup error:', error)
             toast.error(error.message || 'An error occurred during signup')
-        } finally {
             setLoading(false)
         }
     }
@@ -299,6 +303,7 @@ export default function SignupPage() {
                     </Link>
                 </div>
             </form>
+            <LoadingModal isOpen={isRedirecting} message="Creating your account..." />
         </AuthLayout>
     )
 }

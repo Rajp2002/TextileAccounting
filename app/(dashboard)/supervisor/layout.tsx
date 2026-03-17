@@ -5,6 +5,7 @@ import { signOut } from '@/app/(auth)/actions'
 import { OfflineSyncProvider } from '@/components/offline-sync-provider'
 import { SupervisorNav, MobileSupervisorNav } from '@/components/navigation/supervisor-nav'
 import Image from 'next/image'
+import LogoutButton from '@/components/auth/logout-button'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
     // 🔐 F-8 fix: Server-side role check
@@ -50,9 +51,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <form action={signOut}>
-                            <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-900">Logout</Button>
-                        </form>
+                        <LogoutButton variant="header" />
                     </div>
                 </div>
 
