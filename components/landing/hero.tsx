@@ -104,15 +104,28 @@ export default function LandingHero() {
                         <div className="absolute -inset-x-4 -inset-y-4 z-0 bg-gradient-to-tr from-amber-500/20 to-orange-500/20 blur-2xl rounded-[3rem] opacity-50 dark:opacity-40" />
 
                         <div className="relative z-10 -m-2 rounded-2xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-[2rem] lg:p-4 dark:bg-white/5 dark:ring-white/10 backdrop-blur-sm">
-                            <motion.img
+                            <motion.div
                                 animate={{ y: [0, -10, 0] }}
                                 transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                                src="/images/hero-dashboard.png"
-                                alt="Vastra Dashboard"
-                                width={2432}
-                                height={1442}
-                                className="w-[76rem] rounded-xl shadow-2xl ring-1 ring-gray-900/10 dark:ring-white/10 object-cover"
-                            />
+                                className="relative group overflow-hidden rounded-xl shadow-2xl ring-1 ring-gray-900/10 dark:ring-white/10"
+                            >
+                                <video
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                    className="w-[76rem] object-cover transition-transform duration-500 group-hover:scale-[1.01]"
+                                >
+                                    <source src="/videos/hero-tutorial.mov" type="video/quicktime" />
+                                    Your browser does not support the video tag.
+                                </video>
+                                <div className="absolute inset-0 bg-black/5 pointer-events-none" />
+                                <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between pointer-events-none">
+                                    <div className="px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-medium text-white tracking-wider uppercase">
+                                        Product Preview
+                                    </div>
+                                </div>
+                            </motion.div>
                         </div>
                     </motion.div>
                 </div>
