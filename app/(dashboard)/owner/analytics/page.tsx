@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { AddWorkerDialog } from '@/components/AddWorkerDialog'
 import { Calendar as CalendarIcon, RotateCcw, ChevronDown, ChevronRight, HardHat, Briefcase, Pencil, Check, X, TrendingUp, IndianRupee, Users2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 
 // Define interfaces for better type safety
@@ -228,21 +229,8 @@ export default function OwnerDashboard() {
         setSelectedDate(new Date().toISOString().split('T')[0])
     }, [])
 
-    // Fetch the current user's org_id
-    const { data: userProfile } = useQuery({
-        queryKey: ['user_profile'],
-        queryFn: async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('org_id')
-                .eq('id', user.id)
-                .single()
-            if (error) throw error
-            return data
-        }
-    })
+    // Fetch the current user's profile info
+    const { data: userProfile } = useUserProfile()
 
     // Real-time subscription for production logs
     useEffect(() => {
@@ -307,7 +295,7 @@ export default function OwnerDashboard() {
             if (mErr) throw mErr
 
             // Map machine details for lookup
-            const machineMap = (machines || []).reduce((acc, m) => {
+            const machineMap = (machines || []).reduce((acc: Record<string, { name: string, rate: number }>, m: any) => {
                 acc[m.id] = { name: m.name, rate: m.rate_per_meter }
                 return acc
             }, {} as Record<string, { name: string, rate: number }>)
@@ -395,7 +383,7 @@ export default function OwnerDashboard() {
                 if (w.role === 'daily') {
                     // Prorated: (salary / 30) * days_present
                     const daysPresent = (attendance || []).filter(
-                        a => a.fixed_worker_id === w.id && a.present
+                        (a: any) => a.fixed_worker_id === w.id && a.present
                     ).length
                     // Prorated but capped at monthly salary (max 30 days)
                     totalDaily += Math.min(w.monthly_salary, (w.monthly_salary / 30) * daysPresent)
@@ -431,8 +419,8 @@ export default function OwnerDashboard() {
             // Fetch this month's attendance for daily workers
             const month = selectedDate.substring(0, 7) // YYYY-MM
             const dailyWorkerIds = (workers || [])
-                .filter(w => w.role === 'daily')
-                .map(w => w.id)
+                .filter((w: any) => w.role === 'daily')
+                .map((w: any) => w.id)
 
             let attendanceMap: Record<number, number> = {}
             if (dailyWorkerIds.length > 0) {
@@ -444,12 +432,12 @@ export default function OwnerDashboard() {
                     .gte('date', `${month}-01`)
                     .lte('date', `${month}-31`)
                     .eq('present', true)
-                    ; (attendance || []).forEach(a => {
+                    ; (attendance || []).forEach((a: any) => {
                         attendanceMap[a.fixed_worker_id] = (attendanceMap[a.fixed_worker_id] || 0) + 1
                     })
             }
 
-            return (workers || []).map(w => {
+            return (workers || []).map((w: any) => {
                 if (w.role === 'daily') {
                     const daysWorked = attendanceMap[w.id] || 0
                     const earnedPay = Math.min(w.monthly_salary, (w.monthly_salary / 30) * daysWorked)

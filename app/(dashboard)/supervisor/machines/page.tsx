@@ -4,25 +4,12 @@ import { createClient } from '@/lib/supabase/client'
 import { useQuery } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { MachineManagement } from '@/components/MachineManagement'
+import { useUserProfile } from '@/hooks/use-user-profile'
 
 export default function SupervisorMachinesPage() {
     const supabase = createClient()
 
-    // Fetch User Profile to get Org ID
-    const { data: userProfile, isLoading } = useQuery({
-        queryKey: ['user_profile'],
-        queryFn: async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('org_id')
-                .eq('id', user.id)
-                .single()
-            if (error) throw error
-            return data
-        }
-    })
+    const { data: userProfile, isLoading } = useUserProfile()
 
     if (isLoading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-gray-400" /></div>
     if (!userProfile?.org_id) return <div className="p-8 text-center text-red-500">Error loading organization.</div>

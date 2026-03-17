@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { deleteWorkerWithCode } from '@/app/(dashboard)/supervisor/actions'
 import { cn } from '@/lib/utils'
+import { useUserProfile } from '@/hooks/use-user-profile'
 
 const ROLE_LABELS: Record<string, string> = {
     master: 'Master', supervisor: 'Supervisor', helper: 'Helper',
@@ -40,21 +41,7 @@ export default function SupervisorWorkersPage() {
     const [accessCode, setAccessCode] = useState('')
     const [deleting, setDeleting] = useState(false)
 
-    // Fetch User Profile to get Org ID
-    const { data: userProfile } = useQuery({
-        queryKey: ['user_profile'],
-        queryFn: async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('org_id, role')
-                .eq('id', user.id)
-                .single()
-            if (error) throw error
-            return data
-        }
-    })
+    const { data: userProfile } = useUserProfile()
 
     // Fetch Meter (piece-rate) Workers
     const { data: workers, isLoading: workersLoading } = useQuery({

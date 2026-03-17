@@ -1,6 +1,10 @@
 import { createBrowserClient } from '@supabase/ssr'
 
+let client: ReturnType<typeof createBrowserClient> | null = null
+
 export function createClient() {
+    if (client) return client
+
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -18,7 +22,6 @@ export function createClient() {
     if (!isValidUrl(url) || !key) {
         console.error('[Supabase Client] ENV VARS MISSING!', { url: url ?? 'UNDEFINED', keyPresent: !!key })
 
-        // In the browser, throw a clear error instead of silently using placeholders
         if (typeof window !== 'undefined') {
             console.error('NEXT_PUBLIC_SUPABASE_URL:', url)
             console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY present:', !!key)
@@ -30,5 +33,7 @@ export function createClient() {
         )
     }
 
-    return createBrowserClient(url!, key!)
+    client = createBrowserClient(url!, key!)
+    return client
 }
+

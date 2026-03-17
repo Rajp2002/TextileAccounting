@@ -3,26 +3,21 @@
 import { createClient } from '@/lib/supabase/client'
 import { MachineManagement } from '@/components/MachineManagement'
 import { useQuery } from '@tanstack/react-query'
+import { useUserProfile } from '@/hooks/use-user-profile'
+
+import { Loader2 } from 'lucide-react'
 
 export default function SupervisorAssignmentsPage() {
     const supabase = createClient()
 
-    const { data: userProfile } = useQuery({
-        queryKey: ['user_profile'],
-        queryFn: async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('org_id')
-                .eq('id', user.id)
-                .single()
-            if (error) throw error
-            return { ...data, userId: user.id }
-        }
-    })
+    const { data: userProfile } = useUserProfile()
 
-    if (!userProfile?.org_id) return <div>Loading...</div>
+    if (!userProfile?.org_id) return (
+        <div className="flex flex-col items-center justify-center h-[50vh]">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-4" />
+            <p className="text-gray-500 font-medium text-sm">Loading profile...</p>
+        </div>
+    )
 
     return (
         <div className="space-y-6">
