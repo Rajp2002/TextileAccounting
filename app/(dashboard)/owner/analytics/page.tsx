@@ -383,7 +383,7 @@ export default function OwnerDashboard() {
                 if (w.role === 'daily') {
                     // Prorated: (salary / 30) * days_present
                     const daysPresent = (attendance || []).filter(
-                        (a: any) => a.fixed_worker_id === w.id && a.present
+                        (a: { fixed_worker_id: number; present: boolean }) => a.fixed_worker_id === w.id && a.present
                     ).length
                     // Prorated but capped at monthly salary (max 30 days)
                     totalDaily += Math.min(w.monthly_salary, (w.monthly_salary / 30) * daysPresent)
@@ -396,8 +396,8 @@ export default function OwnerDashboard() {
                 totalFixed,
                 totalDaily,
                 total: totalFixed + totalDaily,
-                fixedCount: (fixedWorkers || []).filter(w => w.role !== 'daily').length,
-                dailyCount: (fixedWorkers || []).filter(w => w.role === 'daily').length,
+                fixedCount: (fixedWorkers || []).filter((w: any) => w.role !== 'daily').length,
+                dailyCount: (fixedWorkers || []).filter((w: any) => w.role === 'daily').length,
             }
         }
     })
