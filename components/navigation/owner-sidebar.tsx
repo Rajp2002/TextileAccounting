@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { signOut } from "@/app/(auth)/actions"
 import { cn } from "@/lib/utils"
@@ -39,13 +40,18 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
     return (
         <div className="flex flex-col h-full bg-sidebar">
             {/* Factory branding */}
-            <div className="p-5 border-b border-sidebar-border">
-                <h2 className="text-base font-semibold text-sidebar-foreground truncate">
-                    {factoryName || "Textile SaaS"}
-                </h2>
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
-                    Owner Panel
-                </span>
+            <div className="p-5 border-b border-sidebar-border flex items-center gap-3">
+                <div className="relative h-8 w-8 shrink-0">
+                    <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
+                </div>
+                <div className="flex flex-col overflow-hidden">
+                    <h2 className="text-base font-semibold text-sidebar-foreground truncate">
+                        {factoryName || "Vastra"}
+                    </h2>
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
+                        Owner Panel
+                    </span>
+                </div>
             </div>
 
             {/* Navigation */}
@@ -104,13 +110,18 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
 
             {/* Mobile header bar */}
             <header className="md:hidden sticky top-0 z-30 bg-background border-b border-border flex items-center justify-between px-4 py-3">
-                <div>
-                    <h2 className="text-sm font-semibold text-foreground truncate">
-                        {factoryName || "Textile SaaS"}
-                    </h2>
-                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-medium">
-                        Owner
-                    </span>
+                <div className="flex items-center gap-3">
+                    <div className="relative h-7 w-7 shrink-0">
+                        <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
+                    </div>
+                    <div className="flex flex-col">
+                        <h2 className="text-sm font-semibold text-foreground truncate">
+                            {factoryName || "Vastra"}
+                        </h2>
+                        <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-medium">
+                            Owner
+                        </span>
+                    </div>
                 </div>
                 <Sheet open={isOpen} onOpenChange={setIsOpen}>
                     <SheetTrigger asChild>

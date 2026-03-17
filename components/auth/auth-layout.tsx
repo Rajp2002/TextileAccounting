@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { ReactNode } from 'react'
+import Image from 'next/image'
 
 interface AuthLayoutProps {
     children: ReactNode
@@ -26,9 +27,9 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
             >
                 <div className="backdrop-blur-xl bg-white/70 border border-white/50 shadow-2xl rounded-2xl overflow-hidden">
                     <div className="p-8 pb-6 text-center">
-                        {/* Logo placeholder - replace with actual logo if available */}
-                        <div className="mx-auto mb-6 h-12 w-12 rounded-xl bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center shadow-lg transform rotate-3">
-                            <span className="text-white font-bold text-xl">V</span>
+                        {/* App Logo */}
+                        <div className="mx-auto mb-6 h-16 w-16 relative flex items-center justify-center transform hover:scale-105 transition-transform">
+                            <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" priority />
                         </div>
 
                         <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-2">

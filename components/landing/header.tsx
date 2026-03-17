@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
@@ -28,10 +29,10 @@ export default function LandingHeader() {
                 <div className="rounded-full border border-white/20 bg-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 transition-all dark:bg-zinc-950/60 dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
                     <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                         <Link href="/" className="flex items-center gap-3 group">
-                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:shadow-amber-500/40 transition-all duration-300 group-hover:scale-105">
-                                <span className="text-white font-bold text-base">V</span>
+                            <div className="relative h-9 w-9 md:h-10 md:w-10 group-hover:scale-105 transition-all duration-300">
+                                <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" priority />
                             </div>
-                            <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">Vastra</span>
+                            <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">Vastra</span>
                         </Link>
 
                         {/* Desktop Nav */}

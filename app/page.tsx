@@ -3,6 +3,7 @@ import LandingHero from "@/components/landing/hero";
 import LandingFeatures from "@/components/landing/features";
 import LandingPricing from "@/components/landing/pricing";
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
@@ -46,10 +47,10 @@ export default function Home() {
       <footer className="bg-zinc-950 py-12 px-6 border-t border-white/10 text-white">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
           <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-amber-600 to-orange-700 flex items-center justify-center shadow-md">
-              <span className="text-white font-bold text-base">V</span>
+            <div className="relative h-10 w-10">
+              <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-white">Vastra</span>
+            <span className="text-xl font-bold tracking-tight text-white">Vastra</span>
           </div>
           <p className="text-gray-400 text-sm">
             © {new Date().getFullYear()} Vastra. All rights reserved.
