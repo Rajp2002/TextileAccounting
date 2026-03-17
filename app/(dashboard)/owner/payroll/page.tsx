@@ -9,11 +9,12 @@ import { toast } from 'sonner'
 import { formatINR } from '@/lib/finance'
 import {
     CheckCircle2, Circle, ChevronLeft, ChevronRight,
-    HardHat, Briefcase, AlertCircle, IndianRupee
+    HardHat, Briefcase, AlertCircle, IndianRupee, Loader2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toggleWorkerPaid } from './actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
+import { useMutation } from '@tanstack/react-query'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface PaymentRecord {
@@ -91,13 +92,14 @@ function PaidBadge({ paid, paidAt }: { paid: boolean; paidAt?: string }) {
         </div>
     )
 }
-
 function MeterWorkerRow({
     worker,
     onToggle,
+    isMutating,
 }: {
     worker: MeterWorkerPayroll
     onToggle: () => void
+    isMutating?: boolean
 }) {
     const [expanded, setExpanded] = useState(false)
     const isPaid = worker.payment?.paid ?? false
@@ -161,13 +163,14 @@ function MeterWorkerRow({
         </div>
     )
 }
-
 function FixedWorkerRow({
     worker,
     onToggle,
+    isMutating,
 }: {
     worker: FixedWorkerPayroll
     onToggle: () => void
+    isMutating?: boolean
 }) {
     const [expanded, setExpanded] = useState(false)
     const isPaid = worker.payment?.paid ?? false
@@ -391,17 +394,65 @@ export default function PayrollPage() {
         }
     })
 
-    // ── Toggle paid ─────────────────────────────────────────────────────────
-    const handleTogglePaid = async (workerType: 'meter' | 'fixed', workerId: number, amount: number, currentPaid: boolean) => {
-        try {
-            const result = await toggleWorkerPaid(workerType, workerId, selectedMonth, currentPaid)
+    // ── Toggle paid with Optimistic UI ──────────────────────────────────────
+    const mutation = useMutation({
+        mutationFn: async ({ workerType, workerId, amount, currentPaid }: {
+            workerType: 'meter' | 'fixed',
+            workerId: number,
+            amount: number,
+            currentPaid: boolean
+        }) => {
+            return await toggleWorkerPaid(workerType, workerId, selectedMonth, currentPaid)
+        },
+        onMutate: async (variables) => {
+            const queryKey = variables.workerType === 'meter' ? ['payroll_meter', userProfile?.org_id, selectedMonth] : ['payroll_fixed', userProfile?.org_id, selectedMonth]
 
-            toast.success(result.success ? '✓ Payroll updated successfully' : 'Updated')
+            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+            await queryClient.cancelQueries({ queryKey })
+
+            // Snapshot the previous value
+            const previousData = queryClient.getQueryData(queryKey)
+
+            // Optimistically update to the new value
+            queryClient.setQueryData(queryKey, (old: any) => {
+                if (!old) return old
+                return old.map((w: any) => {
+                    if (w.id === variables.workerId) {
+                        return {
+                            ...w,
+                            payment: {
+                                ...w.payment,
+                                paid: !variables.currentPaid,
+                                paid_at: !variables.currentPaid ? new Date().toISOString() : null
+                            }
+                        }
+                    }
+                    return w
+                })
+            })
+
+            return { previousData, queryKey }
+        },
+        onError: (err, variables, context) => {
+            if (context?.previousData) {
+                queryClient.setQueryData(context.queryKey, context.previousData)
+            }
+            toast.error('Failed to update payroll')
+        },
+        onSettled: (data, error, variables, context) => {
+            // Invalidate to keep in sync with server
+            queryClient.invalidateQueries({ queryKey: context?.queryKey })
+            // Also invalidate the other one just in case (though summary depends on both)
             queryClient.invalidateQueries({ queryKey: ['payroll_meter'] })
             queryClient.invalidateQueries({ queryKey: ['payroll_fixed'] })
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to update payroll')
+        },
+        onSuccess: () => {
+            toast.success('✓ Payroll updated', { duration: 2000 })
         }
+    })
+
+    const handleTogglePaid = (workerType: 'meter' | 'fixed', workerId: number, amount: number, currentPaid: boolean) => {
+        mutation.mutate({ workerType, workerId, amount, currentPaid })
     }
 
     // ── Summary stats ───────────────────────────────────────────────────────
@@ -560,6 +611,7 @@ export default function PayrollPage() {
                                     key={w.id}
                                     worker={w}
                                     onToggle={() => handleTogglePaid('meter', w.id, w.totalPay, w.payment?.paid ?? false)}
+                                    isMutating={mutation.isPending && mutation.variables?.workerId === w.id && mutation.variables?.workerType === 'meter'}
                                 />
                             ))}
                         </>
@@ -601,6 +653,7 @@ export default function PayrollPage() {
                                     key={w.id}
                                     worker={w}
                                     onToggle={() => handleTogglePaid('fixed', w.id, w.earnedPay, w.payment?.paid ?? false)}
+                                    isMutating={mutation.isPending && mutation.variables?.workerId === w.id && mutation.variables?.workerType === 'fixed'}
                                 />
                             ))}
                         </>
