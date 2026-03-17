@@ -33,7 +33,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-background bg-grid-pattern">
             <OwnerSidebar
                 factoryName={factoryName}
                 userName={profile?.full_name || undefined}
