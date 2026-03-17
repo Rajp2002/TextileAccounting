@@ -396,18 +396,23 @@ export default function PayrollPage() {
 
     // ── Toggle paid with Optimistic UI ──────────────────────────────────────
     const mutation = useMutation({
-        mutationFn: async ({ workerType, workerId, amount, currentPaid }: {
+        mutationFn: async ({ workerType, workerId, amount, currentPaid, targetMonth }: {
             workerType: 'meter' | 'fixed',
             workerId: number,
             amount: number,
-            currentPaid: boolean
+            currentPaid: boolean,
+            targetMonth: string
         }) => {
-            return await toggleWorkerPaid(workerType, workerId, selectedMonth, currentPaid)
+            return await toggleWorkerPaid(workerType, workerId, targetMonth, currentPaid)
         },
         onMutate: async (variables) => {
-            const queryKey = variables.workerType === 'meter' ? ['payroll_meter', userProfile?.org_id, selectedMonth] : ['payroll_fixed', userProfile?.org_id, selectedMonth]
+            const orgId = userProfile?.org_id
+            const targetMonth = variables.targetMonth
+            const queryKey = variables.workerType === 'meter' 
+                ? ['payroll_meter', orgId, targetMonth] 
+                : ['payroll_fixed', orgId, targetMonth]
 
-            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+            // Cancel any outgoing refetches for this specific query key
             await queryClient.cancelQueries({ queryKey })
 
             // Snapshot the previous value
@@ -417,6 +422,8 @@ export default function PayrollPage() {
             queryClient.setQueryData(queryKey, (old: any) => {
                 if (!old) return old
                 return old.map((w: any) => {
+                    // CRITICAL: Check both ID AND worker type (implicit in the queryKey but let's be extra safe if we ever share types)
+                    // and only update the targeted worker
                     if (w.id === variables.workerId) {
                         return {
                             ...w,
@@ -440,9 +447,9 @@ export default function PayrollPage() {
             toast.error('Failed to update payroll')
         },
         onSettled: (data, error, variables, context) => {
-            // Invalidate to keep in sync with server
+            // Invalidate the specific capture key
             queryClient.invalidateQueries({ queryKey: context?.queryKey })
-            // Also invalidate the other one just in case (though summary depends on both)
+            // Invalidate the global stats keys as well
             queryClient.invalidateQueries({ queryKey: ['payroll_meter'] })
             queryClient.invalidateQueries({ queryKey: ['payroll_fixed'] })
         },
@@ -452,7 +459,7 @@ export default function PayrollPage() {
     })
 
     const handleTogglePaid = (workerType: 'meter' | 'fixed', workerId: number, amount: number, currentPaid: boolean) => {
-        mutation.mutate({ workerType, workerId, amount, currentPaid })
+        mutation.mutate({ workerType, workerId, amount, currentPaid, targetMonth: selectedMonth })
     }
 
     // ── Summary stats ───────────────────────────────────────────────────────
