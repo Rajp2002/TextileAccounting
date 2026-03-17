@@ -652,7 +652,17 @@ export default function OwnerDashboard() {
                     </CardHeader>
                     <CardContent>
                         {!fixedWorkersList ? (
-                            <div className="py-8 text-center text-gray-500">Loading...</div>
+                            <div className="space-y-3">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="flex justify-between items-center py-4">
+                                        <div className="flex items-center gap-3">
+                                            <Skeleton className="h-5 w-16 rounded-full" />
+                                            <Skeleton className="h-5 w-32" />
+                                        </div>
+                                        <Skeleton className="h-5 w-24" />
+                                    </div>
+                                ))}
+                            </div>
                         ) : fixedWorkersList.length === 0 ? (
                             <div className="py-12 text-center border-2 border-dashed rounded-xl">
                                 <Briefcase className="h-8 w-8 mx-auto text-gray-300 mb-2" />

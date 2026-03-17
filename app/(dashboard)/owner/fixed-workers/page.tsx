@@ -13,6 +13,8 @@ import { toast } from 'sonner'
 import { formatINR } from '@/lib/finance'
 import { Plus, Pencil, Trash2, Users, Briefcase } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useUserProfile } from '@/hooks/use-user-profile'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const ROLES = [
     { value: 'master', label: 'Master', defaultSalary: 30000 },
@@ -58,20 +60,7 @@ export default function FixedWorkersPage() {
     const [formSalary, setFormSalary] = useState('')
     const [saving, setSaving] = useState(false)
 
-    const { data: userProfile } = useQuery({
-        queryKey: ['user_profile'],
-        queryFn: async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('org_id')
-                .eq('id', user.id)
-                .single()
-            if (error) throw error
-            return data
-        }
-    })
+    const { data: userProfile } = useUserProfile()
 
     const { data: fixedWorkers, isLoading } = useQuery({
         queryKey: ['fixed_workers', userProfile?.org_id],
@@ -262,7 +251,33 @@ export default function FixedWorkersPage() {
 
             {/* Workers by Role */}
             {isLoading ? (
-                <div className="text-center py-8 text-gray-500">Loading...</div>
+                <div className="space-y-4">
+                    {[1, 2].map(i => (
+                        <Card key={i}>
+                            <CardHeader className="pb-2">
+                                <div className="flex items-center gap-2">
+                                    <Skeleton className="h-4 w-4 rounded-full" />
+                                    <Skeleton className="h-5 w-32" />
+                                    <Skeleton className="h-4 w-8 rounded-full" />
+                                </div>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                                <div className="divide-y">
+                                    {[1, 2].map(j => (
+                                        <div key={j} className="flex justify-between items-center py-3">
+                                            <Skeleton className="h-5 w-24" />
+                                            <div className="flex items-center gap-3">
+                                                <Skeleton className="h-5 w-20" />
+                                                <Skeleton className="h-8 w-8 rounded-md" />
+                                                <Skeleton className="h-8 w-8 rounded-md" />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
             ) : Object.keys(grouped).length === 0 ? (
                 <Card>
                     <CardContent className="py-12 text-center">

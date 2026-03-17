@@ -3,7 +3,10 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { ClipboardList, ClipboardCheck, Users, Settings, Calendar } from "lucide-react"
+import { ClipboardList, ClipboardCheck, Users, Settings, Calendar, Menu } from "lucide-react"
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
+
 
 const navItems = [
     { name: "Production", href: "/supervisor/production", icon: ClipboardList },
@@ -44,32 +47,51 @@ export function SupervisorNav() {
                 </div>
             </div>
 
-            {/* Mobile Bottom Navigation Bar */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center z-50 px-2 pb-safe pt-1 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] h-[64px] pb-safe">
-                {navItems.map((item) => {
-                    const Icon = item.icon
-                    const isActive = pathname.startsWith(item.href)
-
-                    return (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            className={cn(
-                                "flex flex-col items-center justify-center py-1 px-1 w-full relative h-full",
-                                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                            )}
+            {/* Mobile Navigation (Hamburger Menu) */}
+            <div className="md:hidden">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 z-50 transition-transform active:scale-95"
                         >
-                            <div className={cn(
-                                "py-1 px-4 rounded-full mb-1 transition-colors duration-200",
-                                isActive ? "bg-primary/20" : "group-hover:bg-black/5 dark:group-hover:bg-white/5"
-                            )}>
-                                <Icon className={cn("h-5 w-5", isActive && "fill-primary/20 text-primary")} />
-                            </div>
-                            <span className="text-[10px] sm:text-xs font-semibold leading-none tracking-tight">{item.name}</span>
-                        </Link>
-                    )
-                })}
+                            <Menu className="h-6 w-6" />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-[280px] p-0">
+                        <SheetHeader className="p-6 border-b text-left">
+                            <SheetTitle className="text-xl font-bold">Menu</SheetTitle>
+                            <SheetDescription>
+                                Navigate through supervisor features
+                            </SheetDescription>
+                        </SheetHeader>
+                        <nav className="flex flex-col py-4">
+                            {navItems.map((item) => {
+                                const Icon = item.icon
+                                const isActive = pathname.startsWith(item.href)
+
+                                return (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        className={cn(
+                                            "flex items-center gap-4 px-6 py-4 text-sm font-medium transition-colors",
+                                            isActive
+                                                ? "bg-primary/10 text-primary border-r-4 border-primary"
+                                                : "text-muted-foreground hover:bg-muted"
+                                        )}
+                                    >
+                                        <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
+                                        {item.name}
+                                    </Link>
+                                )
+                            })}
+                        </nav>
+                    </SheetContent>
+                </Sheet>
             </div>
+
         </>
     )
 }
