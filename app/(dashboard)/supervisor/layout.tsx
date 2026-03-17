@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { signOut } from '@/app/(auth)/actions'
 import { OfflineSyncProvider } from '@/components/offline-sync-provider'
 import { SupervisorNav } from '@/components/navigation/supervisor-nav'
+import Image from 'next/image'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
     // 🔐 F-8 fix: Server-side role check
@@ -38,9 +39,14 @@ export default async function SupervisorLayout({ children }: { children: React.R
         <div className="min-h-screen bg-background bg-grid-pattern pb-28">
             <header className="bg-background shadow-sm border-b border-border sticky top-0 z-30">
                 <div className="px-4 py-3 flex justify-between items-center max-w-5xl mx-auto">
-                    <div>
-                        <h1 className="text-lg font-bold text-gray-900 leading-tight truncate max-w-[200px] sm:max-w-xs">{factoryName}</h1>
-                        <span className="text-[10px] uppercase tracking-widest text-teal-600 font-bold">Supervisor</span>
+                    <div className="flex items-center gap-3">
+                        <div className="relative h-8 w-8 shrink-0 rounded-lg overflow-hidden">
+                            <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg font-bold text-gray-900 leading-tight truncate max-w-[200px] sm:max-w-xs">{factoryName || "Vastra"}</h1>
+                            <span className="text-[10px] uppercase tracking-widest text-teal-600 font-bold">Supervisor</span>
+                        </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <form action={signOut}>
