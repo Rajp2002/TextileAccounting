@@ -71,7 +71,7 @@ export function useOfflineSync() {
                 if (error) {
                     console.error('Sync failed for mutation', mutation, error)
                 } else {
-                    await db.mutations.update(mutation.id!, { synced: true })
+                    await db.mutations.update(mutation.id!, { synced: 1 })
                     await db.mutations.delete(mutation.id!) // Clear processed
                 }
             } catch (err) {

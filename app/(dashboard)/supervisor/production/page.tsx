@@ -466,12 +466,12 @@ export default function ProductionEntryForm() {
             </Dialog>
 
             {/* Fixed Save All button */}
-            <div className="fixed bottom-0 md:bottom-auto md:top-24 left-0 right-0 p-4 md:p-0 bg-background/90 backdrop-blur-sm border-t md:border-t-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] md:shadow-none flex justify-center z-10 pb-[env(safe-area-inset-bottom,16px)]">
-                <div className="w-full max-w-5xl md:flex md:justify-end md:px-6">
+            <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] flex justify-center z-40 pb-[env(safe-area-inset-bottom,16px)] md:pb-6">
+                <div className="w-full max-w-5xl md:flex md:justify-end md:px-0">
                     <Button
                         onClick={handleSaveAll}
                         disabled={loading || machineCards.length === 0}
-                        className="w-full md:w-auto md:min-w-[200px] h-[52px] text-lg font-semibold shadow-lg bg-teal-600 hover:bg-teal-700 text-white rounded-xl mb-14 md:mb-0"
+                        className="w-full md:w-[240px] h-[52px] text-lg font-bold shadow-md bg-teal-600 hover:bg-teal-700 text-white rounded-xl mb-14 md:mb-0 transition-all"
                     >
                         {loading ? 'Saving...' : 'Save All Entries'}
                     </Button>

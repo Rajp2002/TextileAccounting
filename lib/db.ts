@@ -6,7 +6,7 @@ export interface OfflineMutation<T = unknown> {
     type: 'INSERT' | 'UPDATE' | 'DELETE';
     data: T;
     timestamp: number;
-    synced: boolean;
+    synced: number; // 0 for false, 1 for true
 }
 
 export class TextileDatabase extends Dexie {
@@ -28,6 +28,6 @@ export async function queueMutation<T = unknown>(table: string, type: 'INSERT' |
         type,
         data,
         timestamp: Date.now(),
-        synced: false
+        synced: 0
     });
 }
