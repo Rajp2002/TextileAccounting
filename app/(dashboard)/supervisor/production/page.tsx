@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 import { calculateDailyPay, formatINR } from '@/lib/finance'
 import { verifyAccessCode } from '@/app/(dashboard)/supervisor/actions'
+import { useUserProfile } from '@/hooks/use-user-profile'
 import { CalendarDays, KeyRound, Loader2, RotateCcw, Lock, BoxSelect } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
@@ -71,20 +72,7 @@ export default function ProductionEntryForm() {
         setMetersInput({})
     }, [selectedDate])
 
-    const { data: userProfile } = useQuery({
-        queryKey: ['user_profile'],
-        queryFn: async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('org_id')
-                .eq('id', user.id)
-                .single()
-            if (error) throw error
-            return { ...data, userId: user.id }
-        }
-    })
+    const { data: userProfile } = useUserProfile()
 
     const { data: existingLogs, isLoading: logsLoading } = useQuery({
         queryKey: ['production_logs', userProfile?.org_id, selectedDate, currentShift],
@@ -148,7 +136,7 @@ export default function ProductionEntryForm() {
         return machines.map(machine => {
             // Filter by both machine_id AND shift so day/night logs are independent
             const existingLog = existingLogs?.find(
-                l => l.machine_id === machine.id && l.shift === currentShift
+                (l: any) => l.machine_id === machine.id && l.shift === currentShift
             )
             const assignment = assignments?.find(a => a.machine_id === machine.id && a.shift === currentShift)
             const assignedWorkerId = assignment?.worker_id
@@ -190,7 +178,7 @@ export default function ProductionEntryForm() {
             // Copy existing log meters to metersInput state so they can be edited seamlessly
             const newMeters: Record<string, number> = {}
             if (existingLogs) {
-                existingLogs.forEach(log => {
+                existingLogs.forEach((log: any) => {
                     newMeters[log.machine_id] = Number(log.meters)
                 })
             }

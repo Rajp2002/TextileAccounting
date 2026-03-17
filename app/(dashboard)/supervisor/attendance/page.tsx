@@ -11,6 +11,7 @@ import { formatINR } from '@/lib/finance'
 import { RotateCcw, Check, X, CalendarDays, KeyRound, Loader2, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { savePastAttendance, verifyAccessCode } from '@/app/(dashboard)/supervisor/actions'
+import { useUserProfile } from '@/hooks/use-user-profile'
 import {
     Dialog,
     DialogContent,
@@ -58,20 +59,7 @@ export default function AttendancePage() {
         setUnlocked(false)
     }, [selectedDate])
 
-    const { data: userProfile } = useQuery({
-        queryKey: ['user_profile'],
-        queryFn: async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('org_id, role')
-                .eq('id', user.id)
-                .single()
-            if (error) throw error
-            return { ...data, userId: user.id }
-        }
-    })
+    const { data: userProfile } = useUserProfile()
 
     const { data: dailyWorkers } = useQuery({
         queryKey: ['daily_workers', userProfile?.org_id],
@@ -261,7 +249,10 @@ export default function AttendancePage() {
             )}
 
             {attendanceLoading ? (
-                <div className="text-center py-8 text-gray-500">Loading...</div>
+                <div className="flex flex-col items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-4" />
+                    <p className="text-gray-500 font-medium text-sm">Loading attendance...</p>
+                </div>
             ) : !dailyWorkers || dailyWorkers.length === 0 ? (
                 <Card>
                     <CardContent className="py-12 text-center">

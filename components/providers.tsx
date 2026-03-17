@@ -1,9 +1,9 @@
 'use client'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 export default function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(
@@ -13,7 +13,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                     queries: {
                         gcTime: 1000 * 60 * 60 * 24, // 24 hours
                         staleTime: 1000 * 60 * 5, // 5 minutes
-                        networkMode: 'offlineFirst', // Serve cached data immediately when offline
+                        networkMode: 'offlineFirst',
                     },
                     mutations: {
                         networkMode: 'offlineFirst',
@@ -22,29 +22,18 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             })
     )
 
-    const [persister, setPersister] = useState<any>(null)
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const localStoragePersister = createSyncStoragePersister({
-                storage: window.localStorage,
-            })
-            setPersister(localStoragePersister)
-        }
-    }, [])
-
-    if (!persister) {
-        return (
-            <QueryClientProvider client={queryClient}>
-                {children}
-            </QueryClientProvider>
-        )
-    }
+    // Synchronous init — localStorage is always available in the browser,
+    // so there's no need for a useEffect cycle that causes a flash.
+    const [persister] = useState(() =>
+        typeof window !== 'undefined'
+            ? createSyncStoragePersister({ storage: window.localStorage })
+            : null
+    )
 
     return (
         <PersistQueryClientProvider
             client={queryClient}
-            persistOptions={{ persister }}
+            persistOptions={{ persister: persister! }}
         >
             {children}
         </PersistQueryClientProvider>

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toggleWorkerPaid } from './actions'
+import { useUserProfile } from '@/hooks/use-user-profile'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface PaymentRecord {
@@ -248,16 +249,7 @@ export default function PayrollPage() {
         setSelectedMonth(new Date().toISOString().substring(0, 7))
     }, [])
 
-    const { data: userProfile } = useQuery({
-        queryKey: ['user_profile'],
-        queryFn: async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
-            const { data, error } = await supabase.from('profiles').select('org_id').eq('id', user.id).single()
-            if (error) throw error
-            return data
-        }
-    })
+    const { data: userProfile } = useUserProfile()
 
     // ── Meter workers payroll data ──────────────────────────────────────────
     const { data: meterWorkers, isLoading: meterLoading } = useQuery({
@@ -299,13 +291,13 @@ export default function PayrollPage() {
                 .eq('worker_type', 'meter')
                 .eq('month', selectedMonth)
 
-            const machineMap = Object.fromEntries((machines || []).map(m => [m.id, m]))
-            const paymentMap = Object.fromEntries((payments || []).map(p => [p.meter_worker_id, p]))
+            const machineMap = Object.fromEntries((machines || []).map((m: any) => [m.id, m]))
+            const paymentMap = Object.fromEntries((payments || []).map((p: any) => [p.meter_worker_id, p]))
 
             // Group logs by worker → machine
             const result: MeterWorkerPayroll[] = []
             for (const worker of (workers || [])) {
-                const workerLogs = (logs || []).filter(l => l.worker_id === worker.id)
+                const workerLogs = (logs || []).filter((l: any) => l.worker_id === worker.id)
                 if (workerLogs.length === 0) continue
 
                 // Group by machine
@@ -356,7 +348,7 @@ export default function PayrollPage() {
             if (error) throw error
 
             // Attendance for daily workers
-            const dailyIds = (workers || []).filter(w => w.role === 'daily').map(w => w.id)
+            const dailyIds = (workers || []).filter((w: any) => w.role === 'daily').map((w: any) => w.id)
             let attendanceMap: Record<number, number> = {}
             if (dailyIds.length > 0) {
                 const { data: att } = await supabase
@@ -367,7 +359,7 @@ export default function PayrollPage() {
                     .gte('date', `${selectedMonth}-01`)
                     .lte('date', `${selectedMonth}-31`)
                     .eq('present', true)
-                    ; (att || []).forEach(a => {
+                    ; (att || []).forEach((a: any) => {
                         attendanceMap[a.fixed_worker_id] = (attendanceMap[a.fixed_worker_id] || 0) + 1
                     })
             }
@@ -379,9 +371,9 @@ export default function PayrollPage() {
                 .eq('org_id', userProfile!.org_id)
                 .eq('worker_type', 'fixed')
                 .eq('month', selectedMonth)
-            const paymentMap = Object.fromEntries((payments || []).map(p => [p.fixed_worker_id, p]))
+            const paymentMap = Object.fromEntries((payments || []).map((p: any) => [p.fixed_worker_id, p]))
 
-            return (workers || []).map(w => {
+            return (workers || []).map((w: any) => {
                 const daysWorked = w.role === 'daily' ? (attendanceMap[w.id] || 0) : undefined
                 const earnedPay = w.role === 'daily'
                     ? Math.min(w.monthly_salary, (w.monthly_salary / 30) * (daysWorked ?? 0))
@@ -414,10 +406,10 @@ export default function PayrollPage() {
 
     // ── Summary stats ───────────────────────────────────────────────────────
     const summary = useMemo(() => {
-        const meterTotal = (meterWorkers || []).reduce((s, w) => s + w.totalPay, 0)
-        const fixedTotal = (fixedWorkers || []).reduce((s, w) => s + w.earnedPay, 0)
-        const meterPaid = (meterWorkers || []).filter(w => w.payment?.paid).reduce((s, w) => s + w.totalPay, 0)
-        const fixedPaid = (fixedWorkers || []).filter(w => w.payment?.paid).reduce((s, w) => s + w.earnedPay, 0)
+        const meterTotal = (meterWorkers || []).reduce((s, w: any) => s + w.totalPay, 0)
+        const fixedTotal = (fixedWorkers || []).reduce((s, w: any) => s + w.earnedPay, 0)
+        const meterPaid = (meterWorkers || []).filter((w: any) => w.payment?.paid).reduce((s, w: any) => s + w.totalPay, 0)
+        const fixedPaid = (fixedWorkers || []).filter((w: any) => w.payment?.paid).reduce((s, w: any) => s + w.earnedPay, 0)
         const total = meterTotal + fixedTotal
         const paid = meterPaid + fixedPaid
         return { total, paid, outstanding: total - paid }
@@ -525,7 +517,7 @@ export default function PayrollPage() {
                             'text-xs px-1.5 py-0.5 rounded-full',
                             activeTab === 'fixed' ? 'bg-white/20' : 'bg-gray-100'
                         )}>
-                            {fixedWorkers.filter(w => !w.payment?.paid).length} pending
+                            {fixedWorkers.filter((w: any) => !w.payment?.paid).length} pending
                         </span>
                     )}
                 </button>
@@ -535,7 +527,22 @@ export default function PayrollPage() {
             {activeTab === 'meter' && (
                 <div className="space-y-3">
                     {meterLoading ? (
-                        <div className="text-center py-12 text-gray-400">Loading...</div>
+                        <div className="space-y-3">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="border rounded-xl p-4 bg-white">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-gray-100 animate-pulse" />
+                                            <div className="space-y-2">
+                                                <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
+                                                <div className="h-3 w-32 bg-gray-50 rounded animate-pulse" />
+                                            </div>
+                                        </div>
+                                        <div className="h-8 w-20 bg-gray-100 rounded animate-pulse" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     ) : !meterWorkers || meterWorkers.length === 0 ? (
                         <Card>
                             <CardContent className="py-12 text-center">
@@ -564,7 +571,19 @@ export default function PayrollPage() {
             {activeTab === 'fixed' && (
                 <div className="space-y-3">
                     {fixedLoading ? (
-                        <div className="text-center py-12 text-gray-400">Loading...</div>
+                        <div className="space-y-3">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="border rounded-xl p-4 bg-white">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-16 h-5 rounded-full bg-gray-100 animate-pulse" />
+                                            <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
+                                        </div>
+                                        <div className="h-8 w-20 bg-gray-100 rounded animate-pulse" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     ) : !fixedWorkers || fixedWorkers.length === 0 ? (
                         <Card>
                             <CardContent className="py-12 text-center">
@@ -577,7 +596,7 @@ export default function PayrollPage() {
                             <p className="text-xs text-gray-400">
                                 Tap a row to see calculation. Day-to-Day pay is based on attendance.
                             </p>
-                            {fixedWorkers.map(w => (
+                            {fixedWorkers.map((w: any) => (
                                 <FixedWorkerRow
                                     key={w.id}
                                     worker={w}
