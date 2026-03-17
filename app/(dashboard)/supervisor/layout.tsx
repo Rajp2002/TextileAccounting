@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/app/(auth)/actions'
 import { OfflineSyncProvider } from '@/components/offline-sync-provider'
-import { SupervisorNav } from '@/components/navigation/supervisor-nav'
+import { SupervisorNav, MobileSupervisorNav } from '@/components/navigation/supervisor-nav'
 import Image from 'next/image'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
@@ -40,6 +40,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
             <header className="bg-background shadow-sm border-b border-border sticky top-0 z-30">
                 <div className="px-4 py-3 flex justify-between items-center max-w-5xl mx-auto">
                     <div className="flex items-center gap-3">
+                        <MobileSupervisorNav />
                         <div className="relative h-10 w-10 shrink-0 rounded-lg overflow-hidden">
                             <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
                         </div>

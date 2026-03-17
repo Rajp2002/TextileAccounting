@@ -1,23 +1,30 @@
+'use client'
+
 import { MachineManagement } from '@/components/MachineManagement'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { useUserProfile } from '@/hooks/use-user-profile'
+import { Skeleton } from '@/components/ui/skeleton'
 
-export default async function MachinesPage() {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+export default function MachinesPage() {
+    const { data: userProfile, isLoading } = useUserProfile()
 
-    if (!user) {
-        redirect('/login')
+    if (isLoading) {
+        return (
+            <div className="space-y-6">
+                <div className="space-y-2">
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                </div>
+                <div className="h-[400px] w-full bg-gray-50 rounded-xl animate-pulse" />
+            </div>
+        )
     }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('org_id')
-        .eq('id', user.id)
-        .single()
-
-    if (!profile?.org_id) {
-        return <div>Error loading profile</div>
+    if (!userProfile?.org_id) {
+        return (
+            <div className="p-8 text-center border-2 border-dashed rounded-xl">
+                <p className="text-red-500 font-medium">Error loading profile. Please try refreshing.</p>
+            </div>
+        )
     }
 
     return (
@@ -27,7 +34,7 @@ export default async function MachinesPage() {
                 <p className="text-sm text-gray-500 mt-0.5">Manage rates and machine status</p>
             </div>
 
-            <MachineManagement orgId={profile.org_id} />
+            <MachineManagement orgId={userProfile.org_id} />
         </div>
     )
 }
