@@ -317,8 +317,8 @@ export default function PayrollPage() {
                     pay: mg.meters * mg.rate,
                 }))
 
-                const totalMeters = machineBreakdown.reduce((s, m) => s + m.meters, 0)
-                const totalPay = machineBreakdown.reduce((s, m) => s + m.pay, 0)
+                const totalMeters = machineBreakdown.reduce((s: number, m: { meters: number }) => s + m.meters, 0)
+                const totalPay = machineBreakdown.reduce((s: number, m: { pay: number }) => s + m.pay, 0)
 
                 result.push({
                     id: worker.id,
@@ -406,10 +406,10 @@ export default function PayrollPage() {
 
     // ── Summary stats ───────────────────────────────────────────────────────
     const summary = useMemo(() => {
-        const meterTotal = (meterWorkers || []).reduce((s, w: any) => s + w.totalPay, 0)
-        const fixedTotal = (fixedWorkers || []).reduce((s, w: any) => s + w.earnedPay, 0)
-        const meterPaid = (meterWorkers || []).filter((w: any) => w.payment?.paid).reduce((s, w: any) => s + w.totalPay, 0)
-        const fixedPaid = (fixedWorkers || []).filter((w: any) => w.payment?.paid).reduce((s, w: any) => s + w.earnedPay, 0)
+        const meterTotal = (meterWorkers || []).reduce((s: number, w: any) => s + w.totalPay, 0)
+        const fixedTotal = (fixedWorkers || []).reduce((s: number, w: any) => s + w.earnedPay, 0)
+        const meterPaid = (meterWorkers || []).filter((w: any) => w.payment?.paid).reduce((s: number, w: any) => s + w.totalPay, 0)
+        const fixedPaid = (fixedWorkers || []).filter((w: any) => w.payment?.paid).reduce((s: number, w: any) => s + w.earnedPay, 0)
         const total = meterTotal + fixedTotal
         const paid = meterPaid + fixedPaid
         return { total, paid, outstanding: total - paid }
