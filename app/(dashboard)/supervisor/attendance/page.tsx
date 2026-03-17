@@ -8,9 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { formatINR } from '@/lib/finance'
-import { RotateCcw, Check, X, CalendarDays, KeyRound, Loader2 } from 'lucide-react'
+import { RotateCcw, Check, X, CalendarDays, KeyRound, Loader2, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { savePastAttendance } from '@/app/(dashboard)/supervisor/actions'
+import { savePastAttendance, verifyAccessCode } from '@/app/(dashboard)/supervisor/actions'
 import {
     Dialog,
     DialogContent,
@@ -44,12 +44,19 @@ export default function AttendancePage() {
     const [localAttendance, setLocalAttendance] = useState<Record<number, boolean>>({})
 
     // Authorization State
+    const [unlocked, setUnlocked] = useState(false)
     const [verificationOpen, setVerificationOpen] = useState(false)
+    const [verificationMode, setVerificationMode] = useState<'unlock' | 'save'>('save')
     const [accessCode, setAccessCode] = useState('')
+    const [verifying, setVerifying] = useState(false)
 
     useEffect(() => {
         setSelectedDate(new Date().toISOString().split('T')[0])
     }, [])
+
+    useEffect(() => {
+        setUnlocked(false)
+    }, [selectedDate])
 
     const { data: userProfile } = useQuery({
         queryKey: ['user_profile'],
@@ -106,8 +113,32 @@ export default function AttendancePage() {
         setLocalAttendance(map)
     }, [dailyWorkers, attendanceRecords])
 
-    const toggleAttendance = (workerId: number) => {
+    const isLocked = attendanceRecords && attendanceRecords.length > 0 && !unlocked
+
+    const toggleAttendance = (workerId: number, workerName: string) => {
+        if (isLocked) {
+            toast.error(`entry for this worker(s) ${workerName} has already been svaed. To modify in case of accidental entry pls get owner access code.`, { duration: 5000 })
+            return
+        }
         setLocalAttendance(prev => ({ ...prev, [workerId]: !prev[workerId] }))
+    }
+
+    const handleUnlockSubmit = async () => {
+        setVerifying(true)
+        try {
+            if (!userProfile?.org_id) throw new Error("Missing org_id")
+            const result = await verifyAccessCode(userProfile.org_id, accessCode)
+            if (result.error) throw new Error(result.error)
+
+            setUnlocked(true)
+            setVerificationOpen(false)
+            setAccessCode('')
+            toast.success('Edit mode unlocked')
+        } catch (error: any) {
+            toast.error(error.message || 'Invalid access code')
+        } finally {
+            setVerifying(false)
+        }
     }
 
     const prepareSaveFlow = () => {
@@ -117,7 +148,8 @@ export default function AttendancePage() {
         const isPastDate = selectedDate < today
 
         // SEC-002: Supervisors editing past dates require an access code
-        if (isPastDate && userProfile?.role === 'supervisor') {
+        if (isPastDate && userProfile?.role === 'supervisor' && !unlocked) {
+            setVerificationMode('save')
             setVerificationOpen(true)
         } else {
             executeSave()
@@ -215,6 +247,19 @@ export default function AttendancePage() {
                 </CardContent>
             </Card>
 
+            {/* Show unlock banner if there are saved entries and not unlocked */}
+            {attendanceRecords && attendanceRecords.length > 0 && !unlocked && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-amber-800 text-sm">
+                        <Lock className="h-4 w-4" />
+                        <span>Some entries are already saved and locked.</span>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => { setVerificationMode('unlock'); setVerificationOpen(true); }} className="h-8 text-xs border-amber-300 text-amber-800 hover:bg-amber-100">
+                        Unlock to Edit
+                    </Button>
+                </div>
+            )}
+
             {attendanceLoading ? (
                 <div className="text-center py-8 text-gray-500">Loading...</div>
             ) : !dailyWorkers || dailyWorkers.length === 0 ? (
@@ -238,7 +283,7 @@ export default function AttendancePage() {
                                             'flex justify-between items-center py-4 px-3 min-h-[56px] rounded-lg cursor-pointer transition-colors',
                                             isPresent ? 'hover:bg-green-50/50' : 'hover:bg-red-50/50 opacity-60'
                                         )}
-                                        onClick={() => toggleAttendance(worker.id)}
+                                        onClick={() => toggleAttendance(worker.id, worker.name)}
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className={cn(
@@ -308,11 +353,11 @@ export default function AttendancePage() {
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setVerificationOpen(false)}>Cancel</Button>
                         <Button
-                            disabled={accessCode.length < 6 || saving}
-                            onClick={() => executeSave(accessCode)}
+                            disabled={accessCode.length < 6 || saving || verifying}
+                            onClick={() => verificationMode === 'unlock' ? handleUnlockSubmit() : executeSave(accessCode)}
                         >
-                            {saving ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            Verify & Save
+                            {(saving || verifying) ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                            {verificationMode === 'unlock' ? 'Verify & Unlock' : 'Verify & Save'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

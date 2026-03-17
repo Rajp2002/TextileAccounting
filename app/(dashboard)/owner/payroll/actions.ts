@@ -48,14 +48,14 @@ export async function toggleWorkerPaid(
         calculatedAmountStr = calculateTotalPay(payItems)
 
     } else {
-        const { data: worker } = await supabase
+        const { data: worker, error: workerError } = await supabase
             .from('fixed_workers')
             .select('role, monthly_salary')
             .eq('id', workerId)
             .eq('org_id', profile.org_id)
-            .single()
+            .maybeSingle()
 
-        if (!worker) throw new Error('Worker not found')
+        if (workerError || !worker) throw new Error('Worker not found')
 
         if (worker.role === 'daily') {
             const { count } = await supabase
@@ -98,16 +98,44 @@ export async function toggleWorkerPaid(
         record.fixed_worker_id = workerId
     }
 
-    const { error } = await supabase
-        .from('payroll_payments')
-        .upsert(record, {
-            onConflict: workerType === 'meter'
-                ? 'org_id,meter_worker_id,month'
-                : 'org_id,fixed_worker_id,month'
-        })
+    let existing: any = null
+    if (workerType === 'meter') {
+        const { data } = await supabase
+            .from('payroll_payments')
+            .select('id')
+            .eq('org_id', profile.org_id)
+            .eq('meter_worker_id', workerId)
+            .eq('month', month)
+            .maybeSingle()
+        existing = data
+    } else {
+        const { data } = await supabase
+            .from('payroll_payments')
+            .select('id')
+            .eq('org_id', profile.org_id)
+            .eq('fixed_worker_id', workerId)
+            .eq('month', month)
+            .maybeSingle()
+        existing = data
+    }
 
-    if (error) {
-        throw new Error(error.message)
+    if (existing) {
+        const { error } = await supabase
+            .from('payroll_payments')
+            .update(record)
+            .eq('id', existing.id)
+
+        if (error) {
+            throw new Error(`Update failed: ${error.message}`)
+        }
+    } else {
+        const { error } = await supabase
+            .from('payroll_payments')
+            .insert(record)
+
+        if (error) {
+            throw new Error(`Insert failed: ${error.message}`)
+        }
     }
 
     revalidatePath('/owner/payroll')
