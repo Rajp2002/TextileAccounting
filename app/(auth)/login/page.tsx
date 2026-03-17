@@ -10,9 +10,11 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Loader2, ArrowRight } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
+import LoadingModal from '@/components/auth/loading-modal'
 
 export default function LoginPage() {
     const [loading, setLoading] = useState(false)
+    const [isRedirecting, setIsRedirecting] = useState(false)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const router = useRouter()
@@ -31,6 +33,7 @@ export default function LoginPage() {
             if (error) throw error
 
             toast.success('Logged in successfully!')
+            setIsRedirecting(true)
 
             // Refresh the router to ensure server components get the newly set session cookies
             router.refresh()
@@ -56,7 +59,6 @@ export default function LoginPage() {
         } catch (error: any) {
             console.error('Login error:', error)
             toast.error(error.message || 'Invalid login credentials')
-        } finally {
             setLoading(false)
         }
     }
@@ -123,6 +125,7 @@ export default function LoginPage() {
                     </Link>
                 </div>
             </form>
+            <LoadingModal isOpen={isRedirecting} message="Setting up your dashboard..." />
         </AuthLayout>
     )
 }
