@@ -110,13 +110,13 @@ export default function LandingHero() {
                                 className="relative group overflow-hidden rounded-xl shadow-2xl ring-1 ring-gray-900/10 dark:ring-white/10"
                             >
                                 <video
+                                    src="/videos/hero-tutorial.mov"
                                     autoPlay
                                     loop
                                     muted
                                     playsInline
                                     className="w-[76rem] object-cover transition-transform duration-500 group-hover:scale-[1.01]"
                                 >
-                                    <source src="/videos/hero-tutorial.mov" type="video/quicktime" />
                                     Your browser does not support the video tag.
                                 </video>
                                 <div className="absolute inset-0 bg-black/5 pointer-events-none" />
