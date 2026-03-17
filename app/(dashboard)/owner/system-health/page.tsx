@@ -4,8 +4,10 @@ import { createClient } from '@/lib/supabase/client'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Server, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { Server, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import { format } from 'date-fns'
+import { useUserProfile } from '@/hooks/use-user-profile'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface DailyBriefLog {
     id: string
@@ -19,15 +21,7 @@ interface DailyBriefLog {
 export default function SystemHealthPage() {
     const supabase = createClient()
 
-    const { data: userProfile } = useQuery({
-        queryKey: ['user_profile_health'],
-        queryFn: async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
-            const { data } = await supabase.from('profiles').select('org_id').eq('id', user.id).single()
-            return data
-        }
-    })
+    const { data: userProfile } = useUserProfile()
 
     const { data: logs, isLoading } = useQuery({
         queryKey: ['daily_brief_logs', userProfile?.org_id],
@@ -63,8 +57,15 @@ export default function SystemHealthPage() {
                 </CardHeader>
                 <CardContent>
                     {isLoading ? (
-                        <div className="py-12 flex justify-center text-gray-400">
-                            <Loader2 className="h-8 w-8 animate-spin" />
+                        <div className="space-y-3">
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <div key={i} className="flex gap-4 py-3 border-b">
+                                    <Skeleton className="h-5 w-40" />
+                                    <Skeleton className="h-5 w-32" />
+                                    <Skeleton className="h-5 w-20 mx-auto" />
+                                    <Skeleton className="h-5 w-48" />
+                                </div>
+                            ))}
                         </div>
                     ) : !logs || logs.length === 0 ? (
                         <div className="py-12 text-center text-gray-500">

@@ -36,7 +36,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
     }
 
     return (
-        <div className="min-h-screen bg-background bg-grid-pattern pb-28">
+        <div className="min-h-screen bg-background bg-grid-pattern">
             <header className="bg-background shadow-sm border-b border-border sticky top-0 z-30">
                 <div className="px-4 py-3 flex justify-between items-center max-w-5xl mx-auto">
                     <div className="flex items-center gap-3">
