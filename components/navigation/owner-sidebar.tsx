@@ -41,7 +41,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
         <div className="flex flex-col h-full bg-sidebar">
             {/* Factory branding */}
             <div className="p-5 border-b border-sidebar-border flex items-center gap-3">
-                <div className="relative h-8 w-8 shrink-0">
+                <div className="relative h-10 w-10 shrink-0">
                     <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
                 </div>
                 <div className="flex flex-col overflow-hidden">
@@ -111,7 +111,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
             {/* Mobile header bar */}
             <header className="md:hidden sticky top-0 z-30 bg-background border-b border-border flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3">
-                    <div className="relative h-7 w-7 shrink-0">
+                    <div className="relative h-9 w-9 shrink-0">
                         <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
                     </div>
                     <div className="flex flex-col">

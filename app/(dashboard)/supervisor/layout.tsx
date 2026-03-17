@@ -40,7 +40,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
             <header className="bg-background shadow-sm border-b border-border sticky top-0 z-30">
                 <div className="px-4 py-3 flex justify-between items-center max-w-5xl mx-auto">
                     <div className="flex items-center gap-3">
-                        <div className="relative h-8 w-8 shrink-0 rounded-lg overflow-hidden">
+                        <div className="relative h-10 w-10 shrink-0 rounded-lg overflow-hidden">
                             <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
                         </div>
                         <div>

@@ -47,7 +47,7 @@ export default function Home() {
       <footer className="bg-zinc-950 py-12 px-6 border-t border-white/10 text-white">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
           <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="relative h-10 w-10">
+            <div className="relative h-12 w-12">
               <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
             </div>
             <span className="text-xl font-bold tracking-tight text-white">Vastra</span>
