@@ -5,10 +5,12 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { useState } from 'react'
 
+export let globalQueryClient: QueryClient | null = null
+
 export default function Providers({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(
-        () =>
-            new QueryClient({
+        () => {
+            const client = new QueryClient({
                 defaultOptions: {
                     queries: {
                         gcTime: 1000 * 60 * 60 * 24, // 24 hours
@@ -20,6 +22,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                     },
                 },
             })
+            globalQueryClient = client
+            return client
+        }
     )
 
     // Synchronous init — localStorage is always available in the browser,

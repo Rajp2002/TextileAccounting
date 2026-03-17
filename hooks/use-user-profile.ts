@@ -12,7 +12,7 @@ export function useUserProfile() {
     const supabase = createClient()
 
     return useQuery({
-        queryKey: ['user_profile'],
+        queryKey: ['user_profile_id'], // Placeholder key we'll refresh
         queryFn: async () => {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Not authenticated')

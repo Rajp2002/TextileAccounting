@@ -71,6 +71,13 @@ export default function SignupPage() {
                 const supabase = createClient()
                 await supabase.auth.refreshSession()
 
+                // Clear React Query cache before redirecting to ensure new user 
+                // doesn't see data from a previous session in the same browser
+                const { globalQueryClient } = await import('@/components/providers')
+                if (globalQueryClient) {
+                    globalQueryClient.clear()
+                }
+
                 // Refresh the Next.js router cache so server components immediately get the newly updated session
                 router.refresh()
 

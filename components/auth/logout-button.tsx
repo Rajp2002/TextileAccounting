@@ -6,6 +6,8 @@ import { signOut } from '@/app/(auth)/actions'
 import { cn } from '@/lib/utils'
 import LoadingModal from './loading-modal'
 
+import { globalQueryClient } from '@/components/providers'
+
 interface LogoutButtonProps {
     variant?: 'sidebar' | 'header'
     className?: string
@@ -16,6 +18,10 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
 
     const handleLogout = async (e: React.FormEvent) => {
         setIsLoggingOut(true)
+        // Clear React Query cache immediately to prevent session leakage
+        if (globalQueryClient) {
+            globalQueryClient.clear()
+        }
         // The signOut action will handle the redirect
         // We just need to show the loading state until then
     }
