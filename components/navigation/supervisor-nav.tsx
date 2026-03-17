@@ -32,8 +32,8 @@ export function SupervisorNav() {
                                 className={cn(
                                     "flex-1 flex items-center justify-center gap-2 py-4 px-4 text-sm font-medium border-b-2 transition-colors min-w-[120px]",
                                     isActive
-                                        ? "border-teal-600 text-teal-700 bg-teal-50/50"
-                                        : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-stone-50 hover:border-gray-200"
+                                        ? "border-primary text-primary bg-primary/10"
+                                        : "border-transparent text-muted-foreground hover:text-foreground hover:bg-black/5 hover:border-border dark:hover:bg-white/5"
                                 )}
                             >
                                 <Icon className="h-4 w-4" />
@@ -56,14 +56,14 @@ export function SupervisorNav() {
                             href={item.href}
                             className={cn(
                                 "flex flex-col items-center justify-center py-1 px-1 w-full relative h-full",
-                                isActive ? "text-teal-700" : "text-gray-500 hover:text-gray-900"
+                                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
                             <div className={cn(
                                 "py-1 px-4 rounded-full mb-1 transition-colors duration-200",
-                                isActive ? "bg-teal-100/50" : "group-hover:bg-gray-100"
+                                isActive ? "bg-primary/20" : "group-hover:bg-black/5 dark:group-hover:bg-white/5"
                             )}>
-                                <Icon className={cn("h-5 w-5", isActive && "fill-teal-700/20 text-teal-700")} />
+                                <Icon className={cn("h-5 w-5", isActive && "fill-primary/20 text-primary")} />
                             </div>
                             <span className="text-[10px] sm:text-xs font-semibold leading-none tracking-tight">{item.name}</span>
                         </Link>
