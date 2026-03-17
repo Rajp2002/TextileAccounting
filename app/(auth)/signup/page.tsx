@@ -66,6 +66,9 @@ export default function SignupPage() {
                 const supabase = createClient()
                 await supabase.auth.refreshSession()
 
+                // Refresh the Next.js router cache so server components immediately get the newly updated session
+                router.refresh()
+
                 toast.success('Account created!')
                 if (result.role === 'owner') {
                     router.push('/owner/analytics')

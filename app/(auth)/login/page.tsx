@@ -32,7 +32,9 @@ export default function LoginPage() {
 
             toast.success('Logged in successfully!')
 
-            // Check role and redirect
+            // Refresh the router to ensure server components get the newly set session cookies
+            router.refresh()
+
             if (data.session) {
                 const { data: profile } = await supabase
                     .from('profiles')

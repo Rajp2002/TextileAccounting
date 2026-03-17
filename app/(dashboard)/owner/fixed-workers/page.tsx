@@ -218,6 +218,11 @@ export default function FixedWorkersPage() {
                                                 {r.label} — {formatINR(r.defaultSalary)}/mo
                                             </SelectItem>
                                         ))}
+                                        {editingWorker && !ROLES.find(r => r.value === editingWorker.role) && (
+                                            <SelectItem value={editingWorker.role}>
+                                                {editingWorker.role} (Custom)
+                                            </SelectItem>
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -312,6 +317,50 @@ export default function FixedWorkersPage() {
                             </Card>
                         )
                     })}
+
+                    {/* Custom Roles */}
+                    {Object.entries(grouped)
+                        .filter(([roleName]) => !ROLES.find(r => r.value === roleName))
+                        .map(([roleName, workers]) => {
+                            if (!workers || workers.length === 0) return null
+                            return (
+                                <Card key={roleName}>
+                                    <CardHeader className="pb-2">
+                                        <div className="flex items-center gap-2">
+                                            <Briefcase className="h-4 w-4 text-gray-500" />
+                                            <CardTitle className="text-base capitalize">{roleName}</CardTitle>
+                                            <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', getRoleColor('other'))}>
+                                                {workers.length}
+                                            </span>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                        <div className="divide-y">
+                                            {workers.map(w => (
+                                                <div key={w.id} className="flex justify-between items-center py-3">
+                                                    <div>
+                                                        <span className={cn('font-medium', !w.is_active && 'text-gray-400 line-through')}>
+                                                            {w.name}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-sm font-semibold text-gray-700">
+                                                            {formatINR(w.monthly_salary)}/mo
+                                                        </span>
+                                                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(w)}>
+                                                            <Pencil className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" onClick={() => handleDelete(w)}>
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
                 </div>
             )}
         </div>
