@@ -16,14 +16,13 @@ export async function toggleWorkerPaid(
     const supabase = await createServerClient()
     const newPaid = !currentPaid
 
+    // ── Calculate gross amount server-side ───────────────────────────────
     let calculatedAmountStr = "0"
 
-    // Server-side calculation
     if (workerType === 'meter') {
         const monthStart = `${month}-01`
         const monthEnd = `${month}-31`
 
-        // Fetch logs
         const { data: logs } = await supabase
             .from('production_logs')
             .select('machine_id, meters')
@@ -32,7 +31,6 @@ export async function toggleWorkerPaid(
             .gte('date', monthStart)
             .lte('date', monthEnd)
 
-        // Fetch machines for rates
         const { data: machines } = await supabase
             .from('machines')
             .select('id, rate_per_meter')
@@ -68,10 +66,8 @@ export async function toggleWorkerPaid(
                 .eq('present', true)
 
             const daysWorked = count || 0
-            // daily rate = monthly_salary / 30, use calculateDailyPay equivalent math
             calculatedAmountStr = calculateDailyPay(daysWorked, worker.monthly_salary / 30)
 
-            // Just to cap it logically, even if finance.ts handles the multiply safely
             if (parseFloat(calculatedAmountStr) > worker.monthly_salary) {
                 calculatedAmountStr = worker.monthly_salary.toString()
             }
@@ -80,52 +76,51 @@ export async function toggleWorkerPaid(
         }
     }
 
-    const calculatedAmount = parseFloat(calculatedAmountStr)
+    const grossAmount = parseFloat(calculatedAmountStr)
 
-    // NOTE: For the fixed schema we use the proper column (fixed_worker_id / meter_worker_id)
-    const record: any = {
-        org_id: profile.org_id,
-        worker_type: workerType,
-        month: month,
-        amount: calculatedAmount,
-        paid: newPaid,
-        paid_at: newPaid ? new Date().toISOString() : null,
-        // Explicitly set the other ID to null to avoid any cross-contamination
-        meter_worker_id: workerType === 'meter' ? workerId : null,
-        fixed_worker_id: workerType === 'fixed' ? workerId : null,
-    }
-
-    // Find if a record already exists for this EXACT worker and month
-    const { data: existing, error: existingError } = await supabase
-        .from('payroll_payments')
-        .select('id')
-        .eq('org_id', profile.org_id)
-        .eq('worker_type', workerType)
-        .eq('month', month)
-        .eq(workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', workerId)
-        .maybeSingle()
-
-    if (existingError) throw new Error(`Query failed: ${existingError.message}`)
-
-    if (existing) {
-        const { error } = await supabase
-            .from('payroll_payments')
-            .update(record)
-            .eq('id', existing.id)
+    // ── Use atomic RPC for settlement ────────────────────────────────────
+    if (newPaid) {
+        // SETTLE: atomically mark paid + deduct pending advances
+        const { data, error } = await supabase.rpc('settle_worker_payroll', {
+            p_org_id: profile.org_id,
+            p_worker_type: workerType,
+            p_worker_id: workerId,
+            p_month: month,
+            p_gross_amount: grossAmount
+        })
 
         if (error) {
-            throw new Error(`Update failed: ${error.message}`)
+            throw new Error(`Settlement failed: ${error.message}`)
+        }
+
+        revalidatePath('/owner/payroll')
+        revalidatePath('/owner/advances')
+        return {
+            success: true,
+            amount: data?.net_amount ?? grossAmount,
+            gross_amount: grossAmount,
+            total_deducted: data?.total_deducted ?? 0,
+            remaining_debt: data?.remaining_debt ?? 0
         }
     } else {
-        const { error } = await supabase
-            .from('payroll_payments')
-            .insert(record)
+        // UNSETTLE: atomically revert paid + restore advances for this cycle
+        const { data, error } = await supabase.rpc('unsettle_worker_payroll', {
+            p_org_id: profile.org_id,
+            p_worker_type: workerType,
+            p_worker_id: workerId,
+            p_month: month
+        })
 
         if (error) {
-            throw new Error(`Insert failed: ${error.message}`)
+            throw new Error(`Unsettle failed: ${error.message}`)
+        }
+
+        revalidatePath('/owner/payroll')
+        revalidatePath('/owner/advances')
+        return {
+            success: true,
+            amount: grossAmount,
+            reverted_advances: data?.reverted_advances ?? 0
         }
     }
-
-    revalidatePath('/owner/payroll')
-    return { success: true, amount: calculatedAmount }
 }

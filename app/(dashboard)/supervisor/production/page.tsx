@@ -11,9 +11,9 @@ import { queueMutation } from '@/lib/db'
 import { createClient } from '@/lib/supabase/client'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 import { calculateDailyPay, formatINR } from '@/lib/finance'
-import { verifyAccessCode } from '@/app/(dashboard)/supervisor/actions'
+import { verifyAccessCode, startBeam } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
-import { CalendarDays, KeyRound, Loader2, RotateCcw, Lock, BoxSelect } from 'lucide-react'
+import { CalendarDays, KeyRound, Loader2, RotateCcw, Lock, BoxSelect, Search, Link as LinkIcon } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 
@@ -36,6 +36,15 @@ interface Assignment {
     shift: 'day' | 'night'
 }
 
+interface YarnBatch {
+    id: string
+    name: string
+    quality_id: string
+    quality: { name: string, target_yield: number }
+    current_machine_id: string | null
+    status: string
+}
+
 export default function ProductionEntryForm() {
     const [metersInput, setMetersInput] = useState<Record<string, number>>({})
     const [loading, setLoading] = useState(false)
@@ -47,6 +56,12 @@ export default function ProductionEntryForm() {
     const [verificationOpen, setVerificationOpen] = useState(false)
     const [accessCode, setAccessCode] = useState('')
     const [verifying, setVerifying] = useState(false)
+
+    // Start Beam State
+    const [beamModalOpen, setBeamModalOpen] = useState(false)
+    const [linkingMachineId, setLinkingMachineId] = useState<string | null>(null)
+    const [linkingBatchId, setLinkingBatchId] = useState<string>('')
+    const [linkingBeam, setLinkingBeam] = useState(false)
 
     const isOnline = useOnlineStatus()
     const supabase = createClient()
@@ -131,6 +146,23 @@ export default function ProductionEntryForm() {
         }
     })
 
+    const { data: activeBatches, isLoading: batchesLoading } = useQuery({
+        queryKey: ['active_yarn_batches', userProfile?.org_id],
+        enabled: !!userProfile?.org_id,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('yarn_batches')
+                .select('id, name, current_machine_id, status, quality_id, qualities(name, target_yield)')
+                .eq('org_id', userProfile!.org_id)
+                .eq('status', 'active')
+            if (error) throw error
+            return data.map((b: any) => ({
+                ...b,
+                quality: b.qualities
+            })) as YarnBatch[]
+        }
+    })
+
     const machineCards = useMemo(() => {
         if (!machines) return []
         return machines.map(machine => {
@@ -142,6 +174,8 @@ export default function ProductionEntryForm() {
             const assignedWorkerId = assignment?.worker_id
             const effectiveWorkerId = existingLog ? existingLog.worker_id : assignedWorkerId
             const isSaved = !!existingLog
+            
+            const activeBatch = activeBatches?.find(b => b.current_machine_id === machine.id)
 
             return {
                 machine,
@@ -149,10 +183,11 @@ export default function ProductionEntryForm() {
                 effectiveWorkerId,
                 meters: existingLog ? Number(existingLog.meters) : (metersInput[machine.id] || 0),
                 isSaved,
-                existingLogId: existingLog?.id
+                existingLogId: existingLog?.id,
+                activeBatch
             }
         })
-    }, [machines, assignments, currentShift, metersInput, existingLogs])
+    }, [machines, assignments, activeBatches, currentShift, metersInput, existingLogs])
 
     const handleMetersChange = (machineId: string, value: number, isSaved: boolean) => {
         if (isSaved && !unlocked) return // Cannot change if saved and not unlocked
@@ -231,6 +266,7 @@ export default function ProductionEntryForm() {
                     date: selectedDate,
                     shift: currentShift,
                     org_id: userProfile!.org_id,
+                    yarn_batch_id: item.activeBatch?.id || null, // Auto-fill active batch
                 }
 
                 if (item.existingLogId) {
@@ -266,6 +302,24 @@ export default function ProductionEntryForm() {
             toast.error('Failed to save: ' + error.message)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleStartBeam = async () => {
+        if (!linkingMachineId || !linkingBatchId) return
+        setLinkingBeam(true)
+        try {
+            const res = await startBeam(linkingBatchId, linkingMachineId)
+            if (res.error) throw new Error(res.error)
+            toast.success("Beam successfully linked to machine!")
+            setBeamModalOpen(false)
+            setLinkingMachineId(null)
+            setLinkingBatchId('')
+            queryClient.invalidateQueries({ queryKey: ['active_yarn_batches', userProfile?.org_id] })
+        } catch (err: any) {
+            toast.error(err.message || "Failed to start beam.")
+        } finally {
+            setLinkingBeam(false)
         }
     }
 
@@ -377,8 +431,36 @@ export default function ProductionEntryForm() {
                                 <div className="space-y-1">
                                     <Label className="text-xs text-gray-500">Worker</Label>
                                     <div className="text-sm font-medium h-8 flex items-center">
-                                        {worker ? worker.name : <span className="text-red-500 italic">No assigned worker for this shift</span>}
+                                        {worker ? worker.name : <span className="text-red-500 italic">No assigned worker</span>}
                                     </div>
+                                </div>
+                                
+                                <div className="space-y-1 mt-1 border-t pt-2">
+                                     <Label className="text-xs text-gray-500">Active Beam (Yarn Batch)</Label>
+                                     <div className="text-sm font-medium h-8 flex items-center">
+                                        {machineCards.find(c => c.machine.id === machine.id)?.activeBatch ? (
+                                            <span className="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded text-xs font-semibold">
+                                                {machineCards.find(c => c.machine.id === machine.id)?.activeBatch?.name} 
+                                                <span className="font-normal text-indigo-500 ml-1">
+                                                    ({machineCards.find(c => c.machine.id === machine.id)?.activeBatch?.quality?.name})
+                                                </span>
+                                            </span>
+                                        ) : (
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="h-7 text-xs border-dashed text-gray-500"
+                                                onClick={() => {
+                                                    setLinkingMachineId(machine.id)
+                                                    setLinkingBatchId('')
+                                                    setBeamModalOpen(true)
+                                                }}
+                                                disabled={disabled}
+                                            >
+                                                Start New Beam
+                                            </Button>
+                                        )}
+                                     </div>
                                 </div>
 
                                 <div className="flex items-center gap-3 pt-3">
@@ -448,6 +530,62 @@ export default function ProductionEntryForm() {
                         >
                             {verifying ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
                             Verify & Unlock
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Start Beam Modal */}
+            <Dialog open={beamModalOpen} onOpenChange={setBeamModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-indigo-700">
+                            <LinkIcon className="h-5 w-5" /> Start New Beam
+                        </DialogTitle>
+                        <DialogDescription>
+                            Link an active yarn batch to this machine. Future logs will automatically credit this batch.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Select Batch</Label>
+                            {activeBatches && activeBatches.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2">
+                                    {activeBatches
+                                        // Only show batches not currently tied to this exact machine (or completely free)
+                                        .filter(b => b.current_machine_id !== linkingMachineId)
+                                        .map(batch => (
+                                        <button
+                                            key={batch.id}
+                                            onClick={() => setLinkingBatchId(batch.id)}
+                                            className={cn(
+                                                "flex flex-col text-left p-3 rounded-lg border transition-all",
+                                                linkingBatchId === batch.id 
+                                                    ? "border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600" 
+                                                    : "border-gray-200 hover:border-indigo-300 hover:bg-gray-50"
+                                            )}
+                                        >
+                                            <span className="font-medium text-gray-900">{batch.name}</span>
+                                            <span className="text-xs text-gray-500">{batch.quality?.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-gray-500 p-4 border rounded bg-gray-50 text-center">
+                                    No active yarn batches available. Ask the owner to add inventory.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => { setBeamModalOpen(false); setLinkingBatchId('') }}>Cancel</Button>
+                        <Button
+                            disabled={!linkingBatchId || linkingBeam}
+                            className="bg-indigo-600 hover:bg-indigo-700"
+                            onClick={handleStartBeam}
+                        >
+                            {linkingBeam ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                            Link & Start
                         </Button>
                     </DialogFooter>
                 </DialogContent>

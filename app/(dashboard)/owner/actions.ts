@@ -76,3 +76,74 @@ export async function validateAndRotateAccessCode(orgId: string, inputCode: stri
 
     return true
 }
+
+// ─── INVENTORY ACTIONS ────────────────────────────────────────────────────────
+
+export async function addQuality(data: { name: string; target_yield: number; avg_sale_price_per_m: number }) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { error } = await supabase
+        .from('qualities')
+        .insert({
+            org_id: profile.org_id,
+            ...data
+        })
+
+    if (error) return { error: error.message }
+    return { success: true }
+}
+
+export async function addYarnBatch(data: { name: string; quality_id: string; total_weight_kg: number }) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { error } = await supabase
+        .from('yarn_batches')
+        .insert({
+            org_id: profile.org_id,
+            status: 'active',
+            ...data
+        })
+
+    if (error) return { error: error.message }
+    return { success: true }
+}
+
+export async function loadSuratQualityTemplates() {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const templates = [
+        { name: '60g Georgette', target_yield: 9.5, avg_sale_price_per_m: 25.00 },
+        { name: 'Japan Satin', target_yield: 6.2, avg_sale_price_per_m: 45.00 },
+        { name: 'Cotton 40s', target_yield: 4.5, avg_sale_price_per_m: 60.00 },
+        { name: 'Micro Crepe', target_yield: 8.0, avg_sale_price_per_m: 35.00 },
+        { name: 'Dani Georgette', target_yield: 10.5, avg_sale_price_per_m: 22.00 }
+    ].map(t => ({ ...t, org_id: profile.org_id }))
+
+    const { error } = await supabase
+        .from('qualities')
+        .insert(templates)
+
+    if (error) return { error: error.message }
+    return { success: true }
+}
+
+export async function closeYarnBatch(batchId: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    // Unlink from current machine and mark consumed
+    const { error } = await supabase
+        .from('yarn_batches')
+        .update({
+            status: 'consumed',
+            current_machine_id: null
+        })
+        .eq('id', batchId)
+        .eq('org_id', profile.org_id)
+
+    if (error) return { error: error.message }
+    return { success: true }
+}

@@ -15,6 +15,8 @@ import {
     Menu,
     X,
     Activity,
+    HandCoins,
+    PackageSearch,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -26,6 +28,8 @@ const primaryNavItems = [
     { name: "Machines", href: "/owner/machines", icon: Server },
     { name: "Workers", href: "/owner/fixed-workers", icon: Users },
     { name: "Payroll", href: "/owner/payroll", icon: DollarSign },
+    { name: "Advances", href: "/owner/advances", icon: HandCoins },
+    { name: "Inventory", href: "/owner/inventory", icon: PackageSearch },
 ]
 
 const secondaryNavItems = [

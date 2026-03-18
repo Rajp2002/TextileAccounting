@@ -6,10 +6,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { formatINR } from '@/lib/finance'
+import { formatINR, sumAdvances, calculateNetPay, calculateRemainingDebt } from '@/lib/finance'
 import {
     CheckCircle2, Circle, ChevronLeft, ChevronRight,
-    HardHat, Briefcase, AlertCircle, IndianRupee, Loader2
+    HardHat, Briefcase, AlertCircle, IndianRupee, Loader2, HandCoins
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toggleWorkerPaid } from './actions'
@@ -33,7 +33,10 @@ interface MeterWorkerPayroll {
     name: string
     machines: { machineName: string; meters: number; rate: number; pay: number }[]
     totalMeters: number
-    totalPay: number
+    totalPay: number       // gross pay
+    totalAdvances: number  // pending advance sum
+    netPay: number         // max(0, gross - advances)
+    remainingDebt: number  // leftover debt if advances > gross
     payment?: PaymentRecord
 }
 
@@ -43,7 +46,10 @@ interface FixedWorkerPayroll {
     role: string
     monthly_salary: number
     daysWorked?: number       // only for 'daily' role
-    earnedPay: number
+    earnedPay: number         // gross pay
+    totalAdvances: number     // pending advance sum
+    netPay: number            // max(0, gross - advances)
+    remainingDebt: number     // leftover debt if advances > gross
     payment?: PaymentRecord
 }
 
@@ -103,6 +109,7 @@ function MeterWorkerRow({
 }) {
     const [expanded, setExpanded] = useState(false)
     const isPaid = worker.payment?.paid ?? false
+    const hasAdvances = worker.totalAdvances > 0
 
     return (
         <div className={cn(
@@ -122,11 +129,26 @@ function MeterWorkerRow({
                         <div className="text-xs text-gray-500">
                             {worker.totalMeters.toFixed(1)} m across {worker.machines.length} machine{worker.machines.length !== 1 ? 's' : ''}
                         </div>
+                        {hasAdvances && (
+                            <div className="flex items-center gap-1 mt-0.5">
+                                <HandCoins className="h-3 w-3 text-amber-600" />
+                                <span className="text-xs font-medium text-amber-600">
+                                    {formatINR(worker.totalAdvances)} advance pending
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </button>
                 <div className="flex items-center gap-3 flex-shrink-0 ml-3">
                     <div className="text-right">
-                        <div className="font-bold text-gray-900">{formatINR(worker.totalPay)}</div>
+                        <div className="font-bold text-gray-900">
+                            {hasAdvances ? formatINR(worker.netPay) : formatINR(worker.totalPay)}
+                        </div>
+                        {hasAdvances && (
+                            <div className="text-[10px] text-gray-400 line-through">
+                                {formatINR(worker.totalPay)}
+                            </div>
+                        )}
                         <PaidBadge paid={isPaid} paidAt={worker.payment?.paid_at} />
                     </div>
                     <Button
@@ -154,9 +176,30 @@ function MeterWorkerRow({
                             </div>
                         ))}
                         <div className="flex justify-between text-sm font-semibold border-t pt-1.5 mt-1">
-                            <span>Total</span>
+                            <span>Gross Pay</span>
                             <span>{formatINR(worker.totalPay)}</span>
                         </div>
+                        {hasAdvances && (
+                            <>
+                                <div className="flex justify-between text-sm text-amber-700">
+                                    <span className="flex items-center gap-1">
+                                        <HandCoins className="h-3.5 w-3.5" />
+                                        Advance Deduction
+                                    </span>
+                                    <span>-{formatINR(Math.min(worker.totalAdvances, worker.totalPay))}</span>
+                                </div>
+                                <div className="flex justify-between text-sm font-bold border-t border-dashed pt-1.5 mt-1">
+                                    <span>Net Pagar</span>
+                                    <span className="text-green-700">{formatINR(worker.netPay)}</span>
+                                </div>
+                                {worker.remainingDebt > 0 && (
+                                    <div className="flex justify-between text-xs text-red-600 bg-red-50 rounded px-2 py-1 mt-1">
+                                        <span>Remaining Debt (carry-over)</span>
+                                        <span className="font-semibold">{formatINR(worker.remainingDebt)}</span>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
             )}
@@ -175,6 +218,7 @@ function FixedWorkerRow({
     const [expanded, setExpanded] = useState(false)
     const isPaid = worker.payment?.paid ?? false
     const isDaily = worker.role === 'daily'
+    const hasAdvances = worker.totalAdvances > 0
 
     return (
         <div className={cn(
@@ -189,11 +233,28 @@ function FixedWorkerRow({
                     <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0', ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700')}>
                         {ROLE_LABELS[worker.role] || worker.role}
                     </span>
-                    <span className="font-semibold text-gray-900 truncate">{worker.name}</span>
+                    <div className="min-w-0">
+                        <span className="font-semibold text-gray-900 truncate block">{worker.name}</span>
+                        {hasAdvances && (
+                            <div className="flex items-center gap-1 mt-0.5">
+                                <HandCoins className="h-3 w-3 text-amber-600" />
+                                <span className="text-xs font-medium text-amber-600">
+                                    {formatINR(worker.totalAdvances)} advance pending
+                                </span>
+                            </div>
+                        )}
+                    </div>
                 </button>
                 <div className="flex items-center gap-3 flex-shrink-0 ml-3">
                     <div className="text-right">
-                        <div className="font-bold text-gray-900">{formatINR(worker.earnedPay)}</div>
+                        <div className="font-bold text-gray-900">
+                            {hasAdvances ? formatINR(worker.netPay) : formatINR(worker.earnedPay)}
+                        </div>
+                        {hasAdvances && (
+                            <div className="text-[10px] text-gray-400 line-through">
+                                {formatINR(worker.earnedPay)}
+                            </div>
+                        )}
                         <PaidBadge paid={isPaid} paidAt={worker.payment?.paid_at} />
                     </div>
                     <Button
@@ -225,14 +286,35 @@ function FixedWorkerRow({
                                 <span>₹{worker.monthly_salary.toLocaleString()} ÷ 30 × {worker.daysWorked ?? 0} days</span>
                             </div>
                             <div className="flex justify-between font-semibold border-t pt-1.5 mt-1">
-                                <span>Earned this month</span>
+                                <span>Gross Pay</span>
                                 <span>{formatINR(worker.earnedPay)}</span>
                             </div>
                         </div>
                     ) : (
                         <div className="text-sm text-gray-600 flex justify-between">
-                            <span>Full monthly salary</span>
+                            <span>Full monthly salary (Gross)</span>
                             <span className="font-semibold">{formatINR(worker.monthly_salary)}</span>
+                        </div>
+                    )}
+                    {hasAdvances && (
+                        <div className="space-y-1.5 mt-2">
+                            <div className="flex justify-between text-sm text-amber-700">
+                                <span className="flex items-center gap-1">
+                                    <HandCoins className="h-3.5 w-3.5" />
+                                    Advance Deduction
+                                </span>
+                                <span>-{formatINR(Math.min(worker.totalAdvances, worker.earnedPay))}</span>
+                            </div>
+                            <div className="flex justify-between text-sm font-bold border-t border-dashed pt-1.5 mt-1">
+                                <span>Net Pagar</span>
+                                <span className="text-green-700">{formatINR(worker.netPay)}</span>
+                            </div>
+                            {worker.remainingDebt > 0 && (
+                                <div className="flex justify-between text-xs text-red-600 bg-red-50 rounded px-2 py-1 mt-1">
+                                    <span>Remaining Debt (carry-over)</span>
+                                    <span className="font-semibold">{formatINR(worker.remainingDebt)}</span>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -294,6 +376,20 @@ export default function PayrollPage() {
                 .eq('worker_type', 'meter')
                 .eq('month', selectedMonth)
 
+            // Fetch pending advances for all meter workers
+            const { data: advances } = await supabase
+                .from('worker_advances')
+                .select('meter_worker_id, amount')
+                .eq('org_id', userProfile!.org_id)
+                .eq('status', 'pending')
+                .not('meter_worker_id', 'is', null)
+
+            // Build advance totals map
+            const advanceMap: Record<number, number> = {}
+            ;(advances || []).forEach((a: any) => {
+                advanceMap[a.meter_worker_id] = (advanceMap[a.meter_worker_id] || 0) + parseFloat(a.amount)
+            })
+
             const machineMap = Object.fromEntries((machines || []).map((m: any) => [m.id, m]))
             const paymentMap = Object.fromEntries((payments || []).map((p: any) => [p.meter_worker_id, p]))
 
@@ -322,6 +418,9 @@ export default function PayrollPage() {
 
                 const totalMeters = machineBreakdown.reduce((s: number, m: { meters: number }) => s + m.meters, 0)
                 const totalPay = machineBreakdown.reduce((s: number, m: { pay: number }) => s + m.pay, 0)
+                const totalAdvances = advanceMap[worker.id] || 0
+                const netPay = parseFloat(calculateNetPay(totalPay, totalAdvances))
+                const remainingDebt = parseFloat(calculateRemainingDebt(totalPay, totalAdvances))
 
                 result.push({
                     id: worker.id,
@@ -329,6 +428,9 @@ export default function PayrollPage() {
                     machines: machineBreakdown,
                     totalMeters,
                     totalPay,
+                    totalAdvances,
+                    netPay,
+                    remainingDebt,
                     payment: paymentMap[worker.id],
                 })
             }
@@ -376,11 +478,27 @@ export default function PayrollPage() {
                 .eq('month', selectedMonth)
             const paymentMap = Object.fromEntries((payments || []).map((p: any) => [p.fixed_worker_id, p]))
 
+            // Fetch pending advances for all fixed workers
+            const { data: advances } = await supabase
+                .from('worker_advances')
+                .select('fixed_worker_id, amount')
+                .eq('org_id', userProfile!.org_id)
+                .eq('status', 'pending')
+                .not('fixed_worker_id', 'is', null)
+
+            const advanceMap: Record<number, number> = {}
+            ;(advances || []).forEach((a: any) => {
+                advanceMap[a.fixed_worker_id] = (advanceMap[a.fixed_worker_id] || 0) + parseFloat(a.amount)
+            })
+
             return (workers || []).map((w: any) => {
                 const daysWorked = w.role === 'daily' ? (attendanceMap[w.id] || 0) : undefined
                 const earnedPay = w.role === 'daily'
                     ? Math.min(w.monthly_salary, (w.monthly_salary / 30) * (daysWorked ?? 0))
                     : w.monthly_salary
+                const totalAdvances = advanceMap[w.id] || 0
+                const netPay = parseFloat(calculateNetPay(earnedPay, totalAdvances))
+                const remainingDebt = parseFloat(calculateRemainingDebt(earnedPay, totalAdvances))
                 return {
                     id: w.id,
                     name: w.name,
@@ -388,6 +506,9 @@ export default function PayrollPage() {
                     monthly_salary: w.monthly_salary,
                     daysWorked,
                     earnedPay,
+                    totalAdvances,
+                    netPay,
+                    remainingDebt,
                     payment: paymentMap[w.id],
                 } as FixedWorkerPayroll
             })
@@ -466,11 +587,14 @@ export default function PayrollPage() {
     const summary = useMemo(() => {
         const meterTotal = (meterWorkers || []).reduce((s: number, w: any) => s + w.totalPay, 0)
         const fixedTotal = (fixedWorkers || []).reduce((s: number, w: any) => s + w.earnedPay, 0)
-        const meterPaid = (meterWorkers || []).filter((w: any) => w.payment?.paid).reduce((s: number, w: any) => s + w.totalPay, 0)
-        const fixedPaid = (fixedWorkers || []).filter((w: any) => w.payment?.paid).reduce((s: number, w: any) => s + w.earnedPay, 0)
+        const meterAdvances = (meterWorkers || []).reduce((s: number, w: any) => s + (w.totalAdvances || 0), 0)
+        const fixedAdvances = (fixedWorkers || []).reduce((s: number, w: any) => s + (w.totalAdvances || 0), 0)
+        const totalAdvances = meterAdvances + fixedAdvances
+        const meterPaid = (meterWorkers || []).filter((w: any) => w.payment?.paid).reduce((s: number, w: any) => s + (w.netPay ?? w.totalPay), 0)
+        const fixedPaid = (fixedWorkers || []).filter((w: any) => w.payment?.paid).reduce((s: number, w: any) => s + (w.netPay ?? w.earnedPay), 0)
         const total = meterTotal + fixedTotal
         const paid = meterPaid + fixedPaid
-        return { total, paid, outstanding: total - paid }
+        return { total, paid, outstanding: total - paid - totalAdvances, totalAdvances }
     }, [meterWorkers, fixedWorkers])
 
     if (!selectedMonth) return null
@@ -505,7 +629,7 @@ export default function PayrollPage() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <Card className="text-center">
                     <CardContent className="pt-4 pb-3">
                         <div className="text-xs text-gray-500 mb-1">Total Owed</div>
@@ -518,6 +642,17 @@ export default function PayrollPage() {
                         <div className="text-lg font-bold text-green-700">{formatINR(summary.paid)}</div>
                     </CardContent>
                 </Card>
+                {summary.totalAdvances > 0 && (
+                    <Card className="text-center border-amber-200">
+                        <CardContent className="pt-4 pb-3">
+                            <div className="text-xs text-amber-600 mb-1 flex items-center justify-center gap-1">
+                                <HandCoins className="h-3 w-3" />
+                                Deductions
+                            </div>
+                            <div className="text-lg font-bold text-amber-700">{formatINR(summary.totalAdvances)}</div>
+                        </CardContent>
+                    </Card>
+                )}
                 <Card className="text-center border-amber-200">
                     <CardContent className="pt-4 pb-3">
                         <div className="text-xs text-gray-500 mb-1">Outstanding</div>
