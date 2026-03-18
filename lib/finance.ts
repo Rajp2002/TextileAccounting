@@ -76,3 +76,103 @@ export function formatINR(amount: string | number): string {
         maximumFractionDigits: 2,
     }).format(num)
 }
+
+/**
+ * Sum advance amounts safely using Decimal.
+ * Used to total pending advances for a worker during payroll settlement.
+ *
+ * @param advances - array of objects with an `amount` field
+ * @returns total advances as a string with 2 decimal places
+ */
+export function sumAdvances(advances: { amount: number | string }[]): string {
+    const total = advances.reduce((acc, adv) => {
+        return acc.plus(new Decimal(adv.amount || 0))
+    }, new Decimal(0))
+
+    return total.toFixed(2)
+}
+
+/**
+ * Calculate net payout after deducting advances from gross pay.
+ * Net pay is floored at ₹0 — never goes negative.
+ *
+ * @param grossPay - total earned (may be string from Decimal calculation)
+ * @param totalAdvances - total pending advances to deduct
+ * @returns net payout as a string with 2 decimal places, minimum "0.00"
+ */
+export function calculateNetPay(
+    grossPay: number | string,
+    totalAdvances: number | string
+): string {
+    const gross = new Decimal(grossPay || 0)
+    const advances = new Decimal(totalAdvances || 0)
+    return Decimal.max(0, gross.minus(advances)).toFixed(2)
+}
+
+/**
+ * Calculate remaining debt when advances exceed gross pay.
+ * Returns 0 when gross pay covers all advances.
+ *
+ * @param grossPay - total earned
+ * @param totalAdvances - total pending advances
+ * @returns remaining debt as a string with 2 decimal places
+ */
+export function calculateRemainingDebt(
+    grossPay: number | string,
+    totalAdvances: number | string
+): string {
+    const gross = new Decimal(grossPay || 0)
+    const advances = new Decimal(totalAdvances || 0)
+    return Decimal.max(0, advances.minus(gross)).toFixed(2)
+}
+
+// ─── Yarn-to-Fabric Yield Calculations ───────────────────────────────────────
+
+/**
+ * Ya = Σ Fabric Produced (m) / Total Batch Weight (kg)
+ * Zero-division safe: returns "0.00" if weight is 0.
+ */
+export function calculateActualYield(
+    totalMetersProduced: number | string,
+    totalWeightKg: number | string
+): string {
+    const meters = new Decimal(totalMetersProduced || 0)
+    const weight = new Decimal(totalWeightKg || 0)
+    if (weight.isZero()) return '0.00'
+    return meters.div(weight).toFixed(2)
+}
+
+/**
+ * V = ((Ya - Ye) / Ye) × 100
+ * Negative V = Leakage (theft/waste). Positive V > 10% = Padding (over-reporting).
+ * Zero-division safe: returns "0.00" if expectedYield is 0.
+ */
+export function calculateEfficiencyVariance(
+    actualYield: number | string,
+    expectedYield: number | string
+): string {
+    const ya = new Decimal(actualYield || 0)
+    const ye = new Decimal(expectedYield || 0)
+    if (ye.isZero()) return '0.00'
+    return ya.minus(ye).div(ye).times(100).toFixed(2)
+}
+
+/**
+ * Monetary Loss = (Ye - Ya) × Weight × Price/m
+ * Only calculated when Ya < Ye (negative variance / leakage).
+ * Returns "0.00" if no loss.
+ */
+export function calculateMonetaryLoss(
+    actualYield: number | string,
+    expectedYield: number | string,
+    totalWeightKg: number | string,
+    avgSalePricePerM: number | string
+): string {
+    const ya = new Decimal(actualYield || 0)
+    const ye = new Decimal(expectedYield || 0)
+    const weight = new Decimal(totalWeightKg || 0)
+    const price = new Decimal(avgSalePricePerM || 0)
+
+    if (ya.gte(ye)) return '0.00' // no loss
+    return ye.minus(ya).times(weight).times(price).toFixed(2)
+}

@@ -134,3 +134,28 @@ export async function verifyAccessCode(orgId: string, accessCode: string) {
 
     return { success: true }
 }
+
+/**
+ * Link an active yarn batch to a specific machine ("Start Beam").
+ */
+export async function startBeam(batchId: string, machineId: string) {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+
+    const serviceClient = createServiceClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    // Use the RPC we created to handle the linking safely
+    const { error } = await serviceClient.rpc('link_batch_to_machine', {
+        p_batch_id: batchId,
+        p_machine_id: machineId
+    })
+
+    if (error) {
+        console.error('Error linking beam to machine:', error)
+        return { error: 'Failed to start beam on machine' }
+    }
+
+    return { success: true }
+}

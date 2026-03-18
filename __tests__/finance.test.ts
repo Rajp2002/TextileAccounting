@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateDailyPay, calculateTotalPay, sumMeters, formatINR } from '../lib/finance'
+import { calculateDailyPay, calculateTotalPay, sumMeters, formatINR, sumAdvances, calculateNetPay, calculateRemainingDebt } from '../lib/finance'
 
 // ============================================================
 // UNIT TESTS: Financial Math (runs offline, no DB needed)
@@ -108,6 +108,83 @@ describe('Finance: formatINR', () => {
     it('handles zero', () => {
         const result = formatINR(0)
         expect(result).toContain('0.00')
+    })
+})
+
+// ============================================================
+// UNIT TESTS: Advance Financial Math (Upaad feature)
+// ============================================================
+
+describe('Finance: sumAdvances', () => {
+    it('sums multiple advance amounts correctly', () => {
+        const advances = [{ amount: 500 }, { amount: 300 }, { amount: 200 }]
+        expect(sumAdvances(advances)).toBe('1000.00')
+    })
+
+    it('handles string amounts from Supabase DECIMAL columns', () => {
+        const advances = [{ amount: '500.50' }, { amount: '249.50' }]
+        expect(sumAdvances(advances)).toBe('750.00')
+    })
+
+    it('handles empty array', () => {
+        expect(sumAdvances([])).toBe('0.00')
+    })
+
+    it('handles many fractional values without drift', () => {
+        const advances = Array.from({ length: 10 }, () => ({ amount: 33.33 }))
+        expect(sumAdvances(advances)).toBe('333.30')
+    })
+})
+
+describe('Finance: calculateNetPay', () => {
+    it('calculates net pay after deductions', () => {
+        // ₹8000 gross - ₹3000 advances = ₹5000 net
+        expect(calculateNetPay(8000, 3000)).toBe('5000.00')
+    })
+
+    it('handles zero advances (net = gross)', () => {
+        expect(calculateNetPay(5000, 0)).toBe('5000.00')
+    })
+
+    it('floors at ₹0 when advances exceed gross', () => {
+        // ₹5000 gross - ₹8000 advances = ₹0 (NOT negative)
+        expect(calculateNetPay(5000, 8000)).toBe('0.00')
+    })
+
+    it('handles exact match (net = ₹0)', () => {
+        expect(calculateNetPay(5000, 5000)).toBe('0.00')
+    })
+
+    it('handles string inputs', () => {
+        expect(calculateNetPay('10000.50', '3000.25')).toBe('7000.25')
+    })
+
+    it('handles fractional deduction without drift', () => {
+        // 33.3 * 3.3 type scenario
+        expect(calculateNetPay('109.89', '33.33')).toBe('76.56')
+    })
+})
+
+describe('Finance: calculateRemainingDebt', () => {
+    it('returns 0 when gross covers all advances', () => {
+        expect(calculateRemainingDebt(8000, 3000)).toBe('0.00')
+    })
+
+    it('returns leftover debt when advances exceed gross', () => {
+        // ₹5000 gross, ₹8000 advances = ₹3000 remaining
+        expect(calculateRemainingDebt(5000, 8000)).toBe('3000.00')
+    })
+
+    it('returns 0 when exact match', () => {
+        expect(calculateRemainingDebt(5000, 5000)).toBe('0.00')
+    })
+
+    it('returns 0 when no advances', () => {
+        expect(calculateRemainingDebt(5000, 0)).toBe('0.00')
+    })
+
+    it('handles string inputs', () => {
+        expect(calculateRemainingDebt('5000', '7500.50')).toBe('2500.50')
     })
 })
 

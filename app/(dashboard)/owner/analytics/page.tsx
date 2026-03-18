@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { sumMeters, calculateTotalPay, formatINR } from '@/lib/finance'
 import { toast } from 'sonner'
 import { AddWorkerDialog } from '@/components/AddWorkerDialog'
-import { Calendar as CalendarIcon, RotateCcw, ChevronDown, ChevronRight, HardHat, Briefcase, Pencil, Check, X, TrendingUp, IndianRupee, Users2 } from 'lucide-react'
+import { Calendar as CalendarIcon, RotateCcw, ChevronDown, ChevronRight, HardHat, Briefcase, Pencil, Check, X, TrendingUp, IndianRupee, Users2, Activity, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -448,6 +448,50 @@ export default function OwnerDashboard() {
         }
     })
 
+    // Yield Analytics Query (Current Month)
+    const { data: yieldAnalytics, isLoading: yieldLoading } = useQuery({
+        queryKey: ['yield_analytics_summary', userProfile?.org_id, selectedDate?.substring(0, 7)],
+        enabled: !!userProfile?.org_id && !!selectedDate,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .rpc('get_batch_yield_report', { p_org_id: userProfile!.org_id })
+            
+            if (error) throw error
+
+            // Filter for batches that had production in the current month (or are just active)
+            // For a simpler dashboard view, we'll look at recently active/consumed batches
+            const activeOrRecent = (data || []).filter((b: any) => 
+                b.batch_status === 'active' || 
+                (b.total_meters_produced > 0 && b.efficiency_variance !== null)
+            )
+
+            let totalLoss = 0
+            let alertCount = 0
+            let avgEfficiency = 0
+            let batchesWithData = 0
+
+            activeOrRecent.forEach((batch: any) => {
+                const variance = Number(batch.efficiency_variance)
+                if (!isNaN(variance)) {
+                    avgEfficiency += variance
+                    batchesWithData++
+                    
+                    if (variance < -5) {
+                        alertCount++
+                        totalLoss += Number(batch.monetary_loss || 0)
+                    }
+                }
+            })
+
+            return {
+                avgEfficiency: batchesWithData > 0 ? (avgEfficiency / batchesWithData).toFixed(1) : null,
+                alertCount,
+                totalLoss,
+                recentBatches: activeOrRecent.slice(0, 5) // Top 5 for minified view if needed
+            }
+        }
+    })
+
     const handleWorkerAdded = () => {
         // Invalidate both meter and fixed worker queries
         queryClient.invalidateQueries({ queryKey: ['production_worker_stats', userProfile?.org_id] })
@@ -585,6 +629,84 @@ export default function OwnerDashboard() {
                                 <Users2 className="h-5 w-5 text-blue-600" />
                             </div>
                         </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* 🔥 YIELD ANALYTICS & "SHET" ALERTS 🔥 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="shadow-sm">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center gap-2">
+                            <Activity className="h-5 w-5 text-indigo-500" />
+                            <CardTitle className="text-lg">Factory Efficiency</CardTitle>
+                        </div>
+                        <CardDescription>Average Batch Yield vs Target (Current Month)</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {yieldLoading ? (
+                            <Skeleton className="h-12 w-32 mt-2" />
+                        ) : yieldAnalytics?.avgEfficiency !== null ? (
+                            <div className="mt-2 flex items-baseline gap-3">
+                                <span className={`text-4xl font-black tracking-tight ${
+                                    Number(yieldAnalytics!.avgEfficiency) < -2 ? 'text-rose-600' 
+                                    : Number(yieldAnalytics!.avgEfficiency) > 2 ? 'text-teal-600'
+                                    : 'text-gray-900'
+                                }`}>
+                                    {Number(yieldAnalytics!.avgEfficiency) > 0 ? '+' : ''}{yieldAnalytics!.avgEfficiency}%
+                                </span>
+                                <span className="text-sm font-medium text-gray-500">variance</span>
+                            </div>
+                        ) : (
+                            <div className="mt-2 text-sm text-gray-400 py-3">Not enough batch data yet. Add inventory and log production.</div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card className={cn(
+                    "shadow-sm transition-all duration-300", 
+                    (yieldAnalytics?.alertCount || 0) > 0 ? "border-rose-200 bg-rose-50/50" : ""
+                )}>
+                    <CardHeader className="pb-2 flex flex-row items-start justify-between">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className={cn(
+                                    "h-5 w-5", 
+                                    (yieldAnalytics?.alertCount || 0) > 0 ? "text-rose-600" : "text-gray-400"
+                                )} />
+                                <CardTitle className={cn(
+                                    "text-lg",
+                                    (yieldAnalytics?.alertCount || 0) > 0 ? "text-rose-900" : "text-gray-900"
+                                )}>Active Alerts</CardTitle>
+                            </div>
+                            <CardDescription className={(yieldAnalytics?.alertCount || 0) > 0 ? "text-rose-700/70" : ""}>
+                                High leakage detected (&gt;5% loss)
+                            </CardDescription>
+                        </div>
+                        {(yieldAnalytics?.alertCount || 0) > 0 && (
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-xs font-bold text-white">
+                                {yieldAnalytics!.alertCount}
+                            </span>
+                        )}
+                    </CardHeader>
+                    <CardContent>
+                        {yieldLoading ? (
+                            <Skeleton className="h-12 w-full mt-2" />
+                        ) : (yieldAnalytics?.alertCount || 0) > 0 ? (
+                            <div className="mt-2">
+                                <div className="text-sm font-medium text-rose-800 mb-1">Estimated Monetary Loss</div>
+                                <div className="text-3xl font-black text-rose-600">
+                                    {formatINR(yieldAnalytics!.totalLoss)}
+                                </div>
+                                <p className="text-xs text-rose-700 mt-2 font-medium">
+                                    Check <span className="underline cursor-pointer opacity-80" onClick={() => window.location.href='/owner/inventory'}>Yarn Inventory</span> to audit specific beams.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="mt-2 flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg font-medium text-sm">
+                                <Check className="w-4 h-4" /> No critical leakage alerts.
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
