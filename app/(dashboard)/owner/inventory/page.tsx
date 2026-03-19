@@ -38,6 +38,7 @@ export default function InventoryPage() {
     const [batchForm, setBatchForm] = useState({ name: '', quality_id: '', total_weight_kg: '' })
 
     const [auditBatchId, setAuditBatchId] = useState<string | null>(null)
+    const [auditModalOpen, setAuditModalOpen] = useState(false)
     const [leftoverWeightKg, setLeftoverWeightKg] = useState<string>('0')
 
     // Real-time listener for production updates
