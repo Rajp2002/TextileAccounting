@@ -10,10 +10,29 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queueMutation } from '@/lib/db'
 import { createClient } from '@/lib/supabase/client'
 import { useOnlineStatus } from '@/hooks/use-online-status'
-import { calculateDailyPay, formatINR } from '@/lib/finance'
-import { verifyAccessCode, startBeam, linkOrderToMachine } from '@/app/(dashboard)/supervisor/actions'
+import { formatINR, calculateDailyPay } from '@/lib/finance'
+import { 
+    verifyAccessCode, 
+    startBeam, 
+    linkOrderToMachine, 
+    shiftHandover 
+} from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
-import { CalendarDays, KeyRound, Loader2, RotateCcw, Lock, BoxSelect, Search, Link as LinkIcon, ClipboardList } from 'lucide-react'
+import { 
+    CalendarDays, 
+    KeyRound, 
+    Loader2, 
+    RotateCcw, 
+    Lock, 
+    BoxSelect, 
+    Search, 
+    Link as LinkIcon, 
+    ClipboardList, 
+    UserMinus, 
+    AlertCircle, 
+    CheckCircle2, 
+    Settings2 
+} from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 
@@ -76,7 +95,10 @@ export default function ProductionEntryForm() {
     const [linkingOrderMachineId, setLinkingOrderMachineId] = useState<string | null>(null)
     const [selectedOrderId, setSelectedOrderId] = useState<string>('')
     const [linkingOrder, setLinkingOrder] = useState(false)
-
+    // Handover State
+    const [handoverOpen, setHandoverOpen] = useState(false)
+    const [handoverMachineId, setHandoverMachineId] = useState<string | null>(null)
+    const [performingHandover, setPerformingHandover] = useState(false)
 
     const isOnline = useOnlineStatus()
     const supabase = createClient()
@@ -213,6 +235,8 @@ export default function ProductionEntryForm() {
             const activeBatch = activeBatches?.find(b => b.current_machine_id === machine.id)
             const activeOrder = activeOrders?.find(o => o.id === (machine as any).current_order_id)
 
+            const isReadyToRun = !!effectiveWorkerId && !!activeBatch && !!activeOrder
+
             return {
                 machine,
                 assignedWorkerId,
@@ -221,7 +245,8 @@ export default function ProductionEntryForm() {
                 isSaved,
                 existingLogId: existingLog?.id,
                 activeBatch,
-                activeOrder
+                activeOrder,
+                isReadyToRun
             }
         })
     }, [machines, assignments, activeBatches, activeOrders, currentShift, metersInput, existingLogs])
@@ -340,6 +365,10 @@ export default function ProductionEntryForm() {
 
     const handleStartBeam = async () => {
         if (!linkingMachineId || !linkingBatchId) return
+        if (!isOnline) {
+            toast.error("Offline: Cannot link beam while offline.")
+            return
+        }
         setLinkingBeam(true)
         try {
             const res = await startBeam(linkingBatchId, linkingMachineId)
@@ -358,6 +387,10 @@ export default function ProductionEntryForm() {
 
     const handleLinkOrder = async () => {
         if (!linkingOrderMachineId || !selectedOrderId) return
+        if (!isOnline) {
+            toast.error("Offline: Cannot link order while offline.")
+            return
+        }
         
         // Quality Guardrail Check
         const machine = machineCards.find(c => c.machine.id === linkingOrderMachineId)
@@ -386,6 +419,22 @@ export default function ProductionEntryForm() {
             toast.error(err.message || "Failed to link order.")
         } finally {
             setLinkingOrder(false)
+        }
+    }
+    const handleShiftHandover = async () => {
+        if (!handoverMachineId || !userProfile?.org_id) return
+        setPerformingHandover(true)
+        try {
+            const res = await shiftHandover(userProfile.org_id, handoverMachineId, currentShift)
+            if (res.error) throw new Error(res.error)
+            toast.success("Shift handover complete. Worker unlinked.")
+            setHandoverOpen(false)
+            setHandoverMachineId(null)
+            queryClient.invalidateQueries({ queryKey: ['machine_assignments'] })
+        } catch (err: any) {
+            toast.error(err.message || "Handover failed")
+        } finally {
+            setPerformingHandover(false)
         }
     }
 
@@ -469,7 +518,7 @@ export default function ProductionEntryForm() {
             ) : null}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {machineCards.map(({ machine, assignedWorkerId, effectiveWorkerId, meters, isSaved, activeBatch, activeOrder }) => {
+                {machineCards.map(({ machine, assignedWorkerId, effectiveWorkerId, meters, isSaved, activeBatch, activeOrder, isReadyToRun }) => {
                     const rate = machine.rate_per_meter || 0
                     const displayMeters = metersInput[machine.id] !== undefined ? metersInput[machine.id] : meters
                     const pay = displayMeters > 0 ? calculateDailyPay(displayMeters, rate) : null
@@ -493,8 +542,24 @@ export default function ProductionEntryForm() {
 
                                 <div className="space-y-1">
                                     <Label className="text-xs text-gray-500">Worker</Label>
-                                    <div className="text-sm font-medium h-8 flex items-center">
-                                        {worker ? worker.name : <span className="text-red-500 italic">No assigned worker</span>}
+                                    <div className="flex items-center justify-between h-8">
+                                        <div className="text-sm font-medium">
+                                            {worker ? worker.name : <span className="text-red-500 italic">No assigned worker</span>}
+                                        </div>
+                                        {worker && !disabled && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 px-2 text-[10px] text-orange-600 hover:text-orange-700 hover:bg-orange-50 bg-orange-50/50 border border-orange-100/50"
+                                                onClick={() => {
+                                                    setHandoverMachineId(machine.id)
+                                                    setHandoverOpen(true)
+                                                }}
+                                            >
+                                                <UserMinus className="h-3 w-3 mr-1" />
+                                                Shift Change
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                                 
@@ -558,36 +623,65 @@ export default function ProductionEntryForm() {
                                      </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 pt-3 border-t">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="lg"
-                                        className="h-12 w-16 bg-gray-50 hover:bg-gray-100 text-gray-700 text-lg border-gray-200"
-                                        disabled={disabled}
-                                        onClick={() => handleMetersChange(machine.id, Math.max(0, displayMeters - 10), isSaved)}
-                                    >
-                                        -10
-                                    </Button>
-                                    <Input
-                                        type="number"
-                                        value={displayMeters || ''}
-                                        disabled={disabled}
-                                        onChange={(e) => handleMetersChange(machine.id, Number(e.target.value), isSaved)}
-                                        placeholder="0"
-                                        className="text-center text-xl font-bold h-12 w-full flex-1 border-gray-300 focus:border-teal-500 focus:ring-teal-500 transition-all"
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="lg"
-                                        className="h-12 w-16 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-100 text-lg"
-                                        disabled={disabled}
-                                        onClick={() => handleMetersChange(machine.id, displayMeters + 10, isSaved)}
-                                    >
-                                        +10
-                                    </Button>
-                                </div>
+                                {/* Ready to Run check (Ready to Run Gap) */}
+                                {!isReadyToRun ? (
+                                    <div className="pt-3 border-t">
+                                        <div className="bg-gray-50 rounded-lg p-3 border border-dashed border-gray-200">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <Settings2 className="h-4 w-4 text-gray-400" />
+                                                <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Setup Required</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-gray-600">Worker Assigned</span>
+                                                    {effectiveWorkerId ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <AlertCircle className="h-3.5 w-3.5 text-red-400" />}
+                                                </div>
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-gray-600">Beam Loaded</span>
+                                                    {activeBatch ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <AlertCircle className="h-3.5 w-3.5 text-red-400" />}
+                                                </div>
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="text-gray-600">Order Linked</span>
+                                                    {activeOrder ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <AlertCircle className="h-3.5 w-3.5 text-red-400" />}
+                                                </div>
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 mt-3 text-center italic">
+                                                Complete setup above to enable production entry
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3 pt-3 border-t">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="lg"
+                                            className="h-12 w-16 bg-gray-50 hover:bg-gray-100 text-gray-700 text-lg border-gray-200"
+                                            disabled={disabled}
+                                            onClick={() => handleMetersChange(machine.id, Math.max(0, displayMeters - 10), isSaved)}
+                                        >
+                                            -10
+                                        </Button>
+                                        <Input
+                                            type="number"
+                                            value={displayMeters || ''}
+                                            disabled={disabled}
+                                            onChange={(e) => handleMetersChange(machine.id, Number(e.target.value), isSaved)}
+                                            placeholder="0"
+                                            className="text-center text-xl font-bold h-12 w-full flex-1 border-gray-300 focus:border-teal-500 focus:ring-teal-500 transition-all"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="lg"
+                                            className="h-12 w-16 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-100 text-lg"
+                                            disabled={disabled}
+                                            onClick={() => handleMetersChange(machine.id, displayMeters + 10, isSaved)}
+                                        >
+                                            +10
+                                        </Button>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     )

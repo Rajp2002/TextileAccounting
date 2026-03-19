@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Plus, PackageSearch, BookmarkCheck, FileText, Settings2, Trash2 } from 'lucide-react'
@@ -26,15 +26,40 @@ export default function InventoryPage() {
 
     // Quality Form State
     const [qualityModalOpen, setQualityModalOpen] = useState(false)
-    const [qualityForm, setQualityForm] = useState({ name: '', target_yield: '', avg_sale_price_per_m: '' })
+    const [qualityForm, setQualityForm] = useState({ 
+        name: '', 
+        target_yield: '', 
+        avg_sale_price_per_m: '',
+        default_worker_rate_per_m: '' 
+    })
 
     // Batch Form State
     const [batchModalOpen, setBatchModalOpen] = useState(false)
     const [batchForm, setBatchForm] = useState({ name: '', quality_id: '', total_weight_kg: '' })
 
-    // Audit Modal State
-    const [auditModalOpen, setAuditModalOpen] = useState(false)
     const [auditBatchId, setAuditBatchId] = useState<string | null>(null)
+    const [leftoverWeightKg, setLeftoverWeightKg] = useState<string>('0')
+
+    // Real-time listener for production updates
+    useEffect(() => {
+        if (!userProfile?.org_id) return
+
+        const channel = supabase
+            .channel('inventory_realtime')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'production_logs', filter: `org_id=eq.${userProfile.org_id}` },
+                () => {
+                    queryClient.invalidateQueries({ queryKey: ['yarn_batches'] })
+                    queryClient.invalidateQueries({ queryKey: ['batch_yield_report'] })
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [userProfile?.org_id, queryClient, supabase])
 
     // Qualities Query
     const { data: qualities, isLoading: qualitiesLoading } = useQuery({
@@ -259,8 +284,11 @@ export default function InventoryPage() {
                                                     Target: <strong className="ml-1 text-gray-900">{quality.target_yield} m/kg</strong>
                                                 </span>
                                             </div>
-                                            <div className="text-xs text-gray-500 mt-2">
+                                            <div className="text-xs text-gray-500 mt-1">
                                                 Est. Sale Value: <strong className="text-green-700">{formatINR(quality.avg_sale_price_per_m)}/m</strong>
+                                            </div>
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                Worker Rate: <strong className="text-teal-700">₹{quality.default_worker_rate_per_m || 0}/m</strong>
                                             </div>
                                         </div>
                                         <div className="flex gap-2 text-gray-400">
@@ -306,9 +334,17 @@ export default function InventoryPage() {
                                     value={qualityForm.avg_sale_price_per_m}
                                     onChange={e => setQualityForm({ ...qualityForm, avg_sale_price_per_m: e.target.value })}
                                 />
-                                <p className="text-xs text-gray-400">Used for leakage calculations.</p>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Worker Rate (₹/m)</Label>
+                                <Input 
+                                    type="number" step="0.01" placeholder="e.g., 4.50" 
+                                    value={qualityForm.default_worker_rate_per_m}
+                                    onChange={e => setQualityForm({ ...qualityForm, default_worker_rate_per_m: e.target.value })}
+                                />
                             </div>
                         </div>
+                        <p className="text-xs text-gray-400">Worker rate is auto-applied to machines using this quality.</p>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setQualityModalOpen(false)}>Cancel</Button>
@@ -320,14 +356,15 @@ export default function InventoryPage() {
                                 const res = await addQuality({
                                     name: qualityForm.name,
                                     target_yield: Number(qualityForm.target_yield),
-                                    avg_sale_price_per_m: Number(qualityForm.avg_sale_price_per_m || 0)
+                                    avg_sale_price_per_m: Number(qualityForm.avg_sale_price_per_m || 0),
+                                    default_worker_rate_per_m: Number(qualityForm.default_worker_rate_per_m || 0)
                                 })
                                 setIsSubmitting(false)
                                 if (res.error) toast.error(res.error)
                                 else {
                                     toast.success("Quality added successfully")
                                     setQualityModalOpen(false)
-                                    setQualityForm({ name: '', target_yield: '', avg_sale_price_per_m: '' })
+                                    setQualityForm({ name: '', target_yield: '', avg_sale_price_per_m: '', default_worker_rate_per_m: '' })
                                     queryClient.invalidateQueries({ queryKey: ['qualities', userProfile?.org_id] })
                                 }
                             }}
@@ -542,6 +579,31 @@ export default function InventoryPage() {
                                 </div>
                             )}
 
+                            {/* Leftover Yarn Entry (Tali Gap) */}
+                            {auditReport?.batch_status === 'active' && (
+                                <div className="mt-4 p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <TrendingDown className="w-4 h-4 text-indigo-600" />
+                                        <Label className="text-sm font-bold text-indigo-900">Leftover Yarn? (Tali)</Label>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="relative flex-1">
+                                            <Input 
+                                                type="number" 
+                                                step="0.1" 
+                                                value={leftoverWeightKg}
+                                                onChange={e => setLeftoverWeightKg(e.target.value)}
+                                                className="pr-8 bg-white"
+                                            />
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">kg</span>
+                                        </div>
+                                        <p className="text-[10px] text-indigo-700 leading-tight flex-1">
+                                            If any yarn remains on the beam, enter it here to exclude it from the audit.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                         </div>
                     ) : (
                         <div className="py-12 text-center text-gray-500">No data found for this batch.</div>
@@ -557,12 +619,13 @@ export default function InventoryPage() {
                                 onClick={async () => {
                                     if(!auditReport.batch_id) return
                                     setIsSubmitting(true)
-                                    const res = await closeYarnBatch(auditReport.batch_id)
+                                    const res = await closeYarnBatch(auditReport.batch_id, Number(leftoverWeightKg || 0))
                                     setIsSubmitting(false)
                                     if (res.error) toast.error(res.error)
                                     else {
                                         toast.success("Batch successfully closed and audited.")
                                         setAuditModalOpen(false)
+                                        setLeftoverWeightKg('0')
                                         queryClient.invalidateQueries({ queryKey: ['yarn_batches', userProfile?.org_id] })
                                     }
                                 }}

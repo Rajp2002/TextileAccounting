@@ -1,10 +1,24 @@
 'use client'
 
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { CalendarDays, TrendingUp, TrendingDown, Clock, Layers } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { CalendarDays, TrendingUp, TrendingDown, Clock, Layers, Link2, Loader2, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { createClient } from "@/lib/supabase/client"
+import { assignOrderToMachines } from "@/app/(dashboard)/owner/actions"
+import { toast } from "sonner"
 
 interface OrderCardProps {
   order: {
@@ -19,6 +33,7 @@ interface OrderCardProps {
     status: string
     quality_name: string
     assigned_machines_count: number
+    org_id: string
   }
   forecast?: {
     predicted_finish_date: string | null
@@ -29,6 +44,12 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order, forecast }: OrderCardProps) {
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false)
+  const [selectedMachines, setSelectedMachines] = useState<string[]>([])
+  
+  const queryClient = useQueryClient()
+  const supabase = createClient()
+
   const isOverdue = new Date() > new Date(order.deadline) && order.progress_percent < 100
   const isAtRisk = !isOverdue && (new Date(order.deadline).getTime() - new Date().getTime()) < 48 * 60 * 60 * 1000 && order.progress_percent < 90
   
@@ -53,12 +74,56 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
   const paceColorText = order.pace_index >= 1 ? "text-green-700" : "text-amber-700"
   const paceBg = order.pace_index >= 1 ? "bg-green-50" : "bg-amber-50"
 
+  // Query all machines for the org
+  const { data: machines, isLoading: machinesLoading } = useQuery({
+    queryKey: ['machines', order.org_id],
+    enabled: assignDialogOpen,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('machines')
+        .select('id, name, current_order_id')
+        .eq('org_id', order.org_id)
+        .order('name')
+      if (error) throw error
+      
+      // Initialize selected machines with those currently assigned to THIS order
+      const assigned = (data as any[]).filter(m => m.current_order_id === order.order_id).map(m => m.id)
+      setSelectedMachines(assigned)
+      
+      return data as any[]
+    }
+  })
+
+  // Mutation for assigning machines
+  const assignMutation = useMutation({
+    mutationFn: async (machineIds: string[]) => {
+      const res = await assignOrderToMachines(order.order_id, machineIds)
+      if (res.error) throw new Error(res.error)
+      return res
+    },
+    onSuccess: () => {
+      toast.success("Machines assigned successfully")
+      setAssignDialogOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['order_progress_summary'] })
+      queryClient.invalidateQueries({ queryKey: ['machines'] })
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to assign machines")
+    }
+  })
+
+  const toggleMachine = (id: string) => {
+    setSelectedMachines(prev => 
+      prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
+    )
+  }
+
   return (
     <Card className={cn(
-        "overflow-hidden border-l-4 transition-all hover:shadow-md",
+        "overflow-hidden border-l-4 transition-all hover:shadow-md h-full flex flex-col",
         isOverdue ? "border-l-red-500" : isAtRisk ? "border-l-amber-500" : "border-l-teal-500"
     )}>
-      <CardContent className="p-5">
+      <CardContent className="p-5 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-1">
             <h3 className="font-bold text-lg text-gray-900 leading-none">{order.party_name}</h3>
@@ -75,7 +140,7 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
           </Badge>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1">
           {/* Progress Section */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm mb-1 items-baseline">
@@ -164,10 +229,24 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
             </div>
           )}
           
-          <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium pt-1">
-             <div className="flex items-center gap-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                {order.assigned_machines_count} Machines Assigned
+          <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium pt-3 mt-auto border-t">
+             <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+                    {order.assigned_machines_count} Machines
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 px-1.5 text-[9px] font-bold text-teal-600 hover:text-teal-700 hover:bg-teal-50 gap-1 uppercase tracking-tighter"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAssignDialogOpen(true);
+                  }}
+                >
+                  <Link2 className="h-2.5 w-2.5" />
+                  Link Machines
+                </Button>
              </div>
              {order.progress_percent < 100 && (
                  <div className="italic">
@@ -177,6 +256,71 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
           </div>
         </div>
       </CardContent>
+
+      <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Link Machines</DialogTitle>
+            <DialogDescription>
+              Select which machines are working on <strong>{order.party_name}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {machinesLoading ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2">
+                {machines?.map(machine => {
+                  const isSelected = selectedMachines.includes(machine.id)
+                  const isOtherOrder = machine.current_order_id && machine.current_order_id !== order.order_id
+                  
+                  return (
+                    <button
+                      key={machine.id}
+                      onClick={() => toggleMachine(machine.id)}
+                      className={cn(
+                        "flex items-center justify-between p-3 rounded-lg border text-left transition-all",
+                        isSelected 
+                          ? "border-teal-600 bg-teal-50 ring-1 ring-teal-600" 
+                          : "border-gray-200 hover:border-teal-300 hover:bg-gray-50"
+                      )}
+                    >
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm truncate">{machine.name}</div>
+                        {isOtherOrder && (
+                          <div className="text-[9px] text-amber-600 font-bold uppercase truncate">Switching Order</div>
+                        )}
+                      </div>
+                      {isSelected && <Check className="h-4 w-4 text-teal-600 shrink-0 ml-1" />}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setAssignDialogOpen(false)}
+              disabled={assignMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="bg-teal-600 hover:bg-teal-700"
+              onClick={() => assignMutation.mutate(selectedMachines)}
+              disabled={assignMutation.isPending}
+            >
+              {assignMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Save Assignment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

@@ -407,7 +407,7 @@ export default function OwnerDashboard() {
                     .in('fixed_worker_id', dailyWorkerIds)
                     .eq('present', true)
                     .gte('date', `${month}-01`)
-                    .lte('date', `${month}-31`)
+                    .lte('date', `${month}-31`);
                 (attendance || []).forEach((a: any) => {
                     attendanceMap[a.fixed_worker_id] = (attendanceMap[a.fixed_worker_id] || 0) + 1
                 })
@@ -573,7 +573,7 @@ export default function OwnerDashboard() {
                                                     <Select name="quality_id" defaultValue={editingOrder?.quality_id} required>
                                                         <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                                                         <SelectContent>
-                                                            {qualities?.map(q => <SelectItem key={q.id} value={q.id}>{q.name}</SelectItem>)}
+                                                            {qualities?.map((q: any) => <SelectItem key={q.id} value={q.id}>{q.name}</SelectItem>)}
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
@@ -624,10 +624,18 @@ export default function OwnerDashboard() {
                         {[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}
                     </div>
                 ) : !ordersSummary || ordersSummary.length === 0 ? (
-                    <div className="py-10 text-center border-2 border-dashed rounded-xl bg-gray-50/30">
-                        <Plus className="h-8 w-8 mx-auto text-gray-300 mb-3" />
-                        <p className="text-gray-500 font-medium">No active orders</p>
-                        <p className="text-xs text-gray-400 mt-1">Start tracking client targets by creating your first order.</p>
+                    <div className="py-12 text-center border-2 border-dashed rounded-xl bg-gray-50/50 border-gray-200">
+                        <div className="bg-white p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
+                            <Plus className="h-8 w-8 text-teal-500" />
+                        </div>
+                        <p className="text-gray-900 font-bold text-lg">No active orders found</p>
+                        <p className="text-sm text-gray-500 mt-1 mb-6 max-w-xs mx-auto">Start tracking client targets, daily pace, and predicted finish dates.</p>
+                        <Button 
+                            onClick={() => { setEditingOrder(null); setOrderDialogOpen(true); }}
+                            className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-8 shadow-lg shadow-teal-100"
+                        >
+                            <Plus className="h-4 w-4 mr-2" /> Create First Order
+                        </Button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -659,7 +667,7 @@ export default function OwnerDashboard() {
                             <div className="space-y-1">
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Wages Today</p>
                                 <p className="text-3xl font-black text-gray-900">
-                                    {workersLoading ? '...' : formatINR(workerStats?.reduce((s, w) => s + parseFloat(w.pay), 0) || 0)}
+                                    {workersLoading ? '...' : formatINR(workerStats?.reduce((s: number, w: any) => s + parseFloat(w.pay), 0) || 0)}
                                 </p>
                             </div>
                             <div className="p-2 bg-indigo-50 rounded-lg"><IndianRupee className="h-5 w-5 text-indigo-600" /></div>
@@ -720,7 +728,7 @@ export default function OwnerDashboard() {
                     <CardContent>
                         {workersLoading ? <Skeleton className="h-40 w-full" /> : workerStats?.length ? (
                             <div className="space-y-1">
-                                {workerStats.map(w => <WorkerRow key={w.id} worker={w} />)}
+                                {workerStats.map((w: any) => <WorkerRow key={w.id} worker={w} />)}
                             </div>
                         ) : <div className="py-10 text-center text-gray-400">No production logs</div>}
                     </CardContent>
@@ -731,7 +739,7 @@ export default function OwnerDashboard() {
                     <CardContent>
                         {fixedWorkersList?.length ? (
                             <div className="divide-y">
-                                {fixedWorkersList.map(fw => <FixedWorkerRow key={fw.id} worker={fw as any} onSalaryUpdate={handleFixedSalaryUpdate} />)}
+                                {fixedWorkersList.map((fw: any) => <FixedWorkerRow key={fw.id} worker={fw as any} onSalaryUpdate={handleFixedSalaryUpdate} />)}
                             </div>
                         ) : <div className="py-10 text-center text-gray-400">No staff found</div>}
                     </CardContent>
