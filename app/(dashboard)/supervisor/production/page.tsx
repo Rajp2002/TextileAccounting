@@ -11,11 +11,19 @@ import { queueMutation } from '@/lib/db'
 import { createClient } from '@/lib/supabase/client'
 import { useOnlineStatus } from '@/hooks/use-online-status'
 import { calculateDailyPay, formatINR } from '@/lib/finance'
-import { verifyAccessCode, startBeam } from '@/app/(dashboard)/supervisor/actions'
+import { verifyAccessCode, startBeam, linkOrderToMachine } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
-import { CalendarDays, KeyRound, Loader2, RotateCcw, Lock, BoxSelect, Search, Link as LinkIcon } from 'lucide-react'
+import { CalendarDays, KeyRound, Loader2, RotateCcw, Lock, BoxSelect, Search, Link as LinkIcon, ClipboardList } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+
+interface Order {
+    id: string
+    party_name: string
+    quality_id: string
+    quality_name: string
+    status: string
+}
 
 interface Worker {
     id: number
@@ -62,6 +70,13 @@ export default function ProductionEntryForm() {
     const [linkingMachineId, setLinkingMachineId] = useState<string | null>(null)
     const [linkingBatchId, setLinkingBatchId] = useState<string>('')
     const [linkingBeam, setLinkingBeam] = useState(false)
+
+    // Order Linking State
+    const [orderModalOpen, setOrderModalOpen] = useState(false)
+    const [linkingOrderMachineId, setLinkingOrderMachineId] = useState<string | null>(null)
+    const [selectedOrderId, setSelectedOrderId] = useState<string>('')
+    const [linkingOrder, setLinkingOrder] = useState(false)
+
 
     const isOnline = useOnlineStatus()
     const supabase = createClient()
@@ -163,6 +178,26 @@ export default function ProductionEntryForm() {
         }
     })
 
+    const { data: activeOrders, isLoading: ordersLoading } = useQuery({
+        queryKey: ['active_orders', userProfile?.org_id],
+        enabled: !!userProfile?.org_id,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('orders')
+                .select('id, party_name, quality_id, qualities(name), status')
+                .eq('org_id', userProfile!.org_id)
+                .eq('status', 'active')
+            if (error) throw error
+            return data.map((o: any) => ({
+                id: o.id,
+                party_name: o.party_name,
+                quality_id: o.quality_id,
+                quality_name: o.qualities?.name,
+                status: o.status
+            })) as Order[]
+        }
+    })
+
     const machineCards = useMemo(() => {
         if (!machines) return []
         return machines.map(machine => {
@@ -176,6 +211,7 @@ export default function ProductionEntryForm() {
             const isSaved = !!existingLog
             
             const activeBatch = activeBatches?.find(b => b.current_machine_id === machine.id)
+            const activeOrder = activeOrders?.find(o => o.id === (machine as any).current_order_id)
 
             return {
                 machine,
@@ -184,10 +220,12 @@ export default function ProductionEntryForm() {
                 meters: existingLog ? Number(existingLog.meters) : (metersInput[machine.id] || 0),
                 isSaved,
                 existingLogId: existingLog?.id,
-                activeBatch
+                activeBatch,
+                activeOrder
             }
         })
-    }, [machines, assignments, activeBatches, currentShift, metersInput, existingLogs])
+    }, [machines, assignments, activeBatches, activeOrders, currentShift, metersInput, existingLogs])
+
 
     const handleMetersChange = (machineId: string, value: number, isSaved: boolean) => {
         if (isSaved && !unlocked) return // Cannot change if saved and not unlocked
@@ -228,12 +266,8 @@ export default function ProductionEntryForm() {
 
     const handleSaveAll = async () => {
         // Only save entries that have meters > 0 and are either NOT saved, OR are unlocked for editing.
-        // Wait, if unlocked, user might have modified a saved entry.
         const entriesToSave = machineCards.filter(c => {
             if (c.isSaved && !unlocked) return false;
-
-            // If unlocked, we only want to save if there's a user input value (which might be 0, overriding the old one?).
-            // Actually if unlocked, user can submit whatever is in the input. Let's just save ones where c.meters is defined.
             return (metersInput[c.machine.id] !== undefined) || (!c.isSaved && c.meters > 0)
         })
 
@@ -255,8 +289,6 @@ export default function ProductionEntryForm() {
             if (!user) throw new Error('Not authenticated')
 
             for (const item of entriesToSave) {
-                // If it's already saved, and we are unlocked, we upsert based on the existingLogId
-                // Otherwise we insert a new log
                 const finalMeters = metersInput[item.machine.id] !== undefined ? metersInput[item.machine.id] : item.meters
 
                 const productionData: any = {
@@ -267,6 +299,7 @@ export default function ProductionEntryForm() {
                     shift: currentShift,
                     org_id: userProfile!.org_id,
                     yarn_batch_id: item.activeBatch?.id || null, // Auto-fill active batch
+                    order_id: item.activeOrder?.id || null, // Auto-fill active order
                 }
 
                 if (item.existingLogId) {
@@ -320,6 +353,39 @@ export default function ProductionEntryForm() {
             toast.error(err.message || "Failed to start beam.")
         } finally {
             setLinkingBeam(false)
+        }
+    }
+
+    const handleLinkOrder = async () => {
+        if (!linkingOrderMachineId || !selectedOrderId) return
+        
+        // Quality Guardrail Check
+        const machine = machineCards.find(c => c.machine.id === linkingOrderMachineId)
+        const order = activeOrders?.find(o => o.id === selectedOrderId)
+        
+        if (machine?.activeBatch && order && machine.activeBatch.quality_id !== order.quality_id) {
+            toast.warning(
+                `Quality Mismatch! Order is "${order.quality_name}" but Machine has "${machine.activeBatch.quality?.name}" beam.`,
+                { 
+                    duration: 6000,
+                    description: "Physical yarn on machine doesn't match order requirements."
+                }
+            )
+        }
+
+        setLinkingOrder(true)
+        try {
+            const res = await linkOrderToMachine(selectedOrderId, linkingOrderMachineId)
+            if (res.error) throw new Error(res.error)
+            toast.success("Order linked to machine!")
+            setOrderModalOpen(false)
+            setLinkingOrderMachineId(null)
+            setSelectedOrderId('')
+            queryClient.invalidateQueries({ queryKey: ['machines', userProfile?.org_id] })
+        } catch (err: any) {
+            toast.error(err.message || "Failed to link order.")
+        } finally {
+            setLinkingOrder(false)
         }
     }
 
@@ -403,14 +469,11 @@ export default function ProductionEntryForm() {
             ) : null}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {machineCards.map(({ machine, assignedWorkerId, effectiveWorkerId, meters, isSaved }) => {
+                {machineCards.map(({ machine, assignedWorkerId, effectiveWorkerId, meters, isSaved, activeBatch, activeOrder }) => {
                     const rate = machine.rate_per_meter || 0
-
-                    // Priority of meters: metersInput (if user editing) > existing meters > 0
                     const displayMeters = metersInput[machine.id] !== undefined ? metersInput[machine.id] : meters
                     const pay = displayMeters > 0 ? calculateDailyPay(displayMeters, rate) : null
                     const worker = workers?.find(w => w.id === effectiveWorkerId)
-
                     const disabled = isSaved && !unlocked
 
                     return (
@@ -435,35 +498,67 @@ export default function ProductionEntryForm() {
                                     </div>
                                 </div>
                                 
-                                <div className="space-y-1 mt-1 border-t pt-2">
-                                     <Label className="text-xs text-gray-500">Active Beam (Yarn Batch)</Label>
-                                     <div className="text-sm font-medium h-8 flex items-center">
-                                        {machineCards.find(c => c.machine.id === machine.id)?.activeBatch ? (
-                                            <span className="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded text-xs font-semibold">
-                                                {machineCards.find(c => c.machine.id === machine.id)?.activeBatch?.name} 
-                                                <span className="font-normal text-indigo-500 ml-1">
-                                                    ({machineCards.find(c => c.machine.id === machine.id)?.activeBatch?.quality?.name})
+                                <div className="grid grid-cols-2 gap-2 mt-1 border-t pt-2">
+                                     <div className="space-y-1">
+                                         <Label className="text-xs text-gray-500">Active Beam</Label>
+                                         <div className="text-sm font-medium h-10 flex items-center">
+                                            {activeBatch ? (
+                                                <span className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded text-xs font-semibold truncate w-full" title={`${activeBatch.name} (${activeBatch.quality?.name})`}>
+                                                    {activeBatch.name} 
+                                                    <span className="font-normal text-indigo-500 ml-1">
+                                                        ({activeBatch.quality?.name})
+                                                    </span>
                                                 </span>
-                                            </span>
-                                        ) : (
-                                            <Button 
-                                                variant="outline" 
-                                                size="sm" 
-                                                className="h-7 text-xs border-dashed text-gray-500"
-                                                onClick={() => {
-                                                    setLinkingMachineId(machine.id)
-                                                    setLinkingBatchId('')
-                                                    setBeamModalOpen(true)
-                                                }}
-                                                disabled={disabled}
-                                            >
-                                                Start New Beam
-                                            </Button>
-                                        )}
+                                            ) : (
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="h-8 w-full text-[10px] border-dashed text-gray-500 px-1"
+                                                    onClick={() => {
+                                                        setLinkingMachineId(machine.id)
+                                                        setLinkingBatchId('')
+                                                        setBeamModalOpen(true)
+                                                    }}
+                                                    disabled={disabled}
+                                                >
+                                                    <LinkIcon className="h-3 w-3 mr-1" />
+                                                    Start Beam
+                                                </Button>
+                                            )}
+                                         </div>
+                                     </div>
+
+                                     <div className="space-y-1">
+                                         <Label className="text-xs text-gray-500">Active Order</Label>
+                                         <div className="text-sm font-medium h-10 flex items-center">
+                                            {activeOrder ? (
+                                                <span className="text-teal-700 bg-teal-50 px-2 py-1 rounded text-xs font-semibold truncate w-full" title={activeOrder.party_name}>
+                                                    {activeOrder.party_name}
+                                                    <span className="font-normal text-teal-500 ml-1">
+                                                        ({activeOrder.quality_name})
+                                                    </span>
+                                                </span>
+                                            ) : (
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="h-8 w-full text-[10px] border-dashed text-gray-500 px-1"
+                                                    onClick={() => {
+                                                        setLinkingOrderMachineId(machine.id)
+                                                        setSelectedOrderId('')
+                                                        setOrderModalOpen(true)
+                                                    }}
+                                                    disabled={disabled}
+                                                >
+                                                    <ClipboardList className="h-3 w-3 mr-1" />
+                                                    Link Order
+                                                </Button>
+                                            )}
+                                         </div>
                                      </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 pt-3">
+                                <div className="flex items-center gap-3 pt-3 border-t">
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -552,7 +647,6 @@ export default function ProductionEntryForm() {
                             {activeBatches && activeBatches.length > 0 ? (
                                 <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2">
                                     {activeBatches
-                                        // Only show batches not currently tied to this exact machine (or completely free)
                                         .filter(b => b.current_machine_id !== linkingMachineId)
                                         .map(batch => (
                                         <button
@@ -586,6 +680,59 @@ export default function ProductionEntryForm() {
                         >
                             {linkingBeam ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
                             Link & Start
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Link Order Modal */}
+            <Dialog open={orderModalOpen} onOpenChange={setOrderModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-teal-700">
+                            <ClipboardList className="h-5 w-5" /> Assign Order to Machine
+                        </DialogTitle>
+                        <DialogDescription>
+                            Select the active order for this machine. Every meter logged will be tracked against this order.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Select Order</Label>
+                            {activeOrders && activeOrders.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2">
+                                    {activeOrders.map(order => (
+                                        <button
+                                            key={order.id}
+                                            onClick={() => setSelectedOrderId(order.id)}
+                                            className={cn(
+                                                "flex flex-col text-left p-3 rounded-lg border transition-all",
+                                                selectedOrderId === order.id 
+                                                    ? "border-teal-600 bg-teal-50 ring-1 ring-teal-600" 
+                                                    : "border-gray-200 hover:border-teal-300 hover:bg-gray-50"
+                                            )}
+                                        >
+                                            <span className="font-medium text-gray-900">{order.party_name}</span>
+                                            <span className="text-xs text-gray-500">{order.quality_name}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-gray-500 p-4 border rounded bg-gray-50 text-center">
+                                    No active orders found. Ask the owner to add orders.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => { setOrderModalOpen(false); setSelectedOrderId('') }}>Cancel</Button>
+                        <Button
+                            disabled={!selectedOrderId || linkingOrder}
+                            className="bg-teal-600 hover:bg-teal-700 text-white"
+                            onClick={handleLinkOrder}
+                        >
+                            {linkingOrder ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                            Assign Order
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -147,3 +147,48 @@ export async function closeYarnBatch(batchId: string) {
     if (error) return { error: error.message }
     return { success: true }
 }
+// ─── ORDER ACTIONS ────────────────────────────────────────────────────────────
+
+export async function upsertOrder(data: {
+    id?: string;
+    party_name: string;
+    quality_id: string;
+    total_target_meters: number;
+    start_date: string;
+    deadline: string;
+    status: 'active' | 'completed' | 'cancelled';
+}) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const orderData = {
+        org_id: profile.org_id,
+        ...data
+    }
+
+    const { error } = await supabase
+        .from('orders')
+        .upsert(orderData)
+        .select()
+
+    if (error) return { error: error.message }
+    
+    revalidatePath('/owner/analytics')
+    return { success: true }
+}
+
+export async function deleteOrder(orderId: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderId)
+        .eq('org_id', profile.org_id)
+
+    if (error) return { error: error.message }
+    
+    revalidatePath('/owner/analytics')
+    return { success: true }
+}
