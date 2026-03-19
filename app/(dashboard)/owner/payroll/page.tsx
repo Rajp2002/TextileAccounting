@@ -11,6 +11,7 @@ import {
     CheckCircle2, Circle, ChevronLeft, ChevronRight,
     HardHat, Briefcase, AlertCircle, IndianRupee, Loader2, HandCoins
 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { toggleWorkerPaid } from './actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
@@ -110,6 +111,7 @@ function MeterWorkerRow({
     const [expanded, setExpanded] = useState(false)
     const isPaid = worker.payment?.paid ?? false
     const hasAdvances = worker.totalAdvances > 0
+    const debtRatio = worker.totalPay > 0 ? worker.totalAdvances / worker.totalPay : 0
 
     return (
         <div className={cn(
@@ -129,14 +131,24 @@ function MeterWorkerRow({
                         <div className="text-xs text-gray-500">
                             {worker.totalMeters.toFixed(1)} m across {worker.machines.length} machine{worker.machines.length !== 1 ? 's' : ''}
                         </div>
-                        {hasAdvances && (
-                            <div className="flex items-center gap-1 mt-0.5">
-                                <HandCoins className="h-3 w-3 text-amber-600" />
-                                <span className="text-xs font-medium text-amber-600">
-                                    {formatINR(worker.totalAdvances)} advance pending
-                                </span>
-                            </div>
-                        )}
+                        <div className="flex items-center gap-2 mt-1">
+                            {hasAdvances && (
+                                <div className="flex items-center gap-1">
+                                    <HandCoins className="h-3 w-3 text-amber-600" />
+                                    <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">
+                                        {formatINR(worker.totalAdvances)} advance
+                                    </span>
+                                </div>
+                            )}
+                            {debtRatio > 0.3 && (
+                                <Badge 
+                                    variant={debtRatio > 0.6 ? "destructive" : "warning"}
+                                    className="text-[9px] h-4 px-1.5 font-black uppercase tracking-tighter"
+                                >
+                                    {debtRatio > 0.6 ? 'High Debt' : 'Debt Risk'}: {Math.round(debtRatio * 100)}%
+                                </Badge>
+                            )}
+                        </div>
                     </div>
                 </button>
                 <div className="flex items-center gap-3 flex-shrink-0 ml-3">
@@ -219,6 +231,7 @@ function FixedWorkerRow({
     const isPaid = worker.payment?.paid ?? false
     const isDaily = worker.role === 'daily'
     const hasAdvances = worker.totalAdvances > 0
+    const debtRatio = worker.earnedPay > 0 ? worker.totalAdvances / worker.earnedPay : 0
 
     return (
         <div className={cn(
@@ -235,14 +248,24 @@ function FixedWorkerRow({
                     </span>
                     <div className="min-w-0">
                         <span className="font-semibold text-gray-900 truncate block">{worker.name}</span>
-                        {hasAdvances && (
-                            <div className="flex items-center gap-1 mt-0.5">
-                                <HandCoins className="h-3 w-3 text-amber-600" />
-                                <span className="text-xs font-medium text-amber-600">
-                                    {formatINR(worker.totalAdvances)} advance pending
-                                </span>
-                            </div>
-                        )}
+                        <div className="flex items-center gap-2 mt-1">
+                            {hasAdvances && (
+                                <div className="flex items-center gap-1">
+                                    <HandCoins className="h-3 w-3 text-amber-600" />
+                                    <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">
+                                        {formatINR(worker.totalAdvances)} advance
+                                    </span>
+                                </div>
+                            )}
+                            {debtRatio > 0.3 && (
+                                <Badge 
+                                    variant={debtRatio > 0.6 ? "destructive" : "warning"}
+                                    className="text-[9px] h-4 px-1.5 font-black uppercase tracking-tighter"
+                                >
+                                    {debtRatio > 0.6 ? 'High Debt' : 'Debt Risk'}: {Math.round(debtRatio * 100)}%
+                                </Badge>
+                            )}
+                        </div>
                     </div>
                 </button>
                 <div className="flex items-center gap-3 flex-shrink-0 ml-3">

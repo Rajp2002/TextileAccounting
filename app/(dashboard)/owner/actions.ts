@@ -79,7 +79,12 @@ export async function validateAndRotateAccessCode(orgId: string, inputCode: stri
 
 // ─── INVENTORY ACTIONS ────────────────────────────────────────────────────────
 
-export async function addQuality(data: { name: string; target_yield: number; avg_sale_price_per_m: number }) {
+export async function addQuality(data: { 
+    name: string; 
+    target_yield: number; 
+    avg_sale_price_per_m: number;
+    default_worker_rate_per_m: number;
+}) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
@@ -115,11 +120,11 @@ export async function loadSuratQualityTemplates() {
     const supabase = await createServerClient()
 
     const templates = [
-        { name: '60g Georgette', target_yield: 9.5, avg_sale_price_per_m: 25.00 },
-        { name: 'Japan Satin', target_yield: 6.2, avg_sale_price_per_m: 45.00 },
-        { name: 'Cotton 40s', target_yield: 4.5, avg_sale_price_per_m: 60.00 },
-        { name: 'Micro Crepe', target_yield: 8.0, avg_sale_price_per_m: 35.00 },
-        { name: 'Dani Georgette', target_yield: 10.5, avg_sale_price_per_m: 22.00 }
+        { name: '60g Georgette', target_yield: 9.5, avg_sale_price_per_m: 25.00, default_worker_rate_per_m: 12.00 },
+        { name: 'Japan Satin', target_yield: 6.2, avg_sale_price_per_m: 45.00, default_worker_rate_per_m: 15.00 },
+        { name: 'Cotton 40s', target_yield: 4.5, avg_sale_price_per_m: 60.00, default_worker_rate_per_m: 18.00 },
+        { name: 'Micro Crepe', target_yield: 8.0, avg_sale_price_per_m: 35.00, default_worker_rate_per_m: 14.00 },
+        { name: 'Dani Georgette', target_yield: 10.5, avg_sale_price_per_m: 22.00, default_worker_rate_per_m: 10.00 }
     ].map(t => ({ ...t, org_id: profile.org_id }))
 
     const { error } = await supabase
@@ -130,7 +135,7 @@ export async function loadSuratQualityTemplates() {
     return { success: true }
 }
 
-export async function closeYarnBatch(batchId: string) {
+export async function closeYarnBatch(batchId: string, leftoverWeightKg: number = 0) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
@@ -139,7 +144,8 @@ export async function closeYarnBatch(batchId: string) {
         .from('yarn_batches')
         .update({
             status: 'consumed',
-            current_machine_id: null
+            current_machine_id: null,
+            leftover_weight_kg: leftoverWeightKg
         })
         .eq('id', batchId)
         .eq('org_id', profile.org_id)
@@ -189,6 +195,34 @@ export async function deleteOrder(orderId: string) {
 
     if (error) return { error: error.message }
     
+    revalidatePath('/owner/analytics')
+    return { success: true }
+}
+
+export async function assignOrderToMachines(orderId: string, machineIds: string[]) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    // 1. Unlink this order from ANY machine that currently has it
+    const { error: unlinkError } = await supabase
+        .from('machines')
+        .update({ current_order_id: null })
+        .eq('current_order_id', orderId)
+        .eq('org_id', profile.org_id)
+
+    if (unlinkError) return { error: unlinkError.message }
+
+    // 2. Link to the selected machines
+    if (machineIds.length > 0) {
+        const { error: linkError } = await supabase
+            .from('machines')
+            .update({ current_order_id: orderId })
+            .in('id', machineIds)
+            .eq('org_id', profile.org_id)
+
+        if (linkError) return { error: linkError.message }
+    }
+
     revalidatePath('/owner/analytics')
     return { success: true }
 }

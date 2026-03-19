@@ -18,7 +18,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { deleteWorkerWithCode } from '@/app/(dashboard)/supervisor/actions'
+import { deleteWorkerWithCode, getWorkerDebt } from '@/app/(dashboard)/supervisor/actions'
+import { formatINR } from '@/lib/finance'
+import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 
@@ -38,8 +40,10 @@ export default function SupervisorWorkersPage() {
 
     // Authorization State
     const [workerToDelete, setWorkerToDelete] = useState<number | null>(null)
+    const [workerDebt, setWorkerDebt] = useState<number>(0)
     const [accessCode, setAccessCode] = useState('')
     const [deleting, setDeleting] = useState(false)
+    const [fetchingDebt, setFetchingDebt] = useState(false)
 
     const { data: userProfile } = useUserProfile()
 
@@ -80,9 +84,17 @@ export default function SupervisorWorkersPage() {
         queryClient.invalidateQueries({ queryKey: ['fixed_workers', userProfile?.org_id] })
     }
 
-    const confirmDelete = (id: number) => {
-        setWorkerToDelete(id)
-        setAccessCode('')
+    const confirmDelete = async (id: number) => {
+        if (!userProfile?.org_id) return
+        setFetchingDebt(true)
+        try {
+            const res = await getWorkerDebt(userProfile.org_id, id, 'meter')
+            setWorkerDebt(res.balance || 0)
+            setWorkerToDelete(id)
+            setAccessCode('')
+        } finally {
+            setFetchingDebt(false)
+        }
     }
 
     const executeDelete = async () => {
@@ -203,6 +215,18 @@ export default function SupervisorWorkersPage() {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
+                        {workerDebt > 0 && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
+                                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-bold text-amber-900">Outstanding Advance Detected</p>
+                                    <p className="text-xs text-amber-700 mt-0.5">
+                                        This worker has a balance of <strong className="text-amber-900">{formatINR(workerDebt)}</strong>. 
+                                        Please ensure this is settled before removing them.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <Label>Access Code</Label>
                             <Input

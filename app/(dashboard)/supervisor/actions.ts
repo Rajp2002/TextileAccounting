@@ -146,15 +146,47 @@ export async function startBeam(batchId: string, machineId: string) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Use the RPC we created to handle the linking safely
-    const { error } = await serviceClient.rpc('link_batch_to_machine', {
-        p_batch_id: batchId,
-        p_machine_id: machineId
-    })
+    // 1. Fetch default rate from the batch's quality
+    const { data: batchData, error: batchError } = await serviceClient
+        .from('yarn_batches')
+        .select('org_id, quality_id, qualities(default_worker_rate_per_m)')
+        .eq('id', batchId)
+        .single()
 
-    if (error) {
-        console.error('Error linking beam to machine:', error)
-        return { error: 'Failed to start beam on machine' }
+    if (batchError || !batchData) {
+        console.error('Error fetching batch:', batchError)
+        return { error: 'Failed to fetch batch data' }
+    }
+
+    const defaultRate = (batchData.qualities as any)?.default_worker_rate_per_m || 0
+
+    // 2. Clear other batches from this machine
+    await serviceClient
+        .from('yarn_batches')
+        .update({ current_machine_id: null })
+        .eq('current_machine_id', machineId)
+        .eq('org_id', profile.org_id)
+        .eq('status', 'active')
+
+    // 3. Link this batch to the machine
+    const { error: linkError } = await serviceClient
+        .from('yarn_batches')
+        .update({ current_machine_id: machineId })
+        .eq('id', batchId)
+        .eq('org_id', profile.org_id)
+
+    if (linkError) {
+        console.error('Error linking batch:', linkError)
+        return { error: 'Failed to link batch to machine' }
+    }
+
+    // 4. Update machine rate (Rate Automation Gap)
+    if (defaultRate > 0) {
+        await serviceClient
+            .from('machines')
+            .update({ rate_per_meter: defaultRate })
+            .eq('id', machineId)
+            .eq('org_id', profile.org_id)
     }
 
     return { success: true }
@@ -170,15 +202,67 @@ export async function linkOrderToMachine(orderId: string, machineId: string) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const { error } = await serviceClient.rpc('link_order_to_machine', {
-        p_order_id: orderId,
-        p_machine_id: machineId
-    })
+    const { error } = await serviceClient
+        .from('machines')
+        .update({ current_order_id: orderId })
+        .eq('id', machineId)
+        .eq('org_id', profile.org_id)
 
     if (error) {
-        console.error('Error linking order to machine:', error)
+        console.error('Error linking order:', error)
         return { error: 'Failed to assign order to machine' }
     }
 
     return { success: true }
+}
+
+/**
+ * Perform a shift handover by unlinking the current worker from a machine for a specific shift.
+ * (Shift Handover Gap)
+ */
+export async function shiftHandover(orgId: string, machineId: string, shift: 'day' | 'night') {
+    await requireRole(['owner', 'supervisor'])
+
+    const serviceClient = createServiceClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { error } = await serviceClient
+        .from('machine_assignments')
+        .delete()
+        .eq('org_id', orgId)
+        .eq('machine_id', machineId)
+        .eq('shift', shift)
+
+    if (error) {
+        console.error('Error in shift handover:', error)
+        return { error: 'Failed to perform shift handover' }
+    }
+
+    return { success: true }
+}
+
+/**
+ * Check if a worker has any outstanding advance (Upaad) balance.
+ * (Advance vs. Resignation Gap)
+ */
+export async function getWorkerDebt(orgId: string, workerId: number, workerType: 'meter' | 'fixed' = 'meter') {
+    await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('worker_advances')
+        .select('amount')
+        .eq('org_id', orgId)
+        .eq('status', 'pending')
+        .eq(workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', workerId)
+
+    if (error) {
+        console.error('Error fetching worker debt:', error)
+        return { error: 'Failed to fetch worker debt' }
+    }
+
+    const balance = data?.reduce((sum, row) => sum + Number(row.amount), 0) || 0
+    return { balance }
 }
