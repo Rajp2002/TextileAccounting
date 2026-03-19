@@ -159,3 +159,26 @@ export async function startBeam(batchId: string, machineId: string) {
 
     return { success: true }
 }
+/**
+ * Link an order to a machine.
+ */
+export async function linkOrderToMachine(orderId: string, machineId: string) {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+
+    const serviceClient = createServiceClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { error } = await serviceClient.rpc('link_order_to_machine', {
+        p_order_id: orderId,
+        p_machine_id: machineId
+    })
+
+    if (error) {
+        console.error('Error linking order to machine:', error)
+        return { error: 'Failed to assign order to machine' }
+    }
+
+    return { success: true }
+}

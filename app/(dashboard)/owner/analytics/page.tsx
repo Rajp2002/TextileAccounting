@@ -5,14 +5,20 @@ import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { sumMeters, calculateTotalPay, formatINR } from '@/lib/finance'
 import { toast } from 'sonner'
 import { AddWorkerDialog } from '@/components/AddWorkerDialog'
-import { Calendar as CalendarIcon, RotateCcw, ChevronDown, ChevronRight, HardHat, Briefcase, Pencil, Check, X, TrendingUp, IndianRupee, Users2, Activity, AlertTriangle } from 'lucide-react'
+import { Calendar as CalendarIcon, RotateCcw, ChevronDown, ChevronRight, HardHat, Briefcase, Pencil, Check, X, TrendingUp, IndianRupee, Users2, Activity, AlertTriangle, Plus, LayoutGrid, ListFilter } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
+import { OrderCard } from '@/components/OrderCard'
+import { upsertOrder } from '@/app/(dashboard)/owner/actions'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 
 // Define interfaces for better type safety
 interface Worker {
@@ -147,8 +153,6 @@ function FixedWorkerRow({ worker, onSalaryUpdate }: { worker: FixedWorkerData, o
     const [editing, setEditing] = useState(false)
     const [editValue, setEditValue] = useState(worker.monthly_salary.toString())
 
-    // Keep editValue in sync when the parent refreshes worker data from the DB,
-    // but only when the user isn't actively editing (to avoid clobbering live input)
     useEffect(() => {
         if (!editing) {
             setEditValue(worker.monthly_salary.toString())
@@ -202,7 +206,6 @@ function FixedWorkerRow({ worker, onSalaryUpdate }: { worker: FixedWorkerData, o
                     )}
                 </div>
             </div>
-            {/* Day-to-day: show earned pay this month */}
             {worker.role === 'daily' && worker.earnedPay !== undefined && (
                 <div className="mt-1.5 flex items-center gap-2 pl-1">
                     <span className="text-xs text-gray-400">
@@ -221,22 +224,21 @@ export default function OwnerDashboard() {
     const supabase = createClient()
     const queryClient = useQueryClient()
 
-    // State for selected date (YYYY-MM-DD)
     const [selectedDate, setSelectedDate] = useState<string>('')
+    const { data: userProfile } = useUserProfile()
 
-    // Initialize with today's date on client-side to avoid hydration mismatch
+    const [orderDialogOpen, setOrderDialogOpen] = useState(false)
+    const [isSubmittingOrder, setIsSubmittingOrder] = useState(false)
+    const [editingOrder, setEditingOrder] = useState<any>(null)
+
     useEffect(() => {
         setSelectedDate(new Date().toISOString().split('T')[0])
     }, [])
 
-    // Fetch the current user's profile info
-    const { data: userProfile } = useUserProfile()
-
-    // Real-time subscription for production logs
     useEffect(() => {
         if (!userProfile?.org_id || !selectedDate) return
 
-        const channel = supabase.channel('production_logs_changes')
+        const channel = supabase.channel('production_logs_changes_dashboard')
             .on(
                 'postgres_changes',
                 {
@@ -246,9 +248,9 @@ export default function OwnerDashboard() {
                     filter: `org_id=eq.${userProfile.org_id}`
                 },
                 () => {
-                    // Invalidate queries when production logs change
-                    queryClient.invalidateQueries({ queryKey: ['production_daily_total', userProfile.org_id, selectedDate] })
-                    queryClient.invalidateQueries({ queryKey: ['production_worker_stats', userProfile.org_id, selectedDate] })
+                    queryClient.invalidateQueries({ queryKey: ['production_daily_total'] })
+                    queryClient.invalidateQueries({ queryKey: ['production_worker_stats'] })
+                    queryClient.invalidateQueries({ queryKey: ['order_progress_summary'] })
                 }
             )
             .subscribe()
@@ -258,7 +260,6 @@ export default function OwnerDashboard() {
         }
     }, [supabase, queryClient, userProfile?.org_id, selectedDate])
 
-    // Fetch daily totals — scoped by org_id and selected date
     const { data: dailyTotal, isLoading } = useQuery({
         queryKey: ['production_daily_total', userProfile?.org_id, selectedDate],
         enabled: !!userProfile?.org_id && !!selectedDate,
@@ -268,18 +269,15 @@ export default function OwnerDashboard() {
                 .select('meters')
                 .eq('org_id', userProfile!.org_id)
                 .eq('date', selectedDate)
-
             if (error) throw error
             return sumMeters(data)
         }
     })
 
-    // 📊 Strike Package 6: Worker-level breakdown (Machine-based Pay)
     const { data: workerStats, isLoading: workersLoading } = useQuery({
         queryKey: ['production_worker_stats', userProfile?.org_id, selectedDate],
         enabled: !!userProfile?.org_id && !!selectedDate,
         queryFn: async () => {
-            // 1. Fetch Workers
             const { data: workers, error: wErr } = await supabase
                 .from('workers')
                 .select('id, name, is_active')
@@ -287,20 +285,17 @@ export default function OwnerDashboard() {
                 .order('name')
             if (wErr) throw wErr
 
-            // 2. Fetch Machines (for names and rates)
             const { data: machines, error: mErr } = await supabase
                 .from('machines')
                 .select('id, name, rate_per_meter')
                 .eq('org_id', userProfile!.org_id)
             if (mErr) throw mErr
 
-            // Map machine details for lookup
-            const machineMap = (machines || []).reduce((acc: Record<string, { name: string, rate: number }>, m: any) => {
+            const machineMap = (machines || []).reduce((acc: any, m: any) => {
                 acc[m.id] = { name: m.name, rate: m.rate_per_meter }
                 return acc
-            }, {} as Record<string, { name: string, rate: number }>)
+            }, {})
 
-            // 3. Fetch Logs for date
             const { data: logs, error: lErr } = await supabase
                 .from('production_logs')
                 .select('worker_id, machine_id, meters')
@@ -308,15 +303,12 @@ export default function OwnerDashboard() {
                 .eq('date', selectedDate)
             if (lErr) throw lErr
 
-            // 4. Calculate stats per worker
             return workers.map((worker: Worker) => {
                 const workerLogs = (logs as ProductionLog[]).filter(l => l.worker_id === worker.id)
-                const totalMeters = sumMeters(workerLogs) // returns string "0.00"
+                const totalMeters = sumMeters(workerLogs)
 
-                // Group by machine for breakdown
                 const machineGroups: Record<string, number> = {}
                 workerLogs.forEach(log => {
-                    // Safe aggregation handled by explicitly converting to number
                     const logMeters = typeof log.meters === 'string' ? parseFloat(log.meters) : log.meters
                     machineGroups[log.machine_id] = (machineGroups[log.machine_id] || 0) + (logMeters || 0)
                 })
@@ -325,16 +317,12 @@ export default function OwnerDashboard() {
                     const machine = machineMap[machineId]
                     const pay = calculateTotalPay([{ meters, rate: machine?.rate || 0 }])
                     return {
-                        machineName: machine?.name || 'Unknown Machine',
-                        meters: meters.toFixed(2), // Convert to fixed string
+                        machineName: machine?.name || 'Unknown',
+                        meters: meters.toFixed(2),
                         pay
                     }
                 })
 
-                // Sorting breakdown by meters descending (parse back to float for sort)
-                breakdown.sort((a, b) => parseFloat(b.meters) - parseFloat(a.meters))
-
-                // Calculate total pay
                 const payItems = workerLogs.map(log => ({
                     meters: log.meters,
                     rate: machineMap[log.machine_id]?.rate || 0
@@ -353,12 +341,10 @@ export default function OwnerDashboard() {
         }
     })
 
-    // Fixed workers payroll query
     const { data: fixedPayroll } = useQuery({
-        queryKey: ['fixed_payroll', userProfile?.org_id, selectedDate],
+        queryKey: ['fixed_payroll_dashboard', userProfile?.org_id, selectedDate],
         enabled: !!userProfile?.org_id && !!selectedDate,
         queryFn: async () => {
-            // Get all active fixed workers
             const { data: fixedWorkers, error: fErr } = await supabase
                 .from('fixed_workers')
                 .select('id, name, role, monthly_salary')
@@ -366,26 +352,22 @@ export default function OwnerDashboard() {
                 .eq('is_active', true)
             if (fErr) throw fErr
 
-            // Get current month's attendance for day-to-day workers
-            const month = selectedDate.substring(0, 7) // YYYY-MM
-            const { data: attendance, error: aErr } = await supabase
+            const month = selectedDate.substring(0, 7)
+            const { data: attendance } = await supabase
                 .from('attendance')
                 .select('fixed_worker_id, present')
                 .eq('org_id', userProfile!.org_id)
                 .gte('date', `${month}-01`)
                 .lte('date', `${month}-31`)
-            if (aErr) throw aErr
 
             let totalFixed = 0
             let totalDaily = 0
 
             for (const w of (fixedWorkers || [])) {
                 if (w.role === 'daily') {
-                    // Prorated: (salary / 30) * days_present
                     const daysPresent = (attendance || []).filter(
-                        (a: { fixed_worker_id: number; present: boolean }) => a.fixed_worker_id === w.id && a.present
+                        (a: any) => a.fixed_worker_id === w.id && a.present
                     ).length
-                    // Prorated but capped at monthly salary (max 30 days)
                     totalDaily += Math.min(w.monthly_salary, (w.monthly_salary / 30) * daysPresent)
                 } else {
                     totalFixed += w.monthly_salary
@@ -402,9 +384,8 @@ export default function OwnerDashboard() {
         }
     })
 
-    // Fetch fixed workers list (with attendance for daily workers)
     const { data: fixedWorkersList } = useQuery({
-        queryKey: ['fixed_workers_list', userProfile?.org_id, selectedDate],
+        queryKey: ['fixed_workers_list_dashboard', userProfile?.org_id, selectedDate],
         enabled: !!userProfile?.org_id && !!selectedDate,
         queryFn: async () => {
             const { data: workers, error } = await supabase
@@ -413,395 +394,346 @@ export default function OwnerDashboard() {
                 .eq('org_id', userProfile!.org_id)
                 .eq('is_active', true)
                 .order('role')
-                .order('name')
             if (error) throw error
 
-            // Fetch this month's attendance for daily workers
-            const month = selectedDate.substring(0, 7) // YYYY-MM
-            const dailyWorkerIds = (workers || [])
-                .filter((w: any) => w.role === 'daily')
-                .map((w: any) => w.id)
+            const month = selectedDate.substring(0, 7)
+            const dailyWorkerIds = (workers || []).filter((w: any) => w.role === 'daily').map((w: any) => w.id)
 
             let attendanceMap: Record<number, number> = {}
             if (dailyWorkerIds.length > 0) {
                 const { data: attendance } = await supabase
                     .from('attendance')
-                    .select('fixed_worker_id, present')
-                    .eq('org_id', userProfile!.org_id)
+                    .select('fixed_worker_id')
                     .in('fixed_worker_id', dailyWorkerIds)
+                    .eq('present', true)
                     .gte('date', `${month}-01`)
                     .lte('date', `${month}-31`)
-                    .eq('present', true)
-                    ; (attendance || []).forEach((a: any) => {
-                        attendanceMap[a.fixed_worker_id] = (attendanceMap[a.fixed_worker_id] || 0) + 1
-                    })
+                (attendance || []).forEach((a: any) => {
+                    attendanceMap[a.fixed_worker_id] = (attendanceMap[a.fixed_worker_id] || 0) + 1
+                })
             }
 
-            return (workers || []).map((w: any) => {
-                if (w.role === 'daily') {
-                    const daysWorked = attendanceMap[w.id] || 0
-                    const earnedPay = Math.min(w.monthly_salary, (w.monthly_salary / 30) * daysWorked)
-                    return { ...w, daysWorked, earnedPay }
-                }
-                return w as FixedWorkerData
-            }) as FixedWorkerData[]
+            return (workers || []).map((w: any) => ({
+                ...w,
+                daysWorked: attendanceMap[w.id] || 0,
+                earnedPay: w.role === 'daily' ? Math.min(w.monthly_salary, (w.monthly_salary / 30) * (attendanceMap[w.id] || 0)) : undefined
+            }))
         }
     })
 
-    // Yield Analytics Query (Current Month)
     const { data: yieldAnalytics, isLoading: yieldLoading } = useQuery({
-        queryKey: ['yield_analytics_summary', userProfile?.org_id, selectedDate?.substring(0, 7)],
-        enabled: !!userProfile?.org_id && !!selectedDate,
+        queryKey: ['yield_analytics_dashboard', userProfile?.org_id],
+        enabled: !!userProfile?.org_id,
         queryFn: async () => {
-            const { data, error } = await supabase
-                .rpc('get_batch_yield_report', { p_org_id: userProfile!.org_id })
-            
+            const { data, error } = await supabase.rpc('get_batch_yield_report', { p_org_id: userProfile!.org_id })
             if (error) throw error
-
-            // Filter for batches that had production in the current month (or are just active)
-            // For a simpler dashboard view, we'll look at recently active/consumed batches
-            const activeOrRecent = (data || []).filter((b: any) => 
-                b.batch_status === 'active' || 
-                (b.total_meters_produced > 0 && b.efficiency_variance !== null)
-            )
-
-            let totalLoss = 0
-            let alertCount = 0
-            let avgEfficiency = 0
-            let batchesWithData = 0
-
-            activeOrRecent.forEach((batch: any) => {
-                const variance = Number(batch.efficiency_variance)
-                if (!isNaN(variance)) {
-                    avgEfficiency += variance
-                    batchesWithData++
-                    
-                    if (variance < -5) {
-                        alertCount++
-                        totalLoss += Number(batch.monetary_loss || 0)
-                    }
+            
+            const activeOrRecent = (data || []).filter((b: any) => b.batch_status === 'active' || b.total_meters_produced > 0)
+            let totalLoss = 0, alertCount = 0, avgEfficiency = 0, count = 0
+            
+            activeOrRecent.forEach((b: any) => {
+                const v = Number(b.efficiency_variance)
+                if (!isNaN(v)) {
+                    avgEfficiency += v
+                    count++
+                    if (v < -5) { alertCount++; totalLoss += Number(b.monetary_loss || 0) }
                 }
             })
-
             return {
-                avgEfficiency: batchesWithData > 0 ? (avgEfficiency / batchesWithData).toFixed(1) : null,
+                avgEfficiency: count > 0 ? (avgEfficiency / count).toFixed(1) : null,
                 alertCount,
-                totalLoss,
-                recentBatches: activeOrRecent.slice(0, 5) // Top 5 for minified view if needed
+                totalLoss
             }
+        }
+    })
+
+    const { data: ordersSummary, isLoading: ordersLoading } = useQuery({
+        queryKey: ['order_progress_summary', userProfile?.org_id],
+        enabled: !!userProfile?.org_id,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('order_progress_summary')
+                .select('*')
+                .eq('org_id', userProfile!.org_id)
+                .order('deadline', { ascending: true })
+            if (error) throw error
+            return data
+        }
+    })
+
+    const { data: orderForecasts } = useQuery({
+        queryKey: ['order_forecasts', ordersSummary?.map((o: any) => o.order_id)],
+        enabled: !!ordersSummary && ordersSummary.length > 0,
+        queryFn: async () => {
+            const forecasts: Record<string, any> = {}
+            if (!ordersSummary) return forecasts
+            for (const order of ordersSummary) {
+                const { data, error } = await supabase.rpc('get_order_forecast', { p_order_id: order.order_id })
+                if (!error && data && data[0]) forecasts[order.order_id] = data[0]
+            }
+            return forecasts
+        }
+    })
+
+    const { data: qualities } = useQuery({
+        queryKey: ['qualities_dashboard', userProfile?.org_id],
+        enabled: !!userProfile?.org_id,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('qualities')
+                .select('id, name')
+                .eq('org_id', userProfile!.org_id)
+            if (error) throw error
+            return data
         }
     })
 
     const handleWorkerAdded = () => {
-        // Invalidate both meter and fixed worker queries
-        queryClient.invalidateQueries({ queryKey: ['production_worker_stats', userProfile?.org_id] })
-        queryClient.invalidateQueries({ queryKey: ['fixed_workers'] })
-        queryClient.invalidateQueries({ queryKey: ['fixed_workers_list'] })
-        queryClient.invalidateQueries({ queryKey: ['fixed_payroll'] })
+        queryClient.invalidateQueries({ queryKey: ['production_worker_stats'] })
+        queryClient.invalidateQueries({ queryKey: ['fixed_workers_list_dashboard'] })
     }
 
     const handleFixedSalaryUpdate = async (workerId: number, salary: number) => {
-        const { error } = await supabase
-            .from('fixed_workers')
-            .update({ monthly_salary: salary })
-            .eq('id', workerId)
-        if (error) {
-            toast.error(error.message)
-        } else {
+        const { error } = await supabase.from('fixed_workers').update({ monthly_salary: salary }).eq('id', workerId)
+        if (error) toast.error(error.message)
+        else {
             toast.success('Salary updated')
-            queryClient.invalidateQueries({ queryKey: ['fixed_workers_list'] })
-            queryClient.invalidateQueries({ queryKey: ['fixed_payroll'] })
+            queryClient.invalidateQueries({ queryKey: ['fixed_workers_list_dashboard'] })
         }
     }
 
-    const setToday = () => {
-        setSelectedDate(new Date().toISOString().split('T')[0])
+    const handleUpsertOrder = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        const formData = new FormData(e.currentTarget)
+        setIsSubmittingOrder(true)
+        try {
+            const res = await upsertOrder({
+                id: editingOrder?.order_id,
+                party_name: formData.get('party_name') as string,
+                quality_id: formData.get('quality_id') as string,
+                total_target_meters: Number(formData.get('total_target_meters')),
+                start_date: formData.get('start_date') as string,
+                deadline: formData.get('deadline') as string,
+                status: 'active'
+            })
+            if (res.error) throw new Error(res.error)
+            toast.success(editingOrder ? "Order updated" : "Order created")
+            setOrderDialogOpen(false)
+            setEditingOrder(null)
+            queryClient.invalidateQueries({ queryKey: ['order_progress_summary'] })
+        } catch (err: any) { toast.error(err.message) }
+        finally { setIsSubmittingOrder(false) }
     }
 
-    // Return null while date initializes to prevent hydration mismatch or stale data
     if (!selectedDate) return null
 
     return (
-        <div className="space-y-8">
-            {/* Welcome Header */}
+        <div className="space-y-8 pb-10">
+            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">
                         {new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'}
                     </h1>
                     <p className="text-sm text-gray-500 mt-0.5">
-                        {new Date(selectedDate || Date.now()).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                        {new Date(selectedDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                 </div>
                 {userProfile?.org_id && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2 bg-white rounded-lg border p-1 shadow-sm">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={setToday}
-                                className="h-8 px-2 text-xs font-medium hover:bg-gray-100 text-gray-600"
-                                title="Reset to Today"
-                            >
-                                <RotateCcw className="h-3 w-3 mr-1" />
-                                Today
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} className="h-8 px-2 text-xs font-medium text-gray-600">
+                                <RotateCcw className="h-3 w-3 mr-1" /> Today
                             </Button>
                             <div className="h-4 w-px bg-gray-200" />
-                            <Input
-                                type="date"
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                className="h-8 w-auto border-0 focus-visible:ring-0 px-2 py-0 text-sm font-medium text-gray-700"
-                            />
+                            <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-8 w-auto border-0 focus-visible:ring-0 px-2 py-0 text-sm font-medium" />
                         </div>
-                        <AddWorkerDialog
-                            orgId={userProfile.org_id}
-                            onWorkerAdded={handleWorkerAdded}
-                        />
+                        
+                        <div className="flex items-center gap-2 border-l pl-3">
+                            <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
+                                <DialogTrigger asChild>
+                                    <Button className="h-9 px-3 bg-teal-600 hover:bg-teal-700 text-white shadow-sm font-semibold" onClick={() => setEditingOrder(null)}>
+                                        <Plus className="h-4 w-4 mr-1.5" /> Order
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[450px]">
+                                    <form onSubmit={handleUpsertOrder} className="space-y-5">
+                                        <DialogHeader>
+                                            <DialogTitle>{editingOrder ? 'Edit Order' : 'Create New Order'}</DialogTitle>
+                                            <DialogDescription>Track targets and forecasts for your clients.</DialogDescription>
+                                        </DialogHeader>
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="party_name">Party Name</Label>
+                                                <Input id="party_name" name="party_name" defaultValue={editingOrder?.party_name} required placeholder="e.g., Sundaram Textiles" />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label>Quality</Label>
+                                                    <Select name="quality_id" defaultValue={editingOrder?.quality_id} required>
+                                                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                                                        <SelectContent>
+                                                            {qualities?.map(q => <SelectItem key={q.id} value={q.id}>{q.name}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="total_target_meters">Target (m)</Label>
+                                                    <Input id="total_target_meters" name="total_target_meters" type="number" defaultValue={editingOrder?.total_target_meters} required />
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="start_date">Start Date</Label>
+                                                    <Input id="start_date" name="start_date" type="date" defaultValue={editingOrder?.start_date || new Date().toISOString().split('T')[0]} required />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="deadline">Deadline</Label>
+                                                    <Input id="deadline" name="deadline" type="date" defaultValue={editingOrder?.deadline} required />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button type="submit" disabled={isSubmittingOrder} className="w-full bg-teal-600 hover:bg-teal-700">
+                                                {isSubmittingOrder ? 'Saving...' : editingOrder ? 'Update Order' : 'Launch Order'}
+                                            </Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                            <AddWorkerDialog orgId={userProfile.org_id} onWorkerAdded={handleWorkerAdded} />
+                        </div>
                     </div>
                 )}
             </div>
 
-            {/* KPI Cards */}
+            {/* Live Orders Group */}
+            <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <LayoutGrid className="h-5 w-5 text-teal-600" />
+                        <h2 className="text-xl font-bold">Live Orders</h2>
+                        {ordersSummary && ordersSummary.length > 0 && (
+                            <Badge variant="secondary" className="bg-teal-50 text-teal-600 border-teal-100">{ordersSummary.length} Active</Badge>
+                        )}
+                    </div>
+                </div>
+
+                {ordersLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}
+                    </div>
+                ) : !ordersSummary || ordersSummary.length === 0 ? (
+                    <div className="py-10 text-center border-2 border-dashed rounded-xl bg-gray-50/30">
+                        <Plus className="h-8 w-8 mx-auto text-gray-300 mb-3" />
+                        <p className="text-gray-500 font-medium">No active orders</p>
+                        <p className="text-xs text-gray-400 mt-1">Start tracking client targets by creating your first order.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {ordersSummary.map((order: any) => (
+                            <div key={order.order_id} className="cursor-pointer" onClick={() => { setEditingOrder(order); setOrderDialogOpen(true); }}>
+                                <OrderCard order={order} forecast={orderForecasts?.[order.order_id]} />
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* KPI Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="border-l-4 border-l-emerald-500 shadow-sm">
                     <CardContent className="p-5">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Daily Production</p>
-                                {isLoading ? (
-                                    <Skeleton className="h-9 w-28 mt-2" />
-                                ) : (
-                                    <p className="text-3xl font-bold text-gray-900 mt-1">{dailyTotal} m</p>
-                                )}
-                                <p className="text-xs text-gray-400 mt-1">
-                                    Output for {new Date(selectedDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
-                                </p>
+                        <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Daily Output</p>
+                                <p className="text-3xl font-black text-gray-900">{isLoading ? '...' : dailyTotal + ' m'}</p>
                             </div>
-                            <div className="p-2 bg-emerald-50 rounded-lg">
-                                <TrendingUp className="h-5 w-5 text-emerald-600" />
-                            </div>
+                            <div className="p-2 bg-emerald-50 rounded-lg"><TrendingUp className="h-5 w-5 text-emerald-600" /></div>
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card className="border-l-4 border-l-indigo-500 shadow-sm">
                     <CardContent className="p-5">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Production Payroll</p>
-                                {workersLoading ? (
-                                    <Skeleton className="h-9 w-28 mt-2" />
-                                ) : (
-                                    <p className="text-3xl font-bold text-gray-900 mt-1">
-                                        {workerStats
-                                            ? formatINR(workerStats.reduce((sum: number, w: any) => sum + parseFloat(w.pay), 0))
-                                            : '₹0.00'
-                                        }
-                                    </p>
-                                )}
-                                <p className="text-xs text-gray-400 mt-1">Per-meter wages today</p>
+                        <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Wages Today</p>
+                                <p className="text-3xl font-black text-gray-900">
+                                    {workersLoading ? '...' : formatINR(workerStats?.reduce((s, w) => s + parseFloat(w.pay), 0) || 0)}
+                                </p>
                             </div>
-                            <div className="p-2 bg-indigo-50 rounded-lg">
-                                <IndianRupee className="h-5 w-5 text-indigo-600" />
-                            </div>
+                            <div className="p-2 bg-indigo-50 rounded-lg"><IndianRupee className="h-5 w-5 text-indigo-600" /></div>
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card className="border-l-4 border-l-blue-500 shadow-sm">
                     <CardContent className="p-5">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Fixed Payroll</p>
-                                {!fixedPayroll ? (
-                                    <Skeleton className="h-9 w-28 mt-2" />
-                                ) : (
-                                    <p className="text-3xl font-bold text-gray-900 mt-1">
-                                        {formatINR(fixedPayroll.total)}
-                                    </p>
-                                )}
-                                <p className="text-xs text-gray-400 mt-1">
-                                    {fixedPayroll ? `${fixedPayroll.fixedCount} salaried + ${fixedPayroll.dailyCount} daily` : ''}
-                                </p>
+                        <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Fixed Payroll</p>
+                                <p className="text-3xl font-black text-gray-900">{!fixedPayroll ? '...' : formatINR(fixedPayroll.total)}</p>
                             </div>
-                            <div className="p-2 bg-blue-50 rounded-lg">
-                                <Users2 className="h-5 w-5 text-blue-600" />
-                            </div>
+                            <div className="p-2 bg-blue-50 rounded-lg"><Users2 className="h-5 w-5 text-blue-600" /></div>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* 🔥 YIELD ANALYTICS & "SHET" ALERTS 🔥 */}
+            {/* Efficiency Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="shadow-sm">
                     <CardHeader className="pb-2">
-                        <div className="flex items-center gap-2">
-                            <Activity className="h-5 w-5 text-indigo-500" />
-                            <CardTitle className="text-lg">Factory Efficiency</CardTitle>
-                        </div>
-                        <CardDescription>Average Batch Yield vs Target (Current Month)</CardDescription>
+                        <div className="flex items-center gap-2"><Activity className="h-5 w-5 text-indigo-600" /><CardTitle className="text-lg">Efficiency</CardTitle></div>
                     </CardHeader>
                     <CardContent>
-                        {yieldLoading ? (
-                            <Skeleton className="h-12 w-32 mt-2" />
-                        ) : yieldAnalytics?.avgEfficiency !== null ? (
-                            <div className="mt-2 flex items-baseline gap-3">
-                                <span className={`text-4xl font-black tracking-tight ${
-                                    Number(yieldAnalytics!.avgEfficiency) < -2 ? 'text-rose-600' 
-                                    : Number(yieldAnalytics!.avgEfficiency) > 2 ? 'text-teal-600'
-                                    : 'text-gray-900'
-                                }`}>
-                                    {Number(yieldAnalytics!.avgEfficiency) > 0 ? '+' : ''}{yieldAnalytics!.avgEfficiency}%
+                        {yieldLoading ? <Skeleton className="h-10 w-24" /> : yieldAnalytics?.avgEfficiency ? (
+                            <div className="flex items-baseline gap-2">
+                                <span className={cn("text-4xl font-black", Number(yieldAnalytics.avgEfficiency) < 0 ? "text-red-500" : "text-teal-600")}>
+                                    {Number(yieldAnalytics.avgEfficiency) > 0 ? '+' : ''}{yieldAnalytics.avgEfficiency}%
                                 </span>
-                                <span className="text-sm font-medium text-gray-500">variance</span>
+                                <span className="text-xs font-bold text-gray-400 uppercase">Variance</span>
                             </div>
-                        ) : (
-                            <div className="mt-2 text-sm text-gray-400 py-3">Not enough batch data yet. Add inventory and log production.</div>
-                        )}
+                        ) : <p className="text-sm text-gray-400">No data available</p>}
                     </CardContent>
                 </Card>
-
-                <Card className={cn(
-                    "shadow-sm transition-all duration-300", 
-                    (yieldAnalytics?.alertCount || 0) > 0 ? "border-rose-200 bg-rose-50/50" : ""
-                )}>
-                    <CardHeader className="pb-2 flex flex-row items-start justify-between">
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <AlertTriangle className={cn(
-                                    "h-5 w-5", 
-                                    (yieldAnalytics?.alertCount || 0) > 0 ? "text-rose-600" : "text-gray-400"
-                                )} />
-                                <CardTitle className={cn(
-                                    "text-lg",
-                                    (yieldAnalytics?.alertCount || 0) > 0 ? "text-rose-900" : "text-gray-900"
-                                )}>Active Alerts</CardTitle>
-                            </div>
-                            <CardDescription className={(yieldAnalytics?.alertCount || 0) > 0 ? "text-rose-700/70" : ""}>
-                                High leakage detected (&gt;5% loss)
-                            </CardDescription>
-                        </div>
-                        {(yieldAnalytics?.alertCount || 0) > 0 && (
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-xs font-bold text-white">
-                                {yieldAnalytics!.alertCount}
-                            </span>
-                        )}
+                <Card className={cn("shadow-sm", yieldAnalytics?.alertCount ? "bg-red-50 border-red-100" : "")}>
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center gap-2"><AlertTriangle className={cn("h-5 w-5", yieldAnalytics?.alertCount ? "text-red-600" : "text-gray-400")} /><CardTitle className="text-lg">Leakage Alerts</CardTitle></div>
                     </CardHeader>
                     <CardContent>
-                        {yieldLoading ? (
-                            <Skeleton className="h-12 w-full mt-2" />
-                        ) : (yieldAnalytics?.alertCount || 0) > 0 ? (
-                            <div className="mt-2">
-                                <div className="text-sm font-medium text-rose-800 mb-1">Estimated Monetary Loss</div>
-                                <div className="text-3xl font-black text-rose-600">
-                                    {formatINR(yieldAnalytics!.totalLoss)}
-                                </div>
-                                <p className="text-xs text-rose-700 mt-2 font-medium">
-                                    Check <span className="underline cursor-pointer opacity-80" onClick={() => window.location.href='/owner/inventory'}>Yarn Inventory</span> to audit specific beams.
-                                </p>
+                        {yieldLoading ? <Skeleton className="h-10 w-full" /> : yieldAnalytics?.alertCount ? (
+                            <div className="space-y-0.5">
+                                <p className="text-2xl font-black text-red-600">{formatINR(yieldAnalytics.totalLoss)}</p>
+                                <p className="text-xs font-bold text-red-800 uppercase">{yieldAnalytics.alertCount} High Leakage Batches</p>
                             </div>
-                        ) : (
-                            <div className="mt-2 flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg font-medium text-sm">
-                                <Check className="w-4 h-4" /> No critical leakage alerts.
-                            </div>
-                        )}
+                        ) : <p className="text-sm text-emerald-600 font-medium pb-2">All batches within target</p>}
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Summary Cards */}
             <div className="grid grid-cols-1 gap-6">
-                {/* Worker Breakdown */}
                 <Card className="shadow-sm">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <HardHat className="h-5 w-5 text-indigo-600" />
-                                <CardTitle className="text-lg">Worker Breakdown</CardTitle>
-                            </div>
-                            <CardDescription className="mt-0">
-                                {new Date(selectedDate).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
-                            </CardDescription>
-                        </div>
+                    <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+                        <div className="flex items-center gap-2"><HardHat className="h-5 w-5 text-indigo-600" /><CardTitle className="text-lg">Worker Details</CardTitle></div>
+                        <p className="text-xs font-bold text-gray-400">{new Date(selectedDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}</p>
                     </CardHeader>
                     <CardContent>
-                        {workersLoading ? (
-                            <div className="space-y-3">
-                                {[...Array(4)].map((_, i) => (
-                                    <div key={i} className="flex justify-between items-center py-3">
-                                        <Skeleton className="h-5 w-32" />
-                                        <Skeleton className="h-5 w-24" />
-                                    </div>
-                                ))}
+                        {workersLoading ? <Skeleton className="h-40 w-full" /> : workerStats?.length ? (
+                            <div className="space-y-1">
+                                {workerStats.map(w => <WorkerRow key={w.id} worker={w} />)}
                             </div>
-                        ) : (
-                            <>
-                                {workerStats && workerStats.length > 0 && (
-                                    <div className="flex justify-between items-center text-xs font-medium text-gray-400 uppercase tracking-wider px-2 pb-2 border-b mb-1">
-                                        <span className="pl-6">Worker</span>
-                                        <span>Output / Pay</span>
-                                    </div>
-                                )}
-                                <div className="space-y-0.5">
-                                    {workerStats?.map((worker: WorkerStats) => (
-                                        <WorkerRow key={worker.id} worker={worker} />
-                                    ))}
-                                    {workerStats && workerStats.length === 0 && (
-                                        <div className="py-12 text-center border-2 border-dashed rounded-xl">
-                                            <HardHat className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                                            <p className="text-gray-500 font-medium">No production logged</p>
-                                            <p className="text-sm text-gray-400 mt-1">Workers will appear here once production is logged for this date</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </>
-                        )}
+                        ) : <div className="py-10 text-center text-gray-400">No production logs</div>}
                     </CardContent>
                 </Card>
 
-                {/* Fixed Workers */}
                 <Card className="shadow-sm">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center gap-2">
-                            <Briefcase className="h-5 w-5 text-blue-600" />
-                            <CardTitle className="text-lg">Fixed Workers</CardTitle>
-                        </div>
-                        <CardDescription>
-                            Salaried staff — click the pencil to edit pay
-                        </CardDescription>
-                    </CardHeader>
+                    <CardHeader className="pb-3"><div className="flex items-center gap-2"><Briefcase className="h-5 w-5 text-blue-600" /><CardTitle className="text-lg">Staff Payroll</CardTitle></div></CardHeader>
                     <CardContent>
-                        {!fixedWorkersList ? (
-                            <div className="space-y-3">
-                                {[1, 2, 3].map(i => (
-                                    <div key={i} className="flex justify-between items-center py-4">
-                                        <div className="flex items-center gap-3">
-                                            <Skeleton className="h-5 w-16 rounded-full" />
-                                            <Skeleton className="h-5 w-32" />
-                                        </div>
-                                        <Skeleton className="h-5 w-24" />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : fixedWorkersList.length === 0 ? (
-                            <div className="py-12 text-center border-2 border-dashed rounded-xl">
-                                <Briefcase className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                                <p className="text-gray-500 font-medium">No fixed workers yet</p>
-                                <p className="text-sm text-gray-400 mt-1">Use &quot;Add Worker&quot; → Fixed Salary to add</p>
-                            </div>
-                        ) : (
+                        {fixedWorkersList?.length ? (
                             <div className="divide-y">
-                                {fixedWorkersList.map(fw => (
-                                    <FixedWorkerRow
-                                        key={fw.id}
-                                        worker={fw}
-                                        onSalaryUpdate={handleFixedSalaryUpdate}
-                                    />
-                                ))}
+                                {fixedWorkersList.map(fw => <FixedWorkerRow key={fw.id} worker={fw as any} onSalaryUpdate={handleFixedSalaryUpdate} />)}
                             </div>
-                        )}
+                        ) : <div className="py-10 text-center text-gray-400">No staff found</div>}
                     </CardContent>
                 </Card>
             </div>
