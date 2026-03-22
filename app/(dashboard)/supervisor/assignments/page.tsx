@@ -4,11 +4,13 @@ import { createClient } from '@/lib/supabase/client'
 import { MachineManagement } from '@/components/MachineManagement'
 import { useQuery } from '@tanstack/react-query'
 import { useUserProfile } from '@/hooks/use-user-profile'
+import { useTranslation } from '@/lib/i18n/context'
 
 import { Loader2 } from 'lucide-react'
 
 export default function SupervisorAssignmentsPage() {
     const supabase = createClient()
+    const { t } = useTranslation()
 
     const { data: userProfile } = useUserProfile()
 
@@ -21,7 +23,7 @@ export default function SupervisorAssignmentsPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold">Worker Assignments</h1>
+            <h1 className="text-2xl font-bold">{t('assignments.title')}</h1>
             <MachineManagement
                 orgId={userProfile.org_id}
                 canEditRates={false}

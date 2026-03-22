@@ -28,6 +28,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { deleteMachineWithCode } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useTranslation } from '@/lib/i18n/context'
 
 interface Worker {
     id: number
@@ -73,6 +74,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
 
     // Use shared profile hook instead of independent fetch
     const { data: userProfile } = useUserProfile()
+    const { t } = useTranslation()
 
     // Fetch Machines
     const { data: machines, isLoading: machinesLoading } = useQuery({
@@ -277,11 +279,11 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                    <CardTitle>Machine Rates & Assignments</CardTitle>
+                    <CardTitle>{t('machines.title')}</CardTitle>
                     <CardDescription>
                         {canEditRates
-                            ? "Set rates per machine and assign workers to shifts."
-                            : "Assign workers to shifts for each machine."}
+                            ? t('machines.desc_edit')
+                            : t('machines.desc_no_edit')}
                     </CardDescription>
                 </div>
                 {canAddMachines && (
@@ -290,19 +292,19 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                             <DialogTrigger asChild>
                                 <Button size="sm" className="gap-2">
                                     <Plus className="h-4 w-4" />
-                                    Add Machine
+                                    {t('machines.add_machine')}
                                 </Button>
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Add New Machine</DialogTitle>
+                                    <DialogTitle>{t('machines.add_machine')}</DialogTitle>
                                     <DialogDescription>
                                         Enter the details for the new machine.
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4 py-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="name">Machine Name</Label>
+                                        <Label htmlFor="name">{t('machines.machine_name')}</Label>
                                         <Input
                                             id="name"
                                             placeholder="e.g., Loom 1"
@@ -311,7 +313,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="rate">Rate per Meter (₹)</Label>
+                                        <Label htmlFor="rate">{t('machines.rate_per_meter')}</Label>
                                         <Input
                                             id="rate"
                                             type="number"
@@ -322,10 +324,10 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                                     </div>
                                 </div>
                                 <DialogFooter>
-                                    <Button variant="outline" onClick={() => setIsAddMachineOpen(false)}>Cancel</Button>
+                                    <Button variant="outline" onClick={() => setIsAddMachineOpen(false)}>{t('common.cancel')}</Button>
                                     <Button onClick={handleAddMachine} disabled={!newMachineName || !newMachineRate || isAddingMachine}>
                                         {isAddingMachine ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                                        Add Machine
+                                        {t('machines.add_machine')}
                                     </Button>
                                 </DialogFooter>
                             </DialogContent>
@@ -345,7 +347,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                                     <div className="flex items-center gap-2">
                                         <div className="font-semibold text-lg">{machine.name}</div>
                                         <div className="text-sm text-gray-500 bg-white px-2 py-0.5 rounded border">
-                                            Current Rate: ₹{machine.rate_per_meter}/m
+                                            {t('machines.current_rate')}: ₹{machine.rate_per_meter}/m
                                         </div>
                                     </div>
 
@@ -383,13 +385,13 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground uppercase">Day Shift (7AM - 7PM)</Label>
+                                        <Label className="text-xs text-muted-foreground uppercase">{t('machines.day_shift_hours')}</Label>
                                         <Select
                                             value={dayAssignment?.worker_id.toString()}
                                             onValueChange={(val) => handleAssignment(machine.id, val, 'day')}
                                         >
                                             <SelectTrigger className="bg-white">
-                                                <SelectValue placeholder="Assign Worker" />
+                                                <SelectValue placeholder={t('machines.assign_worker')} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {workers?.map(w => (
@@ -401,13 +403,13 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                                         </Select>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground uppercase">Night Shift (7PM - 7AM)</Label>
+                                        <Label className="text-xs text-muted-foreground uppercase">{t('machines.night_shift_hours')}</Label>
                                         <Select
                                             value={nightAssignment?.worker_id.toString()}
                                             onValueChange={(val) => handleAssignment(machine.id, val, 'night')}
                                         >
                                             <SelectTrigger className="bg-white">
-                                                <SelectValue placeholder="Assign Worker" />
+                                                <SelectValue placeholder={t('machines.assign_worker')} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {workers?.map(w => (
@@ -425,7 +427,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
 
                     {machines?.length === 0 && (
                         <div className="text-center py-8 text-gray-500">
-                            No machines found. {canAddMachines ? "Please add a machine." : "Contact the owner to add machines."}
+                            {canAddMachines ? t('machines.no_machines_add') : t('machines.no_machines_contact')}
                         </div>
                     )}
                 </div>
@@ -436,15 +438,15 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-red-600">
-                            <KeyRound className="h-5 w-5" /> Owner Authorization Required
+                            <KeyRound className="h-5 w-5" /> {t('auth.owner_auth_req')}
                         </DialogTitle>
                         <DialogDescription>
-                            Deleting a machine permanently removes it and its configuration. This action requires a single-use access code from the factory owner.
+                            {t('auth.delete_desc')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>Access Code</Label>
+                            <Label>{t('auth.access_code')}</Label>
                             <Input
                                 placeholder="Enter 6-character code"
                                 value={accessCode}
@@ -455,14 +457,14 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setMachineToDelete(null)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setMachineToDelete(null)}>{t('common.cancel')}</Button>
                         <Button
                             variant="destructive"
                             disabled={accessCode.length < 6 || deleting}
                             onClick={executeDeleteWithCode}
                         >
                             {deleting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            Verify & Delete
+                            {t('auth.verify_delete')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
