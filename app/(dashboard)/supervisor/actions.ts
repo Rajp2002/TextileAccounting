@@ -141,9 +141,14 @@ export async function verifyAccessCode(orgId: string, accessCode: string) {
 export async function startBeam(batchId: string, machineId: string) {
     const { profile } = await requireRole(['owner', 'supervisor'])
 
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error('Missing Supabase environment variables! Ensure SUPABASE_SERVICE_ROLE_KEY is set in Vercel.')
+        return { error: 'Server Configuration Error: Missing SUPABASE_SERVICE_ROLE_KEY. Please add it to Vercel Environment Variables.' }
+    }
+
     const serviceClient = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
     // 1. Fetch default rate from the batch's quality
@@ -215,9 +220,14 @@ export async function startBeam(batchId: string, machineId: string) {
 export async function linkOrderToMachine(orderId: string, machineId: string) {
     const { profile } = await requireRole(['owner', 'supervisor'])
 
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error('Missing Supabase environment variables. Link order failed.')
+        return { error: 'Server Configuration Error: Missing SUPABASE_SERVICE_ROLE_KEY. Please add it to Vercel Environment Variables.' }
+    }
+
     const serviceClient = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
     const { error } = await serviceClient
@@ -241,9 +251,14 @@ export async function linkOrderToMachine(orderId: string, machineId: string) {
 export async function shiftHandover(orgId: string, machineId: string, shift: 'day' | 'night') {
     await requireRole(['owner', 'supervisor'])
 
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error('Missing Supabase environment variables. Shift handover failed.')
+        return { error: 'Server Configuration Error: Missing SUPABASE_SERVICE_ROLE_KEY. Please add it to Vercel Environment Variables.' }
+    }
+
     const serviceClient = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
     const { error } = await serviceClient
