@@ -18,6 +18,7 @@ import {
     shiftHandover 
 } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
+import { useTranslation } from '@/lib/i18n/context'
 import { 
     CalendarDays, 
     KeyRound, 
@@ -103,6 +104,7 @@ export default function ProductionEntryForm() {
     const isOnline = useOnlineStatus()
     const supabase = createClient()
     const queryClient = useQueryClient()
+    const { t } = useTranslation()
 
     // Initialize date and shift
     useEffect(() => {
@@ -445,13 +447,13 @@ export default function ProductionEntryForm() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
                             <CalendarDays className="h-5 w-5 text-teal-600" />
-                            <CardTitle className="text-xl">Log Production</CardTitle>
+                            <CardTitle className="text-xl">{t('production.log_production')}</CardTitle>
                         </div>
 
                         <div className="flex items-center gap-2">
                             <Button variant="outline" size="sm" onClick={setToday} className="h-10 px-3 text-sm flex-1 sm:flex-none">
                                 <RotateCcw className="h-4 w-4 mr-2" />
-                                Today
+                                {t('production.today')}
                             </Button>
                             <Input
                                 type="date"
@@ -474,7 +476,7 @@ export default function ProductionEntryForm() {
                                 currentShift === 'day' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700 shadow-none'
                             )}
                         >
-                            Day Shift
+                            {t('production.day_shift')}
                         </button>
                         <button
                             onClick={() => setCurrentShift('night')}
@@ -483,7 +485,7 @@ export default function ProductionEntryForm() {
                                 currentShift === 'night' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 shadow-none'
                             )}
                         >
-                            Night Shift
+                            {t('production.night_shift')}
                         </button>
                     </div>
                 </CardContent>
@@ -494,10 +496,10 @@ export default function ProductionEntryForm() {
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-amber-800 text-sm">
                         <Lock className="h-4 w-4" />
-                        <span>Some entries are already saved and locked.</span>
+                        <span>{t('production.locked_entries')}</span>
                     </div>
                     <Button variant="outline" size="sm" onClick={() => setVerificationOpen(true)} className="h-8 text-xs border-amber-300 text-amber-800 hover:bg-amber-100">
-                        Unlock to Edit
+                        {t('production.unlock_edit')}
                     </Button>
                 </div>
             )}
@@ -505,15 +507,15 @@ export default function ProductionEntryForm() {
             {(machinesLoading || logsLoading) ? (
                 <div className="text-center py-12 flex flex-col items-center">
                     <Loader2 className="h-8 w-8 animate-spin text-teal-600 mb-4" />
-                    <p className="text-gray-500 font-medium">Loading factory data...</p>
+                    <p className="text-gray-500 font-medium">{t('production.loading')}</p>
                 </div>
             ) : machineCards.length === 0 ? (
                 <div className="py-16 text-center border-2 border-dashed rounded-xl border-gray-200 bg-white">
                     <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
                         <BoxSelect className="h-8 w-8" />
                     </div>
-                    <p className="text-gray-900 font-semibold text-lg">No machines found</p>
-                    <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Please add machines in the owner view before logging production.</p>
+                    <p className="text-gray-900 font-semibold text-lg">{t('production.no_machines')}</p>
+                    <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">{t('production.no_machines_desc')}</p>
                 </div>
             ) : null}
 
@@ -531,20 +533,20 @@ export default function ProductionEntryForm() {
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <div className="font-semibold text-lg">{machine.name}</div>
-                                        <div className="text-xs text-gray-500">Rate: ₹{rate}/m</div>
+                                        <div className="text-xs text-gray-500">{t('production.rate')}: ₹{rate}/m</div>
                                     </div>
                                     {pay && (
                                         <span className={cn("text-sm font-bold px-2 py-1 rounded", disabled ? "bg-gray-200 text-gray-600" : "text-green-700 bg-green-50")}>
-                                            Est: {formatINR(pay)}
+                                            {t('production.est')}: {formatINR(pay)}
                                         </span>
                                     )}
                                 </div>
 
                                 <div className="space-y-1">
-                                    <Label className="text-xs text-gray-500">Worker</Label>
+                                    <Label className="text-xs text-gray-500">{t('production.worker')}</Label>
                                     <div className="flex items-center justify-between h-8">
                                         <div className="text-sm font-medium">
-                                            {worker ? worker.name : <span className="text-red-500 italic">No assigned worker</span>}
+                                            {worker ? worker.name : <span className="text-red-500 italic">{t('production.no_worker')}</span>}
                                         </div>
                                         {worker && !disabled && (
                                             <Button
@@ -557,7 +559,7 @@ export default function ProductionEntryForm() {
                                                 }}
                                             >
                                                 <UserMinus className="h-3 w-3 mr-1" />
-                                                Shift Change
+                                                {t('production.shift_change')}
                                             </Button>
                                         )}
                                     </div>
@@ -565,7 +567,7 @@ export default function ProductionEntryForm() {
                                 
                                 <div className="grid grid-cols-2 gap-2 mt-1 border-t pt-2">
                                      <div className="space-y-1">
-                                         <Label className="text-xs text-gray-500">Active Beam</Label>
+                                         <Label className="text-xs text-gray-500">{t('production.active_beam')}</Label>
                                          <div className="text-sm font-medium h-10 flex items-center">
                                             {activeBatch ? (
                                                 <span className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded text-xs font-semibold truncate w-full" title={`${activeBatch.name} (${activeBatch.quality?.name})`}>
@@ -587,14 +589,14 @@ export default function ProductionEntryForm() {
                                                     disabled={disabled}
                                                 >
                                                     <LinkIcon className="h-3 w-3 mr-1" />
-                                                    Start Beam
+                                                    {t('production.start_beam')}
                                                 </Button>
                                             )}
                                          </div>
                                      </div>
 
                                      <div className="space-y-1">
-                                         <Label className="text-xs text-gray-500">Active Order</Label>
+                                         <Label className="text-xs text-gray-500">{t('production.active_order')}</Label>
                                          <div className="text-sm font-medium h-10 flex items-center">
                                             {activeOrder ? (
                                                 <span className="text-teal-700 bg-teal-50 px-2 py-1 rounded text-xs font-semibold truncate w-full" title={activeOrder.party_name}>
@@ -616,7 +618,7 @@ export default function ProductionEntryForm() {
                                                     disabled={disabled}
                                                 >
                                                     <ClipboardList className="h-3 w-3 mr-1" />
-                                                    Link Order
+                                                    {t('production.link_order')}
                                                 </Button>
                                             )}
                                          </div>
@@ -629,24 +631,24 @@ export default function ProductionEntryForm() {
                                         <div className="bg-gray-50 rounded-lg p-3 border border-dashed border-gray-200">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <Settings2 className="h-4 w-4 text-gray-400" />
-                                                <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Setup Required</span>
+                                                <span className="text-xs font-bold uppercase tracking-wider text-gray-500">{t('production.setup_required')}</span>
                                             </div>
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-between text-xs">
-                                                    <span className="text-gray-600">Worker Assigned</span>
+                                                    <span className="text-gray-600">{t('production.worker_assigned')}</span>
                                                     {effectiveWorkerId ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <AlertCircle className="h-3.5 w-3.5 text-red-400" />}
                                                 </div>
                                                 <div className="flex items-center justify-between text-xs">
-                                                    <span className="text-gray-600">Beam Loaded</span>
+                                                    <span className="text-gray-600">{t('production.beam_loaded')}</span>
                                                     {activeBatch ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <AlertCircle className="h-3.5 w-3.5 text-red-400" />}
                                                 </div>
                                                 <div className="flex items-center justify-between text-xs">
-                                                    <span className="text-gray-600">Order Linked</span>
+                                                    <span className="text-gray-600">{t('production.order_linked')}</span>
                                                     {activeOrder ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <AlertCircle className="h-3.5 w-3.5 text-red-400" />}
                                                 </div>
                                             </div>
                                             <p className="text-[10px] text-gray-400 mt-3 text-center italic">
-                                                Complete setup above to enable production entry
+                                                {t('production.complete_setup')}
                                             </p>
                                         </div>
                                     </div>
@@ -692,16 +694,16 @@ export default function ProductionEntryForm() {
             <Dialog open={verificationOpen} onOpenChange={setVerificationOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-red-600">
-                            <KeyRound className="h-5 w-5" /> Owner Authorization Required
+                        <DialogTitle className="flex items-center gap-2 text-amber-600">
+                            <KeyRound className="h-5 w-5" /> {t('auth.owner_auth_req')}
                         </DialogTitle>
                         <DialogDescription>
-                            Editing past or saved production entries requires a single-use access code from the factory owner.
+                            {t('auth.unlock_desc')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>Access Code</Label>
+                            <Label>{t('auth.access_code')}</Label>
                             <Input
                                 placeholder="Enter 6-character code"
                                 value={accessCode}
@@ -712,13 +714,13 @@ export default function ProductionEntryForm() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setVerificationOpen(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setVerificationOpen(false)}>{t('common.cancel')}</Button>
                         <Button
                             disabled={accessCode.length < 6 || verifying}
                             onClick={handleUnlockSubmit}
                         >
                             {verifying ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            Verify & Unlock
+                            {t('auth.verify_unlock')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -729,15 +731,15 @@ export default function ProductionEntryForm() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-indigo-700">
-                            <LinkIcon className="h-5 w-5" /> Start New Beam
+                            <LinkIcon className="h-5 w-5" /> {t('modals.start_new_beam')}
                         </DialogTitle>
                         <DialogDescription>
-                            Link an active yarn batch to this machine. Future logs will automatically credit this batch.
+                            {t('modals.link_batch_desc')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>Select Batch</Label>
+                            <Label>{t('modals.select_batch')}</Label>
                             {activeBatches && activeBatches.length > 0 ? (
                                 <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2">
                                     {activeBatches
@@ -760,20 +762,20 @@ export default function ProductionEntryForm() {
                                 </div>
                             ) : (
                                 <div className="text-sm text-gray-500 p-4 border rounded bg-gray-50 text-center">
-                                    No active yarn batches available. Ask the owner to add inventory.
+                                    {t('modals.no_active_batches')}
                                 </div>
                             )}
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => { setBeamModalOpen(false); setLinkingBatchId('') }}>Cancel</Button>
+                        <Button variant="outline" onClick={() => { setBeamModalOpen(false); setLinkingBatchId('') }}>{t('common.cancel')}</Button>
                         <Button
                             disabled={!linkingBatchId || linkingBeam}
                             className="bg-indigo-600 hover:bg-indigo-700"
                             onClick={handleStartBeam}
                         >
                             {linkingBeam ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            Link & Start
+                            {t('modals.link_start')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -784,15 +786,15 @@ export default function ProductionEntryForm() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-teal-700">
-                            <ClipboardList className="h-5 w-5" /> Assign Order to Machine
+                            <ClipboardList className="h-5 w-5" /> {t('modals.assign_order')}
                         </DialogTitle>
                         <DialogDescription>
-                            Select the active order for this machine. Every meter logged will be tracked against this order.
+                            {t('modals.link_order_desc')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>Select Order</Label>
+                            <Label>{t('modals.select_order')}</Label>
                             {activeOrders && activeOrders.length > 0 ? (
                                 <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2">
                                     {activeOrders.map(order => (
@@ -813,20 +815,20 @@ export default function ProductionEntryForm() {
                                 </div>
                             ) : (
                                 <div className="text-sm text-gray-500 p-4 border rounded bg-gray-50 text-center">
-                                    No active orders found. Ask the owner to add orders.
+                                    {t('modals.no_active_orders')}
                                 </div>
                             )}
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => { setOrderModalOpen(false); setSelectedOrderId('') }}>Cancel</Button>
+                        <Button variant="outline" onClick={() => { setOrderModalOpen(false); setSelectedOrderId('') }}>{t('common.cancel')}</Button>
                         <Button
                             disabled={!selectedOrderId || linkingOrder}
                             className="bg-teal-600 hover:bg-teal-700 text-white"
                             onClick={handleLinkOrder}
                         >
                             {linkingOrder ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            Assign Order
+                            {t('modals.link')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

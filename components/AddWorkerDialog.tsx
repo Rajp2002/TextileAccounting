@@ -24,6 +24,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import * as Sentry from '@sentry/nextjs'
+import { useTranslation } from '@/lib/i18n/context'
 
 const FIXED_ROLES = [
     { value: 'master', label: 'Master', defaultSalary: 30000 },
@@ -79,6 +80,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
     const [open, setOpen] = useState(false)
     const supabase = createClient()
     const queryClient = useQueryClient()
+    const { t } = useTranslation()
 
     const {
         register,
@@ -129,7 +131,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
             return data
         },
         onSuccess: (data) => {
-            toast.success(`${data.name} added as ${data.workerType === 'meter' ? 'meter' : 'fixed'} worker!`)
+            toast.success(`${data.name}${t('workers.added_success')}`)
             // Invalidate meter worker queries
             queryClient.invalidateQueries({ queryKey: ['workers'] })
             // Invalidate ALL fixed-worker-related queries used across pages:
@@ -181,22 +183,22 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
             <DialogTrigger asChild>
                 <Button className="gap-2">
                     <Plus className="h-4 w-4" />
-                    Add Worker
+                    {t('workers.add_worker')}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <form onSubmit={handleSubmit((data) => onSubmit(data as unknown as WorkerFormValues))}>
                     <DialogHeader>
-                        <DialogTitle>Add New Worker</DialogTitle>
+                        <DialogTitle>{t('workers.add_worker')}</DialogTitle>
                         <DialogDescription>
-                            Choose worker type and fill in details.
+                            {t('workers.choose_type')}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="grid gap-4 py-4">
                         {/* Worker Type Toggle */}
                         <div className="grid gap-2">
-                            <Label>Worker Type</Label>
+                            <Label>{t('workers.worker_type')}</Label>
                             <div className="flex rounded-lg border overflow-hidden">
                                 <button
                                     type="button"
@@ -208,7 +210,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                     )}
                                     onClick={() => setValue('workerType', 'meter')}
                                 >
-                                    Meter Worker
+                                    {t('workers.meterWorkerType')}
                                 </button>
                                 <button
                                     type="button"
@@ -226,13 +228,13 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                         setValue('salary', 0)
                                     }}
                                 >
-                                    Fixed Salary
+                                    {t('workers.fixedSalaryType')}
                                 </button>
                             </div>
                             <p className="text-xs text-muted-foreground">
                                 {workerType === 'meter'
-                                    ? 'Paid per meter of production on assigned machines'
-                                    : 'Paid a fixed monthly salary (e.g. master, helper, daily)'
+                                    ? t('workers.paid_per_meter')
+                                    : t('workers.paid_fixed')
                                 }
                             </p>
                         </div>
@@ -240,11 +242,11 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                         {/* Name */}
                         <div className="grid gap-2">
                             <Label htmlFor="name">
-                                Worker Name <span className="text-red-500">*</span>
+                                {t('workers.worker_name')} <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="name"
-                                placeholder="e.g. Rajesh Kumar"
+                                placeholder={t('workers.name_placeholder')}
                                 {...register('name')}
                                 autoFocus
                             />
@@ -255,19 +257,20 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                         {workerType === 'fixed' && (
                             <>
                                 <div className="grid gap-2">
-                                    <Label>Role <span className="text-red-500">*</span></Label>
+                                    <Label>{t('workers.role')} <span className="text-red-500">*</span></Label>
                                     <Controller
                                         name="role"
                                         control={control}
                                         render={({ field }) => (
                                             <Select value={field.value} onValueChange={handleRoleChange}>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select role" />
+                                                    <SelectValue placeholder={t('workers.select_role')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {FIXED_ROLES.map(r => (
                                                         <SelectItem key={r.value} value={r.value}>
-                                                            {r.label}
+                                                            {/* @ts-ignore - Dynamic key usage */}
+                                                            {t(`workers.roles.${r.value}`) || r.label}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -279,19 +282,19 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                 </div>
                                 {selectedRole === 'other' && (
                                     <div className="grid gap-2">
-                                        <Label>Custom Role Name <span className="text-red-500">*</span></Label>
+                                        <Label>{t('workers.custom_role_name')} <span className="text-red-500">*</span></Label>
                                         <Input
-                                            placeholder="e.g. Plumber, Electrician"
+                                            placeholder={t('workers.custom_role_placeholder')}
                                             {...register('customRole')}
                                         />
                                         {(errors as any).customRole && <span className="text-xs text-red-500">{(errors as any).customRole.message}</span>}
                                     </div>
                                 )}
                                 <div className="grid gap-2">
-                                    <Label>Monthly Salary (₹) <span className="text-red-500">*</span></Label>
+                                    <Label>{t('workers.monthly_salary')} <span className="text-red-500">*</span></Label>
                                     <Input
                                         type="number"
-                                        placeholder="15000"
+                                        placeholder={t('workers.salary_placeholder')}
                                         {...register('salary')}
                                     />
                                     {(errors as any).salary && <span className="text-xs text-red-500">{(errors as any).salary.message}</span>}
@@ -307,16 +310,16 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                             onClick={() => setOpen(false)}
                             disabled={mutation.isPending}
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </Button>
                         <Button type="submit" disabled={mutation.isPending}>
                             {mutation.isPending ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Adding...
+                                    {t('workers.adding')}
                                 </>
                             ) : (
-                                'Add Worker'
+                                t('workers.add_worker')
                             )}
                         </Button>
                     </DialogFooter>

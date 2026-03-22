@@ -23,11 +23,8 @@ import { formatINR } from '@/lib/finance'
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
+import { useTranslation } from '@/lib/i18n/context'
 
-const ROLE_LABELS: Record<string, string> = {
-    master: 'Master', supervisor: 'Supervisor', helper: 'Helper',
-    mender: 'Mender', sanitation: 'Sanitation', daily: 'Day-to-Day',
-}
 const ROLE_COLORS: Record<string, string> = {
     master: 'bg-purple-100 text-purple-700', supervisor: 'bg-blue-100 text-blue-700',
     helper: 'bg-amber-100 text-amber-700', mender: 'bg-teal-100 text-teal-700',
@@ -46,6 +43,7 @@ export default function SupervisorWorkersPage() {
     const [fetchingDebt, setFetchingDebt] = useState(false)
 
     const { data: userProfile } = useUserProfile()
+    const { t } = useTranslation()
 
     // Fetch Meter (piece-rate) Workers
     const { data: workers, isLoading: workersLoading } = useQuery({
@@ -119,7 +117,7 @@ export default function SupervisorWorkersPage() {
     return (
         <div className="p-4 space-y-6 max-w-4xl mx-auto">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">Manage Workers</h1>
+                <h1 className="text-2xl font-bold text-gray-800">{t('workers.manage_workers')}</h1>
                 <AddWorkerDialog
                     orgId={userProfile.org_id}
                     onWorkerAdded={handleWorkerAdded}
@@ -129,7 +127,7 @@ export default function SupervisorWorkersPage() {
             {/* ── Meter Workers ── */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Meter Workers</CardTitle>
+                    <CardTitle>{t('workers.meter_workers')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {workersLoading ? (
@@ -146,7 +144,7 @@ export default function SupervisorWorkersPage() {
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <span className="text-xs text-gray-400">
-                                            {worker.is_active ? 'Active' : 'Inactive'}
+                                            {worker.is_active ? t('workers.active') : t('workers.inactive')}
                                         </span>
                                         <Button
                                             variant="ghost"
@@ -160,7 +158,7 @@ export default function SupervisorWorkersPage() {
                                 </div>
                             ))}
                             {workers?.length === 0 && (
-                                <p className="text-center text-gray-500 py-8">No meter workers yet. Add one to get started.</p>
+                                <p className="text-center text-gray-500 py-8">{t('workers.no_meter_workers')}</p>
                             )}
                         </div>
                     )}
@@ -170,7 +168,7 @@ export default function SupervisorWorkersPage() {
             {/* ── Fixed / Salaried Staff ── */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Fixed Staff</CardTitle>
+                    <CardTitle>{t('workers.fixed_staff')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {fixedLoading ? (
@@ -186,17 +184,17 @@ export default function SupervisorWorkersPage() {
                                             'text-xs px-2 py-0.5 rounded-full font-medium',
                                             ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700'
                                         )}>
-                                            {ROLE_LABELS[worker.role] || worker.role}
+                                            {t(`workers.roles.${worker.role}`) || worker.role}
                                         </span>
                                         <span className="font-medium text-gray-700">{worker.name}</span>
                                     </div>
                                     <span className="text-xs text-gray-400">
-                                        {worker.is_active ? 'Active' : 'Inactive'}
+                                        {worker.is_active ? t('workers.active') : t('workers.inactive')}
                                     </span>
                                 </div>
                             ))}
                             {fixedWorkers?.length === 0 && (
-                                <p className="text-center text-gray-500 py-8">No fixed staff yet. Add one to get started.</p>
+                                <p className="text-center text-gray-500 py-8">{t('workers.no_fixed_staff')}</p>
                             )}
                         </div>
                     )}
@@ -208,10 +206,10 @@ export default function SupervisorWorkersPage() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-red-600">
-                            <KeyRound className="h-5 w-5" /> Owner Authorization Required
+                            <KeyRound className="h-5 w-5" /> {t('workers.auth_req')}
                         </DialogTitle>
                         <DialogDescription>
-                            Deleting a worker record permanently removes them. This action requires a single-use access code from the factory owner.
+                            {t('workers.delete_desc')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -219,16 +217,15 @@ export default function SupervisorWorkersPage() {
                             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
                                 <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm font-bold text-amber-900">Outstanding Advance Detected</p>
+                                    <p className="text-sm font-bold text-amber-900">{t('workers.outstanding_adv')}</p>
                                     <p className="text-xs text-amber-700 mt-0.5">
-                                        This worker has a balance of <strong className="text-amber-900">{formatINR(workerDebt)}</strong>. 
-                                        Please ensure this is settled before removing them.
+                                        {t('workers.balance_warning')} <strong className="text-amber-900">{formatINR(workerDebt)}</strong>{t('workers.settle_warning')}
                                     </p>
                                 </div>
                             </div>
                         )}
                         <div className="space-y-2">
-                            <Label>Access Code</Label>
+                            <Label>{t('auth.access_code')}</Label>
                             <Input
                                 placeholder="Enter 6-character code"
                                 value={accessCode}
@@ -239,14 +236,14 @@ export default function SupervisorWorkersPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setWorkerToDelete(null)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setWorkerToDelete(null)}>{t('common.cancel')}</Button>
                         <Button
                             variant="destructive"
                             disabled={accessCode.length < 6 || deleting}
                             onClick={executeDelete}
                         >
                             {deleting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            Verify & Delete
+                            {t('auth.verify_delete')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
