@@ -147,6 +147,7 @@ export async function startBeam(batchId: string, machineId: string) {
     )
 
     // 1. Fetch default rate from the batch's quality
+    console.log('Fetching batch data for:', batchId)
     const { data: batchData, error: batchError } = await serviceClient
         .from('yarn_batches')
         .select('org_id, quality_id, qualities(default_worker_rate_per_m)')
@@ -155,20 +156,29 @@ export async function startBeam(batchId: string, machineId: string) {
 
     if (batchError || !batchData) {
         console.error('Error fetching batch:', batchError)
-        return { error: 'Failed to fetch batch data' }
+        return { error: 'Failed to fetch batch data: ' + (batchError?.message || 'Not found') }
     }
 
-    const defaultRate = (batchData.qualities as any)?.default_worker_rate_per_m || 0
+    // Handle case where qualities might be returned as an array or object
+    const qualityData = Array.isArray(batchData.qualities) ? batchData.qualities[0] : batchData.qualities
+    const defaultRate = (qualityData as any)?.default_worker_rate_per_m || 0
+    console.log('Batch found. Quality Rate:', defaultRate)
 
     // 2. Clear other batches from this machine
-    await serviceClient
+    console.log('Clearing existing beams from machine:', machineId)
+    const { error: clearError } = await serviceClient
         .from('yarn_batches')
         .update({ current_machine_id: null })
         .eq('current_machine_id', machineId)
         .eq('org_id', profile.org_id)
         .eq('status', 'active')
 
+    if (clearError) {
+        console.error('Error clearing batch:', clearError)
+    }
+
     // 3. Link this batch to the machine
+    console.log('Linking batch to machine...')
     const { error: linkError } = await serviceClient
         .from('yarn_batches')
         .update({ current_machine_id: machineId })
@@ -182,12 +192,20 @@ export async function startBeam(batchId: string, machineId: string) {
 
     // 4. Update machine rate (Rate Automation Gap)
     if (defaultRate > 0) {
-        await serviceClient
+        console.log('Updating machine rate to:', defaultRate)
+        const { error: rateError } = await serviceClient
             .from('machines')
             .update({ rate_per_meter: defaultRate })
             .eq('id', machineId)
             .eq('org_id', profile.org_id)
+        
+        if (rateError) {
+            console.error('Error updating rate:', rateError)
+        }
     }
+
+    console.log('startBeam completed successfully')
+    return { success: true }
 
     return { success: true }
 }
