@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { ClipboardList, ClipboardCheck, Users, Settings, Calendar, Menu } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/lib/i18n/context"
 
 
 export const navItems = [
@@ -19,6 +20,7 @@ export const navItems = [
 
 export function SupervisorNav() {
     const pathname = usePathname()
+    const { t } = useTranslation()
 
     return (
         <div className="hidden md:flex flex-row overflow-x-auto border-t border-gray-100 bg-white">
@@ -39,7 +41,7 @@ export function SupervisorNav() {
                             )}
                         >
                             <Icon className="h-4 w-4" />
-                            {item.name}
+                            {t(`nav.${item.name.toLowerCase()}`)}
                         </Link>
                     )
                 })}
@@ -51,6 +53,7 @@ export function SupervisorNav() {
 export function MobileSupervisorNav() {
     const pathname = usePathname()
     const [open, setOpen] = useState(false)
+    const { t } = useTranslation()
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
@@ -65,9 +68,9 @@ export function MobileSupervisorNav() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[280px] p-0">
                 <SheetHeader className="p-6 border-b text-left">
-                    <SheetTitle className="text-xl font-bold">Menu</SheetTitle>
+                    <SheetTitle className="text-xl font-bold">{t('common.menu')}</SheetTitle>
                     <SheetDescription>
-                        Navigate through supervisor features
+                        {t('common.navigate')}
                     </SheetDescription>
                 </SheetHeader>
                 <nav className="flex flex-col py-4">
@@ -88,7 +91,7 @@ export function MobileSupervisorNav() {
                                 )}
                             >
                                 <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
-                                {item.name}
+                                {t(`nav.${item.name.toLowerCase()}`)}
                             </Link>
                         )
                     })}
