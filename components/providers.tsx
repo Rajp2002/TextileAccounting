@@ -4,6 +4,7 @@ import { QueryClient } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { useState } from 'react'
+import { I18nProvider } from '@/lib/i18n/context'
 
 export let globalQueryClient: QueryClient | null = null
 
@@ -36,11 +37,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     )
 
     return (
-        <PersistQueryClientProvider
-            client={queryClient}
-            persistOptions={{ persister: persister! }}
-        >
-            {children}
-        </PersistQueryClientProvider>
+        <I18nProvider>
+            <PersistQueryClientProvider
+                client={queryClient}
+                persistOptions={{ persister: persister! }}
+            >
+                {children}
+            </PersistQueryClientProvider>
+        </I18nProvider>
     )
 }

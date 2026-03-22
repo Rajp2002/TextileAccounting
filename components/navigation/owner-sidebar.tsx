@@ -22,6 +22,8 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/co
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import LogoutButton from "@/components/auth/logout-button"
+import { LanguageSwitcher } from "@/components/i18n/language-switcher"
+import { useTranslation } from "@/lib/i18n/context"
 
 const primaryNavItems = [
     { name: "Dashboard", href: "/owner/analytics", icon: BarChart3 },
@@ -44,6 +46,7 @@ interface OwnerSidebarProps {
 
 function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & { onLinkClick?: () => void }) {
     const pathname = usePathname()
+    const { t } = useTranslation()
 
     return (
         <div className="flex flex-col h-full bg-sidebar">
@@ -57,7 +60,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                         {factoryName || "Vastra"}
                     </h2>
                     <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
-                        Owner Panel
+                        {t('common.owner')} Panel
                     </span>
                 </div>
             </div>
@@ -82,7 +85,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                                 )}
                             >
                                 <Icon className="h-[18px] w-[18px]" />
-                                {item.name}
+                                {t(`nav.${item.name.toLowerCase()}`)}
                             </Link>
                         )
                     })}
@@ -94,7 +97,10 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                 {userName && (
                     <p className="text-xs text-muted-foreground mb-3 truncate">{userName}</p>
                 )}
-                <LogoutButton />
+                <div className="flex flex-col gap-3">
+                    <LanguageSwitcher />
+                    <LogoutButton />
+                </div>
             </div>
         </div>
     )
@@ -103,6 +109,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
 export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
     const [isOpen, setIsOpen] = useState(false)
     const pathname = usePathname()
+    const { t } = useTranslation()
 
     return (
         <>
@@ -124,7 +131,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                         <div className="flex items-center gap-1.5">
                             <span className="h-1 w-1 rounded-full bg-primary animate-pulse" />
                             <span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground font-bold">
-                                Owner Panel
+                                {t('common.owner')} Panel
                             </span>
                         </div>
                     </div>
@@ -178,7 +185,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                                 "text-[10px] font-bold leading-none tracking-tight",
                                 isActive ? "opacity-100" : "opacity-70"
                             )}>
-                                {item.name}
+                                {t(`nav.${item.name.toLowerCase()}`)}
                             </span>
                             {isActive && (
                                 <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
@@ -195,7 +202,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                     <div className="py-1.5 px-4 rounded-xl mb-1 hover:bg-black/5 transition-all">
                         <Menu className="h-5 w-5" />
                     </div>
-                    <span className="text-[10px] font-bold leading-none tracking-tight opacity-70">More</span>
+                    <span className="text-[10px] font-bold leading-none tracking-tight opacity-70">{t('common.menu')}</span>
                 </button>
             </div>
         </>

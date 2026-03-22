@@ -6,6 +6,7 @@ import { OfflineSyncProvider } from '@/components/offline-sync-provider'
 import { SupervisorNav, MobileSupervisorNav } from '@/components/navigation/supervisor-nav'
 import Image from 'next/image'
 import LogoutButton from '@/components/auth/logout-button'
+import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
     // 🔐 F-8 fix: Server-side role check
@@ -51,6 +52,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        <LanguageSwitcher />
                         <LogoutButton variant="header" />
                     </div>
                 </div>
