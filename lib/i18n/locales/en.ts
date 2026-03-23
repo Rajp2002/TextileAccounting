@@ -74,6 +74,306 @@ export const en = {
     delete_desc: "Deleting a machine permanently removes it and its configuration. This action requires a single-use access code from the factory owner.",
     verify_delete: "Verify & Delete",
   },
+  analytics: {
+    greeting: {
+      morning: "Good morning",
+      afternoon: "Good afternoon",
+      evening: "Good evening"
+    },
+    today: "Today",
+    order: "Order",
+    orders: {
+      edit_order: "Edit Order",
+      create_new: "Create New Order",
+      track_targets: "Track targets and forecasts for your clients.",
+      party_name: "Party Name",
+      party_name_placeholder: "e.g., Sundaram Textiles",
+      quality: "Quality",
+      target: "Target (m)",
+      start_date: "Start Date",
+      deadline: "Deadline",
+      saving: "Saving...",
+      update: "Update Order",
+      launch: "Launch Order",
+      live_orders: "Live Orders",
+      active_count: "Active",
+      no_active: "No active orders found",
+      start_tracking: "Start tracking client targets, daily pace, and predicted finish dates.",
+      create_first: "Create First Order"
+    },
+    kpi: {
+      daily_output: "Daily Output",
+      wages_today: "Wages Today",
+      fixed_payroll: "Fixed Payroll"
+    },
+    efficiency: {
+      title: "Efficiency",
+      variance: "Variance",
+      no_data: "No data available"
+    },
+    alerts: {
+      title: "Leakage Alerts",
+      high_leakage: "High Leakage Batches",
+      all_good: "All batches within target"
+    },
+    worker_details: "Worker Details",
+    staff_payroll: "Staff Payroll",
+    no_production_logs: "No production logs",
+    no_staff: "No staff found",
+    table: {
+      machine: "Machine",
+      output_pay: "Output / Pay",
+      earned_so_far: "earned so far",
+      days_worked: "days worked this month",
+      day_worked: "day worked this month"
+    }
+  },
+  payroll: {
+    monthly_payroll: "Monthly Payroll",
+    track_settle: "Track and settle worker payments",
+    status: {
+      paid: "Paid",
+      pending: "Pending",
+      unmark: "Unmark",
+      mark_paid: "Mark Paid",
+      deducted: "Deducted"
+    },
+    metrics: {
+      total_owed: "Total Owed",
+      paid: "Paid",
+      deductions: "Deductions",
+      outstanding: "Outstanding",
+      settled: "settled",
+      total_debt: "Total Debt"
+    },
+    tabs: {
+      meter_workers: "Meter Workers",
+      fixed_workers: "Fixed Workers",
+      pending_count: "pending"
+    },
+    row: {
+      advance: "advance",
+      high_debt: "High Debt",
+      debt_risk: "Debt Risk",
+      calculation_breakdown: "Calculation Breakdown",
+      calculation: "Calculation",
+      gross_pay: "Gross Pay",
+      advance_deduction: "Advance Deduction",
+      net_pagar: "Net Pagar",
+      remaining_debt: "Remaining Debt (carry-over)",
+      monthly_salary: "Monthly salary",
+      days_worked: "Days worked",
+      formula: "Formula",
+      days: "days",
+      full_monthly_salary: "Full monthly salary (Gross)",
+      m_across: "m across",
+      machines: "machines",
+      machine: "machine"
+    },
+    empty: {
+      no_production: "No production logged this month",
+      no_fixed: "No fixed workers found",
+      tap_row: "Tap a row to see calculation breakdown",
+      tap_row_fixed: "Tap a row to see calculation. Day-to-Day pay is based on attendance."
+    },
+    advances: {
+      title: "Advances (Upaad)",
+      subtitle: "Track and manage worker advances. Deducted automatically during payroll settlement.",
+      select_worker: "Select Worker",
+      search_placeholder: "Search workers...",
+      no_workers: "No workers found",
+      piece_rate: "Piece-Rate",
+      fixed: "Fixed",
+      risk: {
+        high: "High Debt Risk",
+        moderate: "Moderate Debt",
+        owes: "owes",
+        against: "against",
+        typical_earnings: "typical earnings/month",
+        high_warning: "Consider not giving more advances.",
+        moderate_warning: "Approaching the monthly earnings threshold."
+      },
+      give_advance: "Give Advance",
+      dialog: {
+        title: "Give Advance to",
+        desc: "This will be automatically deducted from their next payroll settlement.",
+        amount: "Amount (₹)",
+        reason: "Reason (optional)",
+        reason_placeholder: "e.g. Medicine, Rent, Home travel",
+        cancel: "Cancel",
+        record: "Record Advance",
+        sure: "Sure?"
+      },
+      list: {
+        no_advances: "No advances recorded",
+        click_to_add: "Click 'Give Advance' to record a new advance for this worker",
+        no_reason: "No reason specified",
+        given: "Given",
+        settled_in: "Settled in",
+        select_above: "Select a worker above to manage their advances"
+      }
+    }
+  },
+  inventory: {
+    title: "Yarn & Qualities",
+    subtitle: "Manage fabric qualities and active yarn batches.",
+    tabs: {
+      batches: "Batches (Beams)",
+      qualities: "Qualities"
+    },
+    batches: {
+      title: "Active & Consumed Batches",
+      add: "Add Batch",
+      loading: "Loading batches...",
+      empty: {
+        title: "No Yarn Batches",
+        desc: "Start tracking your yarn by adding a new batch (or beam).",
+        btn: "Create First Batch"
+      },
+      card: {
+        weight: "Weight",
+        expected_prod: "Expected Prod.",
+        location: "Current Machine Location",
+        unassigned: "Storage / Unassigned",
+        mark_consumed: "Mark Consumed (Audit)",
+        view_audit: "View Final Audit"
+      },
+      add_modal: {
+        title: "Add New Yarn Batch (Beam)",
+        desc: "Register a new physical yarn beam or bag into inventory.",
+        name: "Batch Name / Identification",
+        name_ph: "e.g., Batch #205",
+        quality: "Fabric Quality",
+        quality_ph: "Select a quality",
+        no_quality: "Please add Qualities first.",
+        weight: "Total Weight (kg)",
+        weight_ph: "e.g., 100.5",
+        cancel: "Cancel",
+        save: "Save Batch",
+        saving: "Saving...",
+        success: "Batch added successfully"
+      }
+    },
+    qualities: {
+      title: "Fabric Qualities",
+      add: "Add Quality",
+      loading: "Loading qualities...",
+      empty: {
+        title: "No Qualities Defined",
+        desc: "Define the fabrics you manufacture (e.g. 60g Georgette, Cotton 40s) along with their target yields.",
+        btn: "Load Surat Presets (Templates)",
+        loading: "Loading..."
+      },
+      card: {
+        target: "Target:",
+        est_sale: "Est. Sale Value:",
+        worker_rate: "Worker Rate:",
+        per_m: "/m"
+      },
+      add_modal: {
+        title: "Add New Fabric Quality",
+        desc: "Define a fabric target yield to track machine efficiency.",
+        name: "Fabric Name",
+        name_ph: "e.g., 60g Georgette",
+        target: "Target Yield (m/kg)",
+        target_ph: "e.g., 9.5",
+        sale: "Avg Sale Price (₹/m)",
+        sale_ph: "e.g., 25",
+        worker_rate: "Worker Rate (₹/m)",
+        worker_rate_ph: "e.g., 4.50",
+        helper: "Worker rate is auto-applied to machines using this quality.",
+        cancel: "Cancel",
+        save: "Save Quality",
+        saving: "Saving...",
+        success: "Quality added successfully"
+      }
+    },
+    audit: {
+      title: "Batch Audit Report",
+      desc: "Efficiency and leakage analysis for",
+      loading: "Generating report...",
+      empty: "No data found for this batch.",
+      cards: {
+        quality: "Quality",
+        input: "Input Weight",
+        target: "Target Yield",
+        actual: "Actual Yield"
+      },
+      prod_vs_exp: "Production vs Expected",
+      exp_meters: "Expected Meters (Weight × Target)",
+      act_meters: "Actual Produced Meters",
+      eff_variance: "Efficiency Variance (V)",
+      leakage: {
+        title: "Significant Leakage Detected",
+        desc: "This beam underperformed its target yield by over 5%, indicating potential waste or theft.",
+        loss_title: "Estimated Monetary Loss"
+      },
+      padding: {
+        title: "Abnormal Over-Production",
+        desc: "Yield is more than 10% above target. Verify if supervisors are padding production numbers or if the target yield is misconfigured."
+      },
+      tali: {
+        title: "Leftover Yarn? (Tali)",
+        desc: "If any yarn remains on the beam, enter it here to exclude it from the audit."
+      },
+      close: "Close Summary",
+      mark_consumed: "Mark as Consumed (Close Batch)",
+      closing: "Closing...",
+      success: "Batch successfully closed and audited."
+    }
+  },
+  settings: {
+    title: "Settings",
+    subtitle: "Factory configuration and access codes",
+    factory: {
+      title: "Factory Information",
+      desc: "Manage your factory details and access codes",
+      name: "Factory Name",
+      id: "Factory ID (Join Code)",
+      share: "Share this code with your supervisors so they can join your factory."
+    },
+    personal: {
+      title: "Personal Information",
+      name: "Full Name",
+      phone: "Phone Number",
+      role: "Role:"
+    },
+    access_code: {
+      title: "Sensitive Actions Access Code",
+      desc: "Generate a single-use code for supervisors to delete records or edit past attendance. Codes expire in 15 minutes.",
+      btn: "Generate New Code",
+      generating: "Generating...",
+      success: "New access code generated",
+      error: "Failed to generate code",
+      copy_success: "Code copied to clipboard",
+      copy_title: "Copy code",
+      warning: "⚠️ Copy this now. It won't be shown again."
+    }
+  },
+  system_health: {
+    title: "System Health",
+    subtitle: "Monitor background jobs and daily brief deliveries",
+    logs: {
+      title: "Daily Brief Logs (Last 30 days)",
+      desc: "Status of the automated 8:00 PM WhatsApp performance reports",
+      empty: "No job logs found. Ensure your cron jobs and Edge Functions are enabled.",
+      cols: {
+        timestamp: "Timestamp",
+        target_date: "Target Date",
+        status: "Status",
+        details: "Details"
+      },
+      status: {
+        success: "Success",
+        skipped: "Skipped",
+        failed: "Failed"
+      },
+      details: {
+        no_phone: "No owner phone found or already sent",
+        prepared: "Message prepared/sent"
+      }
+    }
+  },
   workers: {
     manage_workers: "Manage Workers",
     meter_workers: "Meter Workers",

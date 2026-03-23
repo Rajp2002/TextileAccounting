@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label'
 import { generateAccessCode } from '@/app/(dashboard)/owner/actions'
 import { KeyRound, Loader2, Copy, Check } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslation } from '@/lib/i18n/context'
 
 export function AccessCodeGenerator() {
+    const { t } = useTranslation()
     const [loading, setLoading] = useState(false)
     const [generatedCode, setGeneratedCode] = useState<string | null>(null)
     const [copied, setCopied] = useState(false)
@@ -21,9 +23,9 @@ export function AccessCodeGenerator() {
         try {
             const { code } = await generateAccessCode()
             setGeneratedCode(code)
-            toast.success('New access code generated')
+            toast.success(t('settings.access_code.success'))
         } catch (error: any) {
-            toast.error(error.message || 'Failed to generate code')
+            toast.error(error.message || t('settings.access_code.error'))
         } finally {
             setLoading(false)
         }
@@ -33,7 +35,7 @@ export function AccessCodeGenerator() {
         if (!generatedCode) return
         await navigator.clipboard.writeText(generatedCode)
         setCopied(true)
-        toast.success('Code copied to clipboard')
+        toast.success(t('settings.access_code.copy_success'))
         setTimeout(() => setCopied(false), 2000)
     }
 
@@ -42,11 +44,10 @@ export function AccessCodeGenerator() {
             <CardHeader className="bg-red-50/50 pb-4">
                 <CardTitle className="text-red-800 flex items-center gap-2">
                     <KeyRound className="h-5 w-5" />
-                    Sensitive Actions Access Code
+                    {t('settings.access_code.title')}
                 </CardTitle>
                 <CardDescription className="text-red-700/80">
-                    Generate a single-use code for supervisors to delete records or edit past attendance.
-                    Codes expire in 15 minutes.
+                    {t('settings.access_code.desc')}
                 </CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
@@ -58,9 +59,9 @@ export function AccessCodeGenerator() {
                         className="w-full sm:w-auto"
                     >
                         {loading ? (
-                            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>
+                            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('settings.access_code.generating')}</>
                         ) : (
-                            'Generate New Code'
+                            t('settings.access_code.btn')
                         )}
                     </Button>
 
@@ -75,7 +76,7 @@ export function AccessCodeGenerator() {
                                 variant="outline"
                                 size="icon"
                                 onClick={handleCopy}
-                                title="Copy code"
+                                title={t('settings.access_code.copy_title')}
                             >
                                 {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
                             </Button>
@@ -84,7 +85,7 @@ export function AccessCodeGenerator() {
                 </div>
                 {generatedCode && (
                     <p className="text-sm text-yellow-600 font-medium">
-                        ⚠️ Copy this now. It won't be shown again.
+                        {t('settings.access_code.warning')}
                     </p>
                 )}
             </CardContent>
