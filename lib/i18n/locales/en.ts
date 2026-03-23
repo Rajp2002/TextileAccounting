@@ -14,6 +14,23 @@ export const en = {
     advances: "Advances",
     "system health": "System Health",
   },
+  attendance: {
+    title: "Daily Attendance",
+    today: "Today",
+    present: "Present",
+    absent: "Absent",
+    no_workers: "No day-to-day workers",
+    save: "Save Attendance",
+    saving: "Saving...",
+    unlock_edit: "Unlock to Edit",
+    locked_banner: "Some entries are already saved and locked.",
+    auth_desc: "Editing attendance for past dates requires a single-use access code from the factory owner.",
+    verify_unlock: "Verify & Unlock",
+    verify_save: "Verify & Save",
+    loading: "Loading attendance...",
+    per_day: "/day",
+    already_saved: "Entry for this worker has already been saved. To modify in case of accidental entry, please get the owner's access code."
+  },
   common: {
     supervisor: "Supervisor",
     owner: "Owner",
@@ -26,6 +43,8 @@ export const en = {
   },
   production: {
     log_production: "Log Production",
+    save_all: "Save All Entries",
+    saving: "Saving...",
     today: "Today",
     day_shift: "Day Shift",
     night_shift: "Night Shift",
@@ -54,6 +73,7 @@ export const en = {
   },
   machines: {
     title: "Machine Rates & Assignments",
+    new_rate: "New Rate",
     desc_edit: "Set rates per machine and assign workers to shifts.",
     desc_no_edit: "Assign workers to shifts for each machine.",
     add_machine: "Add Machine",

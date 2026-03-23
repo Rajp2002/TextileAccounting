@@ -842,7 +842,7 @@ export default function ProductionEntryForm() {
                         disabled={loading || machineCards.length === 0}
                         className="w-full md:w-[240px] h-[52px] text-lg font-bold shadow-md bg-teal-600 hover:bg-teal-700 text-white rounded-xl mb-14 md:mb-0 transition-all"
                     >
-                        {loading ? 'Saving...' : 'Save All Entries'}
+                        {loading ? t('production.saving') : t('production.save_all')}
                     </Button>
                 </div>
             </div>

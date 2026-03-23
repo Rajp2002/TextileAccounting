@@ -12,6 +12,7 @@ import { RotateCcw, Check, X, CalendarDays, KeyRound, Loader2, Lock } from 'luci
 import { cn } from '@/lib/utils'
 import { savePastAttendance, verifyAccessCode } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
+import { useTranslation } from '@/lib/i18n/context'
 import {
     Dialog,
     DialogContent,
@@ -37,6 +38,7 @@ interface AttendanceRecord {
 }
 
 export default function AttendancePage() {
+    const { t } = useTranslation()
     const supabase = createClient()
     const queryClient = useQueryClient()
 
@@ -105,7 +107,7 @@ export default function AttendancePage() {
 
     const toggleAttendance = (workerId: number, workerName: string) => {
         if (isLocked) {
-            toast.error(`entry for this worker(s) ${workerName} has already been svaed. To modify in case of accidental entry pls get owner access code.`, { duration: 5000 })
+            toast.error(t('attendance.already_saved'), { duration: 5000 })
             return
         }
         setLocalAttendance(prev => ({ ...prev, [workerId]: !prev[workerId] }))
@@ -204,12 +206,12 @@ export default function AttendancePage() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <CalendarDays className="h-5 w-5 text-indigo-600" />
-                            <CardTitle>Daily Attendance</CardTitle>
+                            <CardTitle>{t('attendance.title')}</CardTitle>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button variant="ghost" size="sm" onClick={setToday} className="h-8 px-2 text-xs">
                                 <RotateCcw className="h-3 w-3 mr-1" />
-                                Today
+                                {t('attendance.today')}
                             </Button>
                             <Input
                                 type="date"
@@ -226,7 +228,7 @@ export default function AttendancePage() {
             <Card>
                 <CardContent className="py-4">
                     <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500">Present</span>
+                        <span className="text-sm text-gray-500">{t('attendance.present')}</span>
                         <span className="text-lg font-bold">
                             <span className="text-green-700">{presentCount}</span>
                             <span className="text-gray-400"> / {totalCount}</span>
@@ -240,10 +242,10 @@ export default function AttendancePage() {
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-amber-800 text-sm">
                         <Lock className="h-4 w-4" />
-                        <span>Some entries are already saved and locked.</span>
+                        <span>{t('attendance.locked_banner')}</span>
                     </div>
                     <Button variant="outline" size="sm" onClick={() => { setVerificationMode('unlock'); setVerificationOpen(true); }} className="h-8 text-xs border-amber-300 text-amber-800 hover:bg-amber-100">
-                        Unlock to Edit
+                        {t('attendance.unlock_edit')}
                     </Button>
                 </div>
             )}
@@ -251,12 +253,12 @@ export default function AttendancePage() {
             {attendanceLoading ? (
                 <div className="flex flex-col items-center justify-center py-12">
                     <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-4" />
-                    <p className="text-gray-500 font-medium text-sm">Loading attendance...</p>
+                    <p className="text-gray-500 font-medium text-sm">{t('attendance.loading')}</p>
                 </div>
             ) : !dailyWorkers || dailyWorkers.length === 0 ? (
                 <Card>
                     <CardContent className="py-12 text-center">
-                        <p className="font-medium text-gray-500">No day-to-day workers</p>
+                        <p className="font-medium text-gray-500">{t('attendance.no_workers')}</p>
                     </CardContent>
                 </Card>
             ) : (
@@ -288,7 +290,7 @@ export default function AttendancePage() {
                                                     {worker.name}
                                                 </span>
                                                 <div className="text-xs text-gray-400">
-                                                    {formatINR(dailyRate)}/day
+                                                    {formatINR(dailyRate)}{t('attendance.per_day')}
                                                 </div>
                                             </div>
                                         </div>
@@ -296,7 +298,7 @@ export default function AttendancePage() {
                                             'text-xs font-semibold px-2.5 py-1 rounded-full',
                                             isPresent ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'
                                         )}>
-                                            {isPresent ? 'Present' : 'Absent'}
+                                            {isPresent ? t('attendance.present') : t('attendance.absent')}
                                         </span>
                                     </div>
                                 )
@@ -313,7 +315,7 @@ export default function AttendancePage() {
                         disabled={saving || totalCount === 0}
                         className="w-full md:w-[240px] h-[52px] text-lg font-bold shadow-md bg-teal-600 hover:bg-teal-700 text-white rounded-xl mb-14 md:mb-0 transition-all"
                     >
-                        {saving ? 'Saving...' : 'Save Attendance'}
+                        {saving ? t('attendance.saving') : t('attendance.save')}
                     </Button>
                 </div>
             </div>
@@ -323,15 +325,15 @@ export default function AttendancePage() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-red-600">
-                            <KeyRound className="h-5 w-5" /> Owner Authorization Required
+                            <KeyRound className="h-5 w-5" /> {t('auth.owner_auth_req')}
                         </DialogTitle>
                         <DialogDescription>
-                            Editing attendance for past dates requires a single-use access code from the factory owner.
+                            {t('attendance.auth_desc')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>Access Code</Label>
+                            <Label>{t('auth.access_code')}</Label>
                             <Input
                                 placeholder="Enter 6-character code"
                                 value={accessCode}
@@ -342,13 +344,13 @@ export default function AttendancePage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setVerificationOpen(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setVerificationOpen(false)}>{t('common.cancel')}</Button>
                         <Button
                             disabled={accessCode.length < 6 || saving || verifying}
                             onClick={() => verificationMode === 'unlock' ? handleUnlockSubmit() : executeSave(accessCode)}
                         >
                             {(saving || verifying) ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            {verificationMode === 'unlock' ? 'Verify & Unlock' : 'Verify & Save'}
+                            {verificationMode === 'unlock' ? t('attendance.verify_unlock') : t('attendance.verify_save')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

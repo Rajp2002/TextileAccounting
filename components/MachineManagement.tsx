@@ -356,7 +356,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                                             <>
                                                 <Input
                                                     type="number"
-                                                    placeholder="New Rate"
+                                                    placeholder={t('machines.new_rate')}
                                                     className="w-24 h-8"
                                                     value={editingRates[machine.id] ?? ''}
                                                     onChange={(e) => handleRateChange(machine.id, e.target.value)}
