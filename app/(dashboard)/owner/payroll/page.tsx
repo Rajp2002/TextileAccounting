@@ -14,6 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { toggleWorkerPaid } from './actions'
+import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useMutation } from '@tanstack/react-query'
 
@@ -82,12 +83,13 @@ function nextMonth(ym: string) {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 function PaidBadge({ paid, paidAt }: { paid: boolean; paidAt?: string }) {
+    const { t } = useTranslation()
     if (paid) {
         return (
             <div className="flex items-center gap-1.5 text-green-700">
                 <CheckCircle2 className="h-4 w-4" />
                 <span className="text-xs font-medium">
-                    Paid {paidAt ? new Date(paidAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}
+                    {t('payroll.status.paid')} {paidAt ? new Date(paidAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}
                 </span>
             </div>
         )
@@ -95,7 +97,7 @@ function PaidBadge({ paid, paidAt }: { paid: boolean; paidAt?: string }) {
     return (
         <div className="flex items-center gap-1.5 text-amber-600">
             <Circle className="h-4 w-4" />
-            <span className="text-xs font-medium">Pending</span>
+            <span className="text-xs font-medium">{t('payroll.status.pending')}</span>
         </div>
     )
 }
@@ -109,6 +111,7 @@ function MeterWorkerRow({
     isMutating?: boolean
 }) {
     const [expanded, setExpanded] = useState(false)
+    const { t } = useTranslation()
     const isPaid = worker.payment?.paid ?? false
     const hasAdvances = worker.totalAdvances > 0
     const debtRatio = worker.totalPay > 0 ? worker.totalAdvances / worker.totalPay : 0
@@ -129,14 +132,14 @@ function MeterWorkerRow({
                     <div className="min-w-0">
                         <div className="font-semibold text-gray-900 truncate">{worker.name}</div>
                         <div className="text-xs text-gray-500">
-                            {worker.totalMeters.toFixed(1)} m across {worker.machines.length} machine{worker.machines.length !== 1 ? 's' : ''}
+                            {worker.totalMeters.toFixed(1)} {t('payroll.row.m_across')} {worker.machines.length} {worker.machines.length !== 1 ? t('payroll.row.machines') : t('payroll.row.machine')}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                             {hasAdvances && (
                                 <div className="flex items-center gap-1">
                                     <HandCoins className="h-3 w-3 text-amber-600" />
                                     <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">
-                                        {formatINR(worker.totalAdvances)} advance
+                                        {formatINR(worker.totalAdvances)} {t('payroll.row.advance')}
                                     </span>
                                 </div>
                             )}
@@ -145,7 +148,7 @@ function MeterWorkerRow({
                                     variant={debtRatio > 0.6 ? "destructive" : "warning"}
                                     className="text-[9px] h-4 px-1.5 font-black uppercase tracking-tighter"
                                 >
-                                    {debtRatio > 0.6 ? 'High Debt' : 'Debt Risk'}: {Math.round(debtRatio * 100)}%
+                                    {debtRatio > 0.6 ? t('payroll.row.high_debt') : t('payroll.row.debt_risk')}: {Math.round(debtRatio * 100)}%
                                 </Badge>
                             )}
                         </div>
@@ -169,26 +172,26 @@ function MeterWorkerRow({
                         className={cn('h-8 text-xs', isPaid && 'border-green-300 text-green-700 hover:bg-red-50 hover:border-red-300 hover:text-red-600')}
                         onClick={onToggle}
                     >
-                        {isPaid ? 'Unmark' : 'Mark Paid'}
+                        {isPaid ? t('payroll.status.unmark') : t('payroll.status.mark_paid')}
                     </Button>
                 </div>
             </div>
 
             {expanded && worker.machines.length > 0 && (
                 <div className="border-t bg-gray-50 px-4 py-3">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Calculation Breakdown</p>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('payroll.row.calculation_breakdown')}</p>
                     <div className="space-y-1.5">
                         {worker.machines.map((m, i) => (
                             <div key={i} className="flex justify-between text-sm">
                                 <span className="text-gray-600">{m.machineName}</span>
                                 <span className="text-gray-500 text-xs">
-                                    {m.meters.toFixed(1)} m × ₹{m.rate}/m
+                                    {m.meters.toFixed(1)} {t('payroll.row.m_across').charAt(0)} × ₹{m.rate}/{t('payroll.row.m_across').charAt(0)}
                                     <span className="text-gray-800 font-medium ml-2">= {formatINR(m.pay)}</span>
                                 </span>
                             </div>
                         ))}
                         <div className="flex justify-between text-sm font-semibold border-t pt-1.5 mt-1">
-                            <span>Gross Pay</span>
+                            <span>{t('payroll.row.gross_pay')}</span>
                             <span>{formatINR(worker.totalPay)}</span>
                         </div>
                         {hasAdvances && (
@@ -196,17 +199,17 @@ function MeterWorkerRow({
                                 <div className="flex justify-between text-sm text-amber-700">
                                     <span className="flex items-center gap-1">
                                         <HandCoins className="h-3.5 w-3.5" />
-                                        Advance Deduction
+                                        {t('payroll.row.advance_deduction')}
                                     </span>
                                     <span>-{formatINR(Math.min(worker.totalAdvances, worker.totalPay))}</span>
                                 </div>
                                 <div className="flex justify-between text-sm font-bold border-t border-dashed pt-1.5 mt-1">
-                                    <span>Net Pagar</span>
+                                    <span>{t('payroll.row.net_pagar')}</span>
                                     <span className="text-green-700">{formatINR(worker.netPay)}</span>
                                 </div>
                                 {worker.remainingDebt > 0 && (
                                     <div className="flex justify-between text-xs text-red-600 bg-red-50 rounded px-2 py-1 mt-1">
-                                        <span>Remaining Debt (carry-over)</span>
+                                        <span>{t('payroll.row.remaining_debt')}</span>
                                         <span className="font-semibold">{formatINR(worker.remainingDebt)}</span>
                                     </div>
                                 )}
@@ -228,6 +231,7 @@ function FixedWorkerRow({
     isMutating?: boolean
 }) {
     const [expanded, setExpanded] = useState(false)
+    const { t } = useTranslation()
     const isPaid = worker.payment?.paid ?? false
     const isDaily = worker.role === 'daily'
     const hasAdvances = worker.totalAdvances > 0
@@ -244,7 +248,7 @@ function FixedWorkerRow({
                     className="flex items-center gap-3 text-left flex-1 min-w-0"
                 >
                     <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0', ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700')}>
-                        {ROLE_LABELS[worker.role] || worker.role}
+                        {t(`workers.roles.${worker.role}`) || worker.role}
                     </span>
                     <div className="min-w-0">
                         <span className="font-semibold text-gray-900 truncate block">{worker.name}</span>
@@ -253,7 +257,7 @@ function FixedWorkerRow({
                                 <div className="flex items-center gap-1">
                                     <HandCoins className="h-3 w-3 text-amber-600" />
                                     <span className="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">
-                                        {formatINR(worker.totalAdvances)} advance
+                                        {formatINR(worker.totalAdvances)} {t('payroll.row.advance')}
                                     </span>
                                 </div>
                             )}
@@ -262,7 +266,7 @@ function FixedWorkerRow({
                                     variant={debtRatio > 0.6 ? "destructive" : "warning"}
                                     className="text-[9px] h-4 px-1.5 font-black uppercase tracking-tighter"
                                 >
-                                    {debtRatio > 0.6 ? 'High Debt' : 'Debt Risk'}: {Math.round(debtRatio * 100)}%
+                                    {debtRatio > 0.6 ? t('payroll.row.high_debt') : t('payroll.row.debt_risk')}: {Math.round(debtRatio * 100)}%
                                 </Badge>
                             )}
                         </div>
@@ -286,36 +290,36 @@ function FixedWorkerRow({
                         className={cn('h-8 text-xs', isPaid && 'border-green-300 text-green-700 hover:bg-red-50 hover:border-red-300 hover:text-red-600')}
                         onClick={onToggle}
                     >
-                        {isPaid ? 'Unmark' : 'Mark Paid'}
+                        {isPaid ? t('payroll.status.unmark') : t('payroll.status.mark_paid')}
                     </Button>
                 </div>
             </div>
 
             {expanded && (
                 <div className="border-t bg-gray-50 px-4 py-3">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Calculation</p>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('payroll.row.calculation')}</p>
                     {isDaily ? (
                         <div className="text-sm text-gray-600 space-y-1">
                             <div className="flex justify-between">
-                                <span>Monthly salary</span>
+                                <span>{t('payroll.row.monthly_salary')}</span>
                                 <span>{formatINR(worker.monthly_salary)}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span>Days worked</span>
+                                <span>{t('payroll.row.days_worked')}</span>
                                 <span>{worker.daysWorked ?? 0} / 30</span>
                             </div>
                             <div className="flex justify-between text-xs text-gray-400">
-                                <span>Formula</span>
-                                <span>₹{worker.monthly_salary.toLocaleString()} ÷ 30 × {worker.daysWorked ?? 0} days</span>
+                                <span>{t('payroll.row.formula')}</span>
+                                <span>₹{worker.monthly_salary.toLocaleString()} ÷ 30 × {worker.daysWorked ?? 0} {t('payroll.row.days')}</span>
                             </div>
                             <div className="flex justify-between font-semibold border-t pt-1.5 mt-1">
-                                <span>Gross Pay</span>
+                                <span>{t('payroll.row.gross_pay')}</span>
                                 <span>{formatINR(worker.earnedPay)}</span>
                             </div>
                         </div>
                     ) : (
                         <div className="text-sm text-gray-600 flex justify-between">
-                            <span>Full monthly salary (Gross)</span>
+                            <span>{t('payroll.row.full_monthly_salary')}</span>
                             <span className="font-semibold">{formatINR(worker.monthly_salary)}</span>
                         </div>
                     )}
@@ -324,17 +328,17 @@ function FixedWorkerRow({
                             <div className="flex justify-between text-sm text-amber-700">
                                 <span className="flex items-center gap-1">
                                     <HandCoins className="h-3.5 w-3.5" />
-                                    Advance Deduction
+                                    {t('payroll.row.advance_deduction')}
                                 </span>
                                 <span>-{formatINR(Math.min(worker.totalAdvances, worker.earnedPay))}</span>
                             </div>
                             <div className="flex justify-between text-sm font-bold border-t border-dashed pt-1.5 mt-1">
-                                <span>Net Pagar</span>
+                                <span>{t('payroll.row.net_pagar')}</span>
                                 <span className="text-green-700">{formatINR(worker.netPay)}</span>
                             </div>
                             {worker.remainingDebt > 0 && (
                                 <div className="flex justify-between text-xs text-red-600 bg-red-50 rounded px-2 py-1 mt-1">
-                                    <span>Remaining Debt (carry-over)</span>
+                                    <span>{t('payroll.row.remaining_debt')}</span>
                                     <span className="font-semibold">{formatINR(worker.remainingDebt)}</span>
                                 </div>
                             )}
@@ -350,6 +354,7 @@ function FixedWorkerRow({
 export default function PayrollPage() {
     const supabase = createClient()
     const queryClient = useQueryClient()
+    const { t } = useTranslation()
     const [activeTab, setActiveTab] = useState<'meter' | 'fixed'>('meter')
     const [selectedMonth, setSelectedMonth] = useState('')
 
@@ -627,8 +632,8 @@ export default function PayrollPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Monthly Payroll</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Track and settle worker payments</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('payroll.monthly_payroll')}</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">{t('payroll.track_settle')}</p>
                 </div>
                 {/* Month navigator */}
                 <div className="flex items-center gap-2 bg-white border rounded-lg px-3 py-1.5 self-start sm:self-auto">
@@ -655,13 +660,13 @@ export default function PayrollPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <Card className="text-center">
                     <CardContent className="pt-4 pb-3">
-                        <div className="text-xs text-gray-500 mb-1">Total Owed</div>
+                        <div className="text-xs text-gray-500 mb-1">{t('payroll.metrics.total_owed')}</div>
                         <div className="text-lg font-bold text-gray-900">{formatINR(summary.total)}</div>
                     </CardContent>
                 </Card>
                 <Card className="text-center border-green-200">
                     <CardContent className="pt-4 pb-3">
-                        <div className="text-xs text-gray-500 mb-1">Paid</div>
+                        <div className="text-xs text-gray-500 mb-1">{t('payroll.metrics.paid')}</div>
                         <div className="text-lg font-bold text-green-700">{formatINR(summary.paid)}</div>
                     </CardContent>
                 </Card>
@@ -670,7 +675,7 @@ export default function PayrollPage() {
                         <CardContent className="pt-4 pb-3">
                             <div className="text-xs text-amber-600 mb-1 flex items-center justify-center gap-1">
                                 <HandCoins className="h-3 w-3" />
-                                Deductions
+                                {t('payroll.metrics.deductions')}
                             </div>
                             <div className="text-lg font-bold text-amber-700">{formatINR(summary.totalAdvances)}</div>
                         </CardContent>
@@ -678,7 +683,7 @@ export default function PayrollPage() {
                 )}
                 <Card className="text-center border-amber-200">
                     <CardContent className="pt-4 pb-3">
-                        <div className="text-xs text-gray-500 mb-1">Outstanding</div>
+                        <div className="text-xs text-gray-500 mb-1">{t('payroll.metrics.outstanding')}</div>
                         <div className="text-lg font-bold text-amber-700">{formatINR(summary.outstanding)}</div>
                     </CardContent>
                 </Card>
@@ -694,7 +699,7 @@ export default function PayrollPage() {
                         />
                     </div>
                     <p className="text-xs text-gray-400 text-right">
-                        {Math.round((summary.paid / summary.total) * 100)}% settled
+                        {Math.round((summary.paid / summary.total) * 100)}% {t('payroll.metrics.settled')}
                     </p>
                 </div>
             )}
@@ -709,13 +714,13 @@ export default function PayrollPage() {
                     onClick={() => setActiveTab('meter')}
                 >
                     <HardHat className="h-4 w-4" />
-                    Meter Workers
+                    {t('payroll.tabs.meter_workers')}
                     {meterWorkers && (
                         <span className={cn(
                             'text-xs px-1.5 py-0.5 rounded-full',
                             activeTab === 'meter' ? 'bg-white/20' : 'bg-gray-100'
                         )}>
-                            {meterWorkers.filter(w => !w.payment?.paid).length} pending
+                            {meterWorkers.filter(w => !w.payment?.paid).length} {t('payroll.tabs.pending_count')}
                         </span>
                     )}
                 </button>
@@ -727,13 +732,13 @@ export default function PayrollPage() {
                     onClick={() => setActiveTab('fixed')}
                 >
                     <Briefcase className="h-4 w-4" />
-                    Fixed Workers
+                    {t('payroll.tabs.fixed_workers')}
                     {fixedWorkers && (
                         <span className={cn(
                             'text-xs px-1.5 py-0.5 rounded-full',
                             activeTab === 'fixed' ? 'bg-white/20' : 'bg-gray-100'
                         )}>
-                            {fixedWorkers.filter((w: any) => !w.payment?.paid).length} pending
+                            {fixedWorkers.filter((w: any) => !w.payment?.paid).length} {t('payroll.tabs.pending_count')}
                         </span>
                     )}
                 </button>
@@ -763,13 +768,13 @@ export default function PayrollPage() {
                         <Card>
                             <CardContent className="py-12 text-center">
                                 <AlertCircle className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                                <p className="text-gray-500 font-medium">No production logged this month</p>
+                                <p className="text-gray-500 font-medium">{t('payroll.empty.no_production')}</p>
                             </CardContent>
                         </Card>
                     ) : (
                         <>
                             <p className="text-xs text-gray-400">
-                                Tap a row to see calculation breakdown
+                                {t('payroll.empty.tap_row')}
                             </p>
                             {meterWorkers.map(w => (
                                 <MeterWorkerRow
@@ -805,13 +810,13 @@ export default function PayrollPage() {
                         <Card>
                             <CardContent className="py-12 text-center">
                                 <AlertCircle className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                                <p className="text-gray-500 font-medium">No fixed workers found</p>
+                                <p className="text-gray-500 font-medium">{t('payroll.empty.no_fixed')}</p>
                             </CardContent>
                         </Card>
                     ) : (
                         <>
                             <p className="text-xs text-gray-400">
-                                Tap a row to see calculation. Day-to-Day pay is based on attendance.
+                                {t('payroll.empty.tap_row_fixed')}
                             </p>
                             {fixedWorkers.map((w: any) => (
                                 <FixedWorkerRow

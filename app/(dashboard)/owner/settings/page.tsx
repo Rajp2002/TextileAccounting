@@ -9,8 +9,10 @@ import { Input } from '@/components/ui/input'
 import { AccessCodeGenerator } from '@/components/AccessCodeGenerator'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useTranslation } from '@/lib/i18n/context'
 
 export default function SettingsPage() {
+    const { t } = useTranslation()
     const supabase = createClient()
     const { data: userProfile, isLoading: profileLoading } = useUserProfile()
 
@@ -58,26 +60,26 @@ export default function SettingsPage() {
     return (
         <div className="space-y-6 max-w-2xl pb-10">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-                <p className="text-sm text-gray-500 mt-0.5">Factory configuration and access codes</p>
+                <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
+                <p className="text-sm text-gray-500 mt-0.5">{t('settings.subtitle')}</p>
             </div>
 
             <Card className="shadow-sm border-gray-200">
                 <CardHeader>
                     <div className="flex items-center gap-2">
                         <Factory className="h-5 w-5 text-blue-600" />
-                        <CardTitle>Factory Information</CardTitle>
+                        <CardTitle>{t('settings.factory.title')}</CardTitle>
                     </div>
-                    <CardDescription>Manage your factory details and access codes</CardDescription>
+                    <CardDescription>{t('settings.factory.desc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label>Factory Name</Label>
+                        <Label>{t('settings.factory.name')}</Label>
                         <Input value={org?.name || ''} readOnly className="bg-gray-50" />
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Factory ID (Join Code)</Label>
+                        <Label>{t('settings.factory.id')}</Label>
                         <div className="flex gap-2">
                             <div className="relative flex-1">
                                 <Input
@@ -88,7 +90,7 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            Share this code with your supervisors so they can join your factory.
+                            {t('settings.factory.share')}
                         </p>
                     </div>
                 </CardContent>
@@ -100,23 +102,23 @@ export default function SettingsPage() {
                 <CardHeader>
                     <div className="flex items-center gap-2">
                         <User className="h-5 w-5 text-teal-600" />
-                        <CardTitle>Personal Information</CardTitle>
+                        <CardTitle>{t('settings.personal.title')}</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Full Name</Label>
+                            <Label>{t('settings.personal.name')}</Label>
                             <Input value={userProfile.full_name || ''} readOnly className="bg-gray-50" />
                         </div>
                         <div className="space-y-2">
-                            <Label>Phone Number</Label>
+                            <Label>{t('settings.personal.phone')}</Label>
                             <Input value={userProfile.phone || ''} readOnly className="bg-gray-50" />
                         </div>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-400 mt-2">
                         <ShieldCheck className="h-3 w-3" />
-                        <span>Role: {userProfile.role}</span>
+                        <span>{t('settings.personal.role')} {userProfile.role}</span>
                     </div>
                 </CardContent>
             </Card>

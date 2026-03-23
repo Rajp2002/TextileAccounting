@@ -19,6 +19,7 @@ import { upsertOrder } from '@/app/(dashboard)/owner/actions'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { useTranslation } from '@/lib/i18n/context'
 
 // Define interfaces for better type safety
 interface Worker {
@@ -84,6 +85,7 @@ const ROLE_COLORS: Record<string, string> = {
 
 function WorkerRow({ worker }: { worker: WorkerStats }) {
     const [isExpanded, setIsExpanded] = useState(false)
+    const { t } = useTranslation()
 
     return (
         <div className="border-b last:border-0">
@@ -110,7 +112,7 @@ function WorkerRow({ worker }: { worker: WorkerStats }) {
                     </span>
                     {!worker.is_active && (
                         <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                            Inactive
+                            {t('workers.inactive')}
                         </span>
                     )}
                 </div>
@@ -127,8 +129,8 @@ function WorkerRow({ worker }: { worker: WorkerStats }) {
             {isExpanded && (worker.breakdown?.length || 0) > 0 && (
                 <div className="pl-9 pr-2 pb-3 pt-1 space-y-1">
                     <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex justify-between px-2">
-                        <span>Machine</span>
-                        <span>Output / Pay</span>
+                        <span>{t('analytics.table.machine')}</span>
+                        <span>{t('analytics.table.output_pay')}</span>
                     </div>
                     {worker.breakdown?.map((item, idx) => (
                         <div key={idx} className="flex justify-between text-sm py-1 px-2 hover:bg-white rounded">
@@ -152,6 +154,7 @@ function WorkerRow({ worker }: { worker: WorkerStats }) {
 function FixedWorkerRow({ worker, onSalaryUpdate }: { worker: FixedWorkerData, onSalaryUpdate: (id: number, salary: number) => void }) {
     const [editing, setEditing] = useState(false)
     const [editValue, setEditValue] = useState(worker.monthly_salary.toString())
+    const { t } = useTranslation()
 
     useEffect(() => {
         if (!editing) {
@@ -171,7 +174,7 @@ function FixedWorkerRow({ worker, onSalaryUpdate }: { worker: FixedWorkerData, o
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700')}>
-                        {ROLE_LABELS[worker.role] || worker.role}
+                        {t(`workers.roles.${worker.role}`) || worker.role}
                     </span>
                     <span className="font-medium">{worker.name}</span>
                 </div>
@@ -209,10 +212,10 @@ function FixedWorkerRow({ worker, onSalaryUpdate }: { worker: FixedWorkerData, o
             {worker.role === 'daily' && worker.earnedPay !== undefined && (
                 <div className="mt-1.5 flex items-center gap-2 pl-1">
                     <span className="text-xs text-gray-400">
-                        {worker.daysWorked ?? 0} day{worker.daysWorked !== 1 ? 's' : ''} worked this month
+                        {worker.daysWorked ?? 0} {worker.daysWorked === 1 ? t('analytics.table.day_worked') : t('analytics.table.days_worked')}
                     </span>
                     <span className="text-xs font-semibold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
-                        {formatINR(worker.earnedPay)} earned so far
+                        {formatINR(worker.earnedPay)} {t('analytics.table.earned_so_far')}
                     </span>
                 </div>
             )}
@@ -223,6 +226,7 @@ function FixedWorkerRow({ worker, onSalaryUpdate }: { worker: FixedWorkerData, o
 export default function OwnerDashboard() {
     const supabase = createClient()
     const queryClient = useQueryClient()
+    const { t } = useTranslation()
 
     const [selectedDate, setSelectedDate] = useState<string>('')
     const { data: userProfile } = useUserProfile()
@@ -533,7 +537,7 @@ export default function OwnerDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">
-                        {new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'}
+                        {new Date().getHours() < 12 ? t('analytics.greeting.morning') : new Date().getHours() < 17 ? t('analytics.greeting.afternoon') : t('analytics.greeting.evening')}
                     </h1>
                     <p className="text-sm text-gray-500 mt-0.5">
                         {new Date(selectedDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
@@ -543,7 +547,7 @@ export default function OwnerDashboard() {
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2 bg-white rounded-lg border p-1 shadow-sm">
                             <Button variant="ghost" size="sm" onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} className="h-8 px-2 text-xs font-medium text-gray-600">
-                                <RotateCcw className="h-3 w-3 mr-1" /> Today
+                                <RotateCcw className="h-3 w-3 mr-1" /> {t('analytics.today')}
                             </Button>
                             <div className="h-4 w-px bg-gray-200" />
                             <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-8 w-auto border-0 focus-visible:ring-0 px-2 py-0 text-sm font-medium" />
@@ -553,23 +557,23 @@ export default function OwnerDashboard() {
                             <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
                                 <DialogTrigger asChild>
                                     <Button className="h-9 px-3 bg-teal-600 hover:bg-teal-700 text-white shadow-sm font-semibold" onClick={() => setEditingOrder(null)}>
-                                        <Plus className="h-4 w-4 mr-1.5" /> Order
+                                        <Plus className="h-4 w-4 mr-1.5" /> {t('analytics.order')}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-[450px]">
                                     <form onSubmit={handleUpsertOrder} className="space-y-5">
                                         <DialogHeader>
-                                            <DialogTitle>{editingOrder ? 'Edit Order' : 'Create New Order'}</DialogTitle>
-                                            <DialogDescription>Track targets and forecasts for your clients.</DialogDescription>
+                                            <DialogTitle>{editingOrder ? t('analytics.orders.edit_order') : t('analytics.orders.create_new')}</DialogTitle>
+                                            <DialogDescription>{t('analytics.orders.track_targets')}</DialogDescription>
                                         </DialogHeader>
                                         <div className="space-y-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="party_name">Party Name</Label>
-                                                <Input id="party_name" name="party_name" defaultValue={editingOrder?.party_name} required placeholder="e.g., Sundaram Textiles" />
+                                                <Label htmlFor="party_name">{t('analytics.orders.party_name')}</Label>
+                                                <Input id="party_name" name="party_name" defaultValue={editingOrder?.party_name} required placeholder={t('analytics.orders.party_name_placeholder')} />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
-                                                    <Label>Quality</Label>
+                                                    <Label>{t('analytics.orders.quality')}</Label>
                                                     <Select name="quality_id" defaultValue={editingOrder?.quality_id} required>
                                                         <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                                                         <SelectContent>
@@ -578,24 +582,24 @@ export default function OwnerDashboard() {
                                                     </Select>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="total_target_meters">Target (m)</Label>
+                                                    <Label htmlFor="total_target_meters">{t('analytics.orders.target')}</Label>
                                                     <Input id="total_target_meters" name="total_target_meters" type="number" defaultValue={editingOrder?.total_target_meters} required />
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="start_date">Start Date</Label>
+                                                    <Label htmlFor="start_date">{t('analytics.orders.start_date')}</Label>
                                                     <Input id="start_date" name="start_date" type="date" defaultValue={editingOrder?.start_date || new Date().toISOString().split('T')[0]} required />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="deadline">Deadline</Label>
+                                                    <Label htmlFor="deadline">{t('analytics.orders.deadline')}</Label>
                                                     <Input id="deadline" name="deadline" type="date" defaultValue={editingOrder?.deadline} required />
                                                 </div>
                                             </div>
                                         </div>
                                         <DialogFooter>
                                             <Button type="submit" disabled={isSubmittingOrder} className="w-full bg-teal-600 hover:bg-teal-700">
-                                                {isSubmittingOrder ? 'Saving...' : editingOrder ? 'Update Order' : 'Launch Order'}
+                                                {isSubmittingOrder ? t('analytics.orders.saving') : editingOrder ? t('analytics.orders.update') : t('analytics.orders.launch')}
                                             </Button>
                                         </DialogFooter>
                                     </form>
@@ -612,9 +616,9 @@ export default function OwnerDashboard() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <LayoutGrid className="h-5 w-5 text-teal-600" />
-                        <h2 className="text-xl font-bold">Live Orders</h2>
+                        <h2 className="text-xl font-bold">{t('analytics.orders.live_orders')}</h2>
                         {ordersSummary && ordersSummary.length > 0 && (
-                            <Badge variant="secondary" className="bg-teal-50 text-teal-600 border-teal-100">{ordersSummary.length} Active</Badge>
+                            <Badge variant="secondary" className="bg-teal-50 text-teal-600 border-teal-100">{ordersSummary.length} {t('analytics.orders.active_count')}</Badge>
                         )}
                     </div>
                 </div>
@@ -628,13 +632,13 @@ export default function OwnerDashboard() {
                         <div className="bg-white p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
                             <Plus className="h-8 w-8 text-teal-500" />
                         </div>
-                        <p className="text-gray-900 font-bold text-lg">No active orders found</p>
-                        <p className="text-sm text-gray-500 mt-1 mb-6 max-w-xs mx-auto">Start tracking client targets, daily pace, and predicted finish dates.</p>
+                        <p className="text-gray-900 font-bold text-lg">{t('analytics.orders.no_active')}</p>
+                        <p className="text-sm text-gray-500 mt-1 mb-6 max-w-xs mx-auto">{t('analytics.orders.start_tracking')}</p>
                         <Button 
                             onClick={() => { setEditingOrder(null); setOrderDialogOpen(true); }}
                             className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-8 shadow-lg shadow-teal-100"
                         >
-                            <Plus className="h-4 w-4 mr-2" /> Create First Order
+                            <Plus className="h-4 w-4 mr-2" /> {t('analytics.orders.create_first')}
                         </Button>
                     </div>
                 ) : (
@@ -654,7 +658,7 @@ export default function OwnerDashboard() {
                     <CardContent className="p-5">
                         <div className="flex justify-between items-start">
                             <div className="space-y-1">
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Daily Output</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('analytics.kpi.daily_output')}</p>
                                 <p className="text-3xl font-black text-gray-900">{isLoading ? '...' : dailyTotal + ' m'}</p>
                             </div>
                             <div className="p-2 bg-emerald-50 rounded-lg"><TrendingUp className="h-5 w-5 text-emerald-600" /></div>
@@ -665,7 +669,7 @@ export default function OwnerDashboard() {
                     <CardContent className="p-5">
                         <div className="flex justify-between items-start">
                             <div className="space-y-1">
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Wages Today</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('analytics.kpi.wages_today')}</p>
                                 <p className="text-3xl font-black text-gray-900">
                                     {workersLoading ? '...' : formatINR(workerStats?.reduce((s: number, w: any) => s + parseFloat(w.pay), 0) || 0)}
                                 </p>
@@ -678,7 +682,7 @@ export default function OwnerDashboard() {
                     <CardContent className="p-5">
                         <div className="flex justify-between items-start">
                             <div className="space-y-1">
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Fixed Payroll</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('analytics.kpi.fixed_payroll')}</p>
                                 <p className="text-3xl font-black text-gray-900">{!fixedPayroll ? '...' : formatINR(fixedPayroll.total)}</p>
                             </div>
                             <div className="p-2 bg-blue-50 rounded-lg"><Users2 className="h-5 w-5 text-blue-600" /></div>
@@ -691,7 +695,7 @@ export default function OwnerDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="shadow-sm">
                     <CardHeader className="pb-2">
-                        <div className="flex items-center gap-2"><Activity className="h-5 w-5 text-indigo-600" /><CardTitle className="text-lg">Efficiency</CardTitle></div>
+                        <div className="flex items-center gap-2"><Activity className="h-5 w-5 text-indigo-600" /><CardTitle className="text-lg">{t('analytics.efficiency.title')}</CardTitle></div>
                     </CardHeader>
                     <CardContent>
                         {yieldLoading ? <Skeleton className="h-10 w-24" /> : yieldAnalytics?.avgEfficiency ? (
@@ -699,22 +703,22 @@ export default function OwnerDashboard() {
                                 <span className={cn("text-4xl font-black", Number(yieldAnalytics.avgEfficiency) < 0 ? "text-red-500" : "text-teal-600")}>
                                     {Number(yieldAnalytics.avgEfficiency) > 0 ? '+' : ''}{yieldAnalytics.avgEfficiency}%
                                 </span>
-                                <span className="text-xs font-bold text-gray-400 uppercase">Variance</span>
+                                <span className="text-xs font-bold text-gray-400 uppercase">{t('analytics.efficiency.variance')}</span>
                             </div>
-                        ) : <p className="text-sm text-gray-400">No data available</p>}
+                        ) : <p className="text-sm text-gray-400">{t('analytics.efficiency.no_data')}</p>}
                     </CardContent>
                 </Card>
                 <Card className={cn("shadow-sm", yieldAnalytics?.alertCount ? "bg-red-50 border-red-100" : "")}>
                     <CardHeader className="pb-2">
-                        <div className="flex items-center gap-2"><AlertTriangle className={cn("h-5 w-5", yieldAnalytics?.alertCount ? "text-red-600" : "text-gray-400")} /><CardTitle className="text-lg">Leakage Alerts</CardTitle></div>
+                        <div className="flex items-center gap-2"><AlertTriangle className={cn("h-5 w-5", yieldAnalytics?.alertCount ? "text-red-600" : "text-gray-400")} /><CardTitle className="text-lg">{t('analytics.alerts.title')}</CardTitle></div>
                     </CardHeader>
                     <CardContent>
                         {yieldLoading ? <Skeleton className="h-10 w-full" /> : yieldAnalytics?.alertCount ? (
                             <div className="space-y-0.5">
                                 <p className="text-2xl font-black text-red-600">{formatINR(yieldAnalytics.totalLoss)}</p>
-                                <p className="text-xs font-bold text-red-800 uppercase">{yieldAnalytics.alertCount} High Leakage Batches</p>
+                                <p className="text-xs font-bold text-red-800 uppercase">{yieldAnalytics.alertCount} {t('analytics.alerts.high_leakage')}</p>
                             </div>
-                        ) : <p className="text-sm text-emerald-600 font-medium pb-2">All batches within target</p>}
+                        ) : <p className="text-sm text-emerald-600 font-medium pb-2">{t('analytics.alerts.all_good')}</p>}
                     </CardContent>
                 </Card>
             </div>
@@ -722,7 +726,7 @@ export default function OwnerDashboard() {
             <div className="grid grid-cols-1 gap-6">
                 <Card className="shadow-sm">
                     <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
-                        <div className="flex items-center gap-2"><HardHat className="h-5 w-5 text-indigo-600" /><CardTitle className="text-lg">Worker Details</CardTitle></div>
+                        <div className="flex items-center gap-2"><HardHat className="h-5 w-5 text-indigo-600" /><CardTitle className="text-lg">{t('analytics.worker_details')}</CardTitle></div>
                         <p className="text-xs font-bold text-gray-400">{new Date(selectedDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}</p>
                     </CardHeader>
                     <CardContent>
@@ -730,18 +734,18 @@ export default function OwnerDashboard() {
                             <div className="space-y-1">
                                 {workerStats.map((w: any) => <WorkerRow key={w.id} worker={w} />)}
                             </div>
-                        ) : <div className="py-10 text-center text-gray-400">No production logs</div>}
+                        ) : <div className="py-10 text-center text-gray-400">{t('analytics.no_production_logs')}</div>}
                     </CardContent>
                 </Card>
 
                 <Card className="shadow-sm">
-                    <CardHeader className="pb-3"><div className="flex items-center gap-2"><Briefcase className="h-5 w-5 text-blue-600" /><CardTitle className="text-lg">Staff Payroll</CardTitle></div></CardHeader>
+                    <CardHeader className="pb-3"><div className="flex items-center gap-2"><Briefcase className="h-5 w-5 text-blue-600" /><CardTitle className="text-lg">{t('analytics.staff_payroll')}</CardTitle></div></CardHeader>
                     <CardContent>
                         {fixedWorkersList?.length ? (
                             <div className="divide-y">
                                 {fixedWorkersList.map((fw: any) => <FixedWorkerRow key={fw.id} worker={fw as any} onSalaryUpdate={handleFixedSalaryUpdate} />)}
                             </div>
-                        ) : <div className="py-10 text-center text-gray-400">No staff found</div>}
+                        ) : <div className="py-10 text-center text-gray-400">{t('analytics.no_staff')}</div>}
                     </CardContent>
                 </Card>
             </div>
