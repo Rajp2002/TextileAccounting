@@ -19,6 +19,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { createClient } from "@/lib/supabase/client"
 import { assignOrderToMachines } from "@/app/(dashboard)/owner/actions"
 import { toast } from "sonner"
+import { useTranslation } from "@/lib/i18n/context"
 
 interface OrderCardProps {
   order: {
@@ -44,6 +45,7 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order, forecast }: OrderCardProps) {
+  const { t } = useTranslation()
   const [assignDialogOpen, setAssignDialogOpen] = useState(false)
   const [selectedMachines, setSelectedMachines] = useState<string[]>([])
   
@@ -136,7 +138,7 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
             "capitalize px-2.5 py-0.5 text-[10px] font-bold tracking-wide",
             !isOverdue && !isAtRisk && "bg-teal-100 text-teal-800 hover:bg-teal-100"
           )}>
-            {isOverdue ? "Overdue" : isAtRisk ? "At Risk" : order.progress_percent >= 100 ? "Finished" : "Active"}
+            {isOverdue ? t('analytics.orders.card.overdue') : isAtRisk ? t('analytics.orders.card.at_risk') : order.progress_percent >= 100 ? t('analytics.orders.card.finished') : t('analytics.orders.card.active')}
           </Badge>
         </div>
 
@@ -169,9 +171,9 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
                 }
               </div>
               <div className="min-w-0">
-                <p className="text-[9px] text-gray-400 uppercase font-black tracking-tighter">Health Index</p>
+                <p className="text-[9px] text-gray-400 uppercase font-black tracking-tighter">{t('analytics.orders.card.health_index')}</p>
                 <p className={cn("text-xs font-bold truncate", paceColorText)}>
-                  {order.pace_index.toFixed(2)}x Pace
+                  {order.pace_index.toFixed(2)}{t('analytics.orders.card.pace')}
                 </p>
               </div>
             </div>
@@ -181,7 +183,7 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
                 <CalendarDays className="h-4 w-4 text-blue-600" />
               </div>
               <div>
-                <p className="text-[9px] text-gray-400 uppercase font-black tracking-tighter">Deadline</p>
+                <p className="text-[9px] text-gray-400 uppercase font-black tracking-tighter">{t('analytics.orders.card.deadline')}</p>
                 <p className="text-xs font-bold text-gray-800">
                   {format(new Date(order.deadline), "MMM d, yyyy")}
                 </p>
@@ -208,7 +210,7 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
                     )} />
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase leading-none mb-1">Estimated Finish</span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase leading-none mb-1">{t('analytics.orders.card.estimated_finish')}</span>
                     <span className={cn(
                         "text-sm font-black tracking-tight",
                         new Date(forecast.predicted_finish_date) > new Date(order.deadline) ? "text-red-700" : "text-teal-800"
@@ -221,9 +223,9 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
               {forecast.is_theoretical && (
                 <div className="flex flex-col items-end">
                     <Badge variant="outline" className="text-[8px] h-4 bg-white/80 text-gray-400 border-gray-200 font-bold uppercase tracking-widest px-1">
-                        Theoretical
+                        {t('analytics.orders.card.theoretical')}
                     </Badge>
-                    <span className="text-[8px] text-gray-400 mt-1 italic">Warm-up</span>
+                    <span className="text-[8px] text-gray-400 mt-1 italic">{t('analytics.orders.card.warm_up')}</span>
                 </div>
               )}
             </div>
@@ -233,7 +235,7 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
              <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                    {order.assigned_machines_count} Machines
+                    {order.assigned_machines_count} {t('analytics.orders.card.machines')}
                 </div>
                 <Button 
                   variant="ghost" 
@@ -245,12 +247,12 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
                   }}
                 >
                   <Link2 className="h-2.5 w-2.5" />
-                  Link Machines
+                  {t('analytics.orders.card.link_machines')}
                 </Button>
              </div>
              {order.progress_percent < 100 && (
                  <div className="italic">
-                    ~{Math.round(forecast?.remaining_meters || (order.total_target_meters - order.total_meters_produced)).toLocaleString()}m left
+                    ~{Math.round(forecast?.remaining_meters || (order.total_target_meters - order.total_meters_produced)).toLocaleString()}{t('analytics.orders.card.left')}
                  </div>
              )}
           </div>
@@ -260,9 +262,9 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Link Machines</DialogTitle>
+            <DialogTitle>{t('analytics.orders.card.link_title')}</DialogTitle>
             <DialogDescription>
-              Select which machines are working on <strong>{order.party_name}</strong>.
+              {t('analytics.orders.card.link_desc')} <strong>{order.party_name}</strong>.
             </DialogDescription>
           </DialogHeader>
           
@@ -291,7 +293,7 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
                       <div className="min-w-0">
                         <div className="font-bold text-sm truncate">{machine.name}</div>
                         {isOtherOrder && (
-                          <div className="text-[9px] text-amber-600 font-bold uppercase truncate">Switching Order</div>
+                          <div className="text-[9px] text-amber-600 font-bold uppercase truncate">{t('analytics.orders.card.switching')}</div>
                         )}
                       </div>
                       {isSelected && <Check className="h-4 w-4 text-teal-600 shrink-0 ml-1" />}
@@ -308,7 +310,7 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
               onClick={() => setAssignDialogOpen(false)}
               disabled={assignMutation.isPending}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button 
               className="bg-teal-600 hover:bg-teal-700"
@@ -316,7 +318,7 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
               disabled={assignMutation.isPending}
             >
               {assignMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Save Assignment
+              {t('analytics.orders.card.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
