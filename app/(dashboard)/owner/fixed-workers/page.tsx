@@ -17,6 +17,7 @@ import { validateAndRotateAccessCode } from '@/app/(dashboard)/owner/actions'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useTranslation } from '@/lib/i18n/context'
 
 const ROLES = [
     { value: 'master', label: 'Master', defaultSalary: 30000 },
@@ -52,6 +53,7 @@ function getRoleColor(role: string) {
 }
 
 export default function FixedWorkersPage() {
+    const { t } = useTranslation()
     const supabase = createClient()
     const queryClient = useQueryClient()
 
@@ -211,51 +213,51 @@ export default function FixedWorkersPage() {
         <div className="p-4 space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold">Fixed Workers</h1>
-                    <p className="text-sm text-gray-500">Manage salaried staff and their monthly pay</p>
+                    <h1 className="text-2xl font-bold">{t('fixed_page.title')}</h1>
+                    <p className="text-sm text-gray-500">{t('fixed_page.subtitle')}</p>
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                         <Button onClick={openAddDialog}>
                             <Plus className="h-4 w-4 mr-1" />
-                            Add Worker
+                            {t('fixed_page.add_worker')}
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>{editingWorker ? 'Edit Worker' : 'Add Fixed Worker'}</DialogTitle>
+                            <DialogTitle>{editingWorker ? t('fixed_page.edit_worker') : t('fixed_page.add_title')}</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 pt-2">
                             <div className="space-y-2">
-                                <Label>Name</Label>
+                                <Label>{t('fixed_page.name')}</Label>
                                 <Input
                                     value={formName}
                                     onChange={(e) => setFormName(e.target.value)}
-                                    placeholder="e.g. Ramesh"
+                                    placeholder={t('fixed_page.name_ph')}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Role</Label>
+                                <Label>{t('fixed_page.role')}</Label>
                                 <Select value={formRole} onValueChange={handleRoleChange}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select role" />
+                                        <SelectValue placeholder={t('fixed_page.select_role')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {ROLES.map(r => (
                                             <SelectItem key={r.value} value={r.value}>
-                                                {r.label} — {formatINR(r.defaultSalary)}/mo
+                                                {t(`workers.roles.${r.value}`)} — {formatINR(r.defaultSalary)}/mo
                                             </SelectItem>
                                         ))}
                                         {editingWorker && !ROLES.find(r => r.value === editingWorker.role) && (
                                             <SelectItem value={editingWorker.role}>
-                                                {editingWorker.role} (Custom)
+                                                {editingWorker.role} ({t('fixed_page.custom')})
                                             </SelectItem>
                                         )}
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label>Monthly Salary (₹)</Label>
+                                <Label>{t('fixed_page.monthly_salary')}</Label>
                                 <Input
                                     type="number"
                                     value={formSalary}
@@ -264,7 +266,7 @@ export default function FixedWorkersPage() {
                                 />
                             </div>
                             <Button onClick={handleSave} disabled={saving} className="w-full">
-                                {saving ? 'Saving...' : editingWorker ? 'Update' : 'Add Worker'}
+                                {saving ? t('fixed_page.saving') : editingWorker ? t('fixed_page.update') : t('fixed_page.add_worker')}
                             </Button>
                         </div>
                     </DialogContent>
@@ -275,7 +277,7 @@ export default function FixedWorkersPage() {
             <Card>
                 <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                        Monthly Fixed Payroll
+                        {t('fixed_page.monthly_payroll')}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -283,7 +285,7 @@ export default function FixedWorkersPage() {
                         {formatINR(totalMonthly)}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                        {(fixedWorkers || []).filter(w => w.is_active).length} active fixed workers
+                        {(fixedWorkers || []).filter(w => w.is_active).length} {t('fixed_page.active_count')}
                     </p>
                 </CardContent>
             </Card>
@@ -321,8 +323,8 @@ export default function FixedWorkersPage() {
                 <Card>
                     <CardContent className="py-12 text-center">
                         <Users className="h-10 w-10 mx-auto text-gray-300 mb-3" />
-                        <p className="font-medium text-gray-500">No fixed workers yet</p>
-                        <p className="text-sm text-gray-400 mt-1">Add your salaried staff to track payroll</p>
+                        <p className="font-medium text-gray-500">{t('fixed_page.no_workers')}</p>
+                        <p className="text-sm text-gray-400 mt-1">{t('fixed_page.add_desc')}</p>
                     </CardContent>
                 </Card>
             ) : (
@@ -335,7 +337,7 @@ export default function FixedWorkersPage() {
                                 <CardHeader className="pb-2">
                                     <div className="flex items-center gap-2">
                                         <Briefcase className="h-4 w-4 text-gray-500" />
-                                        <CardTitle className="text-base">{roleInfo.label}</CardTitle>
+                                        <CardTitle className="text-base">{t(`workers.roles.${roleInfo.value}`)}</CardTitle>
                                         <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', getRoleColor(roleInfo.value))}>
                                             {workers.length}
                                         </span>
@@ -350,7 +352,7 @@ export default function FixedWorkersPage() {
                                                         {w.name}
                                                     </span>
                                                     {roleInfo.value === 'daily' && (
-                                                        <span className="text-xs text-orange-600 ml-2">Attendance-based</span>
+                                                        <span className="text-xs text-orange-600 ml-2">{t('fixed_page.attendance_based')}</span>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-3">
@@ -423,10 +425,10 @@ export default function FixedWorkersPage() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-red-600">
-                            <KeyRound className="h-5 w-5" /> Owner Authorization Required
+                            <KeyRound className="h-5 w-5" /> {t('fixed_page.auth_title')}
                         </DialogTitle>
                         <DialogDescription>
-                            Deleting a fixed worker profile is a sensitive action and requires a single-use access code.
+                            {t('fixed_page.auth_desc')}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -435,19 +437,18 @@ export default function FixedWorkersPage() {
                             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
                                 <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm font-bold text-amber-900">Outstanding Advance Detected</p>
+                                    <p className="text-sm font-bold text-amber-900">{t('fixed_page.outstanding')}</p>
                                     <p className="text-xs text-amber-700 mt-0.5">
-                                        This staff member has a balance of <strong className="text-amber-900">{formatINR(workerDebt)}</strong>. 
-                                        Please ensure this is settled before removing them.
+                                        {t('fixed_page.balance')} <strong className="text-amber-900">{formatINR(workerDebt)}</strong>{t('fixed_page.settle')}
                                     </p>
                                 </div>
                             </div>
                         )}
 
                         <div className="space-y-2">
-                            <Label>Access Code</Label>
+                            <Label>{t('fixed_page.access_code')}</Label>
                             <Input
-                                placeholder="Enter 6-character code"
+                                placeholder={t('fixed_page.code_ph')}
                                 value={accessCode}
                                 onChange={(e) => setAccessCode(e.target.value)}
                                 className="font-mono uppercase tracking-widest text-lg"
@@ -457,14 +458,14 @@ export default function FixedWorkersPage() {
                     </div>
 
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setVerificationOpen(false)}>Cancel</Button>
+                        <Button variant="outline" onClick={() => setVerificationOpen(false)}>{t('fixed_page.cancel')}</Button>
                         <Button
                             variant="destructive"
                             disabled={accessCode.length < 6 || deleting}
                             onClick={executeDelete}
                         >
                             {deleting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            Verify & Delete
+                            {t('fixed_page.verify_delete')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
