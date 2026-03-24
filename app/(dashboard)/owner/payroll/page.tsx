@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import { toggleWorkerPaid } from './actions'
 import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
+import { useTransliterate } from '@/hooks/use-transliterate'
 import { useMutation } from '@tanstack/react-query'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -112,6 +113,7 @@ function MeterWorkerRow({
 }) {
     const [expanded, setExpanded] = useState(false)
     const { t } = useTranslation()
+    const tl = useTransliterate()
     const isPaid = worker.payment?.paid ?? false
     const hasAdvances = worker.totalAdvances > 0
     const debtRatio = worker.totalPay > 0 ? worker.totalAdvances / worker.totalPay : 0
@@ -127,10 +129,10 @@ function MeterWorkerRow({
                     className="flex items-center gap-3 text-left flex-1 min-w-0"
                 >
                     <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm flex-shrink-0">
-                        {worker.name[0]}
+                        {tl(worker.name)[0]}
                     </div>
                     <div className="min-w-0">
-                        <div className="font-semibold text-gray-900 truncate">{worker.name}</div>
+                        <div className="font-semibold text-gray-900 truncate">{tl(worker.name)}</div>
                         <div className="text-xs text-gray-500">
                             {worker.totalMeters.toFixed(1)} {t('payroll.row.m_across')} {worker.machines.length} {worker.machines.length !== 1 ? t('payroll.row.machines') : t('payroll.row.machine')}
                         </div>
@@ -232,6 +234,7 @@ function FixedWorkerRow({
 }) {
     const [expanded, setExpanded] = useState(false)
     const { t } = useTranslation()
+    const tl = useTransliterate()
     const isPaid = worker.payment?.paid ?? false
     const isDaily = worker.role === 'daily'
     const hasAdvances = worker.totalAdvances > 0
@@ -251,7 +254,7 @@ function FixedWorkerRow({
                         {t(`workers.roles.${worker.role}`) || worker.role}
                     </span>
                     <div className="min-w-0">
-                        <span className="font-semibold text-gray-900 truncate block">{worker.name}</span>
+                        <span className="font-semibold text-gray-900 truncate block">{tl(worker.name)}</span>
                         <div className="flex items-center gap-2 mt-1">
                             {hasAdvances && (
                                 <div className="flex items-center gap-1">

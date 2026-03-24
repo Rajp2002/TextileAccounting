@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTransliterate } from '@/hooks/use-transliterate'
 
 const ROLES = [
     { value: 'master', defaultSalary: 30000 },
@@ -54,6 +55,7 @@ function getRoleColor(role: string) {
 
 export default function FixedWorkersPage() {
     const { t } = useTranslation()
+    const tl = useTransliterate()
     const supabase = createClient()
     const queryClient = useQueryClient()
 
@@ -349,7 +351,7 @@ export default function FixedWorkersPage() {
                                             <div key={w.id} className="flex justify-between items-center py-3">
                                                 <div>
                                                     <span className={cn('font-medium', !w.is_active && 'text-gray-400 line-through')}>
-                                                        {w.name}
+                                                        {tl(w.name)}
                                                     </span>
                                                     {roleInfo.value === 'daily' && (
                                                         <span className="text-xs text-orange-600 ml-2">{t('fixed_page.attendance_based')}</span>
@@ -396,7 +398,7 @@ export default function FixedWorkersPage() {
                                                 <div key={w.id} className="flex justify-between items-center py-3">
                                                     <div>
                                                         <span className={cn('font-medium', !w.is_active && 'text-gray-400 line-through')}>
-                                                            {w.name}
+                                                            {tl(w.name)}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-3">

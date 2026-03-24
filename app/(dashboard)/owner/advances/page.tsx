@@ -21,6 +21,7 @@ import {
     Clock, CheckCircle2, AlertTriangle, TrendingUp, Loader2
 } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTransliterate } from '@/hooks/use-transliterate'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Worker {
@@ -76,6 +77,7 @@ export default function AdvancesPage() {
     const [newDescription, setNewDescription] = useState('')
     const [deletingId, setDeletingId] = useState<number | null>(null)
     const { t } = useTranslation()
+    const tl = useTransliterate()
 
     // ── Fetch all workers (both types) ──────────────────────────────────────
     const { data: workers, isLoading: workersLoading } = useQuery({
@@ -263,9 +265,9 @@ export default function AdvancesPage() {
                                     >
                                         <div className="flex items-center gap-2">
                                             <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">
-                                                {w.name[0]}
+                                                {tl(w.name)[0]}
                                             </div>
-                                            <span>{w.name}</span>
+                                            <span>{tl(w.name)}</span>
                                         </div>
                                         <span className={cn(
                                             'text-[10px] px-1.5 py-0.5 rounded-full font-medium',
@@ -334,7 +336,7 @@ export default function AdvancesPage() {
                                     'text-xs mt-0.5',
                                     debtLevel === 'red' ? 'text-red-600' : 'text-amber-600'
                                 )}>
-                                    {selectedWorker.name} {t('payroll.advances.risk.owes')} {formatINR(totalPending)} {t('payroll.advances.risk.against')} ~{formatINR(typicalMonthly || 0)}/{t('payroll.advances.risk.typical_earnings')}
+                                    {tl(selectedWorker.name)} {t('payroll.advances.risk.owes')} {formatINR(totalPending)} {t('payroll.advances.risk.against')} ~{formatINR(typicalMonthly || 0)}/{t('payroll.advances.risk.typical_earnings')}
                                     {debtLevel === 'red'
                                         ? ` ${t('payroll.advances.risk.high_warning')}`
                                         : ` ${t('payroll.advances.risk.moderate_warning')}`}
@@ -346,7 +348,7 @@ export default function AdvancesPage() {
                     {/* Header + Add button */}
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-gray-900">
-                            {selectedWorker.name}&apos;s {t('payroll.advances.title').split(' ')[0]}
+                            {tl(selectedWorker.name)}&apos;s {t('payroll.advances.title').split(' ')[0]}
                         </h2>
                         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
                             <DialogTrigger asChild>
@@ -357,7 +359,7 @@ export default function AdvancesPage() {
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-[400px]">
                                 <DialogHeader>
-                                    <DialogTitle>{t('payroll.advances.dialog.title')} {selectedWorker.name}</DialogTitle>
+                                    <DialogTitle>{t('payroll.advances.dialog.title')} {tl(selectedWorker.name)}</DialogTitle>
                                     <DialogDescription>
                                         {t('payroll.advances.dialog.desc')}
                                     </DialogDescription>

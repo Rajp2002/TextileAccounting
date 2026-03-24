@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTransliterate } from '@/hooks/use-transliterate'
 
 // Define interfaces for better type safety
 interface Worker {
@@ -80,6 +81,7 @@ const ROLE_COLORS: Record<string, string> = {
 function WorkerRow({ worker }: { worker: WorkerStats }) {
     const [isExpanded, setIsExpanded] = useState(false)
     const { t } = useTranslation()
+    const tl = useTransliterate()
 
     return (
         <div className="border-b last:border-0">
@@ -102,7 +104,7 @@ function WorkerRow({ worker }: { worker: WorkerStats }) {
                     )}
 
                     <span className={cn("font-medium", !worker.is_active && "text-gray-400")}>
-                        {worker.name}
+                        {tl(worker.name)}
                     </span>
                     {!worker.is_active && (
                         <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
@@ -149,6 +151,7 @@ function FixedWorkerRow({ worker, onSalaryUpdate }: { worker: FixedWorkerData, o
     const [editing, setEditing] = useState(false)
     const [editValue, setEditValue] = useState(worker.monthly_salary.toString())
     const { t } = useTranslation()
+    const tl = useTransliterate()
 
     useEffect(() => {
         if (!editing) {
@@ -170,7 +173,7 @@ function FixedWorkerRow({ worker, onSalaryUpdate }: { worker: FixedWorkerData, o
                     <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700')}>
                         {t(`workers.roles.${worker.role}`) || worker.role}
                     </span>
-                    <span className="font-medium">{worker.name}</span>
+                    <span className="font-medium">{tl(worker.name)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                     {editing ? (
