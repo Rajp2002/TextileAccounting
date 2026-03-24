@@ -47,6 +47,10 @@ export const en = {
     logout: "Log out",
     signing_out: "Signing out securely...",
     select: "Select",
+    fill_all: "Please fill all fields",
+    updated: "Updated successfully",
+    added: "Added successfully",
+    removed: "Removed successfully",
   },
   production: {
     log_production: "Log Production",
@@ -127,6 +131,8 @@ export const en = {
     verify_unlock: "Verify & Unlock",
     delete_desc: "Deleting a machine permanently removes it and its configuration. This action requires a single-use access code from the factory owner.",
     verify_delete: "Verify & Delete",
+    invalid_code: "Invalid or expired access code",
+    code_sent: "Verification code sent to owner",
   },
   analytics: {
     greeting: {
