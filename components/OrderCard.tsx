@@ -91,13 +91,13 @@ export function OrderCard({ order, forecast, layout = 'compact' }: OrderCardProp
       return res
     },
     onSuccess: () => {
-      toast.success("Machines assigned successfully")
+      toast.success(t('analytics.orders.card.machines_assigned'))
       setAssignDialogOpen(false)
       queryClient.invalidateQueries({ queryKey: ['order_progress_summary'] })
       queryClient.invalidateQueries({ queryKey: ['machines'] })
     },
     onError: (err: any) => {
-      toast.error(err.message || "Failed to assign machines")
+      toast.error(err.message || t('analytics.orders.card.assign_failed'))
     }
   })
 
@@ -142,7 +142,7 @@ export function OrderCard({ order, forecast, layout = 'compact' }: OrderCardProp
 
             <div className="space-y-4">
               <div className="flex justify-between items-end">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('analytics.orders.card.progress') || 'Progress'}</span>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('analytics.orders.card.progress')}</span>
                 <span className="text-5xl font-black text-slate-900 tabular-nums tracking-tighter">
                   {Math.round(order.progress_percent)}<span className="text-2xl font-medium text-slate-400 ml-1">%</span>
                 </span>
@@ -160,7 +160,7 @@ export function OrderCard({ order, forecast, layout = 'compact' }: OrderCardProp
                 <p className="text-base text-slate-400 font-medium">
                   <span className="text-slate-900 font-bold">{Math.round(order.total_meters_produced).toLocaleString()}</span>
                   <span className="mx-2">/</span>
-                  {Math.round(order.total_target_meters).toLocaleString()}m produced
+                  {Math.round(order.total_target_meters).toLocaleString()}m {t('common.produced')}
                 </p>
                 <div className="flex items-center gap-4">
                   {order.progress_percent < 100 && (
@@ -178,7 +178,7 @@ export function OrderCard({ order, forecast, layout = 'compact' }: OrderCardProp
                     className="rounded-xl border-slate-200 hover:bg-slate-50 text-indigo-600 font-bold"
                   >
                     <Link2 className="w-4 h-4 mr-2" />
-                    {t('analytics.orders.card.view_details') || 'View Details'}
+                    {t('analytics.orders.card.view_details')}
                   </Button>
                 </div>
               </div>
@@ -279,7 +279,7 @@ export function OrderCard({ order, forecast, layout = 'compact' }: OrderCardProp
       {/* Progress Section */}
       <div className="px-5 py-4">
         <div className="flex justify-between items-end mb-2">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('analytics.orders.card.progress') || 'Progress'}</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('analytics.orders.card.progress')}</span>
           <span className="text-2xl font-bold text-slate-900 tabular-nums">
             {Math.round(order.progress_percent)}<span className="text-sm font-medium text-slate-400 ml-0.5">%</span>
           </span>

@@ -66,14 +66,7 @@ interface FixedWorkerData {
     earnedPay?: number
 }
 
-const ROLE_LABELS: Record<string, string> = {
-    master: 'Master',
-    supervisor: 'Supervisor',
-    helper: 'Helper',
-    mender: 'Mender',
-    sanitation: 'Sanitation',
-    daily: 'Day-to-Day',
-}
+// Dynamic role labels are now handled by t('workers.roles.*') inside components
 
 const ROLE_COLORS: Record<string, string> = {
     master: 'bg-purple-100 text-purple-700',
@@ -201,7 +194,7 @@ function FixedWorkerRow({ worker, onSalaryUpdate }: { worker: FixedWorkerData, o
                     ) : (
                         <>
                             <span className="text-sm font-semibold text-gray-700">
-                                {formatINR(worker.monthly_salary)}/mo
+                                {formatINR(worker.monthly_salary)}{t('common.per_month')}
                             </span>
                             <button onClick={() => { setEditValue(worker.monthly_salary.toString()); setEditing(true) }} className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded">
                                 <Pencil className="h-3.5 w-3.5" />
@@ -502,7 +495,7 @@ export default function OwnerDashboard() {
         const { error } = await supabase.from('fixed_workers').update({ monthly_salary: salary }).eq('id', workerId)
         if (error) toast.error(error.message)
         else {
-            toast.success('Salary updated')
+            toast.success(t('analytics.salary_updated'))
             queryClient.invalidateQueries({ queryKey: ['fixed_workers_list_dashboard'] })
         }
     }
@@ -522,7 +515,7 @@ export default function OwnerDashboard() {
                 status: 'active'
             })
             if (res.error) throw new Error(res.error)
-            toast.success(editingOrder ? "Order updated" : "Order created")
+            toast.success(editingOrder ? t('analytics.orders.order_updated') : t('analytics.orders.order_created'))
             setOrderDialogOpen(false)
             setEditingOrder(null)
             queryClient.invalidateQueries({ queryKey: ['order_progress_summary'] })
@@ -538,7 +531,7 @@ export default function OwnerDashboard() {
         try {
             const res = await deleteOrder(editingOrder.order_id)
             if (res.error) throw new Error(res.error)
-            toast.success("Order deleted")
+            toast.success(t('analytics.orders.order_deleted'))
             setOrderDialogOpen(false)
             setEditingOrder(null)
             queryClient.invalidateQueries({ queryKey: ['order_progress_summary'] })
@@ -592,7 +585,7 @@ export default function OwnerDashboard() {
                                                 <div className="space-y-2">
                                                     <Label>{t('analytics.orders.quality')}</Label>
                                                     <Select name="quality_id" defaultValue={editingOrder?.quality_id} required>
-                                                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                                                        <SelectTrigger><SelectValue placeholder={t('common.select')} /></SelectTrigger>
                                                         <SelectContent>
                                                             {qualities?.map((q: any) => <SelectItem key={q.id} value={q.id}>{q.name}</SelectItem>)}
                                                         </SelectContent>

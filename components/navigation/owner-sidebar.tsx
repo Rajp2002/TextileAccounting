@@ -60,7 +60,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                         {factoryName || "Vastra"}
                     </h2>
                     <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
-                        {t('common.owner')} Panel
+                        {t('common.owner')} {t('common.panel')}
                     </span>
                 </div>
             </div>
@@ -131,7 +131,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                         <div className="flex items-center gap-1.5">
                             <span className="h-1 w-1 rounded-full bg-primary animate-pulse" />
                             <span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground font-bold">
-                                {t('common.owner')} Panel
+                                {t('common.owner')} {t('common.panel')}
                             </span>
                         </div>
                     </div>
@@ -149,7 +149,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                         className="w-[280px] p-0 bg-sidebar border-sidebar-border"
                     >
                         <SheetHeader className="sr-only">
-                            <SheetTitle>Navigation</SheetTitle>
+                            <SheetTitle>{t('common.navigation')}</SheetTitle>
                         </SheetHeader>
                         <NavContent
                             factoryName={factoryName}

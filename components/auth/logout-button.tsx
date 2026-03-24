@@ -5,6 +5,7 @@ import { LogOut, Loader2 } from 'lucide-react'
 import { signOut } from '@/app/(auth)/actions'
 import { cn } from '@/lib/utils'
 import LoadingModal from './loading-modal'
+import { useTranslation } from '@/lib/i18n/context'
 
 import { globalQueryClient } from '@/components/providers'
 
@@ -15,6 +16,7 @@ interface LogoutButtonProps {
 
 export default function LogoutButton({ variant = 'sidebar', className }: LogoutButtonProps) {
     const [isLoggingOut, setIsLoggingOut] = useState(false)
+    const { t } = useTranslation()
 
     const handleLogout = async (e: React.FormEvent) => {
         setIsLoggingOut(true)
@@ -41,10 +43,10 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
                         {isLoggingOut ? (
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         ) : null}
-                        Logout
+                        {t('common.logout')}
                     </button>
                 </form>
-                <LoadingModal isOpen={isLoggingOut} message="Signing out securely..." />
+                <LoadingModal isOpen={isLoggingOut} message={t('common.signing_out')} />
             </>
         )
     }
@@ -65,10 +67,10 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
                     ) : (
                         <LogOut className="h-3.5 w-3.5" />
                     )}
-                    Log out
+                    {t('nav.logout')}
                 </button>
             </form>
-            <LoadingModal isOpen={isLoggingOut} message="Signing out securely..." />
+            <LoadingModal isOpen={isLoggingOut} message={t('common.signing_out')} />
         </>
     )
 }
