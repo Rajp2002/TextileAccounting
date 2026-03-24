@@ -551,6 +551,7 @@ export default function OwnerDashboard() {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">
                         {new Date().getHours() < 12 ? t('analytics.greeting.morning') : new Date().getHours() < 17 ? t('analytics.greeting.afternoon') : t('analytics.greeting.evening')}
+                        {userProfile?.full_name ? `, ${userProfile.full_name.split(' ')[0]}` : ''}
                     </h1>
                     <p className="text-sm text-gray-500 mt-0.5">
                         {new Date(selectedDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}

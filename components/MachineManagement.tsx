@@ -23,13 +23,14 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { toast } from 'sonner'
-import { Loader2, Save, Plus, Trash2, KeyRound } from 'lucide-react'
+import { Loader2, Save, Plus, Trash2, KeyRound, Pencil, Power } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { deleteMachineWithCode } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
+import { cn } from '@/lib/utils'
 
 interface Worker {
     id: number
@@ -54,9 +55,17 @@ interface MachineManagementProps {
     orgId: string
     canEditRates?: boolean
     canAddMachines?: boolean
+    canRenameMachines?: boolean
+    canDeleteMachines?: boolean
 }
 
-export function MachineManagement({ orgId, canEditRates = true, canAddMachines = true }: MachineManagementProps) {
+export function MachineManagement({
+    orgId,
+    canEditRates = true,
+    canAddMachines = true,
+    canRenameMachines = true,
+    canDeleteMachines = true,
+}: MachineManagementProps) {
     const supabase = createClient()
     const queryClient = useQueryClient()
     const [editingRates, setEditingRates] = useState<Record<string, string>>({})
@@ -72,6 +81,11 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
     const [machineToDelete, setMachineToDelete] = useState<string | null>(null)
     const [accessCode, setAccessCode] = useState('')
     const [deleting, setDeleting] = useState(false)
+
+    // Rename Machine State
+    const [machineToRename, setMachineToRename] = useState<Machine | null>(null)
+    const [renameValue, setRenameValue] = useState('')
+    const [renaming, setRenaming] = useState(false)
 
     // Use shared profile hook instead of independent fetch
     const { data: userProfile } = useUserProfile()
@@ -214,6 +228,42 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
         }
     }
 
+    // ── Rename Machine ──
+    const handleRename = async () => {
+        if (!machineToRename || !renameValue.trim()) return
+        setRenaming(true)
+        try {
+            const { error } = await supabase
+                .from('machines')
+                .update({ name: renameValue.trim() })
+                .eq('id', machineToRename.id)
+            if (error) throw error
+            toast.success(t('machines.renamed'))
+            queryClient.invalidateQueries({ queryKey: ['machines'] })
+            setMachineToRename(null)
+        } catch {
+            toast.error(t('machines.rename_failed'))
+        } finally {
+            setRenaming(false)
+        }
+    }
+
+    // ── Toggle Machine Status (activate / deactivate) ──
+    const toggleMachineStatus = async (machine: Machine) => {
+        const newStatus = machine.status === 'active' ? 'inactive' : 'active'
+        try {
+            const { error } = await supabase
+                .from('machines')
+                .update({ status: newStatus })
+                .eq('id', machine.id)
+            if (error) throw error
+            toast.success(t('machines.status_updated'))
+            queryClient.invalidateQueries({ queryKey: ['machines'] })
+        } catch {
+            toast.error(t('machines.status_update_failed'))
+        }
+    }
+
     const handleAssignment = async (machineId: string, workerId: string, shift: 'day' | 'night') => {
         try {
             // Check if assignment exists
@@ -342,18 +392,65 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                     {machines?.map(machine => {
                         const dayAssignment = assignments?.find(a => a.machine_id === machine.id && a.shift === 'day')
                         const nightAssignment = assignments?.find(a => a.machine_id === machine.id && a.shift === 'night')
+                        const isInactive = machine.status === 'inactive'
 
                         return (
-                            <div key={machine.id} className="p-4 border rounded-lg bg-gray-50/50 space-y-4 group">
+                            <div
+                                key={machine.id}
+                                className={cn(
+                                    "p-4 border rounded-lg space-y-4 group transition-opacity",
+                                    isInactive ? "bg-gray-100/60 opacity-60" : "bg-gray-50/50"
+                                )}
+                            >
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                         <div className="font-semibold text-lg">{machine.name}</div>
                                         <div className="text-sm text-gray-500 bg-white px-2 py-0.5 rounded border">
                                             {t('machines.current_rate')}: ₹{machine.rate_per_meter}/m
                                         </div>
+                                        {/* Status Badge */}
+                                        <span className={cn(
+                                            "text-xs px-2 py-0.5 rounded-full font-medium",
+                                            isInactive
+                                                ? "bg-gray-200 text-gray-600"
+                                                : "bg-green-100 text-green-700"
+                                        )}>
+                                            {isInactive ? t('machines.inactive') : t('machines.active_status')}
+                                        </span>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5">
+                                        {/* Rename Button */}
+                                        {canRenameMachines && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-gray-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                                                onClick={() => {
+                                                    setMachineToRename(machine)
+                                                    setRenameValue(machine.name)
+                                                }}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                        )}
+
+                                        {/* Activate / Deactivate Toggle */}
+                                        {canRenameMachines && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className={cn(
+                                                    "h-8 w-8 md:opacity-0 md:group-hover:opacity-100 transition-opacity",
+                                                    isInactive ? "text-green-600" : "text-amber-600"
+                                                )}
+                                                onClick={() => toggleMachineStatus(machine)}
+                                                title={isInactive ? t('machines.activate') : t('machines.deactivate')}
+                                            >
+                                                <Power className="h-4 w-4" />
+                                            </Button>
+                                        )}
+
                                         {canEditRates && (
                                             <>
                                                 <Input
@@ -373,15 +470,17 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                                             </>
                                         )}
 
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-                                            onClick={() => confirmDelete(machine.id)}
-                                            disabled={deleting}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        {canDeleteMachines && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                                                onClick={() => confirmDelete(machine.id)}
+                                                disabled={deleting}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
 
@@ -434,6 +533,33 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                     )}
                 </div>
             </CardContent>
+
+            {/* ── Rename Dialog ── */}
+            <Dialog open={machineToRename !== null} onOpenChange={(open) => !open && setMachineToRename(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{t('machines.rename_machine')}</DialogTitle>
+                        <DialogDescription>{t('machines.rename_desc')}</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>{t('machines.new_name')}</Label>
+                            <Input
+                                value={renameValue}
+                                onChange={(e) => setRenameValue(e.target.value)}
+                                placeholder={t('machines.add_machine_placeholder')}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setMachineToRename(null)}>{t('common.cancel')}</Button>
+                        <Button onClick={handleRename} disabled={!renameValue.trim() || renaming}>
+                            {renaming ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            {t('common.save')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Access Code Modal (SEC-004) */}
             <Dialog open={machineToDelete !== null} onOpenChange={(open) => !open && setMachineToDelete(null)}>

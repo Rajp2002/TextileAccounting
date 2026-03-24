@@ -25,12 +25,13 @@ export default function SupervisorMachinesPage() {
         <div className="p-4 space-y-6 max-w-4xl mx-auto">
             <h1 className="text-2xl font-bold text-gray-800">Manage Machines</h1>
 
-            {/* Reuse the MachineManagement component which handles listing, adding, and rates */}
-            {/* Supervisors have full access as requested */}
+            {/* Supervisors get view-only access to machines */}
             <MachineManagement
                 orgId={userProfile.org_id}
-                canEditRates={true}
-                canAddMachines={true}
+                canEditRates={false}
+                canAddMachines={false}
+                canRenameMachines={false}
+                canDeleteMachines={false}
             />
         </div>
     )

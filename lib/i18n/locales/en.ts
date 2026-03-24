@@ -96,6 +96,10 @@ export const en = {
   },
   assignments: {
     title: "Worker Assignments",
+    day_shift: "Day Shift",
+    night_shift: "Night Shift",
+    day_desc: "Assign workers to day shifts (7 AM – 7 PM) for each machine.",
+    night_desc: "Assign workers to night shifts (7 PM – 7 AM) for each machine.",
   },
   machines: {
     title: "Machine Rates & Assignments",
@@ -123,6 +127,17 @@ export const en = {
     delete_confirm: "Are you sure you want to delete this machine?",
     worker_assigned: "Worker assigned to shift",
     worker_assign_failed: "Failed to assign worker",
+    rename_machine: "Rename Machine",
+    rename_desc: "Enter a new name for this machine.",
+    new_name: "New Name",
+    renamed: "Machine renamed successfully",
+    rename_failed: "Failed to rename machine",
+    deactivate: "Deactivate",
+    activate: "Activate",
+    active_status: "Active",
+    inactive: "Inactive",
+    status_updated: "Machine status updated",
+    status_update_failed: "Failed to update machine status",
   },
   auth: {
     owner_auth_req: "Owner Authorization Required",
@@ -504,6 +519,8 @@ export const en = {
     salary_placeholder: "15000",
     adding: "Adding...",
     added_success: " added successfully!",
+    status_updated: "Worker status updated",
+    status_update_failed: "Failed to update worker status",
   },
   modals: {
     start_new_beam: "Start New Beam",
