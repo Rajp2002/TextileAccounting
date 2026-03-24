@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { OrderCard } from '@/components/OrderCard'
+import { LiveOrdersLayout } from '@/components/LiveOrdersLayout'
 import { upsertOrder } from '@/app/(dashboard)/owner/actions'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -642,13 +643,14 @@ export default function OwnerDashboard() {
                         </Button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {ordersSummary.map((order: any) => (
-                            <div key={order.order_id} className="cursor-pointer" onClick={() => { setEditingOrder(order); setOrderDialogOpen(true); }}>
-                                <OrderCard order={order} forecast={orderForecasts?.[order.order_id]} />
-                            </div>
-                        ))}
-                    </div>
+                    <LiveOrdersLayout 
+                        orders={ordersSummary} 
+                        forecasts={orderForecasts} 
+                        onOrderClick={(order) => {
+                            setEditingOrder(order);
+                            setOrderDialogOpen(true);
+                        }}
+                    />
                 )}
             </div>
 

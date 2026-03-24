@@ -42,9 +42,10 @@ interface OrderCardProps {
     remaining_meters: number
     avg_daily_production: number
   }
+  layout?: 'compact' | 'wide'
 }
 
-export function OrderCard({ order, forecast }: OrderCardProps) {
+export function OrderCard({ order, forecast, layout = 'compact' }: OrderCardProps) {
   const { t } = useTranslation()
   const [assignDialogOpen, setAssignDialogOpen] = useState(false)
   const [selectedMachines, setSelectedMachines] = useState<string[]>([])
@@ -106,8 +107,149 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
     )
   }
 
+  if (layout === 'wide') {
+    return (
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden font-sans p-8 w-full">
+        <div className="flex flex-col lg:flex-row gap-12">
+          {/* Left Side: Title, Subtitle, and large Progress Bar */}
+          <div className="flex-1 space-y-8">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-3xl font-bold text-slate-900 tracking-tight">
+                    {order.party_name}
+                  </h3>
+                  <span className={cn(
+                    "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                    isOverdue ? "bg-rose-50 text-rose-700 border-rose-100" : 
+                    isAtRisk ? "bg-amber-50 text-amber-700 border-amber-100" :
+                    order.progress_percent >= 100 ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
+                    "bg-emerald-50 text-emerald-700 border-emerald-100"
+                  )}>
+                    <span className={cn(
+                      "w-1.5 h-1.5 rounded-full mr-2",
+                      isOverdue ? "bg-rose-500" : isAtRisk ? "bg-amber-500" : "bg-emerald-500 animate-pulse"
+                    )} />
+                    {isOverdue ? t('analytics.orders.card.overdue') : isAtRisk ? t('analytics.orders.card.at_risk') : order.progress_percent >= 100 ? t('analytics.orders.card.finished') : t('analytics.orders.card.active')}
+                  </span>
+                </div>
+                <p className="text-lg text-slate-500 flex items-center gap-2 font-medium">
+                  <Layers className="h-5 w-5 text-slate-400" />
+                  {order.quality_name}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex justify-between items-end">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('analytics.orders.card.progress') || 'Progress'}</span>
+                <span className="text-5xl font-black text-slate-900 tabular-nums tracking-tighter">
+                  {Math.round(order.progress_percent)}<span className="text-2xl font-medium text-slate-400 ml-1">%</span>
+                </span>
+              </div>
+              <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                <div 
+                  className={cn(
+                    "h-full rounded-full transition-all duration-1000 ease-out",
+                    isOverdue ? "bg-rose-500" : isAtRisk ? "bg-amber-500" : "bg-teal-600 shadow-[0_0_15px_-3px_rgba(20,184,166,0.3)]"
+                  )} 
+                  style={{ width: `${order.progress_percent}%` }} 
+                />
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <p className="text-base text-slate-400 font-medium">
+                  <span className="text-slate-900 font-bold">{Math.round(order.total_meters_produced).toLocaleString()}</span>
+                  <span className="mx-2">/</span>
+                  {Math.round(order.total_target_meters).toLocaleString()}m produced
+                </p>
+                <div className="flex items-center gap-4">
+                  {order.progress_percent < 100 && (
+                    <span className="text-slate-400 font-medium italic text-sm bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                      ~{Math.round(forecast?.remaining_meters || (order.total_target_meters - order.total_meters_produced)).toLocaleString()}{t('analytics.orders.card.left')}
+                    </span>
+                  )}
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAssignDialogOpen(true);
+                    }} 
+                    className="rounded-xl border-slate-200 hover:bg-slate-50 text-indigo-600 font-bold"
+                  >
+                    <Link2 className="w-4 h-4 mr-2" />
+                    {t('analytics.orders.card.view_details') || 'View Details'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side: Stats Grid and Forecast section */}
+          <div className="lg:w-1/3 flex flex-col gap-6">
+            <div className="grid grid-cols-2 gap-4 h-full">
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-1.5 bg-white rounded-lg shadow-sm">
+                    <TrendingUp className={cn("w-4 h-4", order.pace_index >= 1 ? "text-emerald-500" : "text-amber-500")} />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{t('analytics.orders.card.health_index')}</span>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900 leading-none mb-1">{order.pace_index.toFixed(2)}</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-tight">{t('analytics.orders.card.pace')}</p>
+                </div>
+              </div>
+              
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col justify-between">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-1.5 bg-white rounded-lg shadow-sm">
+                    <CalendarDays className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{t('analytics.orders.card.deadline')}</span>
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-slate-900 leading-none mb-1">{format(new Date(order.deadline), "MMM d")}</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-tight">{format(new Date(order.deadline), "yyyy")}</p>
+                </div>
+              </div>
+
+              {forecast && forecast.predicted_finish_date && (
+                <div className={cn(
+                  "col-span-2 p-6 rounded-2xl border-2 flex flex-col justify-center gap-3",
+                  statusBg, borderColor
+                )}>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        {t('analytics.orders.card.estimated_finish')}
+                      </span>
+                    </div>
+                    {forecast.is_theoretical && (
+                      <span className="text-[9px] px-2 py-0.5 bg-white/80 border border-slate-200 rounded-full font-bold text-slate-500">
+                        {t('analytics.orders.card.theoretical')}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <p className={`text-4xl font-black ${statusColor} tracking-tighter`}>
+                      {format(new Date(forecast.predicted_finish_date), "MMMM d")}
+                    </p>
+                    <div className="text-right">
+                       <p className="text-xs font-medium text-slate-400 italic">{t('analytics.orders.card.warm_up')}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="max-w-md bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden font-sans h-full flex flex-col">
+    <div className="w-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden font-sans h-full flex flex-col">
       {/* Header Section */}
       <div className="p-5 pb-0 flex justify-between items-start">
         <div>
@@ -208,7 +350,10 @@ export function OrderCard({ order, forecast }: OrderCardProps) {
             {order.assigned_machines_count} {t('analytics.orders.card.machines')}
           </span>
           <button 
-            onClick={() => setAssignDialogOpen(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setAssignDialogOpen(true);
+            }}
             className="flex items-center gap-1 text-indigo-600 font-semibold hover:text-indigo-700 transition-colors uppercase tracking-tight text-[10px]"
           >
             <Link2 className="w-3.5 h-3.5" />
