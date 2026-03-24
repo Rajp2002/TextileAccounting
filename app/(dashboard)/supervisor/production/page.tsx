@@ -19,6 +19,7 @@ import {
 } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTransliterate } from '@/hooks/use-transliterate'
 import { 
     CalendarDays, 
     KeyRound, 
@@ -105,6 +106,7 @@ export default function ProductionEntryForm() {
     const supabase = createClient()
     const queryClient = useQueryClient()
     const { t } = useTranslation()
+    const tl = useTransliterate()
 
     // Initialize date and shift
     useEffect(() => {
@@ -546,7 +548,7 @@ export default function ProductionEntryForm() {
                                     <Label className="text-xs text-gray-500">{t('production.worker')}</Label>
                                     <div className="flex items-center justify-between h-8">
                                         <div className="text-sm font-medium">
-                                            {worker ? worker.name : <span className="text-red-500 italic">{t('production.no_worker')}</span>}
+                                            {worker ? tl(worker.name) : <span className="text-red-500 italic">{t('production.no_worker')}</span>}
                                         </div>
                                         {worker && !disabled && (
                                             <Button

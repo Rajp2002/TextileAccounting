@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { savePastAttendance, verifyAccessCode } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTransliterate } from '@/hooks/use-transliterate'
 import {
     Dialog,
     DialogContent,
@@ -39,6 +40,7 @@ interface AttendanceRecord {
 
 export default function AttendancePage() {
     const { t } = useTranslation()
+    const tl = useTransliterate()
     const supabase = createClient()
     const queryClient = useQueryClient()
 
@@ -287,7 +289,7 @@ export default function AttendancePage() {
                                             </div>
                                             <div>
                                                 <span className={cn('font-medium', !isPresent && 'line-through text-gray-400')}>
-                                                    {worker.name}
+                                                    {tl(worker.name)}
                                                 </span>
                                                 <div className="text-xs text-gray-400">
                                                     {formatINR(dailyRate)}{t('attendance.per_day')}

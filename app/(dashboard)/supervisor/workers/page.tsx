@@ -24,6 +24,7 @@ import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTransliterate } from '@/hooks/use-transliterate'
 
 const ROLE_COLORS: Record<string, string> = {
     master: 'bg-purple-100 text-purple-700', supervisor: 'bg-blue-100 text-blue-700',
@@ -44,6 +45,7 @@ export default function SupervisorWorkersPage() {
 
     const { data: userProfile } = useUserProfile()
     const { t } = useTranslation()
+    const tl = useTransliterate()
 
     // Fetch Meter (piece-rate) Workers
     const { data: workers, isLoading: workersLoading } = useQuery({
@@ -140,7 +142,7 @@ export default function SupervisorWorkersPage() {
                                 <div key={worker.id} className="py-3 flex justify-between items-center group">
                                     <div className="flex items-center gap-3">
                                         <div className={`w-2 h-2 rounded-full ${worker.is_active ? 'bg-green-500' : 'bg-gray-300'}`} />
-                                        <span className="font-medium text-gray-700">{worker.name}</span>
+                                        <span className="font-medium text-gray-700">{tl(worker.name)}</span>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <span className="text-xs text-gray-400">
@@ -186,7 +188,7 @@ export default function SupervisorWorkersPage() {
                                         )}>
                                             {t(`workers.roles.${worker.role}`) || worker.role}
                                         </span>
-                                        <span className="font-medium text-gray-700">{worker.name}</span>
+                                        <span className="font-medium text-gray-700">{tl(worker.name)}</span>
                                     </div>
                                     <span className="text-xs text-gray-400">
                                         {worker.is_active ? t('workers.active') : t('workers.inactive')}

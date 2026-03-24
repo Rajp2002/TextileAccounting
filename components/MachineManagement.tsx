@@ -29,6 +29,7 @@ import { deleteMachineWithCode } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
+import { useTransliterate } from '@/hooks/use-transliterate'
 
 interface Worker {
     id: number
@@ -75,6 +76,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
     // Use shared profile hook instead of independent fetch
     const { data: userProfile } = useUserProfile()
     const { t } = useTranslation()
+    const tl = useTransliterate()
 
     // Fetch Machines
     const { data: machines, isLoading: machinesLoading } = useQuery({
@@ -396,7 +398,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                                             <SelectContent>
                                                 {workers?.map(w => (
                                                     <SelectItem key={w.id} value={w.id.toString()}>
-                                                        {w.name}
+                                                        {tl(w.name)}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -414,7 +416,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                                             <SelectContent>
                                                 {workers?.map(w => (
                                                     <SelectItem key={w.id} value={w.id.toString()}>
-                                                        {w.name}
+                                                        {tl(w.name)}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
