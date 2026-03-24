@@ -47,6 +47,10 @@ export const gu = {
     logout: "લોગ આઉટ",
     signing_out: "સુરક્ષિત રીતે લોગ આઉટ થઈ રહ્યું છે...",
     select: "પસંદ કરો",
+    fill_all: "મહેરબાની કરીને બધી વિગતો ભરો",
+    updated: "સફળતાપૂર્વક અપડેટ થયું",
+    added: "સફળતાપૂર્વક ઉમેરવામાં આવ્યું",
+    removed: "સફળતાપૂર્વક હટાવવામાં આવ્યું",
   },
   production: {
     log_production: "પ્રોડક્શન નોંધો (Log Prod)",
@@ -126,7 +130,9 @@ export const gu = {
     access_code: "એક્સેસ કોડ",
     verify_unlock: "ચકાસો અને ખોલો",
     delete_desc: "મશીન ડીલીટ કરવા માટે માલિકનો એક્સેસ કોડ જરૂરી છે. આ માહિતી કાયમી ડીલીટ થશે.",
-    verify_delete: "ચકાસો અને ડીલીટ કરો",
+    verify_delete: "ખાતરી કરો અને ડીલીટ કરો (Verify & Delete)",
+    invalid_code: "ખોટો અથવા એક્સપાયર થયેલ એક્સેસ કોડ",
+    code_sent: "વેરિફિકેશન કોડ માલિકને મોકલવામાં આવ્યો છે",
   },
   analytics: {
     greeting: {

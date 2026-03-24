@@ -20,12 +20,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
 
 const ROLES = [
-    { value: 'master', label: 'Master', defaultSalary: 30000 },
-    { value: 'supervisor', label: 'Supervisor', defaultSalary: 30000 },
-    { value: 'helper', label: 'Helper', defaultSalary: 15000 },
-    { value: 'mender', label: 'Mender', defaultSalary: 15000 },
-    { value: 'sanitation', label: 'Sanitation Worker', defaultSalary: 7000 },
-    { value: 'daily', label: 'Day-to-Day', defaultSalary: 15000 },
+    { value: 'master', defaultSalary: 30000 },
+    { value: 'supervisor', defaultSalary: 30000 },
+    { value: 'helper', defaultSalary: 15000 },
+    { value: 'mender', defaultSalary: 15000 },
+    { value: 'sanitation', defaultSalary: 7000 },
+    { value: 'daily', defaultSalary: 15000 },
 ]
 
 interface FixedWorker {
@@ -36,8 +36,8 @@ interface FixedWorker {
     is_active: boolean
 }
 
-function getRoleLabel(role: string) {
-    return ROLES.find(r => r.value === role)?.label || role
+function getRoleLabel(role: string, t: any) {
+    return t(`workers.roles.${role}`) || role
 }
 
 function getRoleColor(role: string) {
@@ -116,7 +116,7 @@ export default function FixedWorkersPage() {
 
     const handleSave = async () => {
         if (!formName.trim() || !formRole || !formSalary) {
-            toast.error('Please fill all fields')
+            toast.error(t('common.fill_all'))
             return
         }
 
@@ -132,7 +132,7 @@ export default function FixedWorkersPage() {
                     })
                     .eq('id', editingWorker.id)
                 if (error) throw error
-                toast.success('Worker updated')
+                toast.success(t('common.updated'))
             } else {
                 const { error } = await supabase
                     .from('fixed_workers')
@@ -143,7 +143,7 @@ export default function FixedWorkersPage() {
                         org_id: userProfile!.org_id,
                     })
                 if (error) throw error
-                toast.success('Worker added')
+                toast.success(t('common.added'))
             }
 
             setDialogOpen(false)
@@ -177,7 +177,7 @@ export default function FixedWorkersPage() {
             // Verify access code first (SEC-004)
             const isValid = await validateAndRotateAccessCode(userProfile.org_id, accessCode)
             if (!isValid) {
-                toast.error('Invalid or expired access code')
+                toast.error(t('auth.invalid_code'))
                 return
             }
 
@@ -187,7 +187,7 @@ export default function FixedWorkersPage() {
                 .eq('id', workerToDelete.id)
             if (error) throw error
 
-            toast.success('Worker removed')
+            toast.success(t('common.removed'))
             setVerificationOpen(false)
             setWorkerToDelete(null)
             queryClient.invalidateQueries({ queryKey: ['fixed_workers'] })
@@ -245,7 +245,7 @@ export default function FixedWorkersPage() {
                                     <SelectContent>
                                         {ROLES.map(r => (
                                             <SelectItem key={r.value} value={r.value}>
-                                                {t(`workers.roles.${r.value}`)} — {formatINR(r.defaultSalary)}/mo
+                                                {t(`workers.roles.${r.value}`)} — {formatINR(r.defaultSalary)}{t('common.per_month')}
                                             </SelectItem>
                                         ))}
                                         {editingWorker && !ROLES.find(r => r.value === editingWorker.role) && (
@@ -357,7 +357,7 @@ export default function FixedWorkersPage() {
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-sm font-semibold text-gray-700">
-                                                        {formatINR(w.monthly_salary)}/mo
+                                                        {formatINR(w.monthly_salary)}{t('common.per_month')}
                                                     </span>
                                                     <Button variant="ghost" size="sm" onClick={() => openEditDialog(w)}>
                                                         <Pencil className="h-3.5 w-3.5" />
@@ -401,7 +401,7 @@ export default function FixedWorkersPage() {
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         <span className="text-sm font-semibold text-gray-700">
-                                                            {formatINR(w.monthly_salary)}/mo
+                                                            {formatINR(w.monthly_salary)}{t('common.per_month')}
                                                         </span>
                                                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(w)}>
                                                             <Pencil className="h-3.5 w-3.5" />
