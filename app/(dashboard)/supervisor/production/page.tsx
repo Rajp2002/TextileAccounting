@@ -273,7 +273,7 @@ export default function ProductionEntryForm() {
             setUnlocked(true)
             setVerificationOpen(false)
             setAccessCode('')
-            toast.success('Edit mode unlocked')
+            toast.success(t('production.edit_unlocked'))
 
             // Copy existing log meters to metersInput state so they can be edited seamlessly
             const newMeters: Record<string, number> = {}
@@ -299,13 +299,13 @@ export default function ProductionEntryForm() {
         })
 
         if (entriesToSave.length === 0) {
-            toast.warning('No new or edited meters entered.')
+            toast.warning(t('production.no_entries'))
             return
         }
 
         const missingWorker = entriesToSave.find(c => !c.effectiveWorkerId)
         if (missingWorker) {
-            toast.error(`Please assign a worker for ${missingWorker.machine.name} in assignments first.`)
+            toast.error(t('production.assign_worker_for'))
             return
         }
 
@@ -350,8 +350,8 @@ export default function ProductionEntryForm() {
 
             toast.success(
                 isOnline
-                    ? `${entriesToSave.length} entries saved!`
-                    : `${entriesToSave.length} entries queued (offline).`
+                    ? `${entriesToSave.length} ${t('production.entries_saved')}`
+                    : `${entriesToSave.length} ${t('production.entries_queued')}`
             )
 
             setMetersInput({})
@@ -359,7 +359,7 @@ export default function ProductionEntryForm() {
             queryClient.invalidateQueries({ queryKey: ['production_logs', userProfile?.org_id, selectedDate, currentShift] })
             queryClient.invalidateQueries({ queryKey: ['production_daily_total', 'production_worker_stats'] })
         } catch (error: any) {
-            toast.error('Failed to save: ' + error.message)
+            toast.error(t('production.save_failed') + ': ' + error.message)
         } finally {
             setLoading(false)
         }
@@ -368,20 +368,20 @@ export default function ProductionEntryForm() {
     const handleStartBeam = async () => {
         if (!linkingMachineId || !linkingBatchId) return
         if (!isOnline) {
-            toast.error("Offline: Cannot link beam while offline.")
+            toast.error(t('production.offline_beam'))
             return
         }
         setLinkingBeam(true)
         try {
             const res = await startBeam(linkingBatchId, linkingMachineId)
             if (res.error) throw new Error(res.error)
-            toast.success("Beam successfully linked to machine!")
+            toast.success(t('production.beam_linked'))
             setBeamModalOpen(false)
             setLinkingMachineId(null)
             setLinkingBatchId('')
             queryClient.invalidateQueries({ queryKey: ['active_yarn_batches', userProfile?.org_id] })
         } catch (err: any) {
-            toast.error(err.message || "Failed to start beam.")
+            toast.error(err.message || t('production.beam_link_failed'))
         } finally {
             setLinkingBeam(false)
         }
@@ -390,7 +390,7 @@ export default function ProductionEntryForm() {
     const handleLinkOrder = async () => {
         if (!linkingOrderMachineId || !selectedOrderId) return
         if (!isOnline) {
-            toast.error("Offline: Cannot link order while offline.")
+            toast.error(t('production.offline_order'))
             return
         }
         
@@ -412,13 +412,13 @@ export default function ProductionEntryForm() {
         try {
             const res = await linkOrderToMachine(selectedOrderId, linkingOrderMachineId)
             if (res.error) throw new Error(res.error)
-            toast.success("Order linked to machine!")
+            toast.success(t('production.order_linked_toast'))
             setOrderModalOpen(false)
             setLinkingOrderMachineId(null)
             setSelectedOrderId('')
             queryClient.invalidateQueries({ queryKey: ['machines', userProfile?.org_id] })
         } catch (err: any) {
-            toast.error(err.message || "Failed to link order.")
+            toast.error(err.message || t('production.order_link_failed'))
         } finally {
             setLinkingOrder(false)
         }
@@ -429,12 +429,12 @@ export default function ProductionEntryForm() {
         try {
             const res = await shiftHandover(userProfile.org_id, handoverMachineId, currentShift)
             if (res.error) throw new Error(res.error)
-            toast.success("Shift handover complete. Worker unlinked.")
+            toast.success(t('production.handover_complete'))
             setHandoverOpen(false)
             setHandoverMachineId(null)
             queryClient.invalidateQueries({ queryKey: ['machine_assignments'] })
         } catch (err: any) {
-            toast.error(err.message || "Handover failed")
+            toast.error(err.message || t('production.handover_failed'))
         } finally {
             setPerformingHandover(false)
         }
@@ -705,7 +705,7 @@ export default function ProductionEntryForm() {
                         <div className="space-y-2">
                             <Label>{t('auth.access_code')}</Label>
                             <Input
-                                placeholder="Enter 6-character code"
+                                placeholder={t('production.enter_code')}
                                 value={accessCode}
                                 onChange={(e) => setAccessCode(e.target.value)}
                                 className="font-mono uppercase tracking-widest text-lg"

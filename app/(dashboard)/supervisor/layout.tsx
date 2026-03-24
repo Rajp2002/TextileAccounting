@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/app/(auth)/actions'
 import { OfflineSyncProvider } from '@/components/offline-sync-provider'
-import { SupervisorNav, MobileSupervisorNav } from '@/components/navigation/supervisor-nav'
+import { SupervisorNav, MobileSupervisorNav, SupervisorRoleLabel } from '@/components/navigation/supervisor-nav'
 import Image from 'next/image'
 import LogoutButton from '@/components/auth/logout-button'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
@@ -48,7 +48,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
                         </div>
                         <div>
                             <h1 className="text-lg font-bold text-gray-900 leading-tight truncate max-w-[200px] sm:max-w-xs">{factoryName || "Vastra"}</h1>
-                            <span className="text-[10px] uppercase tracking-widest text-teal-600 font-bold">Supervisor</span>
+                            <SupervisorRoleLabel />
                         </div>
                     </div>
                     <div className="flex items-center gap-2">

@@ -50,6 +50,15 @@ export function SupervisorNav() {
     )
 }
 
+export function SupervisorRoleLabel() {
+    const { t } = useTranslation()
+    return (
+        <span className="text-[10px] uppercase tracking-widest text-teal-600 font-bold">
+            {t('common.supervisor')}
+        </span>
+    )
+}
+
 export function MobileSupervisorNav() {
     const pathname = usePathname()
     const [open, setOpen] = useState(false)

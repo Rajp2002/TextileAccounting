@@ -27,13 +27,13 @@ import * as Sentry from '@sentry/nextjs'
 import { useTranslation } from '@/lib/i18n/context'
 
 const FIXED_ROLES = [
-    { value: 'master', label: 'Master', defaultSalary: 30000 },
-    { value: 'supervisor', label: 'Supervisor', defaultSalary: 30000 },
-    { value: 'helper', label: 'Helper', defaultSalary: 15000 },
-    { value: 'mender', label: 'Mender', defaultSalary: 15000 },
-    { value: 'sanitation', label: 'Sanitation Worker', defaultSalary: 7000 },
-    { value: 'daily', label: 'Day-to-Day', defaultSalary: 15000 },
-    { value: 'other', label: 'Other (Custom Role)', defaultSalary: 0 },
+    { value: 'master', defaultSalary: 30000 },
+    { value: 'supervisor', defaultSalary: 30000 },
+    { value: 'helper', defaultSalary: 15000 },
+    { value: 'mender', defaultSalary: 15000 },
+    { value: 'sanitation', defaultSalary: 7000 },
+    { value: 'daily', defaultSalary: 15000 },
+    { value: 'other', defaultSalary: 0 },
 ]
 
 // Define Zod Schema for validation
@@ -269,8 +269,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                                 <SelectContent>
                                                     {FIXED_ROLES.map(r => (
                                                         <SelectItem key={r.value} value={r.value}>
-                                                            {/* @ts-ignore - Dynamic key usage */}
-                                                            {t(`workers.roles.${r.value}`) || r.label}
+                                                            {t(`workers.roles.${r.value}`)}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>

@@ -134,7 +134,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                 .eq('id', machineId)
 
             if (error) throw error
-            toast.success('Rate updated')
+            toast.success(t('machines.rate_updated'))
             queryClient.invalidateQueries({ queryKey: ['machines'] })
             setEditingRates(prev => {
                 const next = { ...prev }
@@ -142,7 +142,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                 return next
             })
         } catch (error: any) {
-            toast.error('Failed to update rate')
+            toast.error(t('machines.rate_update_failed'))
         } finally {
             setSaving(prev => ({ ...prev, [machineId]: false }))
         }
@@ -163,13 +163,13 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                 })
 
             if (error) throw error
-            toast.success('Machine added successfully')
+            toast.success(t('machines.machine_added'))
             queryClient.invalidateQueries({ queryKey: ['machines'] })
             setIsAddMachineOpen(false)
             setNewMachineName('')
             setNewMachineRate('')
         } catch (error: any) {
-            toast.error('Failed to add machine: ' + error.message)
+            toast.error(t('machines.machine_add_failed') + ': ' + error.message)
         } finally {
             setIsAddingMachine(false)
         }
@@ -178,13 +178,13 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
     const confirmDelete = async (id: string) => {
         if (userProfile?.role === 'owner') {
             // Owner can delete directly
-            if (confirm('Are you sure you want to delete this machine?')) {
+            if (confirm(t('machines.delete_confirm'))) {
                 setDeleting(true)
                 const { error } = await supabase.from('machines').delete().eq('id', id)
                 setDeleting(false)
-                if (error) toast.error('Failed to delete machine')
+                if (error) toast.error(t('machines.machine_delete_failed'))
                 else {
-                    toast.success('Machine deleted')
+                    toast.success(t('machines.machine_deleted'))
                     queryClient.invalidateQueries({ queryKey: ['machines'] })
                 }
             }
@@ -202,11 +202,11 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
             const result = await deleteMachineWithCode(orgId, machineToDelete, accessCode)
             if (result.error) throw new Error(result.error)
 
-            toast.success('Machine deleted successfully')
+            toast.success(t('machines.machine_deleted'))
             setMachineToDelete(null)
             queryClient.invalidateQueries({ queryKey: ['machines'] })
         } catch (error: any) {
-            toast.error(error.message || 'Failed to delete machine')
+            toast.error(error.message || t('machines.machine_delete_failed'))
         } finally {
             setDeleting(false)
         }
@@ -241,11 +241,11 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
             }
 
             if (error) throw error
-            toast.success(`Worker assigned to ${shift} shift`)
+            toast.success(t('machines.worker_assigned'))
             queryClient.invalidateQueries({ queryKey: ['machine_assignments'] })
         } catch (error: any) {
             console.error(error)
-            toast.error('Failed to assign worker')
+            toast.error(t('machines.worker_assign_failed'))
         }
     }
 
@@ -299,7 +299,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                                 <DialogHeader>
                                     <DialogTitle>{t('machines.add_machine')}</DialogTitle>
                                     <DialogDescription>
-                                        Enter the details for the new machine.
+                                        {t('machines.add_machine_desc')}
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4 py-4">
@@ -307,7 +307,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                                         <Label htmlFor="name">{t('machines.machine_name')}</Label>
                                         <Input
                                             id="name"
-                                            placeholder="e.g., Loom 1"
+                                            placeholder={t('machines.add_machine_placeholder')}
                                             value={newMachineName}
                                             onChange={(e) => setNewMachineName(e.target.value)}
                                         />
@@ -448,7 +448,7 @@ export function MachineManagement({ orgId, canEditRates = true, canAddMachines =
                         <div className="space-y-2">
                             <Label>{t('auth.access_code')}</Label>
                             <Input
-                                placeholder="Enter 6-character code"
+                                placeholder={t('machines.enter_code')}
                                 value={accessCode}
                                 onChange={(e) => setAccessCode(e.target.value)}
                                 className="font-mono uppercase tracking-widest text-lg"
