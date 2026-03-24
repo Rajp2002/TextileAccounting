@@ -96,6 +96,10 @@ export const gu = {
   },
   assignments: {
     title: "કારીગરોની કામગીરી",
+    day_shift: "દિવસની પાળી",
+    night_shift: "રાતની પાળી",
+    day_desc: "દરેક મશીન માટે દિવસની પાળી (સવારે 7 - સાંજે 7) માં કારીગર સોંપો.",
+    night_desc: "દરેક મશીન માટે રાતની પાળી (સાંજે 7 - સવારે 7) માં કારીગર સોંપો.",
   },
   machines: {
     title: "મશીન રેટ્સ અને કારીગરો",
@@ -123,6 +127,17 @@ export const gu = {
     delete_confirm: "શું તમે ખરેખર આ મશીન ડીલીટ કરવા માંગો છો?",
     worker_assigned: "કારીગર પાળીમાં સોંપાયો",
     worker_assign_failed: "કારીગર સોંપવામાં નિષ્ફળતા",
+    rename_machine: "મશીનનું નામ બદલો",
+    rename_desc: "આ મશીન માટે નવું નામ દાખલ કરો.",
+    new_name: "નવું નામ",
+    renamed: "મશીનનું નામ સફળતાપૂર્વક બદલાયું",
+    rename_failed: "મશીનનું નામ બદલવામાં નિષ્ફળતા",
+    deactivate: "બંધ કરો",
+    activate: "ચાલુ કરો",
+    active_status: "ચાલુ",
+    inactive: "બંધ",
+    status_updated: "મશીનનું સ્ટેટસ અપડેટ થયું",
+    status_update_failed: "મશીનનું સ્ટેટસ અપડેટ કરવામાં નિષ્ફળતા",
   },
   auth: {
     owner_auth_req: "માલિકની મંજૂરી જરૂરી છે",
@@ -504,6 +519,8 @@ export const gu = {
     salary_placeholder: "15000",
     adding: "ઉમેરાઈ રહ્યું છે...",
     added_success: " ને સફળતાપૂર્વક ઉમેરવામાં આવ્યા!",
+    status_updated: "કારીગરનું સ્ટેટસ અપડેટ થયું",
+    status_update_failed: "કારીગરનું સ્ટેટસ અપડેટ કરવામાં નિષ્ફળતા",
   },
   modals: {
     start_new_beam: "નવો બીમ ચાલુ કરો",

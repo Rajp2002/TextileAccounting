@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { AddWorkerDialog } from '@/components/AddWorkerDialog'
 import { Loader2, Trash2, KeyRound } from 'lucide-react'
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { deleteWorkerWithCode, getWorkerDebt } from '@/app/(dashboard)/supervisor/actions'
 import { formatINR } from '@/lib/finance'
@@ -114,6 +115,21 @@ export default function SupervisorWorkersPage() {
         }
     }
 
+    // ── Toggle worker active status ──
+    const toggleWorkerActive = async (workerId: number, currentActive: boolean, table: 'workers' | 'fixed_workers') => {
+        try {
+            const { error } = await supabase
+                .from(table)
+                .update({ is_active: !currentActive })
+                .eq('id', workerId)
+            if (error) throw error
+            toast.success(t('workers.status_updated'))
+            queryClient.invalidateQueries({ queryKey: [table === 'workers' ? 'workers' : 'fixed_workers', userProfile?.org_id] })
+        } catch {
+            toast.error(t('workers.status_update_failed'))
+        }
+    }
+
     if (!userProfile) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-gray-400" /></div>
 
     return (
@@ -126,28 +142,50 @@ export default function SupervisorWorkersPage() {
                 />
             </div>
 
-            {/* ── Meter Workers ── */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('workers.meter_workers')}</CardTitle>
-                </CardHeader>
-                <CardContent>
+            {/* ── Workers Tabs ── */}
+            <Tabs defaultValue="meter" className="w-full">
+                <TabsList className="w-full">
+                    <TabsTrigger value="meter" className="flex-1">
+                        {t('workers.meter_workers')}
+                        {workers && workers.length > 0 && (
+                            <span className="ml-1.5 text-xs text-muted-foreground">({workers.length})</span>
+                        )}
+                    </TabsTrigger>
+                    <TabsTrigger value="fixed" className="flex-1">
+                        {t('workers.fixed_staff')}
+                        {fixedWorkers && fixedWorkers.length > 0 && (
+                            <span className="ml-1.5 text-xs text-muted-foreground">({fixedWorkers.length})</span>
+                        )}
+                    </TabsTrigger>
+                </TabsList>
+
+                {/* ── Meter Workers Tab ── */}
+                <TabsContent value="meter" className="mt-4">
                     {workersLoading ? (
-                        <div className="flex justify-center p-4">
+                        <div className="flex justify-center p-8">
                             <Loader2 className="animate-spin text-gray-400" />
                         </div>
                     ) : (
-                        <div className="divide-y">
+                        <div className="divide-y border rounded-lg">
                             {workers?.map((worker: any) => (
-                                <div key={worker.id} className="py-3 flex justify-between items-center group">
+                                <div key={worker.id} className="py-3 px-4 flex justify-between items-center group">
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-2 h-2 rounded-full ${worker.is_active ? 'bg-green-500' : 'bg-gray-300'}`} />
                                         <span className="font-medium text-gray-700">{tl(worker.name)}</span>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <span className="text-xs text-gray-400">
-                                            {worker.is_active ? t('workers.active') : t('workers.inactive')}
-                                        </span>
+                                        {/* Active Toggle */}
+                                        <div className="flex items-center gap-2">
+                                            <span className={cn(
+                                                "text-xs",
+                                                worker.is_active ? "text-green-600" : "text-gray-400"
+                                            )}>
+                                                {worker.is_active ? t('workers.active') : t('workers.inactive')}
+                                            </span>
+                                            <Switch
+                                                checked={worker.is_active}
+                                                onCheckedChange={() => toggleWorkerActive(worker.id, worker.is_active, 'workers')}
+                                            />
+                                        </div>
                                         <Button
                                             variant="ghost"
                                             size="icon"
@@ -164,23 +202,18 @@ export default function SupervisorWorkersPage() {
                             )}
                         </div>
                     )}
-                </CardContent>
-            </Card>
+                </TabsContent>
 
-            {/* ── Fixed / Salaried Staff ── */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('workers.fixed_staff')}</CardTitle>
-                </CardHeader>
-                <CardContent>
+                {/* ── Fixed Staff Tab ── */}
+                <TabsContent value="fixed" className="mt-4">
                     {fixedLoading ? (
-                        <div className="flex justify-center p-4">
+                        <div className="flex justify-center p-8">
                             <Loader2 className="animate-spin text-gray-400" />
                         </div>
                     ) : (
-                        <div className="divide-y">
+                        <div className="divide-y border rounded-lg">
                             {fixedWorkers?.map((worker: any) => (
-                                <div key={worker.id} className="py-3 flex justify-between items-center">
+                                <div key={worker.id} className="py-3 px-4 flex justify-between items-center">
                                     <div className="flex items-center gap-3">
                                         <span className={cn(
                                             'text-xs px-2 py-0.5 rounded-full font-medium',
@@ -190,9 +223,18 @@ export default function SupervisorWorkersPage() {
                                         </span>
                                         <span className="font-medium text-gray-700">{tl(worker.name)}</span>
                                     </div>
-                                    <span className="text-xs text-gray-400">
-                                        {worker.is_active ? t('workers.active') : t('workers.inactive')}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className={cn(
+                                            "text-xs",
+                                            worker.is_active ? "text-green-600" : "text-gray-400"
+                                        )}>
+                                            {worker.is_active ? t('workers.active') : t('workers.inactive')}
+                                        </span>
+                                        <Switch
+                                            checked={worker.is_active}
+                                            onCheckedChange={() => toggleWorkerActive(worker.id, worker.is_active, 'fixed_workers')}
+                                        />
+                                    </div>
                                 </div>
                             ))}
                             {fixedWorkers?.length === 0 && (
@@ -200,8 +242,8 @@ export default function SupervisorWorkersPage() {
                             )}
                         </div>
                     )}
-                </CardContent>
-            </Card>
+                </TabsContent>
+            </Tabs>
 
             {/* Access Code Modal (SEC-004) */}
             <Dialog open={workerToDelete !== null} onOpenChange={(open) => !open && setWorkerToDelete(null)}>

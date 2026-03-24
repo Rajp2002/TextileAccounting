@@ -98,6 +98,10 @@ export const hi = {
   },
   assignments: {
     title: "कारीगरों का कार्य आवंटन",
+    day_shift: "दिन की पाली",
+    night_shift: "रात की पाली",
+    day_desc: "प्रत्येक मशीन के लिए दिन की पाली (सुबह 7 - शाम 7) में कारीगर सौंपें।",
+    night_desc: "प्रत्येक मशीन के लिए रात की पाली (शाम 7 - सुबह 7) में कारीगर सौंपें।",
   },
   machines: {
     title: "मशीन रेट्स और वर्कर्स (Machine Rates)",
@@ -125,6 +129,17 @@ export const hi = {
     delete_confirm: "क्या आप वाकई इस मशीन को हटाना चाहते हैं?",
     worker_assigned: "कारीगर पाली में सौंपा गया",
     worker_assign_failed: "कारीगर सौंपने में विफल",
+    rename_machine: "मशीन का नाम बदलें",
+    rename_desc: "इस मशीन के लिए नया नाम दर्ज करें।",
+    new_name: "नया नाम",
+    renamed: "मशीन का नाम सफलतापूर्वक बदला गया",
+    rename_failed: "मशीन का नाम बदलने में विफल",
+    deactivate: "निष्क्रिय करें",
+    activate: "सक्रिय करें",
+    active_status: "सक्रिय",
+    inactive: "निष्क्रिय",
+    status_updated: "मशीन की स्थिति अपडेट हो गई",
+    status_update_failed: "मशीन की स्थिति अपडेट करने में विफल",
   },
   auth: {
     owner_auth_req: "मालिक की अनुमति आवश्यक",
@@ -506,6 +521,8 @@ export const hi = {
     salary_placeholder: "15000",
     adding: "जोड़ा जा रहा है...",
     added_success: " को सफलतापूर्वक जोड़ा गया!",
+    status_updated: "कारीगर की स्थिति अपडेट हो गई",
+    status_update_failed: "कारीगर की स्थिति अपडेट करने में विफल",
   },
   modals: {
     start_new_beam: "नया बीम शुरू करें",
