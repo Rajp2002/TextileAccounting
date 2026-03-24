@@ -614,19 +614,19 @@ export default function OwnerDashboard() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <DialogFooter className="flex-col sm:flex-row gap-2">
+                                        <DialogFooter className="flex flex-row justify-between items-center gap-4 mt-6">
                                             {editingOrder && (
                                                 <Button 
                                                     type="button" 
-                                                    variant="ghost" 
+                                                    variant="outline" 
                                                     onClick={handleDeleteOrder} 
                                                     disabled={isSubmittingOrder}
-                                                    className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-bold"
+                                                    className="border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-bold"
                                                 >
                                                     {t('analytics.orders.delete')}
                                                 </Button>
                                             )}
-                                            <Button type="submit" disabled={isSubmittingOrder} className="w-full bg-teal-600 hover:bg-teal-700">
+                                            <Button type="submit" disabled={isSubmittingOrder} className={cn("bg-teal-600 hover:bg-teal-700", editingOrder ? "flex-1" : "w-full")}>
                                                 {isSubmittingOrder ? t('analytics.orders.saving') : editingOrder ? t('analytics.orders.update') : t('analytics.orders.launch')}
                                             </Button>
                                         </DialogFooter>
