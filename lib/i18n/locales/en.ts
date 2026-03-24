@@ -138,7 +138,8 @@ export const en = {
         link_desc: "Select which machines are working on",
         switching: "Switching Order",
         cancel: "Cancel",
-        save: "Save Assignment"
+        save: "Save Assignment",
+        view_details: "View Details"
       }
     },
     kpi: {
