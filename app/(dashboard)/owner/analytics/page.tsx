@@ -16,7 +16,7 @@ import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { OrderCard } from '@/components/OrderCard'
 import { LiveOrdersLayout } from '@/components/LiveOrdersLayout'
-import { upsertOrder } from '@/app/(dashboard)/owner/actions'
+import { upsertOrder, deleteOrder } from '@/app/(dashboard)/owner/actions'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
@@ -530,6 +530,22 @@ export default function OwnerDashboard() {
         finally { setIsSubmittingOrder(false) }
     }
 
+    const handleDeleteOrder = async () => {
+        if (!editingOrder) return
+        if (!window.confirm(t('analytics.orders.delete_confirm'))) return
+        
+        setIsSubmittingOrder(true)
+        try {
+            const res = await deleteOrder(editingOrder.order_id)
+            if (res.error) throw new Error(res.error)
+            toast.success("Order deleted")
+            setOrderDialogOpen(false)
+            setEditingOrder(null)
+            queryClient.invalidateQueries({ queryKey: ['order_progress_summary'] })
+        } catch (err: any) { toast.error(err.message) }
+        finally { setIsSubmittingOrder(false) }
+    }
+
     if (!selectedDate) return null
 
     return (
@@ -598,7 +614,18 @@ export default function OwnerDashboard() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <DialogFooter>
+                                        <DialogFooter className="flex-col sm:flex-row gap-2">
+                                            {editingOrder && (
+                                                <Button 
+                                                    type="button" 
+                                                    variant="ghost" 
+                                                    onClick={handleDeleteOrder} 
+                                                    disabled={isSubmittingOrder}
+                                                    className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-bold"
+                                                >
+                                                    {t('analytics.orders.delete')}
+                                                </Button>
+                                            )}
                                             <Button type="submit" disabled={isSubmittingOrder} className="w-full bg-teal-600 hover:bg-teal-700">
                                                 {isSubmittingOrder ? t('analytics.orders.saving') : editingOrder ? t('analytics.orders.update') : t('analytics.orders.launch')}
                                             </Button>
