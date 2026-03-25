@@ -9,27 +9,45 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
     return (
-        <main className="min-h-screen bg-white">
-            {/* Header */}
-            <header className="border-b border-gray-100">
-                <div className="mx-auto max-w-4xl px-6 py-6 flex items-center gap-3">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="relative h-10 w-10">
+        <main className="min-h-screen bg-gray-50 dark:bg-zinc-950 relative selection:bg-amber-100 selection:text-amber-900 overflow-hidden">
+            {/* Ambient Background Glow */}
+            <div className="absolute top-0 inset-x-0 h-[40rem] bg-gradient-to-b from-amber-500/10 to-transparent dark:from-amber-500/5 pointer-events-none" />
+
+            {/* Sticky Header */}
+            <header className="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
+                <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between">
+                    <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
+                        <div className="relative h-9 w-9">
                             <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
                         </div>
-                        <span className="text-xl font-bold tracking-tight text-gray-900">Vastra</span>
+                        <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Vastra</span>
                     </Link>
+                    <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-300">
+                        <Link href="/terms" className="hover:text-amber-700 dark:hover:text-amber-500 transition-colors">Terms</Link>
+                        <Link href="/privacy" className="hover:text-amber-700 dark:hover:text-amber-500 transition-colors">Privacy</Link>
+                        <Link href="/refund-policy" className="hover:text-amber-700 dark:hover:text-amber-500 transition-colors">Refunds</Link>
+                    </nav>
                 </div>
             </header>
 
-            {/* Content */}
-            <article className="mx-auto max-w-4xl px-6 py-12 pb-24">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Privacy Policy</h1>
-                <p className="text-sm text-gray-500 mb-10">Last updated: March 25, 2026</p>
+            {/* Main Content Card */}
+            <div className="relative mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+                <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-xl shadow-gray-200/40 dark:shadow-none ring-1 ring-gray-200 dark:ring-white/10 overflow-hidden">
+                    
+                    {/* Card Header */}
+                    <div className="border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-zinc-800/50 px-8 py-10 sm:px-12 sm:py-14 text-center">
+                        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+                            Privacy Policy
+                        </h1>
+                        <p className="mt-4 text-sm font-medium text-amber-700 dark:text-amber-500 tracking-wide uppercase">
+                            Last updated: March 25, 2026
+                        </p>
+                    </div>
 
-                <div className="prose prose-gray max-w-none prose-headings:font-semibold prose-h2:text-xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-lg prose-h3:mt-6 prose-p:text-gray-600 prose-li:text-gray-600 prose-a:text-amber-700 prose-a:no-underline hover:prose-a:underline">
+                    {/* Prose Content */}
+                    <article className="px-8 py-10 sm:px-12 sm:py-12 prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-amber-600 hover:prose-a:text-amber-700 prose-a:underline-offset-4 prose-a:decoration-amber-200 hover:prose-a:decoration-amber-600 transition-all font-medium">
 
-                    <p>
+                        <p className="lead text-lg text-gray-600 dark:text-gray-400 mb-8">
                         Vastra (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting the personal data of our users. This Privacy Policy explains how we collect, use, store, and protect your information when you use the Vastra platform. This policy is drafted in compliance with India&apos;s <strong>Digital Personal Data Protection Act (DPDP Act) 2023</strong>, the <strong>Information Technology Act 2000</strong>, and the <strong>IT (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>.
                     </p>
 
@@ -180,16 +198,17 @@ export default function PrivacyPolicyPage() {
                     <p>
                         This Privacy Policy is governed by the laws of the Republic of India. Any disputes arising from this policy will be subject to the exclusive jurisdiction of the courts in Surat, Gujarat, India.
                     </p>
+                    </article>
                 </div>
-            </article>
+            </div>
 
             {/* Footer */}
-            <footer className="border-t border-gray-100 bg-gray-50 py-8 px-6">
-                <div className="mx-auto max-w-4xl flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-500">
+            <footer className="mt-12 border-t border-gray-200/50 dark:border-white/10 bg-white/50 dark:bg-zinc-950/50 py-10 px-6 backdrop-blur-md">
+                <div className="mx-auto max-w-5xl flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
                     <p>© {new Date().getFullYear()} Vastra. All rights reserved.</p>
-                    <div className="flex gap-6">
-                        <Link href="/terms" className="hover:text-gray-900 transition-colors">Terms of Service</Link>
-                        <Link href="/refund-policy" className="hover:text-gray-900 transition-colors">Refund Policy</Link>
+                    <div className="flex gap-8">
+                        <Link href="/terms" className="hover:text-gray-900 dark:hover:text-white transition-colors">Terms of Service</Link>
+                        <Link href="/refund-policy" className="hover:text-gray-900 dark:hover:text-white transition-colors">Refund Policy</Link>
                     </div>
                 </div>
             </footer>
