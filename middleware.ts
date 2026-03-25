@@ -65,6 +65,17 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
+    // ── Check Instant Session Revocation (Phase 3) ────────────────────────
+    if (user) {
+        const { isUserRevoked } = await import('@/lib/rate-limit')
+        if (await isUserRevoked(user.id)) {
+            await supabase.auth.signOut()
+            response = NextResponse.redirect(new URL('/login', request.url))
+            response.cookies.delete('last_activity')
+            return response
+        }
+    }
+
     // ── Inactivity Timeout Check (1 hour = 3600000ms) ─────────────────────
     const lastActivity = request.cookies.get('last_activity')?.value
     const now = Date.now()

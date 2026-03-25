@@ -112,6 +112,17 @@ export async function deleteOrganizationData(confirmationName: string) {
         }
     }
 
+    // Revoke sessions for all users in this org instantly
+    const { data: orgProfiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('org_id', orgId)
+
+    if (orgProfiles) {
+        const { revokeUserSession } = await import('@/lib/rate-limit')
+        await Promise.all(orgProfiles.map(p => revokeUserSession(p.id)))
+    }
+
     // Delete profiles associated with this org
     const { error: profilesError } = await supabase
         .from('profiles')
