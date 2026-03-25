@@ -128,6 +128,11 @@ export default function LandingPricing() {
                                             {tier.priceSuffix}
                                         </span>
                                     )}
+                                    {tier.priceSuffix && (
+                                        <span className="text-xs font-medium text-gray-400 dark:text-gray-500 ml-1">
+                                            + GST
+                                        </span>
+                                    )}
                                 </p>
                                 <Button
                                     asChild
@@ -203,6 +208,7 @@ export default function LandingPricing() {
                                 <p className="text-base font-semibold text-gray-600 dark:text-gray-300">One-time payment</p>
                                 <p className="mt-6 flex items-baseline justify-center gap-x-2">
                                     <span className="text-5xl font-bold tracking-tight text-gray-900 dark:text-white">₹4,999</span>
+                                    <span className="text-sm font-medium text-gray-400 dark:text-gray-500">+ GST</span>
                                 </p>
                                 <Button className="mt-10 w-full bg-amber-600 hover:bg-amber-700 text-white rounded-full py-6 font-semibold shadow-md dark:bg-amber-600 dark:hover:bg-amber-500 transition-all hover:-translate-y-1">
                                     Add Setup Service
