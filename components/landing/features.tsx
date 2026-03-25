@@ -29,14 +29,14 @@ const features = [
         name: 'Automated WhatsApp Briefs',
         description: 'Receive an automated daily production summary delivered straight to your WhatsApp, giving you a reliable overview of output without opening the app.',
         icon: MessageCircle,
-        className: 'md:col-span-2 bg-gradient-to-br from-green-500/10 to-emerald-500/10 dark:from-green-500/5 dark:to-emerald-500/5',
+        className: 'md:col-span-1 bg-gradient-to-br from-green-500/10 to-emerald-500/10 dark:from-green-500/5 dark:to-emerald-500/5',
         iconBg: 'bg-gradient-to-br from-green-500 to-emerald-500',
     },
     {
         name: 'Instant Access on Any Device',
         description: 'No app store needed. Use "Add to Home Screen" to install directly on any phone or tablet. It functions like a native app for instant access from anywhere.',
         icon: Smartphone,
-        className: 'md:col-span-2 bg-gradient-to-br from-orange-500/10 to-red-500/10 dark:from-orange-500/5 dark:to-red-500/5',
+        className: 'md:col-span-1 bg-gradient-to-br from-orange-500/10 to-red-500/10 dark:from-orange-500/5 dark:to-red-500/5',
         iconBg: 'bg-gradient-to-br from-orange-500 to-red-500',
     },
     {
@@ -50,7 +50,7 @@ const features = [
         name: 'Built-in Labour Law Compliance',
         description: 'Automatically maintain digital wage registers, generate legally compliant worker payslips (PDF), track workplace safety incidents (OSHWC), and monitor minimum wage alerts—keeping your textile factory 100% compliant with the latest Gov. of India Labour Codes without any extra paperwork.',
         icon: ShieldCheck,
-        className: 'md:col-span-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 dark:from-yellow-500/5 dark:to-amber-500/5',
+        className: 'md:col-span-2 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 dark:from-yellow-500/5 dark:to-amber-500/5',
         iconBg: 'bg-gradient-to-br from-yellow-500 to-amber-500',
     },
 ]
