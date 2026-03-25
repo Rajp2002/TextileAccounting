@@ -17,6 +17,8 @@ import {
     Activity,
     HandCoins,
     PackageSearch,
+    ShieldAlert,
+    History,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -35,8 +37,10 @@ const primaryNavItems = [
 ]
 
 const secondaryNavItems = [
+    { name: "Safety & Incidents", href: "/owner/incidents", icon: ShieldAlert },
     { name: "System Health", href: "/owner/system-health", icon: Activity },
     { name: "Settings", href: "/owner/settings", icon: Settings },
+    { name: "Audit Trail", href: "/owner/settings/audit", icon: History },
 ]
 
 interface OwnerSidebarProps {

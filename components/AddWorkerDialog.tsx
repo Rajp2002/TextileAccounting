@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { AlertTriangle } from 'lucide-react'
+import { MIN_WAGE_MONTHLY } from '@/lib/wage-config'
 import {
     Dialog,
     DialogContent,
@@ -42,7 +44,10 @@ const workerSchema = z.object({
     name: z.string().min(1, 'Worker name is required'),
     role: z.string().optional(),
     customRole: z.string().optional(),
-    salary: z.coerce.number().optional()
+    salary: z.coerce.number().optional(),
+    pf_esi_eligible: z.boolean().default(false),
+    esi_number: z.string().optional(),
+    pf_number: z.string().optional(),
 }).superRefine((data, ctx) => {
     if (data.workerType === 'fixed') {
         if (!data.role) {
@@ -78,6 +83,7 @@ interface AddWorkerDialogProps {
 
 export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) {
     const [open, setOpen] = useState(false)
+    const [ageConfirmed, setAgeConfirmed] = useState(false)
     const supabase = createClient()
     const queryClient = useQueryClient()
     const { t } = useTranslation()
@@ -98,12 +104,17 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
             name: '',
             role: '',
             customRole: '',
-            salary: 0
+            salary: 0,
+            pf_esi_eligible: false,
+            esi_number: '',
+            pf_number: ''
         }
     })
 
     const workerType = watch('workerType')
     const selectedRole = watch('role')
+    const watchedSalary = watch('salary')
+    const watchedPfEsiEligible = watch('pf_esi_eligible')
 
     const mutation = useMutation({
         mutationFn: async (data: WorkerFormValues) => {
@@ -114,6 +125,9 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                         org_id: orgId,
                         name: data.name.trim(),
                         is_active: true,
+                        pf_esi_eligible: data.pf_esi_eligible,
+                        esi_number: data.esi_number?.trim() || null,
+                        pf_number: data.pf_number?.trim() || null,
                     })
                 if (error) throw error
             } else {
@@ -125,6 +139,9 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                         role: data.role === 'other' ? data.customRole?.trim() : data.role,
                         monthly_salary: data.salary as number,
                         is_active: true,
+                        pf_esi_eligible: data.pf_esi_eligible,
+                        esi_number: data.esi_number?.trim() || null,
+                        pf_number: data.pf_number?.trim() || null,
                     })
                 if (error) throw error
             }
@@ -179,7 +196,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
     }
 
     return (
-        <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) reset() }}>
+        <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) { reset(); setAgeConfirmed(false) } }}>
             <DialogTrigger asChild>
                 <Button className="gap-2">
                     <Plus className="h-4 w-4" />
@@ -226,6 +243,9 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                         setValue('role', '')
                                         setValue('customRole', '')
                                         setValue('salary', 0)
+                                        setValue('pf_esi_eligible', false)
+                                        setValue('esi_number', '')
+                                        setValue('pf_number', '')
                                     }}
                                 >
                                     {t('workers.fixedSalaryType')}
@@ -297,30 +317,94 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                         {...register('salary')}
                                     />
                                     {(errors as any).salary && <span className="text-xs text-red-500">{(errors as any).salary.message}</span>}
+                                    {watchedSalary && Number(watchedSalary) > 0 && Number(watchedSalary) < MIN_WAGE_MONTHLY && (
+                                        <div className="flex items-center gap-1.5 text-amber-600 mt-1">
+                                            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+                                            <span className="text-xs">Below Gujarat minimum wage (₹{MIN_WAGE_MONTHLY.toLocaleString()}/month)</span>
+                                        </div>
+                                    )}
                                 </div>
                             </>
                         )}
+                        
+                        {/* ESI/PF Compliance Fields */}
+                        <div className="border-t border-gray-100 pt-3 mt-1">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Controller
+                                    name="pf_esi_eligible"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <input
+                                            type="checkbox"
+                                            id="pf_esi_eligible"
+                                            checked={field.value}
+                                            onChange={(e) => field.onChange(e.target.checked)}
+                                            className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                                        />
+                                    )}
+                                />
+                                <Label htmlFor="pf_esi_eligible" className="cursor-pointer font-medium text-gray-700">
+                                    Eligible for ESI / PF Benefits?
+                                </Label>
+                            </div>
+                            
+                            {watchedPfEsiEligible && (
+                                <div className="grid grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div className="grid gap-1.5">
+                                        <Label className="text-xs">ESI Number</Label>
+                                        <Input
+                                            className="h-8 text-sm"
+                                            placeholder="Optional"
+                                            {...register('esi_number')}
+                                        />
+                                    </div>
+                                    <div className="grid gap-1.5">
+                                        <Label className="text-xs">PF Number</Label>
+                                        <Input
+                                            className="h-8 text-sm"
+                                            placeholder="Optional"
+                                            {...register('pf_number')}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setOpen(false)}
-                            disabled={mutation.isPending}
-                        >
-                            {t('common.cancel')}
-                        </Button>
-                        <Button type="submit" disabled={mutation.isPending}>
-                            {mutation.isPending ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    {t('workers.adding')}
-                                </>
-                            ) : (
-                                t('workers.add_worker')
-                            )}
-                        </Button>
+                    <DialogFooter className="flex-col gap-3 sm:flex-col">
+                        {/* Age Declaration (DPDP Act compliance) */}
+                        <div className="flex items-start gap-2.5 w-full">
+                            <input
+                                type="checkbox"
+                                id="age-confirm"
+                                checked={ageConfirmed}
+                                onChange={(e) => setAgeConfirmed(e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                            />
+                            <label htmlFor="age-confirm" className="text-xs text-gray-500 leading-snug cursor-pointer">
+                                I confirm this worker is 18 years of age or older
+                            </label>
+                        </div>
+                        <div className="flex justify-end gap-2 w-full">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setOpen(false)}
+                                disabled={mutation.isPending}
+                            >
+                                {t('common.cancel')}
+                            </Button>
+                            <Button type="submit" disabled={mutation.isPending || !ageConfirmed}>
+                                {mutation.isPending ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        {t('workers.adding')}
+                                    </>
+                                ) : (
+                                    t('workers.add_worker')
+                                )}
+                            </Button>
+                        </div>
                     </DialogFooter>
                 </form>
             </DialogContent>

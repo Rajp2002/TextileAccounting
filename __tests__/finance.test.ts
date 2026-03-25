@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateDailyPay, calculateTotalPay, sumMeters, formatINR, sumAdvances, calculateNetPay, calculateRemainingDebt } from '../lib/finance'
+import { calculateDailyPay, calculateTotalPay, sumMeters, formatINR, sumAdvances, calculateNetPay, calculateRemainingDebt, calculateMaxDeduction } from '../lib/finance'
 
 // ============================================================
 // UNIT TESTS: Financial Math (runs offline, no DB needed)
@@ -146,7 +146,7 @@ describe('Finance: calculateNetPay', () => {
         expect(calculateNetPay(5000, 0)).toBe('5000.00')
     })
 
-    it('floors at ₹0 when advances exceed gross', () => {
+    it('floors at ₹0 when advances exceed gross (default 100% mode)', () => {
         // ₹5000 gross - ₹8000 advances = ₹0 (NOT negative)
         expect(calculateNetPay(5000, 8000)).toBe('0.00')
     })
@@ -162,6 +162,50 @@ describe('Finance: calculateNetPay', () => {
     it('handles fractional deduction without drift', () => {
         // 33.3 * 3.3 type scenario
         expect(calculateNetPay('109.89', '33.33')).toBe('76.56')
+    })
+
+    // ── Labour Law Compliance: 50% deduction cap ────────────────────
+    it('caps deductions at 50% of gross when maxDeductionPercent=50', () => {
+        // ₹10000 gross, ₹8000 advances, cap at 50% → max deduction = ₹5000
+        // Net = ₹10000 - ₹5000 = ₹5000 (remaining ₹3000 carries forward)
+        expect(calculateNetPay(10000, 8000, 50)).toBe('5000.00')
+    })
+
+    it('deducts full amount when advances are under the 50% cap', () => {
+        // ₹10000 gross, ₹3000 advances, cap at 50% → max deduction = ₹5000
+        // Advances (₹3000) < cap (₹5000), so full ₹3000 deducted
+        expect(calculateNetPay(10000, 3000, 50)).toBe('7000.00')
+    })
+
+    it('caps deduction at exactly 50% when advances equal gross', () => {
+        // ₹10000 gross, ₹10000 advances, cap at 50% → max deduction = ₹5000
+        expect(calculateNetPay(10000, 10000, 50)).toBe('5000.00')
+    })
+
+    it('handles zero gross with 50% cap', () => {
+        expect(calculateNetPay(0, 5000, 50)).toBe('0.00')
+    })
+})
+
+describe('Finance: calculateMaxDeduction', () => {
+    it('calculates 50% of gross', () => {
+        expect(calculateMaxDeduction(10000, 50)).toBe('5000.00')
+    })
+
+    it('handles zero gross', () => {
+        expect(calculateMaxDeduction(0, 50)).toBe('0.00')
+    })
+
+    it('handles fractional amounts', () => {
+        expect(calculateMaxDeduction('7777.77', 50)).toBe('3888.89')
+    })
+
+    it('defaults to 50% when no maxPercent provided', () => {
+        expect(calculateMaxDeduction(10000)).toBe('5000.00')
+    })
+
+    it('handles string inputs', () => {
+        expect(calculateMaxDeduction('15000', 50)).toBe('7500.00')
     })
 })
 

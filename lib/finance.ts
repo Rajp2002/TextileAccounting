@@ -93,20 +93,41 @@ export function sumAdvances(advances: { amount: number | string }[]): string {
 }
 
 /**
+ * Calculate the maximum deductible amount per Indian labour law.
+ * Under the Code on Wages, deductions from wages cannot exceed a specified
+ * percentage (typically 50%) of gross wages in any pay period.
+ *
+ * @param grossPay - total earned
+ * @param maxPercent - maximum deduction percentage (default: 50)
+ * @returns max deductible amount as a string with 2 decimal places
+ */
+export function calculateMaxDeduction(
+    grossPay: number | string,
+    maxPercent: number = 50
+): string {
+    const gross = new Decimal(grossPay || 0)
+    return gross.times(maxPercent).div(100).toFixed(2)
+}
+
+/**
  * Calculate net payout after deducting advances from gross pay.
  * Net pay is floored at ₹0 — never goes negative.
  *
  * @param grossPay - total earned (may be string from Decimal calculation)
  * @param totalAdvances - total pending advances to deduct
+ * @param maxDeductionPercent - max % of gross that can be deducted (default: 100, set to 50 for labour law compliance)
  * @returns net payout as a string with 2 decimal places, minimum "0.00"
  */
 export function calculateNetPay(
     grossPay: number | string,
-    totalAdvances: number | string
+    totalAdvances: number | string,
+    maxDeductionPercent: number = 100
 ): string {
     const gross = new Decimal(grossPay || 0)
     const advances = new Decimal(totalAdvances || 0)
-    return Decimal.max(0, gross.minus(advances)).toFixed(2)
+    const maxDeduction = gross.times(maxDeductionPercent).div(100)
+    const actualDeduction = Decimal.min(advances, maxDeduction)
+    return Decimal.max(0, gross.minus(actualDeduction)).toFixed(2)
 }
 
 /**
