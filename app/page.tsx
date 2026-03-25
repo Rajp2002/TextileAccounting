@@ -2,6 +2,7 @@ import LandingHeader from "@/components/landing/header";
 import LandingHero from "@/components/landing/hero";
 import LandingFeatures from "@/components/landing/features";
 import LandingPricing from "@/components/landing/pricing";
+import LandingFAQ from "@/components/landing/faq";
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ export default function Home() {
       <LandingHero />
       <LandingFeatures />
       <LandingPricing />
+      <LandingFAQ />
 
       {/* Pre-footer CTA */}
       <section className="relative isolate overflow-hidden bg-zinc-900 border-y border-white/10 mt-24">
