@@ -148,3 +148,77 @@ export async function checkAccessCodeRateLimit(userId: string): Promise<number |
     const result = await checkRateLimit(getAccessCodeLimiter, `code:${userId}`)
     return result.success ? null : result.reset
 }
+
+// ─── Phase 3: Advanced Redis Controls ─────────────────────────────────────────
+
+/**
+ * Check if the user is currently locked out from entering access codes.
+ */
+export async function checkAccessCodeLockout(userId: string): Promise<boolean> {
+    const r = getRedis()
+    if (!r) return false
+    try {
+        return !!(await r.get(`lockout:${userId}`))
+    } catch (err) {
+        return false // fail open
+    }
+}
+
+/**
+ * Record a failed access code attempt. If they fail 5 times within 30 minutes,
+ * they are locked out for 1 hour.
+ */
+export async function recordAccessCodeFailure(userId: string): Promise<void> {
+    const r = getRedis()
+    if (!r) return
+    try {
+        const key = `code_fails:${userId}`
+        const fails = await r.incr(key)
+        if (fails === 1) {
+            await r.expire(key, 1800) // 30 minutes window
+        }
+        if (fails >= 5) {
+            await r.setex(`lockout:${userId}`, 3600, '1') // 1 hour lockout
+        }
+    } catch (err) {
+        console.error('[RateLimit] Redis error on failure record:', err)
+    }
+}
+
+/**
+ * Reset failed attempts (called upon a successful code entry).
+ */
+export async function resetAccessCodeFailures(userId: string): Promise<void> {
+    const r = getRedis()
+    if (!r) return
+    try {
+        await r.del(`code_fails:${userId}`)
+    } catch (err) {}
+}
+
+/**
+ * Immediately revoke a user's session by flagging their ID in Redis for 1 hour
+ * (matching the maximum duration of their session cookie).
+ */
+export async function revokeUserSession(userId: string): Promise<void> {
+    const r = getRedis()
+    if (!r) return
+    try {
+        await r.setex(`revoked:${userId}`, 3600, '1')
+    } catch (err) {
+        console.error('[RateLimit] Redis error on session revocation:', err)
+    }
+}
+
+/**
+ * Check if a user's session has been explicitly revoked.
+ */
+export async function isUserRevoked(userId: string): Promise<boolean> {
+    const r = getRedis()
+    if (!r) return false
+    try {
+        return !!(await r.get(`revoked:${userId}`))
+    } catch (err) {
+        return false // fail open
+    }
+}

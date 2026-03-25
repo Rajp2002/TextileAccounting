@@ -32,36 +32,66 @@ function getServiceClient() {
     })
 }
 
+import {
+    checkAccessCodeRateLimit,
+    checkAccessCodeLockout,
+    recordAccessCodeFailure,
+    resetAccessCodeFailures,
+} from '@/lib/rate-limit'
+
 /**
  * Validate a one-time access code for the given org.
  * orgId MUST be derived server-side (from requireRole()) — never accept from client.
  * On success the code is consumed (cannot be reused).
  */
-async function validateAndConsumeAccessCode(orgId: string, inputCode: string): Promise<boolean> {
+async function validateAndConsumeAccessCode(userId: string, orgId: string, inputCode: string): Promise<boolean> {
+    // 1. Check for strict lockout ban (5 fails = 1 hour)
+    const isLockedOut = await checkAccessCodeLockout(userId)
+    if (isLockedOut) throw new Error('Account temporarily locked due to too many failed attempts. Try again in 1 hour.')
+
+    // 2. Check sliding window limit (5 attempts per 10 min)
+    const rl = await checkAccessCodeRateLimit(userId)
+    if (rl) throw new Error(`Too many attempts. Try again in ${Math.ceil(rl / 1000)} seconds.`)
+
     // Validate format before any DB hit
     const codeParsed = safeParse(AccessCodeSchema, inputCode)
-    if ('error' in codeParsed) return false
+    if ('error' in codeParsed) {
+        await recordAccessCodeFailure(userId)
+        return false
+    }
 
     const supabase = await createServerClient()
-
     const { data: org, error } = await supabase
         .from('organizations')
         .select('access_code_hash, access_code_expires_at')
         .eq('id', orgId)
         .single()
 
-    if (error || !org || !org.access_code_hash) return false
-    if (new Date(org.access_code_expires_at) < new Date()) return false
+    if (error || !org || !org.access_code_hash) {
+        await recordAccessCodeFailure(userId)
+        return false
+    }
+    
+    if (new Date(org.access_code_expires_at) < new Date()) {
+        await recordAccessCodeFailure(userId)
+        return false
+    }
 
     const { createHash } = await import('crypto')
     const inputHash = createHash('sha256').update(codeParsed.data).digest('hex')
-    if (inputHash !== org.access_code_hash) return false
+    if (inputHash !== org.access_code_hash) {
+        await recordAccessCodeFailure(userId)
+        return false
+    }
 
     // Valid — consume the code
     await supabase
         .from('organizations')
         .update({ access_code_hash: null, access_code_expires_at: null })
         .eq('id', orgId)
+
+    // Clear failure history
+    await resetAccessCodeFailures(userId)
 
     return true
 }
@@ -90,7 +120,12 @@ export async function savePastAttendance(
     if ('error' in parsed) return { error: parsed.error }
 
     // 1. Validate the one-time access code (org-scoped, server-derived)
-    const isCodeValid = await validateAndConsumeAccessCode(orgId, parsed.data.accessCode)
+    let isCodeValid = false
+    try {
+        isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, parsed.data.accessCode)
+    } catch (e: any) {
+        return { error: e.message }
+    }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
     // 2. Bypass RLS for past-date insert
@@ -128,14 +163,19 @@ export async function savePastAttendance(
  * Delete a machine. Requires a valid one-time owner access code.
  */
 export async function deleteMachineWithCode(machineId: string, accessCode: string) {
-    const { profile } = await requireRole(['supervisor'])
+    const { user, profile } = await requireRole(['supervisor'])
     const orgId = profile.org_id
 
     // Validate inputs
     const machineParsed = safeParse(UuidSchema, machineId)
     if ('error' in machineParsed) return { error: machineParsed.error }
 
-    const isCodeValid = await validateAndConsumeAccessCode(orgId, accessCode)
+    let isCodeValid = false
+    try {
+        isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
+    } catch (e: any) {
+        return { error: e.message }
+    }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
     let serviceClient
@@ -164,13 +204,18 @@ export async function deleteMachineWithCode(machineId: string, accessCode: strin
  * Delete a worker. Requires a valid one-time owner access code.
  */
 export async function deleteWorkerWithCode(workerId: number, accessCode: string) {
-    const { profile } = await requireRole(['supervisor'])
+    const { user, profile } = await requireRole(['supervisor'])
     const orgId = profile.org_id
 
     const workerParsed = safeParse(WorkerIdSchema, workerId)
     if ('error' in workerParsed) return { error: workerParsed.error }
 
-    const isCodeValid = await validateAndConsumeAccessCode(orgId, accessCode)
+    let isCodeValid = false
+    try {
+        isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
+    } catch (e: any) {
+        return { error: e.message }
+    }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
     let serviceClient
@@ -199,14 +244,19 @@ export async function deleteWorkerWithCode(workerId: number, accessCode: string)
  * Verify AND consume an access code without performing a destructive action.
  */
 export async function verifyAccessCode(accessCode: string) {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
     const orgId = profile.org_id
 
     // Format validation first (fail fast, no DB hit)
     const codeParsed = safeParse(AccessCodeSchema, accessCode)
     if ('error' in codeParsed) return { error: 'Invalid access code format' }
 
-    const isCodeValid = await validateAndConsumeAccessCode(orgId, codeParsed.data)
+    let isCodeValid = false
+    try {
+        isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, codeParsed.data)
+    } catch (e: any) {
+        return { error: e.message }
+    }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
     return { success: true }
