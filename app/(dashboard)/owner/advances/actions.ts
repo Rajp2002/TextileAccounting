@@ -3,6 +3,12 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import {
+    CreateAdvanceSchema,
+    GetAdvancesSchema,
+    PositiveIntSchema,
+    safeParse,
+} from '@/lib/schemas'
 
 /**
  * Create a new advance (upaad) for a worker.
@@ -17,22 +23,28 @@ export async function createAdvance(
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    if (amount <= 0) throw new Error('Advance amount must be positive')
+    // ── Zod validation ──────────────────────────────────────────────────────
+    const parsed = safeParse(CreateAdvanceSchema, { workerType, workerId, amount, description })
+    if ('error' in parsed) return { error: parsed.error }
+    const data = parsed.data
 
     const record: any = {
         org_id: profile.org_id,
-        amount,
-        description: description.trim() || null,
+        amount: data.amount,
+        description: data.description || null,
         status: 'pending',
-        meter_worker_id: workerType === 'meter' ? workerId : null,
-        fixed_worker_id: workerType === 'fixed' ? workerId : null,
+        meter_worker_id: data.workerType === 'meter' ? data.workerId : null,
+        fixed_worker_id: data.workerType === 'fixed' ? data.workerId : null,
     }
 
     const { error } = await supabase
         .from('worker_advances')
         .insert(record)
 
-    if (error) throw new Error(`Failed to create advance: ${error.message}`)
+    if (error) {
+        console.error('Failed to create advance:', error)
+        return { error: 'Failed to create advance. Please try again.' }
+    }
 
     revalidatePath('/owner/advances')
     revalidatePath('/owner/payroll')
@@ -47,23 +59,30 @@ export async function deleteAdvance(advanceId: number) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
+    // Validate advanceId is a positive integer
+    const parsed = safeParse(PositiveIntSchema, advanceId)
+    if ('error' in parsed) return { error: parsed.error }
+
     // Verify the advance exists, belongs to this org, and is pending
     const { data: advance, error: fetchErr } = await supabase
         .from('worker_advances')
         .select('id, status')
-        .eq('id', advanceId)
+        .eq('id', parsed.data)
         .eq('org_id', profile.org_id)
         .maybeSingle()
 
-    if (fetchErr || !advance) throw new Error('Advance not found')
-    if (advance.status !== 'pending') throw new Error('Only pending advances can be deleted')
+    if (fetchErr || !advance) return { error: 'Advance not found' }
+    if (advance.status !== 'pending') return { error: 'Only pending advances can be deleted' }
 
     const { error } = await supabase
         .from('worker_advances')
         .delete()
-        .eq('id', advanceId)
+        .eq('id', parsed.data)
 
-    if (error) throw new Error(`Failed to delete advance: ${error.message}`)
+    if (error) {
+        console.error('Failed to delete advance:', error)
+        return { error: 'Failed to delete advance. Please try again.' }
+    }
 
     revalidatePath('/owner/advances')
     revalidatePath('/owner/payroll')
@@ -82,20 +101,25 @@ export async function getWorkerAdvances(
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
+    const parsed = safeParse(GetAdvancesSchema, { workerType, workerId, statusFilter })
+    if ('error' in parsed) return []
+
     let query = supabase
         .from('worker_advances')
         .select('*')
         .eq('org_id', profile.org_id)
-        .eq(workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', workerId)
+        .eq(parsed.data.workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', parsed.data.workerId)
         .order('created_at', { ascending: false })
 
-    if (statusFilter) {
-        query = query.eq('status', statusFilter)
+    if (parsed.data.statusFilter) {
+        query = query.eq('status', parsed.data.statusFilter)
     }
 
     const { data, error } = await query
-
-    if (error) throw new Error(`Failed to fetch advances: ${error.message}`)
+    if (error) {
+        console.error('Failed to fetch advances:', error)
+        return []
+    }
 
     return data || []
 }
@@ -114,7 +138,10 @@ export async function getPendingAdvancesSummary() {
         .eq('org_id', profile.org_id)
         .eq('status', 'pending')
 
-    if (error) throw new Error(`Failed to fetch advances summary: ${error.message}`)
+    if (error) {
+        console.error('Failed to fetch advances summary:', error)
+        return []
+    }
 
     return data || []
 }

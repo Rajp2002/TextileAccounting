@@ -119,7 +119,7 @@ export default function AttendancePage() {
         setVerifying(true)
         try {
             if (!userProfile?.org_id) throw new Error("Missing org_id")
-            const result = await verifyAccessCode(userProfile.org_id, accessCode)
+            const result = await verifyAccessCode(accessCode)
             if (result.error) throw new Error(result.error)
 
             setUnlocked(true)
@@ -160,7 +160,7 @@ export default function AttendancePage() {
 
             if (codeToUse) {
                 // Secure server action bypass for verified supervisor 
-                const result = await savePastAttendance(userProfile.org_id, selectedDate, recordsToSave, codeToUse)
+                const result = await savePastAttendance(selectedDate, recordsToSave, codeToUse)
                 if (result.error) throw new Error(result.error)
 
                 setVerificationOpen(false)

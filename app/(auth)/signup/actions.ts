@@ -1,40 +1,23 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { SignupSchema, safeParse } from '@/lib/schemas'
 
 export async function signUpWithEmail(formData: FormData) {
-    const name = formData.get('name') as string
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    const confirmPassword = formData.get('confirmPassword') as string
-    const role = formData.get('role') as string
-    const factoryId = formData.get('factoryId') as string | null
-    const orgName = formData.get('orgName') as string | null
-
-    // Server-side validation
-    if (!name || !email || !password || !role) {
-        return { error: 'All fields are required.' }
+    const raw = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        confirmPassword: formData.get('confirmPassword'),
+        role: formData.get('role'),
+        factoryId: formData.get('factoryId') || null,
+        orgName: formData.get('orgName') || null,
     }
 
-    if (password.length < 6) {
-        return { error: 'Password must be at least 6 characters.' }
-    }
-
-    if (password !== confirmPassword) {
-        return { error: 'Passwords do not match.' }
-    }
-
-    if (role !== 'owner' && role !== 'supervisor') {
-        return { error: 'Invalid role.' }
-    }
-
-    if (role === 'supervisor' && (!factoryId || !factoryId.trim())) {
-        return { error: 'Factory ID is required for supervisors.' }
-    }
-
-    if (role === 'owner' && (!orgName || !orgName.trim())) {
-        return { error: 'Organization name is required for owners.' }
-    }
+    // ── Zod validation ──────────────────────────────────────────────────────
+    const parsed = safeParse(SignupSchema, raw)
+    if ('error' in parsed) return { error: parsed.error }
+    const { name, email, password, role, factoryId, orgName } = parsed.data
 
     const supabase = await createClient()
 
@@ -73,7 +56,8 @@ export async function signUpWithEmail(formData: FormData) {
         if (error.message?.includes('already registered')) {
             return { error: 'An account with this email already exists. Please log in instead.' }
         }
-        return { error: error.message }
+        // Return generic error to avoid leaking auth internals
+        return { error: 'Registration failed. Please try again later.' }
     }
 
     // Check if email confirmation is required (user won't have a session yet)
@@ -120,7 +104,7 @@ export async function signUpWithEmail(formData: FormData) {
                         role,
                         full_name: name,
                         email,
-                        test_password: password,
+                        // NOTE: test_password intentionally NOT included — never store plaintext passwords
                     })
             }
         } catch (profileError: any) {
