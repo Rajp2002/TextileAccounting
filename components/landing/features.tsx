@@ -80,7 +80,7 @@ export default function LandingFeatures() {
                 </div>
 
                 <div className="mx-auto mt-12 max-w-2xl sm:mt-16 lg:mt-20 lg:max-w-5xl">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-auto md:auto-rows-[280px]">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {features.map((feature, index) => (
                             <motion.div
                                 key={feature.name}
