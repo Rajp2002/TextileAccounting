@@ -69,7 +69,10 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/signup') ||
         request.nextUrl.pathname.startsWith('/auth') ||   // Includes /auth/callback, /auth/confirm, /auth/verify
         request.nextUrl.pathname.startsWith('/verify') ||
-        request.nextUrl.pathname.startsWith('/onboarding')
+        request.nextUrl.pathname.startsWith('/onboarding') ||
+        request.nextUrl.pathname.startsWith('/privacy') ||
+        request.nextUrl.pathname.startsWith('/terms') ||
+        request.nextUrl.pathname.startsWith('/refund-policy')
 
     // 3. Authenticated user trying to access public auth routes -> redirect to dashboard
     if (user && isPublicRoute && request.nextUrl.pathname !== '/auth/callback') {
