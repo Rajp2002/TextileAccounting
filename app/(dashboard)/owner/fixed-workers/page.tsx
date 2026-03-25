@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 import { formatINR } from '@/lib/finance'
 import { Plus, Pencil, Trash2, Users, Briefcase, KeyRound, AlertCircle, Loader2 } from 'lucide-react'
 import { getWorkerDebt } from '@/app/(dashboard)/supervisor/actions'
-import { validateAndRotateAccessCode } from '@/app/(dashboard)/owner/actions'
+import { deleteFixedWorkerWithCode } from '@/app/(dashboard)/owner/actions'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -164,7 +164,7 @@ export default function FixedWorkersPage() {
         if (!userProfile?.org_id) return
         setFetchingDebt(true)
         try {
-            const res = await getWorkerDebt(userProfile.org_id, worker.id, 'fixed')
+            const res = await getWorkerDebt(worker.id, 'fixed')
             setWorkerDebt(res.balance || 0)
             setWorkerToDelete(worker)
             setAccessCode('')
@@ -179,18 +179,12 @@ export default function FixedWorkersPage() {
         
         setDeleting(true)
         try {
-            // Verify access code first (SEC-004)
-            const isValid = await validateAndRotateAccessCode(userProfile.org_id, accessCode)
-            if (!isValid) {
-                toast.error(t('auth.invalid_code'))
+            // Verify access code and delete in a single server action (SEC-004)
+            const result = await deleteFixedWorkerWithCode(workerToDelete.id, accessCode)
+            if (!result.success) {
+                toast.error(result.error || t('auth.invalid_code'))
                 return
             }
-
-            const { error } = await supabase
-                .from('fixed_workers')
-                .delete()
-                .eq('id', workerToDelete.id)
-            if (error) throw error
 
             toast.success(t('common.removed'))
             setVerificationOpen(false)

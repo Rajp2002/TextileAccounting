@@ -3,7 +3,70 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { requireRole } from '@/lib/auth'
-import { validateAndRotateAccessCode } from '@/app/(dashboard)/owner/actions'
+import {
+    SavePastAttendanceSchema,
+    AccessCodeSchema,
+    UuidSchema,
+    WorkerIdSchema,
+    ShiftSchema,
+    WorkerTypeSchema,
+    PositiveIntSchema,
+    safeParse,
+} from '@/lib/schemas'
+
+// ─── Internal Helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Returns a Supabase service-role client for operations that need to bypass RLS.
+ * Only call this AFTER verifying the user is authenticated and authorized via requireRole().
+ */
+function getServiceClient() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) {
+        console.error('[Security] Service client env vars not configured.')
+        throw new Error('SERVER_CONFIG_ERROR')
+    }
+    return createServiceClient(url, key, {
+        auth: { autoRefreshToken: false, persistSession: false }
+    })
+}
+
+/**
+ * Validate a one-time access code for the given org.
+ * orgId MUST be derived server-side (from requireRole()) — never accept from client.
+ * On success the code is consumed (cannot be reused).
+ */
+async function validateAndConsumeAccessCode(orgId: string, inputCode: string): Promise<boolean> {
+    // Validate format before any DB hit
+    const codeParsed = safeParse(AccessCodeSchema, inputCode)
+    if ('error' in codeParsed) return false
+
+    const supabase = await createServerClient()
+
+    const { data: org, error } = await supabase
+        .from('organizations')
+        .select('access_code_hash, access_code_expires_at')
+        .eq('id', orgId)
+        .single()
+
+    if (error || !org || !org.access_code_hash) return false
+    if (new Date(org.access_code_expires_at) < new Date()) return false
+
+    const { createHash } = await import('crypto')
+    const inputHash = createHash('sha256').update(codeParsed.data).digest('hex')
+    if (inputHash !== org.access_code_hash) return false
+
+    // Valid — consume the code
+    await supabase
+        .from('organizations')
+        .update({ access_code_hash: null, access_code_expires_at: null })
+        .eq('id', orgId)
+
+    return true
+}
+
+// ─── Attendance ───────────────────────────────────────────────────────────────
 
 interface AttendanceRecordInput {
     fixed_worker_id: number
@@ -12,276 +75,296 @@ interface AttendanceRecordInput {
 
 /**
  * Save attendance for past dates. Requires a valid one-time owner access code.
+ * orgId is derived server-side — not trusted from client.
  */
 export async function savePastAttendance(
-    orgId: string,
     date: string,
     records: AttendanceRecordInput[],
     accessCode: string
 ) {
-    const { user } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
+    const orgId = profile.org_id
 
-    // 1. Validate the one-time access code
-    const isCodeValid = await validateAndRotateAccessCode(orgId, accessCode)
+    // ── Zod validation ──────────────────────────────────────────────────────
+    const parsed = safeParse(SavePastAttendanceSchema, { date, records, accessCode })
+    if ('error' in parsed) return { error: parsed.error }
 
-    if (!isCodeValid) {
-        return { error: 'Invalid or expired access code' }
+    // 1. Validate the one-time access code (org-scoped, server-derived)
+    const isCodeValid = await validateAndConsumeAccessCode(orgId, parsed.data.accessCode)
+    if (!isCodeValid) return { error: 'Invalid or expired access code' }
+
+    // 2. Bypass RLS for past-date insert
+    let serviceClient
+    try {
+        serviceClient = getServiceClient()
+    } catch {
+        return { error: 'A server error occurred. Please try again later.' }
     }
 
-    // 2. Bypassing RLS requires the service role key, because the DB policy 
-    // restricts past-date attendance edits to 'owner' only.
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        return { error: 'Missing Supabase environment variables' }
-    }
-
-    const serviceClient = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY,
-        {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
-        }
-    )
-
-    // 3. Upsert the records
-    const upsertData = records.map(record => ({
+    // 3. Upsert records — org_id is server-derived
+    const upsertData = parsed.data.records.map(record => ({
         org_id: orgId,
         fixed_worker_id: record.fixed_worker_id,
-        date: date,
+        date: parsed.data.date,
         present: record.present,
         marked_by: user.id
     }))
 
     const { error } = await serviceClient
         .from('attendance')
-        .upsert(upsertData, {
-            onConflict: 'fixed_worker_id,date'
-        })
+        .upsert(upsertData, { onConflict: 'fixed_worker_id,date' })
 
     if (error) {
         console.error('Error saving past attendance:', error)
-        return { error: 'Failed to save attendance records' }
+        return { error: 'Failed to save attendance records. Please try again.' }
     }
 
     return { success: true }
 }
+
+// ─── Machine Management ───────────────────────────────────────────────────────
 
 /**
  * Delete a machine. Requires a valid one-time owner access code.
  */
-export async function deleteMachineWithCode(orgId: string, machineId: string, accessCode: string) {
-    await requireRole(['supervisor'])
+export async function deleteMachineWithCode(machineId: string, accessCode: string) {
+    const { profile } = await requireRole(['supervisor'])
+    const orgId = profile.org_id
 
-    const isCodeValid = await validateAndRotateAccessCode(orgId, accessCode)
-    if (!isCodeValid) {
-        return { error: 'Invalid or expired access code' }
+    // Validate inputs
+    const machineParsed = safeParse(UuidSchema, machineId)
+    if ('error' in machineParsed) return { error: machineParsed.error }
+
+    const isCodeValid = await validateAndConsumeAccessCode(orgId, accessCode)
+    if (!isCodeValid) return { error: 'Invalid or expired access code' }
+
+    let serviceClient
+    try {
+        serviceClient = getServiceClient()
+    } catch {
+        return { error: 'A server error occurred. Please try again later.' }
     }
-
-    const serviceClient = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
 
     const { error } = await serviceClient
         .from('machines')
         .delete()
-        .eq('id', machineId)
+        .eq('id', machineParsed.data)
         .eq('org_id', orgId)
 
-    if (error) return { error: 'Failed to delete machine' }
+    if (error) {
+        console.error('Error deleting machine:', error)
+        return { error: 'Failed to delete machine. Please try again.' }
+    }
     return { success: true }
 }
+
+// ─── Worker Management ────────────────────────────────────────────────────────
 
 /**
  * Delete a worker. Requires a valid one-time owner access code.
  */
-export async function deleteWorkerWithCode(orgId: string, workerId: number, accessCode: string) {
-    await requireRole(['supervisor'])
+export async function deleteWorkerWithCode(workerId: number, accessCode: string) {
+    const { profile } = await requireRole(['supervisor'])
+    const orgId = profile.org_id
 
-    const isCodeValid = await validateAndRotateAccessCode(orgId, accessCode)
-    if (!isCodeValid) {
-        return { error: 'Invalid or expired access code' }
+    const workerParsed = safeParse(WorkerIdSchema, workerId)
+    if ('error' in workerParsed) return { error: workerParsed.error }
+
+    const isCodeValid = await validateAndConsumeAccessCode(orgId, accessCode)
+    if (!isCodeValid) return { error: 'Invalid or expired access code' }
+
+    let serviceClient
+    try {
+        serviceClient = getServiceClient()
+    } catch {
+        return { error: 'A server error occurred. Please try again later.' }
     }
-
-    const serviceClient = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
 
     const { error } = await serviceClient
         .from('workers')
         .delete()
-        .eq('id', workerId)
+        .eq('id', workerParsed.data)
         .eq('org_id', orgId)
 
-    if (error) return { error: 'Failed to delete worker' }
+    if (error) {
+        console.error('Error deleting worker:', error)
+        return { error: 'Failed to delete worker. Please try again.' }
+    }
     return { success: true }
 }
+
+// ─── Access Code Verification ─────────────────────────────────────────────────
 
 /**
- * Verify an access code without performing a destructive action.
- * Useful for unlocking UI elements for past/saved data.
+ * Verify AND consume an access code without performing a destructive action.
  */
-export async function verifyAccessCode(orgId: string, accessCode: string) {
-    await requireRole(['owner', 'supervisor'])
+export async function verifyAccessCode(accessCode: string) {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const orgId = profile.org_id
 
-    const isCodeValid = await validateAndRotateAccessCode(orgId, accessCode)
-    if (!isCodeValid) {
-        return { error: 'Invalid or expired access code' }
-    }
+    // Format validation first (fail fast, no DB hit)
+    const codeParsed = safeParse(AccessCodeSchema, accessCode)
+    if ('error' in codeParsed) return { error: 'Invalid access code format' }
+
+    const isCodeValid = await validateAndConsumeAccessCode(orgId, codeParsed.data)
+    if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
     return { success: true }
 }
+
+// ─── Beam / Inventory ─────────────────────────────────────────────────────────
 
 /**
  * Link an active yarn batch to a specific machine ("Start Beam").
  */
 export async function startBeam(batchId: string, machineId: string) {
     const { profile } = await requireRole(['owner', 'supervisor'])
+    const orgId = profile.org_id
 
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        console.error('Missing Supabase environment variables! Ensure SUPABASE_SERVICE_ROLE_KEY is set in Vercel.')
-        return { error: 'Server Configuration Error: Missing SUPABASE_SERVICE_ROLE_KEY. Please add it to Vercel Environment Variables.' }
+    // Validate both UUIDs
+    const batchParsed = safeParse(UuidSchema, batchId)
+    if ('error' in batchParsed) return { error: batchParsed.error }
+
+    const machineParsed = safeParse(UuidSchema, machineId)
+    if ('error' in machineParsed) return { error: machineParsed.error }
+
+    let serviceClient
+    try {
+        serviceClient = getServiceClient()
+    } catch {
+        return { error: 'A server error occurred. Please try again later.' }
     }
 
-    const serviceClient = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-    )
-
-    // 1. Fetch default rate from the batch's quality
-    console.log('Fetching batch data for:', batchId)
     const { data: batchData, error: batchError } = await serviceClient
         .from('yarn_batches')
         .select('org_id, quality_id, qualities(default_worker_rate_per_m)')
-        .eq('id', batchId)
+        .eq('id', batchParsed.data)
+        .eq('org_id', orgId)
         .single()
 
     if (batchError || !batchData) {
         console.error('Error fetching batch:', batchError)
-        return { error: 'Failed to fetch batch data: ' + (batchError?.message || 'Not found') }
+        return { error: 'Failed to fetch batch data. Please try again.' }
     }
 
-    // Handle case where qualities might be returned as an array or object
     const qualityData = Array.isArray(batchData.qualities) ? batchData.qualities[0] : batchData.qualities
     const defaultRate = (qualityData as any)?.default_worker_rate_per_m || 0
-    console.log('Batch found. Quality Rate:', defaultRate)
 
-    // 2. Clear other batches from this machine
-    console.log('Clearing existing beams from machine:', machineId)
-    const { error: clearError } = await serviceClient
+    await serviceClient
         .from('yarn_batches')
         .update({ current_machine_id: null })
-        .eq('current_machine_id', machineId)
-        .eq('org_id', profile.org_id)
+        .eq('current_machine_id', machineParsed.data)
+        .eq('org_id', orgId)
         .eq('status', 'active')
 
-    if (clearError) {
-        console.error('Error clearing batch:', clearError)
-    }
-
-    // 3. Link this batch to the machine
-    console.log('Linking batch to machine...')
     const { error: linkError } = await serviceClient
         .from('yarn_batches')
-        .update({ current_machine_id: machineId })
-        .eq('id', batchId)
-        .eq('org_id', profile.org_id)
+        .update({ current_machine_id: machineParsed.data })
+        .eq('id', batchParsed.data)
+        .eq('org_id', orgId)
 
     if (linkError) {
-        console.error('Error linking batch:', linkError)
-        return { error: 'Failed to link batch to machine' }
+        console.error('Error linking batch to machine:', linkError)
+        return { error: 'Failed to start beam. Please try again.' }
     }
 
-    // 4. Update machine rate (Rate Automation Gap)
     if (defaultRate > 0) {
-        console.log('Updating machine rate to:', defaultRate)
-        const { error: rateError } = await serviceClient
+        await serviceClient
             .from('machines')
             .update({ rate_per_meter: defaultRate })
-            .eq('id', machineId)
-            .eq('org_id', profile.org_id)
-        
-        if (rateError) {
-            console.error('Error updating rate:', rateError)
-        }
+            .eq('id', machineParsed.data)
+            .eq('org_id', orgId)
     }
-
-    console.log('startBeam completed successfully')
-    return { success: true }
 
     return { success: true }
 }
+
 /**
  * Link an order to a machine.
  */
 export async function linkOrderToMachine(orderId: string, machineId: string) {
     const { profile } = await requireRole(['owner', 'supervisor'])
+    const orgId = profile.org_id
 
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        console.error('Missing Supabase environment variables. Link order failed.')
-        return { error: 'Server Configuration Error: Missing SUPABASE_SERVICE_ROLE_KEY. Please add it to Vercel Environment Variables.' }
+    const orderParsed = safeParse(UuidSchema, orderId)
+    if ('error' in orderParsed) return { error: orderParsed.error }
+
+    const machineParsed = safeParse(UuidSchema, machineId)
+    if ('error' in machineParsed) return { error: machineParsed.error }
+
+    let serviceClient
+    try {
+        serviceClient = getServiceClient()
+    } catch {
+        return { error: 'A server error occurred. Please try again later.' }
     }
-
-    const serviceClient = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-    )
 
     const { error } = await serviceClient
         .from('machines')
-        .update({ current_order_id: orderId })
-        .eq('id', machineId)
-        .eq('org_id', profile.org_id)
+        .update({ current_order_id: orderParsed.data })
+        .eq('id', machineParsed.data)
+        .eq('org_id', orgId)
 
     if (error) {
-        console.error('Error linking order:', error)
-        return { error: 'Failed to assign order to machine' }
+        console.error('Error linking order to machine:', error)
+        return { error: 'Failed to assign order to machine. Please try again.' }
     }
 
     return { success: true }
 }
 
+// ─── Shift Handover ───────────────────────────────────────────────────────────
+
 /**
- * Perform a shift handover by unlinking the current worker from a machine for a specific shift.
- * (Shift Handover Gap)
+ * Perform a shift handover by unlinking the current worker from a machine.
  */
-export async function shiftHandover(orgId: string, machineId: string, shift: 'day' | 'night') {
-    await requireRole(['owner', 'supervisor'])
+export async function shiftHandover(machineId: string, shift: 'day' | 'night') {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const orgId = profile.org_id
 
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        console.error('Missing Supabase environment variables. Shift handover failed.')
-        return { error: 'Server Configuration Error: Missing SUPABASE_SERVICE_ROLE_KEY. Please add it to Vercel Environment Variables.' }
+    const machineParsed = safeParse(UuidSchema, machineId)
+    if ('error' in machineParsed) return { error: machineParsed.error }
+
+    const shiftParsed = safeParse(ShiftSchema, shift)
+    if ('error' in shiftParsed) return { error: shiftParsed.error }
+
+    let serviceClient
+    try {
+        serviceClient = getServiceClient()
+    } catch {
+        return { error: 'A server error occurred. Please try again later.' }
     }
-
-    const serviceClient = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-    )
 
     const { error } = await serviceClient
         .from('machine_assignments')
         .delete()
         .eq('org_id', orgId)
-        .eq('machine_id', machineId)
-        .eq('shift', shift)
+        .eq('machine_id', machineParsed.data)
+        .eq('shift', shiftParsed.data)
 
     if (error) {
         console.error('Error in shift handover:', error)
-        return { error: 'Failed to perform shift handover' }
+        return { error: 'Failed to perform shift handover. Please try again.' }
     }
 
     return { success: true }
 }
 
+// ─── Worker Debt ──────────────────────────────────────────────────────────────
+
 /**
  * Check if a worker has any outstanding advance (Upaad) balance.
- * (Advance vs. Resignation Gap)
  */
-export async function getWorkerDebt(orgId: string, workerId: number, workerType: 'meter' | 'fixed' = 'meter') {
-    await requireRole(['owner', 'supervisor'])
+export async function getWorkerDebt(workerId: number, workerType: 'meter' | 'fixed' = 'meter') {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const orgId = profile.org_id
+
+    const workerParsed = safeParse(PositiveIntSchema, workerId)
+    if ('error' in workerParsed) return { error: workerParsed.error }
+
+    const typeParsed = safeParse(WorkerTypeSchema, workerType)
+    if ('error' in typeParsed) return { error: typeParsed.error }
+
     const supabase = await createServerClient()
 
     const { data, error } = await supabase
@@ -289,11 +372,11 @@ export async function getWorkerDebt(orgId: string, workerId: number, workerType:
         .select('amount')
         .eq('org_id', orgId)
         .eq('status', 'pending')
-        .eq(workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', workerId)
+        .eq(typeParsed.data === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', workerParsed.data)
 
     if (error) {
         console.error('Error fetching worker debt:', error)
-        return { error: 'Failed to fetch worker debt' }
+        return { error: 'Failed to fetch worker balance. Please try again.' }
     }
 
     const balance = data?.reduce((sum, row) => sum + Number(row.amount), 0) || 0

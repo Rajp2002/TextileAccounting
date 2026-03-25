@@ -21,8 +21,12 @@ export function AccessCodeGenerator() {
         setGeneratedCode(null)
         setCopied(false)
         try {
-            const { code } = await generateAccessCode()
-            setGeneratedCode(code)
+            const result = await generateAccessCode()
+            if ('error' in result) {
+                toast.error(result.error)
+                return
+            }
+            setGeneratedCode(result.code ?? null)
             toast.success(t('settings.access_code.success'))
         } catch (error: any) {
             toast.error(error.message || t('settings.access_code.error'))

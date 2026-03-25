@@ -3,8 +3,8 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-
 import { calculateTotalPay, calculateDailyPay } from '@/lib/finance'
+import { ToggleWorkerPaidSchema, safeParse } from '@/lib/schemas'
 
 export async function toggleWorkerPaid(
     workerType: 'meter' | 'fixed',
@@ -14,20 +14,26 @@ export async function toggleWorkerPaid(
 ) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
-    const newPaid = !currentPaid
+
+    // ── Zod validation ──────────────────────────────────────────────────────
+    const parsed = safeParse(ToggleWorkerPaidSchema, { workerType, workerId, month, currentPaid })
+    if ('error' in parsed) return { error: parsed.error }
+    const { workerType: wType, workerId: wId, month: wMonth, currentPaid: wCurrentPaid } = parsed.data
+
+    const newPaid = !wCurrentPaid
 
     // ── Calculate gross amount server-side ───────────────────────────────
-    let calculatedAmountStr = "0"
+    let calculatedAmountStr = '0'
 
-    if (workerType === 'meter') {
-        const monthStart = `${month}-01`
-        const monthEnd = `${month}-31`
+    if (wType === 'meter') {
+        const monthStart = `${wMonth}-01`
+        const monthEnd = `${wMonth}-31`
 
         const { data: logs } = await supabase
             .from('production_logs')
             .select('machine_id, meters')
             .eq('org_id', profile.org_id)
-            .eq('worker_id', workerId)
+            .eq('worker_id', wId)
             .gte('date', monthStart)
             .lte('date', monthEnd)
 
@@ -44,25 +50,24 @@ export async function toggleWorkerPaid(
         }))
 
         calculatedAmountStr = calculateTotalPay(payItems)
-
     } else {
         const { data: worker, error: workerError } = await supabase
             .from('fixed_workers')
             .select('role, monthly_salary')
-            .eq('id', workerId)
+            .eq('id', wId)
             .eq('org_id', profile.org_id)
             .maybeSingle()
 
-        if (workerError || !worker) throw new Error('Worker not found')
+        if (workerError || !worker) return { error: 'Worker not found' }
 
         if (worker.role === 'daily') {
             const { count } = await supabase
                 .from('attendance')
                 .select('*', { count: 'exact', head: true })
                 .eq('org_id', profile.org_id)
-                .eq('fixed_worker_id', workerId)
-                .gte('date', `${month}-01`)
-                .lte('date', `${month}-31`)
+                .eq('fixed_worker_id', wId)
+                .gte('date', `${wMonth}-01`)
+                .lte('date', `${wMonth}-31`)
                 .eq('present', true)
 
             const daysWorked = count || 0
@@ -80,17 +85,17 @@ export async function toggleWorkerPaid(
 
     // ── Use atomic RPC for settlement ────────────────────────────────────
     if (newPaid) {
-        // SETTLE: atomically mark paid + deduct pending advances
         const { data, error } = await supabase.rpc('settle_worker_payroll', {
             p_org_id: profile.org_id,
-            p_worker_type: workerType,
-            p_worker_id: workerId,
-            p_month: month,
+            p_worker_type: wType,
+            p_worker_id: wId,
+            p_month: wMonth,
             p_gross_amount: grossAmount
         })
 
         if (error) {
-            throw new Error(`Settlement failed: ${error.message}`)
+            console.error('Settlement failed:', error)
+            return { error: 'Settlement failed. Please try again.' }
         }
 
         revalidatePath('/owner/payroll')
@@ -103,16 +108,16 @@ export async function toggleWorkerPaid(
             remaining_debt: data?.remaining_debt ?? 0
         }
     } else {
-        // UNSETTLE: atomically revert paid + restore advances for this cycle
         const { data, error } = await supabase.rpc('unsettle_worker_payroll', {
             p_org_id: profile.org_id,
-            p_worker_type: workerType,
-            p_worker_id: workerId,
-            p_month: month
+            p_worker_type: wType,
+            p_worker_id: wId,
+            p_month: wMonth
         })
 
         if (error) {
-            throw new Error(`Unsettle failed: ${error.message}`)
+            console.error('Unsettle failed:', error)
+            return { error: 'Failed to revert payment. Please try again.' }
         }
 
         revalidatePath('/owner/payroll')

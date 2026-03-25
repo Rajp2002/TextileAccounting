@@ -269,7 +269,7 @@ export default function ProductionEntryForm() {
         setVerifying(true)
         try {
             if (!userProfile?.org_id) throw new Error("Missing org_id")
-            const result = await verifyAccessCode(userProfile.org_id, accessCode)
+            const result = await verifyAccessCode(accessCode)
             if (result.error) throw new Error(result.error)
 
             setUnlocked(true)
@@ -429,7 +429,7 @@ export default function ProductionEntryForm() {
         if (!handoverMachineId || !userProfile?.org_id) return
         setPerformingHandover(true)
         try {
-            const res = await shiftHandover(userProfile.org_id, handoverMachineId, currentShift)
+            const res = await shiftHandover(handoverMachineId, currentShift)
             if (res.error) throw new Error(res.error)
             toast.success(t('production.handover_complete'))
             setHandoverOpen(false)

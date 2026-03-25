@@ -89,7 +89,7 @@ export default function SupervisorWorkersPage() {
         if (!userProfile?.org_id) return
         setFetchingDebt(true)
         try {
-            const res = await getWorkerDebt(userProfile.org_id, id, 'meter')
+            const res = await getWorkerDebt(id, 'meter')
             setWorkerDebt(res.balance || 0)
             setWorkerToDelete(id)
             setAccessCode('')
@@ -102,7 +102,7 @@ export default function SupervisorWorkersPage() {
         if (!workerToDelete || !userProfile?.org_id) return
         setDeleting(true)
         try {
-            const result = await deleteWorkerWithCode(userProfile.org_id, workerToDelete, accessCode)
+            const result = await deleteWorkerWithCode(workerToDelete, accessCode)
             if (result.error) throw new Error(result.error)
 
             toast.success('Worker deleted successfully')

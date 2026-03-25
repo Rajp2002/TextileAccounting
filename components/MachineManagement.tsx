@@ -215,7 +215,7 @@ export function MachineManagement({
         if (!machineToDelete) return
         setDeleting(true)
         try {
-            const result = await deleteMachineWithCode(orgId, machineToDelete, accessCode)
+            const result = await deleteMachineWithCode(machineToDelete, accessCode)
             if (result.error) throw new Error(result.error)
 
             toast.success(t('machines.machine_deleted'))
