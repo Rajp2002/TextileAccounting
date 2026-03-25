@@ -122,7 +122,18 @@ export default function TermsOfServicePage() {
                         <li>Use the Service in a manner that could damage, disable, or impair the platform.</li>
                     </ul>
 
-                    <h2>6. Analytics Disclaimer</h2>
+                    <h2>6. Labor Law &amp; Statutory Compliance Disclaimer</h2>
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-5 not-prose my-6 flex flex-col gap-3">
+                        <p className="text-sm font-semibold text-red-900">Important Legal Disclaimer regarding OSHWC, ESI, EPF, and Minimum Wages</p>
+                        <p className="text-sm text-red-800">
+                            Vastra provides software tools to assist with factory management and calculation. However, <strong>Vastra is NOT a legal, HR, or compliance advisor.</strong> You, as the factory owner, are solely responsible for ensuring that your factory complies with all applicable local, state, and central labor laws, including but not limited to the Occupational Safety, Health and Working Conditions Code (OSHWC), the Employees' Provident Funds and Miscellaneous Provisions Act, the Employees' State Insurance Act, and the Code on Wages.
+                        </p>
+                        <p className="text-sm text-red-800">
+                            <strong>We accept zero liability</strong> for any statutory fines, penalties, labor disputes, unpaid wages, or compensation claims resulting from data entered into Vastra, algorithmic output, or your use (or misuse) of the platform. The platform's fields for ESI, PF, and OSHWC incident tracking are provided for your administrative convenience only and do not guarantee legal compliance.
+                        </p>
+                    </div>
+
+                    <h2>7. Analytics Disclaimer</h2>
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 not-prose my-6">
                         <p className="text-sm font-semibold text-amber-900 mb-2">Important: Yield Analytics &amp; Loss Estimates</p>
                         <p className="text-sm text-amber-800">
@@ -133,7 +144,7 @@ export default function TermsOfServicePage() {
                         </p>
                     </div>
 
-                    <h2>7. Limitation of Liability</h2>
+                    <h2>8. Limitation of Liability</h2>
                     <ul>
                         <li>The Service is provided &quot;as is&quot; and &quot;as available&quot; without warranties of any kind, express or implied.</li>
                         <li>We do not warrant that the Service will be uninterrupted, error-free, or completely secure.</li>
@@ -142,12 +153,12 @@ export default function TermsOfServicePage() {
                         <li>We are not responsible for losses arising from inaccurate data entered by users, including but not limited to incorrect production figures, machine rates, or quality parameters.</li>
                     </ul>
 
-                    <h2>8. Intellectual Property</h2>
+                    <h2>9. Intellectual Property</h2>
                     <p>
                         The Vastra platform, including its source code, design, user interface, brand name, logo, and documentation, is the exclusive intellectual property of Vastra. You are granted a limited, non-exclusive, non-transferable license to access and use the Service for the duration of your subscription.
                     </p>
 
-                    <h2>9. Termination</h2>
+                    <h2>10. Termination</h2>
                     <ul>
                         <li><strong>By you</strong> — You may cancel your subscription at any time. Upon cancellation, your access continues until the end of the current billing period.</li>
                         <li><strong>By us</strong> — We may suspend or terminate your account for violation of these Terms, non-payment, or any activity that threatens the security or integrity of the platform. We will provide reasonable notice except in cases of severe violations.</li>
@@ -157,17 +168,23 @@ export default function TermsOfServicePage() {
                         See our <Link href="/refund-policy">Refund &amp; Cancellation Policy</Link> for details on refunds.
                     </p>
 
-                    <h2>10. Indemnification</h2>
+                    <h2>11. Indemnification</h2>
                     <p>
-                        You agree to indemnify and hold harmless Vastra, its officers, employees, and agents from any claims, damages, losses, or expenses arising from your use of the Service, your violation of these Terms, or your violation of any third-party rights.
+                        You agree to indemnify, defend, and hold harmless Vastra, its officers, employees, and agents from any claims, damages, losses, fines, or expenses arising from:
                     </p>
+                    <ul>
+                        <li>Your use or misuse of the Service.</li>
+                        <li>Your violation of these Terms.</li>
+                        <li>Your violation of any third-party rights (including worker data privacy right under the DPDP Act).</li>
+                        <li><strong>Any unpaid statutory dues, including but not limited to EPF, ESI, TDS, or minimum wages, and any related penalties or legal action taken against your factory by government authorities.</strong></li>
+                    </ul>
 
-                    <h2>11. Modifications to Terms</h2>
+                    <h2>12. Modifications to Terms</h2>
                     <p>
                         We may update these Terms from time to time. Material changes will be communicated via the platform or email at least 30 days before they take effect. Continued use of the Service after changes constitutes acceptance. If you do not agree with the updated Terms, you must stop using the Service and cancel your subscription.
                     </p>
 
-                    <h2>12. Governing Law &amp; Dispute Resolution</h2>
+                    <h2>13. Governing Law &amp; Dispute Resolution</h2>
                     <p>
                         These Terms shall be governed by and construed in accordance with the laws of the Republic of India. Any dispute arising from these Terms or the use of the Service shall be resolved through:
                     </p>
@@ -177,12 +194,12 @@ export default function TermsOfServicePage() {
                         <li><strong>Jurisdiction</strong> — The courts of Surat, Gujarat, India shall have exclusive jurisdiction for any matters not subject to arbitration.</li>
                     </ol>
 
-                    <h2>13. Severability</h2>
+                    <h2>14. Severability</h2>
                     <p>
                         If any provision of these Terms is found to be invalid or unenforceable by a court of competent jurisdiction, the remaining provisions shall continue in full force and effect.
                     </p>
 
-                    <h2>14. Contact</h2>
+                    <h2>15. Contact</h2>
                     <p>For questions about these Terms, contact:</p>
                     <div className="bg-gray-50 rounded-xl p-6 not-prose text-sm text-gray-700 space-y-1 my-4">
                         <p className="font-semibold text-gray-900">Vastra Legal</p>

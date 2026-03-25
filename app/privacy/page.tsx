@@ -89,6 +89,16 @@ export default function PrivacyPolicyPage() {
                     </ul>
                     <p>We do <strong>not</strong> use your data for advertising, behavioural profiling, or selling to third parties.</p>
 
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 not-prose my-6">
+                        <p className="text-sm font-semibold text-blue-900 mb-2">Role Under the DPDP Act 2023</p>
+                        <p className="text-sm text-blue-800">
+                            For the purposes of the Digital Personal Data Protection Act 2023, the <strong>Factory Owner (Subscriber) acts as the Data Fiduciary</strong>, determining the purpose and means of processing worker data. <strong>Vastra acts solely as a Data Processor</strong>, processing data on behalf of the Factory Owner.
+                        </p>
+                        <p className="text-sm text-blue-800 mt-3">
+                            It is the strict responsibility of the Factory Owner to obtain lawful consent from their workers before entering their personal data into the Vastra platform.
+                        </p>
+                    </div>
+
                     <h2>3. Consent</h2>
                     <p>
                         By creating an account on Vastra, you provide explicit consent for the collection and processing of your data for the purposes described above. You may withdraw consent at any time by contacting us (see Section 11). Withdrawal of consent may result in the inability to use certain features of the platform.
