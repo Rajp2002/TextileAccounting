@@ -171,6 +171,11 @@ export default function SupervisorWorkersPage() {
                                 <div key={worker.id} className="py-3 px-4 flex justify-between items-center group">
                                     <div className="flex items-center gap-3">
                                         <span className="font-medium text-gray-700">{tl(worker.name)}</span>
+                                        {worker.pf_esi_eligible && (
+                                            <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
+                                                ESI/PF ✓
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-4">
                                         {/* Active Toggle */}
@@ -222,6 +227,11 @@ export default function SupervisorWorkersPage() {
                                             {t(`workers.roles.${worker.role}`) || worker.role}
                                         </span>
                                         <span className="font-medium text-gray-700">{tl(worker.name)}</span>
+                                        {worker.pf_esi_eligible && (
+                                            <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
+                                                ESI/PF ✓
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className={cn(

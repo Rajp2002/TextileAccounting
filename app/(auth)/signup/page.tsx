@@ -26,6 +26,7 @@ export default function SignupPage() {
     const [factoryId, setFactoryId] = useState('')
     const [orgName, setOrgName] = useState('')
     const [showPassword, setShowPassword] = useState(false)
+    const [consentGiven, setConsentGiven] = useState(false)
     const router = useRouter()
 
     const handleSignup = async (e: React.FormEvent) => {
@@ -285,10 +286,27 @@ export default function SignupPage() {
                     </AnimatePresence>
                 </div>
 
+                {/* Consent Checkbox (DPDP Act requirement) */}
+                <div className="flex items-start gap-3 py-1">
+                    <input
+                        type="checkbox"
+                        id="consent"
+                        checked={consentGiven}
+                        onChange={(e) => setConsentGiven(e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                    />
+                    <label htmlFor="consent" className="text-sm text-gray-500 leading-snug cursor-pointer">
+                        I agree to the{' '}
+                        <a href="/terms" target="_blank" className="text-amber-700 hover:underline font-medium">Terms of Service</a>
+                        {' '}and{' '}
+                        <a href="/privacy" target="_blank" className="text-amber-700 hover:underline font-medium">Privacy Policy</a>
+                    </label>
+                </div>
+
                 <Button
                     type="submit"
                     className="w-full h-12 text-base font-medium transition-transform active:scale-[0.98]"
-                    disabled={loading}
+                    disabled={loading || !consentGiven}
                 >
                     {loading ? (
                         <>

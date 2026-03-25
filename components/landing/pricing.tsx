@@ -73,7 +73,10 @@ export default function LandingPricing() {
                     </p>
                 </div>
                 <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-300">
-                    Choose the plan that fits your factory's size. No hidden fees.
+                    Choose the plan that fits your factory&apos;s size. No hidden fees.
+                </p>
+                <p className="mx-auto mt-2 text-center text-sm text-gray-400 dark:text-gray-500">
+                    All prices are exclusive of 18% GST
                 </p>
 
                 <div className="isolate mx-auto mt-12 sm:mt-16 grid max-w-md grid-cols-1 gap-8 lg:max-w-7xl lg:grid-cols-3">

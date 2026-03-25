@@ -56,9 +56,9 @@ export default function Home() {
             © {new Date().getFullYear()} Vastra. All rights reserved.
           </p>
           <div className="flex gap-8 text-sm font-medium text-gray-400">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-white transition-colors">Support</a>
+            <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+            <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
+            <a href="/refund-policy" className="hover:text-white transition-colors">Refund Policy</a>
           </div>
         </div>
       </footer>

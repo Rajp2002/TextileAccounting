@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ClipboardList, WifiOff, Calculator, MessageCircle, Smartphone, Users } from 'lucide-react'
+import { ClipboardList, WifiOff, Calculator, MessageCircle, Smartphone, Users, ShieldCheck } from 'lucide-react'
 
 const features = [
     {
@@ -45,6 +45,13 @@ const features = [
         icon: Users,
         className: 'md:col-span-1 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 dark:from-purple-500/5 dark:to-indigo-500/5',
         iconBg: 'bg-gradient-to-br from-purple-500 to-indigo-500',
+    },
+    {
+        name: 'Built-in Labour Law Compliance',
+        description: 'Automatically maintain digital wage registers, generate legally compliant worker payslips (PDF), track workplace safety incidents (OSHWC), and monitor minimum wage alerts—keeping your textile factory 100% compliant with the latest Gov. of India Labour Codes without any extra paperwork.',
+        icon: ShieldCheck,
+        className: 'md:col-span-3 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 dark:from-yellow-500/5 dark:to-amber-500/5',
+        iconBg: 'bg-gradient-to-br from-yellow-500 to-amber-500',
     },
 ]
 

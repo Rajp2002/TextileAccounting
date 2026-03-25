@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { formatINR, sumAdvances, calculateNetPay, calculateRemainingDebt } from '@/lib/finance'
 import {
     CheckCircle2, Circle, ChevronLeft, ChevronRight,
-    HardHat, Briefcase, AlertCircle, IndianRupee, Loader2, HandCoins
+    HardHat, Briefcase, AlertCircle, IndianRupee, Loader2, HandCoins, Download, AlertTriangle
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -18,6 +18,8 @@ import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTransliterate } from '@/hooks/use-transliterate'
 import { useMutation } from '@tanstack/react-query'
+import { generateMeterPayslip, generateFixedPayslip } from '@/lib/generate-payslip'
+import { MIN_WAGE_DAILY, isBelowMinWage } from '@/lib/wage-config'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface PaymentRecord {
@@ -106,10 +108,14 @@ function MeterWorkerRow({
     worker,
     onToggle,
     isMutating,
+    selectedMonth,
+    factoryName,
 }: {
     worker: MeterWorkerPayroll
     onToggle: () => void
     isMutating?: boolean
+    selectedMonth: string
+    factoryName: string
 }) {
     const [expanded, setExpanded] = useState(false)
     const { t } = useTranslation()
@@ -218,6 +224,30 @@ function MeterWorkerRow({
                             </>
                         )}
                     </div>
+                    {/* Minimum wage warning */}
+                    {worker.machines.length > 0 && isBelowMinWage(worker.totalPay / 30, 'daily') && (
+                        <div className="flex items-center gap-1.5 mt-3 text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-1.5">
+                            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+                            <span className="text-xs">Effective daily rate is below minimum wage (₹{MIN_WAGE_DAILY}/day)</span>
+                        </div>
+                    )}
+                    {/* Download payslip */}
+                    <button
+                        onClick={() => generateMeterPayslip({
+                            factoryName,
+                            month: selectedMonth,
+                            workerName: worker.name,
+                            machines: worker.machines,
+                            totalMeters: worker.totalMeters,
+                            totalPay: worker.totalPay,
+                            totalAdvances: worker.totalAdvances,
+                            netPay: worker.netPay,
+                        })}
+                        className="flex items-center gap-1.5 mt-3 text-xs text-gray-500 hover:text-gray-900 transition-colors"
+                    >
+                        <Download className="h-3.5 w-3.5" />
+                        Download Payslip (PDF)
+                    </button>
                 </div>
             )}
         </div>
@@ -227,10 +257,14 @@ function FixedWorkerRow({
     worker,
     onToggle,
     isMutating,
+    selectedMonth,
+    factoryName,
 }: {
     worker: FixedWorkerPayroll
     onToggle: () => void
     isMutating?: boolean
+    selectedMonth: string
+    factoryName: string
 }) {
     const [expanded, setExpanded] = useState(false)
     const { t } = useTranslation()
@@ -347,6 +381,31 @@ function FixedWorkerRow({
                             )}
                         </div>
                     )}
+                    {/* Minimum wage warning */}
+                    {isBelowMinWage(worker.monthly_salary, 'monthly') && (
+                        <div className="flex items-center gap-1.5 mt-3 text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-1.5">
+                            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+                            <span className="text-xs">Salary is below Gujarat minimum wage (₹12,120/month)</span>
+                        </div>
+                    )}
+                    {/* Download payslip */}
+                    <button
+                        onClick={() => generateFixedPayslip({
+                            factoryName,
+                            month: selectedMonth,
+                            workerName: worker.name,
+                            role: worker.role,
+                            monthlySalary: worker.monthly_salary,
+                            daysWorked: worker.daysWorked,
+                            earnedPay: worker.earnedPay,
+                            totalAdvances: worker.totalAdvances,
+                            netPay: worker.netPay,
+                        })}
+                        className="flex items-center gap-1.5 mt-3 text-xs text-gray-500 hover:text-gray-900 transition-colors"
+                    >
+                        <Download className="h-3.5 w-3.5" />
+                        Download Payslip (PDF)
+                    </button>
                 </div>
             )}
         </div>
@@ -366,6 +425,21 @@ export default function PayrollPage() {
     }, [])
 
     const { data: userProfile } = useUserProfile()
+
+    // Org name for payslip headers
+    const { data: orgData } = useQuery({
+        queryKey: ['org_name', userProfile?.org_id],
+        enabled: !!userProfile?.org_id,
+        queryFn: async () => {
+            const { data } = await supabase
+                .from('organizations')
+                .select('name')
+                .eq('id', userProfile!.org_id)
+                .single()
+            return data
+        }
+    })
+    const orgName = orgData?.name || 'Factory'
 
     // ── Meter workers payroll data ──────────────────────────────────────────
     const { data: meterWorkers, isLoading: meterLoading } = useQuery({
@@ -785,6 +859,8 @@ export default function PayrollPage() {
                                     worker={w}
                                     onToggle={() => handleTogglePaid('meter', w.id, w.totalPay, w.payment?.paid ?? false)}
                                     isMutating={mutation.isPending && mutation.variables?.workerId === w.id && mutation.variables?.workerType === 'meter'}
+                                    selectedMonth={selectedMonth}
+                                    factoryName={orgName}
                                 />
                             ))}
                         </>
@@ -827,6 +903,8 @@ export default function PayrollPage() {
                                     worker={w}
                                     onToggle={() => handleTogglePaid('fixed', w.id, w.earnedPay, w.payment?.paid ?? false)}
                                     isMutating={mutation.isPending && mutation.variables?.workerId === w.id && mutation.variables?.workerType === 'fixed'}
+                                    selectedMonth={selectedMonth}
+                                    factoryName={orgName}
                                 />
                             ))}
                         </>

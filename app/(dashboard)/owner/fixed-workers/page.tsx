@@ -35,6 +35,9 @@ interface FixedWorker {
     role: string
     monthly_salary: number
     is_active: boolean
+    pf_esi_eligible?: boolean
+    esi_number?: string
+    pf_number?: string
 }
 
 function getRoleLabel(role: string, t: any) {
@@ -356,6 +359,11 @@ export default function FixedWorkersPage() {
                                                     {roleInfo.value === 'daily' && (
                                                         <span className="text-xs text-orange-600 ml-2">{t('fixed_page.attendance_based')}</span>
                                                     )}
+                                                    {w.pf_esi_eligible && (
+                                                        <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded ml-2">
+                                                            ESI/PF ✓
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-sm font-semibold text-gray-700">
@@ -400,6 +408,11 @@ export default function FixedWorkersPage() {
                                                         <span className={cn('font-medium', !w.is_active && 'text-gray-400 line-through')}>
                                                             {tl(w.name)}
                                                         </span>
+                                                        {w.pf_esi_eligible && (
+                                                            <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded ml-2">
+                                                                ESI/PF ✓
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         <span className="text-sm font-semibold text-gray-700">
