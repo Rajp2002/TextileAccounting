@@ -137,7 +137,7 @@ export default function AuditTable() {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            data?.items?.map((log) => (
+                            data?.items?.map((log: any) => (
                                 <TableRow key={log.id} className="text-sm border-gray-100">
                                     <TableCell className="align-top whitespace-nowrap text-gray-600">
                                         {format(new Date(log.changed_at), "dd MMM yyyy, HH:mm")}
