@@ -173,10 +173,10 @@ serve(async (req) => {
                 continue
             }
 
-            // A. Production logs with worker, machine, rate
+            // A. Production logs with worker, machine, and quality rate
             const { data: productionLines, error: prodError } = await supabaseClient
                 .from('production_logs')
-                .select('meters, worker_id, machine_id, workers(name), machines(name, rate_per_meter)')
+                .select('meters, worker_id, machine_id, workers(name), machines(name), yarn_batches(qualities(default_worker_rate_per_m))')
                 .eq('org_id', org.id)
                 .gte('date', startDate)
                 .lte('date', endDate)
@@ -197,15 +197,19 @@ serve(async (req) => {
                 shiftLookup[`${a.machine_id}_${a.worker_id}`] = a.shift
             }
 
-            const rows: MonthlyProdRow[] = (productionLines || []).map((r: any) => ({
-                meters: Number(r.meters),
-                worker_name: r.workers?.name ?? 'Unknown',
-                worker_id: r.worker_id,
-                machine_name: r.machines?.name ?? 'Unknown',
-                machine_id: r.machine_id,
-                rate_per_meter: Number(r.machines?.rate_per_meter ?? 0),
-                shift: shiftLookup[`${r.machine_id}_${r.worker_id}`] || 'day',
-            }))
+            const rows: MonthlyProdRow[] = (productionLines || []).map((r: any) => {
+                const batch: any = r.yarn_batches
+                const rate = batch?.qualities?.default_worker_rate_per_m || 0
+                return {
+                    meters: Number(r.meters),
+                    worker_name: r.workers?.name ?? 'Unknown',
+                    worker_id: r.worker_id,
+                    machine_name: r.machines?.name ?? 'Unknown',
+                    machine_id: r.machine_id,
+                    rate_per_meter: Number(rate),
+                    shift: shiftLookup[`${r.machine_id}_${r.worker_id}`] || 'day',
+                }
+            })
 
             // C. Fixed workers + attendance
             const { data: fixedWorkers } = await supabaseClient

@@ -452,7 +452,7 @@ export default function PayrollPage() {
             // Fetch production logs for the month
             const { data: logs, error: logsErr } = await supabase
                 .from('production_logs')
-                .select('worker_id, machine_id, meters')
+                .select('worker_id, machine_id, meters, yarn_batches(qualities(default_worker_rate_per_m))')
                 .eq('org_id', userProfile!.org_id)
                 .gte('date', monthStart)
                 .lte('date', monthEnd)
@@ -466,10 +466,10 @@ export default function PayrollPage() {
                 .eq('is_active', true)
             if (wErr) throw wErr
 
-            // Fetch machines (for rates + names)
+            // Fetch machines (for names)
             const { data: machines, error: mErr } = await supabase
                 .from('machines')
-                .select('id, name, rate_per_meter')
+                .select('id, name')
                 .eq('org_id', userProfile!.org_id)
             if (mErr) throw mErr
 
@@ -504,16 +504,26 @@ export default function PayrollPage() {
                 const workerLogs = (logs || []).filter((l: any) => l.worker_id === worker.id)
                 if (workerLogs.length === 0) continue
 
-                // Group by machine
+                // Group by machine + rate (if quality changes)
                 const machineGroups: Record<string, { meters: number; rate: number; name: string }> = {}
                 for (const log of workerLogs) {
                     const machine = machineMap[log.machine_id]
-                    if (!machineGroups[log.machine_id]) {
-                        machineGroups[log.machine_id] = { meters: 0, rate: machine?.rate_per_meter || 0, name: machine?.name || 'Unknown' }
+                    const batch: any = log.yarn_batches
+                    const rate = batch?.qualities?.default_worker_rate_per_m || 0
+                    
+                    // Key by machineId + rate to split if machine produces multiple qualities
+                    const key = `${log.machine_id}-${rate}`
+                    
+                    if (!machineGroups[key]) {
+                        machineGroups[key] = { 
+                            meters: 0, 
+                            rate: rate, 
+                            name: machine?.name || 'Unknown' 
+                        }
                     }
-                    machineGroups[log.machine_id].meters += parseFloat(log.meters) || 0
+                    machineGroups[key].meters += parseFloat(log.meters) || 0
                 }
-
+                
                 const machineBreakdown = Object.values(machineGroups).map(mg => ({
                     machineName: mg.name,
                     meters: mg.meters,

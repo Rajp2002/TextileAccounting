@@ -30,7 +30,7 @@ interface Machine {
     id: string
     name: string
     status: string
-    rate_per_meter: number
+    yarn_batches?: any[]
 }
 
 interface Assignment {
@@ -56,7 +56,7 @@ export default function SupervisorAssignmentsPage() {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('machines')
-                .select('*')
+                .select('*, yarn_batches(status, qualities(default_worker_rate_per_m))')
                 .eq('org_id', orgId!)
                 .order('name')
             if (error) throw error
@@ -198,12 +198,17 @@ export default function SupervisorAssignmentsPage() {
                                 const assignment = assignments?.find(
                                     a => a.machine_id === machine.id && a.shift === activeShift
                                 )
-
                                 return (
                                     <div key={machine.id} className="py-3 flex items-center justify-between gap-4">
                                         <div className="min-w-0">
                                             <div className="font-medium text-gray-800 truncate">{machine.name}</div>
-                                            <div className="text-xs text-gray-400">₹{machine.rate_per_meter}/m</div>
+                                            <div className="text-xs text-gray-400">
+                                                {(() => {
+                                                    const activeBatch = machine.yarn_batches?.find((b: any) => b.status === 'active')
+                                                    const rate = activeBatch?.qualities?.default_worker_rate_per_m
+                                                    return rate ? `₹${rate}/m` : t('machines.no_active_beam')
+                                                })()}
+                                            </div>
                                         </div>
                                         <Select
                                             value={assignment?.worker_id.toString()}

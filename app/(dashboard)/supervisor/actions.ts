@@ -319,14 +319,6 @@ export async function startBeam(batchId: string, machineId: string) {
         return { error: 'Failed to start beam. Please try again.' }
     }
 
-    if (defaultRate > 0) {
-        await serviceClient
-            .from('machines')
-            .update({ rate_per_meter: defaultRate })
-            .eq('id', machineParsed.data)
-            .eq('org_id', orgId)
-    }
-
     return { success: true }
 }
 
