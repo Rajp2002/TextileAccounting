@@ -142,7 +142,7 @@ export default function AdvancesPage() {
 
             const { data: logs } = await supabase
                 .from('production_logs')
-                .select('meters, machine_id')
+                .select('meters, machine_id, yarn_batches(qualities(default_worker_rate_per_m))')
                 .eq('org_id', userProfile!.org_id)
                 .eq('worker_id', selectedWorker!.id)
                 .gte('date', `${monthStr}-01`)
@@ -150,12 +150,14 @@ export default function AdvancesPage() {
 
             const { data: machines } = await supabase
                 .from('machines')
-                .select('id, rate_per_meter')
+                .select('id, name')
                 .eq('org_id', userProfile!.org_id)
 
-            const machineMap = Object.fromEntries((machines || []).map((m: any) => [m.id, m.rate_per_meter || 0]))
+            const machineMap = Object.fromEntries((machines || []).map((m: any) => [m.id, m]))
             const total = (logs || []).reduce((sum: number, log: any) => {
-                return sum + (parseFloat(log.meters) || 0) * (machineMap[log.machine_id] || 0)
+                const batch: any = log.yarn_batches
+                const rate = batch?.qualities?.default_worker_rate_per_m || 0
+                return sum + (parseFloat(log.meters) || 0) * rate
             }, 0)
 
             return total

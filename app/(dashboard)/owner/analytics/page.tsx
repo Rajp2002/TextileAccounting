@@ -40,6 +40,7 @@ interface ProductionLog {
     worker_id: number
     machine_id: string
     meters: number | string
+    yarn_batches?: any
 }
 
 interface MachineBreakdown {
@@ -288,18 +289,18 @@ export default function OwnerDashboard() {
 
             const { data: machines, error: mErr } = await supabase
                 .from('machines')
-                .select('id, name, rate_per_meter')
+                .select('id, name')
                 .eq('org_id', userProfile!.org_id)
             if (mErr) throw mErr
 
             const machineMap = (machines || []).reduce((acc: any, m: any) => {
-                acc[m.id] = { name: m.name, rate: m.rate_per_meter }
+                acc[m.id] = { name: m.name }
                 return acc
             }, {})
 
             const { data: logs, error: lErr } = await supabase
                 .from('production_logs')
-                .select('worker_id, machine_id, meters')
+                .select('worker_id, machine_id, meters, yarn_batches(qualities(default_worker_rate_per_m))')
                 .eq('org_id', userProfile!.org_id)
                 .eq('date', selectedDate)
             if (lErr) throw lErr
@@ -308,27 +309,36 @@ export default function OwnerDashboard() {
                 const workerLogs = (logs as ProductionLog[]).filter(l => l.worker_id === worker.id)
                 const totalMeters = sumMeters(workerLogs)
 
-                const machineGroups: Record<string, number> = {}
-                workerLogs.forEach(log => {
-                    const logMeters = typeof log.meters === 'string' ? parseFloat(log.meters) : log.meters
-                    machineGroups[log.machine_id] = (machineGroups[log.machine_id] || 0) + (logMeters || 0)
-                })
-
-                const breakdown: MachineBreakdown[] = Object.entries(machineGroups).map(([machineId, meters]) => {
-                    const machine = machineMap[machineId]
-                    const pay = calculateTotalPay([{ meters, rate: machine?.rate || 0 }])
+                const payItems = workerLogs.map(log => {
+                    const batch: any = log.yarn_batches
+                    const rate = batch?.qualities?.default_worker_rate_per_m || 0
                     return {
-                        machineName: machine?.name || 'Unknown',
-                        meters: meters.toFixed(2),
-                        pay
+                        meters: log.meters,
+                        rate
                     }
                 })
-
-                const payItems = workerLogs.map(log => ({
-                    meters: log.meters,
-                    rate: machineMap[log.machine_id]?.rate || 0
-                }))
                 const totalPay = calculateTotalPay(payItems)
+
+                const machineGroups: Record<string, { meters: number, pay: number }> = {}
+                workerLogs.forEach(log => {
+                    const logMeters = typeof log.meters === 'string' ? parseFloat(log.meters) : log.meters
+                    const batch: any = log.yarn_batches
+                    const rate = batch?.qualities?.default_worker_rate_per_m || 0
+                    const logPay = logMeters * rate
+
+                    if (!machineGroups[log.machine_id]) machineGroups[log.machine_id] = { meters: 0, pay: 0 }
+                    machineGroups[log.machine_id].meters += logMeters
+                    machineGroups[log.machine_id].pay += logPay
+                })
+
+                const breakdown: MachineBreakdown[] = Object.entries(machineGroups).map(([machineId, data]) => {
+                    const machine = machineMap[machineId]
+                    return {
+                        machineName: machine?.name || 'Unknown',
+                        meters: data.meters.toFixed(2),
+                        pay: data.pay.toFixed(2)
+                    }
+                })
 
                 return {
                     id: worker.id,
