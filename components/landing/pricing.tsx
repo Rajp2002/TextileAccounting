@@ -25,7 +25,7 @@ const tiers = [
         name: 'Base',
         id: 'tier-base',
         href: '/signup',
-        priceMonthly: '₹600',
+        priceMonthly: '₹1,200',
         priceSuffix: '/month',
         description: 'Perfect for smaller textile factories getting started.',
         features: [
@@ -43,7 +43,7 @@ const tiers = [
         name: 'Premium',
         id: 'tier-premium',
         href: '/signup',
-        priceMonthly: '₹1,700',
+        priceMonthly: '₹3,500',
         priceSuffix: '/month',
         description: 'Everything you need to scale your production.',
         features: [
