@@ -129,6 +129,47 @@ export default function ProductionEntryForm() {
         setMetersInput({})
     }, [selectedDate, userProfile?.org_id]) // Also clear if org_id changes (session switch)
 
+    // Listen for new orders created by the owner so the assignment dropdown updates instantly
+    useEffect(() => {
+        if (!userProfile?.org_id) return
+
+        const ordersChannel = supabase.channel('supervisor_orders_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'orders',
+                    filter: `org_id=eq.${userProfile.org_id}`
+                },
+                () => {
+                    queryClient.invalidateQueries({ queryKey: ['active_orders'] })
+                }
+            )
+            .subscribe()
+
+        // Listen for new/updated yarn batches (e.g. owner adds new beam)
+        const batchesChannel = supabase.channel('supervisor_batches_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'yarn_batches',
+                    filter: `org_id=eq.${userProfile.org_id}`
+                },
+                () => {
+                    queryClient.invalidateQueries({ queryKey: ['active_yarn_batches'] })
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(ordersChannel)
+            supabase.removeChannel(batchesChannel)
+        }
+    }, [supabase, queryClient, userProfile?.org_id])
+
     const { data: existingLogs, isLoading: logsLoading } = useQuery({
         queryKey: ['production_logs', userProfile?.org_id, selectedDate, currentShift],
         enabled: !!userProfile?.org_id && !!selectedDate,
