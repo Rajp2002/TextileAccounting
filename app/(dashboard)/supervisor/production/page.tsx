@@ -239,7 +239,7 @@ export default function ProductionEntryForm() {
             if (error) throw error
             return data.map((b: any) => ({
                 ...b,
-                quality: b.qualities
+                quality: Array.isArray(b.qualities) ? b.qualities[0] : b.qualities
             })) as YarnBatch[]
         }
     })
@@ -253,14 +253,18 @@ export default function ProductionEntryForm() {
                 .select('id, party_name, quality_id, qualities(name), status')
                 .eq('org_id', userProfile!.org_id)
                 .eq('status', 'active')
+                .order('party_name', { ascending: true })
             if (error) throw error
-            return data.map((o: any) => ({
-                id: o.id,
-                party_name: o.party_name,
-                quality_id: o.quality_id,
-                quality_name: o.qualities?.name,
-                status: o.status
-            })) as Order[]
+            return data.map((o: any) => {
+                const quality = Array.isArray(o.qualities) ? o.qualities[0] : o.qualities
+                return {
+                    id: o.id,
+                    party_name: o.party_name,
+                    quality_id: o.quality_id,
+                    quality_name: quality?.name || 'Unknown Quality',
+                    status: o.status
+                }
+            }) as Order[]
         }
     })
 
@@ -857,8 +861,9 @@ export default function ProductionEntryForm() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-sm text-gray-500 p-4 border rounded bg-gray-50 text-center">
-                                    {t('modals.no_active_orders')}
+                                <div className="text-sm text-gray-500 p-6 border-2 border-dashed rounded-xl bg-gray-50/50 text-center space-y-2">
+                                    <p className="font-bold text-gray-900">{t('modals.no_active_orders')}</p>
+                                    <p className="text-xs text-gray-400">Ask the owner to create or activate an order in the Analytics dashboard.</p>
                                 </div>
                             )}
                         </div>
