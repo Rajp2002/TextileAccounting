@@ -70,12 +70,22 @@ function createLimiter(requests: number, windowSeconds: number): Ratelimit | nul
 
 /**
  * Auth limiter — 10 requests per 15 minutes, IP-based.
- * Applied in middleware for /login, /signup, /auth/* routes.
+ * Applied in middleware for /login and /auth/* routes.
  */
 let _authLimiter: Ratelimit | null | undefined = undefined
 export function getAuthLimiter() {
     if (_authLimiter === undefined) _authLimiter = createLimiter(10, 15 * 60)
     return _authLimiter
+}
+
+/**
+ * Signup limiter — 50 requests per 15 minutes, IP-based.
+ * Higher limit to facilitate testing and legitimate high-traffic onboarding.
+ */
+let _signupLimiter: Ratelimit | null | undefined = undefined
+export function getSignupLimiter() {
+    if (_signupLimiter === undefined) _signupLimiter = createLimiter(50, 15 * 60)
+    return _signupLimiter
 }
 
 /**
@@ -135,8 +145,9 @@ export async function checkRateLimit(
  * Pre-built helper: check the auth limiter by IP.
  * Returns null if allowed, or the reset timestamp (ms) if rate-limited.
  */
-export async function checkAuthRateLimit(ip: string): Promise<number | null> {
-    const result = await checkRateLimit(getAuthLimiter, `auth:${ip}`)
+export async function checkAuthRateLimit(ip: string, isSignup: boolean = false): Promise<number | null> {
+    const limiterFn = isSignup ? getSignupLimiter : getAuthLimiter
+    const result = await checkRateLimit(limiterFn, `auth:${ip}`)
     return result.success ? null : result.reset
 }
 
