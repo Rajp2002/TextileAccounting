@@ -65,7 +65,8 @@ export async function validateAndRotateAccessCode(orgId: string, inputCode: stri
     if (new Date(org.access_code_expires_at) < new Date()) return false
 
     const inputHash = crypto.createHash('sha256').update(codeParsed.data).digest('hex')
-    if (inputHash !== org.access_code_hash) return false
+    const isValid = crypto.timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(org.access_code_hash, 'hex'))
+    if (!isValid) return false
 
     // Valid! Consume the code
     await supabase
@@ -103,7 +104,8 @@ export async function deleteFixedWorkerWithCode(workerId: number, accessCode: st
     if (new Date(org.access_code_expires_at) < new Date()) return { error: 'Invalid or expired access code' }
 
     const inputHash = crypto.createHash('sha256').update(codeParsed.data).digest('hex')
-    if (inputHash !== org.access_code_hash) return { error: 'Invalid or expired access code' }
+    const isValid = crypto.timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(org.access_code_hash, 'hex'))
+    if (!isValid) return { error: 'Invalid or expired access code' }
 
     await supabase
         .from('organizations')

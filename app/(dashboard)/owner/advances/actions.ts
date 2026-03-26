@@ -78,6 +78,7 @@ export async function deleteAdvance(advanceId: number) {
         .from('worker_advances')
         .delete()
         .eq('id', parsed.data)
+        .eq('org_id', profile.org_id)
 
     if (error) {
         console.error('Failed to delete advance:', error)

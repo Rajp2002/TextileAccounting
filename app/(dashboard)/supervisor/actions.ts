@@ -77,9 +77,10 @@ async function validateAndConsumeAccessCode(userId: string, orgId: string, input
         return false
     }
 
-    const { createHash } = await import('crypto')
+    const { createHash, timingSafeEqual } = await import('crypto')
     const inputHash = createHash('sha256').update(codeParsed.data).digest('hex')
-    if (inputHash !== org.access_code_hash) {
+    const isValid = timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(org.access_code_hash, 'hex'))
+    if (!isValid) {
         await recordAccessCodeFailure(userId)
         return false
     }
