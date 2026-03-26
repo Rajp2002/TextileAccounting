@@ -74,7 +74,7 @@ function createLimiter(requests: number, windowSeconds: number): Ratelimit | nul
  */
 let _authLimiter: Ratelimit | null | undefined = undefined
 export function getAuthLimiter() {
-    if (_authLimiter === undefined) _authLimiter = createLimiter(10, 15 * 60)
+    if (_authLimiter === undefined) _authLimiter = createLimiter(200, 15 * 60)
     return _authLimiter
 }
 
@@ -84,7 +84,7 @@ export function getAuthLimiter() {
  */
 let _signupLimiter: Ratelimit | null | undefined = undefined
 export function getSignupLimiter() {
-    if (_signupLimiter === undefined) _signupLimiter = createLimiter(50, 15 * 60)
+    if (_signupLimiter === undefined) _signupLimiter = createLimiter(200, 15 * 60)
     return _signupLimiter
 }
 
@@ -95,7 +95,7 @@ export function getSignupLimiter() {
  */
 let _accessCodeLimiter: Ratelimit | null | undefined = undefined
 export function getAccessCodeLimiter() {
-    if (_accessCodeLimiter === undefined) _accessCodeLimiter = createLimiter(5, 10 * 60)
+    if (_accessCodeLimiter === undefined) _accessCodeLimiter = createLimiter(100, 10 * 60)
     return _accessCodeLimiter
 }
 
@@ -105,7 +105,7 @@ export function getAccessCodeLimiter() {
  */
 let _destructiveLimiter: Ratelimit | null | undefined = undefined
 export function getDestructiveLimiter() {
-    if (_destructiveLimiter === undefined) _destructiveLimiter = createLimiter(20, 60)
+    if (_destructiveLimiter === undefined) _destructiveLimiter = createLimiter(100, 60)
     return _destructiveLimiter
 }
 
