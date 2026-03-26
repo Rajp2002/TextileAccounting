@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, PackageSearch, BookmarkCheck, FileText, Settings2, Trash2 } from 'lucide-react'
+import { Plus, PackageSearch, BookmarkCheck, FileText, Settings2, Trash2, Loader2 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { useUserProfile } from '@/hooks/use-user-profile'
@@ -14,8 +14,17 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from 'sonner'
 import { formatINR } from '@/lib/finance'
-import { addQuality, addYarnBatch, loadSuratQualityTemplates, closeYarnBatch } from '@/app/(dashboard)/owner/actions'
-import { AlertTriangle, TrendingDown, TrendingUp, DollarSign } from 'lucide-react'
+import { 
+    addQuality, 
+    addYarnBatch, 
+    loadSuratQualityTemplates, 
+    closeYarnBatch,
+    settleBatchAudit 
+} from '@/app/(dashboard)/owner/actions'
+import { unconsumeBatchWithCode } from '@/app/(dashboard)/supervisor/actions'
+import { generateAccessCode } from '@/app/(dashboard)/owner/actions'
+import { AlertTriangle, TrendingDown, TrendingUp, DollarSign, RotateCcw } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 
 export default function InventoryPage() {
@@ -42,6 +51,14 @@ export default function InventoryPage() {
     const [auditBatchId, setAuditBatchId] = useState<string | null>(null)
     const [auditModalOpen, setAuditModalOpen] = useState(false)
     const [leftoverWeightKg, setLeftoverWeightKg] = useState<string>('0')
+
+    // Un-consume / Safety Gate State
+    const [unconsumeModalOpen, setUnconsumeModalOpen] = useState(false)
+    const [unconsumingBatchId, setUnconsumingBatchId] = useState<string | null>(null)
+    const [authCode, setAuthCode] = useState('')
+    const [isVerifyingCode, setIsVerifyingCode] = useState(false)
+    const [generatedCode, setGeneratedCode] = useState('')
+    const [isGeneratingCode, setIsGeneratingCode] = useState(false)
 
     // Real-time listener for production updates
     useEffect(() => {
@@ -78,6 +95,39 @@ export default function InventoryPage() {
             return data
         }
     })
+
+    const handleGenerateCode = async () => {
+        setIsGeneratingCode(true)
+        try {
+            const res = await generateAccessCode()
+            if (res.error) throw new Error(res.error)
+            setGeneratedCode(res.code!)
+            toast.success(t('settings.access_code.success'))
+        } catch (err: any) {
+            toast.error(err.message || "Failed to generate code")
+        } finally {
+            setIsGeneratingCode(false)
+        }
+    }
+
+    const handleUnconsume = async () => {
+        if (!unconsumingBatchId || !authCode) return
+        setIsVerifyingCode(true)
+        try {
+            const res = await unconsumeBatchWithCode(unconsumingBatchId, authCode)
+            if (res.error) throw new Error(res.error)
+            toast.success(t('production.unconsume_success'))
+            setUnconsumeModalOpen(false)
+            setUnconsumingBatchId(null)
+            setAuthCode('')
+            setGeneratedCode('')
+            queryClient.invalidateQueries({ queryKey: ['yarn_batches'] })
+        } catch (err: any) {
+            toast.error(err.message || "Failed to un-consume")
+        } finally {
+            setIsVerifyingCode(false)
+        }
+    }
 
     // Batches Query
     const { data: batches, isLoading: batchesLoading } = useQuery({
@@ -200,7 +250,7 @@ export default function InventoryPage() {
                                             </div>
                                         </div>
 
-                                        {batch.status === 'active' && (
+                                         {batch.status === 'active' && (
                                             <Button 
                                                 variant="outline" 
                                                 className="w-full mt-2 text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 font-semibold"
@@ -213,16 +263,72 @@ export default function InventoryPage() {
                                             </Button>
                                         )}
                                         {batch.status === 'consumed' && (
-                                            <Button 
-                                                variant="outline" 
-                                                className="w-full mt-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50 font-medium"
-                                                onClick={() => {
-                                                    setAuditBatchId(batch.id)
-                                                    setAuditModalOpen(true)
-                                                }}
-                                            >
-                                                <FileText className="w-4 h-4 mr-2" /> {t('inventory.batches.card.view_audit')}
-                                            </Button>
+                                            <div className="space-y-2 mt-2">
+                                                <div className="flex gap-2">
+                                                    <Button 
+                                                        variant="outline" 
+                                                        className="flex-1 text-indigo-600 border-indigo-200 hover:bg-indigo-50 font-medium h-9 text-xs"
+                                                        onClick={() => {
+                                                            setAuditBatchId(batch.id)
+                                                            setAuditModalOpen(true)
+                                                        }}
+                                                    >
+                                                        <FileText className="w-3.5 h-3.5 mr-1" /> {t('inventory.batches.card.view_audit')}
+                                                    </Button>
+                                                    <Button 
+                                                        variant="outline" 
+                                                        className="flex-1 text-orange-600 border-orange-200 hover:bg-orange-50 font-medium h-9 text-xs"
+                                                        onClick={() => {
+                                                            setUnconsumingBatchId(batch.id)
+                                                            setUnconsumeModalOpen(true)
+                                                        }}
+                                                    >
+                                                        <RotateCcw className="w-3.5 h-3.5 mr-1" /> {t('inventory.audit.unconsume')}
+                                                    </Button>
+                                                </div>
+                                                
+                                                {batch.leakage_alert && batch.audit_status === 'pending' && (
+                                                    <div className="flex gap-2">
+                                                        <Button 
+                                                            variant="default" 
+                                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white h-8 text-xs"
+                                                            onClick={async () => {
+                                                                const res = await settleBatchAudit(batch.id, 'settled')
+                                                                if (res.error) toast.error(res.error)
+                                                                else {
+                                                                    toast.success(t('inventory.audit.settled_success'))
+                                                                    queryClient.invalidateQueries({ queryKey: ['yarn_batches'] })
+                                                                }
+                                                            }}
+                                                        >
+                                                            {t('inventory.audit.settle')}
+                                                        </Button>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            className="flex-1 text-gray-500 hover:text-gray-700 h-8 text-xs"
+                                                            onClick={async () => {
+                                                                const res = await settleBatchAudit(batch.id, 'dismissed')
+                                                                if (res.error) toast.error(res.error)
+                                                                else {
+                                                                    toast.success(t('inventory.audit.dismissed_success'))
+                                                                    queryClient.invalidateQueries({ queryKey: ['yarn_batches'] })
+                                                                }
+                                                            }}
+                                                        >
+                                                            {t('inventory.audit.dismiss')}
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                                
+                                                {batch.audit_status !== 'pending' && (
+                                                    <div className={cn(
+                                                        "text-[10px] text-center p-1 rounded font-bold uppercase tracking-wider",
+                                                        batch.audit_status === 'settled' ? "bg-green-50 text-green-600" : "bg-gray-50 text-gray-500"
+                                                    )}>
+                                                        Audit {batch.audit_status}
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                     </CardContent>
                                 </Card>
@@ -640,6 +746,72 @@ export default function InventoryPage() {
                 </DialogContent>
             </Dialog>
 
+            {/* Un-consume Safety Gate Modal */}
+            <Dialog open={unconsumeModalOpen} onOpenChange={setUnconsumeModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-orange-600">
+                            <RotateCcw className="h-5 w-5" /> {t('inventory.audit.unconsume')}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {t('inventory.audit.unconsume_desc')}
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-6 py-4">
+                        <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl space-y-3">
+                            <Label className="text-orange-900 font-bold">{t('settings.access_code.title')}</Label>
+                            <div className="flex gap-2">
+                                <Input 
+                                    value={generatedCode} 
+                                    readOnly 
+                                    placeholder="Code will appear here"
+                                    className="font-mono text-center text-lg tracking-widest bg-white border-orange-200"
+                                />
+                                <Button 
+                                    onClick={handleGenerateCode} 
+                                    disabled={isGeneratingCode}
+                                    className="bg-orange-600 hover:bg-orange-700"
+                                >
+                                    {isGeneratingCode ? <Loader2 className="animate-spin h-4 w-4" /> : t('settings.access_code.btn')}
+                                </Button>
+                            </div>
+                            {generatedCode && (
+                                <p className="text-[10px] text-orange-700 font-medium">
+                                    {t('settings.access_code.warning')}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>{t('production.enter_code')}</Label>
+                            <Input 
+                                value={authCode}
+                                onChange={e => setAuthCode(e.target.value.toUpperCase())}
+                                placeholder="E.g. XJ82Y1"
+                                maxLength={6}
+                                className="font-mono text-center text-xl tracking-widest"
+                            />
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => {
+                            setUnconsumeModalOpen(false)
+                            setGeneratedCode('')
+                            setAuthCode('')
+                        }}>{t('common.cancel')}</Button>
+                        <Button 
+                            className="bg-orange-600 hover:bg-orange-700"
+                            disabled={isVerifyingCode || authCode.length < 6}
+                            onClick={handleUnconsume}
+                        >
+                            {isVerifyingCode ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                            {t('common.verify_unlock')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
