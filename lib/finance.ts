@@ -121,7 +121,7 @@ export function calculateMaxDeduction(
 export function calculateNetPay(
     grossPay: number | string,
     totalAdvances: number | string,
-    maxDeductionPercent: number = 100
+    maxDeductionPercent: number = 50 // Default to 50% as per Code on Wages
 ): string {
     const gross = new Decimal(grossPay || 0)
     const advances = new Decimal(totalAdvances || 0)
@@ -140,11 +140,14 @@ export function calculateNetPay(
  */
 export function calculateRemainingDebt(
     grossPay: number | string,
-    totalAdvances: number | string
+    totalAdvances: number | string,
+    maxDeductionPercent: number = 50 // Default to 50% as per Code on Wages
 ): string {
     const gross = new Decimal(grossPay || 0)
     const advances = new Decimal(totalAdvances || 0)
-    return Decimal.max(0, advances.minus(gross)).toFixed(2)
+    const maxDeduction = gross.times(maxDeductionPercent).div(100)
+    const actualDeduction = Decimal.min(advances, maxDeduction)
+    return Decimal.max(0, advances.minus(actualDeduction)).toFixed(2)
 }
 
 // ─── Yarn-to-Fabric Yield Calculations ───────────────────────────────────────
