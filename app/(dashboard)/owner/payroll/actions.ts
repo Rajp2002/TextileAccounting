@@ -29,24 +29,19 @@ export async function toggleWorkerPaid(
         const monthStart = `${wMonth}-01`
         const monthEnd = `${wMonth}-31`
 
+        // Fetch logs with quality rate from the linked yarn batch
+        // Rate is defined on the fabric quality, not on the machine.
         const { data: logs } = await supabase
             .from('production_logs')
-            .select('machine_id, meters')
+            .select('meters, yarn_batches(qualities(default_worker_rate_per_m))')
             .eq('org_id', profile.org_id)
             .eq('worker_id', wId)
             .gte('date', monthStart)
             .lte('date', monthEnd)
 
-        const { data: machines } = await supabase
-            .from('machines')
-            .select('id, rate_per_meter')
-            .eq('org_id', profile.org_id)
-
-        const machineMap = Object.fromEntries((machines || []).map(m => [m.id, m]))
-
-        const payItems = (logs || []).map(log => ({
+        const payItems = (logs || []).map((log: any) => ({
             meters: log.meters,
-            rate: machineMap[log.machine_id]?.rate_per_meter || 0
+            rate: (log.yarn_batches as any)?.qualities?.default_worker_rate_per_m || 0
         }))
 
         calculatedAmountStr = calculateTotalPay(payItems)

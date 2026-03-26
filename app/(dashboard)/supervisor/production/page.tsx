@@ -55,7 +55,6 @@ interface Worker {
 interface Machine {
     id: string
     name: string
-    rate_per_meter: number
     status: string
 }
 
@@ -69,7 +68,7 @@ interface YarnBatch {
     id: string
     name: string
     quality_id: string
-    quality: { name: string, target_yield: number }
+    quality: { name: string, target_yield: number, default_worker_rate_per_m: number }
     current_machine_id: string | null
     status: string
 }
@@ -193,7 +192,7 @@ export default function ProductionEntryForm() {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('yarn_batches')
-                .select('id, name, current_machine_id, status, quality_id, qualities(name, target_yield)')
+                .select('id, name, current_machine_id, status, quality_id, qualities(name, target_yield, default_worker_rate_per_m)')
                 .eq('org_id', userProfile!.org_id)
                 .eq('status', 'active')
             if (error) throw error
@@ -523,7 +522,8 @@ export default function ProductionEntryForm() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {machineCards.map(({ machine, assignedWorkerId, effectiveWorkerId, meters, isSaved, activeBatch, activeOrder, isReadyToRun }) => {
-                    const rate = machine.rate_per_meter || 0
+                    // Rate is defined on the fabric quality, auto-propagated from beam
+                    const rate = activeBatch?.quality?.default_worker_rate_per_m || 0
                     const displayMeters = metersInput[machine.id] !== undefined ? metersInput[machine.id] : meters
                     const pay = displayMeters > 0 ? calculateDailyPay(displayMeters, rate) : null
                     const worker = workers?.find(w => w.id === effectiveWorkerId)

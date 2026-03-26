@@ -23,7 +23,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { toast } from 'sonner'
-import { Loader2, Save, Plus, Trash2, KeyRound, Pencil, Power } from 'lucide-react'
+import { Loader2, Plus, Trash2, KeyRound, Pencil, Power, Tag } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { deleteMachineWithCode } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
@@ -42,7 +42,7 @@ interface Machine {
     id: string
     name: string
     status: string
-    rate_per_meter: number
+    current_order_id?: string | null
 }
 
 interface Assignment {
@@ -51,9 +51,19 @@ interface Assignment {
     shift: 'day' | 'night'
 }
 
+interface YarnBatch {
+    id: string
+    name: string
+    current_machine_id: string | null
+    quality_id: string
+    quality: {
+        name: string
+        default_worker_rate_per_m: number
+    } | null
+}
+
 interface MachineManagementProps {
     orgId: string
-    canEditRates?: boolean
     canAddMachines?: boolean
     canRenameMachines?: boolean
     canDeleteMachines?: boolean
@@ -61,20 +71,16 @@ interface MachineManagementProps {
 
 export function MachineManagement({
     orgId,
-    canEditRates = true,
     canAddMachines = true,
     canRenameMachines = true,
     canDeleteMachines = true,
 }: MachineManagementProps) {
     const supabase = createClient()
     const queryClient = useQueryClient()
-    const [editingRates, setEditingRates] = useState<Record<string, string>>({})
-    const [saving, setSaving] = useState<Record<string, boolean>>({})
 
     // Add Machine State
     const [isAddMachineOpen, setIsAddMachineOpen] = useState(false)
     const [newMachineName, setNewMachineName] = useState('')
-    const [newMachineRate, setNewMachineRate] = useState('')
     const [isAddingMachine, setIsAddingMachine] = useState(false)
 
     // Delete Machine State
@@ -87,7 +93,6 @@ export function MachineManagement({
     const [renameValue, setRenameValue] = useState('')
     const [renaming, setRenaming] = useState(false)
 
-    // Use shared profile hook instead of independent fetch
     const { data: userProfile } = useUserProfile()
     const { t } = useTranslation()
     const tl = useTransliterate()
@@ -114,7 +119,7 @@ export function MachineManagement({
                 .from('workers')
                 .select('id, name, is_active')
                 .eq('org_id', orgId)
-                .eq('is_active', true) // Only active workers for assignment
+                .eq('is_active', true)
                 .order('name')
             if (error) throw error
             return data as Worker[]
@@ -134,38 +139,25 @@ export function MachineManagement({
         }
     })
 
-    const handleRateChange = (machineId: string, value: string) => {
-        setEditingRates(prev => ({ ...prev, [machineId]: value }))
-    }
-
-    const saveRate = async (machineId: string) => {
-        const newRate = editingRates[machineId]
-        if (!newRate) return
-
-        setSaving(prev => ({ ...prev, [machineId]: true }))
-        try {
-            const { error } = await supabase
-                .from('machines')
-                .update({ rate_per_meter: parseFloat(newRate) })
-                .eq('id', machineId)
-
+    // Fetch active yarn batches with quality rate info
+    const { data: activeBatches } = useQuery({
+        queryKey: ['active_yarn_batches_mgmt', orgId],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('yarn_batches')
+                .select('id, name, current_machine_id, quality_id, qualities(name, default_worker_rate_per_m)')
+                .eq('org_id', orgId)
+                .eq('status', 'active')
             if (error) throw error
-            toast.success(t('machines.rate_updated'))
-            queryClient.invalidateQueries({ queryKey: ['machines'] })
-            setEditingRates(prev => {
-                const next = { ...prev }
-                delete next[machineId]
-                return next
-            })
-        } catch (error: any) {
-            toast.error(t('machines.rate_update_failed'))
-        } finally {
-            setSaving(prev => ({ ...prev, [machineId]: false }))
+            return data.map((b: any) => ({
+                ...b,
+                quality: b.qualities
+            })) as YarnBatch[]
         }
-    }
+    })
 
     const handleAddMachine = async () => {
-        if (!newMachineName || !newMachineRate) return
+        if (!newMachineName) return
 
         setIsAddingMachine(true)
         try {
@@ -173,7 +165,6 @@ export function MachineManagement({
                 .from('machines')
                 .insert({
                     name: newMachineName,
-                    rate_per_meter: parseFloat(newMachineRate),
                     org_id: orgId,
                     status: 'active'
                 })
@@ -183,7 +174,6 @@ export function MachineManagement({
             queryClient.invalidateQueries({ queryKey: ['machines'] })
             setIsAddMachineOpen(false)
             setNewMachineName('')
-            setNewMachineRate('')
         } catch (error: any) {
             toast.error(t('machines.machine_add_failed') + ': ' + error.message)
         } finally {
@@ -193,7 +183,6 @@ export function MachineManagement({
 
     const confirmDelete = async (id: string) => {
         if (userProfile?.role === 'owner') {
-            // Owner can delete directly
             if (confirm(t('machines.delete_confirm'))) {
                 setDeleting(true)
                 const { error } = await supabase.from('machines').delete().eq('id', id)
@@ -205,7 +194,6 @@ export function MachineManagement({
                 }
             }
         } else {
-            // Supervisor needs code
             setMachineToDelete(id)
             setAccessCode('')
         }
@@ -266,12 +254,10 @@ export function MachineManagement({
 
     const handleAssignment = async (machineId: string, workerId: string, shift: 'day' | 'night') => {
         try {
-            // Check if assignment exists
             const existing = assignments?.find(a => a.machine_id === machineId && a.shift === shift)
 
             let error;
             if (existing) {
-                // Update
                 const { error: updateError } = await supabase
                     .from('machine_assignments')
                     .update({ worker_id: parseInt(workerId) })
@@ -280,7 +266,6 @@ export function MachineManagement({
                     .eq('org_id', orgId)
                 error = updateError
             } else {
-                // Insert
                 const { error: insertError } = await supabase
                     .from('machine_assignments')
                     .insert({
@@ -333,9 +318,7 @@ export function MachineManagement({
                 <div>
                     <CardTitle>{t('machines.title')}</CardTitle>
                     <CardDescription>
-                        {canEditRates
-                            ? t('machines.desc_edit')
-                            : t('machines.desc_no_edit')}
+                        {t('machines.desc_no_edit')}
                     </CardDescription>
                 </div>
                 {canAddMachines && (
@@ -362,22 +345,18 @@ export function MachineManagement({
                                             placeholder={t('machines.add_machine_placeholder')}
                                             value={newMachineName}
                                             onChange={(e) => setNewMachineName(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleAddMachine()}
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="rate">{t('machines.rate_per_meter')}</Label>
-                                        <Input
-                                            id="rate"
-                                            type="number"
-                                            placeholder="0.00"
-                                            value={newMachineRate}
-                                            onChange={(e) => setNewMachineRate(e.target.value)}
-                                        />
-                                    </div>
+                                    {/* Rate is now defined on the Quality, not the machine */}
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 bg-blue-50 border border-blue-100 rounded-md p-2.5">
+                                        <Tag className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                                        Worker rates are set per fabric quality in the Inventory tab. The machine's rate updates automatically when a beam is linked.
+                                    </p>
                                 </div>
                                 <DialogFooter>
                                     <Button variant="outline" onClick={() => setIsAddMachineOpen(false)}>{t('common.cancel')}</Button>
-                                    <Button onClick={handleAddMachine} disabled={!newMachineName || !newMachineRate || isAddingMachine}>
+                                    <Button onClick={handleAddMachine} disabled={!newMachineName || isAddingMachine}>
                                         {isAddingMachine ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                                         {t('machines.add_machine')}
                                     </Button>
@@ -394,6 +373,11 @@ export function MachineManagement({
                         const nightAssignment = assignments?.find(a => a.machine_id === machine.id && a.shift === 'night')
                         const isInactive = machine.status === 'inactive'
 
+                        // Derive rate from the active beam's quality
+                        const activeBatch = activeBatches?.find(b => b.current_machine_id === machine.id)
+                        const activeRate = activeBatch?.quality?.default_worker_rate_per_m
+                        const activeQualityName = activeBatch?.quality?.name
+
                         return (
                             <div
                                 key={machine.id}
@@ -405,9 +389,23 @@ export function MachineManagement({
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <div className="font-semibold text-lg">{machine.name}</div>
-                                        <div className="text-sm text-gray-500 bg-white px-2 py-0.5 rounded border">
-                                            {t('machines.current_rate')}: ₹{machine.rate_per_meter}/m
-                                        </div>
+
+                                        {/* Dynamic Rate Badge — derived from active beam's quality */}
+                                        {activeBatch ? (
+                                            <div className="text-sm text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 flex items-center gap-1">
+                                                <Tag className="h-3 w-3" />
+                                                ₹{activeRate ?? '—'}/m
+                                                <span className="text-teal-500 font-normal text-xs">
+                                                    ({activeQualityName})
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 flex items-center gap-1">
+                                                <Tag className="h-3 w-3" />
+                                                Rate set by Quality
+                                            </div>
+                                        )}
+
                                         {/* Status Badge */}
                                         <span className={cn(
                                             "text-xs px-2 py-0.5 rounded-full font-medium",
@@ -449,25 +447,6 @@ export function MachineManagement({
                                             >
                                                 <Power className="h-4 w-4" />
                                             </Button>
-                                        )}
-
-                                        {canEditRates && (
-                                            <>
-                                                <Input
-                                                    type="number"
-                                                    placeholder={t('machines.new_rate')}
-                                                    className="w-24 h-8"
-                                                    value={editingRates[machine.id] ?? ''}
-                                                    onChange={(e) => handleRateChange(machine.id, e.target.value)}
-                                                />
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => saveRate(machine.id)}
-                                                    disabled={!editingRates[machine.id] || saving[machine.id]}
-                                                >
-                                                    {saving[machine.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                                                </Button>
-                                            </>
                                         )}
 
                                         {canDeleteMachines && (

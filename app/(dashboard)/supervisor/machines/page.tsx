@@ -28,7 +28,6 @@ export default function SupervisorMachinesPage() {
             {/* Supervisors get view-only access to machines */}
             <MachineManagement
                 orgId={userProfile.org_id}
-                canEditRates={false}
                 canAddMachines={false}
                 canRenameMachines={false}
                 canDeleteMachines={false}
