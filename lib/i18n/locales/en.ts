@@ -93,6 +93,10 @@ export const en = {
     handover_complete: "Shift handover complete. Worker unlinked.",
     handover_failed: "Handover failed",
     enter_code: "Enter 6-character code",
+    add_beam: "Add New Beam",
+    mark_consumed: "Mark Consumed",
+    unconsume: "Un-consume Beam",
+    unconsume_success: "Beam reverted to active status.",
   },
   assignments: {
     title: "Worker Assignments",
@@ -425,7 +429,13 @@ export const en = {
       close: "Close Summary",
       mark_consumed: "Mark as Consumed (Close Batch)",
       closing: "Closing...",
-      success: "Batch successfully closed and audited."
+      success: "Batch successfully closed and audited.",
+      settle: "Settle Audit",
+      dismiss: "Dismiss Alert",
+      settled_success: "Audit marked as settled.",
+      dismissed_success: "Alert dismissed.",
+      unconsume: "Un-consume (Re-activate)",
+      unconsume_desc: "Reverting a consumed beam to 'active' requires an owner access code."
     }
   },
   settings: {

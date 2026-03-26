@@ -425,3 +425,45 @@ export async function getWorkerDebt(workerId: number, workerType: 'meter' | 'fix
     const balance = data?.reduce((sum, row) => sum + Number(row.amount), 0) || 0
     return { balance }
 }
+
+/**
+ * Un-consume a yarn batch. Requires a valid one-time owner access code.
+ */
+export async function unconsumeBatchWithCode(batchId: string, accessCode: string) {
+    const { user, profile } = await requireRole(['supervisor', 'owner'])
+    const orgId = profile.org_id
+
+    const batchParsed = safeParse(UuidSchema, batchId)
+    if ('error' in batchParsed) return { error: batchParsed.error }
+
+    let isCodeValid = false
+    try {
+        isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
+    } catch (e: any) {
+        return { error: e.message }
+    }
+    if (!isCodeValid) return { error: 'Invalid or expired access code' }
+
+    let serviceClient
+    try {
+        serviceClient = getServiceClient()
+    } catch {
+        return { error: 'A server error occurred. Please try again later.' }
+    }
+
+    const { error } = await serviceClient
+        .from('yarn_batches')
+        .update({ 
+            status: 'active',
+            audit_status: 'pending',
+            leakage_alert: false
+        })
+        .eq('id', batchParsed.data)
+        .eq('org_id', orgId)
+
+    if (error) {
+        console.error('Error un-consuming batch:', error)
+        return { error: 'Failed to un-consume batch. Please try again.' }
+    }
+    return { success: true }
+}

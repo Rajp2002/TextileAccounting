@@ -156,7 +156,7 @@ export async function addYarnBatch(data: {
     quality_id: string
     total_weight_kg: number
 }) {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(YarnBatchSchema, data)
@@ -195,11 +195,20 @@ export async function loadSuratQualityTemplates() {
 }
 
 export async function closeYarnBatch(batchId: string, leftoverWeightKg: number = 0) {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(CloseBatchSchema, { batchId, leftoverWeightKg })
     if ('error' in parsed) return { error: parsed.error }
+
+    // 1. Fetch yield report to check for leakage before closing
+    const { data: report, error: reportError } = await supabase
+        .rpc('get_batch_yield_report', { p_org_id: profile.org_id })
+        
+    const batchReport = report?.find((r: any) => r.batch_id === parsed.data.batchId)
+    
+    // Leakage logic: if efficiency variance is < -5%, flag it
+    const hasLeakage = batchReport ? Number(batchReport.efficiency_variance) < -5 : false
 
     const { error } = await supabase
         .from('yarn_batches')
@@ -207,6 +216,8 @@ export async function closeYarnBatch(batchId: string, leftoverWeightKg: number =
             status: 'consumed',
             current_machine_id: null,
             leftover_weight_kg: parsed.data.leftoverWeightKg,
+            leakage_alert: hasLeakage,
+            audit_status: hasLeakage ? 'pending' : 'settled'
         })
         .eq('id', parsed.data.batchId)
         .eq('org_id', profile.org_id)
@@ -215,6 +226,25 @@ export async function closeYarnBatch(batchId: string, leftoverWeightKg: number =
         console.error('Failed to close yarn batch:', error)
         return { error: 'Failed to close batch. Please try again.' }
     }
+    return { success: true }
+}
+
+export async function settleBatchAudit(batchId: string, status: 'settled' | 'dismissed') {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { error } = await supabase
+        .rpc('settle_batch_audit', { 
+            p_batch_id: batchId,
+            p_status: status 
+        })
+
+    if (error) {
+        console.error('Failed to settle audit:', error)
+        return { error: 'Failed to update audit status.' }
+    }
+
+    revalidatePath('/owner/inventory')
     return { success: true }
 }
 

@@ -17,6 +17,7 @@ import {
     linkOrderToMachine, 
     shiftHandover 
 } from '@/app/(dashboard)/supervisor/actions'
+import { addYarnBatch, closeYarnBatch } from '@/app/(dashboard)/owner/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
@@ -36,6 +37,7 @@ import {
     Settings2 
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from '@/lib/utils'
 
 interface Order {
@@ -100,6 +102,17 @@ export default function ProductionEntryForm() {
     const [handoverOpen, setHandoverOpen] = useState(false)
     const [handoverMachineId, setHandoverMachineId] = useState<string | null>(null)
     const [performingHandover, setPerformingHandover] = useState(false)
+
+    // Add Beam State
+    const [addBeamModalOpen, setAddBeamModalOpen] = useState(false)
+    const [addBeamForm, setAddBeamForm] = useState({ name: '', quality_id: '', total_weight_kg: '' })
+    const [addingBeam, setAddingBeam] = useState(false)
+
+    // Consume Beam State
+    const [consumeModalOpen, setConsumeModalOpen] = useState(false)
+    const [consumingBatchId, setConsumingBatchId] = useState<string | null>(null)
+    const [leftoverWeightKg, setLeftoverWeightKg] = useState<string>('0')
+    const [closingBatch, setClosingBatch] = useState(false)
 
     const isOnline = useOnlineStatus()
     const supabase = createClient()
@@ -411,6 +424,45 @@ export default function ProductionEntryForm() {
         }
     }
 
+    const handleAddBeam = async () => {
+        if (!addBeamForm.name || !addBeamForm.quality_id || !addBeamForm.total_weight_kg) return
+        setAddingBeam(true)
+        try {
+            const res = await addYarnBatch({
+                name: addBeamForm.name,
+                quality_id: addBeamForm.quality_id,
+                total_weight_kg: Number(addBeamForm.total_weight_kg)
+            })
+            if (res.error) throw new Error(res.error)
+            toast.success(t('inventory.batches.add_modal.success'))
+            setAddBeamModalOpen(false)
+            setAddBeamForm({ name: '', quality_id: '', total_weight_kg: '' })
+            queryClient.invalidateQueries({ queryKey: ['active_yarn_batches'] })
+        } catch (err: any) {
+            toast.error(err.message || "Failed to add beam")
+        } finally {
+            setAddingBeam(false)
+        }
+    }
+
+    const handleCloseBatch = async () => {
+        if (!consumingBatchId) return
+        setClosingBatch(true)
+        try {
+            const res = await closeYarnBatch(consumingBatchId, Number(leftoverWeightKg || 0))
+            if (res.error) throw new Error(res.error)
+            toast.success(t('inventory.audit.success'))
+            setConsumeModalOpen(false)
+            setConsumingBatchId(null)
+            setLeftoverWeightKg('0')
+            queryClient.invalidateQueries({ queryKey: ['active_yarn_batches'] })
+        } catch (err: any) {
+            toast.error(err.message || "Failed to close batch")
+        } finally {
+            setClosingBatch(false)
+        }
+    }
+
     const handleStartBeam = async () => {
         if (!linkingMachineId || !linkingBatchId) return
         if (!isOnline) {
@@ -508,6 +560,13 @@ export default function ProductionEntryForm() {
                                 onChange={(e) => setSelectedDate(e.target.value)}
                                 className="h-10 w-[140px] text-sm"
                             />
+                            <Button 
+                                className="h-10 bg-indigo-600 hover:bg-indigo-700" 
+                                onClick={() => setAddBeamModalOpen(true)}
+                            >
+                                <BoxSelect className="h-4 w-4 mr-2" />
+                                {t('production.add_beam')}
+                            </Button>
                         </div>
                     </div>
                 </CardHeader>
@@ -617,6 +676,27 @@ export default function ProductionEntryForm() {
                                          <Label className="text-xs text-gray-500">{t('production.active_beam')}</Label>
                                          <div className="text-sm font-medium h-10 flex items-center">
                                             {activeBatch ? (
+                                                <div className="flex flex-col gap-1 w-full">
+                                                    <span className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded text-[10px] font-semibold truncate" title={`{activeBatch.name} ({activeBatch.quality?.name})`}>
+                                                        {activeBatch.name} 
+                                                        <span className="font-normal text-indigo-500 ml-1">
+                                                            ({activeBatch.quality?.name})
+                                                        </span>
+                                                    </span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-6 px-1 text-[10px] text-rose-600 hover:bg-rose-50 border border-rose-100"
+                                                        onClick={() => {
+                                                            setConsumingBatchId(activeBatch.id)
+                                                            setConsumeModalOpen(true)
+                                                        }}
+                                                        disabled={disabled}
+                                                    >
+                                                        {t('production.mark_consumed')}
+                                                    </Button>
+                                                </div>
+                                            ) : (
                                                 <span className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded text-xs font-semibold truncate w-full" title={`${activeBatch.name} (${activeBatch.quality?.name})`}>
                                                     {activeBatch.name} 
                                                     <span className="font-normal text-indigo-500 ml-1">
@@ -823,6 +903,111 @@ export default function ProductionEntryForm() {
                         >
                             {linkingBeam ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
                             {t('modals.link_start')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Add Beam Modal */}
+            <Dialog open={addBeamModalOpen} onOpenChange={setAddBeamModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{t('inventory.batches.add_modal.title')}</DialogTitle>
+                        <DialogDescription>{t('inventory.batches.add_modal.desc')}</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>{t('inventory.batches.add_modal.name')}</Label>
+                            <Input 
+                                placeholder={t('inventory.batches.add_modal.name_ph')} 
+                                value={addBeamForm.name}
+                                onChange={e => setAddBeamForm({ ...addBeamForm, name: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>{t('inventory.batches.add_modal.quality')}</Label>
+                            <Select 
+                                value={addBeamForm.quality_id} 
+                                onValueChange={v => setAddBeamForm({ ...addBeamForm, quality_id: v })}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={t('inventory.batches.add_modal.quality_ph')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {activeOrders?.map((o: any) => (
+                                        <SelectItem key={o.quality_id} value={o.quality_id}>{o.quality_name}</SelectItem>
+                                    ))}
+                                    {(!activeOrders || activeOrders.length === 0) && (
+                                        <div className="p-2 text-xs text-rose-500">No active orders/qualities available.</div>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>{t('inventory.batches.add_modal.weight')}</Label>
+                            <Input 
+                                type="number" step="0.1" placeholder={t('inventory.batches.add_modal.weight_ph')} 
+                                value={addBeamForm.total_weight_kg}
+                                onChange={e => setAddBeamForm({ ...addBeamForm, total_weight_kg: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setAddBeamModalOpen(false)}>{t('common.cancel')}</Button>
+                        <Button 
+                            className="bg-indigo-600 hover:bg-indigo-700"
+                            disabled={addingBeam || !addBeamForm.name || !addBeamForm.quality_id || !addBeamForm.total_weight_kg}
+                            onClick={handleAddBeam}
+                        >
+                            {addingBeam ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                            {t('inventory.batches.add_modal.save')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Mark Consumed Modal */}
+            <Dialog open={consumeModalOpen} onOpenChange={setConsumeModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-rose-600">
+                            <BoxSelect className="h-5 w-5" /> {t('production.mark_consumed')}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {t('inventory.audit.desc')} this batch.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Label className="text-sm font-bold text-indigo-900">{t('inventory.audit.tali.title')}</Label>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="relative flex-1">
+                                    <Input 
+                                        type="number" 
+                                        step="0.1" 
+                                        value={leftoverWeightKg}
+                                        onChange={e => setLeftoverWeightKg(e.target.value)}
+                                        className="pr-8 bg-white"
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">kg</span>
+                                </div>
+                                <p className="text-[10px] text-indigo-700 leading-tight flex-1">
+                                    {t('inventory.audit.tali.desc')}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setConsumeModalOpen(false)}>{t('common.cancel')}</Button>
+                        <Button 
+                            className="bg-rose-600 hover:bg-rose-700"
+                            disabled={closingBatch || !consumingBatchId}
+                            onClick={handleCloseBatch}
+                        >
+                            {closingBatch ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                            {t('inventory.audit.mark_consumed')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
