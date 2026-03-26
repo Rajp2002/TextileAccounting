@@ -205,15 +205,15 @@ BEGIN
                 settlement_id = v_settlement_id
             WHERE id = v_advance.id;
 
-            INSERT INTO worker_advances (org_id, worker_type, meter_worker_id, fixed_worker_id, amount, reason, status)
+            INSERT INTO worker_advances (org_id, meter_worker_id, fixed_worker_id, amount, description, status, settlement_id)
             VALUES (
                 p_org_id, 
-                p_worker_type, 
                 CASE WHEN p_worker_type = 'meter' THEN p_worker_id ELSE NULL END,
                 CASE WHEN p_worker_type = 'fixed' THEN p_worker_id ELSE NULL END,
                 v_advance.amount - v_deduct_now,
                 'Partial recovery carry-forward',
-                'pending'
+                'pending',
+                v_settlement_id
             );
         END IF;
 
