@@ -284,7 +284,6 @@ export default function ProductionEntryForm() {
     const machineCards = useMemo(() => {
         if (!machines) return []
         return machines.map(machine => {
-            // Filter by both machine_id AND shift so day/night logs are independent
             const existingLog = existingLogs?.find(
                 (l: any) => l.machine_id === machine.id && l.shift === currentShift
             )
@@ -314,7 +313,7 @@ export default function ProductionEntryForm() {
 
 
     const handleMetersChange = (machineId: string, value: number, isSaved: boolean) => {
-        if (isSaved && !unlocked) return // Cannot change if saved and not unlocked
+        if (isSaved && !unlocked) return 
         setMetersInput(prev => ({ ...prev, [machineId]: value }))
     }
 
@@ -334,7 +333,6 @@ export default function ProductionEntryForm() {
             setAccessCode('')
             toast.success(t('production.edit_unlocked'))
 
-            // Copy existing log meters to metersInput state so they can be edited seamlessly
             const newMeters: Record<string, number> = {}
             if (existingLogs) {
                 existingLogs.forEach((log: any) => {
@@ -351,7 +349,6 @@ export default function ProductionEntryForm() {
     }
 
     const handleSaveAll = async () => {
-        // Only save entries that have meters > 0 and are either NOT saved, OR are unlocked for editing.
         const entriesToSave = machineCards.filter(c => {
             if (c.isSaved && !unlocked) return false;
             return (metersInput[c.machine.id] !== undefined) || (!c.isSaved && c.meters > 0)
@@ -384,12 +381,12 @@ export default function ProductionEntryForm() {
                     date: selectedDate,
                     shift: currentShift,
                     org_id: userProfile!.org_id,
-                    yarn_batch_id: item.activeBatch?.id || null, // Auto-fill active batch
-                    order_id: item.activeOrder?.id || null, // Auto-fill active order
+                    yarn_batch_id: item.activeBatch?.id || null, 
+                    order_id: item.activeOrder?.id || null, 
                 }
 
                 if (item.existingLogId) {
-                    productionData.id = item.existingLogId // for upsert
+                    productionData.id = item.existingLogId 
                     productionData.updated_by = user.id
                 } else {
                     productionData.created_by = user.id
@@ -492,7 +489,6 @@ export default function ProductionEntryForm() {
             return
         }
         
-        // Quality Guardrail Check
         const machine = machineCards.find(c => c.machine.id === linkingOrderMachineId)
         const order = activeOrders?.find(o => o.id === selectedOrderId)
         
@@ -556,7 +552,7 @@ export default function ProductionEntryForm() {
                             <Input
                                 type="date"
                                 value={selectedDate}
-                                max={new Date().toISOString().split('T')[0]} // Prevent future dates
+                                max={new Date().toISOString().split('T')[0]} 
                                 onChange={(e) => setSelectedDate(e.target.value)}
                                 className="h-10 w-[140px] text-sm"
                             />
@@ -571,7 +567,6 @@ export default function ProductionEntryForm() {
                     </div>
                 </CardHeader>
 
-                {/* Full-width Shift Toggle inside card content */}
                 <CardContent className="p-4 sm:p-6 pt-0">
                     <div className="flex rounded-xl bg-gray-100 p-1 w-full mt-2">
                         <button
@@ -596,7 +591,6 @@ export default function ProductionEntryForm() {
                 </CardContent>
             </Card>
 
-            {/* Show unlock banner if there are saved entries and not unlocked */}
             {machineCards.some(c => c.isSaved) && !unlocked && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-amber-800 text-sm">
@@ -626,7 +620,6 @@ export default function ProductionEntryForm() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {machineCards.map(({ machine, assignedWorkerId, effectiveWorkerId, meters, isSaved, activeBatch, activeOrder, isReadyToRun }) => {
-                    // Rate is defined on the fabric quality, auto-propagated from beam
                     const rate = activeBatch?.quality?.default_worker_rate_per_m || 0
                     const displayMeters = metersInput[machine.id] !== undefined ? metersInput[machine.id] : meters
                     const pay = displayMeters > 0 ? calculateDailyPay(displayMeters, rate) : null
@@ -673,11 +666,11 @@ export default function ProductionEntryForm() {
                                 
                                 <div className="grid grid-cols-2 gap-2 mt-1 border-t pt-2">
                                      <div className="space-y-1">
-                                         <Label className="text-xs text-gray-500">{t('production.active_beam')}</Label>
-                                         <div className="text-sm font-medium h-10 flex items-center">
-                                            {activeBatch ? (
+                                          <Label className="text-xs text-gray-500">{t('production.active_beam')}</Label>
+                                          <div className="text-sm font-medium h-10 flex items-center">
+                                             {activeBatch ? (
                                                 <div className="flex flex-col gap-1 w-full">
-                                                    <span className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded text-[10px] font-semibold truncate" title={`{activeBatch.name} ({activeBatch.quality?.name})`}>
+                                                    <span className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded text-[10px] font-semibold truncate" title={`${activeBatch.name} (${activeBatch.quality?.name})`}>
                                                         {activeBatch.name} 
                                                         <span className="font-normal text-indigo-500 ml-1">
                                                             ({activeBatch.quality?.name})
@@ -696,14 +689,7 @@ export default function ProductionEntryForm() {
                                                         {t('production.mark_consumed')}
                                                     </Button>
                                                 </div>
-                                            ) : (
-                                                <span className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded text-xs font-semibold truncate w-full" title={`${activeBatch.name} (${activeBatch.quality?.name})`}>
-                                                    {activeBatch.name} 
-                                                    <span className="font-normal text-indigo-500 ml-1">
-                                                        ({activeBatch.quality?.name})
-                                                    </span>
-                                                </span>
-                                            ) : (
+                                             ) : (
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm" 
@@ -718,21 +704,21 @@ export default function ProductionEntryForm() {
                                                     <LinkIcon className="h-3 w-3 mr-1" />
                                                     {t('production.start_beam')}
                                                 </Button>
-                                            )}
-                                         </div>
+                                             )}
+                                          </div>
                                      </div>
 
                                      <div className="space-y-1">
-                                         <Label className="text-xs text-gray-500">{t('production.active_order')}</Label>
-                                         <div className="text-sm font-medium h-10 flex items-center">
-                                            {activeOrder ? (
+                                          <Label className="text-xs text-gray-500">{t('production.active_order')}</Label>
+                                          <div className="text-sm font-medium h-10 flex items-center">
+                                             {activeOrder ? (
                                                 <span className="text-teal-700 bg-teal-50 px-2 py-1 rounded text-xs font-semibold truncate w-full" title={activeOrder.party_name}>
                                                     {activeOrder.party_name}
                                                     <span className="font-normal text-teal-500 ml-1">
                                                         ({activeOrder.quality_name})
                                                     </span>
                                                 </span>
-                                            ) : (
+                                             ) : (
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm" 
@@ -747,12 +733,11 @@ export default function ProductionEntryForm() {
                                                     <ClipboardList className="h-3 w-3 mr-1" />
                                                     {t('production.link_order')}
                                                 </Button>
-                                            )}
-                                         </div>
+                                             )}
+                                          </div>
                                      </div>
                                 </div>
 
-                                {/* Ready to Run check (Ready to Run Gap) */}
                                 {!isReadyToRun ? (
                                     <div className="pt-3 border-t">
                                         <div className="bg-gray-50 rounded-lg p-3 border border-dashed border-gray-200">
@@ -817,7 +802,6 @@ export default function ProductionEntryForm() {
                 })}
             </div>
 
-            {/* Access Code Modal */}
             <Dialog open={verificationOpen} onOpenChange={setVerificationOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -853,7 +837,6 @@ export default function ProductionEntryForm() {
                 </DialogContent>
             </Dialog>
 
-            {/* Start Beam Modal */}
             <Dialog open={beamModalOpen} onOpenChange={setBeamModalOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -908,7 +891,6 @@ export default function ProductionEntryForm() {
                 </DialogContent>
             </Dialog>
 
-            {/* Add Beam Modal */}
             <Dialog open={addBeamModalOpen} onOpenChange={setAddBeamModalOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -966,7 +948,6 @@ export default function ProductionEntryForm() {
                 </DialogContent>
             </Dialog>
 
-            {/* Mark Consumed Modal */}
             <Dialog open={consumeModalOpen} onOpenChange={setConsumeModalOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -1013,7 +994,6 @@ export default function ProductionEntryForm() {
                 </DialogContent>
             </Dialog>
 
-            {/* Link Order Modal */}
             <Dialog open={orderModalOpen} onOpenChange={setOrderModalOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -1067,7 +1047,6 @@ export default function ProductionEntryForm() {
                 </DialogContent>
             </Dialog>
 
-            {/* Fixed Save All button */}
             <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] flex justify-center z-40 pb-[env(safe-area-inset-bottom,16px)] md:pb-6">
                 <div className="w-full max-w-5xl md:flex md:justify-end md:px-0">
                     <Button
