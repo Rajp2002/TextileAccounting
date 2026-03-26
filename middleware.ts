@@ -25,7 +25,8 @@ export async function updateSession(request: NextRequest) {
             request.headers.get('x-real-ip') ||
             '127.0.0.1'
 
-        const resetAt = await checkAuthRateLimit(ip)
+        const isSignup = request.nextUrl.pathname.startsWith('/signup')
+        const resetAt = await checkAuthRateLimit(ip, isSignup)
 
         if (resetAt !== null) {
             const retryAfterSecs = Math.ceil(Math.max(0, resetAt - Date.now()) / 1000)
