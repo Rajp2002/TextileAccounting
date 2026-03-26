@@ -72,9 +72,16 @@ export async function exportOrganizationData() {
  * The caller must pass the exact organization name as confirmation.
  */
 export async function deleteOrganizationData(confirmationName: string) {
-    const { profile } = await requireRole(['owner'])
+    const { profile, user } = await requireRole(['owner'])
     const supabase = await createServerClient()
     const orgId = profile.org_id
+
+    // Check rate limit for destructive action
+    const { getDestructiveLimiter, checkRateLimit } = await import('@/lib/rate-limit')
+    const limiter = await checkRateLimit(getDestructiveLimiter, user.id)
+    if (!limiter.success) {
+        throw new Error(`Too many attempts. Try again in ${Math.ceil(limiter.reset / 1000)} seconds.`)
+    }
 
     // Verify the confirmation name matches the org name
     const { data: org } = await supabase
