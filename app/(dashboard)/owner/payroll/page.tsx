@@ -821,7 +821,12 @@ export default function PayrollPage() {
                             settlement: !variables.currentPaid ? {
                                 status: 'paid',
                                 settled_at: new Date().toISOString(),
-                                is_final_settlement: variables.isFinal
+                                is_final_settlement: variables.isFinal,
+                                gross_pay: w.totalPay || w.earnedPay || 0,
+                                net_payout: parseFloat(calculateNetPay(w.totalPay || w.earnedPay || 0, w.totalAdvances || 0, variables.isFinal ? 100 : 50)),
+                                advance_deducted: (w.totalPay || w.earnedPay || 0) - parseFloat(calculateNetPay(w.totalPay || w.earnedPay || 0, w.totalAdvances || 0, variables.isFinal ? 100 : 50)),
+                                carried_forward_debt: parseFloat(calculateRemainingDebt(w.totalPay || w.earnedPay || 0, w.totalAdvances || 0, variables.isFinal ? 100 : 50)),
+                                compliance_flag: (w.totalAdvances > 0 && !variables.isFinal)
                             } : null
                         }
                     }
