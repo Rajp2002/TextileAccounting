@@ -34,6 +34,7 @@ const primaryNavItems = [
     { name: "Payroll", href: "/owner/payroll", icon: DollarSign },
     { name: "Advances", href: "/owner/advances", icon: HandCoins },
     { name: "Inventory", href: "/owner/inventory", icon: PackageSearch },
+    { name: "Estimator", href: "/owner/estimator", icon: Activity },
 ]
 
 const secondaryNavItems = [

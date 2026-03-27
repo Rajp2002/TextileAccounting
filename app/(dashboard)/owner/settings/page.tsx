@@ -19,6 +19,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
 import { exportOrganizationData, deleteOrganizationData } from './data-export'
 import { toast } from 'sonner'
+import { EstimatorSettings } from '@/components/settings/estimator-settings'
+import { TemplateManager } from '@/components/settings/template-manager'
 
 export default function SettingsPage() {
     const { t } = useTranslation()
@@ -172,6 +174,9 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
             </Card>
+            <EstimatorSettings />
+
+            <TemplateManager />
 
             {/* Data & Privacy — DPDP Act Rights */}
             <Card className="shadow-sm border-gray-200">
