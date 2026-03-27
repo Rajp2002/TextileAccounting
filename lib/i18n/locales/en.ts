@@ -571,5 +571,62 @@ export const en = {
     code_ph: "Enter 6-character code",
     cancel: "Cancel",
     verify_delete: "Verify & Delete"
+  },
+  estimator: {
+    title: "Negotiation Dashboard",
+    subtitle: "Real-time Surat fabric cost calculator",
+    core: {
+      title: "Section 1: The Core",
+      party: "Party Name",
+      meters: "Meters (Order Size)",
+      ppi: "PPI (Picks)",
+      denier: "Denier",
+      gsm: "GSM",
+      style: "Fabric Style"
+    },
+    process: {
+      title: "Section 2: Technical/Process",
+      yarn_rate: "Current Yarn Rate (₹/KG)",
+      job_work: "External Job-Work (Dyeing, Digital, etc.)",
+      add_process: "Add Process",
+      grey_badge: "Grey Cost"
+    },
+    results: {
+      title: "Landed Cost Breakdown",
+      pure_cost: "Pure Production Cost",
+      gst: "GST",
+      final_cost: "Final Landed Cost",
+      breakdown_helper: "Includes Power, Rent/Admin, and Shrinkage."
+    },
+    margin: {
+      title: "Section 4: The Margin",
+      quote_price: "Quote Price Per Meter",
+      estimated_profit: "Estimated Net Profit",
+      save_quote: "Save & Snapshot Quote",
+      convert_order: "Convert to Live Order"
+    },
+    stress: {
+      title: "Risk Stress Test",
+      yarn_hike: "If Yarn Price hikes +5%",
+      eff_drop: "If Efficiency drops to 70%",
+      helper: "Heatmap shows Landed Cost vs. Current Quote Price"
+    },
+    settings: {
+      master_title: "Estimator Master Data",
+      master_desc: "Configure factory-wide default costs for more accurate quoting.",
+      elec_rate: "Electricity Rate (₹/kWh)",
+      rent: "Factory Rent (₹/Day)",
+      admin: "Admin/Staff Overseas (₹/Day)",
+      efficiency: "Avg Machine Efficiency (0-1.0)",
+      gst_rate: "GST Rate (%)",
+      gst_inclusive: "GST Inclusive Landed Cost",
+      gst_helper: "Calculate quote based on GST already in technical inputs.",
+      templates_title: "Fabric Templates",
+      templates_desc: "Setup technical specs for different fabric styles.",
+      new_style: "New Fabric Style",
+      edit_style: "Edit Style",
+      fabric_name: "Fabric Name (Style)",
+      save_template: "Save Template"
+    }
   }
 }
