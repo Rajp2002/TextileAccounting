@@ -35,13 +35,13 @@ export default function AuditTable() {
     const [actionFilter, setActionFilter] = useState<string>('all')
     const [tableFilter, setTableFilter] = useState<string>('all')
 
-    const { data, isLoading } = useQuery({
+    const { data, isLoading, isError } = useQuery({
         queryKey: ['auditLogs', userProfile?.org_id, page, actionFilter, tableFilter],
         enabled: !!userProfile?.org_id,
         queryFn: async () => {
             let query = supabase
                 .from('audit_log')
-                .select('*, profiles!audit_log_changed_by_fkey(name, role)', { count: 'exact' })
+                .select('*, profiles!audit_log_changed_by_fkey(full_name, role)', { count: 'exact' })
                 .eq('org_id', userProfile!.org_id)
                 .order('changed_at', { ascending: false })
                 .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
@@ -130,6 +130,15 @@ export default function AuditTable() {
                                     </div>
                                 </TableCell>
                             </TableRow>
+                        ) : isError ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-48 text-center text-red-500 bg-red-50/30">
+                                    <div className="flex flex-col items-center justify-center gap-2">
+                                        <p className="font-semibold">Failed to load audit logs</p>
+                                        <p className="text-xs text-red-400">Please check your permissions or try refreshing the page.</p>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
                         ) : data?.items?.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-48 text-center text-gray-500">
@@ -155,7 +164,7 @@ export default function AuditTable() {
                                         <div className="flex flex-col">
                                             <span className="font-medium text-gray-800">
                                                 {/* @ts-ignore */}
-                                                {log.profiles?.name || 'Unknown User'}
+                                                {log.profiles?.full_name || 'Unknown User'}
                                             </span>
                                             {/* @ts-ignore */}
                                             {log.profiles?.role && (
