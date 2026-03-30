@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf'
 import { formatINR } from './finance'
+import { formatToSurat } from './time'
 
 /**
  * Generate a PDF payslip for a meter-based worker.
@@ -53,7 +54,7 @@ export function generateMeterPayslip(data: {
     doc.setFont('helvetica', 'bold')
     doc.text('Date:', pageWidth - 80, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(new Date().toLocaleDateString('en-IN'), pageWidth - 55, y)
+    doc.text(formatToSurat(new Date(), 'dd MMMM yyyy'), pageWidth - 55, y)
     y += 10
 
     // ── Divider ──
@@ -177,7 +178,7 @@ export function generateFixedPayslip(data: {
     doc.setFont('helvetica', 'bold')
     doc.text('Date:', pageWidth - 80, y)
     doc.setFont('helvetica', 'normal')
-    doc.text(new Date().toLocaleDateString('en-IN'), pageWidth - 55, y)
+    doc.text(formatToSurat(new Date(), 'dd MMMM yyyy'), pageWidth - 55, y)
     y += 10
 
     // ── Divider ──

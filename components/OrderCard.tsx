@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { CalendarDays, TrendingUp, Layers, Link2, Loader2, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
+import { getSuratDate } from "@/lib/time"
 import {
   Dialog,
   DialogContent,
@@ -54,11 +55,12 @@ export function OrderCard({ order, forecast, layout = 'compact' }: OrderCardProp
   const supabase = createClient()
 
   // Logic to determine if we are behind schedule
+  const suratNow = getSuratDate()
   const isOverdue = forecast?.predicted_finish_date 
     ? new Date(forecast.predicted_finish_date) > new Date(order.deadline) && order.progress_percent < 100
-    : new Date() > new Date(order.deadline) && order.progress_percent < 100
+    : suratNow > new Date(order.deadline) && order.progress_percent < 100
 
-  const isAtRisk = !isOverdue && (new Date(order.deadline).getTime() - new Date().getTime()) < 48 * 60 * 60 * 1000 && order.progress_percent < 90
+  const isAtRisk = !isOverdue && (new Date(order.deadline).getTime() - suratNow.getTime()) < 48 * 60 * 60 * 1000 && order.progress_percent < 90
   
   const statusColor = isOverdue ? 'text-rose-600' : isAtRisk ? 'text-amber-600' : 'text-emerald-600'
   const statusBg = isOverdue ? 'bg-rose-50' : isAtRisk ? 'bg-amber-50' : 'bg-emerald-50'
