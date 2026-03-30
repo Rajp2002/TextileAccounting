@@ -23,9 +23,10 @@ export default async function SupervisorLayout({ children }: { children: React.R
         .eq('id', user.id)
         .single()
 
-    // Owners are intentionally allowed access to supervisor routes
-    // to audit and oversee production, attendance, and worker management.
-    if (profile?.role !== 'supervisor' && profile?.role !== 'owner') {
+    // Redirect owners to their dashboard to enforce role boundaries
+    if (profile?.role === 'owner') {
+        redirect('/owner/analytics')
+    } else if (profile?.role !== 'supervisor') {
         redirect('/login')
     }
 
