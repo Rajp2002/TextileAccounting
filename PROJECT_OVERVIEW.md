@@ -79,7 +79,11 @@ A detailed, expandable table showing every piece-rate worker who produced on the
 
 ### 4.5 Fixed Workers Panel
 
-A list of all salaried/fixed staff with color-coded role badges (Master, Helper, Mender, Sanitation, Day-to-Day, Supervisor). The owner can **inline-edit any salary** directly — click the pencil icon, type the new value, press Enter. For **Day-to-Day workers**, the panel shows days worked this month and earnings so far.
+A list of all salaried/fixed staff with color-coded role badges (Master, Helper, Mender, Sanitation, Day-to-Day, Supervisor). The owner can **inline-edit any salary** directly — click the pencil icon, type the new value, press Enter. 
+
+Key features:
+- **ESI & PF Tracking** — The owner can record ESI (Employee State Insurance) and PF (Provident Fund) numbers and toggle eligibility for compliance tracking.
+- **Attendance-Linked Pay** — For **Day-to-Day workers**, the panel shows days worked this month and auto-calculates earnings.
 
 ---
 
@@ -115,7 +119,7 @@ Defines the types of fabric the factory produces. Each quality has:
 - **Name** (e.g., "60g Georgette", "Cotton 40s")
 - **Target Yield** (meters per kg) — the expected production efficiency
 - **Estimated Sale Price** (₹/meter) — used for monetary loss calculations
-- **Worker Rate** (₹/meter) — auto-applied to machines producing this quality
+- **Worker Rate** (₹/meter) — **The Single Source of Truth** for production pay. This rate is auto-applied to any machine producing this quality, ensuring consistency across the factory floor.
 
 Factories in the Surat region can auto-load default qualities for common fabric types.
 
@@ -165,6 +169,13 @@ Four summary cards:
 - **Paid** — sum of those marked paid
 - **Deductions** — total advances deducted
 - **Outstanding** — what's left to hand out
+
+### 7.4 Robust Settlement Engine ("The Engine Room")
+The payroll system uses a specialized settlement engine to handle complex financial transactions:
+- **The 50% Legal Cap** — In compliance with Indian labor laws, the system automatically caps advance deductions at 50% of gross pay for active workers, ensuring they always take home a living wage. This cap is only lifted for *Final Settlements* (termination).
+- **Snapshot Math** — Every payment creates a permanent snapshot in `payroll_settlements`, locking in the gross pay, deductions, and net payout regardless of future rate changes.
+- **Custom Pay Cycles** — Factories can configure their own cycle start days (e.g., settling on the 10th of every month) via `payroll_configs`.
+- **Advance Splitting** — If a worker's total debt exceeds the 50% cap, the system automatically settles what it can and carries the remaining debt forward to the next month.
 
 ---
 
@@ -227,23 +238,36 @@ Tabbed interface (Piece-Rate / Fixed Staff, Active / Inactive).
 
 Supervisors see the machine list with current assignments but **cannot change rates, rename, or modify machines** — read-only access. This is strictly the owner's privilege.
 
+### 9.6 Safety Incidents (OSHWC)
+
+Supervisors can report workplace accidents and safety incidents directly from the dashboard. This ensures real-time reporting of floor-level incidents as required for OSHWC regulatory compliance.
+
 ---
 
 ## 10. The Machine Management Module (Owner)
 
 Machines are first-class entities:
 - **Name** (e.g., "Loom A", "Rapier 3")
-- **Rate per meter** — the ₹ amount paid per meter produced on that machine
+- **Dynamic Rate** — The ₹ amount paid per meter is resolved dynamically from the **Fabric Quality** currently assigned to the machine's active beam.
 - **Active/Inactive status**
 - **Current order assignment** — which order the machine is producing for
 - **Current beam** — which yarn batch is loaded
 
-The **Owner** can add, rename, update rates, toggle active/inactive, and delete machines (with access code). Rates can also be auto-set by the fabric quality's worker rate when a quality is assigned.
+The **Owner** can add, rename, toggle active/inactive, and delete machines (with access code). 
 
----
+## 11. Compliance & Auditing — Trust through Transparency
 
-## 11. The Access Code System — Owner Authorization Layer
+Vastra is built to meet the rigorous compliance standards required by modern Indian industrial law.
 
+### 11.1 The Audit Trail System
+Required for **Indian Labour record retention (3 years)** and **DPDP Act accountability**. Every sensitive change in the system is automatically logged:
+- **Triggers** — PostgreSQL triggers on `production_logs`, `payroll_payments`, and `worker_advances` capture the 'Before' and 'After' state of every record.
+- **Owner Visibility** — Owners can view a complete history of who changed what and when, ensuring supervisors cannot retroactively manipulate production numbers without detection.
+
+### 11.2 Safety Incidents (OSHWC Code)
+A dedicated module for tracking workplace accidents and safety incidents. This allows factories to maintain a digital register of health and safety events, fulfilling their legal obligations under the Occupational Safety, Health and Working Conditions Code.
+
+### 11.3 The Access Code System — Owner Authorization Layer
 Single-use 6-character codes generated by the Owner from Settings. The code expires after 15 minutes and is consumed on use. Used for:
 - Editing locked (saved) production entries
 - Saving attendance for a past date
@@ -359,9 +383,9 @@ Every database operation enforces:
 | Layer | Technology |
 |---|---|
 | **Frontend** | Next.js 14 (App Router), React, TypeScript |
-| **State** | TanStack Query (React Query) for server state, real-time Supabase subscriptions |
+| **State** | TanStack Query (React Query) for server state, real-time Supabase subscriptions for live dashboards |
 | **Styling** | Tailwind CSS, shadcn/ui components, Framer Motion for animations |
-| **Backend** | Supabase (PostgreSQL, Auth, Row Level Security, Edge Functions, RPCs) |
+| **Backend** | Supabase (PostgreSQL, Auth, Row Level Security, Edge Functions, RPCs, Realtime) |
 | **Financial Math** | Decimal.js |
 | **i18n** | Custom context-based system with Hindi & Gujarati translations + phonetic transliteration engine |
 | **Offline** | IndexedDB via custom hooks, Service Worker (PWA) |
@@ -380,6 +404,7 @@ app/
 │   │   ├── advances/     # Advance tracking & management
 │   │   ├── estimator/    # Vastra Estimator & Quote history
 │   │   ├── fixed-workers/ # Fixed salary staff management
+│   │   ├── incidents/    # OSHWC Safety Incidents (Owner view)
 │   │   ├── inventory/    # Yarn batches, qualities, yield audits
 │   │   ├── machines/     # Machine CRUD
 │   │   ├── payroll/      # Monthly settlement
@@ -389,6 +414,7 @@ app/
 │       ├── production/   # Daily production logging
 │       ├── assignments/  # Worker-machine shift assignments
 │       ├── attendance/   # Day-to-day worker attendance
+│       ├── incidents/    # OSHWC Safety Incidents (Supervisor report)
 │       ├── workers/      # Worker management (tabbed)
 │       └── machines/     # Machine viewing (read-only)
 components/
