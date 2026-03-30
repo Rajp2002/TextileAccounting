@@ -131,6 +131,20 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
+    // ── Strict Role Boundary Enforcement (Edge Level) ─────────────────────
+    if (user && !isPublicRoute) {
+        const role = user.user_metadata?.role || user.app_metadata?.user_role
+        const path = request.nextUrl.pathname
+
+        if (role === 'owner' && path.startsWith('/supervisor')) {
+            return NextResponse.redirect(new URL('/owner/analytics', request.url))
+        }
+        
+        if (role === 'supervisor' && path.startsWith('/owner')) {
+            return NextResponse.redirect(new URL('/supervisor/production', request.url))
+        }
+    }
+
     return response
 }
 
