@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { ReactNode } from 'react'
 import Image from 'next/image'
+import { getSuratDate } from '@/lib/time'
 
 interface AuthLayoutProps {
     children: ReactNode
@@ -47,7 +48,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
 
                 {/* Footer links or branding */}
                 <div className="mt-6 text-center">
-                    <p className="text-xs text-gray-400 font-medium">Vastra &copy; {new Date().getFullYear()}</p>
+                    <p className="text-xs text-gray-400 font-medium">Vastra &copy; {getSuratDate().getFullYear()}</p>
                 </div>
             </motion.div>
         </div>

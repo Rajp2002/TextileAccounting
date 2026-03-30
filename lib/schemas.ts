@@ -190,9 +190,11 @@ const AttendanceRecordSchema = z.object({
     present: z.boolean(),
 })
 
+import { getSuratTodayString } from './time'
+
 export const SavePastAttendanceSchema = z.object({
     date: DateSchema.refine(
-        d => d <= new Date().toISOString().split('T')[0],
+        d => d <= getSuratTodayString(),
         'Cannot save attendance for a future date'
     ),
     records: z

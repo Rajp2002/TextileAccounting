@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTranslation } from '@/lib/i18n/context'
+import { getSuratTodayString } from '@/lib/time'
 
 interface Incident {
     id: string
@@ -40,7 +41,7 @@ export function IncidentsClient({ role }: { role: 'owner' | 'supervisor' }) {
     const [search, setSearch] = useState('')
     const [isAddOpen, setIsAddOpen] = useState(false)
     const [formData, setFormData] = useState({
-        date: format(new Date(), 'yyyy-MM-dd'),
+        date: getSuratTodayString(),
         title: '',
         description: '',
         severity: 'minor',
@@ -89,7 +90,7 @@ export function IncidentsClient({ role }: { role: 'owner' | 'supervisor' }) {
             queryClient.invalidateQueries({ queryKey: ['incidents', userProfile?.org_id] })
             setIsAddOpen(false)
             setFormData({
-                date: format(new Date(), 'yyyy-MM-dd'),
+                date: getSuratTodayString(),
                 title: '',
                 description: '',
                 severity: 'minor',
@@ -170,7 +171,7 @@ export function IncidentsClient({ role }: { role: 'owner' | 'supervisor' }) {
                                             required
                                             value={formData.date}
                                             onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                            max={format(new Date(), 'yyyy-MM-dd')}
+                                            max={getSuratTodayString()}
                                         />
                                     </div>
                                     <div className="space-y-2">
