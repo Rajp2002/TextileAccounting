@@ -124,6 +124,7 @@ export default function AuditTable() {
                             <TableHead className="w-[100px]">Action</TableHead>
                             <TableHead className="w-[140px]">Entity / ID</TableHead>
                             <TableHead className="w-[180px]">Actor</TableHead>
+                            <TableHead className="w-[100px]">Auth</TableHead>
                             <TableHead>Changes</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -181,6 +182,13 @@ export default function AuditTable() {
                                                 </span>
                                             )}
                                         </div>
+                                    </TableCell>
+                                    <TableCell className="align-top">
+                                        {log.is_access_code_used && (
+                                            <Badge variant="outline" className="text-[10px] font-bold border-primary/20 bg-primary/5 text-primary gap-1">
+                                                <span className="text-[12px]">🛡️</span> Authorized
+                                            </Badge>
+                                        )}
                                     </TableCell>
                                     <TableCell className="align-top">
                                         <AuditDiff oldData={log.old_data} newData={log.new_data} />

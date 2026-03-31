@@ -91,6 +91,14 @@ async function validateAndConsumeAccessCode(userId: string, orgId: string, input
         .update({ access_code_hash: null, access_code_expires_at: null })
         .eq('id', orgId)
 
+    // Set PostgreSQL session variable so the audit trigger knows 
+    // this action was authorized by an access code.
+    await supabase.rpc('set_config', { 
+        name: 'app.access_code_used', 
+        value: 'true', 
+        is_local: true 
+    })
+
     // Clear failure history
     await resetAccessCodeFailures(userId)
 
