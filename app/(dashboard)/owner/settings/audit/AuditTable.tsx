@@ -33,10 +33,18 @@ export default function AuditTable() {
 
     const [page, setPage] = useState(0)
     const [actionFilter, setActionFilter] = useState<string>('all')
-    const [tableFilter, setTableFilter] = useState<string>('all')
+    const [categoryFilter, setCategoryFilter] = useState<string>('all')
+
+    const CATEGORY_MAP: Record<string, string[]> = {
+        'hr_payroll': ['attendance', 'workers', 'fixed_workers', 'payroll_settlements', 'worker_advances', 'payroll_configs'],
+        'production': ['production_logs', 'machines', 'machine_assignments', 'orders'],
+        'inventory': ['yarn_batches', 'qualities'],
+        'settings_security': ['profiles', 'incidents'],
+        'estimator': ['estimator_settings', 'estimator_templates', 'estimator_quotes']
+    }
 
     const { data, isLoading, isError } = useQuery({
-        queryKey: ['auditLogs', userProfile?.org_id, page, actionFilter, tableFilter],
+        queryKey: ['auditLogs', userProfile?.org_id, page, actionFilter, categoryFilter],
         enabled: !!userProfile?.org_id,
         queryFn: async () => {
             let query = supabase
@@ -49,8 +57,11 @@ export default function AuditTable() {
             if (actionFilter !== 'all') {
                 query = query.eq('action', actionFilter)
             }
-            if (tableFilter !== 'all') {
-                query = query.eq('table_name', tableFilter)
+            if (categoryFilter !== 'all') {
+                const tables = CATEGORY_MAP[categoryFilter] || []
+                if (tables.length > 0) {
+                    query = query.in('table_name', tables)
+                }
             }
 
             const { data, error, count } = await query
@@ -88,22 +99,18 @@ export default function AuditTable() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-600">Table:</span>
-                    <Select value={tableFilter} onValueChange={(val) => { setTableFilter(val); setPage(0) }}>
+                    <span className="text-sm font-medium text-gray-600">Category:</span>
+                    <Select value={categoryFilter} onValueChange={(val) => { setCategoryFilter(val); setPage(0) }}>
                         <SelectTrigger className="w-[180px] h-9">
-                            <SelectValue placeholder="All Tables" />
+                            <SelectValue placeholder="All Categories" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Tables</SelectItem>
-                            <SelectItem value="production_logs">Production Logs</SelectItem>
-                            <SelectItem value="attendance">Attendance</SelectItem>
-                            <SelectItem value="workers">Workers</SelectItem>
-                            <SelectItem value="fixed_workers">Fixed Workers</SelectItem>
-                            <SelectItem value="machines">Machines</SelectItem>
-                            <SelectItem value="orders">Orders</SelectItem>
-                            <SelectItem value="yarn_batches">Yarn Batches</SelectItem>
-                            <SelectItem value="payroll_payments">Payroll Payments</SelectItem>
-                            <SelectItem value="worker_advances">Worker Advances</SelectItem>
+                            <SelectItem value="all">All Categories</SelectItem>
+                            <SelectItem value="hr_payroll">HR & Payroll</SelectItem>
+                            <SelectItem value="production">Production & Orders</SelectItem>
+                            <SelectItem value="inventory">Inventory & Qualities</SelectItem>
+                            <SelectItem value="settings_security">Settings & Profiles</SelectItem>
+                            <SelectItem value="estimator">Estimator & Quotes</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

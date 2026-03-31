@@ -8,6 +8,7 @@ export const en = {
     dashboard: "Dashboard",
     inventory: "Inventory",
     settings: "Settings",
+    "audit trail": "Audit Trail",
     quality: "Quality Form",
     logout: "Log out",
     payroll: "Payroll",

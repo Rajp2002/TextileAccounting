@@ -8,6 +8,7 @@ export const hi = {
     dashboard: "डैशबोर्ड",
     inventory: "इन्वेंट्री",
     settings: "सेटिंग्स",
+    "audit trail": "ऑडिट ट्रेल (Audit Trail)",
     quality: "क्वालिटी फॉर्म",
     logout: "लॉग आउट",
     payroll: "पेरोल (Payroll)",

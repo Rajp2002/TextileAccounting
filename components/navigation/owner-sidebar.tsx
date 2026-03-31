@@ -75,7 +75,10 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                 <div className="space-y-1">
                     {[...primaryNavItems, ...secondaryNavItems].map((item) => {
                         const Icon = item.icon
-                        const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+                        // Exact match for 'Settings' to prevent highlighting when deep in settings subpages (e.g., Audit Trail)
+                        const isActive = item.name === 'Settings' 
+                            ? pathname === item.href 
+                            : pathname === item.href || pathname.startsWith(item.href + "/")
 
                         return (
                             <Link
