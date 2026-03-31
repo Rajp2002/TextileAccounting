@@ -11,12 +11,12 @@ import { useTranslation } from "@/lib/i18n/context"
 
 
 export const navItems = [
-    { name: "Production", href: "/supervisor/production", icon: ClipboardList },
-    { name: "Assignments", href: "/supervisor/assignments", icon: ClipboardCheck },
-    { name: "Workers", href: "/supervisor/workers", icon: Users },
-    { name: "Machines", href: "/supervisor/machines", icon: Settings },
-    { name: "Attendance", href: "/supervisor/attendance", icon: Calendar },
-    { name: "Incidents", href: "/supervisor/incidents", icon: ShieldAlert },
+    { name: "Production", href: "/supervisor/production", icon: ClipboardList, translationKey: "production" },
+    { name: "Assignments", href: "/supervisor/assignments", icon: ClipboardCheck, translationKey: "assignments" },
+    { name: "Workers", href: "/supervisor/workers", icon: Users, translationKey: "workers" },
+    { name: "Machines", href: "/supervisor/machines", icon: Settings, translationKey: "machines" },
+    { name: "Attendance", href: "/supervisor/attendance", icon: Calendar, translationKey: "attendance" },
+    { name: "Incidents", href: "/supervisor/incidents", icon: ShieldAlert, translationKey: "incidents" },
 ]
 
 export function SupervisorNav() {
@@ -42,7 +42,7 @@ export function SupervisorNav() {
                             )}
                         >
                             <Icon className="h-4 w-4" />
-                            {t(`nav.${item.name.toLowerCase()}`)}
+                            {t(`nav.${item.translationKey}`)}
                         </Link>
                     )
                 })}
@@ -101,7 +101,7 @@ export function MobileSupervisorNav() {
                                 )}
                             >
                                 <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
-                                {t(`nav.${item.name.toLowerCase()}`)}
+                                {t(`nav.${item.translationKey}`)}
                             </Link>
                         )
                     })}
