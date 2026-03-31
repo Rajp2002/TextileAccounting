@@ -8,6 +8,7 @@ export const gu = {
     dashboard: "ડેશબોર્ડ",
     inventory: "ઇન્વેન્ટરી",
     settings: "સેટિંગ્સ",
+    "audit trail": "ઓડિટ ટ્રેલ",
     quality: "ક્વોલિટી ફોર્મ",
     logout: "લોગ આઉટ",
     payroll: "પેરોલ (Payroll)",
