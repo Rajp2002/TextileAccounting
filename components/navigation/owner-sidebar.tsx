@@ -28,20 +28,20 @@ import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { useTranslation } from "@/lib/i18n/context"
 
 const primaryNavItems = [
-    { name: "Dashboard", href: "/owner/analytics", icon: BarChart3 },
-    { name: "Machines", href: "/owner/machines", icon: Server },
-    { name: "Workers", href: "/owner/fixed-workers", icon: Users },
-    { name: "Payroll", href: "/owner/payroll", icon: DollarSign },
-    { name: "Advances", href: "/owner/advances", icon: HandCoins },
-    { name: "Inventory", href: "/owner/inventory", icon: PackageSearch },
-    { name: "Estimator", href: "/owner/estimator", icon: Activity },
+    { name: "Dashboard", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
+    { name: "Machines", href: "/owner/machines", icon: Server, translationKey: "machines" },
+    { name: "Workers", href: "/owner/fixed-workers", icon: Users, translationKey: "workers" },
+    { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll" },
+    { name: "Advances", href: "/owner/advances", icon: HandCoins, translationKey: "advances" },
+    { name: "Inventory", href: "/owner/inventory", icon: PackageSearch, translationKey: "inventory" },
+    { name: "Estimator", href: "/owner/estimator", icon: Activity, translationKey: "estimator" },
 ]
 
 const secondaryNavItems = [
-    { name: "Safety & Incidents", href: "/owner/incidents", icon: ShieldAlert },
-    { name: "System Health", href: "/owner/system-health", icon: Activity },
-    { name: "Settings", href: "/owner/settings", icon: Settings },
-    { name: "Audit Trail", href: "/owner/settings/audit", icon: History },
+    { name: "Safety & Incidents", href: "/owner/incidents", icon: ShieldAlert, translationKey: "safety & incidents" },
+    { name: "System Health", href: "/owner/system-health", icon: Activity, translationKey: "system health" },
+    { name: "Settings", href: "/owner/settings", icon: Settings, translationKey: "settings" },
+    { name: "Audit Trail", href: "/owner/settings/audit", icon: History, translationKey: "audit trail" },
 ]
 
 interface OwnerSidebarProps {
@@ -93,7 +93,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                                 )}
                             >
                                 <Icon className="h-[18px] w-[18px]" />
-                                {t(`nav.${item.name.toLowerCase()}`)}
+                                {t(`nav.${item.translationKey}`)}
                             </Link>
                         )
                     })}
@@ -193,7 +193,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                                 "text-[10px] font-bold leading-none tracking-tight",
                                 isActive ? "opacity-100" : "opacity-70"
                             )}>
-                                {t(`nav.${item.name.toLowerCase()}`)}
+                                {t(`nav.${item.translationKey}`)}
                             </span>
                             {isActive && (
                                 <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
