@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
-import { deleteWorkerWithCode, getWorkerDebt } from '@/app/(dashboard)/supervisor/actions'
+import { deleteWorkerWithCode, getWorkerDebt, toggleWorkerActive as toggleWorkerActiveAction } from '@/app/(dashboard)/supervisor/actions'
 import { formatINR } from '@/lib/finance'
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -116,13 +116,11 @@ export default function SupervisorWorkersPage() {
     }
 
     // ── Toggle worker active status ──
-    const toggleWorkerActive = async (workerId: number, currentActive: boolean, table: 'workers' | 'fixed_workers') => {
+    const toggleWorkerActiveStatus = async (workerId: number, currentActive: boolean, table: 'workers' | 'fixed_workers') => {
         try {
-            const { error } = await supabase
-                .from(table)
-                .update({ is_active: !currentActive })
-                .eq('id', workerId)
-            if (error) throw error
+            const result = await toggleWorkerActiveAction(workerId, currentActive, table)
+            if (result.error) throw new Error(result.error)
+            
             toast.success(t('workers.status_updated'))
             queryClient.invalidateQueries({ queryKey: [table === 'workers' ? 'workers' : 'fixed_workers', userProfile?.org_id] })
         } catch {
@@ -188,7 +186,7 @@ export default function SupervisorWorkersPage() {
                                             </span>
                                             <Switch
                                                 checked={worker.is_active}
-                                                onCheckedChange={() => toggleWorkerActive(worker.id, worker.is_active, 'workers')}
+                                                onCheckedChange={() => toggleWorkerActiveStatus(worker.id, worker.is_active, 'workers')}
                                             />
                                         </div>
                                         <Button
@@ -242,7 +240,7 @@ export default function SupervisorWorkersPage() {
                                         </span>
                                         <Switch
                                             checked={worker.is_active}
-                                            onCheckedChange={() => toggleWorkerActive(worker.id, worker.is_active, 'fixed_workers')}
+                                            onCheckedChange={() => toggleWorkerActiveStatus(worker.id, worker.is_active, 'fixed_workers')}
                                         />
                                     </div>
                                 </div>

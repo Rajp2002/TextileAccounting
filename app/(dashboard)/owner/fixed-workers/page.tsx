@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 import { formatINR } from '@/lib/finance'
 import { Plus, Pencil, Trash2, Users, Briefcase, KeyRound, AlertCircle, Loader2 } from 'lucide-react'
 import { getWorkerDebt } from '@/app/(dashboard)/supervisor/actions'
-import { deleteFixedWorkerWithCode } from '@/app/(dashboard)/owner/actions'
+import { deleteFixedWorkerWithCode, upsertFixedWorker } from '@/app/(dashboard)/owner/actions'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -127,30 +127,15 @@ export default function FixedWorkersPage() {
 
         setSaving(true)
         try {
-            if (editingWorker) {
-                const { error } = await supabase
-                    .from('fixed_workers')
-                    .update({
-                        name: formName.trim(),
-                        role: formRole,
-                        monthly_salary: parseFloat(formSalary),
-                    })
-                    .eq('id', editingWorker.id)
-                if (error) throw error
-                toast.success(t('common.updated'))
-            } else {
-                const { error } = await supabase
-                    .from('fixed_workers')
-                    .insert({
-                        name: formName.trim(),
-                        role: formRole,
-                        monthly_salary: parseFloat(formSalary),
-                        org_id: userProfile!.org_id,
-                    })
-                if (error) throw error
-                toast.success(t('common.added'))
-            }
+            const result = await upsertFixedWorker({
+                id: editingWorker?.id,
+                name: formName.trim(),
+                role: formRole,
+                monthly_salary: parseFloat(formSalary),
+            })
+            if (result.error) throw new Error(result.error)
 
+            toast.success(editingWorker ? t('common.updated') : t('common.added'))
             setDialogOpen(false)
             queryClient.invalidateQueries({ queryKey: ['fixed_workers'] })
         } catch (err: any) {

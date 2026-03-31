@@ -16,7 +16,7 @@ import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { OrderCard } from '@/components/OrderCard'
 import { LiveOrdersLayout } from '@/components/LiveOrdersLayout'
-import { upsertOrder, deleteOrder } from '@/app/(dashboard)/owner/actions'
+import { upsertOrder, deleteOrder, updateFixedWorkerSalary } from '@/app/(dashboard)/owner/actions'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
@@ -505,8 +505,8 @@ export default function OwnerDashboard() {
     }
 
     const handleFixedSalaryUpdate = async (workerId: number, salary: number) => {
-        const { error } = await supabase.from('fixed_workers').update({ monthly_salary: salary }).eq('id', workerId)
-        if (error) toast.error(error.message)
+        const result = await updateFixedWorkerSalary(workerId, salary)
+        if (result.error) toast.error(result.error)
         else {
             toast.success(t('analytics.salary_updated'))
             queryClient.invalidateQueries({ queryKey: ['fixed_workers_list_dashboard'] })

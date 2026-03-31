@@ -13,6 +13,8 @@ export const gu = {
     logout: "લોગ આઉટ",
     payroll: "પેરોલ (Payroll)",
     advances: "એડવાન્સ (Advances)",
+    estimator: "એસ્ટીમેટર (Estimator)",
+    "safety & incidents": "સેફ્ટી અને ઇન્સિડન્ટ્સ",
     "system health": "સિસ્ટમ હેલ્થ",
   },
   attendance: {

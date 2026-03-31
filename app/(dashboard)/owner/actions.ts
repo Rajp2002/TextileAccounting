@@ -16,7 +16,177 @@ import {
     safeParse,
 } from '@/lib/schemas'
 
+// ─── Machine Management (Server Actions) ──────────────────────────────────────
+// These run server-side so auth.uid() is always set in the audit trigger,
+// giving the owner a complete actor trail for every machine change.
+
+export async function addMachine(name: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const trimmedName = name.trim()
+    if (!trimmedName) return { error: 'Machine name is required.' }
+
+    const { error } = await supabase
+        .from('machines')
+        .insert({ name: trimmedName, org_id: profile.org_id, status: 'active' })
+
+    if (error) {
+        console.error('Failed to add machine:', error)
+        return { error: 'Failed to add machine. Please try again.' }
+    }
+
+    revalidatePath('/owner/machines')
+    return { success: true }
+}
+
+export async function renameMachine(machineId: string, newName: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(UuidSchema, machineId)
+    if ('error' in parsed) return { error: parsed.error }
+
+    const trimmedName = newName.trim()
+    if (!trimmedName) return { error: 'Machine name cannot be empty.' }
+
+    const { error } = await supabase
+        .from('machines')
+        .update({ name: trimmedName })
+        .eq('id', parsed.data)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to rename machine:', error)
+        return { error: 'Failed to rename machine. Please try again.' }
+    }
+
+    revalidatePath('/owner/machines')
+    return { success: true }
+}
+
+export async function toggleMachineStatus(machineId: string, currentStatus: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(UuidSchema, machineId)
+    if ('error' in parsed) return { error: parsed.error }
+
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
+
+    const { error } = await supabase
+        .from('machines')
+        .update({ status: newStatus })
+        .eq('id', parsed.data)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to update machine status:', error)
+        return { error: 'Failed to update machine status. Please try again.' }
+    }
+
+    revalidatePath('/owner/machines')
+    return { success: true }
+}
+
+export async function updateMachineAssignment(
+    machineId: string,
+    workerId: number,
+    shift: 'day' | 'night',
+    isExisting: boolean
+) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const machineParsed = safeParse(UuidSchema, machineId)
+    if ('error' in machineParsed) return { error: machineParsed.error }
+
+    let error: any
+    if (isExisting) {
+        const { error: updateError } = await supabase
+            .from('machine_assignments')
+            .update({ worker_id: workerId })
+            .eq('machine_id', machineParsed.data)
+            .eq('shift', shift)
+            .eq('org_id', profile.org_id)
+        error = updateError
+    } else {
+        const { error: insertError } = await supabase
+            .from('machine_assignments')
+            .insert({
+                machine_id: machineParsed.data,
+                worker_id: workerId,
+                shift,
+                org_id: profile.org_id
+            })
+        error = insertError
+    }
+
+    if (error) {
+        console.error('Failed to update assignment:', error)
+        return { error: 'Failed to update worker assignment. Please try again.' }
+    }
+
+    revalidatePath('/owner/machines')
+    return { success: true }
+}
+
+// ─── Fixed Worker Management ──────────────────────────────────────────────────
+
+export async function upsertFixedWorker(data: {
+    id?: number
+    name: string
+    role: string
+    monthly_salary: number
+}) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const name = data.name.trim()
+    if (!name || !data.role || !data.monthly_salary) return { error: 'All fields are required.' }
+
+    if (data.id) {
+        const { error } = await supabase
+            .from('fixed_workers')
+            .update({ name, role: data.role, monthly_salary: data.monthly_salary })
+            .eq('id', data.id)
+            .eq('org_id', profile.org_id)
+        if (error) { console.error(error); return { error: 'Failed to update worker.' } }
+    } else {
+        const { error } = await supabase
+            .from('fixed_workers')
+            .insert({ name, role: data.role, monthly_salary: data.monthly_salary, org_id: profile.org_id })
+        if (error) { console.error(error); return { error: 'Failed to add worker.' } }
+    }
+
+    revalidatePath('/owner/fixed-workers')
+    return { success: true }
+}
+
+export async function updateFixedWorkerSalary(workerId: number, salary: number) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(PositiveIntSchema, workerId)
+    if ('error' in parsed) return { error: parsed.error }
+
+    if (!salary || salary <= 0) return { error: 'Invalid salary amount.' }
+
+    const { error } = await supabase
+        .from('fixed_workers')
+        .update({ monthly_salary: salary })
+        .eq('id', parsed.data)
+        .eq('org_id', profile.org_id)
+
+    if (error) { console.error(error); return { error: 'Failed to update salary.' } }
+
+    revalidatePath('/owner/analytics')
+    revalidatePath('/owner/fixed-workers')
+    return { success: true }
+}
+
 // ─── Access Code ──────────────────────────────────────────────────────────────
+
 
 export async function generateAccessCode() {
     const { profile } = await requireRole(['owner'])
