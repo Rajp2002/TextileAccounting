@@ -17,6 +17,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
+import { assignWorker } from '@/app/(dashboard)/supervisor/actions'
 import { Loader2, Sun, Moon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -98,31 +99,11 @@ export default function SupervisorAssignmentsPage() {
         if (!orgId) return
         try {
             const existing = assignments?.find(a => a.machine_id === machineId && a.shift === activeShift)
+            const result = await assignWorker(machineId, parseInt(workerId), activeShift, !!existing)
+            if (result.error) throw new Error(result.error)
 
-            let error;
-            if (existing) {
-                const { error: updateError } = await supabase
-                    .from('machine_assignments')
-                    .update({ worker_id: parseInt(workerId) })
-                    .eq('machine_id', machineId)
-                    .eq('shift', activeShift)
-                    .eq('org_id', orgId)
-                error = updateError
-            } else {
-                const { error: insertError } = await supabase
-                    .from('machine_assignments')
-                    .insert({
-                        machine_id: machineId,
-                        worker_id: parseInt(workerId),
-                        shift: activeShift,
-                        org_id: orgId
-                    })
-                error = insertError
-            }
-
-            if (error) throw error
             toast.success(t('machines.worker_assigned'))
-            queryClient.invalidateQueries({ queryKey: ['machine_assignments'] })
+            queryClient.invalidateQueries({ queryKey: ['machine_assignments', orgId] })
         } catch (error: any) {
             console.error(error)
             toast.error(t('machines.worker_assign_failed'))

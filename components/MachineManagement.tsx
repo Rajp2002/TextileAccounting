@@ -26,6 +26,12 @@ import { toast } from 'sonner'
 import { Loader2, Plus, Trash2, KeyRound, Pencil, Power, Tag } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { deleteMachineWithCode } from '@/app/(dashboard)/supervisor/actions'
+import {
+    addMachine,
+    renameMachine,
+    toggleMachineStatus as toggleMachineStatusAction,
+    updateMachineAssignment,
+} from '@/app/(dashboard)/owner/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
@@ -161,15 +167,8 @@ export function MachineManagement({
 
         setIsAddingMachine(true)
         try {
-            const { error } = await supabase
-                .from('machines')
-                .insert({
-                    name: newMachineName,
-                    org_id: orgId,
-                    status: 'active'
-                })
-
-            if (error) throw error
+            const result = await addMachine(newMachineName)
+            if (result.error) throw new Error(result.error)
             toast.success(t('machines.machine_added'))
             queryClient.invalidateQueries({ queryKey: ['machines'] })
             setIsAddMachineOpen(false)
@@ -221,11 +220,8 @@ export function MachineManagement({
         if (!machineToRename || !renameValue.trim()) return
         setRenaming(true)
         try {
-            const { error } = await supabase
-                .from('machines')
-                .update({ name: renameValue.trim() })
-                .eq('id', machineToRename.id)
-            if (error) throw error
+            const result = await renameMachine(machineToRename.id, renameValue.trim())
+            if (result.error) throw new Error(result.error)
             toast.success(t('machines.renamed'))
             queryClient.invalidateQueries({ queryKey: ['machines'] })
             setMachineToRename(null)
@@ -238,13 +234,9 @@ export function MachineManagement({
 
     // ── Toggle Machine Status (activate / deactivate) ──
     const toggleMachineStatus = async (machine: Machine) => {
-        const newStatus = machine.status === 'active' ? 'inactive' : 'active'
         try {
-            const { error } = await supabase
-                .from('machines')
-                .update({ status: newStatus })
-                .eq('id', machine.id)
-            if (error) throw error
+            const result = await toggleMachineStatusAction(machine.id, machine.status)
+            if (result.error) throw new Error(result.error)
             toast.success(t('machines.status_updated'))
             queryClient.invalidateQueries({ queryKey: ['machines'] })
         } catch {
@@ -255,29 +247,13 @@ export function MachineManagement({
     const handleAssignment = async (machineId: string, workerId: string, shift: 'day' | 'night') => {
         try {
             const existing = assignments?.find(a => a.machine_id === machineId && a.shift === shift)
-
-            let error;
-            if (existing) {
-                const { error: updateError } = await supabase
-                    .from('machine_assignments')
-                    .update({ worker_id: parseInt(workerId) })
-                    .eq('machine_id', machineId)
-                    .eq('shift', shift)
-                    .eq('org_id', orgId)
-                error = updateError
-            } else {
-                const { error: insertError } = await supabase
-                    .from('machine_assignments')
-                    .insert({
-                        machine_id: machineId,
-                        worker_id: parseInt(workerId),
-                        shift,
-                        org_id: orgId
-                    })
-                error = insertError
-            }
-
-            if (error) throw error
+            const result = await updateMachineAssignment(
+                machineId,
+                parseInt(workerId),
+                shift,
+                !!existing
+            )
+            if (result.error) throw new Error(result.error)
             toast.success(t('machines.worker_assigned'))
             queryClient.invalidateQueries({ queryKey: ['machine_assignments'] })
         } catch (error: any) {

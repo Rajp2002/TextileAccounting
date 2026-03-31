@@ -21,6 +21,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Loader2, Plus } from 'lucide-react'
 import { formatINR } from '@/lib/finance'
 import { cn } from '@/lib/utils'
+import { addMeterWorker, addFixedWorker } from '@/app/(dashboard)/supervisor/actions'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -119,31 +120,23 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
     const mutation = useMutation({
         mutationFn: async (data: WorkerFormValues) => {
             if (data.workerType === 'meter') {
-                const { error } = await supabase
-                    .from('workers')
-                    .insert({
-                        org_id: orgId,
-                        name: data.name.trim(),
-                        is_active: true,
-                        pf_esi_eligible: data.pf_esi_eligible,
-                        esi_number: data.esi_number?.trim() || null,
-                        pf_number: data.pf_number?.trim() || null,
-                    })
-                if (error) throw error
+                const result = await addMeterWorker({
+                    name: data.name.trim(),
+                    pf_esi_eligible: data.pf_esi_eligible,
+                    esi_number: data.esi_number?.trim() || null,
+                    pf_number: data.pf_number?.trim() || null,
+                })
+                if (result.error) throw new Error(result.error)
             } else {
-                const { error } = await supabase
-                    .from('fixed_workers')
-                    .insert({
-                        org_id: orgId,
-                        name: data.name.trim(),
-                        role: data.role === 'other' ? data.customRole?.trim() : data.role,
-                        monthly_salary: data.salary as number,
-                        is_active: true,
-                        pf_esi_eligible: data.pf_esi_eligible,
-                        esi_number: data.esi_number?.trim() || null,
-                        pf_number: data.pf_number?.trim() || null,
-                    })
-                if (error) throw error
+                const result = await addFixedWorker({
+                    name: data.name.trim(),
+                    role: data.role === 'other' ? data.customRole?.trim() || '' : data.role || '',
+                    monthly_salary: data.salary as number,
+                    pf_esi_eligible: data.pf_esi_eligible,
+                    esi_number: data.esi_number?.trim() || null,
+                    pf_number: data.pf_number?.trim() || null,
+                })
+                if (result.error) throw new Error(result.error)
             }
             return data
         },

@@ -13,7 +13,7 @@ export async function toggleWorkerPaid(
     currentPaid: boolean,
     isFinalSettlement: boolean = false
 ) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const newPaid = !currentPaid
@@ -80,7 +80,8 @@ export async function toggleWorkerPaid(
             p_worker_id: workerId,
             p_month: month,
             p_gross_amount: grossAmount,
-            p_is_final_settlement: isFinalSettlement
+            p_is_final_settlement: isFinalSettlement,
+            p_actor_id: user.id
         })
 
         if (error) {
@@ -100,7 +101,8 @@ export async function toggleWorkerPaid(
             p_org_id: profile.org_id,
             p_worker_type: workerType,
             p_worker_id: workerId,
-            p_month: month
+            p_month: month,
+            p_actor_id: user.id
         })
 
         if (error) {

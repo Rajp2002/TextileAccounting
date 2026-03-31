@@ -13,6 +13,8 @@ export const hi = {
     logout: "लॉग आउट",
     payroll: "पेरोल (Payroll)",
     advances: "एडवांस (Advances)",
+    estimator: "एस्टीमेटर (Estimator)",
+    "safety & incidents": "सुरक्षा और घटनाएं",
     "system health": "सिस्टम हेल्थ",
   },
   attendance: {

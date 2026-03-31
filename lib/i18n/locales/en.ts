@@ -13,6 +13,8 @@ export const en = {
     logout: "Log out",
     payroll: "Payroll",
     advances: "Advances",
+    estimator: "Estimator",
+    "safety & incidents": "Safety & Incidents",
     "system health": "System Health",
   },
   attendance: {

@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Badge } from '@/components/ui/badge'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Users, Factory, Package, Shield, Calculator, Tags } from 'lucide-react'
 import AuditDiff from '@/components/ui/audit-diff'
 import {
     Select,
@@ -27,6 +27,119 @@ import { Button } from '@/components/ui/button'
 
 const PAGE_SIZE = 20
 
+// ── Category Definitions ──────────────────────────────────────────────────────
+
+type CategoryKey = 'hr_payroll' | 'production' | 'inventory' | 'settings_security' | 'estimator'
+
+interface CategoryConfig {
+    label: string
+    tables: string[]
+    color: string
+    bgColor: string
+    borderColor: string
+    icon: React.ComponentType<{ className?: string }>
+}
+
+const CATEGORIES: Record<CategoryKey, CategoryConfig> = {
+    hr_payroll: {
+        label: 'HR & Payroll',
+        tables: ['attendance', 'workers', 'fixed_workers', 'payroll_settlements', 'worker_advances', 'payroll_configs'],
+        color: 'text-violet-700',
+        bgColor: 'bg-violet-50',
+        borderColor: 'border-violet-200',
+        icon: Users,
+    },
+    production: {
+        label: 'Production & Orders',
+        tables: ['production_logs', 'machines', 'machine_assignments', 'orders'],
+        color: 'text-blue-700',
+        bgColor: 'bg-blue-50',
+        borderColor: 'border-blue-200',
+        icon: Factory,
+    },
+    inventory: {
+        label: 'Inventory & Qualities',
+        tables: ['yarn_batches', 'qualities'],
+        color: 'text-teal-700',
+        bgColor: 'bg-teal-50',
+        borderColor: 'border-teal-200',
+        icon: Package,
+    },
+    settings_security: {
+        label: 'Settings & Profiles',
+        tables: ['profiles', 'incidents'],
+        color: 'text-amber-700',
+        bgColor: 'bg-amber-50',
+        borderColor: 'border-amber-200',
+        icon: Shield,
+    },
+    estimator: {
+        label: 'Estimator & Quotes',
+        tables: ['estimator_settings', 'estimator_templates', 'estimator_quotes'],
+        color: 'text-emerald-700',
+        bgColor: 'bg-emerald-50',
+        borderColor: 'border-emerald-200',
+        icon: Calculator,
+    },
+}
+
+// Human-readable table name mapping
+const TABLE_LABELS: Record<string, string> = {
+    attendance: 'Attendance',
+    workers: 'Worker',
+    fixed_workers: 'Fixed Worker',
+    payroll_settlements: 'Payroll Settlement',
+    payroll_payments: 'Payroll Payment',
+    worker_advances: 'Advance (Upaad)',
+    payroll_configs: 'Payroll Config',
+    production_logs: 'Production Log',
+    machines: 'Machine',
+    machine_assignments: 'Machine Assignment',
+    orders: 'Order',
+    yarn_batches: 'Yarn Batch',
+    qualities: 'Quality',
+    profiles: 'User Profile',
+    incidents: 'Incident',
+    estimator_settings: 'Estimator Settings',
+    estimator_templates: 'Estimator Template',
+    estimator_quotes: 'Quote',
+}
+
+function getCategoryForTable(tableName: string): CategoryKey | null {
+    for (const [key, config] of Object.entries(CATEGORIES)) {
+        if (config.tables.includes(tableName)) {
+            return key as CategoryKey
+        }
+    }
+    return null
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+const ActionBadge = ({ action }: { action: string }) => {
+    switch (action) {
+        case 'INSERT': return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 font-semibold text-[11px]">INSERT</Badge>
+        case 'UPDATE': return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 font-semibold text-[11px]">UPDATE</Badge>
+        case 'DELETE': return <Badge className="bg-red-100 text-red-800 hover:bg-red-100 font-semibold text-[11px]">DELETE</Badge>
+        default: return <Badge className="text-[11px]">{action}</Badge>
+    }
+}
+
+const CategoryBadge = ({ tableName }: { tableName: string }) => {
+    const catKey = getCategoryForTable(tableName)
+    if (!catKey) return null
+    const cat = CATEGORIES[catKey]
+    const Icon = cat.icon
+    return (
+        <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded border ${cat.color} ${cat.bgColor} ${cat.borderColor}`}>
+            <Icon className="h-3 w-3" />
+            {cat.label}
+        </span>
+    )
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
+
 export default function AuditTable() {
     const supabase = createClient()
     const { data: userProfile } = useUserProfile()
@@ -34,14 +147,6 @@ export default function AuditTable() {
     const [page, setPage] = useState(0)
     const [actionFilter, setActionFilter] = useState<string>('all')
     const [categoryFilter, setCategoryFilter] = useState<string>('all')
-
-    const CATEGORY_MAP: Record<string, string[]> = {
-        'hr_payroll': ['attendance', 'workers', 'fixed_workers', 'payroll_settlements', 'worker_advances', 'payroll_configs'],
-        'production': ['production_logs', 'machines', 'machine_assignments', 'orders'],
-        'inventory': ['yarn_batches', 'qualities'],
-        'settings_security': ['profiles', 'incidents'],
-        'estimator': ['estimator_settings', 'estimator_templates', 'estimator_quotes']
-    }
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ['auditLogs', userProfile?.org_id, page, actionFilter, categoryFilter],
@@ -58,7 +163,7 @@ export default function AuditTable() {
                 query = query.eq('action', actionFilter)
             }
             if (categoryFilter !== 'all') {
-                const tables = CATEGORY_MAP[categoryFilter] || []
+                const tables = CATEGORIES[categoryFilter as CategoryKey]?.tables ?? []
                 if (tables.length > 0) {
                     query = query.in('table_name', tables)
                 }
@@ -70,68 +175,94 @@ export default function AuditTable() {
         }
     })
 
-    const ActionBadge = ({ action }: { action: string }) => {
-        switch (action) {
-            case 'INSERT': return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">INSERT</Badge>
-            case 'UPDATE': return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">UPDATE</Badge>
-            case 'DELETE': return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">DELETE</Badge>
-            default: return <Badge>{action}</Badge>
-        }
+    const handleCategoryChange = (val: string) => {
+        setCategoryFilter(val)
+        setPage(0)
+    }
+
+    const handleActionChange = (val: string) => {
+        setActionFilter(val)
+        setPage(0)
     }
 
     return (
         <div className="space-y-4">
-            {/* Filters */}
-            <div className="flex flex-wrap items-center gap-3">
+            {/* ── Filters ── */}
+            <div className="flex flex-wrap items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <Tags className="h-4 w-4 text-gray-400 shrink-0" />
+
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-600">Action:</span>
-                    <Select value={actionFilter} onValueChange={(val) => { setActionFilter(val); setPage(0) }}>
-                        <SelectTrigger className="w-[140px] h-9">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Category</span>
+                    <Select value={categoryFilter} onValueChange={handleCategoryChange}>
+                        <SelectTrigger className="w-[190px] h-8 text-sm bg-white">
+                            <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">
+                                <span className="flex items-center gap-2">All Categories</span>
+                            </SelectItem>
+                            {Object.entries(CATEGORIES).map(([key, cat]) => {
+                                const Icon = cat.icon
+                                return (
+                                    <SelectItem key={key} value={key}>
+                                        <span className={`flex items-center gap-2 ${cat.color}`}>
+                                            <Icon className="h-3.5 w-3.5" />
+                                            {cat.label}
+                                        </span>
+                                    </SelectItem>
+                                )
+                            })}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="h-4 w-px bg-gray-300" />
+
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Action</span>
+                    <Select value={actionFilter} onValueChange={handleActionChange}>
+                        <SelectTrigger className="w-[140px] h-8 text-sm bg-white">
                             <SelectValue placeholder="All Actions" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Actions</SelectItem>
-                            <SelectItem value="INSERT">Insert</SelectItem>
-                            <SelectItem value="UPDATE">Update</SelectItem>
-                            <SelectItem value="DELETE">Delete</SelectItem>
+                            <SelectItem value="INSERT"><span className="text-emerald-700 font-medium">Insert</span></SelectItem>
+                            <SelectItem value="UPDATE"><span className="text-amber-700 font-medium">Update</span></SelectItem>
+                            <SelectItem value="DELETE"><span className="text-red-700 font-medium">Delete</span></SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-600">Category:</span>
-                    <Select value={categoryFilter} onValueChange={(val) => { setCategoryFilter(val); setPage(0) }}>
-                        <SelectTrigger className="w-[180px] h-9">
-                            <SelectValue placeholder="All Categories" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Categories</SelectItem>
-                            <SelectItem value="hr_payroll">HR & Payroll</SelectItem>
-                            <SelectItem value="production">Production & Orders</SelectItem>
-                            <SelectItem value="inventory">Inventory & Qualities</SelectItem>
-                            <SelectItem value="settings_security">Settings & Profiles</SelectItem>
-                            <SelectItem value="estimator">Estimator & Quotes</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
+                {(categoryFilter !== 'all' || actionFilter !== 'all') && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs text-gray-500 hover:text-gray-900 ml-auto"
+                        onClick={() => { setCategoryFilter('all'); setActionFilter('all'); setPage(0) }}
+                    >
+                        Clear filters
+                    </Button>
+                )}
             </div>
 
+            {/* ── Table ── */}
             <div className="rounded-md border border-gray-200 shadow-sm overflow-hidden bg-white">
                 <Table>
                     <TableHeader className="bg-gray-50/50">
                         <TableRow>
-                            <TableHead className="w-[180px]">Timestamp</TableHead>
-                            <TableHead className="w-[100px]">Action</TableHead>
-                            <TableHead className="w-[140px]">Entity / ID</TableHead>
-                            <TableHead className="w-[180px]">Actor</TableHead>
-                            <TableHead className="w-[100px]">Auth</TableHead>
+                            <TableHead className="w-[170px]">Timestamp</TableHead>
+                            <TableHead className="w-[90px]">Action</TableHead>
+                            <TableHead className="w-[160px]">Category</TableHead>
+                            <TableHead className="w-[150px]">Entity</TableHead>
+                            <TableHead className="w-[170px]">Actor</TableHead>
+                            <TableHead className="w-[90px]">Auth</TableHead>
                             <TableHead>Changes</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-48 text-center">
+                                <TableCell colSpan={7} className="h-48 text-center">
                                     <div className="flex flex-col items-center justify-center text-gray-500 gap-2">
                                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
                                         <p className="text-sm">Loading audit logs...</p>
@@ -140,7 +271,7 @@ export default function AuditTable() {
                             </TableRow>
                         ) : isError ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-48 text-center text-red-500 bg-red-50/30">
+                                <TableCell colSpan={7} className="h-48 text-center text-red-500 bg-red-50/30">
                                     <div className="flex flex-col items-center justify-center gap-2">
                                         <p className="font-semibold">Failed to load audit logs</p>
                                         <p className="text-xs text-red-400">Please check your permissions or try refreshing the page.</p>
@@ -149,48 +280,69 @@ export default function AuditTable() {
                             </TableRow>
                         ) : data?.items?.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-48 text-center text-gray-500">
-                                    No audit logs found for the selected filters.
+                                <TableCell colSpan={7} className="h-48 text-center text-gray-500">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <Factory className="h-8 w-8 text-gray-300" />
+                                        <p className="text-sm">No audit logs found for the selected filters.</p>
+                                        {(categoryFilter !== 'all' || actionFilter !== 'all') && (
+                                            <button
+                                                className="text-xs text-indigo-600 hover:underline"
+                                                onClick={() => { setCategoryFilter('all'); setActionFilter('all'); setPage(0) }}
+                                            >
+                                                Clear filters to see all entries
+                                            </button>
+                                        )}
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
                             data?.items?.map((log: any) => (
-                                <TableRow key={log.id} className="text-sm border-gray-100">
-                                    <TableCell className="align-top whitespace-nowrap text-gray-600">
-                                        {format(new Date(log.changed_at), "dd MMM yyyy, HH:mm")}
+                                <TableRow key={log.id} className="text-sm border-gray-100 hover:bg-gray-50/50">
+                                    <TableCell className="align-top whitespace-nowrap text-gray-600 text-xs py-3">
+                                        {format(new Date(log.changed_at), "dd MMM yyyy")}
+                                        <div className="text-gray-400 text-[11px]">{format(new Date(log.changed_at), "HH:mm:ss")}</div>
                                     </TableCell>
-                                    <TableCell className="align-top">
+                                    <TableCell className="align-top py-3">
                                         <ActionBadge action={log.action} />
                                     </TableCell>
-                                    <TableCell className="align-top">
+                                    <TableCell className="align-top py-3">
+                                        <CategoryBadge tableName={log.table_name} />
+                                    </TableCell>
+                                    <TableCell className="align-top py-3">
                                         <div className="flex flex-col">
-                                            <span className="font-semibold text-gray-900">{log.table_name}</span>
-                                            <span className="text-xs text-gray-400 truncate max-w-[120px]" title={log.record_id}>ID: {log.record_id}</span>
+                                            <span className="font-semibold text-gray-900 text-xs">
+                                                {TABLE_LABELS[log.table_name] ?? log.table_name}
+                                            </span>
+                                            <span className="text-[11px] text-gray-400 truncate max-w-[130px] font-mono" title={log.record_id}>
+                                                #{String(log.record_id).slice(0, 8)}
+                                            </span>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="align-top">
+                                    <TableCell className="align-top py-3">
                                         <div className="flex flex-col">
-                                            <span className="font-medium text-gray-800">
+                                            <span className="font-medium text-gray-800 text-xs">
                                                 {/* @ts-ignore */}
-                                                {log.profiles?.full_name || 'Unknown User'}
+                                                {log.profiles?.full_name || <span className="text-gray-400 italic">Unknown</span>}
                                             </span>
                                             {/* @ts-ignore */}
                                             {log.profiles?.role && (
-                                                <span className="text-xs text-gray-500 capitalize">
+                                                <span className="text-[11px] text-gray-500 capitalize">
                                                     {/* @ts-ignore */}
                                                     {log.profiles.role}
                                                 </span>
                                             )}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="align-top">
-                                        {log.is_access_code_used && (
-                                            <Badge variant="outline" className="text-[10px] font-bold border-primary/20 bg-primary/5 text-primary gap-1">
-                                                <span className="text-[12px]">🛡️</span> Authorized
+                                    <TableCell className="align-top py-3">
+                                        {log.is_access_code_used ? (
+                                            <Badge variant="outline" className="text-[10px] font-bold border-primary/20 bg-primary/5 text-primary gap-1 whitespace-nowrap">
+                                                <span className="text-[12px]">🛡️</span> Auth
                                             </Badge>
+                                        ) : (
+                                            <span className="text-[11px] text-gray-300">—</span>
                                         )}
                                     </TableCell>
-                                    <TableCell className="align-top">
+                                    <TableCell className="align-top py-3">
                                         <AuditDiff oldData={log.old_data} newData={log.new_data} />
                                     </TableCell>
                                 </TableRow>
@@ -200,30 +352,39 @@ export default function AuditTable() {
                 </Table>
             </div>
 
-            {/* Pagination Controls */}
-            {data?.count && data.count > PAGE_SIZE && (
-                <div className="flex items-center justify-between px-2">
-                    <p className="text-sm text-gray-500">
-                        Showing {page * PAGE_SIZE + 1} to {Math.min((page + 1) * PAGE_SIZE, data.count)} of {data.count} entries
+            {/* ── Summary + Pagination ── */}
+            {data && (
+                <div className="flex items-center justify-between px-1">
+                    <p className="text-xs text-gray-400">
+                        {data.count
+                            ? `Showing ${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, data.count)} of ${data.count} entries`
+                            : 'No entries'}
                     </p>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPage(p => Math.max(0, p - 1))}
-                            disabled={page === 0}
-                        >
-                            Previous
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPage(p => p + 1)}
-                            disabled={(page + 1) * PAGE_SIZE >= data.count}
-                        >
-                            Next
-                        </Button>
-                    </div>
+                    {data.count && data.count > PAGE_SIZE ? (
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.max(0, p - 1))}
+                                disabled={page === 0}
+                                className="h-8 text-xs"
+                            >
+                                ← Previous
+                            </Button>
+                            <span className="flex items-center text-xs text-gray-500 px-2">
+                                Page {page + 1} of {Math.ceil(data.count / PAGE_SIZE)}
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={(page + 1) * PAGE_SIZE >= data.count}
+                                className="h-8 text-xs"
+                            >
+                                Next →
+                            </Button>
+                        </div>
+                    ) : null}
                 </div>
             )}
         </div>

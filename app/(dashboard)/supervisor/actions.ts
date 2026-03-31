@@ -3,6 +3,7 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { requireRole } from '@/lib/auth'
+import { revalidatePath } from 'next/cache'
 import {
     SavePastAttendanceSchema,
     AccessCodeSchema,
@@ -154,6 +155,9 @@ export async function savePastAttendance(
         marked_by: user.id
     }))
 
+    // Set audit actor before service-role DML
+    await serviceClient.rpc('set_actor_for_audit', { p_actor_id: user.id })
+
     const { error } = await serviceClient
         .from('attendance')
         .upsert(upsertData, { onConflict: 'fixed_worker_id,date' })
@@ -194,6 +198,9 @@ export async function deleteMachineWithCode(machineId: string, accessCode: strin
         return { error: 'A server error occurred. Please try again later.' }
     }
 
+    // Set audit actor before service-role DML
+    await serviceClient.rpc('set_actor_for_audit', { p_actor_id: user.id })
+
     const { error } = await serviceClient
         .from('machines')
         .delete()
@@ -233,6 +240,9 @@ export async function deleteWorkerWithCode(workerId: number, accessCode: string)
     } catch {
         return { error: 'A server error occurred. Please try again later.' }
     }
+
+    // Set audit actor before service-role DML
+    await serviceClient.rpc('set_actor_for_audit', { p_actor_id: user.id })
 
     const { error } = await serviceClient
         .from('workers')
@@ -277,7 +287,7 @@ export async function verifyAccessCode(accessCode: string) {
  * Link an active yarn batch to a specific machine ("Start Beam").
  */
 export async function startBeam(batchId: string, machineId: string) {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
     const orgId = profile.org_id
 
     // Validate both UUIDs
@@ -309,6 +319,9 @@ export async function startBeam(batchId: string, machineId: string) {
     const qualityData = Array.isArray(batchData.qualities) ? batchData.qualities[0] : batchData.qualities
     const defaultRate = (qualityData as any)?.default_worker_rate_per_m || 0
 
+    // Set audit actor before service-role DML
+    await serviceClient.rpc('set_actor_for_audit', { p_actor_id: user.id })
+
     await serviceClient
         .from('yarn_batches')
         .update({ current_machine_id: null })
@@ -334,7 +347,7 @@ export async function startBeam(batchId: string, machineId: string) {
  * Link an order to a machine.
  */
 export async function linkOrderToMachine(orderId: string, machineId: string) {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
     const orgId = profile.org_id
 
     const orderParsed = safeParse(UuidSchema, orderId)
@@ -349,6 +362,9 @@ export async function linkOrderToMachine(orderId: string, machineId: string) {
     } catch {
         return { error: 'A server error occurred. Please try again later.' }
     }
+
+    // Set audit actor before service-role DML
+    await serviceClient.rpc('set_actor_for_audit', { p_actor_id: user.id })
 
     const { error } = await serviceClient
         .from('machines')
@@ -370,7 +386,7 @@ export async function linkOrderToMachine(orderId: string, machineId: string) {
  * Perform a shift handover by unlinking the current worker from a machine.
  */
 export async function shiftHandover(machineId: string, shift: 'day' | 'night') {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
     const orgId = profile.org_id
 
     const machineParsed = safeParse(UuidSchema, machineId)
@@ -385,6 +401,9 @@ export async function shiftHandover(machineId: string, shift: 'day' | 'night') {
     } catch {
         return { error: 'A server error occurred. Please try again later.' }
     }
+
+    // Set audit actor before service-role DML
+    await serviceClient.rpc('set_actor_for_audit', { p_actor_id: user.id })
 
     const { error } = await serviceClient
         .from('machine_assignments')
@@ -459,6 +478,9 @@ export async function unconsumeBatchWithCode(batchId: string, accessCode: string
         return { error: 'A server error occurred. Please try again later.' }
     }
 
+    // Set audit actor before service-role DML
+    await serviceClient.rpc('set_actor_for_audit', { p_actor_id: user.id })
+
     const { error } = await serviceClient
         .from('yarn_batches')
         .update({ 
@@ -475,3 +497,127 @@ export async function unconsumeBatchWithCode(batchId: string, accessCode: string
     }
     return { success: true }
 }
+
+// ─── Worker Management ───────────────────────────────────────────────────────
+
+export async function addMeterWorker(data: {
+    name: string
+    pf_esi_eligible: boolean
+    esi_number?: string | null
+    pf_number?: string | null
+}) {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+    
+    // Set actor context so the audit trigger captures the ID instead of NULL since we are using requireRole which sets the user JWT natively
+    // We don't need service role here, so we shouldn't necessarily need set_actor_for_audit unless it's a service client,
+    // BUT requiring it provides a full guarantee. Actually, createServerClient() includes the user JWT.
+    
+    // Wait, the regular createServerClient() sets the JWT, so auth.uid() is available.
+    const { error } = await supabase
+        .from('workers')
+        .insert({
+            name: data.name,
+            is_active: true,
+            pf_esi_eligible: data.pf_esi_eligible,
+            esi_number: data.esi_number,
+            pf_number: data.pf_number,
+            org_id: profile.org_id
+        })
+        
+    if (error) return { error: error.message }
+    return { success: true }
+}
+
+export async function addFixedWorker(data: {
+    name: string
+    role: string
+    monthly_salary: number
+    pf_esi_eligible: boolean
+    esi_number?: string | null
+    pf_number?: string | null
+}) {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+    
+    const { error } = await supabase
+        .from('fixed_workers')
+        .insert({
+            name: data.name,
+            role: data.role,
+            monthly_salary: data.monthly_salary,
+            is_active: true,
+            pf_esi_eligible: data.pf_esi_eligible,
+            esi_number: data.esi_number,
+            pf_number: data.pf_number,
+            org_id: profile.org_id
+        })
+        
+    if (error) return { error: error.message }
+    return { success: true }
+}
+
+export async function toggleWorkerActive(workerId: number, currentActive: boolean, table: 'workers' | 'fixed_workers') {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(PositiveIntSchema, workerId)
+    if ('error' in parsed) return { error: parsed.error }
+
+    const { error } = await supabase
+        .from(table)
+        .update({ is_active: !currentActive })
+        .eq('id', parsed.data)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to update worker status:', error)
+        return { error: 'Failed to update worker status. Please try again.' }
+    }
+
+    revalidatePath('/supervisor/workers')
+    return { success: true }
+}
+
+export async function assignWorker(
+    machineId: string,
+    workerId: number,
+    shift: 'day' | 'night',
+    isExisting: boolean
+) {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const machineParsed = safeParse(UuidSchema, machineId)
+    if ('error' in machineParsed) return { error: machineParsed.error }
+
+    let error: any
+    if (isExisting) {
+        const { error: updateError } = await supabase
+            .from('machine_assignments')
+            .update({ worker_id: workerId })
+            .eq('machine_id', machineParsed.data)
+            .eq('shift', shift)
+            .eq('org_id', profile.org_id)
+        error = updateError
+    } else {
+        const { error: insertError } = await supabase
+            .from('machine_assignments')
+            .insert({
+                machine_id: machineParsed.data,
+                worker_id: workerId,
+                shift,
+                org_id: profile.org_id
+            })
+        error = insertError
+    }
+
+    if (error) {
+        console.error('Failed to update assignment:', error)
+        return { error: 'Failed to assign worker. Please try again.' }
+    }
+
+    revalidatePath('/supervisor/assignments')
+    return { success: true }
+}
+
