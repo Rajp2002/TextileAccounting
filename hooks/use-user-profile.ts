@@ -19,7 +19,7 @@ export function useUserProfile() {
 
             const { data, error } = await supabase
                 .from('profiles')
-                .select('org_id, role, full_name, phone')
+                .select('org_id, role, full_name, phone, whatsapp_number, whatsapp_opted_in')
                 .eq('id', user.id)
                 .single()
 

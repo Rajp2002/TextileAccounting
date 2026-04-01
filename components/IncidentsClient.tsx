@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTranslation } from '@/lib/i18n/context'
 import { getSuratTodayString } from '@/lib/time'
+import { createIncident } from '@/app/(dashboard)/owner/incidents/actions'
 
 interface Incident {
     id: string
@@ -82,8 +83,9 @@ export function IncidentsClient({ role }: { role: 'owner' | 'supervisor' }) {
 
     const addMutation = useMutation({
         mutationFn: async (payload: any) => {
-            const { error } = await supabase.from('incidents').insert([payload])
-            if (error) throw error
+            // Use server action so critical incidents trigger WhatsApp alert
+            const result = await createIncident(payload)
+            if (result?.error) throw new Error(result.error)
         },
         onSuccess: () => {
             toast.success('Incident reported successfully')
