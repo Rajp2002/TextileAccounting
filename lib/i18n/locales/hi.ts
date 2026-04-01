@@ -154,6 +154,7 @@ export const hi = {
     verify_delete: "पुष्टि करें और हटाएँ (Verify & Delete)",
     invalid_code: "अमान्य या समाप्त हो चुका एक्सेस कोड",
     code_sent: "सत्यापन कोड मालिक को मोबाइल पर भेज दिया गया है",
+    code_requested_success: "मालिक को व्हाट्सएप के माध्यम से अनुरोध भेजा गया",
   },
   analytics: {
     greeting: {
@@ -539,6 +540,9 @@ export const hi = {
     select_order: "ऑर्डर चुनें",
     no_active_orders: "कोई चालू ऑर्डर उपलब्ध नहीं है। मालिक से ऑर्डर जोड़ने को कहें।",
     link: "लिंक करें",
+    batch_already_linked_title: "बैच पहले से लिंक है",
+    batch_already_linked_desc: "यह बैच वर्तमान में मशीन \"{machineName}\" पर सक्रिय है। इसे स्थानांतरित करने से यह पुरानी मशीन पर रुक जाएगा। आगे बढ़ें?",
+    move_beam: "बीम स्थानांतरित करें",
   },
   fixed_page: {
     title: "फिक्स्ड वर्कर्स",

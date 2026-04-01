@@ -152,6 +152,7 @@ export const gu = {
     verify_delete: "ખાતરી કરો અને ડીલીટ કરો (Verify & Delete)",
     invalid_code: "ખોટો અથવા એક્સપાયર થયેલ એક્સેસ કોડ",
     code_sent: "વેરિફિકેશન કોડ માલિકને મોકલવામાં આવ્યો છે",
+    code_requested_success: "WhatsApp દ્વારા માલિકને વિનંતી મોકલવામાં આવી છે",
   },
   analytics: {
     greeting: {
@@ -537,6 +538,9 @@ export const gu = {
     select_order: "ઓર્ડર પસંદ કરો",
     no_active_orders: "કોઈ ચાલુ ઓર્ડર નથી. માલિકને ઓર્ડર ઉમેરવા કહો.",
     link: "લિંક કરો",
+    batch_already_linked_title: "બેચ પહેલેથી લિંક છે",
+    batch_already_linked_desc: "આ બેચ હાલમાં મશીન \"{machineName}\" પર કાર્યરત છે. તેને અહીં લાવવાથી જૂના મશીન પર તે બંધ થઈ જશે. આગળ વધવું છે?",
+    move_beam: "બીમ ખસેડો",
   },
   fixed_page: {
     title: "ફિક્સ પગારદાર કારીગરો",

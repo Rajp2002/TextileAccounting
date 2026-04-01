@@ -156,6 +156,7 @@ export const en = {
     verify_delete: "Verify & Delete",
     invalid_code: "Invalid or expired access code",
     code_sent: "Verification code sent to owner",
+    code_requested_success: "Request sent to owner via WhatsApp",
   },
   analytics: {
     greeting: {
@@ -547,6 +548,9 @@ export const en = {
     select_order: "Select Order",
     no_active_orders: "No active orders available. Ask the owner to add orders.",
     link: "Link",
+    batch_already_linked_title: "Batch Already Linked",
+    batch_already_linked_desc: "This batch is currently active on machine \"{machineName}\". Moving it will stop it on the old machine. Proceed?",
+    move_beam: "Move Beam",
   },
   fixed_page: {
     title: "Fixed Workers",

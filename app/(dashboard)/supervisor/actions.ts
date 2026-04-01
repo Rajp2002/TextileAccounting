@@ -4,6 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import crypto from 'crypto'
 import {
     SavePastAttendanceSchema,
     AccessCodeSchema,
@@ -622,6 +623,60 @@ export async function assignWorker(
     }
 
     revalidatePath('/supervisor/assignments')
+    return { success: true }
+}
+
+/**
+ * Request a new access code from the owner.
+ * Generated code is sent to the owner's WhatsApp, mentioning who requested it.
+ */
+export async function requestAccessCode() {
+    const { user, profile } = await requireRole(['supervisor', 'owner'])
+    const supabase = await createServerClient()
+
+    // 1. Generate random 6-character code
+    const code = crypto.randomBytes(3).toString('hex').toUpperCase()
+    const hash = crypto.createHash('sha256').update(code).digest('hex')
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes
+
+    // 2. Save hash to organizations table
+    const { error } = await supabase
+        .from('organizations')
+        .update({ access_code_hash: hash, access_code_expires_at: expiresAt })
+        .eq('id', profile.org_id)
+
+    if (error) {
+        console.error('[requestAccessCode] DB Update failed:', error)
+        return { error: 'Failed to generate request. Please try again.' }
+    }
+
+    // 3. Fire-and-forget: send notification to owner via Edge Function
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    // Get requester name for the notification
+    const { data: requester } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', user.id)
+        .single()
+
+    if (supabaseUrl && serviceRoleKey) {
+        fetch(`${supabaseUrl}/functions/v1/send-access-code`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${serviceRoleKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                org_id: profile.org_id,
+                code,
+                expires_at: expiresAt,
+                requested_by: requester?.name || 'Supervisor'
+            }),
+        }).catch((err) => console.error('[request-access-code] Notification failed:', err))
+    }
+
     return { success: true }
 }
 
