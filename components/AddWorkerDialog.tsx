@@ -22,6 +22,7 @@ import { Loader2, Plus } from 'lucide-react'
 import { formatINR } from '@/lib/finance'
 import { cn } from '@/lib/utils'
 import { addMeterWorker, addFixedWorker } from '@/app/(dashboard)/supervisor/actions'
+import { saveWorkerWhatsApp } from '@/app/(dashboard)/owner/actions'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -85,6 +86,9 @@ interface AddWorkerDialogProps {
 export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) {
     const [open, setOpen] = useState(false)
     const [ageConfirmed, setAgeConfirmed] = useState(false)
+    const [whatsappPhone, setWhatsappPhone] = useState('')
+    const [whatsappLang, setWhatsappLang] = useState<'en' | 'hi' | 'gu'>('en')
+    const [whatsappConsent, setWhatsappConsent] = useState(false)
     const supabase = createClient()
     const queryClient = useQueryClient()
     const { t } = useTranslation()
@@ -127,6 +131,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                     pf_number: data.pf_number?.trim() || null,
                 })
                 if (result.error) throw new Error(result.error)
+                return { ...data, workerId: (result as any).workerId as number }
             } else {
                 const result = await addFixedWorker({
                     name: data.name.trim(),
@@ -137,10 +142,10 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                     pf_number: data.pf_number?.trim() || null,
                 })
                 if (result.error) throw new Error(result.error)
+                return { ...data, workerId: (result as any).workerId as number }
             }
-            return data
         },
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
             toast.success(`${data.name}${t('workers.added_success')}`)
             // Invalidate meter worker queries
             queryClient.invalidateQueries({ queryKey: ['workers'] })
@@ -153,8 +158,25 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
             queryClient.invalidateQueries({ queryKey: ['fixed_workers_list'] })
             queryClient.invalidateQueries({ queryKey: ['fixed_payroll'] })
             queryClient.invalidateQueries({ queryKey: ['daily_workers'] })
+
+            // Save WhatsApp details if phone entered and consent given
+            if (whatsappPhone.length === 10 && whatsappConsent && data.workerId) {
+                saveWorkerWhatsApp({
+                    workerId: data.workerId,
+                    workerType: data.workerType as 'meter' | 'fixed',
+                    phone: whatsappPhone,
+                    language: whatsappLang,
+                    consentGiven: whatsappConsent,
+                }).catch((err) => console.error('[saveWorkerWhatsApp]', err))
+            }
+
+            // WhatsApp opt-in is handled separately in the mutation below but
+            // we reset the fields here after close.
             setOpen(false)
             reset()
+            setWhatsappPhone('')
+            setWhatsappLang('en')
+            setWhatsappConsent(false)
             if (onWorkerAdded) {
                 onWorkerAdded()
             }
@@ -359,6 +381,54 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                             {...register('pf_number')}
                                         />
                                     </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* WhatsApp (optional) */}
+                        <div className="border-t border-gray-100 pt-3 mt-1 space-y-3">
+                            <div>
+                                <p className="text-xs font-medium text-gray-700 mb-0.5">
+                                    WhatsApp Number <span className="text-gray-400 font-normal">(optional)</span>
+                                </p>
+                                <p className="text-xs text-gray-400 mb-2">Used for payroll messages and advance receipts</p>
+                                <div className="flex gap-2">
+                                    <div className="flex items-center px-2.5 bg-gray-50 border border-gray-200 rounded-md text-xs text-gray-600 font-medium whitespace-nowrap">
+                                        +91
+                                    </div>
+                                    <Input
+                                        type="tel"
+                                        inputMode="numeric"
+                                        placeholder="9898989898"
+                                        value={whatsappPhone}
+                                        onChange={(e) => setWhatsappPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                                        maxLength={10}
+                                        className="font-mono"
+                                    />
+                                    <select
+                                        value={whatsappLang}
+                                        onChange={(e) => setWhatsappLang(e.target.value as 'en' | 'hi' | 'gu')}
+                                        className="border border-gray-200 rounded-md text-xs px-2 bg-white text-gray-700"
+                                    >
+                                        <option value="en">English</option>
+                                        <option value="hi">हिंदी</option>
+                                        <option value="gu">ગુજરાતી</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {whatsappPhone.length === 10 && (
+                                <div className="flex items-start gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="wa-consent"
+                                        checked={whatsappConsent}
+                                        onChange={(e) => setWhatsappConsent(e.target.checked)}
+                                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 cursor-pointer"
+                                    />
+                                    <label htmlFor="wa-consent" className="text-xs text-gray-500 leading-snug cursor-pointer">
+                                        I confirm this worker has consented to receive WhatsApp payroll messages on this number
+                                    </label>
                                 </div>
                             )}
                         </div>

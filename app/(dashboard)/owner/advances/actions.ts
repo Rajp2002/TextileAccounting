@@ -37,13 +37,37 @@ export async function createAdvance(
         fixed_worker_id: data.workerType === 'fixed' ? data.workerId : null,
     }
 
-    const { error } = await supabase
+    const { data: inserted, error } = await supabase
         .from('worker_advances')
         .insert(record)
+        .select('id')
+        .single()
 
     if (error) {
         console.error('Failed to create advance:', error)
         return { error: 'Failed to create advance. Please try again.' }
+    }
+
+    // ── Fire-and-forget: send advance receipt to worker's WhatsApp ───────────
+    // Non-blocking — advance creation is not gated on notification delivery.
+    if (inserted?.id) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        if (supabaseUrl && serviceRoleKey) {
+            fetch(`${supabaseUrl}/functions/v1/send-advance-receipt`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${serviceRoleKey}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    org_id: profile.org_id,
+                    advance_id: inserted.id,
+                    worker_id: data.workerId,
+                    worker_type: data.workerType,
+                }),
+            }).catch((err) => console.error('[advance-receipt] Notification failed:', err))
+        }
     }
 
     revalidatePath('/owner/advances')

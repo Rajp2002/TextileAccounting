@@ -207,6 +207,25 @@ export async function generateAccessCode() {
         return { error: 'Failed to generate access code. Please try again.' }
     }
 
+    // ── Fire-and-forget: send code to owner's WhatsApp ───────────────────────
+    // Non-blocking — code display in UI is not gated on notification.
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (supabaseUrl && serviceRoleKey) {
+        fetch(`${supabaseUrl}/functions/v1/send-access-code`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${serviceRoleKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                org_id: profile.org_id,
+                code,
+                expires_at: expiresAt,
+            }),
+        }).catch((err) => console.error('[send-access-code] Notification failed:', err))
+    }
+
     return { success: true, code }
 }
 
@@ -396,6 +415,26 @@ export async function closeYarnBatch(batchId: string, leftoverWeightKg: number =
         console.error('Failed to close yarn batch:', error)
         return { error: 'Failed to close batch. Please try again.' }
     }
+
+    // ── Fire-and-forget: send yield alert WhatsApp if leakage detected ───────
+    if (hasLeakage) {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        if (supabaseUrl && serviceRoleKey) {
+            fetch(`${supabaseUrl}/functions/v1/send-yield-alert`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${serviceRoleKey}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    org_id: profile.org_id,
+                    batch_id: parsed.data.batchId,
+                }),
+            }).catch((err) => console.error('[send-yield-alert] Notification failed:', err))
+        }
+    }
+
     return { success: true }
 }
 
@@ -502,5 +541,97 @@ export async function assignOrderToMachines(orderId: string, machineIds: string[
     }
 
     revalidatePath('/owner/analytics')
+    return { success: true }
+}
+
+// ─── WhatsApp Preferences ─────────────────────────────────────────────────────
+
+/**
+ * Save owner's WhatsApp opt-in preference.
+ * Owner-only. Validates 10-digit Indian mobile number.
+ */
+export async function saveWhatsAppPreferences(
+    phone: string,
+    optedIn: boolean
+) {
+    const { user, profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const cleanPhone = phone.replace(/\D/g, '')
+    if (optedIn && cleanPhone.length !== 10) {
+        return { error: 'Please enter a valid 10-digit Indian mobile number.' }
+    }
+
+    const updateData: Record<string, any> = {
+        whatsapp_opted_in: optedIn,
+    }
+
+    if (optedIn) {
+        updateData.whatsapp_number = cleanPhone
+        updateData.whatsapp_opted_in_at = new Date().toISOString()
+    } else {
+        updateData.whatsapp_opted_in_at = null
+    }
+
+    const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', user.id)
+
+    if (error) {
+        console.error('Failed to save WhatsApp preferences:', error)
+        return { error: 'Failed to save preferences. Please try again.' }
+    }
+
+    revalidatePath('/owner/settings')
+    return { success: true }
+}
+
+/**
+ * Save WhatsApp number + language for a piece-rate or fixed worker.
+ * Requires explicit consent flag from the owner (legal defensibility).
+ * Owner-only.
+ */
+export async function saveWorkerWhatsApp(data: {
+    workerId: number
+    workerType: 'meter' | 'fixed'
+    phone: string
+    language: 'en' | 'hi' | 'gu'
+    consentGiven: boolean
+}) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    // Hard block if consent not explicitly confirmed
+    if (!data.consentGiven) {
+        return { error: 'Worker consent must be confirmed before saving WhatsApp number.' }
+    }
+
+    const cleanPhone = data.phone.replace(/\D/g, '')
+    if (cleanPhone && cleanPhone.length !== 10) {
+        return { error: 'Please enter a valid 10-digit mobile number.' }
+    }
+
+    const table = data.workerType === 'meter' ? 'workers' : 'fixed_workers'
+
+    const parsedId = safeParse(PositiveIntSchema, data.workerId)
+    if ('error' in parsedId) return { error: parsedId.error }
+
+    const { error } = await supabase
+        .from(table)
+        .update({
+            whatsapp_number: cleanPhone || null,
+            whatsapp_language: data.language,
+        })
+        .eq('id', parsedId.data)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to save worker WhatsApp:', error)
+        return { error: 'Failed to save worker WhatsApp details.' }
+    }
+
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/advances')
     return { success: true }
 }

@@ -18,435 +18,154 @@ Small-to-mid-sized textile mills in India bleed money in ways that are almost im
 
 ---
 
-## 2. How the Platform is Organized
+## 2. Core Architecture & Multi-Tenancy
 
-The app is a **multi-tenant SaaS** built with **Next.js** and **Supabase**. Each factory is an isolated **Organization**. All data — workers, machines, orders, batches, production logs, payroll — is completely ring-fenced.
+The app is a **multi-tenant SaaS** built with **Next.js 14** and **Supabase**. Each factory is an isolated **Organization** (`org_id`).
 
-Within an organization, there are two roles:
+### 2.1 Role-Based Access Control (RBAC)
+Data is strictly partitioned via PostgreSQL Row Level Security (RLS).
 
-| Role | Who they are | What they can do |
-|---|---|---|
-| **Owner** | Factory proprietor / manager | Full control: orders, inventory, payroll, analytics, yield audits, settings, all data |
-| **Supervisor** | Floor manager | Operational tasks: log production, manage workers, mark attendance, link beams and orders to machines |
+| Role | Who they are | Primary Focus | Key Permissions |
+|---|---|---|---|
+| **Owner** | Factory proprietor | Strategy & Profits | All data, yield audits, payroll settlement, machine rates, access code generation |
+| **Supervisor** | Floor manager | Daily Operations | Production logging, worker management, attendance, incident reporting, machine linking |
 
----
-
-## 3. The Onboarding & Join Flow
-
-The **Owner** creates their organization and receives a unique **Factory Join Code** (visible in Settings). This code is shared out-of-band (WhatsApp, in person) with supervisors who use it to self-onboard. No CSV uploads or email invites needed.
-
----
-
-## 4. The Owner Dashboard — Command Center
-
-The Owner's primary view is the **analytics dashboard** — a date-scoped, real-time overview of factory performance.
-
-### 4.1 Live Orders (Top of Dashboard)
-
-The dashboard leads with **Live Orders** — a prominent section showing all active customer orders. The layout adapts smartly:
-- **1 order** → full-width hero card
-- **2–3 orders** → responsive grid
-- **4+ orders** → horizontal carousel with navigation arrows and pagination dots
-
-Each **Order Card** shows:
-- **Party name** and **fabric quality**
-- **Progress bar** (meters produced vs. target) with percentage
-- **Health / Pace Index** — a ratio of production pace to required pace (≥1.0 = on track, <1.0 = behind)
-- **Deadline** date
-- **Predicted finish date** — a forecast calculated from average daily production, with a "theoretical" label during the warm-up period when data is sparse
-- **Status badges** — color-coded: Active (green), At Risk (amber, <48h to deadline at <90%), Overdue (red, past deadline and incomplete), Finished (green, 100%)
-- **Machine linking** — the owner can assign/reassign machines to an order directly from the card
-
-The owner can **create, edit, and delete orders** via a dialog. Each order has a party name, fabric quality, target meters, start date, and deadline.
-
-### 4.2 The Three KPI Cards
-
-Below the orders are three always-visible summary cards:
-
-1. **Daily Production** — Total meters produced across all machines for the selected date.
-2. **Wages Today** — Total rupee cost of all piece-rate wages for that day.
-3. **Fixed Payroll** — What salaried staff cost for the current month, pro-rated for daily workers.
-
-### 4.3 Efficiency & Loss Alerts
-
-Two cards powered by the **Yarn-to-Fabric Yield Engine**:
-- **Efficiency** — Average variance across all active yarn batches. Positive = over-producing, negative = leaking.
-- **Loss Alerts** — Count of batches with >5% leakage and the total estimated monetary loss in ₹. This is the profit-saving centerpiece — it turns an invisible problem into a concrete number.
-
-### 4.4 Worker Breakdown Table
-
-A detailed, expandable table showing every piece-rate worker who produced on the selected date. Each row shows name, total meters, calculated day-pay. Tapping a row expands a **per-machine breakdown**: machine name, meters, rate, and resulting pay. Owners verify exactly how every rupee was calculated.
-
-### 4.5 Fixed Workers Panel
-
-A list of all salaried/fixed staff with color-coded role badges (Master, Helper, Mender, Sanitation, Day-to-Day, Supervisor). The owner can **inline-edit any salary** directly — click the pencil icon, type the new value, press Enter. 
-
-Key features:
-- **ESI & PF Tracking** — The owner can record ESI (Employee State Insurance) and PF (Provident Fund) numbers and toggle eligibility for compliance tracking.
-- **Attendance-Linked Pay** — For **Day-to-Day workers**, the panel shows days worked this month and auto-calculates earnings.
+### 2.2 Standard Time Engine (Surat Standard)
+To prevent server-client drift (e.g., UTC vs. IST), all date/time logic is centralized in `lib/time.ts`. 
+- **Timezone**: `Asia/Kolkata` (Surat)
+- **Primary Helper**: `getSuratDate()` and `getSuratTodayString()`. 
+- **Critical Logic**: Attendance and production logs are strictly bound to Surat "Today" to ensure mid-night shifts are logged to the correct business day.
 
 ---
 
-## 5. The Order Management System
+## 3. Operations: Onboarding & Workflow
 
-Orders are first-class entities representing customer fabric commitments with deadlines.
+### 3.1 Seamless Onboarding
+The **Owner** creates the organization and receives a unique **Factory Join Code**. Supervisors use this code to join, avoiding the friction of manual email invites or CSV uploads.
 
-### 5.1 Order Lifecycle
-1. **Owner creates** an order: party name, quality, target meters, start date, deadline.
-2. **Machines are linked** to the order.
-3. Production logged against linked machines **automatically accumulates** toward the order's target.
-4. The system calculates **pace index**, **progress %**, and a **forecasted completion date** using actual daily production averages.
-5. When the order reaches 100%, it's marked **Finished**.
-
-### 5.2 Forecasting Engine
-The backend RPC `get_order_forecast` calculates:
-- **Average daily production** across assigned machines
-- **Remaining meters**
-- **Predicted finish date** — extrapolated from the daily average
-- **Theoretical flag** — set during the first few days when data is insufficient for reliable forecasting
-
-### 5.3 Order Progress Summary (Database View)
-A materialized view `order_progress_summary` provides pre-calculated metrics: `total_meters_produced`, `progress_percent`, `time_elapsed_percent`, `pace_index`, `assigned_machines_count`.
+### 3.2 Machine Lifecycle
+Machines are the primary production units. They track:
+- **Active Beam**: The specific yarn batch currently loaded.
+- **Linked Order**: The customer commitment this machine is currently fulfilling.
+- **Dynamic Rate**: The ₹/meter paid to workers, resolved from the **Quality** currently assigned to the machine's beam.
 
 ---
 
-## 6. The Inventory Module — Yarn & Quality Management
+## 4. The Owner Dashboard — Real-Time Analytics
 
-The inventory system tracks raw materials (yarn batches/beams) and fabric quality definitions. This is the foundation for the yield analytics that detect profit leakage.
+### 4.1 Order Intelligence
+The dashboard leads with **Live Orders**, using an adaptive layout (Hero, Grid, or Carousel) based on order volume.
+- **Progress Tracking**: Real-time meters produced vs. target.
+- **Pace Index**: A ratio of actual production speed to required speed (`≥1.0` is healthy).
+- **Forecasting**: Powered by the PostgreSQL RPC `get_order_forecast`, predicting finish dates based on trailing daily averages.
+- **Machine Linking**: Owners can reassign machines to orders directly from the dashboard cards.
 
-### 6.1 Qualities Tab
-Defines the types of fabric the factory produces. Each quality has:
-- **Name** (e.g., "60g Georgette", "Cotton 40s")
-- **Target Yield** (meters per kg) — the expected production efficiency
-- **Estimated Sale Price** (₹/meter) — used for monetary loss calculations
-- **Worker Rate** (₹/meter) — **The Single Source of Truth** for production pay. This rate is auto-applied to any machine producing this quality, ensuring consistency across the factory floor.
+### 4.2 KPI & Profit Center
+- **Daily Metrics**: Production totals, Piece-rate wages today, and Pro-rated fixed payroll.
+- **Yield Leakage Engine**: Average efficiency across all batches. If leakage exceeds 5%, a **Loss Alert** displays the estimated monetary loss in ₹, highlighting direct profit drainage.
 
-Factories in the Surat region can auto-load default qualities for common fabric types.
-
-### 6.2 Batches (Beams) Tab
-Tracks individual yarn batches as they enter the factory:
-- **Batch name/ID** — factory's internal identification
-- **Quality** — which fabric type this yarn produces
-- **Weight (kg)** — input weight that determines expected output
-- **Status** — Active (on a machine) or Consumed (batch audit completed)
-- **Machine assignment** — which machine the beam is loaded on
-
-### 6.3 Batch Audit & Yield Report
-When a beam is consumed, the system generates a **full audit report** that compares:
-- **Expected meters** = Weight × Target Yield
-- **Actual meters** = Sum of all production logged on that machine during the beam's lifespan
-- **Efficiency Variance** = `((Actual - Expected) / Expected) × 100`
-
-The audit flags three scenarios:
-- **Leakage (Variance < -5%)** — Real loss: yarn was wasted, stolen, or production was under-reported. Shows estimated **monetary loss** = `(Expected Yield - Actual Yield) × Weight × Sale Price/m`
-- **Padding (Variance > +10%)** — Over-reporting: a supervisor may have inflated meter counts, or the quality's target yield is misconfigured.
-- **Healthy** — Within tolerance.
-
-If leftover yarn remains on the beam (called *tali*), it can be recorded to adjust the audit.
+### 4.3 Detailed Audit Visibility
+- **Worker Breakdown**: Expandable table shows exactly which machines a worker operated, their meter count, and the exact rate applied.
+- **Fixed Workers**: Salaried staff management with inline salary editing and ESI/PF tracking.
 
 ---
 
-## 7. The Payroll Module — Month-by-Month Settlement
+## 5. Inventory & Yield Management
 
-The payroll page is where the owner **settles wages** at month end.
+### 5.1 Quality Definitions
+Qualities (e.g., "60g Georgette") define the technical specs:
+- **Target Yield**: Meters expected per kg of yarn.
+- **Sale Price**: Expected revenue per meter.
+- **Worker Rate**: The standard piece-rate for this quality across the factory.
 
-### 7.1 Piece-Rate Workers Tab
-All active piece-rate workers who logged production in the month, **sorted by total payout descending**. Each card shows:
-- Total meters, machines worked, total calculated pay
-- **Advance (Upaad) deduction** — pending advances are auto-deducted from gross pay
-- **Net Pagar** — the actual amount to hand over: `Gross Pay - Advances`
-- If advances exceed earnings: shows **remaining debt** (carried forward)
-- **Paid / Pending** badge with Mark Paid / Unmark Paid toggle
-
-Tapping a card expands the **full calculation breakdown**: `Machine Name | X meters × ₹Y/m = ₹Z` across all machines, then the advance deduction, arriving at the net payout.
-
-### 7.2 Fixed Workers Tab
-All salaried staff for the month with the same Mark Paid / Unmark mechanic. Day-to-Day workers show: `(Monthly Salary ÷ 30) × Days Present`.
-
-### 7.3 Summary Bar
-Four summary cards:
-- **Total Owed** — everyone's pay this month
-- **Paid** — sum of those marked paid
-- **Deductions** — total advances deducted
-- **Outstanding** — what's left to hand out
-
-### 7.4 Robust Settlement Engine ("The Engine Room")
-The payroll system uses a specialized settlement engine to handle complex financial transactions:
-- **The 50% Legal Cap** — In compliance with Indian labor laws, the system automatically caps advance deductions at 50% of gross pay for active workers, ensuring they always take home a living wage. This cap is only lifted for *Final Settlements* (termination).
-- **Snapshot Math** — Every payment creates a permanent snapshot in `payroll_settlements`, locking in the gross pay, deductions, and net payout regardless of future rate changes.
-- **Custom Pay Cycles** — Factories can configure their own cycle start days (e.g., settling on the 10th of every month) via `payroll_configs`.
-- **Advance Splitting** — If a worker's total debt exceeds the 50% cap, the system automatically settles what it can and carries the remaining debt forward to the next month.
+### 5.2 Beam (Batch) Management
+- **Workflows**: Supervisors can **Start Beam** (link to machine) and **Mark as Consumed** directly from the floor.
+- **The Audit Report**: Comparing `Expected Meters (Weight * Target Yield)` vs `Actual Meters (Sum of Logs)`.
+- **Variance Analysis**:
+    - **Leakage (<-5%)**: Triggers monetary loss calculation.
+    - **Padding (>+10%)**: Flags potential reporting fraud or misconfiguration.
 
 ---
 
-## 8. The Advances (Upaad) Module
+## 6. The Payroll & Advances (Upaad) System
 
-A dedicated page for managing mid-month cash advances to workers.
+### 6.1 Settlement Engine (`lib/finance.ts`)
+Financial arithmetic is hardened using **Decimal.js** for 20-digit precision, preventing floating-point errors common in piece-rate math.
+- **Snapshot Math**: Settlements are "locked" in `payroll_settlements` to prevent historical changes from affecting past records.
+- **NaN Hardening**: Input sanitization ensures `meters * rate` never results in corrupted financial records.
 
-### 8.1 Worker Selection & Risk Assessment
-The owner selects a worker and immediately sees:
-- **All pending advances** — amount, date given, reason, settlement status
-- **Debt risk level** — High (heavy debt relative to typical earnings), Moderate, or safe — with a warning if more advances should be avoided
+### 6.2 The 50% Legal Cap
+In compliance with Indian labor laws, the system auto-caps advance deductions at 50% of gross pay for active workers. Excess debt is automatically carried forward to the next month's "Opening Balance."
 
-### 8.2 Recording an Advance
-A dialog captures the amount and optional reason (e.g., "medicine", "rent"). Once saved, the advance is automatically queued for deduction from the next payroll settlement.
-
-### 8.3 Auto-Settlement
-When payroll is run, the system calculates `Net Pay = Gross Pay - Pending Advances`. If advances exceed earnings, the remainder carries forward as debt. This prevents owners from losing track of outstanding advances.
+### 6.3 Advance Lifecycle
+Advances are recorded with reasons (medical, school fees, etc.) and instantly reflected as "Pending Debt" on the worker's payroll card. The system handles partial settlements and carry-forward balances automatically.
 
 ---
 
-## 9. The Supervisor Dashboard — The Floor Tool
+## 7. The Supervisor Floor Tool
 
-Supervisors have a dedicated, streamlined dashboard with five core modules. The UI is designed for speed — large tap targets, mobile-first, minimal steps.
+### 7.1 Real-Time Production Logging
+- **Shift Aware**: Auto-detects Day/Night shifts based on Surat time.
+- **Floor Controls**: One-tap linking of Beams and Orders. Production entries go read-only once saved.
+- **Audit Hardening**: Captures "Before" and "After" snapshots for EVERY log entry.
+- **Real-Time Sync**: Production logs created by supervisors instantly update the Owner's Analytics view via Supabase Realtime.
 
-### 9.1 Production Logging — The Core Daily Task
-
-The most-used screen in the app. For each machine card:
-- Auto-fills the **assigned worker** (from assignments)
-- Shows **active beam** (from inventory) and **linked order** (if any)
-- Displays a **setup checklist**: worker assigned ✓, beam loaded ✓, order linked ✓
-- Supervisor enters meter count via keyboard or **+10 / –10 quick-increment buttons**
-- Real-time **estimated pay** shown as meters are typed
-- **Save All Entries** submits all machines at once
-
-**Shift Toggle:** Day/Night shift toggle auto-detects the correct shift (7AM–7PM = Day, 7PM–7AM = Night).
-
-**Beam & Order Linking:** Supervisors can link yarn batches and orders directly to machines from the production page via modals, streamlining the floor workflow.
-
-**Offline Mode:** The app queues entries in IndexedDB when offline and syncs on reconnect. A toast tells the supervisor entries are "queued (offline)."
-
-**The Lock System:** Saved entries go **read-only**. To edit, the supervisor must enter a **single-use access code** from the Owner.
-
-### 9.2 Worker Assignments — Who Runs Which Machine
-
-Shift-aware persistent assignments (Day/Night). A day shift assignment is separate from a night shift one.
-
-### 9.3 Attendance — Tracking Day-to-Day Workers
-
-Green ✓ / red ✗ toggle per worker, with a live "Present / Total" counter. **Past date security**: requires an access code to prevent backdated attendance manipulation.
-
-### 9.4 Worker Management
-
-Tabbed interface (Piece-Rate / Fixed Staff, Active / Inactive).
-- Add new piece-rate or fixed workers
-- Toggle active/inactive status
-- Delete requires an **access code** (irreversible action)
-- Workers with outstanding advances show a warning and must be settled before deletion
-
-### 9.5 Machine Viewing
-
-Supervisors see the machine list with current assignments but **cannot change rates, rename, or modify machines** — read-only access. This is strictly the owner's privilege.
-
-### 9.6 Safety Incidents (OSHWC)
-
-Supervisors can report workplace accidents and safety incidents directly from the dashboard. This ensures real-time reporting of floor-level incidents as required for OSHWC regulatory compliance.
+### 7.2 The Access Code Guard
+High-stakes actions (editing locked logs, backdating attendance, deleting records) require a **single-use 6-character Access Code** generated by the Owner. This creates a "digital signature" of owner approval for sensitive mutations.
 
 ---
 
-## 10. The Machine Management Module (Owner)
+## 8. Compliance & Risk Management
 
-Machines are first-class entities:
-- **Name** (e.g., "Loom A", "Rapier 3")
-- **Dynamic Rate** — The ₹ amount paid per meter is resolved dynamically from the **Fabric Quality** currently assigned to the machine's active beam.
-- **Active/Inactive status**
-- **Current order assignment** — which order the machine is producing for
-- **Current beam** — which yarn batch is loaded
+### 8.1 Enhanced Audit Trail
+A dedicated module for owners to track every system mutation.
+- **Human-Readable Diffs**: Instead of raw JSON, the UI shows "Changed Rate from ₹2.50 to ₹2.60".
+- **Access Code Linking**: Every modification requiring a code is linked to that specific code usage in the audit log.
+- **Retention**: Designed for 3-year record retention under Indian Labour laws.
 
-The **Owner** can add, rename, toggle active/inactive, and delete machines (with access code). 
-
-## 11. Compliance & Auditing — Trust through Transparency
-
-Vastra is built to meet the rigorous compliance standards required by modern Indian industrial law.
-
-### 11.1 The Audit Trail System
-Required for **Indian Labour record retention (3 years)** and **DPDP Act accountability**. Every sensitive change in the system is automatically logged:
-- **Triggers** — PostgreSQL triggers on `production_logs`, `payroll_payments`, and `worker_advances` capture the 'Before' and 'After' state of every record.
-- **Owner Visibility** — Owners can view a complete history of who changed what and when, ensuring supervisors cannot retroactively manipulate production numbers without detection.
-
-### 11.2 Safety Incidents (OSHWC Code)
-A dedicated module for tracking workplace accidents and safety incidents. This allows factories to maintain a digital register of health and safety events, fulfilling their legal obligations under the Occupational Safety, Health and Working Conditions Code.
-
-### 11.3 The Access Code System — Owner Authorization Layer
-Single-use 6-character codes generated by the Owner from Settings. The code expires after 15 minutes and is consumed on use. Used for:
-- Editing locked (saved) production entries
-- Saving attendance for a past date
-- Deleting a worker or machine record
-- Any other retrospective or destructive operation
+### 8.2 OSHWC Safety Incidents
+A specialized module for tracking workplace accidents and safety incidents.
+- **Compliance**: Meets register requirements for the Occupational Safety, Health and Working Conditions Code.
+- **Severity Triage**: Minor, Major, and Critical categories with mandatory "Worker Involved" and "Action Taken" fields.
 
 ---
 
-## 12. The Vastra Estimator — Negotiation & Costing Tool
+## 9. Vastra Estimator — The Negotiation Tool
 
-A professional-grade costing engine designed for Surat factory owners to calculate fabric landed costs and negotiate with parties in real-time.
-
-### 12.1 Technical "Surat Logic" Engine
-The estimator (`lib/estimator.ts`) handles complex textile math:
-- **Grey Cost**: Calculated from GSM, Yarn Rate, and standard wastage.
-- **Job-Work with Shrinkage**: Sums multiple job-work processes (dyeing, printing, etc.), each with its own ₹ rate and % shrinkage.
-- **Overhead Allocation**: Pro-rates fixed factory rent and admin salaries based on machine efficiency and PPI (Picks Per Inch).
-- **GST Logic**: Toggle between GST-inclusive and GST-exclusive pricing to protect profit margins.
-
-### 12.2 Negotiation Dashboard
-A mobile-first interface (`app/owner/estimator`) that allows owners to:
-- **Live Profit Simulation**: Move a margin slider to see how quote prices affect net profit per meter and total order profit.
-- **Style Templates**: Quick-load specs for common fabrics (e.g., Japan Satin, Georgette) from the **Template Manager**.
-- **Stress Testing**: A risk heatmap visualizing how external shocks (e.g., +5% yarn price hike or -15% machine efficiency) impact the bottom line.
-
-### 12.3 "Convert to Order" Workflow
-Bridges the gap between estimation and production:
-- **Auto-Quality Mapping**: When a quote is accepted, the system checks for an existing fabric quality by name. If not found, it automatically creates a new one, calculating the **Target Yield** based on GSM.
-- **Order Launch**: Creates a live production order linked to the quote snapshot, ensuring zero data entry errors when moving from negotiation to the factory floor.
+A professional costing engine for real-time negotiation with parties.
+- **Surat Logic**: Handles grey cost, job-work shrinkage, fixed overhead allocation, and GST-inclusive pricing.
+- **Profit Simulation**: A margin slider calculates total order profit vs. per-meter profit instantly.
+- **Convert to Order**: Finalized quotes can be converted into live Production Orders with one click, auto-creating "Qualities" and "Target Yields" from the quote specs.
 
 ---
 
-## 13. Internationalization (i18n) & Transliteration
+## 10. Multi-Language (i18n) & Transliteration
 
-The app supports **three languages**: English, Hindi, and Gujarati. A language switcher is available in both the Owner sidebar and Supervisor navigation.
-
-### 13.1 Full Translation Coverage
-Every string in the app is translated: navigation labels, form labels, toast messages, error messages, dialog content, role names, KPI labels, audit report text. Translations are organized by module (`nav`, `production`, `attendance`, `payroll`, `inventory`, etc.).
-
-### 13.2 Phonetic Transliteration Engine
-Worker names stored in English in the database are **dynamically transliterated** into Devanagari (Hindi) or Gujarati script based on the active language. This uses a custom phonetic mapping engine (`lib/transliterate.ts`) with a `useTransliterate` hook, ensuring a fully localized experience without requiring data migration.
+Vastra is fully usable in **English, Hindi, and Gujarati**.
+- **Standardized Keys**: Navigation and UI strings use a unified translation schema across all three locales.
+- **Phonetic Transliteration**: Worker names stored in English are dynamically rendered in Devanagari or Gujarati scripts, ensuring workers see their own names correctly without manual data entry.
 
 ---
 
-## 14. WhatsApp Daily Brief & System Health
-
-### 14.1 Automated WhatsApp Briefs
-A scheduled background job (cron) sends a **daily production summary** to the Owner's WhatsApp at 8:00 PM. The owner gets a reliable overview of output without opening the app. This is a Premium-tier feature.
-
-### 14.2 System Health Page
-The Owner can view the last 30 days of daily brief delivery logs: timestamp, target date, status (Success / Skipped / Failed), and details. This ensures the automated reporting pipeline is working.
-
----
-
-## 15. The Landing Page & Pricing
-
-The public-facing landing page positions Vastra as a **profit-saving tool**, not a generic utility:
-
-### 15.1 Hero
-Headline: *"Optimize your textile production in real-time"*. CTA: Start Free Trial. Includes a product preview video.
-
-### 15.2 Features Section
-Six feature cards:
-1. **Seamless Daily Production Tracking** — automated monthly pay calculation
-2. **Built for the Factory Floor** — offline-first operation
-3. **Pinpoint Accurate Payroll** — high-precision Decimal.js calculations
-4. **Automated WhatsApp Briefs** — daily summary to WhatsApp
-5. **Instant Access on Any Device** — PWA, no app store needed
-6. **Flexible Team Sizing** — scales from 15 workers to unlimited
-
-### 15.3 Pricing Tiers
-| Tier | Price | Highlights |
-|---|---|---|
-| **Free Trial** | ₹0 for 7 days | All features, unlimited workers, no credit card |
-| **Base** | ₹600/month | Up to 15 workers, basic support |
-| **Premium** | ₹1,700/month | Unlimited workers, WhatsApp briefs, priority support, advanced analytics |
-
-**Setup & Training Add-on:** ₹4,999 one-time — includes account configuration, data import, and virtual training session with a dedicated onboarding manager.
-
----
-
-## 16. The Financial Engine
-
-All monetary calculations use **Decimal.js** (`lib/finance.ts`) with 20-digit precision and ROUND_HALF_UP to eliminate floating-point errors. Key functions:
-
-- `calculateDailyPay(meters, rate)` — single machine pay
-- `calculateTotalPay(items[])` — multi-machine aggregation
-- `sumMeters(logs[])` — safe decimal summation
-- `sumAdvances(advances[])` — total pending advances
-- `calculateNetPay(gross, advances)` — net payout (floored at ₹0)
-- `calculateRemainingDebt(gross, advances)` — carry-forward debt
-- `calculateActualYield(meters, weightKg)` — meters per kg
-- `calculateEfficiencyVariance(actual, expected)` — % variance
-- `calculateMonetaryLoss(actual, expected, weight, price)` — ₹ loss when leakage detected
-- `formatINR(amount)` — Indian rupee formatting
-
----
-
-## 17. Data Security & Multi-Tenancy
-
-Every database operation enforces:
-
-1. **Authentication** — you must be logged in.
-2. **Row Level Security (RLS)** — PostgreSQL policies scope every query to the user's `org_id`. Cross-organization data access is impossible.
-3. **Role Policies** — operations restricted by `role` (e.g., only `owner` can delete workers, edit rates).
-4. **JWT Claims** — `org_id` and `role` embedded in the session token and verified on every request.
-5. **Access Codes** — single-use codes add human approval gates on sensitive mutations.
-
----
-
-## 18. Tech Stack
+## 11. Technical Infrastructure
 
 | Layer | Technology |
 |---|---|
-| **Frontend** | Next.js 14 (App Router), React, TypeScript |
-| **State** | TanStack Query (React Query) for server state, real-time Supabase subscriptions for live dashboards |
-| **Styling** | Tailwind CSS, shadcn/ui components, Framer Motion for animations |
-| **Backend** | Supabase (PostgreSQL, Auth, Row Level Security, Edge Functions, RPCs, Realtime) |
-| **Financial Math** | Decimal.js |
-| **i18n** | Custom context-based system with Hindi & Gujarati translations + phonetic transliteration engine |
-| **Offline** | IndexedDB via custom hooks, Service Worker (PWA) |
-| **Notifications** | WhatsApp via scheduled cron jobs |
+| **Framework** | Next.js 14 (App Router) |
+| **Database** | Supabase (PostgreSQL + RLS + Realtime) |
+| **Logic Engine** | TypeScript + Decimal.js + date-fns-tz |
+| **UI Components** | shadcn/ui + Tailwind CSS + Framer Motion |
+| **Background Jobs** | Edge Functions / Cron for WhatsApp Daily Briefs |
+| **Reporting** | PDF Generation for Payslips and Yield Audits |
 
 ---
 
-## 19. Project Structure
+## 12. Getting Started for Developers
 
-```
-app/
-├── (auth)/           # Login, signup, onboarding, verification
-├── (dashboard)/
-│   ├── owner/        # Owner pages
-│   │   ├── analytics/    # Main dashboard (orders, KPIs, efficiency, workers)
-│   │   ├── advances/     # Advance tracking & management
-│   │   ├── estimator/    # Vastra Estimator & Quote history
-│   │   ├── fixed-workers/ # Fixed salary staff management
-│   │   ├── incidents/    # OSHWC Safety Incidents (Owner view)
-│   │   ├── inventory/    # Yarn batches, qualities, yield audits
-│   │   ├── machines/     # Machine CRUD
-│   │   ├── payroll/      # Monthly settlement
-│   │   ├── settings/     # Factory config, access codes, Estimator setup
-│   │   └── system-health/ # WhatsApp brief delivery logs
-│   └── supervisor/   # Supervisor pages
-│       ├── production/   # Daily production logging
-│       ├── assignments/  # Worker-machine shift assignments
-│       ├── attendance/   # Day-to-day worker attendance
-│       ├── incidents/    # OSHWC Safety Incidents (Supervisor report)
-│       ├── workers/      # Worker management (tabbed)
-│       └── machines/     # Machine viewing (read-only)
-components/
-├── landing/          # Hero, features, pricing (public page)
-├── navigation/       # Owner sidebar, supervisor nav bar
-├── settings/         # EstimatorSettings, TemplateManager
-├── OrderCard.tsx     # Order progress card
-├── LiveOrdersLayout.tsx  # Adaptive order grid/carousel
-├── MachineManagement.tsx # Shared machine component
-├── AddWorkerDialog.tsx   # Worker creation dialog
-└── ui/               # shadcn/ui primitives
-hooks/
-├── use-offline-sync.ts   # IndexedDB offline queue
-├── use-online-status.ts  # Connectivity detection
-├── use-transliterate.ts  # Name transliteration hook
-└── use-user-profile.ts   # Current user session
-lib/
-├── finance.ts        # Decimal-safe financial calculations
-├── estimator.ts      # Vastra Estimator core technical logic
-├── transliterate.ts  # Phonetic transliteration engine
-├── i18n/             # Language context & locale files (en, hi, gu)
-└── supabase/         # Supabase client & server helpers
-```
+1. **Environment**: Obtain `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+2. **Setup**: `npm install && npm run dev`.
+3. **Database**: Review `supabase/migrations/` in chronological order to understand the schema evolutions.
+4. **Time Zone**: Always use `lib/time.ts` helpers. Never use `new Date()` for "Today" logic.
+5. **Precision**: Always use `lib/finance.ts` for monetary sums. Avoid native floating point `+`.
 
----
-
-## 20. Getting Started
-
-1. Get the Supabase credentials for the dev environment from the project lead.
-2. Clone the repo, run `npm install`, then `npm run dev`.
-3. Sign up as a new Owner to create your own test organization, or ask to be added to the dev org.
-4. Spend time going through each module manually — create an order, add inventory, log production, run a batch audit, try the payroll settlement, run an estimation. Understanding the UX as a user is essential before touching the code.
-5. Read through `supabase/migrations/` in order — the schema tells you exactly what data exists and what the constraints are.
-
-Welcome to the team. The goal is to build something that **saves factory owners real money** — by making waste visible, payroll precise, and operations auditable.
+**Mission**: We build tools that save factory owners real money by making waste visible, payroll precise, and operations auditable.

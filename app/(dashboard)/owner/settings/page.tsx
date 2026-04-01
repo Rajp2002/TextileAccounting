@@ -14,6 +14,7 @@ import { Factory, User, ShieldCheck, Download, Trash2, Loader2, AlertTriangle } 
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { AccessCodeGenerator } from '@/components/AccessCodeGenerator'
+import { WhatsAppOptIn } from '@/components/settings/WhatsAppOptIn'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
@@ -149,6 +150,9 @@ export default function SettingsPage() {
             </Card>
 
             <AccessCodeGenerator />
+
+            {/* WhatsApp Daily Brief opt-in */}
+            <WhatsAppOptIn />
 
             <Card className="shadow-sm border-gray-200">
                 <CardHeader>

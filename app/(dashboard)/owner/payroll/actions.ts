@@ -89,6 +89,28 @@ export async function toggleWorkerPaid(
             return { error: 'Settlement failed. Please try again.' }
         }
 
+        // ── Fire-and-forget: send payslip WhatsApp to worker ─────────────────
+        const settlementId = (data as any)?.settlement_id
+        if (settlementId) {
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+            const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+            if (supabaseUrl && serviceRoleKey) {
+                fetch(`${supabaseUrl}/functions/v1/send-payslip`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${serviceRoleKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        org_id: profile.org_id,
+                        worker_id: workerId,
+                        worker_type: workerType,
+                        settlement_id: settlementId,
+                    }),
+                }).catch((err) => console.error('[send-payslip] Notification failed:', err))
+            }
+        }
+
         revalidatePath('/owner/payroll')
         revalidatePath('/owner/advances')
         return {

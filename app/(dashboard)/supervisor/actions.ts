@@ -514,7 +514,7 @@ export async function addMeterWorker(data: {
     // BUT requiring it provides a full guarantee. Actually, createServerClient() includes the user JWT.
     
     // Wait, the regular createServerClient() sets the JWT, so auth.uid() is available.
-    const { error } = await supabase
+    const { data: inserted, error } = await supabase
         .from('workers')
         .insert({
             name: data.name,
@@ -524,9 +524,11 @@ export async function addMeterWorker(data: {
             pf_number: data.pf_number,
             org_id: profile.org_id
         })
+        .select('id')
+        .single()
         
     if (error) return { error: error.message }
-    return { success: true }
+    return { success: true, workerId: inserted.id as number }
 }
 
 export async function addFixedWorker(data: {
@@ -540,7 +542,7 @@ export async function addFixedWorker(data: {
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
     
-    const { error } = await supabase
+    const { data: inserted, error } = await supabase
         .from('fixed_workers')
         .insert({
             name: data.name,
@@ -552,9 +554,11 @@ export async function addFixedWorker(data: {
             pf_number: data.pf_number,
             org_id: profile.org_id
         })
+        .select('id')
+        .single()
         
     if (error) return { error: error.message }
-    return { success: true }
+    return { success: true, workerId: inserted.id as number }
 }
 
 export async function toggleWorkerActive(workerId: number, currentActive: boolean, table: 'workers' | 'fixed_workers') {
