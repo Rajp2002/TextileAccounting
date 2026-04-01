@@ -412,6 +412,7 @@ export default function ProductionEntryForm() {
                     org_id: userProfile!.org_id,
                     yarn_batch_id: item.activeBatch?.id || null, 
                     order_id: item.activeOrder?.id || null, 
+                    worker_rate_snapshot: item.activeBatch?.quality?.default_worker_rate_per_m || 0,
                 }
 
                 if (item.existingLogId) {

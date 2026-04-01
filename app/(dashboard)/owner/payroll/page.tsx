@@ -629,7 +629,7 @@ export default function PayrollPage() {
             // Fetch production logs for the month
             const { data: logs, error: logsErr } = await supabase
                 .from('production_logs')
-                .select('worker_id, machine_id, meters, yarn_batches(qualities(default_worker_rate_per_m))')
+                .select('worker_id, machine_id, meters, worker_rate_snapshot')
                 .eq('org_id', userProfile!.org_id)
                 .gte('date', monthStart)
                 .lte('date', monthEnd)
@@ -685,8 +685,7 @@ export default function PayrollPage() {
                 const machineGroups: Record<string, { meters: number; rate: number; name: string }> = {}
                 for (const log of workerLogs) {
                     const machine = machineMap[log.machine_id]
-                    const batch: any = log.yarn_batches
-                    const rate = batch?.qualities?.default_worker_rate_per_m || 0
+                    const rate = log.worker_rate_snapshot || 0
                     const key = `${log.machine_id}-${rate}`
                     
                     if (!machineGroups[key]) {
