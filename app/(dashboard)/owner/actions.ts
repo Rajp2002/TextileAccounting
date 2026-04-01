@@ -340,6 +340,69 @@ export async function addQuality(data: {
     return { success: true }
 }
 
+export async function updateQuality(id: string, data: {
+    name: string
+    target_yield: number
+    avg_sale_price_per_m: number
+    default_worker_rate_per_m: number
+}) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(QualitySchema, data)
+    if ('error' in parsed) return { error: parsed.error }
+
+    const { error } = await supabase
+        .from('qualities')
+        .update(parsed.data)
+        .eq('id', id)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to update quality:', error)
+        return { error: 'Failed to update quality. Please try again.' }
+    }
+    return { success: true }
+}
+
+export async function deleteQuality(id: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    // Check for active batches using this quality
+    const { count, error: countError } = await supabase
+        .from('yarn_batches')
+        .select('*', { count: 'exact', head: true })
+        .eq('quality_id', id)
+        .eq('status', 'active')
+        .eq('org_id', profile.org_id)
+
+    if (countError) {
+        console.error('Failed to check active batches for quality:', countError)
+        return { error: 'Failed to verify quality dependencies.' }
+    }
+
+    if (count && count > 0) {
+        return { error: 'Quality in use by active batches' }
+    }
+
+    const { error } = await supabase
+        .from('qualities')
+        .delete()
+        .eq('id', id)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to delete quality:', error)
+        // If there's an FK error (e.g. from consumed batches) handle it gracefully
+        if (error.code === '23503') {
+             return { error: 'Cannot delete quality because it is referenced by past production records or consumed batches.' }
+        }
+        return { error: 'Failed to delete quality. Please try again.' }
+    }
+    return { success: true }
+}
+
 export async function addYarnBatch(data: {
     name: string
     quality_id: string

@@ -19,7 +19,9 @@ import {
     addYarnBatch, 
     loadSuratQualityTemplates, 
     closeYarnBatch,
-    settleBatchAudit 
+    settleBatchAudit,
+    updateQuality,
+    deleteQuality
 } from '@/app/(dashboard)/owner/actions'
 import { unconsumeBatchWithCode } from '@/app/(dashboard)/supervisor/actions'
 import { generateAccessCode } from '@/app/(dashboard)/owner/actions'
@@ -37,6 +39,7 @@ export default function InventoryPage() {
 
     // Quality Form State
     const [qualityModalOpen, setQualityModalOpen] = useState(false)
+    const [editingQualityId, setEditingQualityId] = useState<string | null>(null)
     const [qualityForm, setQualityForm] = useState({ 
         name: '', 
         target_yield: '', 
@@ -234,7 +237,7 @@ export default function InventoryPage() {
                                             <div>
                                                 <div className="text-gray-500 mb-1">{t('inventory.batches.card.expected_prod')}</div>
                                                 <div className="font-semibold text-teal-700">
-                                                    {Number(batch.total_weight_kg) * Number(batch.qualities?.target_yield)} m
+                                                    {(Number(batch.total_weight_kg) * Number(batch.qualities?.target_yield)).toFixed(2)} m
                                                 </div>
                                             </div>
                                         </div>
@@ -401,7 +404,36 @@ export default function InventoryPage() {
                                             </div>
                                         </div>
                                         <div className="flex gap-2 text-gray-400">
-                                            <button className="hover:text-indigo-600"><Settings2 className="w-4 h-4" /></button>
+                                            <button 
+                                                className="hover:text-indigo-600"
+                                                onClick={() => {
+                                                    setEditingQualityId(quality.id)
+                                                    setQualityForm({
+                                                        name: quality.name,
+                                                        target_yield: String(quality.target_yield),
+                                                        avg_sale_price_per_m: String(quality.avg_sale_price_per_m),
+                                                        default_worker_rate_per_m: String(quality.default_worker_rate_per_m)
+                                                    })
+                                                    setQualityModalOpen(true)
+                                                }}
+                                            >
+                                                <Settings2 className="w-4 h-4" />
+                                            </button>
+                                            <button 
+                                                className="hover:text-rose-600"
+                                                onClick={async () => {
+                                                    if (confirm(`Are you sure you want to delete ${quality.name}?`)) {
+                                                        const res = await deleteQuality(quality.id)
+                                                        if (res.error) toast.error(res.error)
+                                                        else {
+                                                            toast.success('Quality deleted successfully')
+                                                            queryClient.invalidateQueries({ queryKey: ['qualities', userProfile?.org_id] })
+                                                        }
+                                                    }
+                                                }}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -411,11 +443,16 @@ export default function InventoryPage() {
                 </TabsContent>
             </Tabs>
 
-            {/* Quality Modal */}
-            <Dialog open={qualityModalOpen} onOpenChange={setQualityModalOpen}>
+            <Dialog open={qualityModalOpen} onOpenChange={(open) => {
+                if (!open) {
+                    setEditingQualityId(null)
+                    setQualityForm({ name: '', target_yield: '', avg_sale_price_per_m: '', default_worker_rate_per_m: '' })
+                }
+                setQualityModalOpen(open)
+            }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{t('inventory.qualities.add_modal.title')}</DialogTitle>
+                        <DialogTitle>{editingQualityId ? 'Edit Quality' : t('inventory.qualities.add_modal.title')}</DialogTitle>
                         <DialogDescription>{t('inventory.qualities.add_modal.desc')}</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -456,22 +493,32 @@ export default function InventoryPage() {
                         <p className="text-xs text-gray-400">{t('inventory.qualities.add_modal.helper')}</p>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setQualityModalOpen(false)}>{t('inventory.qualities.add_modal.cancel')}</Button>
+                        <Button variant="outline" onClick={() => {
+                            setEditingQualityId(null)
+                            setQualityModalOpen(false)
+                            setQualityForm({ name: '', target_yield: '', avg_sale_price_per_m: '', default_worker_rate_per_m: '' })
+                        }}>{t('inventory.qualities.add_modal.cancel')}</Button>
                         <Button 
                             className="bg-indigo-600 hover:bg-indigo-700"
                             disabled={isSubmitting || !qualityForm.name || !qualityForm.target_yield}
                             onClick={async () => {
                                 setIsSubmitting(true)
-                                const res = await addQuality({
+                                const submitData = {
                                     name: qualityForm.name,
                                     target_yield: Number(qualityForm.target_yield),
                                     avg_sale_price_per_m: Number(qualityForm.avg_sale_price_per_m || 0),
                                     default_worker_rate_per_m: Number(qualityForm.default_worker_rate_per_m || 0)
-                                })
+                                }
+                                
+                                const res = editingQualityId 
+                                    ? await updateQuality(editingQualityId, submitData)
+                                    : await addQuality(submitData)
+                                    
                                 setIsSubmitting(false)
                                 if (res.error) toast.error(res.error)
                                 else {
-                                    toast.success(t('inventory.qualities.add_modal.success'))
+                                    toast.success(editingQualityId ? 'Quality updated' : t('inventory.qualities.add_modal.success'))
+                                    setEditingQualityId(null)
                                     setQualityModalOpen(false)
                                     setQualityForm({ name: '', target_yield: '', avg_sale_price_per_m: '', default_worker_rate_per_m: '' })
                                     queryClient.invalidateQueries({ queryKey: ['qualities', userProfile?.org_id] })
