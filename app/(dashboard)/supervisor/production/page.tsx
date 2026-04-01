@@ -113,6 +113,9 @@ export default function ProductionEntryForm() {
     const [consumingBatchId, setConsumingBatchId] = useState<string | null>(null)
     const [leftoverWeightKg, setLeftoverWeightKg] = useState<string>('0')
     const [closingBatch, setClosingBatch] = useState(false)
+    // Move Beam Confirmation State
+    const [moveConfirmationOpen, setMoveConfirmationOpen] = useState(false)
+    const [pendingBatchId, setPendingBatchId] = useState<string | null>(null)
 
     const isOnline = useOnlineStatus()
     const supabase = createClient()
@@ -177,9 +180,26 @@ export default function ProductionEntryForm() {
             )
             .subscribe()
 
+        // Listen for machine changes (e.g. owner renames or deactivates a machine)
+        const machinesChannel = supabase.channel('supervisor_machines_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'machines',
+                    filter: `org_id=eq.${userProfile.org_id}`
+                },
+                () => {
+                    queryClient.invalidateQueries({ queryKey: ['machines', userProfile.org_id] })
+                }
+            )
+            .subscribe()
+
         return () => {
             supabase.removeChannel(ordersChannel)
             supabase.removeChannel(batchesChannel)
+            supabase.removeChannel(machinesChannel)
         }
     }, [supabase, queryClient, userProfile?.org_id])
 
@@ -283,32 +303,41 @@ export default function ProductionEntryForm() {
 
     const machineCards = useMemo(() => {
         if (!machines) return []
-        return machines.map(machine => {
-            const existingLog = existingLogs?.find(
-                (l: any) => l.machine_id === machine.id && l.shift === currentShift
-            )
-            const assignment = assignments?.find(a => a.machine_id === machine.id && a.shift === currentShift)
-            const assignedWorkerId = assignment?.worker_id
-            const effectiveWorkerId = existingLog ? existingLog.worker_id : assignedWorkerId
-            const isSaved = !!existingLog
-            
-            const activeBatch = activeBatches?.find(b => b.current_machine_id === machine.id)
-            const activeOrder = activeOrders?.find(o => o.id === (machine as any).current_order_id)
+        return machines
+            .filter(machine => {
+                // Show if active OR if it has a log for this specific view (date/shift)
+                const isMachineActive = machine.status === 'active'
+                const hasExistingLog = existingLogs?.some(
+                    (l: any) => l.machine_id === machine.id && l.shift === currentShift
+                )
+                return isMachineActive || hasExistingLog
+            })
+            .map(machine => {
+                const existingLog = existingLogs?.find(
+                    (l: any) => l.machine_id === machine.id && l.shift === currentShift
+                )
+                const assignment = assignments?.find(a => a.machine_id === machine.id && a.shift === currentShift)
+                const assignedWorkerId = assignment?.worker_id
+                const effectiveWorkerId = existingLog ? existingLog.worker_id : assignedWorkerId
+                const isSaved = !!existingLog
+                
+                const activeBatch = activeBatches?.find(b => b.current_machine_id === machine.id)
+                const activeOrder = activeOrders?.find(o => o.id === (machine as any).current_order_id)
 
-            const isReadyToRun = !!effectiveWorkerId && !!activeBatch && !!activeOrder
+                const isReadyToRun = !!effectiveWorkerId && !!activeBatch && !!activeOrder
 
-            return {
-                machine,
-                assignedWorkerId,
-                effectiveWorkerId,
-                meters: existingLog ? Number(existingLog.meters) : (metersInput[machine.id] || 0),
-                isSaved,
-                existingLogId: existingLog?.id,
-                activeBatch,
-                activeOrder,
-                isReadyToRun
-            }
-        })
+                return {
+                    machine,
+                    assignedWorkerId,
+                    effectiveWorkerId,
+                    meters: existingLog ? Number(existingLog.meters) : (metersInput[machine.id] || 0),
+                    isSaved,
+                    existingLogId: existingLog?.id,
+                    activeBatch,
+                    activeOrder,
+                    isReadyToRun
+                }
+            })
     }, [machines, assignments, activeBatches, activeOrders, currentShift, metersInput, existingLogs])
 
 
@@ -466,14 +495,29 @@ export default function ProductionEntryForm() {
             toast.error(t('production.offline_beam'))
             return
         }
+
+        const batch = activeBatches?.find(b => b.id === linkingBatchId)
+        if (batch?.current_machine_id && batch.current_machine_id !== linkingMachineId) {
+            setPendingBatchId(linkingBatchId)
+            setMoveConfirmationOpen(true)
+            return
+        }
+
+        await executeStartBeam(linkingBatchId)
+    }
+
+    const executeStartBeam = async (batchId: string) => {
+        if (!linkingMachineId) return
         setLinkingBeam(true)
         try {
-            const res = await startBeam(linkingBatchId, linkingMachineId)
+            const res = await startBeam(batchId, linkingMachineId)
             if (res.error) throw new Error(res.error)
             toast.success(t('production.beam_linked'))
             setBeamModalOpen(false)
+            setMoveConfirmationOpen(false)
             setLinkingMachineId(null)
             setLinkingBatchId('')
+            setPendingBatchId(null)
             queryClient.invalidateQueries({ queryKey: ['active_yarn_batches', userProfile?.org_id] })
         } catch (err: any) {
             toast.error(err.message || t('production.beam_link_failed'))
@@ -854,21 +898,33 @@ export default function ProductionEntryForm() {
                                 <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2">
                                     {activeBatches
                                         .filter(b => b.current_machine_id !== linkingMachineId)
-                                        .map(batch => (
-                                        <button
-                                            key={batch.id}
-                                            onClick={() => setLinkingBatchId(batch.id)}
-                                            className={cn(
-                                                "flex flex-col text-left p-3 rounded-lg border transition-all",
-                                                linkingBatchId === batch.id 
-                                                    ? "border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600" 
-                                                    : "border-gray-200 hover:border-indigo-300 hover:bg-gray-50"
-                                            )}
-                                        >
-                                            <span className="font-medium text-gray-900">{batch.name}</span>
-                                            <span className="text-xs text-gray-500">{batch.quality?.name}</span>
-                                        </button>
-                                    ))}
+                                        .map(batch => {
+                                            const currentMachineName = machines?.find(m => m.id === batch.current_machine_id)?.name
+                                            return (
+                                                <button
+                                                    key={batch.id}
+                                                    onClick={() => setLinkingBatchId(batch.id)}
+                                                    className={cn(
+                                                        "flex flex-col text-left p-3 rounded-lg border transition-all",
+                                                        linkingBatchId === batch.id 
+                                                            ? "border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600" 
+                                                            : "border-gray-200 hover:border-indigo-300 hover:bg-gray-50"
+                                                    )}
+                                                >
+                                                    <div className="flex justify-between items-start gap-2">
+                                                        <div className="flex flex-col flex-1">
+                                                            <span className="font-medium text-gray-900">{batch.name}</span>
+                                                            <span className="text-xs text-gray-500">{batch.quality?.name}</span>
+                                                        </div>
+                                                        {currentMachineName && (
+                                                            <span className="shrink-0 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">
+                                                                {currentMachineName}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </button>
+                                            )
+                                        })}
                                 </div>
                             ) : (
                                 <div className="text-sm text-gray-500 p-4 border rounded bg-gray-50 text-center">
@@ -989,6 +1045,30 @@ export default function ProductionEntryForm() {
                         >
                             {closingBatch ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
                             {t('inventory.audit.mark_consumed')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={moveConfirmationOpen} onOpenChange={setMoveConfirmationOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-amber-600">
+                            <AlertCircle className="h-5 w-5" /> {t('modals.batch_already_linked_title')}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {t('modals.batch_already_linked_desc').replace('{machineName}', machines?.find(m => m.id === activeBatches?.find(b => b.id === (pendingBatchId || linkingBatchId))?.current_machine_id)?.name || 'another machine')}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setMoveConfirmationOpen(false)}>{t('common.cancel')}</Button>
+                        <Button
+                            className="bg-amber-600 hover:bg-amber-700"
+                            onClick={() => executeStartBeam(pendingBatchId || linkingBatchId)}
+                            disabled={linkingBeam}
+                        >
+                            {linkingBeam ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                            {t('modals.move_beam')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

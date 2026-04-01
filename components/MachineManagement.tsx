@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -25,7 +25,7 @@ import {
 import { toast } from 'sonner'
 import { Loader2, Plus, Trash2, KeyRound, Pencil, Power, Tag } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { deleteMachineWithCode } from '@/app/(dashboard)/supervisor/actions'
+import { deleteMachineWithCode, requestAccessCode } from '@/app/(dashboard)/supervisor/actions'
 import {
     addMachine,
     renameMachine,
@@ -99,6 +99,9 @@ export function MachineManagement({
     const [renameValue, setRenameValue] = useState('')
     const [renaming, setRenaming] = useState(false)
 
+    // Request Access Code state
+    const [requestingCode, setRequestingCode] = useState(false)
+
     const { data: userProfile } = useUserProfile()
     const { t } = useTranslation()
     const tl = useTransliterate()
@@ -116,6 +119,30 @@ export function MachineManagement({
             return data as Machine[]
         }
     })
+
+    // ── Real-time Sync ──
+    useEffect(() => {
+        if (!orgId) return
+
+        const channel = supabase.channel('machines_realtime')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'machines',
+                    filter: `org_id=eq.${orgId}`
+                },
+                () => {
+                    queryClient.invalidateQueries({ queryKey: ['machines', orgId] })
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [orgId, supabase, queryClient])
 
     // Fetch Workers
     const { data: workers } = useQuery({
@@ -215,6 +242,19 @@ export function MachineManagement({
         }
     }
 
+    const handleRequestCode = async () => {
+        setRequestingCode(true)
+        try {
+            const result = await requestAccessCode()
+            if (result.error) throw new Error(result.error)
+            toast.success(t('auth.code_requested_success') || 'Request sent to owner via WhatsApp')
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to request code')
+        } finally {
+            setRequestingCode(false)
+        }
+    }
+
     // ── Rename Machine ──
     const handleRename = async () => {
         if (!machineToRename || !renameValue.trim()) return
@@ -234,13 +274,26 @@ export function MachineManagement({
 
     // ── Toggle Machine Status (activate / deactivate) ──
     const toggleMachineStatus = async (machine: Machine) => {
+        // Optimistic Update
+        const oldMachines = queryClient.getQueryData(['machines', orgId])
+        queryClient.setQueryData(['machines', orgId], (old: Machine[] | undefined) => {
+            if (!old) return old
+            return old.map(m => m.id === machine.id 
+                ? { ...m, status: m.status === 'active' ? 'inactive' : 'active' }
+                : m
+            )
+        })
+
         try {
             const result = await toggleMachineStatusAction(machine.id, machine.status)
             if (result.error) throw new Error(result.error)
             toast.success(t('machines.status_updated'))
-            queryClient.invalidateQueries({ queryKey: ['machines'] })
         } catch {
             toast.error(t('machines.status_update_failed'))
+            // Rollback on error
+            queryClient.setQueryData(['machines', orgId], oldMachines)
+        } finally {
+            queryClient.invalidateQueries({ queryKey: ['machines', orgId] })
         }
     }
 
@@ -430,7 +483,14 @@ export function MachineManagement({
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-8 w-8 text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-                                                onClick={() => confirmDelete(machine.id)}
+                                                onClick={() => {
+                                                    if (userProfile?.role === 'owner') {
+                                                        confirmDelete(machine.id)
+                                                    } else {
+                                                        setMachineToDelete(machine.id)
+                                                        setAccessCode('')
+                                                    }
+                                                }}
                                                 disabled={deleting}
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -539,16 +599,31 @@ export function MachineManagement({
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setMachineToDelete(null)}>{t('common.cancel')}</Button>
-                        <Button
-                            variant="destructive"
-                            disabled={accessCode.length < 6 || deleting}
-                            onClick={executeDeleteWithCode}
-                        >
-                            {deleting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            {t('auth.verify_delete')}
-                        </Button>
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                        {userProfile?.role !== 'owner' && (
+                            <Button 
+                                type="button"
+                                variant="ghost" 
+                                size="sm"
+                                className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                onClick={handleRequestCode}
+                                disabled={requestingCode}
+                            >
+                                {requestingCode ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <KeyRound className="h-3 w-3 mr-1" />}
+                                Request Code from Owner
+                            </Button>
+                        )}
+                        <div className="flex gap-2 ml-auto">
+                            <Button variant="outline" onClick={() => setMachineToDelete(null)}>{t('common.cancel')}</Button>
+                            <Button
+                                variant="destructive"
+                                disabled={accessCode.length < 6 || deleting}
+                                onClick={executeDeleteWithCode}
+                            >
+                                {deleting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                                {t('auth.verify_delete')}
+                            </Button>
+                        </div>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

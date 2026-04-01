@@ -50,16 +50,20 @@ Deno.serve(async (req) => {
     const factoryName = org?.name ?? "Your Factory";
 
     // 3. Format expiry label
-    const expiresLabel = expires_at
+    let infoLabel = expires_at
       ? `Expires at ${new Date(expires_at).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" })}`
       : "Valid for 15 minutes";
+
+    if (body.requested_by) {
+        infoLabel += ` • Req by ${body.requested_by}`;
+    }
 
     // 4. Build template body (Authentication template, 4 variables)
     const bodyValues = [
       factoryName,         // {{1}} Factory name
       getSuratTimeLabel(), // {{2}} Time of generation
       code,                // {{3}} The 6-char access code (shown in bold in template)
-      expiresLabel,        // {{4}} Expiry info
+      infoLabel,           // {{4}} Expiry & requester info
     ];
 
     const callbackData = makeCallbackData("accesscode", org_id);

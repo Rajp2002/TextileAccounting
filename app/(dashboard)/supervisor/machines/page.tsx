@@ -29,8 +29,8 @@ export default function SupervisorMachinesPage() {
             <MachineManagement
                 orgId={userProfile.org_id}
                 canAddMachines={false}
-                canRenameMachines={false}
-                canDeleteMachines={false}
+                canRenameMachines={true}
+                canDeleteMachines={true}
             />
         </div>
     )
