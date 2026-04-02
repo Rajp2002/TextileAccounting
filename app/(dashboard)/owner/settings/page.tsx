@@ -3,14 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
     Dialog, DialogContent, DialogDescription, DialogFooter,
     DialogHeader, DialogTitle, DialogTrigger
 } from '@/components/ui/dialog'
-import { Factory, User, ShieldCheck, Download, Trash2, Loader2, AlertTriangle } from 'lucide-react'
+import { Factory, User, ShieldCheck, Download, Trash2, Loader2, AlertTriangle, Copy, RefreshCw } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { AccessCodeGenerator } from '@/components/AccessCodeGenerator'
@@ -22,15 +22,18 @@ import { exportOrganizationData, deleteOrganizationData } from './data-export'
 import { toast } from 'sonner'
 import { EstimatorSettings } from '@/components/settings/estimator-settings'
 import { TemplateManager } from '@/components/settings/template-manager'
+import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
 
 export default function SettingsPage() {
     const { t } = useTranslation()
     const supabase = createClient()
     const router = useRouter()
+    const queryClient = useQueryClient()
     const { data: userProfile, isLoading: profileLoading } = useUserProfile()
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [deleteConfirmation, setDeleteConfirmation] = useState('')
+    const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false)
 
     // Fetch organization details on the client
     const { data: org, isLoading: orgLoading } = useQuery({
@@ -39,11 +42,33 @@ export default function SettingsPage() {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('organizations')
-                .select('name, join_code')
+                .select('name, join_code, join_code_expires_at')
                 .eq('id', userProfile!.org_id)
                 .single()
             if (error) throw error
             return data
+        }
+    })
+
+    // Regenerate join code mutation
+    const regenerateMutation = useMutation({
+        mutationFn: async () => {
+            const result = await regenerateJoinCode()
+            if ('error' in result) throw new Error(result.error)
+            return result
+        },
+        onSuccess: (data) => {
+            // Optimistic update — don't wait for refetch
+            queryClient.setQueryData(['organization', userProfile?.org_id], (old: any) => ({
+                ...old,
+                join_code: data.joinCode,
+                join_code_expires_at: data.expiresAt,
+            }))
+            setRegenerateDialogOpen(false)
+            toast.success('Join code regenerated. The old code is now invalid.')
+        },
+        onError: (err: any) => {
+            toast.error(err.message || 'Failed to regenerate code')
         }
     })
 
@@ -131,19 +156,84 @@ export default function SettingsPage() {
                         <Input value={org?.name || ''} readOnly className="bg-gray-50" />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>{t('settings.factory.id')}</Label>
-                        <div className="flex gap-2">
-                            <div className="relative flex-1">
-                                <Input
-                                    value={org?.join_code || ''}
-                                    readOnly
-                                    className="bg-blue-50 border-blue-200 text-blue-800 font-mono font-bold tracking-widest text-center text-lg"
-                                />
+                    <div className="space-y-3">
+                        <Label>Factory join code</Label>
+                        {/* Code display + actions */}
+                        <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 space-y-3">
+                            <div className="flex items-center gap-3">
+                                <p className="flex-1 font-mono font-bold tracking-[0.25em] text-2xl text-blue-900">
+                                    {org?.join_code || '—'}
+                                </p>
+                                <Button
+                                    id="copy-join-code-btn"
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-100"
+                                    onClick={() => {
+                                        if (org?.join_code) {
+                                            navigator.clipboard.writeText(org.join_code)
+                                            toast.success('Join code copied!')
+                                        }
+                                    }}
+                                >
+                                    <Copy className="h-3.5 w-3.5" /> Copy
+                                </Button>
+                                <Dialog open={regenerateDialogOpen} onOpenChange={setRegenerateDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            id="regenerate-join-code-btn"
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-1.5 border-orange-300 text-orange-700 hover:bg-orange-50"
+                                        >
+                                            <RefreshCw className="h-3.5 w-3.5" /> Regenerate
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[420px]">
+                                        <DialogHeader>
+                                            <DialogTitle className="flex items-center gap-2 text-orange-700">
+                                                <AlertTriangle className="h-5 w-5" />
+                                                Regenerate join code?
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                                This will invalidate the current code immediately. Any supervisor currently signing up with the old code will need the new one.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <DialogFooter>
+                                            <Button variant="outline" onClick={() => setRegenerateDialogOpen(false)}>
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                className="bg-orange-600 hover:bg-orange-700 text-white"
+                                                disabled={regenerateMutation.isPending}
+                                                onClick={() => regenerateMutation.mutate()}
+                                            >
+                                                {regenerateMutation.isPending ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                                                ) : (
+                                                    <RefreshCw className="h-4 w-4 mr-1.5" />
+                                                )}
+                                                {regenerateMutation.isPending ? 'Regenerating...' : 'Yes, regenerate'}
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
+
+                            {/* Expiry date */}
+                            {org?.join_code_expires_at && (
+                                <p className="text-xs text-blue-600">
+                                    Expires:{' '}
+                                    <span className="font-medium">
+                                        {new Date(org.join_code_expires_at).toLocaleDateString('en-IN', {
+                                            day: 'numeric', month: 'short', year: 'numeric'
+                                        })}
+                                    </span>
+                                </p>
+                            )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            {t('settings.factory.share')}
+                            Supervisors use this code to join your factory. Share it securely.
                         </p>
                     </div>
                 </CardContent>

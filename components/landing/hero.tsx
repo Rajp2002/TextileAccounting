@@ -73,17 +73,44 @@ export default function LandingHero() {
 
                         <motion.div
                             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-                            className="mt-10 flex items-center gap-x-6"
+                            className="mt-10 space-y-4"
                         >
-                            <Link href="/signup">
-                                <Button size="lg" className="rounded-full px-8 py-6 text-base font-semibold bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 shadow-xl shadow-gray-900/10 dark:shadow-white/10 transition-all hover:-translate-y-1 hover:scale-105">
-                                    Start Free Trial
-                                </Button>
-                            </Link>
-                            <Link href="#demo" className="text-sm font-semibold leading-6 text-gray-900 dark:text-white flex items-center gap-2 group transition-colors hover:text-amber-700 dark:hover:text-amber-500">
-                                <PlayCircle className="h-6 w-6 text-gray-400 group-hover:text-amber-700 dark:group-hover:text-amber-500 transition-colors" />
-                                Watch Demo
-                            </Link>
+                            {/* Two-path CTAs (F1 spec §6) */}
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <Link href="/signup" className="flex-1 sm:flex-none">
+                                    <Button
+                                        id="hero-owner-signup-btn"
+                                        size="lg"
+                                        className="w-full sm:w-auto rounded-full px-7 py-6 text-base font-semibold bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 shadow-xl shadow-gray-900/10 dark:shadow-white/10 transition-all hover:-translate-y-1 hover:scale-105"
+                                    >
+                                        Start as owner
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Button>
+                                </Link>
+                                <Link href="/join" className="flex-1 sm:flex-none">
+                                    <Button
+                                        id="hero-supervisor-join-btn"
+                                        size="lg"
+                                        variant="outline"
+                                        className="w-full sm:w-auto rounded-full px-7 py-6 text-base font-semibold border-2 border-gray-300 hover:border-amber-500 hover:text-amber-700 dark:border-zinc-600 dark:hover:border-amber-500 dark:text-white transition-all hover:-translate-y-1"
+                                    >
+                                        Join as supervisor
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                                <p>Already have an account?{' '}
+                                    <Link href="/login" className="text-amber-700 hover:underline font-medium dark:text-amber-500">
+                                        Log in
+                                    </Link>
+                                </p>
+                                <span className="hidden sm:inline text-gray-300 dark:text-zinc-700">•</span>
+                                <Link href="#demo" className="hidden sm:flex items-center gap-1.5 hover:text-gray-700 transition-colors group">
+                                    <PlayCircle className="h-4 w-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                                    Watch demo
+                                </Link>
+                            </div>
                         </motion.div>
                     </motion.div>
                 </div>

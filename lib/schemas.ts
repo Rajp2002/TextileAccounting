@@ -52,38 +52,50 @@ export const WorkerTypeSchema = z.enum(['meter', 'fixed'])
 
 // ─── Auth Schemas ─────────────────────────────────────────────────────────────
 
-/** Password: min 8 chars, at least 1 number or special char */
+/** Password: min 8 chars, uppercase + number required (F1 spec) */
 export const PasswordSchema = z
     .string()
     .min(8, 'Password must be at least 8 characters')
     .max(128, 'Password too long')
-    .refine(
-        p => /[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p),
-        'Password must contain at least 1 number or symbol'
-    )
+    .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+    .regex(/[0-9]/, 'Must contain at least one number')
 
-export const SignupSchema = z
-    .object({
-        name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name too long'),
-        email: z.string().trim().email('Invalid email address').max(254),
-        password: PasswordSchema,
-        confirmPassword: z.string(),
-        role: z.enum(['owner', 'supervisor'], { message: 'Role must be owner or supervisor' }),
-        factoryId: z.string().trim().optional().nullable(),
-        orgName: z.string().trim().optional().nullable(),
-    })
-    .refine(d => d.password === d.confirmPassword, {
-        message: 'Passwords do not match',
-        path: ['confirmPassword'],
-    })
-    .refine(d => !(d.role === 'supervisor' && !d.factoryId), {
-        message: 'Factory ID is required for supervisors',
-        path: ['factoryId'],
-    })
-    .refine(d => !(d.role === 'owner' && !d.orgName), {
-        message: 'Organisation name is required for owners',
-        path: ['orgName'],
-    })
+/**
+ * CreateOrgSchema — owner signup form (F1 spec §4)
+ * Used by createOrganization() server action.
+ */
+export const CreateOrgSchema = z.object({
+    ownerName:   z.string().trim().min(2, 'Name must be at least 2 characters').max(80, 'Name too long'),
+    email:       z.string().trim().email('Invalid email address').max(254),
+    password:    PasswordSchema,
+    factoryName: z.string().trim().min(2, 'Factory name required').max(120, 'Factory name too long'),
+})
+
+/**
+ * JoinOrgSchema — supervisor join form (F1 spec §4)
+ * Used by joinOrganization() server action.
+ */
+export const JoinOrgSchema = z.object({
+    joinCode:       z.string().trim().length(8, 'Code must be exactly 8 characters'),
+    supervisorName: z.string().trim().min(2, 'Name must be at least 2 characters').max(80, 'Name too long'),
+    email:          z.string().trim().email('Invalid email address').max(254),
+    password:       PasswordSchema,
+})
+
+/**
+ * SignInSchema — login form (F1 spec §4)
+ * Used by signIn() server action.
+ */
+export const SignInSchema = z.object({
+    email:    z.string().trim().email('Invalid email address'),
+    password: z.string().min(1, 'Password required'),
+})
+
+/**
+ * @deprecated Use CreateOrgSchema instead.
+ * Kept temporarily so any lingering references compile.
+ */
+export const SignupSchema = CreateOrgSchema
 
 // ─── Inventory Schemas ────────────────────────────────────────────────────────
 

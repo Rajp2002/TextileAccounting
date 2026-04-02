@@ -1,9 +1,19 @@
+// ─── monthly-brief ────────────────────────────────────────────────────────────
+// Scheduled by pg_cron on the 28th of every month at 18:00 UTC (23:30 IST).
+// Sends a full monthly production + payroll summary to all org owners via WhatsApp.
+//
+// Auth: Bearer <SUPABASE_SERVICE_ROLE_KEY> — same pattern as all other Edge Functions.
+// (Previously used CRON_SECRET; standardized to service_role for consistency.)
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
+import {
+    sendInteraktTemplate,
+    logDelivery,
+    makeCallbackData,
+} from "../_shared/interakt.ts"
 
-// Restrict CORS: these functions are called by the server cron, not the browser.
-// Only allowing our own site origin prevents stray browser calls.
+// CORS headers: cron calls only — no browser interaction expected.
 const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') ?? 'https://vastra.app'
 
 const corsHeaders = {
@@ -121,8 +131,10 @@ serve(async (req) => {
         return new Response('ok', { headers: corsHeaders })
     }
 
-    const authHeader = req.headers.get('Authorization')
-    if (authHeader !== `Bearer ${Deno.env.get('CRON_SECRET')}`) {
+    // Auth: must supply service_role key (set by pg_cron via app.settings.service_role_key)
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    const authHeader = req.headers.get('Authorization') ?? ''
+    if (authHeader !== `Bearer ${serviceRoleKey}`) {
         return new Response('Unauthorized', { status: 401, headers: corsHeaders })
     }
 
@@ -257,57 +269,49 @@ serve(async (req) => {
                 .filter(Boolean)
                 .join('\n\n')
 
-            // E. Send
+            // E. Fetch owner profile id for delivery log
+            const { data: ownerProfile } = await supabaseClient
+                .from('profiles')
+                .select('id')
+                .eq('org_id', org.id)
+                .eq('role', 'owner')
+                .limit(1)
+                .maybeSingle()
+
+            // F. Send via shared Interakt helper
+            //    Template: vastra_monthly_brief with a single body variable (the full message text)
+            const apiKey = Deno.env.get('INTERAKT_API_KEY') ?? ''
+            const callbackData = makeCallbackData('monthly', org.id)
+            const TEMPLATE_NAME = 'vastra_monthly_brief'
+
             let sendStatus = 'simulated'
-            let providerResponse = {}
-            const WHATSAPP_PROVIDER = Deno.env.get('WHATSAPP_PROVIDER') || 'simulate'
+            let interaktMessageId: string | null = null
 
-            if (WHATSAPP_PROVIDER === 'twilio') {
-                const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
-                const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
-                const fromNumber = Deno.env.get('TWILIO_PHONE_NUMBER')
-                if (!accountSid || !authToken || !fromNumber) { continue }
+            if (apiKey) {
+                const result = await sendInteraktTemplate(
+                    apiKey,
+                    ownerPhone,
+                    TEMPLATE_NAME,
+                    'en',
+                    [messageBody],   // {{1}} = full report text
+                    callbackData,
+                )
+                sendStatus = result.success ? 'sent' : 'failed'
+                interaktMessageId = result.interaktMessageId
 
-                const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`
-                const formData = new URLSearchParams()
-                formData.append('To', `whatsapp:${ownerPhone}`)
-                formData.append('From', fromNumber)
-                formData.append('Body', messageBody)
-
-                try {
-                    const response = await fetch(twilioUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: formData
-                    })
-                    providerResponse = await response.json()
-                    sendStatus = response.ok ? 'sent' : 'failed'
-                } catch (e) {
-                    sendStatus = 'error'
-                    console.error('Twilio Error:', e)
-                }
-            } else if (WHATSAPP_PROVIDER === 'interakt') {
-                const apiKey = Deno.env.get('INTERAKT_API_KEY')
-                if (!apiKey) { continue }
-                const interaktUrl = 'https://api.interakt.ai/v1/public/message/'
-                const payload = {
-                    countryCode: ownerPhone.replace('+', '').substring(0, 2),
-                    phoneNumber: ownerPhone.replace('+', '').substring(2),
-                    callbackData: "monthly_brief", type: "Text",
-                    data: { message: messageBody }
-                }
-                try {
-                    const response = await fetch(interaktUrl, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Basic ${apiKey}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    })
-                    providerResponse = await response.json()
-                    sendStatus = response.ok ? 'sent' : 'failed'
-                } catch (e) { sendStatus = 'error' }
+                // Log to whatsapp_delivery_log (same audit trail as all other functions)
+                await logDelivery(supabaseClient, {
+                    orgId: org.id,
+                    ownerProfileId: ownerProfile?.id ?? null,
+                    recipientPhone: ownerPhone,
+                    templateName: TEMPLATE_NAME,
+                    notificationType: 'monthly_brief',
+                    callbackData,
+                    interaktMessageId,
+                    status: result.success ? 'sent' : 'failed',
+                    errorMessage: result.success ? null : JSON.stringify(result.responseBody),
+                    payloadSnapshot: { month: reportMonth, messageLength: messageBody.length },
+                })
             } else {
                 console.log(`[SIMULATION] Monthly WhatsApp to ${ownerPhone}:`)
                 console.log(messageBody)
@@ -316,13 +320,12 @@ serve(async (req) => {
             const briefStatus = (sendStatus === 'sent' || sendStatus === 'simulated') ? 'monthly_sent' : 'monthly_failed'
             await supabaseClient.from('daily_brief_logs').insert({
                 org_id: org.id, report_date: `${reportMonth}-01`, status: briefStatus,
-                details: { type: 'monthly', provider: WHATSAPP_PROVIDER, month: reportMonth, message: messageBody, response: providerResponse },
+                details: { type: 'monthly', month: reportMonth, message: messageBody },
             })
 
             results.push({
                 org: org.name, phone: ownerPhone, month: reportMonth,
-                status: sendStatus, provider: WHATSAPP_PROVIDER,
-                message: messageBody, response: providerResponse
+                status: sendStatus, interaktMessageId,
             })
         }
 

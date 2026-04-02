@@ -1,119 +1,24 @@
 'use server'
 
+/**
+ * @deprecated This file is superseded by app/(auth)/actions/auth.ts (F1 spec).
+ * Re-exports signOut and getUser for backward compatibility.
+ * All new auth logic lives in the actions/ directory.
+ */
+
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { SignupSchema, safeParse } from '@/lib/schemas'
 
-export async function signUpWithEmail(formData: FormData) {
-    const raw = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        password: formData.get('password'),
-        confirmPassword: formData.get('confirmPassword'),
-        role: formData.get('role'),
-        factoryId: formData.get('factoryId') || null,
-        orgName: formData.get('orgName') || null,
-    }
-
-    // ── Zod validation ──────────────────────────────────────────────────────
-    const parsed = safeParse(SignupSchema, raw)
-    if ('error' in parsed) return { error: parsed.error }
-    const { name, email, password, role, factoryId, orgName } = parsed.data
-
+export async function signOut() {
     const supabase = await createClient()
+    await supabase.auth.signOut()
+    revalidatePath('/', 'layout')
+    redirect('/login')
+}
 
-    // For supervisors, validate factory ID exists before creating the user
-    if (role === 'supervisor') {
-        const { data: org, error: orgError } = await supabase
-            .from('organizations')
-            .select('id')
-            .eq('join_code', factoryId!.trim().toUpperCase())
-            .maybeSingle()
-
-        if (orgError || !org) {
-            return { error: 'Invalid Factory ID. Please check with your factory owner.' }
-        }
-    }
-
-    // Sign up via Supabase Auth — sends confirmation email automatically
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-
-    const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-            emailRedirectTo: `${siteUrl}/auth/callback`,
-            data: {
-                full_name: name,
-                role,
-                join_code: role === 'supervisor' ? factoryId!.trim().toUpperCase() : null,
-                org_name: role === 'owner' ? orgName!.trim() : null,
-            }
-        }
-    })
-
-    if (error) {
-        console.error('Signup error:', error)
-        if (error.message?.includes('already registered')) {
-            return { error: 'An account with this email already exists. Please log in instead.' }
-        }
-        // Return generic error to avoid leaking auth internals
-        return { error: 'Registration failed. Please try again later.' }
-    }
-
-    // Check if email confirmation is required (user won't have a session yet)
-    if (data.user && !data.session) {
-        return { success: true, message: 'Check your email to verify your account.' }
-    }
-
-    // If email confirmation is disabled (dev mode), user gets a session immediately
-    // Create profile right away since we have the session
-    if (data.session) {
-        try {
-            const userId = data.session.user.id
-            let orgId = ''
-
-            if (role === 'owner') {
-                const { data: org, error: orgError } = await supabase
-                    .from('organizations')
-                    .insert({
-                        name: orgName!.trim(),
-                        owner_id: userId,
-                    })
-                    .select('id')
-                    .single()
-
-                if (orgError) throw orgError
-                orgId = org.id
-            } else if (role === 'supervisor') {
-                const { data: org, error: orgError } = await supabase
-                    .from('organizations')
-                    .select('id')
-                    .eq('join_code', factoryId!.trim().toUpperCase())
-                    .single()
-
-                if (orgError || !org) throw new Error('Invalid Factory ID')
-                orgId = org.id
-            }
-
-            if (orgId) {
-                await supabase
-                    .from('profiles')
-                    .insert({
-                        id: userId,
-                        org_id: orgId,
-                        role,
-                        full_name: name,
-                        email,
-                        // NOTE: test_password intentionally NOT included — never store plaintext passwords
-                    })
-            }
-        } catch (profileError: any) {
-            console.error('Profile creation error:', profileError)
-            // User is created but profile failed — they'll hit onboarding
-        }
-
-        return { success: true, confirmed: true, role }
-    }
-
-    return { success: true, message: 'Check your email to verify your account.' }
+export async function getUser() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    return user
 }
