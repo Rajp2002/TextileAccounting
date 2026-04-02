@@ -42,6 +42,8 @@ To prevent server-client drift (e.g., UTC vs. IST), all date/time logic is centr
 
 ### 3.1 Seamless Onboarding
 The **Owner** creates the organization and receives a unique **Factory Join Code**. Supervisors use this code to join, avoiding the friction of manual email invites or CSV uploads.
+- **Mandatory Phone Verification**: Both Owner and Supervisor onboarding enforce an exact 10-digit phone number requirement. This acts as the backbone for automated WhatsApp opt-ins and routing out of the gate.
+- **Auto-Validating Join Codes**: Supervisor join codes are explicitly 8 characters and are auto-validated the moment the 8th character is entered, revealing the rest of the registration details instantly.
 
 ### 3.2 Machine Lifecycle
 Machines are the primary production units. They track:
