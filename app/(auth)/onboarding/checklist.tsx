@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { addMachine } from '@/app/(dashboard)/owner/actions'
-import { addQuality } from '@/app/(dashboard)/owner/actions'
+import { addQuality, saveWorkerWhatsApp } from '@/app/(dashboard)/owner/actions'
 import { addMeterWorker } from '@/app/(dashboard)/supervisor/actions'
 import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/actions/auth'
 
@@ -331,45 +331,95 @@ function QualityForm({ onDone }: { onDone: () => void }) {
 
 // ─── Worker Form ─────────────────────────────────────────────────────────────────
 
+interface WorkerRow { name: string; phone: string }
+const emptyWorker = (): WorkerRow => ({ name: '', phone: '' })
+
 function WorkerForm({ onDone }: { onDone: () => void }) {
-    const [workers, setWorkers] = useState([{ name: '' }])
+    const [workers, setWorkers] = useState<WorkerRow[]>([emptyWorker()])
     const [bulkText, setBulkText] = useState('')
     const [bulkMode, setBulkMode] = useState(false)
+    const [consentGiven, setConsentGiven] = useState(false)
     const [saving, setSaving] = useState(false)
 
-    const addRow = () => setWorkers(w => [...w, { name: '' }])
+    const addRow = () => setWorkers(w => [...w, emptyWorker()])
     const removeRow = (i: number) => setWorkers(w => w.filter((_, idx) => idx !== i))
-    const updateRow = (i: number, val: string) =>
-        setWorkers(w => w.map((r, idx) => idx === i ? { name: val } : r))
+    const updateRow = (i: number, field: keyof WorkerRow, val: string) =>
+        setWorkers(w => w.map((r, idx) => idx === i ? { ...r, [field]: val } : r))
 
+    // Bulk: each line is either "Name" or "Name, 9876543210"
     const parseBulk = () => {
         const lines = bulkText.split('\n').map(l => l.trim()).filter(Boolean)
         if (lines.length === 0) { toast.error('No worker names found'); return }
-        setWorkers(lines.map(name => ({ name })))
+        const parsed: WorkerRow[] = lines.map(line => {
+            const parts = line.split(/[,\t]/).map(p => p.trim())
+            return { name: parts[0] || '', phone: parts[1] || '' }
+        })
+        setWorkers(parsed)
         setBulkMode(false)
-        toast.success(`Parsed ${lines.length} worker names`)
+        toast.success(`Parsed ${parsed.length} worker${parsed.length > 1 ? 's' : ''}`)
     }
 
     const handleSave = async () => {
-        const names = workers.map(w => w.name.trim()).filter(Boolean)
-        if (names.length === 0) { toast.error('Enter at least one worker name'); return }
+        const valid = workers.filter(w => w.name.trim())
+        if (valid.length === 0) { toast.error('Enter at least one worker name'); return }
+
+        // Validate phone numbers if provided
+        const phoneWorkers = valid.filter(w => w.phone.trim())
+        const badPhones = phoneWorkers.filter(w => w.phone.replace(/\D/g, '').length !== 10)
+        if (badPhones.length > 0) {
+            toast.error(`Invalid phone for: ${badPhones.map(w => w.name).join(', ')} — must be 10 digits`)
+            return
+        }
+
+        // Consent is required if ANY phone number is being saved
+        if (phoneWorkers.length > 0 && !consentGiven) {
+            toast.error('Please confirm consent before saving phone numbers')
+            return
+        }
+
         setSaving(true)
         let allOk = true
-        for (const name of names) {
-            const res = await addMeterWorker({ name, pf_esi_eligible: false })
-            if (res?.error) { toast.error(`"${name}": ${res.error}`); allOk = false }
+        for (const worker of valid) {
+            // 1. Create the worker record
+            const res = await addMeterWorker({ name: worker.name.trim(), pf_esi_eligible: false })
+            if (res?.error) {
+                toast.error(`"${worker.name}": ${res.error}`)
+                allOk = false
+                continue
+            }
+
+            // 2. If phone provided + consent given, save WhatsApp number
+            const cleanPhone = worker.phone.replace(/\D/g, '')
+            if (cleanPhone && res.workerId) {
+                const phoneRes = await saveWorkerWhatsApp({
+                    workerId: res.workerId,
+                    workerType: 'meter',
+                    phone: cleanPhone,
+                    language: 'hi',   // default; owner can change in Payroll settings
+                    consentGiven: true // validated above
+                })
+                if (phoneRes?.error) {
+                    // Non-fatal: worker was created, just phone didn't save
+                    console.warn(`Phone save failed for ${worker.name}:`, phoneRes.error)
+                }
+            }
         }
         setSaving(false)
         if (allOk) {
-            toast.success(`${names.length} worker${names.length > 1 ? 's' : ''} added!`)
+            toast.success(`${valid.length} worker${valid.length > 1 ? 's' : ''} added!`)
             onDone()
         }
     }
 
+    const hasAnyPhone = workers.some(w => w.phone.trim())
+    const validCount = workers.filter(w => w.name.trim()).length
+
     return (
         <div className="space-y-4 pt-4 border-t border-gray-100">
             <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">Add piece-rate workers (set PF/ESI details later in Payroll)</p>
+                <p className="text-sm text-gray-500">
+                    Add piece-rate workers <span className="text-gray-400">(PF/ESI details can be set later in Payroll)</span>
+                </p>
                 <Button type="button" variant="ghost" size="sm"
                     onClick={() => setBulkMode(b => !b)}
                     className="text-emerald-700 hover:bg-emerald-50 gap-1.5 text-xs">
@@ -384,12 +434,14 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
                         initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }} className="space-y-3"
                     >
-                        <Label className="text-xs text-gray-600">Paste worker names (one per line)</Label>
+                        <Label className="text-xs text-gray-600">
+                            One per line: <span className="font-mono text-gray-500">Name</span> or <span className="font-mono text-gray-500">Name, PhoneNumber</span>
+                        </Label>
                         <textarea
                             rows={5}
                             value={bulkText}
                             onChange={e => setBulkText(e.target.value)}
-                            placeholder={"Ramesh Kumar\nSuresh Patel\nMahesh Verma"}
+                            placeholder={"Ramesh Kumar, 9876543210\nSuresh Patel\nMahesh Verma, 9123456789"}
                             className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none"
                         />
                         <Button type="button" size="sm" onClick={parseBulk}
@@ -402,20 +454,35 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
                         initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }} className="space-y-2"
                     >
+                        {/* Column headers */}
+                        <div className="grid grid-cols-[1fr_140px_20px] gap-2 px-0.5">
+                            <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Worker name</span>
+                            <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">Phone (optional)</span>
+                            <span />
+                        </div>
+
                         {workers.map((w, i) => (
-                            <div key={i} className="flex gap-2">
+                            <div key={i} className="grid grid-cols-[1fr_140px_20px] gap-2 items-center">
                                 <Input
                                     value={w.name}
-                                    placeholder={`e.g. Ramesh Kumar`}
-                                    onChange={e => updateRow(i, e.target.value)}
+                                    placeholder="Ramesh Kumar"
+                                    onChange={e => updateRow(i, 'name', e.target.value)}
                                     className="h-9 text-sm"
                                 />
-                                {workers.length > 1 && (
+                                <Input
+                                    value={w.phone}
+                                    type="tel"
+                                    placeholder="9876543210"
+                                    maxLength={10}
+                                    onChange={e => updateRow(i, 'phone', e.target.value.replace(/\D/g, ''))}
+                                    className="h-9 text-sm font-mono"
+                                />
+                                {workers.length > 1 ? (
                                     <button type="button" onClick={() => removeRow(i)}
                                         className="text-gray-300 hover:text-red-400 transition-colors">
                                         <Trash2 className="h-4 w-4" />
                                     </button>
-                                )}
+                                ) : <span />}
                             </div>
                         ))}
                         <button type="button" onClick={addRow}
@@ -426,10 +493,45 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
                 )}
             </AnimatePresence>
 
-            <Button onClick={handleSave} disabled={saving}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-10 font-semibold">
-                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : `Save ${workers.filter(w=>w.name.trim()).length || ''} worker${workers.filter(w=>w.name.trim()).length !== 1 ? 's' : ''}`}
+            {/* PII Consent checkbox — appears when any phone number is entered */}
+            <AnimatePresence>
+                {hasAnyPhone && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="rounded-lg border border-amber-200 bg-amber-50 p-3"
+                    >
+                        <label className="flex items-start gap-3 cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                checked={consentGiven}
+                                onChange={e => setConsentGiven(e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-amber-400 text-amber-600 accent-amber-600 shrink-0 cursor-pointer"
+                            />
+                            <span className="text-xs text-amber-800 leading-relaxed">
+                                <span className="font-semibold">Consent Declaration:</span> I confirm that I have obtained the informed consent of each worker listed above to collect, store, and use their personal contact information (phone number) within this platform, in accordance with applicable data protection regulations including the DPDP Act, 2023.
+                            </span>
+                        </label>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <Button
+                onClick={handleSave}
+                disabled={saving || (hasAnyPhone && !consentGiven) || validCount === 0}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-10 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {saving
+                    ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
+                    : `Save ${validCount || ''} worker${validCount !== 1 ? 's' : ''}`
+                }
             </Button>
+
+            {hasAnyPhone && !consentGiven && (
+                <p className="text-[11px] text-center text-amber-600">
+                    ↑ Confirm consent above to enable saving
+                </p>
+            )}
         </div>
     )
 }
