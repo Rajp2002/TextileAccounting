@@ -461,18 +461,24 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
         }
     }
 
-    const handleStepDone = async (key: string) => {
-        // Refresh status then auto-advance to the next incomplete step
-        const res = await getOnboardingStatus()
-        setStatus(res)
-        if (res.isComplete) {
-            toast.success('All done! 🎉')
+    const handleStepDone = (key: string) => {
+        // Update state LOCALLY — do NOT call getOnboardingStatus() here.
+        // It's a server action; Next.js triggers router.refresh() after it,
+        // which re-renders page.tsx on the server and causes the auto-redirect
+        // blank-page issue. Local state is sufficient: each form only calls
+        // this after its own save succeeds, so we know that step is complete.
+        const newStatus = { ...status, [key]: true }
+        newStatus.isComplete = newStatus.hasMachine && newStatus.hasQuality && newStatus.hasWorker
+        setStatus(newStatus)
+        if (newStatus.isComplete) {
+            toast.success('All done! 🎉 Click "Go to dashboard" to continue.')
             setOpenStep(null)
         } else {
-            const next = STEPS.find(s => !res[s.key as keyof OnboardingStatus])
+            const next = STEPS.find(s => !newStatus[s.key as keyof OnboardingStatus])
             setOpenStep(next?.key ?? null)
         }
     }
+
 
     const handleGoToDashboard = async () => {
         if (!status.isComplete) return

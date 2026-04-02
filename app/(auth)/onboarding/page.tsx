@@ -58,10 +58,10 @@ export default async function OnboardingPage() {
     // Fetch real-time status (SSR — accurate on page load)
     const status = await getOnboardingStatus()
 
-    // If everything is done (could happen if they return after completing), go to dashboard
-    if (status.isComplete) {
-        redirect('/owner/analytics')
-    }
+    // NOTE: we intentionally do NOT redirect here when isComplete=true.
+    // The middleware handles that guard via JWT claims (onboarding_complete flag).
+    // If we redirect here, Next.js router.refresh() after server actions re-triggers
+    // this redirect before the JWT has been refreshed — causing a blank page.
 
     return <OnboardingChecklist initialStatus={status} />
 }
