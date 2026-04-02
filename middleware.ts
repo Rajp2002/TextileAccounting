@@ -198,14 +198,20 @@ export async function updateSession(request: NextRequest) {
         const onboardingComplete = jwt.onboarding_complete
         const orgId = jwt.org_id
 
-        // Missing org_id in JWT = profile/org doesn't exist (likely JWT race condition)
-        // Sign out first to break any redirect loop, then send to login
+        // Missing org_id in JWT = stale JWT (race condition) or broken account.
+        // Must sign out properly: copy signOut cookies onto the redirect so the
+        // browser actually clears the session cookie (new response wouldn't have them).
         if (!orgId && !pathname.startsWith('/onboarding')) {
             await supabase.auth.signOut()
             const url = request.nextUrl.clone()
             url.pathname = '/login'
             url.searchParams.set('reason', 'session_incomplete')
-            return NextResponse.redirect(url)
+            const signOutRedirect = NextResponse.redirect(url)
+            // Copy cleared-session cookies from the signOut response to the redirect
+            response.cookies.getAll().forEach((cookie) =>
+                signOutRedirect.cookies.set(cookie.name, cookie.value, { path: '/' })
+            )
+            return signOutRedirect
         }
 
         // Onboarding guard: owners must complete setup before accessing ops routes
