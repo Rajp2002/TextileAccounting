@@ -3,9 +3,18 @@
 import { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+
+function parseJWTClaims(token: string): Record<string, any> {
+    try {
+        const payload = token.split('.')[1]
+        return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'))
+    } catch {
+        return {}
+    }
+}
 
 function ConfirmContent() {
     const router = useRouter()
@@ -15,95 +24,31 @@ function ConfirmContent() {
     const [error, setError] = useState<string | null>(null)
     const processingRef = useRef(false)
 
-    const createProfileIfNeeded = async (userId: string, userMetadata: any) => {
-        // Check if profile already exists
-        const { data: existingProfile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', userId)
-            .maybeSingle()
+    const redirectByRole = async (session: any) => {
+        const jwt = parseJWTClaims(session.access_token)
+        const role = jwt.user_role
+        const onboardingComplete = jwt.onboarding_complete
 
-        if (existingProfile) return // Profile already exists
-
-        const role = userMetadata?.role
-        const fullName = userMetadata?.full_name
-        const joinCode = userMetadata?.join_code
-        const orgName = userMetadata?.org_name
-
-        if (!role || !fullName) return // No metadata to create profile from
-
-        try {
-            let orgId = ''
-
-            if (role === 'owner' && orgName) {
-                // Create organization for owners
-                const { data: org, error: orgError } = await supabase
-                    .from('organizations')
-                    .insert({
-                        name: orgName,
-                        owner_id: userId,
-                    })
-                    .select('id')
-                    .single()
-
-                if (orgError) throw orgError
-                orgId = org.id
-            } else if (role === 'supervisor' && joinCode) {
-                // Look up organization for supervisors
-                const { data: org, error: orgError } = await supabase
-                    .from('organizations')
-                    .select('id')
-                    .eq('join_code', joinCode)
-                    .single()
-
-                if (orgError || !org) throw new Error('Invalid Factory ID')
-                orgId = org.id
+        if (role === 'owner') {
+            if (!onboardingComplete) {
+                router.push('/onboarding')
+            } else {
+                router.push('/owner/analytics')
             }
-
-            if (orgId) {
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .insert({
-                        id: userId,
-                        org_id: orgId,
-                        role,
-                        full_name: fullName,
-                    })
-
-                if (profileError) throw profileError
-            }
-        } catch (err: any) {
-            console.error('Profile creation error:', err)
-            // Don't block the flow — user can still be redirected to onboarding
-        }
-    }
-
-    const redirectByRole = async (userId: string) => {
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', userId)
-            .maybeSingle()
-
-        if (profile?.role === 'owner') {
-            router.push('/owner/analytics')
-        } else if (profile?.role === 'supervisor') {
+        } else if (role === 'supervisor') {
             router.push('/supervisor/production')
         } else {
-            router.push('/onboarding')
+            router.push('/login')
         }
     }
 
-    const finalizeLogin = async (userId: string, userMetadata: any) => {
+    const finalizeLogin = async (session: any) => {
         if (processingRef.current) return
         processingRef.current = true
 
-        setStatus('Setting up your account...')
-
+        setStatus('Redirecting to dashboard...')
         try {
-            await createProfileIfNeeded(userId, userMetadata)
-            setStatus('Redirecting to dashboard...')
-            await redirectByRole(userId)
+            await redirectByRole(session)
         } catch (e: any) {
             setError(e.message)
             processingRef.current = false
@@ -134,7 +79,7 @@ function ConfirmContent() {
 
                     if (data.session) {
                         window.history.replaceState(null, '', window.location.pathname + window.location.search)
-                        await finalizeLogin(data.session.user.id, data.session.user.user_metadata)
+                        await finalizeLogin(data.session)
                         return
                     }
                 }
@@ -145,7 +90,7 @@ function ConfirmContent() {
             const { data: { session } } = await supabase.auth.getSession()
 
             if (session) {
-                await finalizeLogin(session.user.id, session.user.user_metadata)
+                await finalizeLogin(session)
                 return
             }
 
@@ -159,7 +104,7 @@ function ConfirmContent() {
                     return
                 }
                 if (data.session) {
-                    await finalizeLogin(data.session.user.id, data.session.user.user_metadata)
+                    await finalizeLogin(data.session)
                     return
                 }
             }
@@ -169,6 +114,7 @@ function ConfirmContent() {
         }
 
         run()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     return (

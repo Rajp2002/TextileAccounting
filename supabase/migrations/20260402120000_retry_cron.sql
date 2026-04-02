@@ -1,0 +1,40 @@
+-- ============================================================
+-- MIGRATION: pg_cron — Hourly retry for failed WhatsApp sends
+-- ============================================================
+-- Fires at the top of every hour.
+-- Calls the retry-failed-messages Supabase Edge Function.
+--
+-- That function finds whatsapp_delivery_log rows with:
+--   status = 'failed'  AND  sent_at > NOW() - 24h  AND  retry_count < 3
+-- and re-attempts to send them via Interakt.
+--
+-- PREREQUISITES: app.settings.supabase_url and
+--               app.settings.service_role_key must be set.
+-- ============================================================
+
+CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS pg_net  WITH SCHEMA extensions;
+
+-- Remove if already exists (idempotent)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'vastra-retry-failed-messages') THEN
+        PERFORM cron.unschedule('vastra-retry-failed-messages');
+    END IF;
+END;
+$$;
+
+SELECT cron.schedule(
+    'vastra-retry-failed-messages',  -- job name
+    '0 * * * *',                     -- top of every hour
+    $$
+    SELECT net.http_post(
+        url     := current_setting('app.settings.supabase_url') || '/functions/v1/retry-failed-messages',
+        headers := jsonb_build_object(
+            'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key'),
+            'Content-Type', 'application/json'
+        ),
+        body    := '{}'::jsonb
+    );
+    $$
+);
