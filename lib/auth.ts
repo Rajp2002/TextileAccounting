@@ -44,9 +44,8 @@ export async function requireRole(allowedRoles: string[]) {
         redirect('/login')
     }
 
-    const jwt = parseJWT(session.access_token)
-    const role = jwt.user_role
-    const org_id = jwt.org_id
+    const role = session.user.app_metadata.role
+    const org_id = session.user.app_metadata.org_id
 
     if (!role || !org_id) {
         redirect('/login')
@@ -74,9 +73,8 @@ export async function getAuthenticatedUser() {
 
     if (!session) redirect('/login')
 
-    const jwt = parseJWT(session.access_token)
-    const role = jwt.user_role
-    const org_id = jwt.org_id
+    const role = session.user.app_metadata.role
+    const org_id = session.user.app_metadata.org_id
 
     if (!role || !org_id) redirect('/login')
 
