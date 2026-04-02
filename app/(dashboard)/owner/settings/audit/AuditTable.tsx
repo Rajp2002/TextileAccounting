@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Users, Factory, Package, Shield, Calculator, Tags } from 'lucide-react'
+import { Loader2, Users, Factory, Package, Shield, Calculator, Tags, CalendarDays, X } from 'lucide-react'
 import AuditDiff from '@/components/ui/audit-diff'
 import {
     Select,
@@ -147,9 +147,10 @@ export default function AuditTable() {
     const [page, setPage] = useState(0)
     const [actionFilter, setActionFilter] = useState<string>('all')
     const [categoryFilter, setCategoryFilter] = useState<string>('all')
+    const [dateFilter, setDateFilter] = useState<string>('') // 'YYYY-MM-DD'
 
     const { data, isLoading, isError } = useQuery({
-        queryKey: ['auditLogs', userProfile?.org_id, page, actionFilter, categoryFilter],
+        queryKey: ['auditLogs', userProfile?.org_id, page, actionFilter, categoryFilter, dateFilter],
         enabled: !!userProfile?.org_id,
         queryFn: async () => {
             let query = supabase
@@ -168,6 +169,16 @@ export default function AuditTable() {
                     query = query.in('table_name', tables)
                 }
             }
+            if (dateFilter) {
+                // Filter the full calendar day in ISO (UTC) — the DB stores UTC timestamps
+                const dayStart = new Date(dateFilter)
+                dayStart.setHours(0, 0, 0, 0)
+                const dayEnd = new Date(dateFilter)
+                dayEnd.setHours(23, 59, 59, 999)
+                query = query
+                    .gte('changed_at', dayStart.toISOString())
+                    .lte('changed_at', dayEnd.toISOString())
+            }
 
             const { data, error, count } = await query
             if (error) throw error
@@ -184,6 +195,20 @@ export default function AuditTable() {
         setActionFilter(val)
         setPage(0)
     }
+
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setDateFilter(e.target.value)
+        setPage(0)
+    }
+
+    const clearAllFilters = () => {
+        setCategoryFilter('all')
+        setActionFilter('all')
+        setDateFilter('')
+        setPage(0)
+    }
+
+    const hasActiveFilters = categoryFilter !== 'all' || actionFilter !== 'all' || dateFilter !== ''
 
     return (
         <div className="space-y-4">
@@ -233,12 +258,40 @@ export default function AuditTable() {
                     </Select>
                 </div>
 
-                {(categoryFilter !== 'all' || actionFilter !== 'all') && (
+                <div className="h-4 w-px bg-gray-300" />
+
+                {/* ── Date Filter ── */}
+                <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        Date
+                    </span>
+                    <div className="relative flex items-center">
+                        <input
+                            type="date"
+                            value={dateFilter}
+                            onChange={handleDateChange}
+                            max={new Date().toISOString().split('T')[0]}
+                            className="h-8 rounded-md border border-input bg-white px-2 pr-7 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0 transition-colors"
+                        />
+                        {dateFilter && (
+                            <button
+                                onClick={() => { setDateFilter(''); setPage(0) }}
+                                className="absolute right-1.5 text-gray-400 hover:text-gray-700 transition-colors"
+                                title="Clear date"
+                            >
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {hasActiveFilters && (
                     <Button
                         variant="ghost"
                         size="sm"
                         className="h-8 text-xs text-gray-500 hover:text-gray-900 ml-auto"
-                        onClick={() => { setCategoryFilter('all'); setActionFilter('all'); setPage(0) }}
+                        onClick={clearAllFilters}
                     >
                         Clear filters
                     </Button>
@@ -284,10 +337,10 @@ export default function AuditTable() {
                                     <div className="flex flex-col items-center gap-2">
                                         <Factory className="h-8 w-8 text-gray-300" />
                                         <p className="text-sm">No audit logs found for the selected filters.</p>
-                                        {(categoryFilter !== 'all' || actionFilter !== 'all') && (
+                                        {hasActiveFilters && (
                                             <button
                                                 className="text-xs text-indigo-600 hover:underline"
-                                                onClick={() => { setCategoryFilter('all'); setActionFilter('all'); setPage(0) }}
+                                                onClick={clearAllFilters}
                                             >
                                                 Clear filters to see all entries
                                             </button>

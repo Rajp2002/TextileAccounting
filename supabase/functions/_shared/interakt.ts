@@ -13,6 +13,8 @@ export interface InteraktResult {
   success: boolean;
   responseBody: Record<string, unknown>;
   httpStatus: number;
+  /** Message ID returned by Interakt — persisted to whatsapp_delivery_log for webhook correlation */
+  interaktMessageId: string | null;
 }
 
 export interface LogDeliveryParams {
@@ -25,6 +27,8 @@ export interface LogDeliveryParams {
   status: "sent" | "failed";
   errorMessage?: string | null;
   payloadSnapshot: Record<string, unknown>;
+  /** Interakt's message ID from the send response — used as webhook correlation key */
+  interaktMessageId?: string | null;
 }
 
 // ─── Core Send Function ───────────────────────────────────────────────────────
@@ -68,12 +72,21 @@ export async function sendInteraktTemplate(
 
     httpStatus = res.status;
     responseBody = await res.json().catch(() => ({}));
-    return { success: res.ok, responseBody, httpStatus };
+
+    // Interakt returns the message ID in the response body — capture it for webhook correlation
+    const interaktMessageId =
+      typeof responseBody.id === "string" ? responseBody.id
+      : typeof (responseBody.data as Record<string, unknown>)?.id === "string"
+        ? (responseBody.data as Record<string, unknown>).id as string
+        : null;
+
+    return { success: res.ok, responseBody, httpStatus, interaktMessageId };
   } catch (err) {
     return {
       success: false,
       responseBody: { fetchError: String(err) },
       httpStatus: 0,
+      interaktMessageId: null,
     };
   }
 }
@@ -97,6 +110,7 @@ export async function logDelivery(
     notification_type: params.notificationType,
     status: params.status,
     interakt_callback_data: params.callbackData,
+    interakt_message_id: params.interaktMessageId ?? null,
     error_message: params.errorMessage ?? null,
     payload_snapshot: params.payloadSnapshot,
   });

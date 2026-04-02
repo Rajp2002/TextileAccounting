@@ -1,6 +1,7 @@
 -- Add worker_rate_snapshot to production_logs
 ALTER TABLE production_logs
-ADD COLUMN worker_rate_snapshot DECIMAL NOT NULL DEFAULT 0;
+ADD COLUMN IF NOT EXISTS worker_rate_snapshot DECIMAL NOT NULL DEFAULT 0;
+
 
 -- Backfill the snapshot for existing logs based on the current quality rate
 UPDATE production_logs pl

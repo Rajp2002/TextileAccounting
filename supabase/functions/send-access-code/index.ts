@@ -86,6 +86,7 @@ Deno.serve(async (req) => {
       templateName: TEMPLATE_NAME,
       notificationType: "access_code",
       callbackData,
+      interaktMessageId: result.interaktMessageId,
       status: result.success ? "sent" : "failed",
       errorMessage: result.success ? null : JSON.stringify(result.responseBody),
       // NOTE: We do NOT log the plaintext code in the payload_snapshot for security

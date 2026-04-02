@@ -145,6 +145,7 @@ Deno.serve(async (req) => {
       templateName: TEMPLATE_NAME,
       notificationType: "yield_alert",
       callbackData,
+      interaktMessageId: result.interaktMessageId,
       status: result.success ? "sent" : "failed",
       errorMessage: result.success ? null : JSON.stringify(result.responseBody),
       payloadSnapshot: { bodyValues: finalBodyValues, batch_id, efficiency, estimatedLoss },
