@@ -55,6 +55,7 @@ export async function createOrganization(input: {
     email: string
     password: string
     factoryName: string
+    phone: string
 }) {
     const parsed = safeParse(CreateOrgSchema, input)
     if ('error' in parsed) return { error: parsed.error }
@@ -118,14 +119,14 @@ export async function createOrganization(input: {
             }
 
             // Continue with org2
-            return await _createOwnerProfile(adminClient, userId, org2!.id, parsed.data.ownerName, parsed.data.email, parsed.data.password)
+            return await _createOwnerProfile(adminClient, userId, org2!.id, parsed.data.ownerName, parsed.data.email, parsed.data.password, parsed.data.phone)
         }
 
         await adminClient.auth.admin.deleteUser(userId)
         return { error: 'Failed to create organization. Please try again.' }
     }
 
-    return await _createOwnerProfile(adminClient, userId, org.id, parsed.data.ownerName, parsed.data.email, parsed.data.password)
+    return await _createOwnerProfile(adminClient, userId, org.id, parsed.data.ownerName, parsed.data.email, parsed.data.password, parsed.data.phone)
 }
 
 async function _createOwnerProfile(
@@ -134,7 +135,8 @@ async function _createOwnerProfile(
     orgId: string,
     ownerName: string,
     email: string,
-    password: string
+    password: string,
+    phone: string
 ) {
     // ── Step 3: Create owner profile ─────────────────────────────────────────
     const { error: profileError } = await adminClient
@@ -144,6 +146,7 @@ async function _createOwnerProfile(
             org_id: orgId,
             role: 'owner',
             full_name: ownerName,
+            phone: phone,
         })
 
     if (profileError) {
@@ -170,6 +173,7 @@ export async function createOrganizationAndRedirect(input: {
     email: string
     password: string
     factoryName: string
+    phone: string
 }) {
     const result = await createOrganization(input)
     if (result && 'error' in result) return result
@@ -225,6 +229,7 @@ export async function joinOrganization(input: {
     supervisorName: string
     email: string
     password: string
+    phone: string
 }) {
     const parsed = safeParse(JoinOrgSchema, input)
     if ('error' in parsed) return { error: parsed.error }
@@ -267,6 +272,7 @@ export async function joinOrganization(input: {
             org_id: org.id,
             role: 'supervisor',
             full_name: parsed.data.supervisorName,
+            phone: parsed.data.phone,
         })
 
     if (profileError) {

@@ -27,6 +27,7 @@ export default function JoinPage() {
     // Form fields
     const [supervisorName, setSupervisorName] = useState('')
     const [email, setEmail]                   = useState('')
+    const [phone, setPhone]                   = useState('')
     const [password, setPassword]             = useState('')
     const [showPassword, setShowPassword]     = useState(false)
     const [errors, setErrors]                 = useState<Record<string, string>>({})
@@ -75,6 +76,8 @@ export default function JoinPage() {
                 newErrors.supervisorName = 'Name must be at least 2 characters'
             if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
                 newErrors.email = 'Invalid email address'
+            if (!/^\d{10}$/.test(phone))
+                newErrors.phone = 'Phone number must be exactly 10 digits'
             if (password.length < 8)
                 newErrors.password = 'Password must be at least 8 characters'
             if (!/[A-Z]/.test(password))
@@ -106,6 +109,7 @@ export default function JoinPage() {
                 joinCode: joinCode.trim().toUpperCase(),
                 supervisorName: supervisorName.trim(),
                 email: email.trim(),
+                phone: phone.trim(),
                 password,
             })
             if (result && 'error' in result) {
@@ -238,6 +242,34 @@ export default function JoinPage() {
                                     disabled={loading}
                                 />
                                 {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+                            </div>
+
+                            {/* Phone */}
+                            <div className="space-y-1.5">
+                                <Label htmlFor="phone" className="text-gray-700 font-medium">
+                                    Phone Number
+                                </Label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">+91</span>
+                                    <Input
+                                        id="phone"
+                                        type="tel"
+                                        placeholder="9876543210"
+                                        maxLength={10}
+                                        value={phone}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '')
+                                            setPhone(val)
+                                            setErrors(p => ({ ...p, phone: '' }))
+                                        }}
+                                        className={cn(
+                                            'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all pl-11',
+                                            errors.phone && 'border-red-400'
+                                        )}
+                                        disabled={loading}
+                                    />
+                                </div>
+                                {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
                             </div>
 
                             {/* Password */}

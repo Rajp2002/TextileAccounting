@@ -37,6 +37,7 @@ export default function SignupPage() {
     const [loading, setLoading] = useState(false)
     const [ownerName, setOwnerName]     = useState('')
     const [email, setEmail]             = useState('')
+    const [phone, setPhone]             = useState('')
     const [password, setPassword]       = useState('')
     const [factoryName, setFactoryName] = useState('')
     const [showPassword, setShowPassword] = useState(false)
@@ -52,6 +53,8 @@ export default function SignupPage() {
             newErrors.ownerName = 'Name must be at least 2 characters'
         if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
             newErrors.email = 'Invalid email address'
+        if (!/^\d{10}$/.test(phone))
+            newErrors.phone = 'Phone number must be exactly 10 digits'
         if (password.length < 8)
             newErrors.password = 'Password must be at least 8 characters'
         if (!/[A-Z]/.test(password))
@@ -71,6 +74,7 @@ export default function SignupPage() {
             const result = await createOrganizationAndRedirect({
                 ownerName: ownerName.trim(),
                 email: email.trim(),
+                phone: phone.trim(),
                 password,
                 factoryName: factoryName.trim(),
             })
@@ -157,6 +161,36 @@ export default function SignupPage() {
                         disabled={loading}
                     />
                     {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+                </div>
+
+                {/* Phone */}
+                <div className="space-y-1.5">
+                    <Label htmlFor="phone" className="text-gray-700 font-medium">
+                        Phone Number
+                    </Label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">+91</span>
+                        <Input
+                            id="phone"
+                            type="tel"
+                            placeholder="9876543210"
+                            maxLength={10}
+                            value={phone}
+                            onChange={(e) => { 
+                                // Only allow numeric characters
+                                const val = e.target.value.replace(/\D/g, '')
+                                setPhone(val)
+                                setErrors(prev => ({ ...prev, phone: '' })) 
+                            }}
+                            onBlur={validate}
+                            className={cn(
+                                'h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all pl-11',
+                                errors.phone && 'border-red-400 focus:border-red-500'
+                            )}
+                            disabled={loading}
+                        />
+                    </div>
+                    {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                 </div>
 
                 {/* Password + Strength Indicator */}
