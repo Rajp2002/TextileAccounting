@@ -17,25 +17,22 @@ export default async function SupervisorLayout({ children }: { children: React.R
         redirect('/login')
     }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role, org_id')
-        .eq('id', user.id)
-        .single()
+    const userRole = user.app_metadata?.role
+    const userOrgId = user.app_metadata?.org_id
 
     // Redirect owners to their dashboard to enforce role boundaries
-    if (profile?.role === 'owner') {
+    if (userRole === 'owner') {
         redirect('/owner/analytics')
-    } else if (profile?.role !== 'supervisor') {
+    } else if (userRole !== 'supervisor') {
         redirect('/login')
     }
 
     let factoryName = 'Textile SaaS'
-    if (profile?.org_id) {
+    if (userOrgId) {
         const { data: org } = await supabase
             .from('organizations')
             .select('name')
-            .eq('id', profile.org_id)
+            .eq('id', userOrgId)
             .single()
         if (org?.name) factoryName = org.name
     }

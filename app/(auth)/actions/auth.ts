@@ -319,10 +319,9 @@ export async function signIn(input: { email: string; password: string }) {
         return { error: 'Session error. Please try again.' }
     }
 
-    // Parse role from the JWT access token (injected by custom_access_token_hook)
-    const jwt = parseJWT(data.session.access_token)
-    const userRole = jwt.user_role
-    const onboardingComplete = jwt.onboarding_complete
+    // Retrieve properties natively natively from app_metadata
+    const userRole = data.session.user.app_metadata?.role
+    const onboardingComplete = data.session.user.app_metadata?.onboarding_complete
 
     if (userRole === 'owner') {
         if (!onboardingComplete) {
@@ -349,10 +348,11 @@ export async function regenerateJoinCode() {
 
     if (!session) return { error: 'Not authenticated' }
 
-    const jwt = parseJWT(session.access_token)
+    const userRole = session.user.app_metadata?.role
+    const orgId = session.user.app_metadata?.org_id
 
-    if (jwt.user_role !== 'owner') return { error: 'Unauthorized' }
-    if (!jwt.org_id) return { error: 'Organization not found' }
+    if (userRole !== 'owner') return { error: 'Unauthorized' }
+    if (!orgId) return { error: 'Organization not found' }
 
     const newCode = generateJoinCode()
     const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -365,7 +365,7 @@ export async function regenerateJoinCode() {
             join_code: newCode,
             join_code_expires_at: newExpiry,
         })
-        .eq('id', jwt.org_id)
+        .eq('id', orgId)
 
     if (error) return { error: 'Failed to regenerate code. Please try again.' }
 
@@ -391,8 +391,7 @@ export async function getOnboardingStatus(): Promise<{
 
     if (!session) redirect('/login')
 
-    const jwt = parseJWT(session.access_token)
-    const orgId = jwt.org_id
+    const orgId = session.user.app_metadata?.org_id
 
     if (!orgId) redirect('/login')
 

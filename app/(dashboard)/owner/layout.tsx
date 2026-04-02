@@ -11,23 +11,21 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
         redirect('/login')
     }
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role, full_name, org_id')
-        .eq('id', user.id)
-        .single()
+    const userRole = user.app_metadata?.role
+    const userFullName = user.app_metadata?.full_name
+    const userOrgId = user.app_metadata?.org_id
 
-    if (profile?.role !== 'owner') {
+    if (userRole !== 'owner') {
         redirect('/supervisor/production')
     }
 
     // Fetch factory name for the sidebar
     let factoryName = 'Textile SaaS'
-    if (profile?.org_id) {
+    if (userOrgId) {
         const { data: org } = await supabase
             .from('organizations')
             .select('name')
-            .eq('id', profile.org_id)
+            .eq('id', userOrgId)
             .single()
         if (org?.name) factoryName = org.name
     }
@@ -36,7 +34,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
         <div className="min-h-screen bg-background bg-grid-pattern">
             <OwnerSidebar
                 factoryName={factoryName}
-                userName={profile?.full_name || undefined}
+                userName={userFullName || undefined}
             />
 
             {/* Content area — offset by sidebar on desktop, padding-bottom for bottom nav on mobile */}
