@@ -198,10 +198,38 @@ export async function updateSession(request: NextRequest) {
         const onboardingComplete = jwt.onboarding_complete
         const orgId = jwt.org_id
 
-        // Missing org_id in JWT = stale JWT (race condition) or broken account.
-        // Must sign out properly: copy signOut cookies onto the redirect so the
-        // browser actually clears the session cookie (new response wouldn't have them).
+        // Missing org_id in JWT = possibly a stale JWT (race condition on new signup/join).
+        // Before signing out, attempt a direct DB lookup to confirm it's genuinely missing.
+        // The edge runtime can use fetch-based supabase; we use the anon key but
+        // elevated by service role via a direct REST call.
+        let resolvedOrgId = orgId
         if (!orgId && !pathname.startsWith('/onboarding')) {
+            try {
+                const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+                if (serviceKey && supabaseUrl) {
+                    const profileRes = await fetch(
+                        `${supabaseUrl}/rest/v1/profiles?select=org_id&id=eq.${user!.id}&limit=1`,
+                        {
+                            headers: {
+                                apikey: serviceKey,
+                                Authorization: `Bearer ${serviceKey}`,
+                                'Content-Type': 'application/json',
+                            },
+                        }
+                    )
+                    if (profileRes.ok) {
+                        const [profile] = await profileRes.json()
+                        resolvedOrgId = profile?.org_id ?? undefined
+                    }
+                }
+            } catch {
+                // DB lookup failed — fall through to sign-out below
+            }
+        }
+
+        // If org_id is still absent after DB fallback, the session is genuinely broken
+        if (!resolvedOrgId && !pathname.startsWith('/onboarding')) {
             await supabase.auth.signOut()
             const url = request.nextUrl.clone()
             url.pathname = '/login'
