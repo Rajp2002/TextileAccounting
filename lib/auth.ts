@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * Decodes a JWT without verification (safe — we only use it for claims
@@ -30,7 +31,8 @@ export function parseJWT(token: string): Record<string, any> {
  * requireRole — shared auth utility (ARCH-001 / F1 Auth Hardening)
  *
  * Enforces role-level authorization using JWT claims (O(1) fast path)
- * rather than querying the database.
+ * with a DB fallback for the stale-JWT window that occurs immediately
+ * after new account creation (custom_access_token_hook race condition).
  *
  * @param allowedRoles - array of roles permitted to call this action
  * @returns { user, profile: { role, org_id } } on success
@@ -44,15 +46,30 @@ export async function requireRole(allowedRoles: string[]) {
         redirect('/login')
     }
 
-    const role = session.user.app_metadata.role
-    const org_id = session.user.app_metadata.org_id
+    // Fast path: JWT already has claims
+    let role: string | undefined = session.user.app_metadata?.role
+    let org_id: string | undefined = session.user.app_metadata?.org_id
 
+    // Slow path: JWT is stale (race condition on new signup).
+    // The custom_access_token_hook fired before the profile row was committed.
+    // Fall back to a direct DB lookup via admin client (bypasses RLS).
+    if (!role || !org_id) {
+        const admin = createAdminClient()
+        const { data: profile } = await admin
+            .from('profiles')
+            .select('role, org_id')
+            .eq('id', session.user.id)
+            .maybeSingle()
+        role = profile?.role ?? undefined
+        org_id = profile?.org_id ?? undefined
+    }
+
+    // If still missing after DB check, the account is genuinely broken
     if (!role || !org_id) {
         redirect('/login')
     }
 
     if (!allowedRoles.includes(role)) {
-        // Redirect to their natural home rather than /login for better UX
         redirect(role === 'supervisor' ? '/supervisor/production' : '/login')
     }
 
@@ -64,7 +81,7 @@ export async function requireRole(allowedRoles: string[]) {
 
 /**
  * getAuthenticatedUser — lightweight check for any authenticated user.
- * Uses JWT claims to avoid database queries.
+ * Uses JWT claims to avoid database queries, with DB fallback for stale JWTs.
  * Use when you just need org_id + user.id without a role restriction.
  */
 export async function getAuthenticatedUser() {
@@ -73,8 +90,19 @@ export async function getAuthenticatedUser() {
 
     if (!session) redirect('/login')
 
-    const role = session.user.app_metadata.role
-    const org_id = session.user.app_metadata.org_id
+    let role: string | undefined = session.user.app_metadata?.role
+    let org_id: string | undefined = session.user.app_metadata?.org_id
+
+    if (!role || !org_id) {
+        const admin = createAdminClient()
+        const { data: profile } = await admin
+            .from('profiles')
+            .select('role, org_id')
+            .eq('id', session.user.id)
+            .maybeSingle()
+        role = profile?.role ?? undefined
+        org_id = profile?.org_id ?? undefined
+    }
 
     if (!role || !org_id) redirect('/login')
 
@@ -84,3 +112,4 @@ export async function getAuthenticatedUser() {
         supabase
     }
 }
+
