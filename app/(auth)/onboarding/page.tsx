@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getOnboardingStatus } from '@/app/(auth)/actions/auth'
 import OnboardingChecklist from './checklist'
 
@@ -17,8 +18,7 @@ export default async function OnboardingPage() {
 
     if (!session) redirect('/login')
 
-    // If already complete, skip straight to dashboard
-    // (This is a fast path using the JWT claim — avoids unnecessary DB check)
+    // Decode JWT claims (fast path — avoids DB lookup when claims are present)
     const jwtPayload = (() => {
         try {
             const b64 = session.access_token.split('.')[1]
@@ -26,14 +26,34 @@ export default async function OnboardingPage() {
         } catch { return {} }
     })()
 
+    // Fast path: JWT already has claims — use them directly
     if (jwtPayload.onboarding_complete === true) {
         redirect('/owner/analytics')
     }
 
-    // Only owners can access onboarding
-    if (jwtPayload.user_role !== 'owner') {
+    // Determine role: prefer JWT claim, fall back to DB (handles JWT race condition
+    // where custom_access_token_hook fires before the profile row is visible).
+    let role: string | undefined = jwtPayload.user_role
+
+    if (!role) {
+        // JWT is stale (race condition on new signup) — fetch role from DB directly
+        const admin = createAdminClient()
+        const { data: profile } = await admin
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .maybeSingle()
+        role = profile?.role ?? undefined
+    }
+
+    // Supervisors don't go through onboarding — send them to their home screen
+    if (role === 'supervisor') {
         redirect('/supervisor/production')
     }
+
+    // If role is still unknown (very rare edge case), show the checklist safely
+    // rather than bouncing the user to an unknown route and causing a blank page.
+    // getOnboardingStatus() will redirect to /login if there's truly no session.
 
     // Fetch real-time status (SSR — accurate on page load)
     const status = await getOnboardingStatus()

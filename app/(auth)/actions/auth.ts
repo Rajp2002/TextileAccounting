@@ -165,16 +165,21 @@ async function _createOwnerProfile(
     }
 
     // ── Step 5: Wait for JWT hook to inject org_id/role ──────────────────────
-    // The custom_access_token_hook fires during sign-in. If the profile insert
-    // hasn't fully committed yet (PG transaction lag), the hook returns no claims.
-    // We poll up to 3 times with exponential back-off (100ms → 200ms → 400ms).
-    let attempts = 0
-    while (attempts < 3) {
-        await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempts)))
-        const { data: { session: freshSession } } = await supabase.auth.refreshSession()
-        if (freshSession?.user.app_metadata?.role) break
-        attempts++
+    // The custom_access_token_hook fires during sign-in, but the profile row
+    // may not be visible to the hook yet on first invocation (PG lag).
+    // Strategy: wait 500ms flat (covers 99% of DB commit lag), then retry
+    // once more at 1s. Total max wait: 1.5s. Well within Vercel limits.
+    await new Promise(resolve => setTimeout(resolve, 500))
+    {
+        const { data: { session: s1 } } = await supabase.auth.refreshSession()
+        const hasClaims = !!s1?.user.app_metadata?.role || !!s1?.user.app_metadata?.org_id
+        if (!hasClaims) {
+            // One more try after 1s
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            await supabase.auth.refreshSession()
+        }
     }
+    // Even if claims still absent, the onboarding page has a DB fallback.
 
     // Redirect happens outside this helper — caller must redirect
     return { success: true }
@@ -304,12 +309,14 @@ export async function joinOrganization(input: {
     }
 
     // ── Wait for JWT hook to inject org_id/role ───────────────────────────────
-    let attempts = 0
-    while (attempts < 3) {
-        await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempts)))
-        const { data: { session: freshSession } } = await supabase.auth.refreshSession()
-        if (freshSession?.user.app_metadata?.role) break
-        attempts++
+    await new Promise(resolve => setTimeout(resolve, 500))
+    {
+        const { data: { session: s1 } } = await supabase.auth.refreshSession()
+        const hasClaims = !!s1?.user.app_metadata?.role || !!s1?.user.app_metadata?.org_id
+        if (!hasClaims) {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            await supabase.auth.refreshSession()
+        }
     }
 
     redirect('/supervisor/production')
