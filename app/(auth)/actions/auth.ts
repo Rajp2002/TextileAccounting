@@ -164,6 +164,18 @@ async function _createOwnerProfile(
         return { error: 'Account created but sign-in failed. Please log in.' }
     }
 
+    // ── Step 5: Wait for JWT hook to inject org_id/role ──────────────────────
+    // The custom_access_token_hook fires during sign-in. If the profile insert
+    // hasn't fully committed yet (PG transaction lag), the hook returns no claims.
+    // We poll up to 3 times with exponential back-off (100ms → 200ms → 400ms).
+    let attempts = 0
+    while (attempts < 3) {
+        await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempts)))
+        const { data: { session: freshSession } } = await supabase.auth.refreshSession()
+        if (freshSession?.user.app_metadata?.role) break
+        attempts++
+    }
+
     // Redirect happens outside this helper — caller must redirect
     return { success: true }
 }
@@ -289,6 +301,15 @@ export async function joinOrganization(input: {
 
     if (signInError) {
         return { error: 'Account created but sign-in failed. Please log in.' }
+    }
+
+    // ── Wait for JWT hook to inject org_id/role ───────────────────────────────
+    let attempts = 0
+    while (attempts < 3) {
+        await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempts)))
+        const { data: { session: freshSession } } = await supabase.auth.refreshSession()
+        if (freshSession?.user.app_metadata?.role) break
+        attempts++
     }
 
     redirect('/supervisor/production')
