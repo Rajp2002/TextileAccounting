@@ -49,6 +49,7 @@ export async function requireRole(allowedRoles: string[]) {
     // Fast path: JWT already has claims
     let role: string | undefined = session.user.app_metadata?.role
     let org_id: string | undefined = session.user.app_metadata?.org_id
+    let full_name: string | undefined = session.user.app_metadata?.full_name
 
     // Slow path: JWT is stale (race condition on new signup).
     // The custom_access_token_hook fired before the profile row was committed.
@@ -57,11 +58,12 @@ export async function requireRole(allowedRoles: string[]) {
         const admin = createAdminClient()
         const { data: profile } = await admin
             .from('profiles')
-            .select('role, org_id')
+            .select('role, org_id, full_name')
             .eq('id', session.user.id)
             .maybeSingle()
         role = profile?.role ?? undefined
         org_id = profile?.org_id ?? undefined
+        full_name = profile?.full_name ?? undefined
     }
 
     // If still missing after DB check, the account is genuinely broken
@@ -75,7 +77,7 @@ export async function requireRole(allowedRoles: string[]) {
 
     return {
         user: session.user,
-        profile: { role, org_id }
+        profile: { role, org_id, full_name }
     }
 }
 
