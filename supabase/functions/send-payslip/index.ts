@@ -164,6 +164,7 @@ Deno.serve(async (req) => {
       templateName,
       notificationType: "payslip",
       callbackData,
+      interaktMessageId: result.interaktMessageId,
       status: result.success ? "sent" : "failed",
       errorMessage: result.success ? null : JSON.stringify(result.responseBody),
       payloadSnapshot: { bodyValues, worker_id, settlement_id },

@@ -4,9 +4,16 @@
 -- Fires at 14:30 UTC = 20:00 IST every day.
 -- Calls the send-daily-brief Supabase Edge Function via http_post.
 --
--- PREREQUISITES (set in Supabase Dashboard → Settings → Vault):
---   app.settings.supabase_url   = https://<project-ref>.supabase.co
---   app.settings.service_role_key = <service_role_secret>
+-- PREREQUISITES — set OUTSIDE this file (never commit real values here):
+--   Run once in Supabase SQL editor (Dashboard → SQL Editor):
+--
+--     ALTER DATABASE postgres
+--       SET "app.settings.supabase_url" = 'https://<project-ref>.supabase.co';
+--     ALTER DATABASE postgres
+--       SET "app.settings.service_role_key" = '<your-service-role-key>';
+--
+--   ⚠️  Do NOT paste the actual key into this migration file.
+--   ⚠️  Do NOT commit real credentials to any file tracked by git.
 -- ============================================================
 
 -- Enable extensions (idempotent)

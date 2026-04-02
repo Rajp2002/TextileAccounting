@@ -108,6 +108,7 @@ Deno.serve(async (req) => {
       templateName: TEMPLATE_NAME,
       notificationType: "advance_receipt",
       callbackData,
+      interaktMessageId: result.interaktMessageId,
       status: result.success ? "sent" : "failed",
       errorMessage: result.success ? null : JSON.stringify(result.responseBody),
       payloadSnapshot: { bodyValues, advance_id, worker_id },
