@@ -22,7 +22,8 @@
 - [ ] If already logged in, verify you are **automatically redirected** to the correct dashboard (Owner → `/owner/analytics`, Supervisor → `/supervisor/production`).
 
 ### 1.2 Owner Signup Flow
-- [ ] Navigate to `/signup`. Verify the page renders correctly with Full Name, Email, Password, Confirm Password fields.
+- [ ] Navigate to `/signup`. Verify the page renders correctly with Factory name, Your name, Email, Phone Number, and Password fields.
+- [ ] **Phone validation**: Enter an invalid phone number (e.g. 5 digits, or letters). Verify inline validation enforces exactly 10 numeric digits.
 - [ ] Verify the **role selector** shows "Factory Owner" and "Supervisor" options. Select "Factory Owner."
 - [ ] Verify a **"Factory / Organization Name"** field appears when Owner is selected.
 - [ ] **Password validation**: Try submitting with a password shorter than 6 characters. Verify a validation error appears.
@@ -37,10 +38,10 @@
 ### 1.3 Supervisor Signup Flow
 - [ ] Open an **incognito/private window** (to avoid session conflicts).
 - [ ] Navigate to `/signup`. Select the "Supervisor" role.
-- [ ] Verify a **"Factory ID"** field appears (not "Factory / Organization Name").
-- [ ] Verify the Factory ID input is **uppercase, monospace, centered**, max 6 characters.
-- [ ] **Invalid Join Code**: Enter a random invalid code (e.g., `ZZZZZ1`). Submit. Verify an error toast: "Invalid Factory ID" or similar.
-- [ ] **Valid Join Code**: Enter the Owner's real Join Code. Submit. Verify:
+- [ ] Verify the Join Code input is **uppercase, monospace, centered, with tracking/spacing**, max 8 characters.
+- [ ] **Invalid Join Code**: Type exactly 8 invalid characters (e.g., `12345678`). Verify it automatically validates and shows an invalid code error inline.
+- [ ] **Valid Join Code**: Type exactly the 8 characters of the Owner's real Join Code. Verify it automatically slides open the details form (Name, Email, Phone, Password) without pressing Enter.
+- [ ] **Submit with Phone**: Complete the remaining details, including a valid 10-digit phone number. Submit. Verify:
   - Success toast appears.
   - Redirect to `/supervisor/production`.
 
