@@ -1,27 +1,19 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { OwnerSidebar } from '@/components/navigation/owner-sidebar'
+import { requireRole } from '@/lib/auth'
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
-    // 🔐 F-8 fix: Server-side role check
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-        redirect('/login')
-    }
-
-    const userRole = user.app_metadata?.role
-    const userFullName = user.app_metadata?.full_name
-    const userOrgId = user.app_metadata?.org_id
-
-    if (userRole !== 'owner') {
-        redirect('/supervisor/production')
-    }
+    // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs
+    const { profile } = await requireRole(['owner'])
+    const userRole = profile.role
+    const userOrgId = profile.org_id
+    const userFullName = profile.full_name
 
     // Fetch factory name for the sidebar
     let factoryName = 'Textile SaaS'
     if (userOrgId) {
+        const supabase = await createClient()
         const { data: org } = await supabase
             .from('organizations')
             .select('name')

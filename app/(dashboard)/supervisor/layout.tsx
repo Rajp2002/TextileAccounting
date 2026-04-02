@@ -7,28 +7,17 @@ import { SupervisorNav, MobileSupervisorNav, SupervisorRoleLabel } from '@/compo
 import Image from 'next/image'
 import LogoutButton from '@/components/auth/logout-button'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
+import { requireRole } from '@/lib/auth'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
-    // 🔐 F-8 fix: Server-side role check
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-        redirect('/login')
-    }
-
-    const userRole = user.app_metadata?.role
-    const userOrgId = user.app_metadata?.org_id
-
-    // Redirect owners to their dashboard to enforce role boundaries
-    if (userRole === 'owner') {
-        redirect('/owner/analytics')
-    } else if (userRole !== 'supervisor') {
-        redirect('/login')
-    }
+    // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs
+    const { profile } = await requireRole(['supervisor'])
+    const userRole = profile.role
+    const userOrgId = profile.org_id
 
     let factoryName = 'Textile SaaS'
     if (userOrgId) {
+        const supabase = await createClient()
         const { data: org } = await supabase
             .from('organizations')
             .select('name')
