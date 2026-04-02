@@ -4,11 +4,23 @@ import { createClient } from '@/lib/supabase/server'
 /**
  * Decodes a JWT without verification (safe — we only use it for claims
  * that Supabase Auth already validated server-side).
+ * Uses `atob` instead of Buffer for cross-environment safety.
  */
 export function parseJWT(token: string): Record<string, any> {
     try {
-        const payload = token.split('.')[1]
-        return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'))
+        let payload = token.split('.')[1]
+        payload = payload.replace(/-/g, '+').replace(/_/g, '/')
+        const parsed = JSON.parse(atob(payload))
+        
+        const customClaims = parsed.app_metadata?.custom_claims || parsed
+        
+        return {
+            ...parsed,
+            ...customClaims,
+            user_role: customClaims.user_role ?? parsed.user_metadata?.role,
+            org_id: customClaims.org_id ?? parsed.user_metadata?.org_id,
+            onboarding_complete: customClaims.onboarding_complete ?? false
+        }
     } catch {
         return {}
     }

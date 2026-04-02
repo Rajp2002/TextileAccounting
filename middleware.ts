@@ -8,11 +8,29 @@ import { checkAuthRateLimit } from '@/lib/rate-limit'
  * Decodes a JWT payload without verification.
  * Safe to use here because Supabase middleware validates the token
  * cryptographically before we read it; we only consume the claims.
+ * Uses `atob` for Node/Edge cross-compatibility (Buffer is missing on Edge).
  */
 function parseJWTClaims(token: string): Record<string, any> {
     try {
-        const payload = token.split('.')[1]
-        return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'))
+        let payload = token.split('.')[1]
+        // Convert base64url to standard base64
+        payload = payload.replace(/-/g, '+').replace(/_/g, '/')
+        // Decrypt base64
+        const decoded = atob(payload)
+        
+        // Supabase custom claims are placed inside app_metadata.custom_claims 
+        // or directly at the root depending on the Supabase version. We will attempt 
+        // to grab them from everywhere safely.
+        const parsed = JSON.parse(decoded)
+        const customClaims = parsed.app_metadata?.custom_claims || parsed
+        
+        return {
+            ...parsed,
+            ...customClaims,
+            user_role: customClaims.user_role ?? parsed.user_metadata?.role,
+            org_id: customClaims.org_id ?? parsed.user_metadata?.org_id,
+            onboarding_complete: customClaims.onboarding_complete ?? false
+        }
     } catch {
         return {}
     }
