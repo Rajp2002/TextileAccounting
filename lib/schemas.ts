@@ -69,6 +69,7 @@ export const CreateOrgSchema = z.object({
     email:       z.string().trim().email('Invalid email address').max(254),
     password:    PasswordSchema,
     factoryName: z.string().trim().min(2, 'Factory name required').max(120, 'Factory name too long'),
+    phone:       z.string().trim().regex(/^\d{10}$/, 'Phone must be exactly 10 digits'),
 })
 
 /**
@@ -80,6 +81,7 @@ export const JoinOrgSchema = z.object({
     supervisorName: z.string().trim().min(2, 'Name must be at least 2 characters').max(80, 'Name too long'),
     email:          z.string().trim().email('Invalid email address').max(254),
     password:       PasswordSchema,
+    phone:          z.string().trim().regex(/^\d{10}$/, 'Phone must be exactly 10 digits'),
 })
 
 /**
