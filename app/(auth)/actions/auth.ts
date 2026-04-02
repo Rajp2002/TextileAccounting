@@ -419,8 +419,21 @@ export async function getOnboardingStatus(): Promise<{
 
     if (!session) redirect('/login')
 
-    const orgId = session.user.app_metadata?.org_id
+    // Prefer org_id from JWT (fast path). Fall back to DB lookup when JWT is
+    // stale (race condition: hook fires before profile row is visible on fresh signup).
+    let orgId: string | undefined = session.user.app_metadata?.org_id
 
+    if (!orgId) {
+        const admin = createAdminClient()
+        const { data: profile } = await admin
+            .from('profiles')
+            .select('org_id')
+            .eq('id', session.user.id)
+            .maybeSingle()
+        orgId = profile?.org_id ?? undefined
+    }
+
+    // If we still have no org_id after the DB fallback, the account is truly broken
     if (!orgId) redirect('/login')
 
     const [machines, qualities, workers] = await Promise.all([
