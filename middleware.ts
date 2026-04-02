@@ -199,10 +199,9 @@ export async function updateSession(request: NextRequest) {
         const orgId = jwt.org_id
 
         // Missing org_id in JWT = possibly a stale JWT (race condition on new signup/join).
-        // Before signing out, attempt a direct DB lookup to confirm it's genuinely missing.
-        // The edge runtime can use fetch-based supabase; we use the anon key but
-        // elevated by service role via a direct REST call.
         let resolvedOrgId = orgId
+        let resolvedOnboarding = onboardingComplete
+
         if (!orgId && !pathname.startsWith('/onboarding')) {
             try {
                 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -224,7 +223,33 @@ export async function updateSession(request: NextRequest) {
                     }
                 }
             } catch {
-                // DB lookup failed — fall through to sign-out below
+                // DB lookup failed
+            }
+        }
+
+        // DB fallback for onboardingComplete if JWT says false but they might have finished it
+        if (role === 'owner' && !resolvedOnboarding && resolvedOrgId) {
+            try {
+                const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+                if (serviceKey && supabaseUrl) {
+                    const orgRes = await fetch(
+                        `${supabaseUrl}/rest/v1/organizations?select=onboarding_complete&id=eq.${resolvedOrgId}&limit=1`,
+                        {
+                            headers: {
+                                apikey: serviceKey,
+                                Authorization: `Bearer ${serviceKey}`,
+                                'Content-Type': 'application/json',
+                            },
+                        }
+                    )
+                    if (orgRes.ok) {
+                        const [org] = await orgRes.json()
+                        resolvedOnboarding = org?.onboarding_complete ?? false
+                    }
+                }
+            } catch {
+                // DB lookup failed
             }
         }
 
@@ -245,7 +270,7 @@ export async function updateSession(request: NextRequest) {
         // Onboarding guard: owners must complete setup before accessing ops routes
         if (
             role === 'owner' &&
-            !onboardingComplete &&
+            !resolvedOnboarding &&
             !pathname.startsWith('/onboarding') &&
             !pathname.startsWith('/owner/machines') &&
             !pathname.startsWith('/owner/inventory') &&
@@ -256,9 +281,10 @@ export async function updateSession(request: NextRequest) {
         }
 
         // If onboarding is complete and they navigate to /onboarding → push to dashboard
-        if (role === 'owner' && onboardingComplete && pathname === '/onboarding') {
+        if (role === 'owner' && resolvedOnboarding && pathname === '/onboarding') {
             return NextResponse.redirect(new URL('/owner/analytics', request.url))
         }
+
 
         // ── Strict role boundary enforcement ──────────────────────────────
         // Supervisor trying to access /owner/* routes
