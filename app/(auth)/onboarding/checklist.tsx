@@ -17,7 +17,7 @@ import { createClient } from '@/lib/supabase/client'
 import { addMachine } from '@/app/(dashboard)/owner/actions'
 import { addQuality } from '@/app/(dashboard)/owner/actions'
 import { addMeterWorker } from '@/app/(dashboard)/supervisor/actions'
-import { getOnboardingStatus } from '@/app/(auth)/actions/auth'
+import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/actions/auth'
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -516,9 +516,25 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
     const handleGoToDashboard = async () => {
         if (!status.isComplete) return
         setCompleting(true)
-        const supabase = createClient()
-        await supabase.auth.refreshSession()
-        router.push('/owner/analytics')
+        try {
+            // 1. Write onboarding_complete=true to DB FIRST
+            //    so the JWT hook picks it up on the next token mint.
+            const markRes = await markOnboardingComplete()
+            if (markRes?.error) {
+                toast.error('Could not finalise setup. Please try again.')
+                setCompleting(false)
+                return
+            }
+            // 2. Refresh session — hook now reads onboarding_complete=true
+            //    from DB → new JWT has the flag → middleware unblocks.
+            const supabase = createClient()
+            await supabase.auth.refreshSession()
+            // 3. Navigate
+            router.push('/owner/analytics')
+        } catch {
+            toast.error('Something went wrong. Please try again.')
+            setCompleting(false)
+        }
     }
 
     return (

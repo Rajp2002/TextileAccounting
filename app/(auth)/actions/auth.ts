@@ -457,3 +457,38 @@ export async function getOnboardingStatus(): Promise<{
 
     return { hasMachine, hasQuality, hasWorker, isComplete }
 }
+
+/**
+ * Marks onboarding as complete in the DB so the next JWT refresh picks it up.
+ * Call this BEFORE supabase.auth.refreshSession() in the client so the
+ * custom_access_token_hook mints a JWT with onboarding_complete=true,
+ * which unblocks the middleware gate on /owner/analytics.
+ */
+export async function markOnboardingComplete() {
+    const supabase = await createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return { error: 'Not authenticated' }
+
+    let orgId: string | undefined = session.user.app_metadata?.org_id
+    if (!orgId) {
+        const admin = createAdminClient()
+        const { data: profile } = await admin
+            .from('profiles')
+            .select('org_id')
+            .eq('id', session.user.id)
+            .maybeSingle()
+        orgId = profile?.org_id ?? undefined
+    }
+    if (!orgId) return { error: 'No org found' }
+
+    const { error } = await supabase
+        .from('organizations')
+        .update({ onboarding_complete: true })
+        .eq('id', orgId)
+
+    if (error) {
+        console.error('[markOnboardingComplete] DB update failed:', error)
+        return { error: 'Failed to complete onboarding' }
+    }
+    return { success: true }
+}
