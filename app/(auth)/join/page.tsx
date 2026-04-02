@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,10 +31,10 @@ export default function JoinPage() {
     const [showPassword, setShowPassword]     = useState(false)
     const [errors, setErrors]                 = useState<Record<string, string>>({})
 
-    // ── On-blur: validate the join code ────────────────────────────────────────
+    // ── On-blur / Auto-validate: validate the join code ──────────────────────────
     const handleCodeBlur = async () => {
         const normalized = joinCode.trim().toUpperCase()
-        if (!normalized) return
+        if (!normalized || normalized.length !== 8) return
 
         setCodeValidating(true)
         setCodeResult(null)
@@ -42,7 +42,18 @@ export default function JoinPage() {
         const result = await validateJoinCode(normalized)
         setCodeResult(result)
         setCodeValidating(false)
+        if (result.valid) {
+            setErrors(p => ({ ...p, joinCode: '' }))
+        } else {
+            setErrors(p => ({ ...p, joinCode: result.error || 'Please enter a valid join code' }))
+        }
     }
+
+    useEffect(() => {
+        if (joinCode.length === 8 && !codeResult && !codeValidating) {
+            handleCodeBlur()
+        }
+    }, [joinCode, codeResult, codeValidating])
 
     const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         // Auto-uppercase + strip spaces on each keystroke
@@ -54,23 +65,39 @@ export default function JoinPage() {
 
     const validate = () => {
         const newErrors: Record<string, string> = {}
-        if (!codeResult?.valid) newErrors.joinCode = 'Please enter a valid join code'
-        if (!supervisorName.trim() || supervisorName.trim().length < 2)
-            newErrors.supervisorName = 'Name must be at least 2 characters'
-        if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-            newErrors.email = 'Invalid email address'
-        if (password.length < 8)
-            newErrors.password = 'Password must be at least 8 characters'
-        if (!/[A-Z]/.test(password))
-            newErrors.password = 'Password must contain an uppercase letter'
-        if (!/[0-9]/.test(password))
-            newErrors.password = 'Password must contain a number'
+        if (!codeResult?.valid) {
+            newErrors.joinCode = codeResult?.error || 'Please enter a valid join code'
+        }
+        
+        // Only validate details if the join code is valid and details form is meant to be shown
+        if (codeResult?.valid) {
+            if (!supervisorName.trim() || supervisorName.trim().length < 2)
+                newErrors.supervisorName = 'Name must be at least 2 characters'
+            if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+                newErrors.email = 'Invalid email address'
+            if (password.length < 8)
+                newErrors.password = 'Password must be at least 8 characters'
+            if (!/[A-Z]/.test(password))
+                newErrors.password = 'Password must contain an uppercase letter'
+            if (!/[0-9]/.test(password))
+                newErrors.password = 'Password must contain a number'
+        }
+
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        
+        // If the join code is not yet valid, don't attempt to submit the registration
+        if (!codeResult?.valid) {
+            if (joinCode.length === 8 && !codeValidating) {
+                handleCodeBlur()
+            }
+            return
+        }
+
         if (!validate()) return
 
         setLoading(true)
