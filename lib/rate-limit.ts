@@ -147,7 +147,9 @@ export async function checkRateLimit(
  */
 export async function checkAuthRateLimit(ip: string, isSignup: boolean = false): Promise<number | null> {
     const limiterFn = isSignup ? getSignupLimiter : getAuthLimiter
-    const result = await checkRateLimit(limiterFn, `auth:${ip}`)
+    // Use separate key prefixes so login and signup/join don't share the same bucket
+    const keyPrefix = isSignup ? 'signup' : 'login'
+    const result = await checkRateLimit(limiterFn, `${keyPrefix}:${ip}`)
     return result.success ? null : result.reset
 }
 
