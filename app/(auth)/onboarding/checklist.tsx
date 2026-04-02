@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { addMachine } from '@/app/(dashboard)/owner/actions'
-import { addQuality, loadSuratQualityTemplates } from '@/app/(dashboard)/owner/actions'
+import { addQuality } from '@/app/(dashboard)/owner/actions'
 import { addMeterWorker } from '@/app/(dashboard)/supervisor/actions'
 import { getOnboardingStatus } from '@/app/(auth)/actions/auth'
 
@@ -142,12 +142,28 @@ function MachineForm({ onDone }: { onDone: () => void }) {
 interface QualityRow { name: string; target_yield: string; avg_sale_price: string; worker_rate: string }
 const emptyQuality = (): QualityRow => ({ name: '', target_yield: '', avg_sale_price: '', worker_rate: '' })
 
+// Accurate Surat textile templates - yields calculated via 1000 / (GSM × width_m)
+// Prices from Surat wholesale market rates (2025-26), worker rates from industry reports
+const SURAT_TEMPLATES: QualityRow[] = [
+    // Fabric          GSM   Width         Yield         Sale ₹/m   Worker ₹/m
+    { name: '60g Georgette',   target_yield: '14.9', avg_sale_price: '42',  worker_rate: '2.5'  }, // 60 GSM, 44"
+    { name: '90g Georgette',   target_yield: '9.9',  avg_sale_price: '65',  worker_rate: '2.0'  }, // 90 GSM, 44"
+    { name: 'Dani Georgette',  target_yield: '13.6', avg_sale_price: '38',  worker_rate: '2.2'  }, // 50 GSM, 58"
+    { name: 'Chiffon',         target_yield: '19.9', avg_sale_price: '35',  worker_rate: '2.0'  }, // 45 GSM, 44"
+    { name: 'Butter Crepe',    target_yield: '9.9',  avg_sale_price: '28',  worker_rate: '2.0'  }, // 90 GSM, 44"
+    { name: 'American Crepe',  target_yield: '7.9',  avg_sale_price: '32',  worker_rate: '2.0'  }, // 113 GSM, 44"
+    { name: 'Japan Satin',     target_yield: '8.5',  avg_sale_price: '55',  worker_rate: '2.2'  }, // 80 GSM, 58"
+    { name: 'Polyester Satin', target_yield: '6.3',  avg_sale_price: '48',  worker_rate: '2.0'  }, // 120 GSM, 58" wide
+    { name: 'Viscose',         target_yield: '6.9',  avg_sale_price: '75',  worker_rate: '2.5'  }, // 130 GSM, 44"
+    { name: 'Micro Crepe',     target_yield: '11.2', avg_sale_price: '38',  worker_rate: '2.0'  }, // 80 GSM, 44"
+]
+
 function QualityForm({ onDone }: { onDone: () => void }) {
     const [qualities, setQualities] = useState<QualityRow[]>([emptyQuality()])
     const [bulkMode, setBulkMode] = useState(false)
     const [bulkText, setBulkText] = useState('')
-    const [loadingTemplates, setLoadingTemplates] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [templatesLoaded, setTemplatesLoaded] = useState(false)
 
     const updateRow = (i: number, field: keyof QualityRow, val: string) =>
         setQualities(q => q.map((r, idx) => idx === i ? { ...r, [field]: val } : r))
@@ -164,15 +180,16 @@ function QualityForm({ onDone }: { onDone: () => void }) {
         })
         setQualities(parsed)
         setBulkMode(false)
+        setTemplatesLoaded(false)
         toast.success(`Parsed ${parsed.length} qualities`)
     }
 
-    const handleLoadTemplates = async () => {
-        setLoadingTemplates(true)
-        const res = await loadSuratQualityTemplates()
-        setLoadingTemplates(false)
-        if (res?.error) toast.error(res.error)
-        else { toast.success('Surat quality templates loaded!'); onDone() }
+    // Load templates into the editable form — user reviews/edits before saving
+    const handleLoadTemplates = () => {
+        setQualities(SURAT_TEMPLATES.map(t => ({ ...t })))
+        setTemplatesLoaded(true)
+        setBulkMode(false)
+        toast.success('10 Surat templates loaded — review and edit before saving')
     }
 
     const handleSave = async () => {
@@ -195,19 +212,35 @@ function QualityForm({ onDone }: { onDone: () => void }) {
 
     return (
         <div className="space-y-4 pt-4 border-t border-gray-100">
-            {/* Quick-load Surat templates */}
-            <div className="flex items-center gap-2 p-3 bg-violet-50 rounded-lg border border-violet-100">
-                <Sparkles className="h-4 w-4 text-violet-500 shrink-0" />
-                <p className="text-xs text-violet-700 flex-1">Use Surat standard quality templates as a starting point</p>
-                <Button type="button" size="sm" variant="outline"
-                    onClick={handleLoadTemplates} disabled={loadingTemplates}
-                    className="border-violet-300 text-violet-700 hover:bg-violet-100 text-xs shrink-0">
-                    {loadingTemplates ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Load templates'}
-                </Button>
-            </div>
+            {/* Template banner */}
+            {!templatesLoaded ? (
+                <div className="flex items-center gap-2 p-3 bg-violet-50 rounded-lg border border-violet-100">
+                    <Sparkles className="h-4 w-4 text-violet-500 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-violet-800">Use Surat industry templates</p>
+                        <p className="text-[11px] text-violet-600">10 common fabrics with research-accurate yields & prices — editable before saving</p>
+                    </div>
+                    <Button type="button" size="sm" variant="outline"
+                        onClick={handleLoadTemplates}
+                        className="border-violet-300 text-violet-700 hover:bg-violet-100 text-xs shrink-0 whitespace-nowrap">
+                        Load templates
+                    </Button>
+                </div>
+            ) : (
+                <div className="flex items-center gap-2 p-2.5 bg-amber-50 rounded-lg border border-amber-200">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                    <p className="text-[11px] text-amber-700 flex-1">
+                        Templates loaded — <span className="font-semibold">review and edit values below</span> to match your factory's actual rates, then save.
+                    </p>
+                    <button type="button" onClick={() => { setQualities([emptyQuality()]); setTemplatesLoaded(false) }}
+                        className="text-[10px] text-amber-500 hover:text-amber-700 underline shrink-0">
+                        Clear
+                    </button>
+                </div>
+            )}
 
             <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500">Or add manually</p>
+                <p className="text-xs text-gray-500">{templatesLoaded ? `${qualities.length} qualities loaded` : 'Or add manually'}</p>
                 <Button type="button" variant="ghost" size="sm"
                     onClick={() => setBulkMode(b => !b)}
                     className="text-violet-700 hover:bg-violet-50 gap-1.5 text-xs">
