@@ -1,4 +1,5 @@
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz'
+import { format } from 'date-fns'
 
 export const SURAT_TIMEZONE = 'Asia/Kolkata'
 
@@ -34,9 +35,9 @@ export function getSuratTodayString(): string {
  * Fixes timezone drift where yesterday might compute incorrectly.
  */
 export function getSuratYesterdayString(): string {
-    const d = new Date()
-    d.setDate(d.getDate() - 1)
-    return formatToSurat(d, 'yyyy-MM-dd')
+    const now = getSuratDate()
+    now.setDate(now.getDate() - 1)
+    return format(now, 'yyyy-MM-dd')
 }
 
 /**
