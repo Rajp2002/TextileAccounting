@@ -16,19 +16,15 @@ export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] |
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const lang = useLanguagePreference()
 
-  if (!entries) {
+  if (!entries || entries.length === 0) {
     return (
       <section>
-        <h2 className="text-xl font-bold mb-4">Today&apos;s workers</h2>
-        <div className="bg-card border border-border shadow-sm rounded-xl p-6 text-center bg-muted/20">
-          <p className="text-muted-foreground/70 font-medium">Worker breakdown data unavailable</p>
+        <h2 className="text-xl font-bold mb-4 text-foreground/80 font-heading">Today&apos;s workers</h2>
+        <div className="bg-card border border-border shadow-sm rounded-xl p-8 text-center bg-muted/5">
+          <p className="text-muted-foreground/60 font-medium italic">No production logged today</p>
         </div>
       </section>
     )
-  }
-
-  if (entries.length === 0) {
-    return null // Hide entirely per spec if no workers logged today
   }
 
   const toggle = (id: string) => {

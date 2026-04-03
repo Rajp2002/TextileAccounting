@@ -22,8 +22,8 @@ declare
 begin
   -- Total meters and piece-rate wages for yesterday
   select
-    coalesce(sum(pl.meters), 0),
-    coalesce(sum(pl.meters * pl.worker_rate_snapshot), 0)
+    case when count(pl.id) = 0 then null else coalesce(sum(pl.meters), 0) end,
+    case when count(pl.id) = 0 then null else coalesce(sum(pl.meters * pl.worker_rate_snapshot), 0) end
   into v_total_meters, v_piece_rate_wages
   from production_logs pl
   where pl.org_id = p_org_id
@@ -82,18 +82,18 @@ declare
   v_active_machines  int;
 begin
   select
-    coalesce(sum(pl.meters), 0),
-    coalesce(sum(pl.meters * pl.worker_rate_snapshot), 0)
+    case when count(pl.id) = 0 then null else coalesce(sum(pl.meters), 0) end,
+    case when count(pl.id) = 0 then null else coalesce(sum(pl.meters * pl.worker_rate_snapshot), 0) end
   into v_total_meters, v_piece_rate_wages
   from production_logs pl
   where pl.org_id = p_org_id
     and pl.date   = p_date;
 
-  select count(distinct m.id)
+  select case when count(distinct m.id) = 0 then null else count(distinct m.id) end
   into v_active_machines
   from machines m
   where m.org_id    = p_org_id
-    and m.is_active = true
+    and m.status = 'active'
     and m.current_beam_id is not null;
 
   return jsonb_build_object(
@@ -218,7 +218,7 @@ begin
     as machine_list
     from machines m
     where m.current_order_id = o.id
-      and m.is_active = true
+      and m.status = 'active'
   ) machines on true
   where o.org_id = p_org_id
     and o.status = 'active';
