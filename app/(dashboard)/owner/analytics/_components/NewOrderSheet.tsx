@@ -89,7 +89,7 @@ export function NewOrderSheet({ onSuccess }: { onSuccess?: () => void }) {
           New Order
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:max-w-md">
+      <SheetContent side="right" className="w-full sm:max-w-md flex flex-col h-full">
         <SheetHeader className="mb-6">
           <SheetTitle className="text-2xl font-bold">Create New Order</SheetTitle>
           <SheetDescription>
@@ -98,84 +98,100 @@ export function NewOrderSheet({ onSuccess }: { onSuccess?: () => void }) {
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="party_name"
-              render={({ field }: { field: any }) => (
-                <FormItem>
-                  <FormLabel>Party Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Reliance Textiles" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="quality_id"
-              render={({ field }: { field: any }) => (
-                <FormItem>
-                  <FormLabel>Quality</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col">
+            <div className="space-y-8 flex-1 overflow-y-auto pr-1">
+              <FormField
+                control={form.control}
+                name="party_name"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold">Party Name</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select quality" />
-                      </SelectTrigger>
+                      <Input 
+                        placeholder="e.g. Reliance Textiles" 
+                        {...field} 
+                        className="h-11 rounded-xl"
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {qualities.map(q => (
-                        <SelectItem key={q.id} value={q.id}>
-                          {q.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="total_target_meters"
-              render={({ field }: { field: any }) => (
-                <FormItem>
-                  <FormLabel>Total Target Meters</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="0" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="quality_id"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold">Quality</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-11 rounded-xl">
+                          <SelectValue placeholder="Select quality" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {qualities.map(q => (
+                          <SelectItem key={q.id} value={q.id}>
+                            {q.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="deadline"
-              render={({ field }: { field: any }) => (
-                <FormItem>
-                  <FormLabel>Deadline</FormLabel>
-                  <FormControl>
-                    <Input type="date" min={getSuratTodayString()} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="total_target_meters"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold">Total Target Meters</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="0" 
+                        {...field} 
+                        className="h-11 rounded-xl"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="flex gap-3 pt-4">
+              <FormField
+                control={form.control}
+                name="deadline"
+                render={({ field }: { field: any }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold">Deadline</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="date" 
+                        min={getSuratTodayString()} 
+                        {...field} 
+                        className="h-11 rounded-xl content-center"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex gap-3 pt-6 mt-auto border-t border-border/50 pb-2">
               <Button 
                 type="button" 
                 variant="outline" 
-                className="flex-1"
+                className="flex-1 h-12 rounded-xl text-base font-semibold"
                 onClick={() => setOpen(false)}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1" disabled={loading}>
+              <Button type="submit" className="flex-1 h-12 rounded-xl text-base font-semibold" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Order
               </Button>
