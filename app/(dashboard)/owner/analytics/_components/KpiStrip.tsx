@@ -1,5 +1,6 @@
 import { formatMeters, formatRupees, formatPct, formatDate } from '@/lib/format'
-import { getSuratTodayString } from '@/lib/time'
+import { getSuratTodayString, getSuratYesterdayString } from '@/lib/time'
+import { Badge } from '@/components/ui/badge'
 
 type KpiStripProps = {
   yesterday: {
@@ -15,6 +16,7 @@ type KpiStripProps = {
     date: string
   } | null
   isConnected?: boolean
+  selectedDate?: string
 }
 
 function efficiencyColor(pct: number | null): string {
@@ -24,33 +26,45 @@ function efficiencyColor(pct: number | null): string {
   return 'text-danger'                          // red
 }
 
-export function KpiStrip({ yesterday, today, isConnected = true }: KpiStripProps) {
+export function KpiStrip({ yesterday, today, isConnected = true, selectedDate }: KpiStripProps) {
   // Graceful empty states handling
-  const yData = yesterday || { total_meters: 0, piece_rate_wages: 0, fixed_payroll: 0, efficiency_pct: null }
-  const tData = today || { total_meters: 0, piece_rate_wages: 0, active_machines: 0, date: getSuratTodayString() }
+  const yData = yesterday || { total_meters: null, piece_rate_wages: null, fixed_payroll: null, efficiency_pct: null }
+  const tData = today || { total_meters: null, piece_rate_wages: null, active_machines: null, date: getSuratTodayString() }
   
+  const isHistorical = selectedDate && selectedDate !== getSuratTodayString()
+
   return (
     <div className="flex flex-col rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-      {/* Yesterday Row */}
-      <div className="flex flex-col space-y-4 p-5 bg-muted/30 border-b border-border">
+      {/* Historical OR Yesterday Row */}
+      <div className={`flex flex-col space-y-4 p-5 ${!isHistorical ? 'bg-muted/30 border-b border-border' : ''}`}>
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-sm text-foreground/80">
-            Yesterday · {" "}
-            {yesterday ? formatDate(yesterday ? String(new Date(String(tData.date)).getTime() - 86400000) : '') : 'No data'}
+            {isHistorical ? 'Selected Date' : 'Yesterday'} · {" "}
+            {isHistorical 
+              ? formatDate(selectedDate)
+              : yesterday 
+                ? formatDate(getSuratYesterdayString())
+                : 'No data'}
           </h3>
-          <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">[finalized]</span>
+          <Badge variant="secondary" className="uppercase tracking-wider text-[10px] font-medium">Finalized</Badge>
         </div>
         <div className="grid grid-cols-4 gap-4">
           <div>
-            <div className="text-2xl font-semibold">{formatMeters(yData.total_meters) ?? '—'}</div>
+            <div className="text-2xl font-semibold">
+              {yData.total_meters !== null ? formatMeters(yData.total_meters) : '—'}
+            </div>
             <div className="text-sm text-muted-foreground mt-1">Meters produced</div>
           </div>
           <div>
-            <div className="text-2xl font-semibold">{formatRupees(yData.piece_rate_wages) ?? '—'}</div>
+            <div className="text-2xl font-semibold">
+              {yData.piece_rate_wages !== null ? formatRupees(yData.piece_rate_wages) : '—'}
+            </div>
             <div className="text-sm text-muted-foreground mt-1">Floor wages today</div>
           </div>
           <div>
-            <div className="text-2xl font-semibold">{formatRupees(yData.fixed_payroll) ?? '—'}</div>
+            <div className="text-2xl font-semibold">
+              {yData.fixed_payroll !== null ? formatRupees(yData.fixed_payroll) : '—'}
+            </div>
             <div className="text-sm text-muted-foreground mt-1">Salary burden today</div>
           </div>
           <div>
@@ -62,44 +76,45 @@ export function KpiStrip({ yesterday, today, isConnected = true }: KpiStripProps
         </div>
       </div>
 
-      {/* Today Row */}
-      <div className="flex flex-col space-y-4 p-5">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm text-foreground/80">
-            Today · {formatDate(tData.date)}
-          </h3>
-          <span className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground font-medium">
-            [live 
-            {isConnected ? (
-              <span className="relative flex h-2 w-2 ml-1">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
-              </span>
-            ) : (
-              <span className="relative flex h-2 w-2 ml-1 inline-flex rounded-full bg-muted-foreground"></span>
-            )}
-            ]
-          </span>
-        </div>
-        {!today ? (
-          <div className="text-sm text-muted-foreground">No logs yet today. Production will appear here as supervisors log meters.</div>
-        ) : (
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <div className="text-2xl font-semibold text-foreground">{formatMeters(tData.total_meters) ?? '—'}</div>
-              <div className="text-sm text-muted-foreground mt-1">Meters produced</div>
-            </div>
-            <div>
-              <div className="text-2xl font-semibold text-foreground">{formatRupees(tData.piece_rate_wages) ?? '—'} <span className="text-sm text-muted-foreground font-normal">est.</span></div>
-              <div className="text-sm text-muted-foreground mt-1">Floor wages today</div>
-            </div>
-            <div>
-              <div className="text-2xl font-semibold text-foreground">{tData.active_machines} <span className="text-sm font-normal text-muted-foreground">machines</span></div>
-              <div className="text-sm text-muted-foreground mt-1">Machines running</div>
-            </div>
+      {/* Today Row (Hidden in Historical View) */}
+      {!isHistorical && (
+        <div className="flex flex-col space-y-4 p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold text-sm text-foreground/80">
+              Today · {formatDate(tData.date)}
+            </h3>
+            <Badge variant="outline" className="uppercase tracking-wider text-[10px] font-medium bg-success/10 text-success border-success/20 flex items-center gap-1.5">
+              LIVE
+              {isConnected ? (
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                </span>
+              ) : (
+                <span className="relative flex h-2 w-2 inline-flex rounded-full bg-muted-foreground"></span>
+              )}
+            </Badge>
           </div>
-        )}
-      </div>
+          {!today ? (
+            <div className="text-sm text-muted-foreground">No logs yet today. Production will appear here as supervisors log meters.</div>
+          ) : (
+            <div className="grid grid-cols-4 gap-4">
+              <div>
+                <div className="text-2xl font-semibold text-foreground">{tData.total_meters !== null ? formatMeters(tData.total_meters) : '—'}</div>
+                <div className="text-sm text-muted-foreground mt-1">Meters produced</div>
+              </div>
+              <div>
+                <div className="text-2xl font-semibold text-foreground">{tData.piece_rate_wages !== null ? formatRupees(tData.piece_rate_wages) : '—'} <span className="text-sm text-muted-foreground font-normal">est.</span></div>
+                <div className="text-sm text-muted-foreground mt-1">Floor wages today</div>
+              </div>
+              <div>
+                <div className="text-2xl font-semibold text-foreground">{tData.active_machines ?? '—'} <span className="text-sm font-normal text-muted-foreground">machines</span></div>
+                <div className="text-sm text-muted-foreground mt-1">Machines running</div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

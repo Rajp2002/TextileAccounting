@@ -114,3 +114,70 @@ export async function refreshLiveDashboard() {
     workerBreakdown: (workerBreakdown as any) || null,
   }
 }
+
+export async function fetchHistoricalData(targetDate: string) {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  if (!session) throw new Error('Unauthorized')
+
+  const { org_id } = parseJWT(session.access_token)
+
+  const results = await Promise.allSettled([
+    supabase.rpc('get_kpi_yesterday',          { p_org_id: org_id, p_date: targetDate }),
+    supabase.rpc('get_worker_breakdown_today', { p_org_id: org_id, p_date: targetDate }),
+  ])
+
+  const [kpi, workerBreakdown] = results.map(r =>
+    r.status === 'fulfilled' ? r.value.data : null
+  )
+
+  return {
+    yesterday: kpi,
+    workerBreakdown: (workerBreakdown as any) || null,
+  }
+}
+
+export async function getQualities() {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error('Unauthorized')
+
+  const { org_id } = parseJWT(session.access_token)
+
+  const { data, error } = await supabase
+    .from('qualities')
+    .select('id, name')
+    .eq('org_id', org_id)
+    .order('name')
+
+  if (error) throw error
+  return data
+}
+
+export async function createOrder(payload: {
+  party_name: string
+  quality_id: string
+  total_target_meters: number
+  deadline: string
+}) {
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) throw new Error('Unauthorized')
+
+  const { org_id } = parseJWT(session.access_token)
+
+  const { data, error } = await supabase
+    .from('orders')
+    .insert({
+      ...payload,
+      org_id,
+      status: 'active',
+      start_date: getSuratTodayString()
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
