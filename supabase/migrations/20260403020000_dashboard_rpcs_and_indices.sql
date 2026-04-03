@@ -178,7 +178,7 @@ begin
       'pace_index',        case
                              when (o.deadline - p_date) <= 0 then 0
                              else round(
-                               coalesce(trailing.avg_meters_per_day, 0)
+                               coalesce(trailing_avg.avg_meters_per_day, 0)
                                / nullif(
                                  (o.total_target_meters - coalesce(progress.meters_produced, 0))
                                  / nullif((o.deadline - p_date), 0)
@@ -186,10 +186,10 @@ begin
                              , 2)
                            end,
       'projected_finish_date', case
-                                 when coalesce(trailing.avg_meters_per_day, 0) = 0 then null
+                                 when coalesce(trailing_avg.avg_meters_per_day, 0) = 0 then null
                                  else (p_date + (
                                    (o.total_target_meters - coalesce(progress.meters_produced, 0))
-                                   / trailing.avg_meters_per_day
+                                   / trailing_avg.avg_meters_per_day
                                  )::int)
                                end,
       'assigned_machines', coalesce(machines.machine_list, '[]'::jsonb)
@@ -212,7 +212,7 @@ begin
     , 0) as avg_meters_per_day
     from production_logs pl2
     where pl2.order_id = o.id
-  ) trailing on true
+  ) trailing_avg on true
   left join lateral (
     select jsonb_agg(jsonb_build_object('id', m.id, 'name', m.name))
     as machine_list
