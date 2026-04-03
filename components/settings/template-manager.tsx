@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Plus, Trash2, Save, FileText, Layers, Weight, Hash } from 'lucide-react'
-import { getEstimatorTemplates, upsertEstimatorTemplate, deleteEstimatorTemplate } from '@/app/(dashboard)/owner/estimator/actions'
+import { Loader2, Plus, Trash2, Save, FileText, Layers, Hash } from 'lucide-react'
+import { getEstimatorTemplates, saveAsFabricTemplate, deleteTemplate } from '@/app/(dashboard)/owner/estimator/actions'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
 
@@ -17,10 +17,16 @@ export function TemplateManager() {
     const [editingId, setEditingId] = useState<string | null>(null)
     const [form, setForm] = useState({
         name: '',
-        ppi: 60,
         yarn_denier: 75,
-        gsm: 80,
-        default_yarn_rate: 140
+        calculated_yarn_denier: 75,
+        beam_ends: 3200,
+        picks_per_cm: 23,
+        reed_space_cm: 110,
+        weft_denier: 75,
+        tape_length_m: 100,
+        shrinkage_pct: 5,
+        machine_rate_per_m: 1.5,
+        default_yarn_rate: 180,
     })
 
     const load = async () => {
@@ -36,14 +42,31 @@ export function TemplateManager() {
 
     const handleSave = async () => {
         if (!form.name) return toast.error(t('common.fill_all'))
-        const res = await upsertEstimatorTemplate({
-            id: editingId === 'new' ? undefined : editingId || undefined,
-            ...form
-        })
+        
+        // Note: Currently we only save new templates, not edit existing ones
+        // If editing an existing one, we are technically creating a new one right now.
+        const res = await saveAsFabricTemplate(form)
+        
         if (res.success) {
             toast.success(t('common.updated'))
+            if (editingId && editingId !== 'new') {
+                // If we edited an old one and saved a new one, delete the old one
+                await deleteTemplate(editingId)
+            }
             setEditingId(null)
-            setForm({ name: '', ppi: 60, yarn_denier: 75, gsm: 80, default_yarn_rate: 140 })
+            setForm({
+               name: '',
+               yarn_denier: 75,
+               calculated_yarn_denier: 75,
+               beam_ends: 3200,
+               picks_per_cm: 23,
+               reed_space_cm: 110,
+               weft_denier: 75,
+               tape_length_m: 100,
+               shrinkage_pct: 5,
+               machine_rate_per_m: 1.5,
+               default_yarn_rate: 180,
+            })
             load()
         } else {
             toast.error(res.error || 'Failed to save template')
@@ -52,7 +75,7 @@ export function TemplateManager() {
 
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to delete this template?')) return
-        const res = await deleteEstimatorTemplate(id)
+        const res = await deleteTemplate(id)
         if (res.success) {
             toast.success(t('common.removed'))
             load()
@@ -63,17 +86,23 @@ export function TemplateManager() {
         setEditingId(tpl.id)
         setForm({
             name: tpl.name,
-            ppi: tpl.ppi,
             yarn_denier: tpl.yarn_denier,
-            gsm: tpl.gsm,
-            default_yarn_rate: tpl.default_yarn_rate
+            calculated_yarn_denier: tpl.calculated_yarn_denier ?? tpl.yarn_denier,
+            beam_ends: tpl.beam_ends,
+            picks_per_cm: tpl.ppi, // Note db uses ppi
+            reed_space_cm: tpl.reed_space, // Note db uses reed_space
+            weft_denier: tpl.weft_denier,
+            tape_length_m: tpl.tape_length_m,
+            shrinkage_pct: tpl.shrinkage_pct,
+            machine_rate_per_m: tpl.machine_rate_per_m,
+            default_yarn_rate: tpl.default_yarn_rate,
         })
     }
 
     if (loading && templates.length === 0) return <div className="p-8 text-center text-gray-400">Loading...</div>
 
     return (
-        <Card className="shadow-sm border-gray-200">
+        <Card className="shadow-sm border-gray-200 mt-6">
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                     <div className="flex items-center gap-2">
@@ -95,27 +124,52 @@ export function TemplateManager() {
                             <h4 className="font-bold text-blue-900">
                                 {editingId === 'new' ? t('estimator.settings.new_style') : t('estimator.settings.edit_style')}
                             </h4>
-                            <Button variant="ghost" size="sm" onClick={() => { setEditingId(null); setForm({ name: '', ppi: 60, yarn_denier: 75, gsm: 80, default_yarn_rate: 140 }) }}>{t('common.cancel')}</Button>
+                            <Button variant="ghost" size="sm" onClick={() => { 
+                                setEditingId(null); 
+                                setForm({
+                                    name: '',
+                                    yarn_denier: 75,
+                                    calculated_yarn_denier: 75,
+                                    beam_ends: 3200,
+                                    picks_per_cm: 23,
+                                    reed_space_cm: 110,
+                                    weft_denier: 75,
+                                    tape_length_m: 100,
+                                    shrinkage_pct: 5,
+                                    machine_rate_per_m: 1.5,
+                                    default_yarn_rate: 180,
+                                }) 
+                            }}>{t('common.cancel')}</Button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2 md:col-span-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2 md:col-span-3">
                                 <Label>{t('estimator.settings.fabric_name')}</Label>
                                 <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Japan Satin, Georgette 60g" />
                             </div>
+                            
                             <div className="space-y-2">
-                                <Label className="flex items-center gap-2"><Hash className="h-3 w-3" /> {t('estimator.core.ppi')}</Label>
-                                <Input type="number" value={form.ppi} onChange={e => setForm({...form, ppi: Number(e.target.value)})} />
+                                <Label className="flex items-center gap-2"><Layers className="h-3 w-3" /> Warp Denier</Label>
+                                <Input type="number" value={form.yarn_denier} onChange={e => setForm({...form, yarn_denier: Number(e.target.value), calculated_yarn_denier: Number(e.target.value)})} />
                             </div>
                             <div className="space-y-2">
-                                <Label className="flex items-center gap-2"><Layers className="h-3 w-3" /> {t('estimator.core.denier')}</Label>
-                                <Input type="number" value={form.yarn_denier} onChange={e => setForm({...form, yarn_denier: Number(e.target.value)})} />
+                                <Label className="flex items-center gap-2"><Hash className="h-3 w-3" /> Beam Ends</Label>
+                                <Input type="number" value={form.beam_ends} onChange={e => setForm({...form, beam_ends: Number(e.target.value)})} />
                             </div>
                             <div className="space-y-2">
-                                <Label className="flex items-center gap-2"><Weight className="h-3 w-3" /> {t('estimator.core.gsm')}</Label>
-                                <Input type="number" value={form.gsm} onChange={e => setForm({...form, gsm: Number(e.target.value)})} />
+                                <Label className="flex items-center gap-2"><Layers className="h-3 w-3" /> Weft Denier</Label>
+                                <Input type="number" value={form.weft_denier} onChange={e => setForm({...form, weft_denier: Number(e.target.value)})} />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-2"><Hash className="h-3 w-3" /> Picks/CM</Label>
+                                <Input type="number" value={form.picks_per_cm} onChange={e => setForm({...form, picks_per_cm: Number(e.target.value)})} />
                             </div>
                             <div className="space-y-2">
-                                <Label className="flex items-center gap-2">₹ {t('estimator.process.yarn_rate')}</Label>
+                                <Label className="flex items-center gap-2">Reed Space (cm)</Label>
+                                <Input type="number" value={form.reed_space_cm} onChange={e => setForm({...form, reed_space_cm: Number(e.target.value)})} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-2">₹ Default Yarn Rate</Label>
                                 <Input type="number" value={form.default_yarn_rate} onChange={e => setForm({...form, default_yarn_rate: Number(e.target.value)})} />
                             </div>
                         </div>
@@ -140,10 +194,10 @@ export function TemplateManager() {
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-y-1 text-[11px] text-gray-500 font-medium">
-                                <span>PPI: <b>{tplt.ppi}</b></span>
-                                <span>Denier: <b>{tplt.yarn_denier}</b></span>
-                                <span>GSM: <b>{tplt.gsm}</b></span>
-                                <span>Rate: <b>₹{tplt.default_yarn_rate}</b></span>
+                                <span>Picks: <b>{tplt.ppi}/cm</b></span>
+                                <span>Warp: <b>{tplt.yarn_denier}d</b></span>
+                                <span>Ends: <b>{tplt.beam_ends}</b></span>
+                                <span>Weft: <b>{tplt.weft_denier}d</b></span>
                             </div>
                         </div>
                     ))}

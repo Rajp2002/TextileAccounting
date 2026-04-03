@@ -36,12 +36,20 @@ function NoActiveOrders({ onOrderCreated }: { onOrderCreated?: () => void }) {
   )
 }
 
-function OrderCarousel({ orders, allMachines }: { orders: Order[], allMachines: Array<{ id: string, name: string }> }) {
+function OrderCarousel({ 
+  orders, 
+  allMachines,
+  onRefresh
+}: { 
+  orders: Order[], 
+  allMachines: Array<{ id: string, name: string, current_order_id: string | null }>,
+  onRefresh?: () => void
+}) {
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 px-1 snap-x">
       {orders.map(o => (
         <div key={o.id} className="snap-start">
-          <OrderCard order={o} variant="carousel" allMachines={allMachines} />
+          <OrderCard order={o} variant="carousel" allMachines={allMachines} onRefresh={onRefresh} />
         </div>
       ))}
     </div>
@@ -51,11 +59,13 @@ function OrderCarousel({ orders, allMachines }: { orders: Order[], allMachines: 
 export function OrdersSection({ 
   orders, 
   allMachines,
-  onOrderCreated 
+  onOrderCreated,
+  onRefresh
 }: { 
   orders: Order[] | null, 
-  allMachines: Array<{ id: string, name: string }>,
-  onOrderCreated?: () => void 
+  allMachines: Array<{ id: string, name: string, current_order_id: string | null }>,
+  onOrderCreated?: () => void,
+  onRefresh?: () => void
 }) {
   if (!orders) {
     return (
@@ -74,7 +84,7 @@ export function OrdersSection({
     return (
       <section>
         <SectionHeader title="Active orders" onOrderCreated={onOrderCreated} />
-        <OrderCard order={orders[0]} variant="hero" allMachines={allMachines} />
+        <OrderCard order={orders[0]} variant="hero" allMachines={allMachines} onRefresh={onRefresh} />
       </section>
     )
   }
@@ -84,7 +94,7 @@ export function OrdersSection({
       <section>
         <SectionHeader title="Active orders" count={orders.length} onOrderCreated={onOrderCreated} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {orders.map(o => <OrderCard key={o.id} order={o} variant="grid" allMachines={allMachines} />)}
+          {orders.map(o => <OrderCard key={o.id} order={o} variant="grid" allMachines={allMachines} onRefresh={onRefresh} />)}
         </div>
       </section>
     )
@@ -94,7 +104,7 @@ export function OrdersSection({
   return (
     <section>
       <SectionHeader title="Active orders" count={orders.length} onOrderCreated={onOrderCreated} />
-      <OrderCarousel orders={orders} allMachines={allMachines} />
+      <OrderCarousel orders={orders} allMachines={allMachines} onRefresh={onRefresh} />
     </section>
   )
 }

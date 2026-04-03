@@ -1,453 +1,804 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { 
-    Calculator, 
-    TrendingUp, 
-    AlertTriangle, 
-    Save, 
-    Plus, 
-    Trash2, 
+import {
+    Calculator,
+    TrendingUp,
+    AlertTriangle,
+    Save,
+    ChevronDown,
+    ChevronUp,
     Package,
-    Settings as SettingsIcon,
+    Settings2,
     Loader2,
-    Calendar
+    Calendar,
+    Sparkles,
+    FlaskConical,
+    TriangleAlert,
+    Check,
+    X,
+    BookmarkPlus,
+    ArrowRight,
+    Layers,
 } from 'lucide-react'
-import { 
-    calculateLandedCost, 
-    EstimatorInputs, 
-    EstimatorResult 
-} from '@/lib/estimator'
-import { 
-    getEstimatorSettings, 
-    getEstimatorTemplates, 
+import { calculateLandedCost, runStressTests, EstimatorInputs, DEFAULT_ESTIMATOR_INPUTS } from '@/lib/estimator'
+import {
+    getEstimatorSettings,
+    getEstimatorTemplates,
     saveEstimatorQuote,
-    convertQuoteToOrder
+    saveAsFabricTemplate,
+    convertQuoteToOrder,
 } from './actions'
 import { toast } from 'sonner'
-import { useTranslation } from '@/lib/i18n/context'
-import { format } from 'date-fns'
+import { format, addDays } from 'date-fns'
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog'
+import { useRouter } from 'next/navigation'
 
+// ─── NumericField helper ──────────────────────────────────────────────────────
+function NumericField({
+    label,
+    value,
+    onChange,
+    unit,
+    step = 1,
+    min = 0,
+    hint,
+}: {
+    label: string
+    value: number
+    onChange: (v: number) => void
+    unit?: string
+    step?: number
+    min?: number
+    hint?: string
+}) {
+    return (
+        <div className="space-y-1.5">
+            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">
+                {label}
+            </Label>
+            <div className="relative">
+                <Input
+                    type="number"
+                    step={step}
+                    min={min}
+                    value={value}
+                    onChange={(e) => onChange(Number(e.target.value))}
+                    className="h-12 text-base font-mono font-bold text-center pr-10 bg-slate-900 border-slate-700 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30"
+                />
+                {unit && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-medium pointer-events-none">
+                        {unit}
+                    </span>
+                )}
+            </div>
+            {hint && <p className="text-[10px] text-slate-500">{hint}</p>}
+        </div>
+    )
+}
+
+// ─── Section wrapper ──────────────────────────────────────────────────────────
+function Section({
+    title,
+    icon: Icon,
+    children,
+    accent = 'indigo',
+}: {
+    title: string
+    icon: React.ElementType
+    children: React.ReactNode
+    accent?: 'indigo' | 'emerald' | 'amber' | 'violet'
+}) {
+    const colors = {
+        indigo: 'text-indigo-400 border-indigo-500/40 bg-indigo-500/10',
+        emerald: 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10',
+        amber: 'text-amber-400 border-amber-500/40 bg-amber-500/10',
+        violet: 'text-violet-400 border-violet-500/40 bg-violet-500/10',
+    }
+    return (
+        <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
+            <div className={`px-4 py-3 border-b border-slate-700/50 flex items-center gap-2 ${colors[accent].split(' ').slice(2).join(' ')}`}>
+                <Icon className={`h-4 w-4 ${colors[accent].split(' ')[0]}`} />
+                <span className="text-sm font-bold text-white">{title}</span>
+            </div>
+            <div className="p-4 space-y-4">{children}</div>
+        </div>
+    )
+}
+
+// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function EstimatorPage() {
-    const { t } = useTranslation()
+    const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [converting, setConverting] = useState(false)
+    const [savingTemplate, setSavingTemplate] = useState(false)
     const [settings, setSettings] = useState<any>(null)
     const [templates, setTemplates] = useState<any[]>([])
+    const [showConvertDialog, setShowConvertDialog] = useState(false)
+    const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false)
+    const [templateName, setTemplateName] = useState('')
 
-    // Core inputs
+    // ── Order info ────────────────────────────────────────────────────────
     const [partyName, setPartyName] = useState('')
-    const [fabricStyle, setFabricStyle] = useState('')
-    const [meters, setMeters] = useState(10000)
-    const [ppi, setPpi] = useState(60)
-    const [denier, setDenier] = useState(75)
-    const [gsm, setGsm] = useState(80)
-    const [yarnRate, setYarnRate] = useState(140)
-    const [deadline, setDeadline] = useState(format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'))
+    const [qualityLabel, setQualityLabel] = useState('')          // e.g. "Canvas Shine"
+    const [warpInstruction, setWarpInstruction] = useState('')    // e.g. "50/48 + 70/36 + Rainbow"
+    const [weftInstruction, setWeftInstruction] = useState('')    // e.g. "50/48"
+    const [targetMeters, setTargetMeters] = useState(10000)
+    const [deadline, setDeadline] = useState(
+        format(addDays(new Date(), 30), 'yyyy-MM-dd')
+    )
 
-    // Process inputs
-    const [jobWork, setJobWork] = useState<{name: string, rate: number, shrinkage: number}[]>([])
-    
-    // Margin/Quote
-    const [marginPercent, setMarginPercent] = useState(10)
+    // ── Yarn specs ────────────────────────────────────────────────────────
+    const [yarnDenier, setYarnDenier] = useState(DEFAULT_ESTIMATOR_INPUTS.yarn_denier)
+    const [calcDenier, setCalcDenier] = useState(DEFAULT_ESTIMATOR_INPUTS.calculated_yarn_denier)
+    const [beamEnds, setBeamEnds] = useState(DEFAULT_ESTIMATOR_INPUTS.beam_ends)
+    const [picksCm, setPicksCm] = useState(DEFAULT_ESTIMATOR_INPUTS.picks_per_cm)
+    const [reedSpace, setReedSpace] = useState(DEFAULT_ESTIMATOR_INPUTS.reed_space_cm)
+    const [weftDenier, setWeftDenier] = useState(DEFAULT_ESTIMATOR_INPUTS.weft_denier)
+    const [tapeLength, setTapeLength] = useState(DEFAULT_ESTIMATOR_INPUTS.tape_length_m)
+    const [shrinkage, setShrinkage] = useState(DEFAULT_ESTIMATOR_INPUTS.shrinkage_pct)
 
+    // ── Financials ────────────────────────────────────────────────────────
+    const [yarnRate, setYarnRate] = useState(DEFAULT_ESTIMATOR_INPUTS.yarn_rate_per_kg)
+    const [machineRate, setMachineRate] = useState(DEFAULT_ESTIMATOR_INPUTS.machine_rate_per_m)
+    const [marginPct, setMarginPct] = useState(DEFAULT_ESTIMATOR_INPUTS.margin_pct)
+    const [gstPct, setGstPct] = useState(DEFAULT_ESTIMATOR_INPUTS.gst_pct)
+    const [dailyOverhead, setDailyOverhead] = useState(0)
+    const [activeMachines, setActiveMachines] = useState(24)
+
+    // ── Load settings & templates ─────────────────────────────────────────
     useEffect(() => {
         async function load() {
             setLoading(true)
             const [sRes, tRes] = await Promise.all([
                 getEstimatorSettings(),
-                getEstimatorTemplates()
+                getEstimatorTemplates(),
             ])
-            if (sRes.data) setSettings(sRes.data)
+            if (sRes.data) {
+                const s = sRes.data
+                setMachineRate(Number(s.machine_rate_per_m ?? 1.5))
+                setDailyOverhead(Number(s.daily_overhead ?? 0))
+                setActiveMachines(Number(s.total_active_machines ?? 24))
+                setGstPct(Number(s.gst_rate ?? 5))
+                setSettings(s)
+            }
             if (tRes.data) setTemplates(tRes.data)
             setLoading(false)
         }
         load()
     }, [])
 
-    const applyTemplate = (tpl: any) => {
-        setFabricStyle(tpl.name)
-        setPpi(tpl.ppi)
-        setDenier(tpl.yarn_denier)
-        setGsm(tpl.gsm)
-        setYarnRate(tpl.default_yarn_rate)
-        toast.info(`Applied ${tpl.name} specs`)
-    }
+    // ── Live calculation ──────────────────────────────────────────────────
+    const inputs: EstimatorInputs = useMemo(
+        () => ({
+            yarn_denier: yarnDenier,
+            calculated_yarn_denier: calcDenier,
+            beam_ends: beamEnds,
+            picks_per_cm: picksCm,
+            reed_space_cm: reedSpace,
+            weft_denier: weftDenier,
+            tape_length_m: tapeLength,
+            shrinkage_pct: shrinkage,
+            yarn_rate_per_kg: yarnRate,
+            machine_rate_per_m: machineRate,
+            daily_overhead: dailyOverhead,
+            total_active_machines: activeMachines,
+            margin_pct: marginPct,
+            gst_pct: gstPct,
+        }),
+        [
+            yarnDenier, calcDenier, beamEnds, picksCm, reedSpace, weftDenier,
+            tapeLength, shrinkage, yarnRate, machineRate, marginPct, gstPct,
+            dailyOverhead, activeMachines,
+        ]
+    )
 
-    const inputs: EstimatorInputs = useMemo(() => ({
-        ppi,
-        yarn_denier: denier,
-        gsm,
-        meters,
-        yarn_rate_per_kg: yarnRate,
-        job_work_charges: jobWork,
-        electricity_rate: settings?.electricity_rate ?? 7.5,
-        factory_rent_per_day: settings?.factory_rent_per_day ?? 0,
-        admin_overhead_per_day: settings?.admin_overhead_per_day ?? 0,
-        avg_machine_efficiency: settings?.avg_machine_efficiency ?? 0.85,
-        standard_wastage_percent: settings?.standard_wastage_percent ?? 2.0,
-        gst_rate: settings?.gst_rate ?? 5.0,
-        is_gst_inclusive: settings?.is_gst_inclusive ?? false
-    }), [ppi, denier, gsm, meters, yarnRate, jobWork, settings])
+    const result = useMemo(() => calculateLandedCost(inputs), [inputs])
+    const stressTests = useMemo(() => runStressTests(inputs), [inputs])
 
-    const result: EstimatorResult = useMemo(() => calculateLandedCost(inputs), [inputs])
+    // ── Apply template ────────────────────────────────────────────────────
+    const applyTemplate = useCallback((tpl: any) => {
+        setQualityLabel(tpl.name)
+        if (tpl.yarn_denier) setYarnDenier(Number(tpl.yarn_denier))
+        if (tpl.calculated_yarn_denier) setCalcDenier(Number(tpl.calculated_yarn_denier))
+        if (tpl.beam_ends) setBeamEnds(Number(tpl.beam_ends))
+        if (tpl.ppi) setPicksCm(Number(tpl.ppi))
+        if (tpl.reed_space) setReedSpace(Number(tpl.reed_space))
+        if (tpl.weft_denier) setWeftDenier(Number(tpl.weft_denier))
+        if (tpl.tape_length_m) setTapeLength(Number(tpl.tape_length_m))
+        if (tpl.shrinkage_pct) setShrinkage(Number(tpl.shrinkage_pct))
+        if (tpl.default_yarn_rate) setYarnRate(Number(tpl.default_yarn_rate))
+        if (tpl.machine_rate_per_m) setMachineRate(Number(tpl.machine_rate_per_m))
+        toast.success(`Applied "${tpl.name}" specs`)
+    }, [])
 
-    const quotePrice = Number((result.finalLandedCost * (1 + marginPercent / 100)).toFixed(2))
-    const totalProfit = Number(((quotePrice - result.finalLandedCost) * meters).toFixed(0))
-
-    const handleAddProcess = () => {
-        setJobWork([...jobWork, { name: '', rate: 0, shrinkage: 0 }])
-    }
-
-    const handleSaveQuote = async () => {
-        setSaving(true)
-        const res = await saveEstimatorQuote({
-            party_name: partyName,
-            fabric_style: fabricStyle,
-            meters,
-            ppi,
-            gsm,
-            yarn_rate: yarnRate,
-            quote_price: quotePrice,
-            margin_percent: marginPercent,
-            technical_snapshot: inputs
+    // ── Save as template ──────────────────────────────────────────────────
+    const handleSaveTemplate = async () => {
+        if (!templateName.trim()) return toast.error('Enter a name for this fabric')
+        setSavingTemplate(true)
+        const res = await saveAsFabricTemplate({
+            name: templateName.trim(),
+            yarn_denier: yarnDenier,
+            calculated_yarn_denier: calcDenier,
+            beam_ends: beamEnds,
+            picks_per_cm: picksCm,
+            reed_space_cm: reedSpace,
+            weft_denier: weftDenier,
+            tape_length_m: tapeLength,
+            shrinkage_pct: shrinkage,
+            machine_rate_per_m: machineRate,
+            default_yarn_rate: yarnRate,
         })
+        setSavingTemplate(false)
         if (res.success) {
-            toast.success('Quote snapshot saved')
+            const [tRes] = await Promise.all([getEstimatorTemplates()])
+            if (tRes.data) setTemplates(tRes.data)
+            setShowSaveTemplateDialog(false)
+            setTemplateName('')
+            toast.success('Fabric template saved!')
         } else {
-            toast.error(res.error || 'Failed to save quote')
+            toast.error(res.error ?? 'Failed to save template')
         }
-        setSaving(false)
     }
 
+    // ── Convert to order ──────────────────────────────────────────────────
     const handleConvertToOrder = async () => {
-        if (!partyName) return toast.error('Party Name is required')
+        if (!partyName.trim()) return toast.error('Party name is required')
+        if (!qualityLabel.trim()) return toast.error('Quality label is required')
+        if (!deadline) return toast.error('Delivery date is required')
+
         setConverting(true)
-        
-        // Save quote first to get persistent record
-        const saveRes = await saveEstimatorQuote({
-            party_name: partyName,
-            fabric_style: fabricStyle,
-            meters,
-            ppi,
-            gsm,
-            yarn_rate: yarnRate,
-            quote_price: quotePrice,
-            margin_percent: marginPercent,
-            technical_snapshot: inputs
+        const res = await convertQuoteToOrder({
+            party_name: partyName.trim(),
+            quality_label: qualityLabel.trim(),
+            warp_instruction: warpInstruction.trim() || undefined,
+            weft_instruction: weftInstruction.trim() || undefined,
+            total_target_meters: targetMeters,
+            deadline,
+            yarn_denier: yarnDenier,
+            calculated_yarn_denier: calcDenier,
+            beam_ends: beamEnds,
+            picks_per_cm: picksCm,
+            reed_space_cm: reedSpace,
+            weft_denier: weftDenier,
+            tape_length_m: tapeLength,
+            shrinkage_pct: shrinkage,
+            yarn_rate_per_kg: yarnRate,
+            machine_rate_per_m: machineRate,
+            daily_overhead: dailyOverhead,
+            quote_price_per_m: result.quote_price_per_m,
+            margin_pct: marginPct,
         })
-
-        if (!saveRes.success) {
-            toast.error('Failed to save quote snapshot')
-            setConverting(false)
-            return
-        }
-
-        // Ideally we'd get the quote ID back, but for MVP we launch directly
-        // We'll use a placeholder quote ID logic for order link if needed, 
-        // but the core is creating the Order.
-        // For now, let's just create the order from the inputs.
-        
-        // We need a helper to get one quote ID back. Let's assume the user just wants the order.
-        toast.success('Order launched successfully!')
         setConverting(false)
+        if (res.success) {
+            setShowConvertDialog(false)
+            toast.success('Order created! Pending setup on the floor.')
+            router.push('/owner/orders')
+        } else {
+            toast.error(res.error ?? 'Failed to create order')
+        }
     }
 
-    if (loading) return <div className="p-8 flex items-center justify-center h-screen"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+            </div>
+        )
+    }
 
     return (
-        <div className="p-4 space-y-4 max-w-4xl mx-auto pb-24">
-            <header className="flex items-center justify-between mb-2">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{t('estimator.title')}</h1>
-                    <p className="text-sm text-gray-500">{t('estimator.subtitle')}</p>
-                </div>
-                <Button variant="outline" size="icon" asChild>
-                    <a href="/owner/settings"><SettingsIcon className="h-4 w-4" /></a>
-                </Button>
-            </header>
-
-            {/* Section 1: Core */}
-            <Card className="shadow-sm border-gray-200">
-                <CardHeader className="py-3 bg-gray-50/50">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                        <Calculator className="h-4 w-4 text-primary" />
-                        {t('estimator.core.title')}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>{t('estimator.core.party')}</Label>
-                            <Input 
-                                placeholder="e.g. Sundaram Textiles" 
-                                className="h-11 text-base" 
-                                value={partyName}
-                                onChange={e => setPartyName(e.target.value)}
-                            />
+        <div className="min-h-screen bg-slate-950 text-white">
+            {/* ── STICKY HEADER — Live Quote Banner ─────────────────────── */}
+            <div className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 shadow-lg shadow-slate-950/50">
+                <div className="px-4 py-3 max-w-2xl mx-auto">
+                    <div className="flex items-center justify-between gap-3">
+                        <div>
+                            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                                Cost / meter
+                            </p>
+                            <p className="text-3xl font-black font-mono text-white leading-none">
+                                ₹{result.landed_cost_per_m.toFixed(2)}
+                            </p>
                         </div>
-                        <div className="space-y-2">
-                            <Label>{t('estimator.core.meters')}</Label>
-                            <Input 
-                                type="number" 
-                                className="h-11 text-base font-mono" 
-                                value={meters}
-                                onChange={e => setMeters(Number(e.target.value))}
-                            />
+                        <div className="h-10 w-px bg-slate-700" />
+                        <div className="flex-1">
+                            <p className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">
+                                Quote @ {marginPct}% margin
+                            </p>
+                            <p className="text-3xl font-black font-mono text-indigo-400 leading-none">
+                                ₹{result.quote_price_per_m.toFixed(2)}
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                            <Button
+                                size="sm"
+                                className="h-9 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs gap-1.5"
+                                onClick={() => setShowConvertDialog(true)}
+                            >
+                                <Package className="h-3.5 w-3.5" />
+                                Order
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-9 border-slate-700 text-slate-300 hover:text-white text-xs gap-1.5"
+                                onClick={() => setShowSaveTemplateDialog(true)}
+                            >
+                                <BookmarkPlus className="h-3.5 w-3.5" />
+                                Save
+                            </Button>
                         </div>
                     </div>
 
-                    <div className="pt-2">
-                        <Label className="mb-2 block">{t('estimator.core.style')}</Label>
-                        <div className="flex gap-2 pb-2 overflow-x-auto no-scrollbar">
-                            {templates.map(tpl => (
-                                <Button 
-                                    key={tpl.id} 
-                                    variant={fabricStyle === tpl.name ? "default" : "outline"}
-                                    size="sm"
-                                    className="rounded-full shrink-0"
+                    {/* Cost breakdown mini pills */}
+                    <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar pb-0.5">
+                        <span className="shrink-0 text-[10px] bg-slate-800 text-slate-300 rounded-full px-2 py-0.5 font-mono border border-slate-700">
+                            🧶 Material ₹{result.material_cost_per_m.toFixed(2)}
+                        </span>
+                        <span className="shrink-0 text-[10px] bg-slate-800 text-slate-300 rounded-full px-2 py-0.5 font-mono border border-slate-700">
+                            ⚙️ Machine ₹{result.machine_cost_per_m.toFixed(2)}
+                        </span>
+                        {result.overhead_cost_per_m > 0 && (
+                            <span className="shrink-0 text-[10px] bg-slate-800 text-slate-300 rounded-full px-2 py-0.5 font-mono border border-slate-700">
+                                🏭 Overhead ₹{result.overhead_cost_per_m.toFixed(2)}
+                            </span>
+                        )}
+                        {gstPct > 0 && (
+                            <span className="shrink-0 text-[10px] bg-slate-800 text-slate-300 rounded-full px-2 py-0.5 font-mono border border-slate-700">
+                                📋 GST ₹{result.gst_amount_per_m.toFixed(2)}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* ── MAIN CONTENT ─────────────────────────────────────────── */}
+            <div className="px-4 py-5 space-y-4 max-w-2xl mx-auto pb-24">
+
+                {/* Templates row */}
+                {templates.length > 0 && (
+                    <div>
+                        <p className="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-2">
+                            Saved Fabrics
+                        </p>
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                            {templates.map((tpl) => (
+                                <button
+                                    key={tpl.id}
                                     onClick={() => applyTemplate(tpl)}
+                                    className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold border transition-all ${
+                                        qualityLabel === tpl.name
+                                            ? 'bg-indigo-600 border-indigo-500 text-white'
+                                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-500'
+                                    }`}
                                 >
                                     {tpl.name}
-                                </Button>
+                                </button>
                             ))}
-                            <Button variant="outline" size="sm" className="rounded-full border-dashed" asChild>
-                                <a href="/owner/settings"><Plus className="h-3 w-3 mr-1" /> Custom</a>
-                            </Button>
                         </div>
                     </div>
+                )}
 
-                    <div className="grid grid-cols-3 gap-3">
+                {/* ── Section 1: Order Info ─────────────────────────────── */}
+                <Section title="Order Details" icon={Layers} accent="violet">
+                    <div className="grid grid-cols-1 gap-3">
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-bold text-gray-400">{t('estimator.core.ppi')}</Label>
-                            <Input type="number" className="h-10 text-center font-bold" value={ppi} onChange={e => setPpi(Number(e.target.value))} />
+                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">
+                                Party Name
+                            </Label>
+                            <Input
+                                placeholder="e.g. Sundaram Textiles"
+                                value={partyName}
+                                onChange={(e) => setPartyName(e.target.value)}
+                                className="h-12 text-base bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus:border-indigo-500"
+                            />
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-bold text-gray-400">{t('estimator.core.denier')}</Label>
-                            <Input type="number" className="h-10 text-center font-bold" value={denier} onChange={e => setDenier(Number(e.target.value))} />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-bold text-gray-400">{t('estimator.core.gsm')}</Label>
-                            <Input type="number" className="h-10 text-center font-bold" value={gsm} onChange={e => setGsm(Number(e.target.value))} />
+                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">
+                                Quality Label
+                            </Label>
+                            <Input
+                                placeholder="e.g. Canvas Shine, Japan Satin, Micro Crepe"
+                                value={qualityLabel}
+                                onChange={(e) => setQualityLabel(e.target.value)}
+                                className="h-12 text-base bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus:border-indigo-500"
+                            />
                         </div>
                     </div>
-                </CardContent>
-            </Card>
-
-            {/* Section 2: Technical/Process */}
-            <Card className="shadow-sm border-gray-200">
-                <CardHeader className="py-3 bg-gray-50/50">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-emerald-500" />
-                        {t('estimator.process.title')}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-4">
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <Label className="font-bold">{t('estimator.process.yarn_rate')}</Label>
-                            <Badge variant="secondary" className="text-lg font-mono px-3 py-1">₹{yarnRate}</Badge>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">
+                                Warp Spec
+                            </Label>
+                            <Input
+                                placeholder="50/48 + 70/36 + Rainbow"
+                                value={warpInstruction}
+                                onChange={(e) => setWarpInstruction(e.target.value)}
+                                className="h-12 text-sm bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus:border-indigo-500"
+                            />
                         </div>
-                        <input 
-                            type="range"
-                            className="w-full accent-primary h-2 bg-gray-200 rounded-lg cursor-pointer"
-                            min={100} 
-                            max={250} 
-                            step={1} 
-                            value={yarnRate}
-                            onChange={(e) => setYarnRate(Number(e.target.value))}
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">
+                                Weft Spec
+                            </Label>
+                            <Input
+                                placeholder="50/48"
+                                value={weftInstruction}
+                                onChange={(e) => setWeftInstruction(e.target.value)}
+                                className="h-12 text-sm bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus:border-indigo-500"
+                            />
+                        </div>
+                    </div>
+                </Section>
+
+                {/* ── Section 2: Yarn Specs ─────────────────────────────── */}
+                <Section title="Yarn Technical Specs" icon={Sparkles} accent="indigo">
+                    <div className="grid grid-cols-2 gap-3">
+                        <NumericField
+                            label="Yarn Denier"
+                            value={yarnDenier}
+                            onChange={setYarnDenier}
+                            unit="D"
+                            hint="Single-end yarn denier"
+                        />
+                        <NumericField
+                            label="Calc. Denier"
+                            value={calcDenier}
+                            onChange={setCalcDenier}
+                            unit="D"
+                            hint="After doubling/folding"
+                        />
+                        <NumericField
+                            label="Beam Ends"
+                            value={beamEnds}
+                            onChange={setBeamEnds}
+                            hint="Total warp ends on beam"
+                        />
+                        <NumericField
+                            label="Weft Denier"
+                            value={weftDenier}
+                            onChange={setWeftDenier}
+                            unit="D"
+                            hint="Weft yarn denier"
+                        />
+                        <NumericField
+                            label="Picks / cm"
+                            value={picksCm}
+                            onChange={setPicksCm}
+                            step={0.5}
+                            hint="Picks per centimeter"
+                        />
+                        <NumericField
+                            label="Reed Space"
+                            value={reedSpace}
+                            onChange={setReedSpace}
+                            unit="cm"
+                            hint="Fabric width in cm"
+                        />
+                        <NumericField
+                            label="Tape Length"
+                            value={tapeLength}
+                            onChange={setTapeLength}
+                            unit="m"
+                            hint="Meters per beam tape"
+                        />
+                        <NumericField
+                            label="Shrinkage"
+                            value={shrinkage}
+                            onChange={setShrinkage}
+                            unit="%"
+                            step={0.5}
+                            hint="Combined warp + weft %"
                         />
                     </div>
+                    {/* Beam capacity preview */}
+                    <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-700 flex items-center justify-between">
+                        <span className="text-xs text-slate-400">Estimated meters / beam</span>
+                        <span className="font-mono font-bold text-emerald-400 text-sm">
+                            ≈ {result.estimated_beam_meters.toFixed(0)}m
+                        </span>
+                    </div>
+                </Section>
 
-                    <div className="pt-2 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <Label className="font-bold">{t('estimator.process.job_work')}</Label>
-                            <Button variant="ghost" size="sm" onClick={handleAddProcess} className="h-7 text-xs text-primary">
-                                <Plus className="h-3 w-3 mr-1" /> {t('estimator.process.add_process')}
-                            </Button>
+                {/* ── Section 3: Yarn Rate Slider ───────────────────────── */}
+                <Section title="Market Yarn Rate" icon={TrendingUp} accent="emerald">
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <div>
+                                <p className="text-sm text-slate-400">Current Rate</p>
+                                <p className="text-3xl font-black font-mono text-emerald-400">
+                                    ₹{yarnRate}
+                                    <span className="text-sm text-slate-500 ml-1 font-normal">/kg</span>
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] text-slate-500">Material cost</p>
+                                <p className="text-xl font-bold font-mono text-white">
+                                    ₹{result.material_cost_per_m.toFixed(2)}/m
+                                </p>
+                            </div>
                         </div>
-                        
-                        {jobWork.map((jw, idx) => (
-                            <div key={idx} className="flex gap-2 items-end">
-                                <div className="flex-[2] space-y-1">
-                                    <Input 
-                                        placeholder="Name" 
-                                        className="h-9 px-2" 
-                                        value={jw.name} 
-                                        onChange={e => {
-                                            const next = [...jobWork]
-                                            next[idx].name = e.target.value
-                                            setJobWork(next)
-                                        }}
-                                    />
-                                </div>
-                                <div className="flex-1 space-y-1">
-                                    <Input 
-                                        type="number" 
-                                        placeholder="₹" 
-                                        className="h-9 px-2" 
-                                        value={jw.rate}
-                                        onChange={e => {
-                                            const next = [...jobWork]
-                                            next[idx].rate = Number(e.target.value)
-                                            setJobWork(next)
-                                        }}
-                                    />
-                                </div>
-                                <div className="flex-1 space-y-1">
-                                    <Input 
-                                        type="number" 
-                                        placeholder="% Shr" 
-                                        className="h-9 px-2" 
-                                        value={jw.shrinkage}
-                                        onChange={e => {
-                                            const next = [...jobWork]
-                                            next[idx].shrinkage = Number(e.target.value)
-                                            setJobWork(next)
-                                        }}
-                                    />
-                                </div>
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-9 w-9 text-red-500" 
-                                    onClick={() => setJobWork(jobWork.filter((_, i) => i !== idx))}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                        <input
+                            type="range"
+                            min={80}
+                            max={350}
+                            step={1}
+                            value={yarnRate}
+                            onChange={(e) => setYarnRate(Number(e.target.value))}
+                            className="w-full h-2 rounded-full bg-slate-700 appearance-none cursor-pointer accent-emerald-500"
+                        />
+                        <div className="flex justify-between text-[10px] text-slate-600 mt-1">
+                            <span>₹80</span>
+                            <span>₹350</span>
+                        </div>
+                    </div>
+
+                    {/* Also let user punch it in directly */}
+                    <div className="space-y-1.5">
+                        <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">
+                            Or type exact rate
+                        </Label>
+                        <Input
+                            type="number"
+                            value={yarnRate}
+                            onChange={(e) => setYarnRate(Number(e.target.value))}
+                            className="h-12 text-base font-mono font-bold text-center bg-slate-900 border-slate-700 text-white focus:border-emerald-500"
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <NumericField
+                            label="Machine Rate"
+                            value={machineRate}
+                            onChange={setMachineRate}
+                            unit="₹/m"
+                            step={0.05}
+                            hint="Flat ₹ per meter produced"
+                        />
+                        <NumericField
+                            label="Daily Overhead"
+                            value={dailyOverhead}
+                            onChange={setDailyOverhead}
+                            unit="₹/day"
+                            hint="Rent + admin salaries"
+                        />
+                    </div>
+                </Section>
+
+                {/* ── Section 4: Margin & Quote ─────────────────────────── */}
+                <Section title="Margin & Quote Price" icon={Calculator} accent="amber">
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <p className="text-sm text-slate-400">Desired Margin</p>
+                            <p className="text-3xl font-black text-amber-400">
+                                {marginPct}%
+                            </p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[10px] text-slate-500">Profit per meter</p>
+                            <p className="text-xl font-bold font-mono text-emerald-400">
+                                +₹{result.profit_per_m.toFixed(2)}
+                            </p>
+                        </div>
+                    </div>
+                    <input
+                        type="range"
+                        min={0}
+                        max={50}
+                        step={0.5}
+                        value={marginPct}
+                        onChange={(e) => setMarginPct(Number(e.target.value))}
+                        className="w-full h-2 rounded-full bg-slate-700 appearance-none cursor-pointer accent-amber-500"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-600 mt-1">
+                        <span>0%</span>
+                        <span>50%</span>
+                    </div>
+
+                    {/* GST toggle */}
+                    <div className="grid grid-cols-2 gap-3 mt-2">
+                        <NumericField
+                            label="GST %"
+                            value={gstPct}
+                            onChange={setGstPct}
+                            unit="%"
+                            step={0.5}
+                        />
+                        <div className="bg-indigo-600/20 border border-indigo-500/40 rounded-xl p-3 flex flex-col items-center justify-center">
+                            <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-widest">
+                                Quote Price
+                            </p>
+                            <p className="text-2xl font-black font-mono text-indigo-300 mt-0.5">
+                                ₹{result.quote_price_per_m.toFixed(2)}
+                            </p>
+                            <p className="text-[10px] text-slate-500">per meter</p>
+                        </div>
+                    </div>
+                </Section>
+
+                {/* ── Section 5: Stress Test ──────────────────────────── */}
+                <Section title="Risk Scenarios" icon={FlaskConical} accent="amber">
+                    <div className="space-y-2">
+                        {stressTests.map((test) => (
+                            <div
+                                key={test.scenario}
+                                className="flex items-center justify-between bg-slate-900/60 rounded-xl px-3 py-2.5 border border-slate-700"
+                            >
+                                <span className="text-xs text-slate-400">{test.scenario}</span>
+                                <span className="text-sm font-bold font-mono text-rose-400">
+                                    +₹{test.delta.toFixed(2)}/m
+                                </span>
                             </div>
                         ))}
+                        <p className="text-[10px] text-slate-600 text-center pt-1">
+                            Impact on your landed cost if these scenarios occur
+                        </p>
+                    </div>
+                </Section>
+            </div>
 
-                        <div className="p-3 bg-blue-50 rounded-xl flex items-center justify-between border border-blue-100">
-                             <span className="text-sm font-medium text-blue-900">{t('estimator.process.grey_badge')}</span>
-                             <span className="font-bold text-blue-900 font-mono">₹{result.greyCost.toFixed(2)}/m</span>
+            {/* ── SAVE AS TEMPLATE DIALOG ──────────────────────────────── */}
+            <Dialog open={showSaveTemplateDialog} onOpenChange={setShowSaveTemplateDialog}>
+                <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-sm mx-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-white">Save as Base Fabric</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3 py-2">
+                        <p className="text-sm text-slate-400">
+                            Name this fabric template so you can load these specs instantly next time.
+                        </p>
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">
+                                Fabric Name
+                            </Label>
+                            <Input
+                                placeholder="e.g. Canvas Shine, 60g Georgette"
+                                value={templateName}
+                                onChange={(e) => setTemplateName(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSaveTemplate()}
+                                className="h-12 bg-slate-800 border-slate-600 text-white"
+                                autoFocus
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500">
+                            <div>Denier: {yarnDenier}D / {calcDenier}D calc</div>
+                            <div>Beam Ends: {beamEnds}</div>
+                            <div>Picks: {picksCm}/cm</div>
+                            <div>Reed: {reedSpace}cm</div>
+                            <div>Shrinkage: {shrinkage}%</div>
+                            <div>Rate: ₹{yarnRate}/kg</div>
                         </div>
                     </div>
-                </CardContent>
-            </Card>
+                    <DialogFooter className="gap-2">
+                        <Button
+                            variant="outline"
+                            className="border-slate-700 text-slate-400"
+                            onClick={() => setShowSaveTemplateDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            className="bg-indigo-600 hover:bg-indigo-500"
+                            onClick={handleSaveTemplate}
+                            disabled={savingTemplate}
+                        >
+                            {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookmarkPlus className="h-4 w-4" />}
+                            Save Template
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
-            {/* Results */}
-            <Card className="bg-primary text-primary-foreground shadow-lg border-none overflow-hidden relative">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-primary-foreground/80 text-xs uppercase tracking-widest">{t('estimator.results.title')}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-0.5">
-                            <p className="text-[10px] opacity-70">{t('estimator.results.pure_cost')}</p>
-                            <p className="text-xl font-bold font-mono">₹{result.pureLandedCost.toFixed(2)}</p>
-                        </div>
-                        <div className="space-y-0.5 text-right">
-                            <p className="text-[10px] opacity-70">{t('estimator.results.gst')}</p>
-                            <p className="text-xl font-bold font-mono">₹{result.gstAmount.toFixed(2)}</p>
-                        </div>
-                    </div>
-                    <div className="pt-4 border-t border-white/20">
-                        <p className="text-sm opacity-80 mb-1">{t('estimator.results.final_cost')}</p>
-                        <div className="flex items-baseline gap-2">
-                            <h2 className="text-4xl font-black font-mono">₹{result.finalLandedCost.toFixed(2)}</h2>
-                            <span className="text-sm font-medium opacity-70">/ meter</span>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Margin & Action */}
-            <Card className="shadow-sm border-2 border-primary/10">
-                <CardHeader className="py-3 bg-primary/5">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                        {t('estimator.margin.title')}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-gray-500 font-medium">Margin (%): <span className="text-primary font-bold">{marginPercent}%</span></Label>
-                                <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 font-mono border-emerald-100">
-                                    ₹{totalProfit.toLocaleString('en-IN')} Profit
-                                </Badge>
+            {/* ── CONVERT TO ORDER DIALOG ──────────────────────────────── */}
+            <Dialog open={showConvertDialog} onOpenChange={setShowConvertDialog}>
+                <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-sm mx-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-white flex items-center gap-2">
+                            <Package className="h-5 w-5 text-indigo-400" />
+                            Convert to Floor Order
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3 py-2">
+                        {/* Job Card Preview */}
+                        <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-2.5">
+                            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                                Job Card Preview
+                            </p>
+                            <div className="space-y-1.5 text-sm">
+                                {qualityLabel && (
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-400">Quality</span>
+                                        <span className="font-bold text-white">{qualityLabel}</span>
+                                    </div>
+                                )}
+                                {partyName && (
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-400">Party</span>
+                                        <span className="text-white">{partyName}</span>
+                                    </div>
+                                )}
+                                {warpInstruction && (
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-400">Warp</span>
+                                        <span className="text-white font-mono text-xs">{warpInstruction}</span>
+                                    </div>
+                                )}
+                                {weftInstruction && (
+                                    <div className="flex justify-between">
+                                        <span className="text-slate-400">Weft</span>
+                                        <span className="text-white font-mono text-xs">{weftInstruction}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between">
+                                    <span className="text-slate-400">Quote</span>
+                                    <span className="font-bold text-indigo-400 font-mono">
+                                        ₹{result.quote_price_per_m.toFixed(2)}/m
+                                    </span>
+                                </div>
                             </div>
-                            <input 
-                                type="range"
-                                className="w-full accent-primary h-2 bg-gray-200 rounded-lg cursor-pointer"
-                                min={-5} 
-                                max={50} 
-                                step={0.5} 
-                                value={marginPercent}
-                                onChange={(e) => setMarginPercent(Number(e.target.value))}
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">
+                                Target Meters
+                            </Label>
+                            <Input
+                                type="number"
+                                value={targetMeters}
+                                onChange={(e) => setTargetMeters(Number(e.target.value))}
+                                className="h-12 font-mono font-bold text-center bg-slate-800 border-slate-600 text-white"
                             />
                         </div>
-                        
-                        <div className="bg-gray-50 p-4 rounded-2xl flex flex-col items-center justify-center border border-gray-100">
-                             <Label className="text-[11px] uppercase tracking-wide text-gray-500 mb-1">{t('estimator.margin.quote_price')}</Label>
-                             <div className="text-3xl font-black text-gray-900 font-mono">₹{quotePrice}</div>
-                             <div className="text-[10px] text-emerald-600 font-bold mt-1">₹{(quotePrice - result.finalLandedCost).toFixed(2)} {t('estimator.margin.estimated_profit')}/m</div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label className="flex items-center gap-2"><Calendar className="h-4 w-4 text-gray-400" /> Deadline</Label>
-                            <Input 
-                                type="date" 
-                                className="h-11"
+                        <div className="space-y-1.5">
+                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400 flex items-center gap-1.5">
+                                <Calendar className="h-3 w-3" /> Delivery Date
+                            </Label>
+                            <Input
+                                type="date"
                                 value={deadline}
-                                onChange={e => setDeadline(e.target.value)}
+                                onChange={(e) => setDeadline(e.target.value)}
+                                className="h-12 bg-slate-800 border-slate-600 text-white"
                             />
                         </div>
-
-                        <div className="flex flex-col gap-3 justify-end">
-                            <Button className="w-full h-11 text-base font-bold" onClick={handleConvertToOrder} disabled={converting}>
-                                {converting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Package className="mr-2 h-5 w-5" />}
-                                {t('estimator.margin.convert_order')}
-                            </Button>
-                            <Button variant="outline" className="w-full h-11" onClick={handleSaveQuote} disabled={saving}>
-                                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                {t('estimator.margin.save_quote')}
-                            </Button>
-                        </div>
+                        <p className="text-[11px] text-slate-500">
+                            Order will be created in <strong className="text-slate-400">Pending Setup</strong> state. The supervisor assigns machines next.
+                        </p>
                     </div>
-                </CardContent>
-            </Card>
-
-            {/* Stress Test */}
-            <Card className="shadow-sm border-gray-200">
-                <CardHeader className="py-3">
-                    <CardTitle className="text-xs uppercase tracking-widest text-gray-500 flex items-center gap-2">
-                        <AlertTriangle className="h-3 w-3 text-orange-500" />
-                        {t('estimator.stress.title')}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 space-y-2">
-                        <div className="flex justify-between text-xs font-semibold text-gray-600">
-                            <span>{t('estimator.stress.yarn_hike')}</span>
-                            <span className="text-red-500 font-mono">+₹{(calculateLandedCost({...inputs, yarn_rate_per_kg: yarnRate * 1.05}).finalLandedCost - result.finalLandedCost).toFixed(2)}/m</span>
-                        </div>
-                        <div className="h-2 rounded-full overflow-hidden bg-gray-200">
-                             <div className="h-full bg-orange-500 w-[60%] animate-pulse"></div>
-                        </div>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 space-y-2">
-                        <div className="flex justify-between text-xs font-semibold text-gray-600">
-                            <span>{t('estimator.stress.eff_drop')}</span>
-                            <span className="text-red-500 font-mono">+₹{(calculateLandedCost({...inputs, avg_machine_efficiency: 0.7}).finalLandedCost - result.finalLandedCost).toFixed(2)}/m</span>
-                        </div>
-                        <div className="h-2 rounded-full overflow-hidden bg-gray-200">
-                             <div className="h-full bg-red-500 w-[85%] animate-pulse"></div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    <DialogFooter className="gap-2">
+                        <Button
+                            variant="outline"
+                            className="border-slate-700 text-slate-400"
+                            onClick={() => setShowConvertDialog(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            className="bg-indigo-600 hover:bg-indigo-500 font-bold gap-2"
+                            onClick={handleConvertToOrder}
+                            disabled={converting}
+                        >
+                            {converting ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <ArrowRight className="h-4 w-4" />
+                            )}
+                            Create Floor Order
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

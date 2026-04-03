@@ -2,13 +2,15 @@
 
 import { useState } from 'react'
 import { assignMachinesToOrder } from '../../actions/orders'
+import { cn } from '@/lib/utils'
 
 type MachineAssignSheetProps = {
   orderId: string
   orderName: string
   qualityName: string
   currentMachineIds: string[]
-  allMachines: Array<{ id: string, name: string }>
+  allMachines: Array<{ id: string, name: string, current_order_id: string | null }>
+  onSuccess?: () => void
 }
 
 export function MachineAssignSheet({ 
@@ -16,7 +18,8 @@ export function MachineAssignSheet({
   orderName, 
   qualityName,
   currentMachineIds,
-  allMachines 
+  allMachines,
+  onSuccess
 }: MachineAssignSheetProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set(currentMachineIds))
@@ -33,6 +36,7 @@ export function MachineAssignSheet({
     } else {
       setIsOpen(false)
       setSaving(false)
+      onSuccess?.()
     }
   }
 
@@ -79,22 +83,37 @@ export function MachineAssignSheet({
             <div className="space-y-2 mb-6">
               {allMachines.map(m => {
                 const isSelected = selected.has(m.id)
-                // We're omitting the "Different Quality" disablement here in the client for simplicity unless passed via props
-                // (Wait, the user requested: "Client-side disabling is just UX". But allMachines needs to be passed correctly).
-                const disabled = false // Assume all passed are valid or extended later
+                const isLinkedToOther = m.current_order_id && m.current_order_id !== orderId
+                const disabled = false // Owners can always override
+
                 return (
                   <div 
                     key={m.id}
                     onClick={() => toggle(m.id, disabled)}
-                    className={`flex items-center gap-3 p-3 rounded border cursor-pointer ${
-                      disabled ? 'opacity-50 cursor-not-allowed bg-muted' : 
-                      isSelected ? 'border-primary bg-primary/5' : 'border-border'
+                    className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                      isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/30'
                     }`}
                   >
-                    <input type="checkbox" checked={isSelected} readOnly disabled={disabled} />
-                    <div>
-                      <div className="font-medium">{m.name}</div>
-                      {disabled && <div className="text-xs text-muted-foreground">Different quality</div>}
+                    <div className={cn(
+                      "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
+                      isSelected ? "bg-primary border-primary" : "border-muted-foreground/30"
+                    )}>
+                      {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-foreground flex items-center gap-2">
+                        {m.name}
+                        {isLinkedToOther && (
+                          <span className="text-[10px] bg-warning/15 text-warning px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                            Already Linked
+                          </span>
+                        )}
+                      </div>
+                      {isLinkedToOther && (
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          Currently assigned to another active order
+                        </div>
+                      )}
                     </div>
                   </div>
                 )

@@ -13,10 +13,8 @@ import {
   makeCallbackData,
 } from "../_shared/interakt.ts";
 
-const TEMPLATE_NORMAL = "vastra_daily_brief_normal";
-const TEMPLATE_ALERT = "vastra_daily_brief_alert";
+const TEMPLATE_PIVOT_BRIEF = "vastra_daily_brief_v2"; // A hypothetical new template name for the pivot
 const TEMPLATE_DEADLINE = "vastra_deadline_risk";
-const LEAKAGE_THRESHOLD = Number(Deno.env.get("LEAKAGE_ALERT_THRESHOLD") ?? "5");
 
 Deno.serve(async (_req) => {
   try {
@@ -68,62 +66,51 @@ async function processOwner(
   const phone = owner.whatsapp_number as string;
   const ownerProfileId = owner.id as string;
 
-  // 2. Get today's stats via RPC
+  // 2. Postgres RPC will be updated to return this flat structure.
+  // We expect: total_meters, active_orders (count), top_machine_name, top_machine_meters, labor_liability_inr
   const { data: statsData, error: statsError } = await supabase.rpc(
-    "get_daily_brief_stats",
+    "get_daily_brief_stats_v2", // Note: Need to update the RPC or create this new one. 
     { p_org_id: orgId, p_date: todayStr },
   );
 
   const stats = (!statsError && statsData)
     ? statsData
-    : { total_meters: 0, active_orders: 0, avg_efficiency: 100, estimated_loss_inr: 0, piece_rate_wages: 0 };
+    : { total_meters: 0, active_orders: 0, top_machine_name: 'None', top_machine_meters: 0, labor_liability_inr: 0 };
 
   if (statsError) console.warn(`Stats fetch failed for org ${orgId}: ${statsError.message}`);
 
-  // 3. Pick template based on leakage threshold
-  const hasLeakage = Number(stats.avg_efficiency) < (100 - LEAKAGE_THRESHOLD);
   const callbackData = makeCallbackData("brief", orgId);
 
-  let templateName: string;
-  let bodyValues: string[];
-
-  if (hasLeakage) {
-    templateName = TEMPLATE_ALERT;
-    bodyValues = [
-      factoryName,
-      dateLabel,
-      String(Math.round(Number(stats.total_meters))),
-      String(stats.active_orders),
-      String(Number(stats.avg_efficiency).toFixed(1)),
-      formatInr(Number(stats.estimated_loss_inr)),
-      formatInr(Number(stats.piece_rate_wages)),
-    ];
-  } else {
-    templateName = TEMPLATE_NORMAL;
-    bodyValues = [
-      factoryName,
-      dateLabel,
-      String(Math.round(Number(stats.total_meters))),
-      String(stats.active_orders),
-      String(Number(stats.avg_efficiency).toFixed(1)),
-      formatInr(Number(stats.piece_rate_wages)),
-    ];
-  }
+  // New Template mapping:
+  // {{1}} = Date (e.g. 10 Apr)
+  // {{2}} = Total Meters
+  // {{3}} = Active Orders Count
+  // {{4}} = Top Machine Name
+  // {{5}} = Top Machine Meters
+  // {{6}} = Total Labor Liability
+  const bodyValues = [
+    dateLabel,
+    String(Math.round(Number(stats.total_meters))),
+    String(stats.active_orders),
+    stats.top_machine_name || 'N/A',
+    String(Math.round(Number(stats.top_machine_meters))),
+    formatInr(Number(stats.labor_liability_inr)),
+  ];
 
   // 4. Send daily brief
-  const result = await sendInteraktTemplate(apiKey, phone, templateName, "en", bodyValues, callbackData);
+  const result = await sendInteraktTemplate(apiKey, phone, TEMPLATE_PIVOT_BRIEF, "en", bodyValues, callbackData);
 
   await logDelivery(supabase, {
     orgId,
     ownerProfileId,
     recipientPhone: phone,
-    templateName,
+    templateName: TEMPLATE_PIVOT_BRIEF,
     notificationType: "daily_brief",
     callbackData,
     interaktMessageId: result.interaktMessageId,
     status: result.success ? "sent" : "failed",
     errorMessage: result.success ? null : JSON.stringify(result.responseBody),
-    payloadSnapshot: { bodyValues, template: templateName },
+    payloadSnapshot: { bodyValues, template: TEMPLATE_PIVOT_BRIEF },
   });
 
   if (!result.success) {
@@ -144,7 +131,7 @@ async function checkAndSendDeadlineAlerts(
 ) {
   const { data: orders } = await supabase
     .from("order_progress_summary")
-    .select("order_id, party_name, total_target_meters, progress_percent, pace_index, deadline")
+    .select("order_id, party_name, quality_label, total_target_meters, progress_percent, pace_index, deadline")
     .eq("org_id", orgId)
     .eq("status", "active")
     .lt("pace_index", 1.0);
@@ -154,7 +141,6 @@ async function checkAndSendDeadlineAlerts(
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   for (const order of orders) {
-    // Check cooldown
     const { data: cooldown } = await supabase
       .from("whatsapp_cooldowns")
       .select("sent_at")
@@ -171,15 +157,17 @@ async function checkAndSendDeadlineAlerts(
     );
     const callbackData = makeCallbackData("deadline", orgId);
 
+    // Using quality_label fallback because of flat structure
+    const orderName = order.quality_label || order.party_name;
+
     const result = await sendInteraktTemplate(apiKey, phone, TEMPLATE_DEADLINE, "en", [
       factoryName,
-      order.party_name,
+      orderName,
       String(Math.round(Number(order.progress_percent))),
       String(Math.max(0, daysRemaining)),
       String(Number(order.pace_index).toFixed(2)),
     ], callbackData);
 
-    // Upsert cooldown (replace old entry)
     await supabase.from("whatsapp_cooldowns").upsert({
       org_id: orgId,
       alert_type: "deadline_risk",

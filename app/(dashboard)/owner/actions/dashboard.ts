@@ -56,7 +56,7 @@ export type DashboardData = {
   } | null
   orders: Order[] | null
   workerBreakdown: WorkerBreakdownEntry[] | null
-  machines: Array<{ id: string, name: string }> | null
+  machines: Array<{ id: string, name: string, current_order_id: string | null }> | null
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
@@ -75,7 +75,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     supabase.rpc('get_yield_alert',               { p_org_id: org_id }),
     supabase.rpc('get_active_orders_with_pace',   { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_worker_breakdown_today',    { p_org_id: org_id, p_date: today }),
-    supabase.from('machines').select('id, name').eq('org_id', org_id).eq('status', 'active'),
+    supabase.from('machines').select('id, name, current_order_id').eq('org_id', org_id).eq('status', 'active'),
   ])
 
   const [kpiYesterday, kpiToday, yieldAlert, orders, workerBreakdown, machines] = results.map(r =>
@@ -105,7 +105,7 @@ export async function refreshLiveDashboard() {
     supabase.rpc('get_kpi_today_live',            { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_active_orders_with_pace',   { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_worker_breakdown_today',    { p_org_id: org_id, p_date: today }),
-    supabase.from('machines').select('id, name').eq('org_id', org_id).eq('status', 'active'),
+    supabase.from('machines').select('id, name, current_order_id').eq('org_id', org_id).eq('status', 'active'),
   ])
 
   const [kpiToday, orders, workerBreakdown, machines] = results.map(r =>
