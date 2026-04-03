@@ -29,6 +29,7 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
           today:           liveData.today,
           orders:          liveData.orders,
           workerBreakdown: liveData.workerBreakdown,
+          machines:        liveData.machines,
         }))
       } catch (err) {
         console.error('Failed to sync live dashboard data', err)
@@ -113,7 +114,11 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
       </div>
       <KpiStrip yesterday={data.yesterday} today={data.today} isConnected={isConnected} selectedDate={selectedDate} />
       {data.yieldAlert && <YieldAlertBanner alert={data.yieldAlert} />}
-      <OrdersSection orders={data.orders} onOrderCreated={handleRealtimeUpdate} />
+      <OrdersSection 
+        orders={data.orders} 
+        allMachines={data.machines || []}
+        onOrderCreated={handleRealtimeUpdate} 
+      />
       <WorkerBreakdown entries={data.workerBreakdown} />
     </div>
   )

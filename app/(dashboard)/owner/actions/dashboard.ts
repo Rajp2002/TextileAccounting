@@ -56,6 +56,7 @@ export type DashboardData = {
   } | null
   orders: Order[] | null
   workerBreakdown: WorkerBreakdownEntry[] | null
+  machines: Array<{ id: string, name: string }> | null
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
@@ -74,9 +75,10 @@ export async function getDashboardData(): Promise<DashboardData> {
     supabase.rpc('get_yield_alert',               { p_org_id: org_id }),
     supabase.rpc('get_active_orders_with_pace',   { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_worker_breakdown_today',    { p_org_id: org_id, p_date: today }),
+    supabase.from('machines').select('id, name').eq('org_id', org_id).eq('status', 'active'),
   ])
 
-  const [kpiYesterday, kpiToday, yieldAlert, orders, workerBreakdown] = results.map(r =>
+  const [kpiYesterday, kpiToday, yieldAlert, orders, workerBreakdown, machines] = results.map(r =>
     r.status === 'fulfilled' ? r.value.data : null
   )
 
@@ -86,6 +88,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     yieldAlert:      yieldAlert as any,
     orders:          (orders as any) || null,
     workerBreakdown: (workerBreakdown as any) || null,
+    machines:        (machines as any) || null,
   }
 }
 
@@ -102,9 +105,10 @@ export async function refreshLiveDashboard() {
     supabase.rpc('get_kpi_today_live',            { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_active_orders_with_pace',   { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_worker_breakdown_today',    { p_org_id: org_id, p_date: today }),
+    supabase.from('machines').select('id, name').eq('org_id', org_id).eq('status', 'active'),
   ])
 
-  const [kpiToday, orders, workerBreakdown] = results.map(r =>
+  const [kpiToday, orders, workerBreakdown, machines] = results.map(r =>
     r.status === 'fulfilled' ? r.value.data : null
   )
 
@@ -112,6 +116,7 @@ export async function refreshLiveDashboard() {
     today:           kpiToday ? { ...(kpiToday as any), date: today } : null,
     orders:          (orders as any) || null,
     workerBreakdown: (workerBreakdown as any) || null,
+    machines:        (machines as any) || null,
   }
 }
 

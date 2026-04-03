@@ -36,19 +36,27 @@ function NoActiveOrders({ onOrderCreated }: { onOrderCreated?: () => void }) {
   )
 }
 
-function OrderCarousel({ orders }: { orders: Order[] }) {
+function OrderCarousel({ orders, allMachines }: { orders: Order[], allMachines: Array<{ id: string, name: string }> }) {
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 px-1 snap-x">
       {orders.map(o => (
         <div key={o.id} className="snap-start">
-          <OrderCard order={o} variant="carousel" />
+          <OrderCard order={o} variant="carousel" allMachines={allMachines} />
         </div>
       ))}
     </div>
   )
 }
 
-export function OrdersSection({ orders, onOrderCreated }: { orders: Order[] | null, onOrderCreated?: () => void }) {
+export function OrdersSection({ 
+  orders, 
+  allMachines,
+  onOrderCreated 
+}: { 
+  orders: Order[] | null, 
+  allMachines: Array<{ id: string, name: string }>,
+  onOrderCreated?: () => void 
+}) {
   if (!orders) {
     return (
       <section className="bg-card border border-border shadow-sm rounded-xl p-10 text-center bg-muted/5">
@@ -66,7 +74,7 @@ export function OrdersSection({ orders, onOrderCreated }: { orders: Order[] | nu
     return (
       <section>
         <SectionHeader title="Active orders" onOrderCreated={onOrderCreated} />
-        <OrderCard order={orders[0]} variant="hero" />
+        <OrderCard order={orders[0]} variant="hero" allMachines={allMachines} />
       </section>
     )
   }
@@ -76,7 +84,7 @@ export function OrdersSection({ orders, onOrderCreated }: { orders: Order[] | nu
       <section>
         <SectionHeader title="Active orders" count={orders.length} onOrderCreated={onOrderCreated} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {orders.map(o => <OrderCard key={o.id} order={o} variant="grid" />)}
+          {orders.map(o => <OrderCard key={o.id} order={o} variant="grid" allMachines={allMachines} />)}
         </div>
       </section>
     )
@@ -86,7 +94,7 @@ export function OrdersSection({ orders, onOrderCreated }: { orders: Order[] | nu
   return (
     <section>
       <SectionHeader title="Active orders" count={orders.length} onOrderCreated={onOrderCreated} />
-      <OrderCarousel orders={orders} />
+      <OrderCarousel orders={orders} allMachines={allMachines} />
     </section>
   )
 }
