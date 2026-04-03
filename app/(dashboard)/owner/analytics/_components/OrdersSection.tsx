@@ -1,11 +1,16 @@
+'use client'
+
 import { Order } from '../../actions/dashboard'
 import { OrderCard } from './OrderCard'
 import Link from 'next/link'
 import { NewOrderSheet } from './NewOrderSheet'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, PackagePlus, ArrowRight, LayoutDashboard, Users } from 'lucide-react'
+import { motion } from 'framer-motion'
 
-function SectionHeader({ title, count, onOrderCreated }: { title: string, count?: number, onOrderCreated?: () => void }) {
+// ─── Section Header ───────────────────────────────────────────────────────────
+
+function SectionHeader({ title, count, onOrderCreated }: { title: string; count?: number; onOrderCreated?: () => void }) {
   return (
     <div className="flex justify-between items-end mb-4">
       <h2 className="text-xl font-bold">
@@ -16,33 +21,102 @@ function SectionHeader({ title, count, onOrderCreated }: { title: string, count?
   )
 }
 
+// ─── Empty State ─────────────────────────────────────────────────────────────
+
 function NoActiveOrders({ onOrderCreated }: { onOrderCreated?: () => void }) {
   return (
-    <section className="bg-card border border-border shadow-sm rounded-xl p-10 text-center flex flex-col items-center justify-center min-h-[300px]">
-      <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mb-6">
-        <Plus size={32} className="text-muted-foreground/40" />
-      </div>
-      <h2 className="text-2xl font-bold mb-3">No active orders</h2>
-      <p className="text-muted-foreground max-w-sm mx-auto mb-8">
-        Your order queue is currently empty. Create your first order to start tracking production pace and deadlines.
-      </p>
-      <div className="flex gap-4">
-        <NewOrderSheet onSuccess={onOrderCreated} />
-        <Link href="/owner/orders">
-          <Button variant="outline">View All Orders</Button>
+    <motion.section
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
+    >
+      {/* Subtle gradient accent */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(ellipse 60% 50% at 50% 0%, hsl(var(--primary)/0.06) 0%, transparent 100%)',
+        }}
+      />
+
+      <div className="relative flex flex-col items-center px-8 py-16 text-center">
+        {/* Icon ring */}
+        <div className="mb-6 relative">
+          <div className="w-20 h-20 rounded-2xl bg-primary/8 border border-primary/12 flex items-center justify-center shadow-inner">
+            <PackagePlus className="h-9 w-9 text-primary/50" />
+          </div>
+          <span className="absolute -top-1 -right-1 flex h-4 w-4">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75" />
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-primary/60" />
+          </span>
+        </div>
+
+        {/* Headline */}
+        <h2 className="text-2xl font-bold tracking-tight mb-2">Create your first order</h2>
+        <p className="text-muted-foreground text-sm max-w-xs mx-auto mb-8 leading-relaxed">
+          An order gives your supervisor something to log production against.
+          Once it exists, meters will start flowing in within minutes.
+        </p>
+
+        {/* Primary CTA */}
+        <NewOrderSheet
+          onSuccess={onOrderCreated}
+          trigger={
+            <Button
+              size="lg"
+              className="gap-2 rounded-full px-8 h-12 font-semibold text-base shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            >
+              <Plus className="h-5 w-5" />
+              Add your first order
+            </Button>
+          }
+        />
+
+        {/* Steps guide */}
+        <div className="mt-10 grid grid-cols-3 gap-6 w-full max-w-sm text-left">
+          {[
+            { icon: PackagePlus, label: 'Create order', sublabel: 'Party + fabric + meters', done: false, active: true },
+            { icon: LayoutDashboard, label: 'Assign machine', sublabel: 'Link loom to order', done: false, active: false },
+            { icon: Users, label: 'Log shifts', sublabel: 'Supervisor enters meters', done: false, active: false },
+          ].map((step, i) => (
+            <div key={i} className="flex flex-col items-center text-center gap-1.5">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-1 ${
+                step.active
+                  ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
+                  : 'bg-muted text-muted-foreground'
+              }`}>
+                <step.icon className="h-4 w-4" />
+              </div>
+              <p className={`text-xs font-semibold ${step.active ? 'text-foreground' : 'text-muted-foreground'}`}>
+                {step.label}
+              </p>
+              <p className="text-[10px] text-muted-foreground/70 leading-tight">{step.sublabel}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Secondary link */}
+        <Link
+          href="/owner/orders"
+          className="mt-8 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          View orders page <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
-    </section>
+    </motion.section>
   )
 }
 
-function OrderCarousel({ 
-  orders, 
+// ─── Carousel ─────────────────────────────────────────────────────────────────
+
+function OrderCarousel({
+  orders,
   allMachines,
-  onRefresh
-}: { 
-  orders: Order[], 
-  allMachines: Array<{ id: string, name: string, current_order_id: string | null }>,
+  onRefresh,
+}: {
+  orders: Order[]
+  allMachines: Array<{ id: string; name: string; current_order_id: string | null }>
   onRefresh?: () => void
 }) {
   return (
@@ -56,15 +130,17 @@ function OrderCarousel({
   )
 }
 
-export function OrdersSection({ 
-  orders, 
+// ─── Main Export ──────────────────────────────────────────────────────────────
+
+export function OrdersSection({
+  orders,
   allMachines,
   onOrderCreated,
-  onRefresh
-}: { 
-  orders: Order[] | null, 
-  allMachines: Array<{ id: string, name: string, current_order_id: string | null }>,
-  onOrderCreated?: () => void,
+  onRefresh,
+}: {
+  orders: Order[] | null
+  allMachines: Array<{ id: string; name: string; current_order_id: string | null }>
+  onOrderCreated?: () => void
   onRefresh?: () => void
 }) {
   if (!orders) {
@@ -100,7 +176,6 @@ export function OrdersSection({
     )
   }
 
-  // 5+ orders: horizontal scroll carousel
   return (
     <section>
       <SectionHeader title="Active orders" count={orders.length} onOrderCreated={onOrderCreated} />
