@@ -54,8 +54,8 @@ export type DashboardData = {
     expected_meters: number
     actual_meters: number
   } | null
-  orders: Order[]
-  workerBreakdown: WorkerBreakdownEntry[]
+  orders: Order[] | null
+  workerBreakdown: WorkerBreakdownEntry[] | null
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
@@ -84,8 +84,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     yesterday:       kpiYesterday,
     today:           kpiToday ? { ...(kpiToday as any), date: today } : null,
     yieldAlert:      yieldAlert as any,
-    orders:          (orders as any) ?? [],
-    workerBreakdown: (workerBreakdown as any) ?? [],
+    orders:          (orders as any) || null,
+    workerBreakdown: (workerBreakdown as any) || null,
   }
 }
 
@@ -110,7 +110,7 @@ export async function refreshLiveDashboard() {
 
   return {
     today:           kpiToday ? { ...(kpiToday as any), date: today } : null,
-    orders:          (orders as any) ?? [],
-    workerBreakdown: (workerBreakdown as any) ?? [],
+    orders:          (orders as any) || null,
+    workerBreakdown: (workerBreakdown as any) || null,
   }
 }

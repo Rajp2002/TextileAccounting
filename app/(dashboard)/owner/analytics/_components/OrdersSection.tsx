@@ -36,7 +36,16 @@ function OrderCarousel({ orders }: { orders: Order[] }) {
   )
 }
 
-export function OrdersSection({ orders }: { orders: Order[] }) {
+export function OrdersSection({ orders }: { orders: Order[] | null }) {
+  if (!orders) {
+    return (
+      <section className="bg-card border border-border shadow-sm rounded-xl p-8 text-center bg-muted/20">
+        <h2 className="text-xl font-bold mb-2 text-muted-foreground">Active orders data unavailable</h2>
+        <p className="text-muted-foreground/70 mb-4">Network or server error. Could not load orders.</p>
+      </section>
+    )
+  }
+
   if (orders.length === 0) {
     return <NoActiveOrders />
   }
