@@ -11,8 +11,8 @@ import { useTranslation } from "@/lib/i18n/context"
 
 
 export const navItems = [
-    { name: "Production", href: "/supervisor/production", icon: ClipboardList, translationKey: "production" },
-    { name: "Assignments", href: "/supervisor/assignments", icon: ClipboardCheck, translationKey: "assignments" },
+    { name: "Shift Setup", href: "/supervisor/assignments", icon: ClipboardCheck, translationKey: "assignments" },
+    { name: "Log Production", href: "/supervisor/production", icon: ClipboardList, translationKey: "production" },
     { name: "Workers", href: "/supervisor/workers", icon: Users, translationKey: "workers" },
     { name: "Machines", href: "/supervisor/machines", icon: Settings, translationKey: "machines" },
     { name: "Attendance", href: "/supervisor/attendance", icon: Calendar, translationKey: "attendance" },
@@ -42,7 +42,8 @@ export function SupervisorNav() {
                             )}
                         >
                             <Icon className="h-4 w-4" />
-                            {t(`nav.${item.translationKey}`)}
+                            {/* Fallback pattern like owner navbar so the english string overrides untranslated keys for now */}
+                            {t(`nav.${item.translationKey}`) || item.name}
                         </Link>
                     )
                 })}
@@ -101,7 +102,7 @@ export function MobileSupervisorNav() {
                                 )}
                             >
                                 <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
-                                {t(`nav.${item.translationKey}`)}
+                                {t(`nav.${item.translationKey}`) || item.name}
                             </Link>
                         )
                     })}
@@ -110,4 +111,3 @@ export function MobileSupervisorNav() {
         </Sheet>
     )
 }
-

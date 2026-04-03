@@ -680,3 +680,162 @@ export async function requestAccessCode() {
     return { success: true }
 }
 
+// ─── Shift Assignments (Module 3) ─────────────────────────────────────────────
+
+/**
+ * Get all data needed for the shift setup screen for a given date + shift.
+ * Returns machines, active orders, active workers, and any existing assignments.
+ */
+export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const orgId = profile.org_id
+    const supabase = await createServerClient()
+
+    const [machinesRes, ordersRes, workersRes, assignmentsRes] = await Promise.all([
+        supabase
+            .from('machines')
+            .select('id, name, status, default_rate_per_m, current_order_id')
+            .eq('org_id', orgId)
+            .eq('status', 'active')
+            .order('name'),
+        supabase
+            .from('orders')
+            .select('id, quality_label, party_name, warp_instruction, weft_instruction, total_target_meters, deadline, status')
+            .eq('org_id', orgId)
+            .eq('status', 'active')
+            .order('deadline'),
+        supabase
+            .from('workers')
+            .select('id, name')
+            .eq('org_id', orgId)
+            .eq('is_active', true)
+            .order('name'),
+        supabase
+            .from('shift_assignments')
+            .select('id, machine_id, worker_id, order_id, rate_per_m')
+            .eq('org_id', orgId)
+            .eq('date', date)
+            .eq('shift', shift),
+    ])
+
+    return {
+        machines: machinesRes.data ?? [],
+        orders: ordersRes.data ?? [],
+        workers: workersRes.data ?? [],
+        assignments: assignmentsRes.data ?? [],
+    }
+}
+
+/**
+ * Upsert a single shift assignment for a machine.
+ */
+export async function upsertShiftAssignment(data: {
+    date: string
+    shift: 'day' | 'night'
+    machine_id: string
+    worker_id: number | null
+    order_id: string | null
+    rate_per_m: number
+}) {
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const { error } = await supabase
+        .from('shift_assignments')
+        .upsert(
+            {
+                org_id: profile.org_id,
+                date: data.date,
+                shift: data.shift,
+                machine_id: data.machine_id,
+                worker_id: data.worker_id,
+                order_id: data.order_id,
+                rate_per_m: data.rate_per_m,
+                created_by: user.id,
+            },
+            { onConflict: 'org_id,date,shift,machine_id' }
+        )
+
+    if (error) {
+        console.error('upsertShiftAssignment error:', error)
+        return { error: error.message }
+    }
+
+    revalidatePath('/supervisor/assignments')
+    return { success: true }
+}
+
+/**
+ * Copy all assignments from a previous shift to the current date/shift.
+ */
+export async function copyPreviousShiftAction(
+    targetDate: string,
+    targetShift: 'day' | 'night',
+    sourceDate: string,
+    sourceShift: 'day' | 'night'
+) {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase.rpc('copy_previous_shift', {
+        p_date: targetDate,
+        p_shift: targetShift,
+        p_source_date: sourceDate,
+        p_source_shift: sourceShift,
+    })
+
+    if (error) {
+        console.error('copyPreviousShiftAction error:', error)
+        return { error: error.message }
+    }
+
+    revalidatePath('/supervisor/assignments')
+    return { success: true, copied: data as number }
+}
+
+/**
+ * Bulk-log production at end of shift.
+ * For each entry, looks up the shift assignment rate → falls back to machine.default_rate_per_m → falls back to provided default.
+ */
+export async function bulkLogProduction(entries: {
+    machine_id: string
+    worker_id: number
+    order_id: string | null
+    meters: number
+    shift: 'day' | 'night'
+    date: string
+    rate_per_m?: number
+}[]) {
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    if (entries.length === 0) return { success: true }
+
+    const logs = entries
+        .filter((e) => e.meters > 0)
+        .map((e) => ({
+            org_id: profile.org_id,
+            machine_id: e.machine_id,
+            worker_id: e.worker_id,
+            order_id: e.order_id,
+            meters: e.meters,
+            shift: e.shift,
+            date: e.date,
+            worker_rate_snapshot: e.rate_per_m ?? 1.5,
+            created_by: user.id,
+        }))
+
+    if (logs.length === 0) return { success: true, logged: 0 }
+
+    const { error } = await supabase.from('production_logs').insert(logs)
+
+    if (error) {
+        console.error('bulkLogProduction error:', error)
+        return { error: error.message }
+    }
+
+    revalidatePath('/supervisor/production')
+    revalidatePath('/owner/orders')
+    return { success: true, logged: logs.length }
+}
+

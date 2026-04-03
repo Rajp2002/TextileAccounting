@@ -5,7 +5,8 @@ import { MachineAssignSheet } from './MachineAssignSheet'
 type OrderCardProps = {
   order: Order
   variant: 'hero' | 'grid' | 'carousel'
-  allMachines: Array<{ id: string, name: string }>
+  allMachines: Array<{ id: string, name: string, current_order_id: string | null }>
+  onRefresh?: () => void
 }
 
 function PaceIndexBadge({ paceIndex, daysRemaining }: { paceIndex: number, daysRemaining: number }) {
@@ -64,7 +65,7 @@ function ForecastLabel({ projectedFinishDate, deadline }: { projectedFinishDate:
   )
 }
 
-export function OrderCard({ order, variant, allMachines }: OrderCardProps) {
+export function OrderCard({ order, variant, allMachines, onRefresh }: OrderCardProps) {
   const isComplete = order.meters_remaining <= 0
   const widthClasses = {
     hero: 'w-full',
@@ -130,6 +131,7 @@ export function OrderCard({ order, variant, allMachines }: OrderCardProps) {
             qualityName={order.quality_name}
             currentMachineIds={order.assigned_machines.map((m: { id: string, name: string }) => m.id)}
             allMachines={allMachines} 
+            onSuccess={onRefresh}
           />
         </div>
       </div>

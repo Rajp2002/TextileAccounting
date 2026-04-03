@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Loader2, Save, Zap, Home, Briefcase, Percent } from 'lucide-react'
-import { getEstimatorSettings, upsertEstimatorSettings } from '@/app/(dashboard)/owner/estimator/actions'
+import { Loader2, Save, Zap, Home, Calculator, Percent } from 'lucide-react'
+import { getEstimatorSettings, updateEstimatorSettings } from '@/app/(dashboard)/owner/estimator/actions'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
 
@@ -16,12 +16,9 @@ export function EstimatorSettings() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [settings, setSettings] = useState({
-        electricity_rate: 7.5,
-        factory_rent_per_day: 0,
-        admin_overhead_per_day: 0,
-        avg_machine_efficiency: 0.85,
-        standard_wastage_percent: 2.0,
-        standard_shrinkage_percent: 3.0,
+        machine_rate_per_m: 1.5,
+        daily_overhead: 0,
+        total_active_machines: 24,
         gst_rate: 5.0,
         is_gst_inclusive: false
     })
@@ -31,7 +28,13 @@ export function EstimatorSettings() {
             setLoading(true)
             const res = await getEstimatorSettings()
             if (res.data) {
-                setSettings(res.data)
+                setSettings({
+                    machine_rate_per_m: res.data.machine_rate_per_m ?? 1.5,
+                    daily_overhead: res.data.daily_overhead ?? 0,
+                    total_active_machines: res.data.total_active_machines ?? 24,
+                    gst_rate: res.data.gst_rate ?? 5.0,
+                    is_gst_inclusive: res.data.is_gst_inclusive ?? false,
+                })
             }
             setLoading(false)
         }
@@ -40,7 +43,7 @@ export function EstimatorSettings() {
 
     const handleSave = async () => {
         setSaving(true)
-        const res = await upsertEstimatorSettings(settings)
+        const res = await updateEstimatorSettings(settings)
         if (res.success) {
             toast.success(t('common.updated'))
         } else {
@@ -55,68 +58,56 @@ export function EstimatorSettings() {
         <Card className="shadow-sm border-gray-200">
             <CardHeader>
                 <div className="flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-orange-500" />
-                    <CardTitle>{t('estimator.settings.master_title')}</CardTitle>
+                    <Calculator className="h-5 w-5 text-indigo-500" />
+                    <CardTitle>Estimator Master Configuration</CardTitle>
                 </div>
-                <CardDescription>{t('estimator.settings.master_desc')}</CardDescription>
+                <CardDescription>Global variables used in the Instant Quote calculator.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Electricity */}
+                    {/* Machine Rate */}
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
                             <Zap className="h-4 w-4 text-gray-400" />
-                            {t('estimator.settings.elec_rate')}
+                            Target Machine Rate (₹/m)
                         </Label>
                         <Input 
                             type="number" 
-                            step="0.1"
-                            value={settings.electricity_rate}
-                            onChange={e => setSettings({...settings, electricity_rate: Number(e.target.value)})}
+                            step="0.05"
+                            value={settings.machine_rate_per_m}
+                            onChange={e => setSettings({...settings, machine_rate_per_m: Number(e.target.value)})}
                         />
+                        <p className="text-[10px] text-muted-foreground">The default weaving gross margin for overheads+profit.</p>
                     </div>
 
-                    {/* Rent */}
+                    {/* Daily Overhead */}
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
                             <Home className="h-4 w-4 text-gray-400" />
-                            {t('estimator.settings.rent')}
+                            Daily Fixed Overhead (₹)
                         </Label>
                         <Input 
                             type="number" 
-                            value={settings.factory_rent_per_day}
-                            onChange={e => setSettings({...settings, factory_rent_per_day: Number(e.target.value)})}
+                            value={settings.daily_overhead}
+                            onChange={e => setSettings({...settings, daily_overhead: Number(e.target.value)})}
                         />
+                        <p className="text-[10px] text-muted-foreground">Rent, Admin, Fixed salaries per day.</p>
                     </div>
 
-                    {/* Admin Overhead */}
+                    {/* Active Machines */}
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
-                            <Briefcase className="h-4 w-4 text-gray-400" />
-                            {t('estimator.settings.admin')}
+                            <Zap className="h-4 w-4 text-gray-400" />
+                            Active Machines Setup
                         </Label>
                         <Input 
                             type="number" 
-                            value={settings.admin_overhead_per_day}
-                            onChange={e => setSettings({...settings, admin_overhead_per_day: Number(e.target.value)})}
+                            value={settings.total_active_machines}
+                            onChange={e => setSettings({...settings, total_active_machines: Number(e.target.value)})}
                         />
+                        <p className="text-[10px] text-muted-foreground">Used to divide fixed daily overheads.</p>
                     </div>
 
-                    {/* Efficiency */}
-                    <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
-                            <Percent className="h-4 w-4 text-gray-400" />
-                            {t('estimator.settings.efficiency')}
-                        </Label>
-                        <Input 
-                            type="number" 
-                            step="0.01"
-                            min="0"
-                            max="1"
-                            value={settings.avg_machine_efficiency}
-                            onChange={e => setSettings({...settings, avg_machine_efficiency: Number(e.target.value)})}
-                        />
-                    </div>
                 </div>
 
                 <div className="pt-4 border-t space-y-4">

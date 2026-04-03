@@ -627,13 +627,22 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                 setCompleting(false)
                 return
             }
+
             // 2. Refresh session — hook now reads onboarding_complete=true
             //    from DB → new JWT has the flag → middleware unblocks.
-            const supabase = createClient()
-            await supabase.auth.refreshSession()
-            // 3. Navigate
+            //    We make this non-fatal because the middleware has a DB fallback
+            //    if the JWT refresh fails or is slow.
+            try {
+                const supabase = createClient()
+                await supabase.auth.refreshSession()
+            } catch (err) {
+                console.warn('[OnboardingChecklist] Session refresh failed, proceeding anyway:', err)
+            }
+
+            // 3. Navigate — middleware will handle the final gate check
             router.push('/owner/analytics')
-        } catch {
+        } catch (e) {
+            console.error('[OnboardingChecklist] handleGoToDashboard failed:', e)
             toast.error('Something went wrong. Please try again.')
             setCompleting(false)
         }

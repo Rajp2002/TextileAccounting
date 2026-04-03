@@ -1,161 +1,268 @@
 /**
- * lib/estimator.ts
+ * lib/estimator.ts — Vastra Estimator (Surat Weaving Formula v2)
  *
- * Technical calculation logic for the Vastra Estimator (Surat textile hub).
- * Handles Grey Cost, Job-work with shrinkage, and Overhead allocation.
+ * Core calculation engine using the actual textile weaving math used
+ * in Surat's water-jet and rapier loom factories.
+ *
+ * COST BREAKDOWN:
+ *   1. Material Cost/m  = warp_yarn + weft_yarn  (using denier & ends/picks)
+ *   2. Machine Cost/m   = flat ₹/m rate (covers loom, electricity, maintenance)
+ *   3. Overhead Cost/m  = daily overhead allocated per active machine / daily meters
+ *   4. GST              = optional additive
+ *   ─────────────────────────────────────────────────────────────
+ *   Quote Price/m       = (Total Cost) × (1 + margin%)
  */
 
-import { z } from 'zod'
-
-export interface JobWorkItem {
-    name: string
-    rate: number
-    shrinkage: number
-}
+// ---------------------------------------------------------------------------
+// TYPES
+// ---------------------------------------------------------------------------
 
 export interface EstimatorInputs {
-    // Technical Specs
-    ppi: number
-    yarn_denier: number
-    gsm: number
-    
-    // Order Specs
-    meters: number
-    yarn_rate_per_kg: number
-    job_work_charges: JobWorkItem[]
-    
-    // Master Data / Overheads
-    electricity_rate: number // ₹ per kWh
-    factory_rent_per_day: number
-    admin_overhead_per_day: number // Salaries, etc.
-    avg_machine_efficiency: number // 0.85 etc.
-    standard_wastage_percent: number
-    gst_rate: number
-    is_gst_inclusive: boolean
+  // ── Yarn Specs ──────────────────────────────────────────────────────────
+  /** Actual single-end yarn denier (e.g. 75 for 75D polyester) */
+  yarn_denier: number
+  /** Calculated/effective denier after doubling (e.g. 75/2 → 37.5, or same as yarn_denier for single yarn) */
+  calculated_yarn_denier: number
+  /** Total number of warp ends wound on the beam */
+  beam_ends: number
+  /** Picks per centimeter in the weft direction */
+  picks_per_cm: number
+  /** Finished fabric width in centimeters */
+  reed_space_cm: number
+  /** Weft yarn denier (leave same as yarn_denier if warp = weft) */
+  weft_denier: number
+  /** Length of one full beam tape in meters */
+  tape_length_m: number
+  /** Combined warp + weft shrinkage percentage (e.g. 5 or 8) */
+  shrinkage_pct: number
+
+  // ── Financials ───────────────────────────────────────────────────────────
+  /** Current market rate for raw yarn in ₹/kg */
+  yarn_rate_per_kg: number
+  /** Flat machine charge per meter including electricity (₹/m) */
+  machine_rate_per_m: number
+  /** Factory total fixed daily overhead in ₹ (rent + admin salaries etc.) */
+  daily_overhead: number
+  /** Number of active machines to distribute overhead across */
+  total_active_machines: number
+  /** Desired profit margin percentage */
+  margin_pct: number
+  /** GST rate percentage (0 if not applicable) */
+  gst_pct: number
 }
 
 export interface EstimatorResult {
-    greyCost: number
-    jobWorkCost: number
-    powerCost: number
-    overheadCost: number
-    pureLandedCost: number
-    finalLandedCost: number
-    gstAmount: number
-    dailyProduction: number
+  /** Warp yarn in kg per meter of fabric */
+  warp_yarn_kg_per_m: number
+  /** Weft yarn in kg per meter of fabric */
+  weft_yarn_kg_per_m: number
+  /** Total raw yarn kg per meter (pre-shrinkage) */
+  total_yarn_kg_per_m: number
+  /** Actual yarn needed per meter AFTER accounting for shrinkage loss */
+  yarn_kg_per_m_with_shrinkage: number
+  /** Raw material cost per meter in ₹ */
+  material_cost_per_m: number
+  /** Flat machine/loom cost per meter in ₹ */
+  machine_cost_per_m: number
+  /** Allocated daily overhead per meter in ₹ */
+  overhead_cost_per_m: number
+  /** Sum of all costs before GST */
+  total_cost_per_m: number
+  /** GST amount per meter */
+  gst_amount_per_m: number
+  /** Final landed cost per meter (total + GST) */
+  landed_cost_per_m: number
+  /** Recommended quote price per meter */
+  quote_price_per_m: number
+  /** Profit margin in ₹ per meter */
+  profit_per_m: number
+  /** Estimated meters this beam can produce */
+  estimated_beam_meters: number
+  /** Total order value at quote price */
+  total_order_value: (meters: number) => number
 }
 
+// ---------------------------------------------------------------------------
+// CORE FORMULA
+// ---------------------------------------------------------------------------
+
 /**
- * Calculates the landed cost per meter using the "Surat Logic".
- * Formula: Landed Cost = ((Grey + JobWork) / (1 - Shrinkage)) + ((Power + Labor + Rent) / Daily Production)
+ * Calculates the landed cost per meter using the Surat textile weaving formula.
+ *
+ * WARP yarn weight formula:
+ *   Weight (g/m) = (beam_ends × calculated_yarn_denier) / 9000
+ *   (Denier = grams per 9000 meters; one end contributes denier/9000 g per meter)
+ *
+ * WEFT yarn weight formula:
+ *   Weight (g/m) = (picks_per_cm × 100 × reed_space_cm/100 × weft_denier) / 9000
+ *                = (picks_per_cm × reed_space_cm × weft_denier) / 9000
+ *
+ * Both are then adjusted for shrinkage loss:
+ *   actual_yarn = calculated_yarn / (1 - shrinkage%)
+ *
+ * This gives us the ACTUAL yarn consumed per meter of finished fabric.
  */
-export function calculateLandedCost(inputs: EstimatorInputs) {
-    const {
-        ppi,
-        yarn_denier,
-        gsm,
-        yarn_rate_per_kg,
-        job_work_charges,
-        electricity_rate,
-        factory_rent_per_day,
-        admin_overhead_per_day,
-        avg_machine_efficiency,
-        standard_wastage_percent,
-        gst_rate,
-        is_gst_inclusive
-    } = inputs
+export function calculateLandedCost(inputs: EstimatorInputs): EstimatorResult {
+  const {
+    calculated_yarn_denier,
+    beam_ends,
+    picks_per_cm,
+    reed_space_cm,
+    weft_denier,
+    tape_length_m,
+    shrinkage_pct,
+    yarn_rate_per_kg,
+    machine_rate_per_m,
+    daily_overhead,
+    total_active_machines,
+    margin_pct,
+    gst_pct,
+  } = inputs
 
-    // 1. Grey Cost Calculation
-    // GSM (Grams per Square Meter) is usually provided or calculated.
-    // In Surat, sometimes they use (GSM * Yarn Rate) / 1000 for yarn cost per meter.
-    // We add wastage to the yarn consumption.
-    const greyCostPerMeter = (gsm * yarn_rate_per_kg / 1000) * (1 + standard_wastage_percent / 100)
+  // ── 1. WARP YARN ───────────────────────────────────────────────────────
+  // g/m = (ends × denier) / 9000
+  const warp_g_per_m = (beam_ends * calculated_yarn_denier) / 9000
+  const warp_kg_per_m = warp_g_per_m / 1000
 
-    // 2. Job-Work Cost with Shrinkage
-    // If rate is ₹12 and shrinkage is 3%, the real cost is 12 / (1 - 0.03) = 12.37
-    let totalJobWorkCost = 0
-    let totalShrinkageFactor = 0
-    job_work_charges.forEach(jw => {
-        totalJobWorkCost += jw.rate
-        totalShrinkageFactor += (jw.shrinkage / 100)
-    })
+  // ── 2. WEFT YARN ───────────────────────────────────────────────────────
+  // Total weft thread length per meter of fabric:
+  //   picks_per_cm × 100cm (per meter length) × (reed_space_cm / 100)m (width per pick)
+  // Simplifies to: picks_per_cm × reed_space_cm thread-meters per fabric-meter
+  // Weight (g/m) = (picks_per_cm × reed_space_cm × weft_denier) / 9000
+  const weft_g_per_m = (picks_per_cm * reed_space_cm * weft_denier) / 9000
+  const weft_kg_per_m = weft_g_per_m / 1000
 
-    const directCostPerMeter = (greyCostPerMeter + totalJobWorkCost) / (1 - totalShrinkageFactor)
+  // ── 3. TOTAL YARN (before shrinkage) ───────────────────────────────────
+  const total_yarn_kg_per_m = warp_kg_per_m + weft_kg_per_m
 
-    // 3. Overhead Allocation (Power, Rent, Admin)
-    // Daily Production depends on PPI and Machine Speed.
-    // Standard Loom Speed (e.g., 600 RPM for water-jet)
-    // Meters per Day = (RPM * 60 * 24 * efficiency) / (PPI * 39.37)
-    // Let's assume a default daily production if not provided, or let user adjust.
-    // For now, let's use a simplified "Machine Hour" approach or "Daily Total / Capacity".
-    
-    // Assume 1 machine produces X meters per day based on PPI
-    // Typical Water-jet: 600 RPM.
-    // Meters/min = 600 / PPI
-    // Meters/day = (600 / PPI) * 60 * 24 * efficiency
-    const rpm = 600 // Standard fallback
-    const dailyProductionPerMachine = (rpm / ppi) * 60 * 24 * avg_machine_efficiency * 0.0254 // Converting picks to meters approx
-    // Simplified Surat benchmark: 80-100 meters per day for 60 PPI.
-    const fallbackDailyProduction = (100 * 60) / ppi // Inverse relation to PPI
-    const realDailyProduction = dailyProductionPerMachine > 0 ? dailyProductionPerMachine : fallbackDailyProduction
+  // ── 4. SHRINKAGE ADJUSTMENT ─────────────────────────────────────────────
+  // More yarn is loaded than the finished fabric length would suggest.
+  // If shrinkage is 5%, we need 1/(1-0.05) = 1.0526× more yarn.
+  const shrinkage_factor = 1 / (1 - shrinkage_pct / 100)
+  const yarn_kg_per_m_with_shrinkage = total_yarn_kg_per_m * shrinkage_factor
 
-    // Power Cost approx ₹2 per meter (Surat benchmark)
-    // Power (kWh) = (Machine kW * 24) / Daily Production
-    const machineKW = 2.5 // Typical water-jet loom power
-    const powerCostPerMeter = (machineKW * 24 * electricity_rate) / realDailyProduction
+  // ── 5. MATERIAL COST ───────────────────────────────────────────────────
+  const material_cost_per_m = yarn_kg_per_m_with_shrinkage * yarn_rate_per_kg
 
-    // Rent & Admin (Fixed)
-    // We need to know how many machines the factory has to distribute rent.
-    // Or we assume a "per machine" rent assignment.
-    // Let's assume the factory has 24 machines for standard overhead distribution if not specified.
-    const machineCount = 24 
-    const fixedOverheadPerMachinePerDay = (factory_rent_per_day + admin_overhead_per_day) / machineCount
-    const overheadCostPerMeter = fixedOverheadPerMachinePerDay / realDailyProduction
+  // ── 6. MACHINE COST ────────────────────────────────────────────────────
+  // Flat rate — covers electricity, loom depreciation, maintenance
+  const machine_cost_per_m_val = machine_rate_per_m
 
-    const pureLandedCost = directCostPerMeter + powerCostPerMeter + overheadCostPerMeter
+  // ── 7. OVERHEAD ALLOCATION ──────────────────────────────────────────────
+  // Overhead is the daily fixed cost divided across all active machines.
+  // Each machine is responsible for 1 share. Within that share, cost is
+  // attributed per meter produced (use a standard ~100m/day/machine default
+  // when we don't have live data; owners set actual numbers in settings).
+  const STANDARD_DAILY_METERS_PER_MACHINE = 100 // conservative benchmark
+  const machines = Math.max(total_active_machines, 1)
+  const overhead_per_machine_per_day = daily_overhead / machines
+  const overhead_cost_per_m =
+    overhead_per_machine_per_day / STANDARD_DAILY_METERS_PER_MACHINE
 
-    // 4. GST Logic
-    const gstFactor = 1 + (gst_rate / 100)
-    const finalLandedCost = is_gst_inclusive ? pureLandedCost : pureLandedCost * gstFactor
+  // ── 8. TOTAL COST ──────────────────────────────────────────────────────
+  const total_cost_per_m =
+    material_cost_per_m + machine_cost_per_m_val + overhead_cost_per_m
 
-    return {
-        greyCost: greyCostPerMeter,
-        jobWorkCost: totalJobWorkCost,
-        powerCost: powerCostPerMeter,
-        overheadCost: overheadCostPerMeter,
-        pureLandedCost: pureLandedCost,
-        finalLandedCost: finalLandedCost,
-        gstAmount: finalLandedCost - pureLandedCost,
-        dailyProduction: realDailyProduction
-    }
+  // ── 9. GST ─────────────────────────────────────────────────────────────
+  const gst_amount_per_m = total_cost_per_m * (gst_pct / 100)
+  const landed_cost_per_m = total_cost_per_m + gst_amount_per_m
+
+  // ── 10. QUOTE PRICE & PROFIT ───────────────────────────────────────────
+  const quote_price_per_m = landed_cost_per_m * (1 + margin_pct / 100)
+  const profit_per_m = quote_price_per_m - landed_cost_per_m
+
+  // ── 11. BEAM CAPACITY ──────────────────────────────────────────────────
+  // Meters this beam can produce based on tape_length and shrinkage
+  const estimated_beam_meters = tape_length_m * (1 - shrinkage_pct / 100)
+
+  return {
+    warp_yarn_kg_per_m: warp_kg_per_m,
+    weft_yarn_kg_per_m: weft_kg_per_m,
+    total_yarn_kg_per_m,
+    yarn_kg_per_m_with_shrinkage,
+    material_cost_per_m,
+    machine_cost_per_m: machine_cost_per_m_val,
+    overhead_cost_per_m,
+    total_cost_per_m,
+    gst_amount_per_m,
+    landed_cost_per_m,
+    quote_price_per_m,
+    profit_per_m,
+    estimated_beam_meters,
+    total_order_value: (meters: number) => meters * quote_price_per_m,
+  }
 }
 
-/**
- * Stress Test Scenarios
- */
-export function runStressTest(inputs: EstimatorInputs) {
-    // Scenario 1: Yarn Price Hike (+5%)
-    const yarnHike = calculateLandedCost({
-        ...inputs,
-        yarn_rate_per_kg: inputs.yarn_rate_per_kg * 1.05
-    })
+// ---------------------------------------------------------------------------
+// STRESS TESTS
+// ---------------------------------------------------------------------------
 
-    // Scenario 2: Efficiency Drop (-15%)
-    const efficiencyDrop = calculateLandedCost({
-        ...inputs,
-        avg_machine_efficiency: inputs.avg_machine_efficiency * 0.85
-    })
+export interface StressTestResult {
+  scenario: string
+  cost_per_m: number
+  delta: number
+}
 
-    // Scenario 3: PPI Increase (+5 picks) - more labor/time
-    const ppiIncrease = calculateLandedCost({
-        ...inputs,
-        ppi: inputs.ppi + 5
-    })
+export function runStressTests(inputs: EstimatorInputs): StressTestResult[] {
+  const base = calculateLandedCost(inputs)
 
-    return {
-        base: calculateLandedCost(inputs),
-        yarnHike: yarnHike.finalLandedCost,
-        efficiencyDrop: efficiencyDrop.finalLandedCost,
-        ppiIncrease: ppiIncrease.finalLandedCost
-    }
+  return [
+    {
+      scenario: 'Yarn +5% price hike',
+      cost_per_m: calculateLandedCost({
+        ...inputs,
+        yarn_rate_per_kg: inputs.yarn_rate_per_kg * 1.05,
+      }).landed_cost_per_m,
+      delta:
+        calculateLandedCost({
+          ...inputs,
+          yarn_rate_per_kg: inputs.yarn_rate_per_kg * 1.05,
+        }).landed_cost_per_m - base.landed_cost_per_m,
+    },
+    {
+      scenario: 'Shrinkage +3% worse than expected',
+      cost_per_m: calculateLandedCost({
+        ...inputs,
+        shrinkage_pct: inputs.shrinkage_pct + 3,
+      }).landed_cost_per_m,
+      delta:
+        calculateLandedCost({
+          ...inputs,
+          shrinkage_pct: inputs.shrinkage_pct + 3,
+        }).landed_cost_per_m - base.landed_cost_per_m,
+    },
+    {
+      scenario: 'Machine rate up ₹0.50/m',
+      cost_per_m: calculateLandedCost({
+        ...inputs,
+        machine_rate_per_m: inputs.machine_rate_per_m + 0.5,
+      }).landed_cost_per_m,
+      delta:
+        calculateLandedCost({
+          ...inputs,
+          machine_rate_per_m: inputs.machine_rate_per_m + 0.5,
+        }).landed_cost_per_m - base.landed_cost_per_m,
+    },
+  ]
+}
+
+// ---------------------------------------------------------------------------
+// DEFAULT TEMPLATE (Surat standard polyester georgette)
+// ---------------------------------------------------------------------------
+
+export const DEFAULT_ESTIMATOR_INPUTS: EstimatorInputs = {
+  yarn_denier: 75,
+  calculated_yarn_denier: 75,
+  beam_ends: 3200,
+  picks_per_cm: 23,
+  reed_space_cm: 110,
+  weft_denier: 75,
+  tape_length_m: 100,
+  shrinkage_pct: 5,
+  yarn_rate_per_kg: 107,
+  machine_rate_per_m: 1.50,
+  daily_overhead: 0,
+  total_active_machines: 24,
+  margin_pct: 10,
+  gst_pct: 5,
 }
