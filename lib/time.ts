@@ -30,6 +30,16 @@ export function getSuratTodayString(): string {
 }
 
 /**
+ * Helper to get strictly yesterday's date formatted as YYYY-MM-DD in Surat.
+ * Fixes timezone drift where yesterday might compute incorrectly.
+ */
+export function getSuratYesterdayString(): string {
+    const d = new Date()
+    d.setDate(d.getDate() - 1)
+    return formatToSurat(d, 'yyyy-MM-dd')
+}
+
+/**
  * Checks if a specific date/time string is strictly "in the past or today" based on Surat bounds. 
  */
 export function isBeforeOrTodayInSurat(dateString: string): boolean {

@@ -1,4 +1,5 @@
 import { formatMeters, formatRupees, formatPct, formatDate } from '@/lib/format'
+import { getSuratTodayString } from '@/lib/time'
 
 type KpiStripProps = {
   yesterday: {
@@ -26,7 +27,7 @@ function efficiencyColor(pct: number | null): string {
 export function KpiStrip({ yesterday, today, isConnected = true }: KpiStripProps) {
   // Graceful empty states handling
   const yData = yesterday || { total_meters: 0, piece_rate_wages: 0, fixed_payroll: 0, efficiency_pct: null }
-  const tData = today || { total_meters: 0, piece_rate_wages: 0, active_machines: 0, date: new Date().toISOString() }
+  const tData = today || { total_meters: 0, piece_rate_wages: 0, active_machines: 0, date: getSuratTodayString() }
   
   return (
     <div className="flex flex-col rounded-xl border border-border bg-card shadow-sm overflow-hidden">

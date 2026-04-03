@@ -12,11 +12,22 @@ function useLanguagePreference() {
   return 'en' // Defaulting to english
 }
 
-export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] }) {
+export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] | null }) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const lang = useLanguagePreference()
 
-  if (!entries || entries.length === 0) {
+  if (!entries) {
+    return (
+      <section>
+        <h2 className="text-xl font-bold mb-4">Today&apos;s workers</h2>
+        <div className="bg-card border border-border shadow-sm rounded-xl p-6 text-center bg-muted/20">
+          <p className="text-muted-foreground/70 font-medium">Worker breakdown data unavailable</p>
+        </div>
+      </section>
+    )
+  }
+
+  if (entries.length === 0) {
     return null // Hide entirely per spec if no workers logged today
   }
 
