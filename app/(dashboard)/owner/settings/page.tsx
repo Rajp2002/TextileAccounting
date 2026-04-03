@@ -20,7 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
 import { exportOrganizationData, deleteOrganizationData } from './data-export'
 import { toast } from 'sonner'
-import { EstimatorSettings } from '@/components/settings/estimator-settings'
+import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
 import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
 
@@ -268,7 +268,7 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
             </Card>
-            <EstimatorSettings />
+            <FactoryCostProfile />
 
             <TemplateManager />
 

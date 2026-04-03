@@ -1,268 +1,422 @@
 /**
- * lib/estimator.ts — Vastra Estimator (Surat Weaving Formula v2)
+ * lib/estimator.ts — Vastra Estimator V3 (Clean Break)
  *
- * Core calculation engine using the actual textile weaving math used
- * in Surat's water-jet and rapier loom factories.
+ * Complete rewrite. All V1 code (calculateLandedCost, runStressTests,
+ * DEFAULT_ESTIMATOR_INPUTS) has been removed. calcFullTotals is the
+ * only math engine in this file.
  *
- * COST BREAKDOWN:
- *   1. Material Cost/m  = warp_yarn + weft_yarn  (using denier & ends/picks)
- *   2. Machine Cost/m   = flat ₹/m rate (covers loom, electricity, maintenance)
- *   3. Overhead Cost/m  = daily overhead allocated per active machine / daily meters
- *   4. GST              = optional additive
- *   ─────────────────────────────────────────────────────────────
- *   Quote Price/m       = (Total Cost) × (1 + margin%)
+ * COST STACK (per metre of finished fabric):
+ *   Layer 1: Warp yarn     = Σ (beamEnds × calcDenier × rate × GST × shortage)
+ *   Layer 2: Weft yarn     = Σ (picks × reedSpace × calcDenier × rate × GST × shortage)
+ *   Layer 3: Weave cost    = picks(PPI) × perPickCostPaisa
+ *   Layer 4: Warping+Sizing= totalWarpKg × (warpingRate + sizingRate) / 100
+ *   Layer 5: Winding       = totalAllYarnKg × windingRate / 100  [optional]
+ *   Layer 6: Processing    = processingRatePerM  [optional, flat ₹/m]
+ *   Layer 7: Finishing     = finishingRatePerM   [optional, flat ₹/m]
+ *            directCost    = Layers 1–7
+ *   Layer 8: Overhead      = directCost × overheadPct / 100
+ *   ─────────────────────────────────────────────────────
+ *   totalProductionCostPerM = directCost + overhead
+ *
+ * ORDER QUOTE (applied after production cost is known):
+ *   landedCostPerM  = totalProductionCostPerM × (1 + commissionPct/100) + transportPerM
+ *   quotePricePerM  = landedCostPerM × (1 + profitMarginPct/100)
  */
 
-// ---------------------------------------------------------------------------
+import { nanoid } from 'nanoid'
+
+// ─────────────────────────────────────────────────────────────────────────────
 // TYPES
-// ---------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
 
-export interface EstimatorInputs {
-  // ── Yarn Specs ──────────────────────────────────────────────────────────
-  /** Actual single-end yarn denier (e.g. 75 for 75D polyester) */
-  yarn_denier: number
-  /** Calculated/effective denier after doubling (e.g. 75/2 → 37.5, or same as yarn_denier for single yarn) */
-  calculated_yarn_denier: number
-  /** Total number of warp ends wound on the beam */
-  beam_ends: number
-  /** Picks per centimeter in the weft direction */
-  picks_per_cm: number
-  /** Finished fabric width in centimeters */
-  reed_space_cm: number
-  /** Weft yarn denier (leave same as yarn_denier if warp = weft) */
-  weft_denier: number
-  /** Length of one full beam tape in meters */
-  tape_length_m: number
-  /** Combined warp + weft shrinkage percentage (e.g. 5 or 8) */
-  shrinkage_pct: number
-
-  // ── Financials ───────────────────────────────────────────────────────────
-  /** Current market rate for raw yarn in ₹/kg */
-  yarn_rate_per_kg: number
-  /** Flat machine charge per meter including electricity (₹/m) */
-  machine_rate_per_m: number
-  /** Factory total fixed daily overhead in ₹ (rent + admin salaries etc.) */
-  daily_overhead: number
-  /** Number of active machines to distribute overhead across */
-  total_active_machines: number
-  /** Desired profit margin percentage */
-  margin_pct: number
-  /** GST rate percentage (0 if not applicable) */
-  gst_pct: number
+/** One component of a blended warp (e.g. "3444 ends of 75D main + 84 ends of selvedge") */
+export interface WarpRow {
+  id: string
+  label?: string        // optional display label e.g. "Main", "Selvedge"
+  calcDenier: number    // effective denier after doubling (e.g. 75/2 → 37.5)
+  beamEnds: number      // ends for THIS row only — discrete per component
+  yarnRate: number      // ₹/kg market rate for this yarn
+  gstPct: number        // GST % on this specific yarn (different materials = different brackets)
+  shortagePct: number   // shortage/wastage % for this component
 }
 
-export interface EstimatorResult {
-  /** Warp yarn in kg per meter of fabric */
-  warp_yarn_kg_per_m: number
-  /** Weft yarn in kg per meter of fabric */
-  weft_yarn_kg_per_m: number
-  /** Total raw yarn kg per meter (pre-shrinkage) */
-  total_yarn_kg_per_m: number
-  /** Actual yarn needed per meter AFTER accounting for shrinkage loss */
-  yarn_kg_per_m_with_shrinkage: number
-  /** Raw material cost per meter in ₹ */
-  material_cost_per_m: number
-  /** Flat machine/loom cost per meter in ₹ */
-  machine_cost_per_m: number
-  /** Allocated daily overhead per meter in ₹ */
-  overhead_cost_per_m: number
-  /** Sum of all costs before GST */
-  total_cost_per_m: number
-  /** GST amount per meter */
-  gst_amount_per_m: number
-  /** Final landed cost per meter (total + GST) */
-  landed_cost_per_m: number
-  /** Recommended quote price per meter */
-  quote_price_per_m: number
-  /** Profit margin in ₹ per meter */
-  profit_per_m: number
-  /** Estimated meters this beam can produce */
-  estimated_beam_meters: number
-  /** Total order value at quote price */
-  total_order_value: (meters: number) => number
+/** One weft component (fabrics can have multi-pick weft blends) */
+export interface WeftRow {
+  id: string
+  label?: string
+  picks: number         // picks per inch (PPI) — industry standard in Surat
+  reedSpace: number     // fabric width in cm
+  calcDenier: number    // effective weft yarn denier
+  yarnRate: number      // ₹/kg
+  gstPct: number
+  shortagePct: number
 }
 
-// ---------------------------------------------------------------------------
-// CORE FORMULA
-// ---------------------------------------------------------------------------
+/** Which optional cost sections apply to this factory/estimate */
+export interface FactorySections {
+  winding:    boolean   // yarn arrives on hanks, needs rewinding onto cones
+  processing: boolean   // dyeing / printing
+  finishing:  boolean   // calendering, heat-setting
+  commission: boolean   // broker/agent involvement
+  transport:  boolean   // factory delivers rather than buyer collecting
+}
+
+/** Complete client-side estimate state (what the estimator page manages) */
+export interface EstimateState {
+  warpRows:            WarpRow[]
+  weftRows:            WeftRow[]
+  tapeLengthM:         number          // metres per beam tape (for beam capacity preview)
+  perPickCostPaisa:    number          // loom charge in paise per pick (e.g. 0.16)
+  warpingRatePerKg:    number          // ₹/kg charged by warping unit
+  sizingRatePerKg:     number          // ₹/kg charged by sizing unit
+  windingRatePerKg:    number          // ₹/kg charged for rewinding (0 if not applicable)
+  processingRatePerM:  number          // flat ₹/m for dyeing/printing
+  finishingRatePerM:   number          // flat ₹/m for calendering/heat-setting
+  overheadPct:         number          // overhead as % of direct production cost
+  commissionPct:       number          // selling commission %
+  transportPerM:       number          // transport cost ₹/m
+  profitPct:           number          // desired profit margin %
+  orderQuantityM:      number | null   // null = order module not yet activated
+  enabledSections:     FactorySections
+}
+
+/** Warp row after formula has been applied */
+export interface WarpRowResult extends WarpRow {
+  kgPer100m:   number   // raw yarn kg per 100m of fabric
+  costPer100m: number   // ₹ per 100m (GST + shortage inclusive)
+}
+
+/** Weft row after formula has been applied */
+export interface WeftRowResult extends WeftRow {
+  kgPer100m:   number
+  costPer100m: number
+}
+
+/** Output of calcOrderQuote when order quantity is known */
+export interface OrderQuote {
+  landedCostPerM:     number   // production cost + commission % + transport
+  quotePricePerM:     number   // what the owner tells the buyer
+  totalOrderValue:    number   // quotePricePerM × orderQuantityM
+  grossProfitRupees:  number   // totalOrderValue − landed cost × qty
+  actualMarginPct:    number   // gross profit as % of total order value
+}
+
+/** Complete derived totals from calcFullTotals */
+export interface EstimatorV3Totals {
+  warpRows:                WarpRowResult[]
+  weftRows:                WeftRowResult[]
+  warpCostPerM:            number
+  weftCostPerM:            number
+  weaveCostPerM:           number
+  warpingAndSizingPerM:    number
+  windingPerM:             number
+  processingPerM:          number
+  finishingPerM:           number
+  directCostPerM:          number
+  overheadPerM:            number
+  totalProductionCostPerM: number
+  totalWarpKgPer100m:      number   // used for warping formula + display
+  totalAllYarnKgPer100m:   number   // used for winding formula + quality weight display
+  estimatedBeamCapacityM:  number   // how many metres one full beam produces
+  orderQuote:              OrderQuote | null
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FORMULA FUNCTIONS
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Calculates the landed cost per meter using the Surat textile weaving formula.
+ * Warp yarn weight per 100m of finished fabric.
  *
- * WARP yarn weight formula:
- *   Weight (g/m) = (beam_ends × calculated_yarn_denier) / 9000
- *   (Denier = grams per 9000 meters; one end contributes denier/9000 g per meter)
+ * Formula: (beamEnds × calcDenier × 100) / 9_000_000
+ *   - Denier = grams per 9000 metres of one thread
+ *   - One end contributes calcDenier/9000 g per metre
+ *   - N ends → (N × calcDenier / 9000) g/m → × 100 for per-100m, ÷ 1000 for kg
  *
- * WEFT yarn weight formula:
- *   Weight (g/m) = (picks_per_cm × 100 × reed_space_cm/100 × weft_denier) / 9000
- *                = (picks_per_cm × reed_space_cm × weft_denier) / 9000
- *
- * Both are then adjusted for shrinkage loss:
- *   actual_yarn = calculated_yarn / (1 - shrinkage%)
- *
- * This gives us the ACTUAL yarn consumed per meter of finished fabric.
+ * @param beamEnds  - number of warp ends for this component
+ * @param calcDenier - effective denier (after doubling/folding)
+ * @returns kg per 100m
  */
-export function calculateLandedCost(inputs: EstimatorInputs): EstimatorResult {
-  const {
-    calculated_yarn_denier,
-    beam_ends,
-    picks_per_cm,
-    reed_space_cm,
-    weft_denier,
-    tape_length_m,
-    shrinkage_pct,
-    yarn_rate_per_kg,
-    machine_rate_per_m,
-    daily_overhead,
-    total_active_machines,
-    margin_pct,
-    gst_pct,
-  } = inputs
+export function calcWarpYarnKg(beamEnds: number, calcDenier: number): number {
+  return (beamEnds * calcDenier * 100) / 9_000_000
+}
 
-  // ── 1. WARP YARN ───────────────────────────────────────────────────────
-  // g/m = (ends × denier) / 9000
-  const warp_g_per_m = (beam_ends * calculated_yarn_denier) / 9000
-  const warp_kg_per_m = warp_g_per_m / 1000
+/**
+ * Weft yarn weight per 100m of finished fabric.
+ *
+ * Formula: (picks × reedSpace × calcDenier × 100) / 9_000_000
+ *   - picks = picks per INCH (PPI) — standard Surat unit
+ *   - Each pick spans reedSpace cm of fabric width
+ *   - Per 1m fabric length: picks × (reedSpace/100) m of weft thread
+ *   - × 100 (per-100m) ÷ 9000 (denier→g/m) ÷ 1000 (g→kg)
+ *   = picks × reedSpace × calcDenier × 100 / 9_000_000
+ *
+ * @param picks      - picks per inch (PPI)
+ * @param reedSpace  - fabric width in cm
+ * @param calcDenier - effective weft yarn denier
+ * @returns kg per 100m
+ */
+export function calcWeftYarnKg(picks: number, reedSpace: number, calcDenier: number): number {
+  return (picks * reedSpace * calcDenier * 100) / 9_000_000
+}
 
-  // ── 2. WEFT YARN ───────────────────────────────────────────────────────
-  // Total weft thread length per meter of fabric:
-  //   picks_per_cm × 100cm (per meter length) × (reed_space_cm / 100)m (width per pick)
-  // Simplifies to: picks_per_cm × reed_space_cm thread-meters per fabric-meter
-  // Weight (g/m) = (picks_per_cm × reed_space_cm × weft_denier) / 9000
-  const weft_g_per_m = (picks_per_cm * reed_space_cm * weft_denier) / 9000
-  const weft_kg_per_m = weft_g_per_m / 1000
+/**
+ * Yarn landed cost per 100m for a single row.
+ * GST is applied per-row because different materials attract different tax brackets.
+ * Shortage is applied as an additional consumption factor.
+ *
+ * Formula: kgPer100m × (yarnRate × (1 + gstPct/100)) × (1 + shortagePct/100)
+ *
+ * @param kgPer100m   - raw yarn weight per 100m
+ * @param yarnRate    - ₹/kg market rate
+ * @param gstPct      - GST percentage (e.g. 5 for 5%)
+ * @param shortagePct - shortage/wastage percentage (e.g. 5 for 5%)
+ * @returns ₹ per 100m
+ */
+export function calcYarnCost(
+  kgPer100m: number,
+  yarnRate: number,
+  gstPct: number,
+  shortagePct: number
+): number {
+  const rateWithGst = yarnRate * (1 + gstPct / 100)
+  return kgPer100m * rateWithGst * (1 + shortagePct / 100)
+}
 
-  // ── 3. TOTAL YARN (before shrinkage) ───────────────────────────────────
-  const total_yarn_kg_per_m = warp_kg_per_m + weft_kg_per_m
+/**
+ * Weave cost per metre of finished fabric.
+ *
+ * The confirmed Surat formula — NO reed space multiplication.
+ * The per-pick rate inherently accounts for the standard machine width.
+ *
+ * Formula: picks (PPI) × perPickCostPaisa
+ *   e.g. 68 picks × 0.16 paise = ₹10.88 / m
+ *
+ * @param picks            - picks per inch (PPI)
+ * @param perPickCostPaisa - loom charge in paise per pick (₹ × 100)
+ * @returns ₹ per metre
+ */
+export function calcWeaveCostPerMeter(picks: number, perPickCostPaisa: number): number {
+  return picks * perPickCostPaisa
+}
 
-  // ── 4. SHRINKAGE ADJUSTMENT ─────────────────────────────────────────────
-  // More yarn is loaded than the finished fabric length would suggest.
-  // If shrinkage is 5%, we need 1/(1-0.05) = 1.0526× more yarn.
-  const shrinkage_factor = 1 / (1 - shrinkage_pct / 100)
-  const yarn_kg_per_m_with_shrinkage = total_yarn_kg_per_m * shrinkage_factor
+/**
+ * Warping + Sizing cost per metre.
+ * Both are charged by the warping unit on the same warp weight.
+ * totalWarpKgPer100m is already computed from the warp rows — no new inputs needed.
+ *
+ * Formula: (totalWarpKgPer100m × (warpingRate + sizingRate)) / 100
+ *
+ * @param totalWarpKgPer100m - sum of kgPer100m across all warp rows
+ * @param warpingRatePerKg   - ₹/kg charged by warping unit
+ * @param sizingRatePerKg    - ₹/kg charged by sizing unit
+ * @returns ₹ per metre
+ */
+export function calcWarpingCostPerMeter(
+  totalWarpKgPer100m: number,
+  warpingRatePerKg: number,
+  sizingRatePerKg: number
+): number {
+  return (totalWarpKgPer100m * (warpingRatePerKg + sizingRatePerKg)) / 100
+}
 
-  // ── 5. MATERIAL COST ───────────────────────────────────────────────────
-  const material_cost_per_m = yarn_kg_per_m_with_shrinkage * yarn_rate_per_kg
+/**
+ * Winding cost per metre (optional — only when yarn arrives on hanks).
+ * Charged on total yarn weight (warp + weft).
+ *
+ * Formula: (totalAllYarnKgPer100m × windingRatePerKg) / 100
+ *
+ * @param totalAllYarnKgPer100m - total yarn (warp + weft) kg per 100m
+ * @param windingRatePerKg      - ₹/kg winding charge
+ * @returns ₹ per metre
+ */
+export function calcWindingCostPerMeter(
+  totalAllYarnKgPer100m: number,
+  windingRatePerKg: number
+): number {
+  return (totalAllYarnKgPer100m * windingRatePerKg) / 100
+}
 
-  // ── 6. MACHINE COST ────────────────────────────────────────────────────
-  // Flat rate — covers electricity, loom depreciation, maintenance
-  const machine_cost_per_m_val = machine_rate_per_m
+/**
+ * Overhead cost per metre.
+ * Overhead is a percentage of direct production cost to naturally scale
+ * with fabric complexity. A high-picks jacquard uses more overhead than a plain weave.
+ *
+ * Formula: directCostPerM × (overheadPct / 100)
+ *
+ * @param directCostPerM - sum of all cost layers before overhead
+ * @param overheadPct    - overhead as % of direct cost (e.g. 8 for 8%)
+ * @returns ₹ per metre
+ */
+export function calcOverheadCostPerMeter(directCostPerM: number, overheadPct: number): number {
+  return directCostPerM * (overheadPct / 100)
+}
 
-  // ── 7. OVERHEAD ALLOCATION ──────────────────────────────────────────────
-  // Overhead is the daily fixed cost divided across all active machines.
-  // Each machine is responsible for 1 share. Within that share, cost is
-  // attributed per meter produced (use a standard ~100m/day/machine default
-  // when we don't have live data; owners set actual numbers in settings).
-  const STANDARD_DAILY_METERS_PER_MACHINE = 100 // conservative benchmark
-  const machines = Math.max(total_active_machines, 1)
-  const overhead_per_machine_per_day = daily_overhead / machines
-  const overhead_cost_per_m =
-    overhead_per_machine_per_day / STANDARD_DAILY_METERS_PER_MACHINE
+/**
+ * Order-level quote calculations.
+ * Only called when the owner has entered an order quantity.
+ *
+ * landedCostPerM  = production × (1 + commission%) + transport
+ * quotePricePerM  = landedCost × (1 + margin%)
+ * grossProfit     = (quotePrice − landedCost) × qty
+ * actualMarginPct = grossProfit / totalOrderValue × 100
+ */
+export function calcOrderQuote(params: {
+  totalProductionCostPerM: number
+  orderQuantityM:          number
+  commissionPct:           number
+  transportPerM:           number
+  profitMarginPct:         number
+}): OrderQuote {
+  const { totalProductionCostPerM, orderQuantityM, commissionPct, transportPerM, profitMarginPct } = params
 
-  // ── 8. TOTAL COST ──────────────────────────────────────────────────────
-  const total_cost_per_m =
-    material_cost_per_m + machine_cost_per_m_val + overhead_cost_per_m
+  const landedCostPerM   = totalProductionCostPerM * (1 + commissionPct / 100) + transportPerM
+  const quotePricePerM   = landedCostPerM * (1 + profitMarginPct / 100)
+  const totalOrderValue  = quotePricePerM * orderQuantityM
+  const totalCost        = landedCostPerM * orderQuantityM
+  const grossProfitRupees = totalOrderValue - totalCost
+  const actualMarginPct  = totalOrderValue > 0 ? (grossProfitRupees / totalOrderValue) * 100 : 0
 
-  // ── 9. GST ─────────────────────────────────────────────────────────────
-  const gst_amount_per_m = total_cost_per_m * (gst_pct / 100)
-  const landed_cost_per_m = total_cost_per_m + gst_amount_per_m
+  return { landedCostPerM, quotePricePerM, totalOrderValue, grossProfitRupees, actualMarginPct }
+}
 
-  // ── 10. QUOTE PRICE & PROFIT ───────────────────────────────────────────
-  const quote_price_per_m = landed_cost_per_m * (1 + margin_pct / 100)
-  const profit_per_m = quote_price_per_m - landed_cost_per_m
+/**
+ * Master aggregation function — called once per render via useMemo.
+ * All layers derive from EstimateState; zero server round-trips.
+ */
+export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
+  // ── Layer 1: Warp Yarn ──────────────────────────────────────────────────
+  const warpRows: WarpRowResult[] = estimate.warpRows.map(r => {
+    const kgPer100m   = calcWarpYarnKg(r.beamEnds, r.calcDenier)
+    const costPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, r.shortagePct)
+    return { ...r, kgPer100m, costPer100m }
+  })
 
-  // ── 11. BEAM CAPACITY ──────────────────────────────────────────────────
-  // Meters this beam can produce based on tape_length and shrinkage
-  const estimated_beam_meters = tape_length_m * (1 - shrinkage_pct / 100)
+  // ── Layer 2: Weft Yarn ──────────────────────────────────────────────────
+  const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
+    const kgPer100m   = calcWeftYarnKg(r.picks, r.reedSpace, r.calcDenier)
+    const costPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, r.shortagePct)
+    return { ...r, kgPer100m, costPer100m }
+  })
+
+  const totalWarpKgPer100m    = warpRows.reduce((s, r) => s + r.kgPer100m, 0)
+  const totalWeftKgPer100m    = weftRows.reduce((s, r) => s + r.kgPer100m, 0)
+  const totalAllYarnKgPer100m = totalWarpKgPer100m + totalWeftKgPer100m
+
+  const warpCostPerM = warpRows.reduce((s, r) => s + r.costPer100m, 0) / 100
+  const weftCostPerM = weftRows.reduce((s, r) => s + r.costPer100m, 0) / 100
+
+  // ── Layer 3: Weave Cost ─────────────────────────────────────────────────
+  // Use the total picks from all weft rows (sum of PPI)
+  const totalPicks   = estimate.weftRows.reduce((s, r) => s + r.picks, 0)
+  const weaveCostPerM = calcWeaveCostPerMeter(totalPicks, estimate.perPickCostPaisa)
+
+  // ── Layer 4: Warping + Sizing ───────────────────────────────────────────
+  const warpingAndSizingPerM = calcWarpingCostPerMeter(
+    totalWarpKgPer100m,
+    estimate.warpingRatePerKg,
+    estimate.sizingRatePerKg
+  )
+
+  // ── Layer 5: Winding (optional) ─────────────────────────────────────────
+  const windingPerM = estimate.enabledSections.winding
+    ? calcWindingCostPerMeter(totalAllYarnKgPer100m, estimate.windingRatePerKg)
+    : 0
+
+  // ── Layer 6+7: Processing + Finishing (optional) ────────────────────────
+  const processingPerM = estimate.enabledSections.processing ? estimate.processingRatePerM : 0
+  const finishingPerM  = estimate.enabledSections.finishing  ? estimate.finishingRatePerM  : 0
+
+  // ── Direct Cost (sum of all layers above) ───────────────────────────────
+  const directCostPerM =
+    warpCostPerM + weftCostPerM + weaveCostPerM +
+    warpingAndSizingPerM + windingPerM + processingPerM + finishingPerM
+
+  // ── Layer 8: Overhead (% of direct cost) ───────────────────────────────
+  const overheadPerM = calcOverheadCostPerMeter(directCostPerM, estimate.overheadPct)
+
+  const totalProductionCostPerM = directCostPerM + overheadPerM
+
+  // ── Beam Capacity Preview ───────────────────────────────────────────────
+  // Approximate metres a full beam tape produces (tape_length for warp direction)
+  const estimatedBeamCapacityM = estimate.tapeLengthM
+
+  // ── Order Quote (only when quantity is set) ─────────────────────────────
+  const orderQuote = estimate.orderQuantityM && estimate.orderQuantityM > 0
+    ? calcOrderQuote({
+        totalProductionCostPerM,
+        orderQuantityM:  estimate.orderQuantityM,
+        commissionPct:   estimate.enabledSections.commission ? estimate.commissionPct : 0,
+        transportPerM:   estimate.enabledSections.transport  ? estimate.transportPerM  : 0,
+        profitMarginPct: estimate.profitPct,
+      })
+    : null
 
   return {
-    warp_yarn_kg_per_m: warp_kg_per_m,
-    weft_yarn_kg_per_m: weft_kg_per_m,
-    total_yarn_kg_per_m,
-    yarn_kg_per_m_with_shrinkage,
-    material_cost_per_m,
-    machine_cost_per_m: machine_cost_per_m_val,
-    overhead_cost_per_m,
-    total_cost_per_m,
-    gst_amount_per_m,
-    landed_cost_per_m,
-    quote_price_per_m,
-    profit_per_m,
-    estimated_beam_meters,
-    total_order_value: (meters: number) => meters * quote_price_per_m,
+    warpRows,
+    weftRows,
+    warpCostPerM,
+    weftCostPerM,
+    weaveCostPerM,
+    warpingAndSizingPerM,
+    windingPerM,
+    processingPerM,
+    finishingPerM,
+    directCostPerM,
+    overheadPerM,
+    totalProductionCostPerM,
+    totalWarpKgPer100m,
+    totalAllYarnKgPer100m,
+    estimatedBeamCapacityM,
+    orderQuote,
   }
 }
 
-// ---------------------------------------------------------------------------
-// STRESS TESTS
-// ---------------------------------------------------------------------------
+// ─────────────────────────────────────────────────────────────────────────────
+// DEFAULTS (Surat standard polyester georgette baseline)
+// ─────────────────────────────────────────────────────────────────────────────
 
-export interface StressTestResult {
-  scenario: string
-  cost_per_m: number
-  delta: number
+export const DEFAULT_WARP_ROW: Omit<WarpRow, 'id'> = {
+  calcDenier:  75,
+  beamEnds:    3200,
+  yarnRate:    107,
+  gstPct:      5,
+  shortagePct: 5,
 }
 
-export function runStressTests(inputs: EstimatorInputs): StressTestResult[] {
-  const base = calculateLandedCost(inputs)
-
-  return [
-    {
-      scenario: 'Yarn +5% price hike',
-      cost_per_m: calculateLandedCost({
-        ...inputs,
-        yarn_rate_per_kg: inputs.yarn_rate_per_kg * 1.05,
-      }).landed_cost_per_m,
-      delta:
-        calculateLandedCost({
-          ...inputs,
-          yarn_rate_per_kg: inputs.yarn_rate_per_kg * 1.05,
-        }).landed_cost_per_m - base.landed_cost_per_m,
-    },
-    {
-      scenario: 'Shrinkage +3% worse than expected',
-      cost_per_m: calculateLandedCost({
-        ...inputs,
-        shrinkage_pct: inputs.shrinkage_pct + 3,
-      }).landed_cost_per_m,
-      delta:
-        calculateLandedCost({
-          ...inputs,
-          shrinkage_pct: inputs.shrinkage_pct + 3,
-        }).landed_cost_per_m - base.landed_cost_per_m,
-    },
-    {
-      scenario: 'Machine rate up ₹0.50/m',
-      cost_per_m: calculateLandedCost({
-        ...inputs,
-        machine_rate_per_m: inputs.machine_rate_per_m + 0.5,
-      }).landed_cost_per_m,
-      delta:
-        calculateLandedCost({
-          ...inputs,
-          machine_rate_per_m: inputs.machine_rate_per_m + 0.5,
-        }).landed_cost_per_m - base.landed_cost_per_m,
-    },
-  ]
+export const DEFAULT_WEFT_ROW: Omit<WeftRow, 'id'> = {
+  picks:       68,
+  reedSpace:   110,
+  calcDenier:  75,
+  yarnRate:    107,
+  gstPct:      5,
+  shortagePct: 3,
 }
 
-// ---------------------------------------------------------------------------
-// DEFAULT TEMPLATE (Surat standard polyester georgette)
-// ---------------------------------------------------------------------------
+export const DEFAULT_FACTORY_SECTIONS: FactorySections = {
+  winding:    false,
+  processing: false,
+  finishing:  false,
+  commission: true,
+  transport:  false,
+}
 
-export const DEFAULT_ESTIMATOR_INPUTS: EstimatorInputs = {
-  yarn_denier: 75,
-  calculated_yarn_denier: 75,
-  beam_ends: 3200,
-  picks_per_cm: 23,
-  reed_space_cm: 110,
-  weft_denier: 75,
-  tape_length_m: 100,
-  shrinkage_pct: 5,
-  yarn_rate_per_kg: 107,
-  machine_rate_per_m: 1.50,
-  daily_overhead: 0,
-  total_active_machines: 24,
-  margin_pct: 10,
-  gst_pct: 5,
+export function makeDefaultEstimateState(): EstimateState {
+  return {
+    warpRows:           [{ id: nanoid(), ...DEFAULT_WARP_ROW }],
+    weftRows:           [{ id: nanoid(), ...DEFAULT_WEFT_ROW }],
+    tapeLengthM:        100,
+    perPickCostPaisa:   0.16,
+    warpingRatePerKg:   2.00,
+    sizingRatePerKg:    1.50,
+    windingRatePerKg:   0,
+    processingRatePerM: 0,
+    finishingRatePerM:  0,
+    overheadPct:        8,
+    commissionPct:      2,
+    transportPerM:      0,
+    profitPct:          15,
+    orderQuantityM:     null,
+    enabledSections:    { ...DEFAULT_FACTORY_SECTIONS },
+  }
 }
