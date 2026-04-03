@@ -404,13 +404,15 @@ export async function regenerateJoinCode() {
 // ─── getOnboardingStatus ───────────────────────────────────────────────────────
 
 /**
- * Checks whether the org has at least 1 machine, 1 quality, and 1 worker.
- * When all three are present, flips onboarding_complete = true in the DB
+ * Checks whether the org has at least 1 machine and 1 worker.
+ * When both are present, flips onboarding_complete = true in the DB
  * so the next JWT refresh picks it up and middleware stops redirecting.
+ *
+ * NOTE: Quality is no longer a mandatory onboarding gate (lean arch pivot).
+ * Owners can define qualities anytime from settings/inventory.
  */
 export async function getOnboardingStatus(): Promise<{
     hasMachine: boolean
-    hasQuality: boolean
     hasWorker: boolean
     isComplete: boolean
 }> {
@@ -436,16 +438,14 @@ export async function getOnboardingStatus(): Promise<{
     // If we still have no org_id after the DB fallback, the account is truly broken
     if (!orgId) redirect('/login')
 
-    const [machines, qualities, workers] = await Promise.all([
+    const [machines, workers] = await Promise.all([
         supabase.from('machines').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
-        supabase.from('qualities').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
         supabase.from('workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
     ])
 
     const hasMachine = (machines.count ?? 0) > 0
-    const hasQuality = (qualities.count ?? 0) > 0
     const hasWorker  = (workers.count  ?? 0) > 0
-    const isComplete = hasMachine && hasQuality && hasWorker
+    const isComplete = hasMachine && hasWorker
 
     if (isComplete) {
         // Flip the flag so future middleware checks use JWT cache, not DB
@@ -455,7 +455,7 @@ export async function getOnboardingStatus(): Promise<{
             .eq('id', orgId)
     }
 
-    return { hasMachine, hasQuality, hasWorker, isComplete }
+    return { hasMachine, hasWorker, isComplete }
 }
 
 /**

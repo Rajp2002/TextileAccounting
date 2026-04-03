@@ -7,15 +7,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import {
-    CheckCircle2, Circle, ArrowRight, Loader2,
+    CheckCircle2, ArrowRight, Loader2,
     Cpu, Layers, Users, Plus, Trash2, Upload,
-    ChevronDown, ChevronUp, Sparkles
+    ChevronDown, ChevronUp
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
-import { addMachine } from '@/app/(dashboard)/owner/actions'
-import { addQuality, saveWorkerWhatsApp } from '@/app/(dashboard)/owner/actions'
+import { addMachine, saveWorkerWhatsApp } from '@/app/(dashboard)/owner/actions'
 import { addMeterWorker } from '@/app/(dashboard)/supervisor/actions'
 import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/actions/auth'
 
@@ -23,7 +22,6 @@ import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/action
 
 interface OnboardingStatus {
     hasMachine: boolean
-    hasQuality: boolean
     hasWorker: boolean
     isComplete: boolean
 }
@@ -137,198 +135,6 @@ function MachineForm({ onDone }: { onDone: () => void }) {
     )
 }
 
-// ─── Quality Form ────────────────────────────────────────────────────────────────
-
-interface QualityRow { name: string; target_yield: string; avg_sale_price: string; worker_rate: string }
-const emptyQuality = (): QualityRow => ({ name: '', target_yield: '', avg_sale_price: '', worker_rate: '' })
-
-// Accurate Surat textile templates - yields calculated via 1000 / (GSM × width_m)
-// Prices from Surat wholesale market rates (2025-26), worker rates from industry reports
-const SURAT_TEMPLATES: QualityRow[] = [
-    // Fabric          GSM   Width         Yield         Sale ₹/m   Worker ₹/m
-    { name: '60g Georgette',   target_yield: '14.9', avg_sale_price: '42',  worker_rate: '2.5'  }, // 60 GSM, 44"
-    { name: '90g Georgette',   target_yield: '9.9',  avg_sale_price: '65',  worker_rate: '2.0'  }, // 90 GSM, 44"
-    { name: 'Dani Georgette',  target_yield: '13.6', avg_sale_price: '38',  worker_rate: '2.2'  }, // 50 GSM, 58"
-    { name: 'Chiffon',         target_yield: '19.9', avg_sale_price: '35',  worker_rate: '2.0'  }, // 45 GSM, 44"
-    { name: 'Butter Crepe',    target_yield: '9.9',  avg_sale_price: '28',  worker_rate: '2.0'  }, // 90 GSM, 44"
-    { name: 'American Crepe',  target_yield: '7.9',  avg_sale_price: '32',  worker_rate: '2.0'  }, // 113 GSM, 44"
-    { name: 'Japan Satin',     target_yield: '8.5',  avg_sale_price: '55',  worker_rate: '2.2'  }, // 80 GSM, 58"
-    { name: 'Polyester Satin', target_yield: '6.3',  avg_sale_price: '48',  worker_rate: '2.0'  }, // 120 GSM, 58" wide
-    { name: 'Viscose',         target_yield: '6.9',  avg_sale_price: '75',  worker_rate: '2.5'  }, // 130 GSM, 44"
-    { name: 'Micro Crepe',     target_yield: '11.2', avg_sale_price: '38',  worker_rate: '2.0'  }, // 80 GSM, 44"
-]
-
-function QualityForm({ onDone }: { onDone: () => void }) {
-    const [qualities, setQualities] = useState<QualityRow[]>([emptyQuality()])
-    const [bulkMode, setBulkMode] = useState(false)
-    const [bulkText, setBulkText] = useState('')
-    const [saving, setSaving] = useState(false)
-    const [templatesLoaded, setTemplatesLoaded] = useState(false)
-
-    const updateRow = (i: number, field: keyof QualityRow, val: string) =>
-        setQualities(q => q.map((r, idx) => idx === i ? { ...r, [field]: val } : r))
-    const addRow = () => setQualities(q => [...q, emptyQuality()])
-    const removeRow = (i: number) => setQualities(q => q.filter((_, idx) => idx !== i))
-
-    // CSV: name, target_yield, sale_price, worker_rate
-    const parseBulk = () => {
-        const rows = bulkText.split('\n').map(l => l.trim()).filter(Boolean)
-        if (rows.length === 0) { toast.error('No data found'); return }
-        const parsed = rows.map(row => {
-            const parts = row.split(/[,\t]/).map(p => p.trim())
-            return { name: parts[0] || '', target_yield: parts[1] || '', avg_sale_price: parts[2] || '', worker_rate: parts[3] || '' }
-        })
-        setQualities(parsed)
-        setBulkMode(false)
-        setTemplatesLoaded(false)
-        toast.success(`Parsed ${parsed.length} qualities`)
-    }
-
-    // Load templates into the editable form — user reviews/edits before saving
-    const handleLoadTemplates = () => {
-        setQualities(SURAT_TEMPLATES.map(t => ({ ...t })))
-        setTemplatesLoaded(true)
-        setBulkMode(false)
-        toast.success('10 Surat templates loaded — review and edit before saving')
-    }
-
-    const handleSave = async () => {
-        const valid = qualities.filter(q => q.name.trim() && q.target_yield)
-        if (valid.length === 0) { toast.error('Fill at least one quality name and yield'); return }
-        setSaving(true)
-        let allOk = true
-        for (const q of valid) {
-            const res = await addQuality({
-                name: q.name.trim(),
-                target_yield: Number(q.target_yield),
-                avg_sale_price_per_m: Number(q.avg_sale_price || 0),
-                default_worker_rate_per_m: Number(q.worker_rate || 0),
-            })
-            if (res?.error) { toast.error(`"${q.name}": ${res.error}`); allOk = false }
-        }
-        setSaving(false)
-        if (allOk) { toast.success(`${valid.length} qualit${valid.length > 1 ? 'ies' : 'y'} added!`); onDone() }
-    }
-
-    return (
-        <div className="space-y-4 pt-4 border-t border-gray-100">
-            {/* Template banner */}
-            {!templatesLoaded ? (
-                <div className="flex items-center gap-2 p-3 bg-violet-50 rounded-lg border border-violet-100">
-                    <Sparkles className="h-4 w-4 text-violet-500 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-violet-800">Use Surat industry templates</p>
-                        <p className="text-[11px] text-violet-600">10 common fabrics with research-accurate yields & prices — editable before saving</p>
-                    </div>
-                    <Button type="button" size="sm" variant="outline"
-                        onClick={handleLoadTemplates}
-                        className="border-violet-300 text-violet-700 hover:bg-violet-100 text-xs shrink-0 whitespace-nowrap">
-                        Load templates
-                    </Button>
-                </div>
-            ) : (
-                <div className="flex items-center gap-2 p-2.5 bg-amber-50 rounded-lg border border-amber-200">
-                    <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                    <p className="text-[11px] text-amber-700 flex-1">
-                        Templates loaded — <span className="font-semibold">review and edit values below</span> to match your factory's actual rates, then save.
-                    </p>
-                    <button type="button" onClick={() => { setQualities([emptyQuality()]); setTemplatesLoaded(false) }}
-                        className="text-[10px] text-amber-500 hover:text-amber-700 underline shrink-0">
-                        Clear
-                    </button>
-                </div>
-            )}
-
-            <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500">{templatesLoaded ? `${qualities.length} qualities loaded` : 'Or add manually'}</p>
-                <Button type="button" variant="ghost" size="sm"
-                    onClick={() => setBulkMode(b => !b)}
-                    className="text-violet-700 hover:bg-violet-50 gap-1.5 text-xs">
-                    <Upload className="h-3.5 w-3.5" />
-                    {bulkMode ? 'Manual entry' : 'Bulk import (CSV)'}
-                </Button>
-            </div>
-
-            <AnimatePresence mode="wait">
-                {bulkMode ? (
-                    <motion.div key="bulk"
-                        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }} className="space-y-3"
-                    >
-                        <Label className="text-xs text-gray-600">
-                            One per line: <span className="font-mono text-gray-500">Name, Target (m/kg), Sale Price, Worker Rate</span>
-                        </Label>
-                        <textarea
-                            rows={5}
-                            value={bulkText}
-                            onChange={e => setBulkText(e.target.value)}
-                            placeholder={"60g Georgette, 9.5, 25, 12\nJapan Satin, 6.2, 45, 15"}
-                            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
-                        />
-                        <Button type="button" size="sm" onClick={parseBulk}
-                            className="bg-violet-600 hover:bg-violet-700 text-white">
-                            Parse CSV
-                        </Button>
-                    </motion.div>
-                ) : (
-                    <motion.div key="manual"
-                        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }} className="space-y-3"
-                    >
-                        {qualities.map((q, i) => (
-                            <div key={i} className="p-3 border border-gray-100 rounded-lg bg-gray-50/50 space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <Input
-                                        value={q.name}
-                                        placeholder="Quality name (e.g. 60g Georgette)"
-                                        onChange={e => updateRow(i, 'name', e.target.value)}
-                                        className="h-8 text-sm flex-1"
-                                    />
-                                    {qualities.length > 1 && (
-                                        <button type="button" onClick={() => removeRow(i)}
-                                            className="text-gray-300 hover:text-red-400">
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div>
-                                        <Label className="text-[10px] text-gray-400">Target m/kg</Label>
-                                        <Input value={q.target_yield} type="number" placeholder="9.5"
-                                            onChange={e => updateRow(i, 'target_yield', e.target.value)}
-                                            className="h-8 text-sm" />
-                                    </div>
-                                    <div>
-                                        <Label className="text-[10px] text-gray-400">Sale ₹/m</Label>
-                                        <Input value={q.avg_sale_price} type="number" placeholder="25"
-                                            onChange={e => updateRow(i, 'avg_sale_price', e.target.value)}
-                                            className="h-8 text-sm" />
-                                    </div>
-                                    <div>
-                                        <Label className="text-[10px] text-gray-400">Worker ₹/m</Label>
-                                        <Input value={q.worker_rate} type="number" placeholder="12"
-                                            onChange={e => updateRow(i, 'worker_rate', e.target.value)}
-                                            className="h-8 text-sm" />
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        <button type="button" onClick={addRow}
-                            className="flex items-center gap-1 text-xs text-violet-700 hover:text-violet-800 font-medium">
-                            <Plus className="h-3.5 w-3.5" /> Add another quality
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <Button onClick={handleSave} disabled={saving}
-                className="w-full bg-violet-600 hover:bg-violet-700 text-white h-10 font-semibold">
-                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : 'Save qualities'}
-            </Button>
-        </div>
-    )
-}
-
 // ─── Worker Form ─────────────────────────────────────────────────────────────────
 
 interface WorkerRow { name: string; phone: string }
@@ -378,37 +184,44 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
         }
 
         setSaving(true)
-        let allOk = true
-        for (const worker of valid) {
-            // 1. Create the worker record
-            const res = await addMeterWorker({ name: worker.name.trim(), pf_esi_eligible: false })
-            if (res?.error) {
-                toast.error(`"${worker.name}": ${res.error}`)
-                allOk = false
-                continue
-            }
 
-            // 2. If phone provided + consent given, save WhatsApp number
-            const cleanPhone = worker.phone.replace(/\D/g, '')
-            if (cleanPhone && res.workerId) {
-                const phoneRes = await saveWorkerWhatsApp({
-                    workerId: res.workerId,
-                    workerType: 'meter',
-                    phone: cleanPhone,
-                    language: 'hi',   // default; owner can change in Payroll settings
-                    consentGiven: true // validated above
+        // Phase 1: Insert all workers in parallel (eliminates N serial roundtrips)
+        const results = await Promise.all(
+            valid.map(worker => addMeterWorker({ name: worker.name.trim(), pf_esi_eligible: false }))
+        )
+
+        // Check for any insert errors
+        const errors = results
+            .map((res, i) => res?.error ? `"${valid[i].name}": ${res.error}` : null)
+            .filter(Boolean) as string[]
+
+        if (errors.length > 0) {
+            errors.forEach(e => toast.error(e))
+            setSaving(false)
+            return
+        }
+
+        // Phase 2: Save phone numbers in parallel (non-fatal — workers already created)
+        if (phoneWorkers.length > 0) {
+            await Promise.all(
+                valid.map((worker, i) => {
+                    const cleanPhone = worker.phone.replace(/\D/g, '')
+                    const workerId = results[i]?.workerId
+                    if (!cleanPhone || !workerId) return Promise.resolve()
+                    return saveWorkerWhatsApp({
+                        workerId,
+                        workerType: 'meter',
+                        phone: cleanPhone,
+                        language: 'hi',
+                        consentGiven: true,
+                    }).catch(err => console.warn(`Phone save failed for ${worker.name}:`, err))
                 })
-                if (phoneRes?.error) {
-                    // Non-fatal: worker was created, just phone didn't save
-                    console.warn(`Phone save failed for ${worker.name}:`, phoneRes.error)
-                }
-            }
+            )
         }
+
         setSaving(false)
-        if (allOk) {
-            toast.success(`${valid.length} worker${valid.length > 1 ? 's' : ''} added!`)
-            onDone()
-        }
+        toast.success(`${valid.length} worker${valid.length > 1 ? 's' : ''} added!`)
+        onDone()
     }
 
     const hasAnyPhone = workers.some(w => w.phone.trim())
@@ -548,14 +361,6 @@ const STEPS = [
         form: MachineForm,
     },
     {
-        key: 'hasQuality' as keyof OnboardingStatus,
-        icon: Layers,
-        title: 'Define yarn qualities',
-        description: 'Qualities set target yield, sale price, and piece-rate for workers.',
-        accentColor: 'violet',
-        form: QualityForm,
-    },
-    {
         key: 'hasWorker' as keyof OnboardingStatus,
         icon: Users,
         title: 'Add your workers',
@@ -577,8 +382,8 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
     const [refreshing, setRefreshing] = useState(false)
     const [completing, setCompleting] = useState(false)
 
-    const completedCount = [status.hasMachine, status.hasQuality, status.hasWorker].filter(Boolean).length
-    const progressPct = (completedCount / 3) * 100
+    const completedCount = [status.hasMachine, status.hasWorker].filter(Boolean).length
+    const progressPct = (completedCount / 2) * 100
 
     const refresh = async () => {
         setRefreshing(true)
@@ -603,7 +408,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
         // blank-page issue. Local state is sufficient: each form only calls
         // this after its own save succeeds, so we know that step is complete.
         const newStatus = { ...status, [key]: true }
-        newStatus.isComplete = newStatus.hasMachine && newStatus.hasQuality && newStatus.hasWorker
+        newStatus.isComplete = newStatus.hasMachine && newStatus.hasWorker
         setStatus(newStatus)
         if (newStatus.isComplete) {
             toast.success('All done! 🎉 Click "Go to dashboard" to continue.')
@@ -661,7 +466,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                         <Layers className="h-7 w-7 text-amber-700" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Set up your factory</h1>
-                    <p className="text-gray-500 mt-1 text-sm">Complete these 3 steps to start tracking production</p>
+                    <p className="text-gray-500 mt-1 text-sm">Complete these 2 steps to start tracking production</p>
 
                     {/* Progress */}
                     <div className="mt-5 flex items-center gap-3">
@@ -674,7 +479,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                             />
                         </div>
                         <span className="text-sm font-semibold text-gray-700 tabular-nums w-8 text-right">
-                            {completedCount}/3
+                            {completedCount}/2
                         </span>
                     </div>
                 </div>
