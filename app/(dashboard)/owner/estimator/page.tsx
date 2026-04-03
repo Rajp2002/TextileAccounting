@@ -27,6 +27,11 @@ import {
     ChevronDown,
     ChevronUp,
     Scissors,
+    Coins,
+    Banknote,
+    Truck,
+    CheckCircle2,
+    History,
 } from 'lucide-react'
 import {
     calcFullTotals,
@@ -86,7 +91,6 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
         }
         case 'APPLY_TEMPLATE': {
             const tpl = action.template
-            // V3 template with full row arrays
             if (tpl.warp_rows && tpl.warp_rows.length > 0) {
                 return {
                     ...state,
@@ -98,7 +102,6 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                     perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
                 }
             }
-            // Legacy V1 template — map single-row fields
             return {
                 ...state,
                 warpRows: [{
@@ -162,30 +165,30 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
 // SUB-COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SectionHeader({ title, icon: Icon, accent = 'indigo', children }: {
+function SectionHeader({ title, icon: Icon, accent = 'indigo', badgeContent }: {
     title:    string
     icon:     React.ElementType
-    accent?:  'indigo' | 'emerald' | 'amber' | 'violet' | 'teal' | 'rose'
-    children?: React.ReactNode
+    accent?:  'indigo' | 'emerald' | 'amber' | 'violet' | 'rose' | 'orange'
+    badgeContent?: React.ReactNode
 }) {
-    const colors: Record<string, string> = {
-        indigo:  'text-indigo-400 bg-indigo-500/10 border-indigo-500/30',
-        emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
-        amber:   'text-amber-400 bg-amber-500/10 border-amber-500/30',
-        violet:  'text-violet-400 bg-violet-500/10 border-violet-500/30',
-        teal:    'text-teal-400 bg-teal-500/10 border-teal-500/30',
-        rose:    'text-rose-400 bg-rose-500/10 border-rose-500/30',
+    const variants: Record<string, string> = {
+        indigo:  'bg-indigo-50 text-indigo-600 border-indigo-100',
+        emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+        amber:   'bg-amber-50 text-amber-600 border-amber-100',
+        violet:  'bg-violet-50 text-violet-600 border-violet-100',
+        rose:    'bg-rose-50 text-rose-600 border-rose-100',
+        orange:  'bg-orange-50 text-orange-600 border-orange-100',
     }
-    const [textColor, bg, border] = colors[accent].split(' ')
+    const colorClass = variants[accent]
     return (
-        <div className={`rounded-2xl overflow-hidden border ${border} ${bg}`}>
-            <div className="px-4 py-3 flex items-center justify-between border-b border-white/5">
-                <div className="flex items-center gap-2">
-                    <Icon className={`h-4 w-4 ${textColor}`} />
-                    <span className="text-sm font-bold text-white">{title}</span>
+        <div className={`px-4 py-3 flex items-center justify-between border-b ${colorClass.split(' ')[2]} ${colorClass.split(' ')[0]}`}>
+            <div className="flex items-center gap-2.5">
+                <div className={`p-1.5 rounded-lg bg-white/80 shadow-sm`}>
+                    <Icon className={`h-4 w-4 ${colorClass.split(' ')[1]}`} />
                 </div>
-                {children}
+                <span className="text-sm font-bold tracking-tight">{title}</span>
             </div>
+            {badgeContent}
         </div>
     )
 }
@@ -197,113 +200,84 @@ function NumField({
     unit?: string; step?: number; min?: number; hint?: string
 }) {
     return (
-        <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">{label}</Label>
-            <div className="relative">
+        <div className="space-y-1.5">
+            <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">{label}</Label>
+            <div className="relative group">
                 <Input
                     type="number"
                     step={step}
                     min={min}
                     value={value}
                     onChange={e => onChange(Number(e.target.value))}
-                    className="h-10 text-sm font-mono font-bold text-center pr-9 bg-slate-900 border-slate-700 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                    className="h-10 text-sm font-mono font-bold text-center pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300"
                 />
                 {unit && (
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 font-medium pointer-events-none">
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">
                         {unit}
                     </span>
                 )}
             </div>
-            {hint && <p className="text-[10px] text-slate-600">{hint}</p>}
+            {hint && <p className="text-[10px] text-slate-400 font-medium leading-none">{hint}</p>}
         </div>
     )
 }
 
-function CostPill({ label, value }: { label: string; value: number }) {
+function CostPill({ label, value, type = 'default' }: { label: string; value: number; type?: 'default' | 'warp' | 'weft' | 'weave' | 'primary' }) {
     if (value <= 0) return null
+    const base = "shrink-0 text-[10px] rounded-full px-2.5 py-0.5 font-mono font-bold border transition-all"
+    const variants: Record<string, string> = {
+        default: "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300",
+        warp:    "bg-indigo-50 text-indigo-700 border-indigo-100 hover:border-indigo-200",
+        weft:    "bg-emerald-50 text-emerald-700 border-emerald-100 hover:border-emerald-200",
+        weave:   "bg-amber-50 text-amber-700 border-amber-100 hover:border-amber-200",
+        primary: "bg-orange-50 text-orange-700 border-orange-100 hover:border-orange-200",
+    }
     return (
-        <span className="shrink-0 text-[10px] bg-slate-800 text-slate-300 rounded-full px-2.5 py-0.5 font-mono border border-slate-700">
+        <span className={`${base} ${variants[type] || variants.default}`}>
             {label} ₹{value.toFixed(2)}
         </span>
     )
 }
 
-// Yarn row component (shared for warp + weft with conditional fields)
-function WarpRowCard({
-    row, index, onUpdate, onRemove, canRemove, kgPer100m, costPer100m,
+function RowCard({
+    title, index, onRemove, canRemove, kgPer100m, costPer100m, children, accent = 'indigo'
 }: {
-    row:        WarpRow
-    index:      number
-    onUpdate:   (field: keyof WarpRow, value: any) => void
-    onRemove:   () => void
-    canRemove:  boolean
-    kgPer100m:  number
-    costPer100m: number
+    title: string; index: number; onRemove: () => void; canRemove: boolean
+    kgPer100m: number; costPer100m: number; children: React.ReactNode; accent?: 'indigo' | 'emerald'
 }) {
+    const colors = {
+        indigo:  { text: 'text-indigo-600', bg: 'bg-indigo-50/50', border: 'border-indigo-100' },
+        emerald: { text: 'text-emerald-600', bg: 'bg-emerald-50/50', border: 'border-emerald-100' },
+    }
+    const c = colors[accent]
     return (
-        <div className="bg-slate-900/70 rounded-xl border border-slate-700/60 p-3 space-y-3">
+        <div className={`rounded-xl border ${c.border} ${c.bg} p-3.5 space-y-3.5 relative overflow-hidden group`}>
+            {/* Component label */}
             <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">
-                    Warp Component {index + 1}
-                </span>
                 <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-slate-400 font-mono">
-                        {kgPer100m.toFixed(3)} kg/100m · ₹{costPer100m.toFixed(2)}/100m
+                    <span className={`text-[10px] uppercase tracking-widest font-black ${c.text}`}>
+                        {title} {index + 1}
+                    </span>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-white border-slate-200 text-slate-500 font-mono">
+                        {kgPer100m.toFixed(3)} kg/100m
+                    </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-slate-500 font-bold font-mono">
+                        ₹{costPer100m.toFixed(2)}/100m
                     </span>
                     {canRemove && (
-                        <button onClick={onRemove} className="text-slate-600 hover:text-rose-400 transition-colors">
+                        <button onClick={onRemove} className="text-slate-300 hover:text-red-500 transition-colors">
                             <Trash2 className="h-3.5 w-3.5" />
                         </button>
                     )}
                 </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-                <NumField label="Calc Denier" value={row.calcDenier} onChange={v => onUpdate('calcDenier', v)} unit="D" step={0.5} />
-                <NumField label="Beam Ends" value={row.beamEnds} onChange={v => onUpdate('beamEnds', v)} hint="This component only" />
-                <NumField label="₹ / kg" value={row.yarnRate} onChange={v => onUpdate('yarnRate', v)} unit="₹/kg" step={1} />
-                <NumField label="GST" value={row.gstPct} onChange={v => onUpdate('gstPct', v)} unit="%" step={0.5} />
-                <NumField label="Shortage" value={row.shortagePct} onChange={v => onUpdate('shortagePct', v)} unit="%" step={0.5} hint="Wastage/shrinkage %" />
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 relative z-10">
+                {children}
             </div>
-        </div>
-    )
-}
-
-function WeftRowCard({
-    row, index, onUpdate, onRemove, canRemove, kgPer100m, costPer100m,
-}: {
-    row:        WeftRow
-    index:      number
-    onUpdate:   (field: keyof WeftRow, value: any) => void
-    onRemove:   () => void
-    canRemove:  boolean
-    kgPer100m:  number
-    costPer100m: number
-}) {
-    return (
-        <div className="bg-slate-900/70 rounded-xl border border-slate-700/60 p-3 space-y-3">
-            <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">
-                    Weft Component {index + 1}
-                </span>
-                <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-slate-400 font-mono">
-                        {kgPer100m.toFixed(3)} kg/100m · ₹{costPer100m.toFixed(2)}/100m
-                    </span>
-                    {canRemove && (
-                        <button onClick={onRemove} className="text-slate-600 hover:text-rose-400 transition-colors">
-                            <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                    )}
-                </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-                <NumField label="Picks (PPI)" value={row.picks} onChange={v => onUpdate('picks', v)} hint="Picks per inch" />
-                <NumField label="Reed Space" value={row.reedSpace} onChange={v => onUpdate('reedSpace', v)} unit="cm" />
-                <NumField label="Calc Denier" value={row.calcDenier} onChange={v => onUpdate('calcDenier', v)} unit="D" step={0.5} />
-                <NumField label="₹ / kg" value={row.yarnRate} onChange={v => onUpdate('yarnRate', v)} unit="₹/kg" step={1} />
-                <NumField label="GST" value={row.gstPct} onChange={v => onUpdate('gstPct', v)} unit="%" step={0.5} />
-                <NumField label="Shortage" value={row.shortagePct} onChange={v => onUpdate('shortagePct', v)} unit="%" step={0.5} />
-            </div>
+            {/* Subtle row indicator */}
+            <div className={`absolute left-0 top-0 bottom-0 w-1 ${accent === 'indigo' ? 'bg-indigo-500/20' : 'bg-emerald-500/20'}`} />
         </div>
     )
 }
@@ -321,7 +295,6 @@ export default function EstimatorPage() {
     const [savingTemplate, setSavingTemplate] = useState(false)
     const [templates, setTemplates] = useState<any[]>([])
 
-    // Order info (separate from EstimateState as they're display-only on convert)
     const [partyName,       setPartyName]       = useState('')
     const [qualityLabel,    setQualityLabel]    = useState('')
     const [warpInstruction, setWarpInstruction] = useState('')
@@ -329,12 +302,10 @@ export default function EstimatorPage() {
     const [targetMeters,    setTargetMeters]    = useState(1000)
     const [deadline,        setDeadline]        = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
 
-    // Dialogs
     const [showSaveTemplate, setShowSaveTemplate] = useState(false)
     const [showConvert,      setShowConvert]      = useState(false)
     const [templateName,     setTemplateName]     = useState('')
 
-    // Load factory profile + templates
     useEffect(() => {
         async function load() {
             setLoading(true)
@@ -359,18 +330,16 @@ export default function EstimatorPage() {
         load()
     }, [])
 
-    // All derived numbers from a single memo
     const totals: EstimatorV3Totals = useMemo(() => calcFullTotals(state), [state])
 
     const applyTemplate = useCallback((tpl: any) => {
         dispatch({ type: 'APPLY_TEMPLATE', template: tpl })
         setQualityLabel(tpl.name)
-        toast.success(`Applied "${tpl.name}"`)
+        toast.success(`Applied fabric template: ${tpl.name}`)
     }, [])
 
-    // ── Save as fabric template ──────────────────────────────────────────
     const handleSaveTemplate = async () => {
-        if (!templateName.trim()) return toast.error('Enter a name for this fabric')
+        if (!templateName.trim()) return toast.error('Please enter a fabric name')
         setSavingTemplate(true)
         const res = await saveAsFabricTemplate({
             name:             templateName.trim(),
@@ -385,17 +354,15 @@ export default function EstimatorPage() {
             if (tRes.data) setTemplates(tRes.data)
             setShowSaveTemplate(false)
             setTemplateName('')
-            toast.success('Fabric template saved!')
+            toast.success('New fabric template created')
         } else {
             toast.error(res.error ?? 'Failed to save template')
         }
     }
 
-    // ── Convert to order ─────────────────────────────────────────────────
     const handleConvertToOrder = async () => {
-        if (!partyName.trim())   return toast.error('Party name is required')
-        if (!qualityLabel.trim()) return toast.error('Quality label is required')
-        if (!deadline)            return toast.error('Delivery date is required')
+        if (!partyName.trim())   return toast.error('Party name required')
+        if (!qualityLabel.trim()) return toast.error('Quality label required')
         setConverting(true)
         const res = await convertQuoteToOrder({
             party_name:          partyName.trim(),
@@ -411,7 +378,7 @@ export default function EstimatorPage() {
         setConverting(false)
         if (res.success) {
             setShowConvert(false)
-            toast.success('Order created! Pending setup on the floor.')
+            toast.success('Quote converted successfully')
             router.push('/owner/orders')
         } else {
             toast.error(res.error ?? 'Failed to create order')
@@ -420,8 +387,8 @@ export default function EstimatorPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+            <div className="flex items-center justify-center p-20">
+                <Loader2 className="h-10 w-10 animate-spin text-brand-accent/40" />
             </div>
         )
     }
@@ -430,116 +397,118 @@ export default function EstimatorPage() {
     const hasOrderQty    = !!(state.orderQuantityM && state.orderQuantityM > 0)
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white">
+        <div className="space-y-6 pb-20">
 
-            {/* ── STICKY HEADER ───────────────────────────────────────── */}
-            <div className="sticky top-0 z-40 bg-slate-950/96 backdrop-blur-xl border-b border-slate-800 shadow-lg shadow-slate-950/60">
-                <div className="px-4 py-3 max-w-2xl mx-auto space-y-2">
+            {/* ── STICKY HUD ───────────────────────────────────────── */}
+            <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-border/50 shadow-sm -mt-6 pt-6 pb-4 px-4 mx-[-24px] sm:mx-[-32px] md:mx-[-40px]">
+                <div className="max-w-4xl mx-auto space-y-4">
 
-                    {/* Row 1: core numbers + actions */}
-                    <div className="flex items-center gap-3">
-                        {/* Production cost */}
+                    <div className="flex items-center gap-4">
+                        {/* Production Cost */}
                         <div className="min-w-0">
-                            <p className="text-[9px] uppercase tracking-widest text-slate-500 font-bold">Production / m</p>
-                            <p className="text-2xl font-black font-mono text-white leading-none">
+                            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Prod. Cost / m</p>
+                            <p className="text-2xl font-black font-mono text-slate-900 leading-none">
                                 ₹{totals.totalProductionCostPerM.toFixed(2)}
                             </p>
                         </div>
 
                         {hasOrderQty && orderQuote && (
                             <>
-                                <div className="h-8 w-px bg-slate-700 shrink-0" />
-                                {/* Quote price */}
+                                <div className="h-8 w-px bg-slate-200 shrink-0 hidden sm:block" />
+                                {/* Quote Price */}
                                 <div className="min-w-0">
-                                    <p className="text-[9px] uppercase tracking-widest text-indigo-400 font-bold">Quote / m</p>
-                                    <p className="text-2xl font-black font-mono text-indigo-400 leading-none">
+                                    <p className="text-[10px] uppercase tracking-wider text-brand-accent font-black">Quote / m</p>
+                                    <p className="text-3xl font-black font-mono text-brand-accent leading-none">
                                         ₹{orderQuote.quotePricePerM.toFixed(2)}
                                     </p>
                                 </div>
-                                <div className="h-8 w-px bg-slate-700 shrink-0" />
-                                {/* Total */}
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-[9px] uppercase tracking-widest text-slate-500 font-bold">Total</p>
-                                    <p className="text-xl font-black font-mono text-emerald-400 leading-none">
+                                <div className="h-8 w-px bg-slate-200 shrink-0 hidden md:block" />
+                                {/* Total Value */}
+                                <div className="min-w-0 flex-1 hidden md:block text-right">
+                                    <p className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold">Total Order</p>
+                                    <p className="text-xl font-black font-mono text-slate-900 leading-none">
                                         ₹{orderQuote.totalOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                     </p>
                                 </div>
                             </>
                         )}
 
-                        {/* Action buttons */}
-                        <div className="flex flex-col gap-1.5 ml-auto shrink-0">
+                        {/* Actions */}
+                        <div className="flex gap-2 ml-auto shrink-0 self-center">
                             <Button
                                 size="sm"
-                                className="h-8 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs gap-1.5"
+                                className="h-9 px-4 bg-brand-accent hover:bg-brand-accent/90 text-white font-bold text-xs gap-2 shadow-lg shadow-brand-accent/15"
                                 onClick={() => setShowConvert(true)}
                             >
-                                <Package className="h-3 w-3" /> Order
+                                <Package className="h-3.5 w-3.5" /> Order
                             </Button>
                             <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-8 border-slate-700 text-slate-300 hover:text-white text-xs gap-1.5"
+                                className="h-9 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-2 font-bold"
                                 onClick={() => setShowSaveTemplate(true)}
                             >
-                                <BookmarkPlus className="h-3 w-3" /> Save
+                                <BookmarkPlus className="h-3.5 w-3.5" /> Save Template
                             </Button>
                         </div>
                     </div>
 
-                    {/* Row 2: margin slider (when order qty entered) */}
+                    {/* HUD Row 2: Margin slider */}
                     {hasOrderQty && orderQuote && (
-                        <div className="flex items-center gap-3">
-                            <div className="shrink-0 text-right">
-                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Margin</p>
-                                <p className="text-sm font-black text-amber-400">{state.profitPct.toFixed(1)}%</p>
+                        <div className="flex items-center gap-4 bg-orange-50/50 p-2.5 rounded-xl border border-orange-100">
+                            <div className="shrink-0">
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Margin</p>
+                                <p className="text-sm font-black text-brand-accent leading-none">{state.profitPct.toFixed(1)}%</p>
                             </div>
                             <input
                                 type="range"
                                 min={0} max={40} step={0.5}
                                 value={state.profitPct}
                                 onChange={e => dispatch({ type: 'SET', field: 'profitPct', value: Number(e.target.value) })}
-                                className="flex-1 h-1.5 rounded-full bg-slate-700 appearance-none cursor-pointer accent-amber-500"
+                                className="flex-1 h-2 rounded-full bg-slate-200 appearance-none cursor-pointer accent-brand-accent"
                             />
-                            <div className="shrink-0 text-left">
-                                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Profit</p>
-                                <p className="text-sm font-black text-emerald-400">
+                            <div className="shrink-0 text-right">
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Net Profit</p>
+                                <p className="text-sm font-black text-emerald-600 leading-none">
                                     ₹{orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
                         </div>
                     )}
 
-                    {/* Row 3: cost breakdown pills */}
-                    <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-                        <CostPill label="🧶 Warp"           value={totals.warpCostPerM} />
-                        <CostPill label="🧵 Weft"           value={totals.weftCostPerM} />
-                        <CostPill label="⚙️ Weave"          value={totals.weaveCostPerM} />
+                    {/* HUD Row 3: Pills */}
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pt-1">
+                        <CostPill label="🧶 Warp"           value={totals.warpCostPerM}    type="warp" />
+                        <CostPill label="🧵 Weft"           value={totals.weftCostPerM}    type="weft" />
+                        <CostPill label="⚙️ Weave"          value={totals.weaveCostPerM}   type="weave" />
                         <CostPill label="🔀 Warp+Size"      value={totals.warpingAndSizingPerM} />
                         {totals.windingPerM > 0     && <CostPill label="🌀 Winding"    value={totals.windingPerM} />}
-                        {totals.processingPerM > 0  && <CostPill label="🎨 Processing" value={totals.processingPerM} />}
-                        {totals.finishingPerM > 0   && <CostPill label="✨ Finishing"  value={totals.finishingPerM} />}
+                        {totals.processingPerM > 0  && <CostPill label="🎨 Processing" value={totals.processingPerM} type="primary" />}
+                        {totals.finishingPerM > 0   && <CostPill label="✨ Finishing"  value={totals.finishingPerM} type="primary" />}
                         <CostPill label="🏭 Overhead"       value={totals.overheadPerM} />
                     </div>
                 </div>
             </div>
 
-            {/* ── MAIN CONTENT ─────────────────────────────────────────── */}
-            <div className="px-4 py-5 space-y-5 max-w-2xl mx-auto pb-28">
+            {/* ── MAIN FORM ────────────────────────────────────────────── */}
+            <div className="max-w-4xl mx-auto space-y-6">
 
-                {/* ── Saved Fabrics ── */}
+                {/* Fabric Select Row */}
                 {templates.length > 0 && (
-                    <div>
-                        <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2">Saved Fabrics</p>
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <History className="h-3.5 w-3.5 text-slate-400" />
+                            <p className="text-[11px] uppercase tracking-widest text-slate-500 font-black">History & Templates</p>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                             {templates.map(tpl => (
                                 <button
                                     key={tpl.id}
                                     onClick={() => applyTemplate(tpl)}
-                                    className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold border transition-all ${
+                                    className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold border transition-all shadow-sm ${
                                         qualityLabel === tpl.name
-                                            ? 'bg-indigo-600 border-indigo-500 text-white'
-                                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-500'
+                                            ? 'bg-brand-accent border-brand-accent text-white shadow-brand-accent/20'
+                                            : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/50 hover:bg-slate-50'
                                     }`}
                                 >
                                     {tpl.name}
@@ -549,477 +518,313 @@ export default function EstimatorPage() {
                     </div>
                 )}
 
-                {/* ── Section 1: Order Details ── */}
-                <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-slate-700/50 flex items-center gap-2 bg-violet-500/10">
-                        <Layers className="h-4 w-4 text-violet-400" />
-                        <span className="text-sm font-bold text-white">Order Details</span>
-                    </div>
-                    <div className="p-4 space-y-3">
-                        <div className="grid grid-cols-1 gap-3">
-                            <div className="space-y-1">
-                                <Label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Party Name</Label>
+                {/* 1. Order Basics */}
+                <Card className="border-border/60 shadow-sm overflow-hidden">
+                    <SectionHeader title="Order & Fabric Label" icon={Layers} accent="indigo" />
+                    <CardContent className="p-5 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[10px] uppercase font-black text-slate-500">Party / Customer</Label>
                                 <Input
-                                    placeholder="e.g. Sundaram Textiles"
                                     value={partyName}
                                     onChange={e => setPartyName(e.target.value)}
-                                    className="h-11 bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus:border-violet-500"
+                                    placeholder="Sundaram Textiles"
+                                    className="font-bold border-slate-200 h-11"
                                 />
                             </div>
-                            <div className="space-y-1">
-                                <Label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Quality Label</Label>
+                            <div className="space-y-1.5">
+                                <Label className="text-[10px] uppercase font-black text-slate-500">Quality / Fabric Label</Label>
                                 <Input
-                                    placeholder="e.g. Canvas Shine, Japan Satin, Micro Crepe"
                                     value={qualityLabel}
                                     onChange={e => setQualityLabel(e.target.value)}
-                                    className="h-11 bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus:border-violet-500"
+                                    placeholder="Japan Satin, Canvas Shine"
+                                    className="font-bold border-slate-200 h-11"
                                 />
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <Label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Warp Spec</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[10px] uppercase font-black text-slate-500">Warp Construction</Label>
                                 <Input
-                                    placeholder="50/48 + 70/36 + Rainbow"
                                     value={warpInstruction}
                                     onChange={e => setWarpInstruction(e.target.value)}
-                                    className="h-11 text-sm bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus:border-violet-500"
+                                    placeholder="50/48 + Rainbow"
+                                    className="text-sm font-medium border-slate-200 h-11"
                                 />
                             </div>
-                            <div className="space-y-1">
-                                <Label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Weft Spec</Label>
+                            <div className="space-y-1.5">
+                                <Label className="text-[10px] uppercase font-black text-slate-500">Weft Construction</Label>
                                 <Input
-                                    placeholder="50/48"
                                     value={weftInstruction}
                                     onChange={e => setWeftInstruction(e.target.value)}
-                                    className="h-11 text-sm bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus:border-violet-500"
+                                    placeholder="50/48 - 68 Picks"
+                                    className="text-sm font-medium border-slate-200 h-11"
                                 />
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
-                {/* ── Section 2: Warp Yarn Rows ── */}
-                <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-slate-700/50 flex items-center justify-between bg-indigo-500/10">
-                        <div className="flex items-center gap-2">
-                            <Sparkles className="h-4 w-4 text-indigo-400" />
-                            <span className="text-sm font-bold text-white">Warp Yarn</span>
+                {/* 2. Warp Yarn Rows */}
+                <Card className="border-border/60 shadow-sm overflow-hidden">
+                    <SectionHeader 
+                        title="Warp Yarn Composition" 
+                        icon={Sparkles} 
+                        accent="indigo"
+                        badgeContent={<div className="text-[11px] font-mono font-bold text-indigo-700 bg-white/60 px-2 py-0.5 rounded-md border border-indigo-100">₹{totals.warpCostPerM.toFixed(2)}/m</div>}
+                    />
+                    <CardContent className="p-5 space-y-4">
+                        <div className="space-y-4">
+                            {state.warpRows.map((row, i) => (
+                                <RowCard
+                                    key={row.id}
+                                    title="Warp Layer"
+                                    index={i}
+                                    accent="indigo"
+                                    canRemove={state.warpRows.length > 1}
+                                    onRemove={() => dispatch({ type: 'REMOVE_WARP_ROW', id: row.id })}
+                                    kgPer100m={totals.warpRows[i]?.kgPer100m ?? 0}
+                                    costPer100m={totals.warpRows[i]?.costPer100m ?? 0}
+                                >
+                                    <NumField label="Calc Denier" value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calcDenier', value: v })} unit="D" step={0.5} />
+                                    <NumField label="Beam Ends" value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v })} />
+                                    <NumField label="Rate (₹/kg)" value={row.yarnRate} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: v })} step={1} />
+                                    <NumField label="GST %" value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v })} step={0.5} />
+                                    <NumField label="Shortage %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} step={0.5} />
+                                </RowCard>
+                            ))}
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 font-mono">
-                                {totals.totalWarpKgPer100m.toFixed(3)} kg/100m
-                            </span>
-                            <Badge variant="outline" className="text-[10px] border-indigo-500/40 text-indigo-300">
-                                ₹{totals.warpCostPerM.toFixed(2)}/m
-                            </Badge>
-                        </div>
-                    </div>
-                    <div className="p-4 space-y-3">
-                        {totals.warpRows.map((row, i) => (
-                            <WarpRowCard
-                                key={row.id}
-                                row={row}
-                                index={i}
-                                kgPer100m={row.kgPer100m}
-                                costPer100m={row.costPer100m}
-                                canRemove={state.warpRows.length > 1}
-                                onUpdate={(field, val) => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field, value: val })}
-                                onRemove={() => dispatch({ type: 'REMOVE_WARP_ROW', id: row.id })}
-                            />
-                        ))}
-                        <button
+                        <Button
+                            variant="outline"
+                            className="w-full border-dashed border-slate-300 py-6 text-slate-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all gap-2"
                             onClick={() => dispatch({ type: 'ADD_WARP_ROW' })}
-                            className="w-full py-2 rounded-xl border border-dashed border-slate-600 text-slate-500 hover:text-indigo-400 hover:border-indigo-500/50 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                         >
-                            <Plus className="h-3.5 w-3.5" /> Add Warp Component
-                        </button>
-                        {/* Tape length for beam preview */}
-                        <div className="flex items-center justify-between pt-1">
-                            <div className="space-y-1 w-40">
-                                <NumField label="Tape Length" value={state.tapeLengthM} onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v })} unit="m" hint="Metres per beam" />
-                            </div>
-                            <div className="text-right">
-                                <p className="text-[10px] text-slate-500">Beam capacity</p>
-                                <p className="text-sm font-bold font-mono text-emerald-400">≈ {totals.estimatedBeamCapacityM.toFixed(0)} m</p>
-                            </div>
+                            <Plus className="h-4 w-4" /> Add Blend Component
+                        </Button>
+                        <div className="pt-4 flex items-center justify-between border-t border-slate-100">
+                           <div className="w-32"><NumField label="Tape Len" value={state.tapeLengthM} onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v })} unit="m" /></div>
+                           <div className="text-right">
+                               <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Beam Capacity</p>
+                               <p className="text-lg font-black font-mono text-indigo-600 leading-none">≈ {totals.estimatedBeamCapacityM.toFixed(0)} m</p>
+                           </div>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
-                {/* ── Section 3: Weft Yarn Rows ── */}
-                <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-slate-700/50 flex items-center justify-between bg-emerald-500/10">
-                        <div className="flex items-center gap-2">
-                            <Scissors className="h-4 w-4 text-emerald-400" />
-                            <span className="text-sm font-bold text-white">Weft Yarn</span>
+                {/* 3. Weft Yarn Rows */}
+                <Card className="border-border/60 shadow-sm overflow-hidden">
+                    <SectionHeader 
+                        title="Weft Yarn Composition" 
+                        icon={Scissors} 
+                        accent="emerald"
+                        badgeContent={<div className="text-[11px] font-mono font-bold text-emerald-700 bg-white/60 px-2 py-0.5 rounded-md border border-emerald-100">₹{totals.weftCostPerM.toFixed(2)}/m</div>}
+                    />
+                    <CardContent className="p-5 space-y-4">
+                        <div className="space-y-4">
+                            {state.weftRows.map((row, i) => (
+                                <RowCard
+                                    key={row.id}
+                                    title="Weft Layer"
+                                    index={i}
+                                    accent="emerald"
+                                    canRemove={state.weftRows.length > 1}
+                                    onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })}
+                                    kgPer100m={totals.weftRows[i]?.kgPer100m ?? 0}
+                                    costPer100m={totals.weftRows[i]?.costPer100m ?? 0}
+                                >
+                                    <NumField label="Picks (PPI)" value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v })} />
+                                    <NumField label="Reed Width" value={row.reedSpace} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })} unit="cm" />
+                                    <NumField label="Calc Denier" value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v })} unit="D" step={0.5} />
+                                    <NumField label="Rate (₹/kg)" value={row.yarnRate} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v })} />
+                                    <NumField label="GST %" value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v })} step={0.5} />
+                                    <NumField label="Shortage %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} step={0.5} />
+                                </RowCard>
+                            ))}
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 font-mono">
-                                {totals.totalAllYarnKgPer100m.toFixed(3)} kg/100m total
-                            </span>
-                            <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-300">
-                                ₹{totals.weftCostPerM.toFixed(2)}/m
-                            </Badge>
-                        </div>
-                    </div>
-                    <div className="p-4 space-y-3">
-                        {totals.weftRows.map((row, i) => (
-                            <WeftRowCard
-                                key={row.id}
-                                row={row}
-                                index={i}
-                                kgPer100m={row.kgPer100m}
-                                costPer100m={row.costPer100m}
-                                canRemove={state.weftRows.length > 1}
-                                onUpdate={(field, val) => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field, value: val })}
-                                onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })}
-                            />
-                        ))}
-                        <button
+                        <Button
+                            variant="outline"
+                            className="w-full border-dashed border-slate-300 py-6 text-slate-500 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all gap-2"
                             onClick={() => dispatch({ type: 'ADD_WEFT_ROW' })}
-                            className="w-full py-2 rounded-xl border border-dashed border-slate-600 text-slate-500 hover:text-emerald-400 hover:border-emerald-500/50 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                         >
-                            <Plus className="h-3.5 w-3.5" /> Add Weft Component
-                        </button>
-                    </div>
-                </div>
+                            <Plus className="h-4 w-4" /> Add Weft Blend
+                        </Button>
+                    </CardContent>
+                </Card>
 
-                {/* ── Section 4: Weave Cost ── */}
-                <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-slate-700/50 flex items-center justify-between bg-amber-500/10">
-                        <div className="flex items-center gap-2">
-                            <Gauge className="h-4 w-4 text-amber-400" />
-                            <span className="text-sm font-bold text-white">Weave Cost</span>
-                        </div>
-                        <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-300">
-                            ₹{totals.weaveCostPerM.toFixed(2)}/m
-                        </Badge>
-                    </div>
-                    <div className="p-4">
-                        <div className="grid grid-cols-2 gap-3">
-                            <NumField
-                                label="Per-pick Cost"
-                                value={state.perPickCostPaisa}
-                                onChange={v => dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v })}
+                {/* 4. Weave Cost */}
+                <Card className="border-border/60 shadow-sm overflow-hidden">
+                    <SectionHeader title="Weave Charges (Loom)" icon={Gauge} accent="amber" />
+                    <CardContent className="p-5">
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            <NumField 
+                                label="Looms Charge per Pick" 
+                                value={state.perPickCostPaisa} 
+                                onChange={v => dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v })} 
                                 unit="₹/pick"
-                                step={0.01}
-                                hint="e.g. 0.16 = 16 paise/pick"
+                                step={0.01} 
+                                hint="Paise per pick value"
                             />
-                            <div className="flex flex-col justify-end">
-                                <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-700 text-center">
-                                    <p className="text-[10px] text-slate-500">Total picks (sum PPI)</p>
-                                    <p className="text-lg font-black font-mono text-amber-400">
-                                        {state.weftRows.reduce((s, r) => s + r.picks, 0)}
-                                    </p>
-                                    <p className="text-[10px] text-slate-600">× ₹{state.perPickCostPaisa} = ₹{totals.weaveCostPerM.toFixed(2)}/m</p>
+                            <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-100 flex items-center justify-between">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase text-amber-600/70 tracking-widest leading-none mb-1">PPI Impact</p>
+                                    <p className="text-sm font-bold text-slate-600">{state.weftRows.reduce((a,b)=>a+b.picks, 0)} picks</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black uppercase text-amber-600/70 tracking-widest leading-none mb-1">Cost / m</p>
+                                    <p className="text-xl font-black font-mono text-amber-700">₹{totals.weaveCostPerM.toFixed(2)}</p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                       </div>
+                    </CardContent>
+                </Card>
+
+                {/* 5. Production Layers */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Warping / Sizing */}
+                    <Card className="border-border/60 shadow-sm overflow-hidden">
+                        <SectionHeader title="Warping & Sizing" icon={TrendingUp} accent="violet" />
+                        <CardContent className="p-4 space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                <NumField label="Warping / kg" value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v })} step={0.1} />
+                                <NumField label="Sizing / kg" value={state.sizingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v })} step={0.1} />
+                            </div>
+                            <div className="text-[10px] font-medium text-slate-400 italic">
+                                Applied on {totals.totalWarpKgPer100m.toFixed(2)} kg warp yarn consumption.
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Overhead */}
+                    <Card className="border-border/60 shadow-sm overflow-hidden">
+                        <SectionHeader title="Factory Overhead" icon={Calculator} accent="rose" />
+                        <CardContent className="p-4">
+                            <NumField label="Overhead %" value={state.overheadPct} onChange={v => dispatch({ type: 'SET', field: 'overheadPct', value: v })} unit="%" step={0.5} />
+                            <div className="mt-3 text-[10px] font-medium text-slate-400">
+                                {state.overheadPct}% of direct cost (₹{totals.directCostPerM.toFixed(2)}) = ₹{totals.overheadPerM.toFixed(2)}/m
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                {/* ── Section 5: Warping + Sizing ── */}
-                <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-slate-700/50 flex items-center justify-between bg-teal-500/10">
-                        <div className="flex items-center gap-2">
-                            <TrendingUp className="h-4 w-4 text-teal-400" />
-                            <span className="text-sm font-bold text-white">Warping + Sizing</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 font-mono">
-                                {totals.totalWarpKgPer100m.toFixed(3)} kg warp/100m
-                            </span>
-                            <Badge variant="outline" className="text-[10px] border-teal-500/40 text-teal-300">
-                                ₹{totals.warpingAndSizingPerM.toFixed(3)}/m
-                            </Badge>
-                        </div>
-                    </div>
-                    <div className="p-4">
-                        <div className="grid grid-cols-2 gap-3">
-                            <NumField
-                                label="Warping Rate"
-                                value={state.warpingRatePerKg}
-                                onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v })}
-                                unit="₹/kg"
-                                step={0.25}
-                            />
-                            <NumField
-                                label="Sizing Rate"
-                                value={state.sizingRatePerKg}
-                                onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v })}
-                                unit="₹/kg"
-                                step={0.25}
-                            />
-                        </div>
-                        <p className="text-[10px] text-slate-600 mt-2">
-                            Auto-computed: {totals.totalWarpKgPer100m.toFixed(3)} kg/100m × (₹{state.warpingRatePerKg} + ₹{state.sizingRatePerKg}) / 100 = ₹{totals.warpingAndSizingPerM.toFixed(4)}/m
-                        </p>
-                    </div>
-                </div>
-
-                {/* ── Section 6: Winding (optional) ── */}
-                {state.enabledSections.winding ? (
-                    <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
-                        <div className="px-4 py-3 border-b border-slate-700/50 flex items-center justify-between bg-blue-500/10">
-                            <div className="flex items-center gap-2">
-                                <Wind className="h-4 w-4 text-blue-400" />
-                                <span className="text-sm font-bold text-white">Winding</span>
-                            </div>
-                            <Badge variant="outline" className="text-[10px] border-blue-500/40 text-blue-300">
-                                ₹{totals.windingPerM.toFixed(3)}/m
-                            </Badge>
-                        </div>
-                        <div className="p-4">
-                            <NumField
-                                label="Winding Rate"
-                                value={state.windingRatePerKg}
-                                onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v })}
-                                unit="₹/kg"
-                                step={0.25}
-                                hint={`Applies to all yarn: ${totals.totalAllYarnKgPer100m.toFixed(3)} kg/100m`}
-                            />
-                        </div>
-                    </div>
-                ) : (
-                    <button
-                        onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })}
-                        className="w-full py-2.5 rounded-xl border border-dashed border-slate-700 text-slate-600 hover:text-blue-400 hover:border-blue-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
-                    >
-                        <Plus className="h-3.5 w-3.5" /> Add Winding to this quote
-                    </button>
-                )}
-
-                {/* ── Section 7: Processing / Finishing (optional) ── */}
-                {(state.enabledSections.processing || state.enabledSections.finishing) ? (
-                    <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
-                        <div className="px-4 py-3 border-b border-slate-700/50 flex items-center justify-between bg-rose-500/10">
-                            <div className="flex items-center gap-2">
-                                <Palette className="h-4 w-4 text-rose-400" />
-                                <span className="text-sm font-bold text-white">Post-Weaving</span>
-                            </div>
-                            <Badge variant="outline" className="text-[10px] border-rose-500/40 text-rose-300">
-                                ₹{(totals.processingPerM + totals.finishingPerM).toFixed(2)}/m
-                            </Badge>
-                        </div>
-                        <div className="p-4 grid grid-cols-2 gap-3">
-                            {state.enabledSections.processing && (
-                                <NumField
-                                    label="Processing / Dyeing"
-                                    value={state.processingRatePerM}
-                                    onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v })}
-                                    unit="₹/m"
-                                    step={0.5}
-                                />
+                {/* 6. Optional Sections */}
+                <Card className="border-border/60 shadow-sm overflow-hidden">
+                    <SectionHeader title="Post-Processing & Logistics" icon={Palette} accent="orange" />
+                    <CardContent className="p-5 space-y-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {state.enabledSections.winding ? (
+                                <NumField label="Winding / kg" value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v })} unit="₹/kg" />
+                            ) : (
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> Winding</button>
                             )}
-                            {state.enabledSections.finishing && (
-                                <NumField
-                                    label="Finishing"
-                                    value={state.finishingRatePerM}
-                                    onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v })}
-                                    unit="₹/m"
-                                    step={0.5}
-                                />
+                            {state.enabledSections.processing ? (
+                                <NumField label="Dyeing/Processing" value={state.processingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v })} unit="₹/m" />
+                            ) : (
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'processing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> Processing</button>
+                            )}
+                            {state.enabledSections.finishing ? (
+                                <NumField label="Finishing / m" value={state.finishingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v })} unit="₹/m" />
+                            ) : (
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'finishing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> Finishing</button>
                             )}
                         </div>
-                    </div>
-                ) : (
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'processing' })}
-                            className="flex-1 py-2.5 rounded-xl border border-dashed border-slate-700 text-slate-600 hover:text-rose-400 hover:border-rose-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
-                        >
-                            <Plus className="h-3.5 w-3.5" /> Add Processing
-                        </button>
-                        <button
-                            onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'finishing' })}
-                            className="flex-1 py-2.5 rounded-xl border border-dashed border-slate-700 text-slate-600 hover:text-rose-400 hover:border-rose-500/40 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
-                        >
-                            <Plus className="h-3.5 w-3.5" /> Add Finishing
-                        </button>
-                    </div>
-                )}
+                    </CardContent>
+                </Card>
 
-                {/* ── Section 8: Overhead ── */}
-                <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-slate-700/50 flex items-center justify-between bg-violet-500/10">
-                        <div className="flex items-center gap-2">
-                            <Calculator className="h-4 w-4 text-violet-400" />
-                            <span className="text-sm font-bold text-white">Overhead</span>
+                {/* 7. Simulation / Order */}
+                <Card className="border-border/60 shadow-sm overflow-hidden bg-slate-50/20">
+                    <SectionHeader title="Simulation & Quantity" icon={Coins} accent="emerald" />
+                    <CardContent className="p-5 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <NumField 
+                                label="Simulation Quantity" 
+                                value={state.orderQuantityM ?? 1000} 
+                                onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v > 0 ? v : null })} 
+                                unit="m" 
+                                step={100}
+                                hint="Activates HUD quotes"
+                            />
+                            {hasOrderQty && (
+                                <>
+                                    <NumField label="Broker Comm. %" value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v })} unit="%" step={0.5} />
+                                    <NumField label="Transport / m" value={state.transportPerM} onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v })} unit="₹/m" step={0.1} />
+                                </>
+                            )}
                         </div>
-                        <Badge variant="outline" className="text-[10px] border-violet-500/40 text-violet-300">
-                            ₹{totals.overheadPerM.toFixed(2)}/m
-                        </Badge>
-                    </div>
-                    <div className="p-4">
-                        <NumField
-                            label="Overhead %"
-                            value={state.overheadPct}
-                            onChange={v => dispatch({ type: 'SET', field: 'overheadPct', value: v })}
-                            unit="%"
-                            step={0.5}
-                            hint={`${state.overheadPct}% of ₹${totals.directCostPerM.toFixed(2)} direct cost = ₹${totals.overheadPerM.toFixed(2)}/m`}
-                        />
-                    </div>
-                </div>
-
-                {/* ── Section 9: Order Quantity ── */}
-                <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-slate-700/50 flex items-center gap-2 bg-slate-700/30">
-                        <Package className="h-4 w-4 text-slate-400" />
-                        <span className="text-sm font-bold text-white">Order Quantity</span>
-                        <span className="text-[11px] text-slate-500 ml-1">— fills in the quote above</span>
-                    </div>
-                    <div className="p-4 space-y-3">
-                        <NumField
-                            label="Order Metres"
-                            value={state.orderQuantityM ?? 0}
-                            onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v > 0 ? v : null })}
-                            unit="m"
-                            step={100}
-                            hint="Enter to see total quote value and profit"
-                        />
-                        {hasOrderQty && orderQuote && (
-                            <>
-                                {state.enabledSections.commission && (
-                                    <NumField
-                                        label="Commission %"
-                                        value={state.commissionPct}
-                                        onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v })}
-                                        unit="%"
-                                        step={0.5}
-                                    />
-                                )}
-                                {state.enabledSections.transport && (
-                                    <NumField
-                                        label="Transport ₹/m"
-                                        value={state.transportPerM}
-                                        onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v })}
-                                        unit="₹/m"
-                                        step={0.1}
-                                    />
-                                )}
-                                {/* Quote summary card */}
-                                <div className="bg-indigo-600/10 border border-indigo-500/30 rounded-xl p-4 space-y-2.5 mt-2">
-                                    <p className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">Quote Summary</p>
-                                    <div className="space-y-1.5 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-slate-400">Quote price</span>
-                                            <span className="font-black font-mono text-white text-base">₹{orderQuote.quotePricePerM.toFixed(2)}/m</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-slate-400">Total order value</span>
-                                            <span className="font-bold font-mono text-indigo-400">₹{orderQuote.totalOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-slate-400">Gross profit</span>
-                                            <span className={`font-bold font-mono ${orderQuote.grossProfitRupees >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                                ₹{orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                                                {' '}({orderQuote.actualMarginPct.toFixed(1)}%)
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
 
-            {/* ── SAVE AS TEMPLATE DIALOG ──────────────────────────────── */}
+            {/* ── DIALOGS ────────────────────────────────────────────────── */}
+
+            {/* Save Template Dialog */}
             <Dialog open={showSaveTemplate} onOpenChange={setShowSaveTemplate}>
-                <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-sm mx-auto">
+                <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle className="text-white">Save as Base Fabric</DialogTitle>
+                        <DialogTitle>Save New Fabric Template</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-3 py-2">
-                        <p className="text-sm text-slate-400">
-                            Save all {state.warpRows.length} warp + {state.weftRows.length} weft components as a reusable fabric template.
-                        </p>
-                        <div className="space-y-1">
-                            <Label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Fabric Name</Label>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-1.5">
+                            <Label className="text-[10px] uppercase font-black text-slate-500">Fabric Quality Name</Label>
                             <Input
-                                placeholder="e.g. Canvas Shine, 60g Georgette"
+                                placeholder="Japan Satin, Canvas Shine"
                                 value={templateName}
                                 onChange={e => setTemplateName(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && handleSaveTemplate()}
-                                className="h-11 bg-slate-800 border-slate-600 text-white"
                                 autoFocus
                             />
                         </div>
-                        <div className="bg-slate-800/60 rounded-xl p-3 border border-slate-700 space-y-1 text-[11px] text-slate-400">
-                            {state.warpRows.map((r, i) => (
-                                <div key={r.id}>Warp {i+1}: {r.beamEnds} ends × {r.calcDenier}D @ ₹{r.yarnRate}/kg</div>
-                            ))}
-                            {state.weftRows.map((r, i) => (
-                                <div key={r.id}>Weft {i+1}: {r.picks} PPI × {r.reedSpace}cm × {r.calcDenier}D @ ₹{r.yarnRate}/kg</div>
-                            ))}
-                            <div className="border-t border-slate-700 pt-1 mt-1">Weave: {state.weftRows.reduce((s,r) => s+r.picks,0)} picks × ₹{state.perPickCostPaisa}/pick</div>
+                        <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 leading-relaxed">
+                            This will save all {state.warpRows.length} warp and {state.weftRows.length} weft blend layers for quick recall later.
                         </div>
                     </div>
-                    <DialogFooter className="gap-2">
-                        <Button variant="outline" className="border-slate-700 text-slate-400" onClick={() => setShowSaveTemplate(false)}>Cancel</Button>
-                        <Button className="bg-indigo-600 hover:bg-indigo-500" onClick={handleSaveTemplate} disabled={savingTemplate}>
-                            {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookmarkPlus className="h-4 w-4" />}
-                            Save Template
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setShowSaveTemplate(false)}>Cancel</Button>
+                        <Button className="bg-brand-accent text-white" onClick={handleSaveTemplate} disabled={savingTemplate}>
+                            {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                            Confirm & Save
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            {/* ── CONVERT TO ORDER DIALOG ──────────────────────────────── */}
+            {/* Convert Dialog */}
             <Dialog open={showConvert} onOpenChange={setShowConvert}>
-                <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-sm mx-auto">
+                <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle className="text-white flex items-center gap-2">
-                            <Package className="h-5 w-5 text-indigo-400" /> Convert to Floor Order
+                        <DialogTitle className="flex items-center gap-2">
+                           <Banknote className="h-5 w-5 text-emerald-500" />
+                           Review & Create Order
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-3 py-2">
-                        {/* Job card preview */}
-                        <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-2">
-                            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Job Card Preview</p>
-                            <div className="space-y-1 text-sm">
-                                {qualityLabel && <div className="flex justify-between"><span className="text-slate-400">Quality</span><span className="font-bold">{qualityLabel}</span></div>}
-                                {partyName    && <div className="flex justify-between"><span className="text-slate-400">Party</span><span>{partyName}</span></div>}
-                                <div className="flex justify-between">
-                                    <span className="text-slate-400">Quote</span>
-                                    <span className="font-bold text-indigo-400 font-mono">
-                                        ₹{(totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM).toFixed(2)}/m
-                                    </span>
-                                </div>
-                            </div>
+                    <div className="py-2 space-y-4">
+                        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl space-y-2">
+                           <div className="flex justify-between items-center text-xs font-medium text-emerald-700">
+                               <span>Quote Price</span>
+                               <span className="font-mono font-black text-base">₹{(totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM).toFixed(2)}/m</span>
+                           </div>
+                           <div className="flex justify-between items-center text-xs font-medium text-emerald-700">
+                               <span>Expected Profit</span>
+                               <span className="font-mono font-black">₹{totals.orderQuote?.grossProfitRupees.toLocaleString('en-IN') ?? '0'}</span>
+                           </div>
                         </div>
-
-                        <div className="space-y-1">
-                            <Label className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Target Metres</Label>
-                            <Input
-                                type="number"
-                                value={targetMeters}
-                                onChange={e => setTargetMeters(Number(e.target.value))}
-                                className="h-11 font-mono font-bold text-center bg-slate-800 border-slate-600 text-white"
-                            />
+                        <div className="grid grid-cols-2 gap-3">
+                           <div className="space-y-1.5">
+                                <Label className="text-[10px] uppercase font-black text-slate-500">Total Metres</Label>
+                                <Input type="number" value={targetMeters} onChange={e => setTargetMeters(Number(e.target.value))} />
+                           </div>
+                           <div className="space-y-1.5">
+                                <Label className="text-[10px] uppercase font-black text-slate-500">Deadline</Label>
+                                <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} />
+                           </div>
                         </div>
-                        <div className="space-y-1">
-                            <Label className="text-[10px] uppercase tracking-widest font-bold text-slate-400 flex items-center gap-1.5">
-                                <Calendar className="h-3 w-3" /> Delivery Date
-                            </Label>
-                            <Input
-                                type="date"
-                                value={deadline}
-                                onChange={e => setDeadline(e.target.value)}
-                                className="h-11 bg-slate-800 border-slate-600 text-white"
-                            />
-                        </div>
-                        <p className="text-[11px] text-slate-500">
-                            Order will be created in <strong className="text-slate-400">Pending Setup</strong> state. The supervisor assigns machines next.
+                        <p className="text-[11px] text-slate-500 text-center px-4 leading-relaxed">
+                            Creating the order will move these specs to the <span className="text-indigo-600 font-bold">Floor Dashboard</span> for machine assignment.
                         </p>
                     </div>
-                    <DialogFooter className="gap-2">
-                        <Button variant="outline" className="border-slate-700 text-slate-400" onClick={() => setShowConvert(false)}>Cancel</Button>
-                        <Button className="bg-indigo-600 hover:bg-indigo-500 font-bold gap-2" onClick={handleConvertToOrder} disabled={converting}>
-                            {converting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                            Create Floor Order
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setShowConvert(false)}>Dismiss</Button>
+                        <Button className="bg-brand-accent text-white w-full sm:w-auto" onClick={handleConvertToOrder} disabled={converting}>
+                            {converting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                            Start Production
                         </Button>
                     </DialogFooter>
                 </DialogContent>
