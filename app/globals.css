@@ -50,7 +50,7 @@
 }
 
 :root {
-  --radius: 1rem;
+  --radius: 1.25rem;
 
   /* App Background - Soft, warm grid background color */
   --background: oklch(0.985 0.005 85);
