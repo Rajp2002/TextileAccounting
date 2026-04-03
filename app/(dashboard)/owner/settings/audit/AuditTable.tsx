@@ -75,7 +75,7 @@ const CATEGORIES: Record<CategoryKey, CategoryConfig> = {
     },
     estimator: {
         label: 'Estimator & Quotes',
-        tables: ['estimator_settings', 'estimator_templates', 'estimator_quotes'],
+        tables: ['factory_cost_profile', 'estimator_templates', 'estimator_quotes'],
         color: 'text-emerald-700',
         bgColor: 'bg-emerald-50',
         borderColor: 'border-emerald-200',
@@ -100,7 +100,7 @@ const TABLE_LABELS: Record<string, string> = {
     qualities: 'Quality',
     profiles: 'User Profile',
     incidents: 'Incident',
-    estimator_settings: 'Estimator Settings',
+    factory_cost_profile: 'Factory Cost Profile',
     estimator_templates: 'Estimator Template',
     estimator_quotes: 'Quote',
 }

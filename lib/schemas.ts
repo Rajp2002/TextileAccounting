@@ -228,47 +228,18 @@ export const DeleteWithCodeSchema = z.object({
 export const MachineIdSchema = UuidSchema  // Machines use UUID primary keys
 export const WorkerIdSchema = PositiveIntSchema  // Workers use integer primary keys
 
-// ─── Estimator Schemas ────────────────────────────────────────────────────────
+// ─── Estimator Schemas (V3) ───────────────────────────────────────────────────
+// V1 schemas (EstimatorSettingsSchema, EstimatorTemplateSchema, EstimatorQuoteSchema)
+// have been removed as part of the Estimator V3 clean break.
+// V3 uses TypeScript types from lib/estimator.ts directly for complex JSONB structures.
 
-export const EstimatorSettingsSchema = z.object({
-    electricity_rate: z.number().nonnegative().max(100),
-    factory_rent_per_day: z.number().nonnegative().max(10_000_000),
-    admin_overhead_per_day: z.number().nonnegative().max(10_000_000),
-    avg_machine_efficiency: z.number().min(0).max(1),
-    standard_wastage_percent: z.number().min(0).max(100),
-    standard_shrinkage_percent: z.number().min(0).max(100),
-    gst_rate: z.number().min(0).max(100),
-    is_gst_inclusive: z.boolean(),
-})
-
-export const EstimatorTemplateSchema = z.object({
-    id: UuidSchema.optional(),
-    name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100),
-    ppi: z.number().int().positive().max(500),
-    yarn_denier: z.number().int().positive().max(2000),
-    gsm: z.number().int().positive().max(1000),
-    default_yarn_rate: z.number().positive().max(100_000),
-})
-
-export const JobWorkItemSchema = z.object({
-    name: z.string().trim().min(1),
-    rate: z.number().nonnegative(),
-    shrinkage: z.number().min(0).max(100).default(0),
-})
-
-export const EstimatorQuoteSchema = z.object({
-    party_name: z.string().trim().min(1, 'Party name is required'),
-    template_id: UuidSchema.optional().nullable(),
-    ppi: z.number().int().positive(),
-    yarn_denier: z.number().int().positive(),
-    gsm: z.number().int().positive(),
-    meters: z.number().positive(),
-    yarn_rate_per_kg: z.number().positive(),
-    job_work_charges: z.array(JobWorkItemSchema).default([]),
-    landed_cost_per_meter: z.number().positive(),
-    quote_price_per_meter: z.number().positive(),
-    intended_margin_percent: z.number().min(-100).max(1000),
-    order_id: UuidSchema.optional().nullable(),
+export const FactoryCostProfileSchema = z.object({
+    warping_rate_per_kg:     z.number().nonnegative().max(10_000),
+    sizing_rate_per_kg:      z.number().nonnegative().max(10_000),
+    winding_rate_per_kg:     z.number().nonnegative().max(10_000),
+    overhead_pct:            z.number().min(0).max(100),
+    default_commission_pct:  z.number().min(0).max(100),
+    default_transport_per_m: z.number().nonnegative().max(100_000),
 })
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

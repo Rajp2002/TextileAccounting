@@ -3,31 +3,41 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import type { EstimateState, FactorySections, WarpRow, WeftRow } from '@/lib/estimator'
 
-// ─── Settings ────────────────────────────────────────────────────────────────
+// ─── Factory Cost Profile ─────────────────────────────────────────────────────
 
-export async function getEstimatorSettings() {
+export async function getFactoryCostProfile() {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const { data, error } = await supabase
-        .from('estimator_settings')
+        .from('factory_cost_profile')
         .select('*')
-        .eq('org_id', profile.org_id)
+        .eq('factory_id', profile.org_id)
         .maybeSingle()
 
     if (error) return { error: error.message }
 
-    // Auto-create settings row if first visit
+    // Auto-create with sensible defaults on first visit
     if (!data) {
         const { data: created, error: createError } = await supabase
-            .from('estimator_settings')
+            .from('factory_cost_profile')
             .insert({
-                org_id: profile.org_id,
-                machine_rate_per_m: 1.50,
-                daily_overhead: 0,
-                total_active_machines: 24,
-                gst_rate: 5.0,
+                factory_id:              profile.org_id,
+                warping_rate_per_kg:     2.00,
+                sizing_rate_per_kg:      1.50,
+                winding_rate_per_kg:     0,
+                overhead_pct:            8.00,
+                default_commission_pct:  2.00,
+                default_transport_per_m: 0,
+                enabled_sections: {
+                    winding:    false,
+                    processing: false,
+                    finishing:  false,
+                    commission: true,
+                    transport:  false,
+                },
             })
             .select()
             .single()
@@ -39,30 +49,34 @@ export async function getEstimatorSettings() {
     return { data }
 }
 
-export async function updateEstimatorSettings(data: {
-    machine_rate_per_m: number
-    daily_overhead: number
-    total_active_machines: number
-    gst_rate: number
-    is_gst_inclusive: boolean
+export async function upsertFactoryCostProfile(data: {
+    warping_rate_per_kg:     number
+    sizing_rate_per_kg:      number
+    winding_rate_per_kg:     number
+    overhead_pct:            number
+    default_commission_pct:  number
+    default_transport_per_m: number
+    enabled_sections:        FactorySections
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const { error } = await supabase
-        .from('estimator_settings')
+        .from('factory_cost_profile')
         .upsert({
-            org_id: profile.org_id,
+            factory_id: profile.org_id,
             ...data,
+            updated_at: new Date().toISOString(),
         })
 
     if (error) return { error: error.message }
 
+    revalidatePath('/owner/settings')
     revalidatePath('/owner/estimator')
     return { success: true }
 }
 
-// ─── Templates ───────────────────────────────────────────────────────────────
+// ─── Estimator Templates ──────────────────────────────────────────────────────
 
 export async function getEstimatorTemplates() {
     const { profile } = await requireRole(['owner'])
@@ -80,37 +94,42 @@ export async function getEstimatorTemplates() {
 }
 
 export async function saveAsFabricTemplate(data: {
-    name: string
-    yarn_denier: number
-    calculated_yarn_denier: number
-    beam_ends: number
-    picks_per_cm?: number        // stored as ppi for backward compat
-    reed_space_cm?: number       // stored as reed_space
-    weft_denier: number
-    tape_length_m: number
-    shrinkage_pct: number
-    machine_rate_per_m: number
-    default_yarn_rate: number
+    name:               string
+    warpRows:           WarpRow[]
+    weftRows:           WeftRow[]
+    tapeLengthM:        number
+    perPickCostPaisa:   number
+    // Legacy single-denier fields kept for display compat in template cards
+    yarn_denier?:       number
+    beam_ends?:         number
+    weft_denier?:       number
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
+    // Derive legacy fields from first row for template card display
+    const firstWarp = data.warpRows[0]
+    const firstWeft = data.weftRows[0]
+
     const { error } = await supabase
         .from('estimator_templates')
         .insert({
-            org_id: profile.org_id,
-            name: data.name,
-            yarn_denier: data.yarn_denier,
-            calculated_yarn_denier: data.calculated_yarn_denier,
-            beam_ends: data.beam_ends,
-            ppi: data.picks_per_cm ?? 23,
-            reed_space: data.reed_space_cm ?? 110,
-            weft_denier: data.weft_denier,
-            tape_length_m: data.tape_length_m,
-            shrinkage_pct: data.shrinkage_pct,
-            machine_rate_per_m: data.machine_rate_per_m,
-            default_yarn_rate: data.default_yarn_rate,
-            is_active: true,
+            org_id:              profile.org_id,
+            name:                data.name,
+            // V3 recipe arrays (primary)
+            warp_rows:           data.warpRows,
+            weft_rows:           data.weftRows,
+            per_pick_cost_paise: data.perPickCostPaisa,
+            tape_length_m:       data.tapeLengthM,
+            // Legacy display fields derived from first row
+            yarn_denier:         firstWarp?.calcDenier ?? 75,
+            calculated_yarn_denier: firstWarp?.calcDenier ?? 75,
+            beam_ends:           firstWarp?.beamEnds ?? 3200,
+            ppi:                 firstWeft?.picks ?? 68,
+            reed_space:          firstWeft?.reedSpace ?? 110,
+            weft_denier:         firstWeft?.calcDenier ?? 75,
+            default_yarn_rate:   firstWarp?.yarnRate ?? 107,
+            is_active:           true,
         })
 
     if (error) return { error: error.message }
@@ -135,138 +154,112 @@ export async function deleteTemplate(id: string) {
     return { success: true }
 }
 
-// ─── Quotes & Orders ─────────────────────────────────────────────────────────
+// ─── Save Quote (V3) ──────────────────────────────────────────────────────────
 
-export async function saveEstimatorQuote(data: {
-    party_name: string
-    quality_label: string
-    warp_instruction?: string
-    weft_instruction?: string
-    yarn_denier: number
-    calculated_yarn_denier: number
-    beam_ends: number
-    picks_per_cm: number
-    reed_space_cm: number
-    weft_denier: number
-    tape_length_m: number
-    shrinkage_pct: number
-    yarn_rate_per_kg: number
-    machine_rate_per_m: number
-    daily_overhead: number
-    quote_price_per_m: number
-    margin_pct: number
-    meters: number
+export async function saveEstimatorQuoteV3(params: {
+    partyName:          string
+    qualityLabel:       string
+    warpInstruction?:   string
+    weftInstruction?:   string
+    estimate:           EstimateState
+    totalProductionCostPerM: number
+    quotePricePerM:     number
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    const { estimate } = params
 
     const { data: saved, error } = await supabase
         .from('estimator_quotes')
         .insert({
-            org_id: profile.org_id,
-            party_name: data.party_name,
-            quality_label: data.quality_label,
-            warp_instruction: data.warp_instruction,
-            weft_instruction: data.weft_instruction,
-            // Technical snapshot
-            yarn_denier: data.yarn_denier,
-            beam_ends: data.beam_ends,
-            reed_space: data.reed_space_cm,
-            shrinkage_pct: data.shrinkage_pct,
-            weft_denier: data.weft_denier,
-            tape_length_m: data.tape_length_m,
-            machine_rate_per_m: data.machine_rate_per_m,
-            daily_overhead: data.daily_overhead,
-            // Legacy compat fields
-            ppi: data.picks_per_cm,
-            gsm: null,
-            yarn_rate_per_kg: data.yarn_rate_per_kg,
-            meters: data.meters,
-            quote_price_per_meter: data.quote_price_per_m,
-            intended_margin_percent: data.margin_pct,
-            landed_cost_per_meter: data.quote_price_per_m / (1 + data.margin_pct / 100),
+            org_id:               profile.org_id,
+            party_name:           params.partyName,
+            quality_label:        params.qualityLabel,
+            warp_instruction:     params.warpInstruction,
+            weft_instruction:     params.weftInstruction,
+            // V3 full recipe snapshots
+            warp_rows:            estimate.warpRows,
+            weft_rows:            estimate.weftRows,
+            per_pick_cost_paise:  estimate.perPickCostPaisa,
+            warping_rate_per_kg:  estimate.warpingRatePerKg,
+            sizing_rate_per_kg:   estimate.sizingRatePerKg,
+            winding_rate_per_kg:  estimate.windingRatePerKg,
+            processing_rate_per_m: estimate.processingRatePerM,
+            finishing_rate_per_m: estimate.finishingRatePerM,
+            overhead_pct:         estimate.overheadPct,
+            commission_pct:       estimate.commissionPct,
+            transport_per_m:      estimate.transportPerM,
+            order_quantity_m:     estimate.orderQuantityM,
+            profit_margin_pct:    estimate.profitPct,
+            enabled_sections:     estimate.enabledSections,
+            // Result snapshots
+            landed_cost_per_meter:    params.totalProductionCostPerM,
+            quote_price_per_meter:    params.quotePricePerM,
+            intended_margin_percent:  estimate.profitPct,
+            meters:                   estimate.orderQuantityM ?? 0,
+            // Legacy required fields with sane defaults
+            ppi:     estimate.weftRows[0]?.picks ?? 68,
+            yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
         })
         .select('id')
         .single()
 
     if (error) return { error: error.message }
-
     return { success: true, quoteId: saved.id }
 }
 
+// ─── Convert Quote to Order ───────────────────────────────────────────────────
+
 export async function convertQuoteToOrder(data: {
-    party_name: string
-    quality_label: string
-    warp_instruction?: string
-    weft_instruction?: string
+    party_name:          string
+    quality_label:       string
+    warp_instruction?:   string
+    weft_instruction?:   string
     total_target_meters: number
-    deadline: string
-    // Quote snapshot fields
-    yarn_denier?: number
-    calculated_yarn_denier?: number
-    beam_ends?: number
-    picks_per_cm?: number
-    reed_space_cm?: number
-    weft_denier?: number
-    tape_length_m?: number
-    shrinkage_pct?: number
-    yarn_rate_per_kg?: number
-    machine_rate_per_m?: number
-    daily_overhead?: number
-    quote_price_per_m?: number
-    margin_pct?: number
+    deadline:            string
+    estimate?:           EstimateState
+    quote_price_per_m?:  number
+    totalProductionCostPerM?: number
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    // 1. Save the quote snapshot first
+    // 1. Save quote snapshot if estimate data is present
     let quoteId: string | undefined
-    if (data.yarn_rate_per_kg && data.quote_price_per_m) {
-        const quoteRes = await saveEstimatorQuote({
-            party_name: data.party_name,
-            quality_label: data.quality_label,
-            warp_instruction: data.warp_instruction,
-            weft_instruction: data.weft_instruction,
-            yarn_denier: data.yarn_denier ?? 75,
-            calculated_yarn_denier: data.calculated_yarn_denier ?? 75,
-            beam_ends: data.beam_ends ?? 3200,
-            picks_per_cm: data.picks_per_cm ?? 23,
-            reed_space_cm: data.reed_space_cm ?? 110,
-            weft_denier: data.weft_denier ?? 75,
-            tape_length_m: data.tape_length_m ?? 100,
-            shrinkage_pct: data.shrinkage_pct ?? 5,
-            yarn_rate_per_kg: data.yarn_rate_per_kg,
-            machine_rate_per_m: data.machine_rate_per_m ?? 1.5,
-            daily_overhead: data.daily_overhead ?? 0,
-            quote_price_per_m: data.quote_price_per_m,
-            margin_pct: data.margin_pct ?? 10,
-            meters: data.total_target_meters,
+    if (data.estimate && data.quote_price_per_m) {
+        const quoteRes = await saveEstimatorQuoteV3({
+            partyName:               data.party_name,
+            qualityLabel:            data.quality_label,
+            warpInstruction:         data.warp_instruction,
+            weftInstruction:         data.weft_instruction,
+            estimate:                data.estimate,
+            totalProductionCostPerM: data.totalProductionCostPerM ?? 0,
+            quotePricePerM:          data.quote_price_per_m,
         })
-        if (quoteRes.quoteId) quoteId = quoteRes.quoteId
+        if ('quoteId' in quoteRes && quoteRes.quoteId) quoteId = quoteRes.quoteId
     }
 
-    // 2. Create the flat order (no quality_id required)
+    // 2. Create the flat order
     const { data: order, error } = await supabase
         .from('orders')
         .insert({
-            org_id: profile.org_id,
-            party_name: data.party_name,
-            quality_label: data.quality_label,
-            warp_instruction: data.warp_instruction ?? '',
-            weft_instruction: data.weft_instruction ?? '',
-            total_target_meters: data.total_target_meters,
-            start_date: new Date().toISOString().split('T')[0],
-            deadline: data.deadline,
-            status: 'active',
-            // Link quote if saved
-            ...(quoteId ? {} : {}),  // estimator_quotes.order_id will be updated separately
+            org_id:               profile.org_id,
+            party_name:           data.party_name,
+            quality_label:        data.quality_label,
+            warp_instruction:     data.warp_instruction ?? '',
+            weft_instruction:     data.weft_instruction ?? '',
+            total_target_meters:  data.total_target_meters,
+            start_date:           new Date().toISOString().split('T')[0],
+            deadline:             data.deadline,
+            status:               'active',
         })
         .select('id')
         .single()
 
     if (error) return { error: error.message }
 
-    // 3. Link quote to order if we have both IDs
+    // 3. Link quote → order
     if (quoteId && order?.id) {
         await supabase
             .from('estimator_quotes')
