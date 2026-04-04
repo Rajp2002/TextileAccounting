@@ -3,7 +3,8 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import type { EstimateState, FactorySections, WarpRow, WeftRow } from '@/lib/estimator'
+import type { EstimateState, FactorySections, WarpRow, WeftRow, OverheadItem } from '@/lib/estimator'
+import { nanoid } from 'nanoid'
 
 // ─── Factory Cost Profile ─────────────────────────────────────────────────────
 
@@ -42,11 +43,37 @@ export async function getFactoryCostProfile() {
             .select()
             .single()
 
-        if (createError) return { error: createError.message }
-        return { data: created }
-    }
+            if (createError) return { error: createError.message }
+            return { data: created }
+        }
 
     return { data }
+}
+
+// ─── Fixed Workers for Overhead ───────────────────────────────────────────────
+
+/**
+ * Fetches active fixed-salary workers so the estimator can pre-populate
+ * the "Fixed Salary Staff" overhead section with real DB data.
+ * Returns light objects; each maps to an OverheadItem with source='fixed_worker_derived'.
+ */
+export async function getFixedWorkersForOverhead(): Promise<{
+    data?: { id: number; name: string; role: string; monthly_salary: number }[]
+    error?: string
+}> {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('fixed_workers')
+        .select('id, name, role, monthly_salary')
+        .eq('org_id', profile.org_id)
+        .eq('is_active', true)
+        .order('role', { ascending: true })
+        .order('name', { ascending: true })
+
+    if (error) return { error: error.message }
+    return { data: data ?? [] }
 }
 
 export async function upsertFactoryCostProfile(data: {
@@ -57,6 +84,8 @@ export async function upsertFactoryCostProfile(data: {
     default_commission_pct:  number
     default_transport_per_m: number
     enabled_sections:        FactorySections
+    overhead_items?:         OverheadItem[]
+    monthly_output_m?:       number
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -187,7 +216,10 @@ export async function saveEstimatorQuoteV3(params: {
             winding_rate_per_kg:  estimate.windingRatePerKg,
             processing_rate_per_m: estimate.processingRatePerM,
             finishing_rate_per_m: estimate.finishingRatePerM,
-            overhead_pct:         estimate.overheadPct,
+            // Overhead V2: store both the items snapshot and the computed effective %
+            overhead_items:       estimate.overheadItems,
+            monthly_output_m:     estimate.monthlyOutputM,
+            overhead_pct:         estimate.overheadPct,   // effective % computed by engine
             commission_pct:       estimate.commissionPct,
             transport_per_m:      estimate.transportPerM,
             order_quantity_m:     estimate.orderQuantityM,

@@ -14,7 +14,9 @@
  *   Layer 6: Processing    = processingRatePerM  [optional, flat ₹/m]
  *   Layer 7: Finishing     = finishingRatePerM   [optional, flat ₹/m]
  *            directCost    = Layers 1–7
- *   Layer 8: Overhead      = directCost × overheadPct / 100
+ *   Layer 8: Overhead      = Σ(overheadItems[i].monthlyAmount) / monthlyOutputM
+ *              (sum of all fixed monthly factory costs divided by monthly output metres)
+ *              effectiveOverheadPct = (overheadPerM / directCostPerM) × 100  [display only]
  *   ─────────────────────────────────────────────────────
  *   totalProductionCostPerM = directCost + overhead
  *
@@ -61,6 +63,19 @@ export interface FactorySections {
   transport:  boolean   // factory delivers rather than buyer collecting
 }
 
+/**
+ * A single overhead line item — represents one monthly fixed cost.
+ * source='fixed_worker_derived' items are pre-populated from the fixed_workers table
+ * but remain fully editable by the user.
+ */
+export interface OverheadItem {
+  id:           string
+  label:        string        // e.g. "Rent", "Electricity", "Raju (Master)"
+  monthlyAmount: number       // ₹ per month
+  source:       'manual' | 'fixed_worker_derived'
+  workerId?:    number        // fixed_workers.id — present only for derived items
+}
+
 /** Complete client-side estimate state (what the estimator page manages) */
 export interface EstimateState {
   warpRows:            WarpRow[]
@@ -72,7 +87,12 @@ export interface EstimateState {
   windingRatePerKg:    number          // ₹/kg charged for rewinding (0 if not applicable)
   processingRatePerM:  number          // flat ₹/m for dyeing/printing
   finishingRatePerM:   number          // flat ₹/m for calendering/heat-setting
-  overheadPct:         number          // overhead as % of direct production cost
+  // ── Overhead V2: itemized breakdown ─────────────────────────────────────
+  overheadItems:       OverheadItem[]  // list of monthly fixed cost line items
+  monthlyOutputM:      number          // estimated metres produced per month (denominator)
+  // ── kept for backward-compat serialisation (computed, never user-edited) ─
+  overheadPct:         number          // effective overhead % — derived from items/denominator
+  // ────────────────────────────────────────────────────────────────────────
   commissionPct:       number          // selling commission %
   transportPerM:       number          // transport cost ₹/m
   profitPct:           number          // desired profit margin %
@@ -114,6 +134,8 @@ export interface EstimatorV3Totals {
   finishingPerM:           number
   directCostPerM:          number
   overheadPerM:            number
+  overheadTotalMonthly:    number   // sum of all overhead item monthly amounts
+  effectiveOverheadPct:    number   // overheadPerM / directCostPerM × 100 (display only)
   totalProductionCostPerM: number
   totalWarpKgPer100m:      number   // used for warping formula + display
   totalAllYarnKgPer100m:   number   // used for winding formula + quality weight display
@@ -238,18 +260,25 @@ export function calcWindingCostPerMeter(
 }
 
 /**
- * Overhead cost per metre.
- * Overhead is a percentage of direct production cost to naturally scale
- * with fabric complexity. A high-picks jacquard uses more overhead than a plain weave.
+ * Overhead cost per metre — V2 formula.
  *
- * Formula: directCostPerM × (overheadPct / 100)
+ * Divides total monthly fixed factory costs by monthly output metres.
+ * This is more accurate than a percentage because it reflects real fixed costs
+ * independent of yarn prices (which fluctuate).
  *
- * @param directCostPerM - sum of all cost layers before overhead
- * @param overheadPct    - overhead as % of direct cost (e.g. 8 for 8%)
- * @returns ₹ per metre
+ * Formula: Σ(items[i].monthlyAmount) / monthlyOutputM
+ *
+ * @param overheadItems   - array of monthly overhead line items
+ * @param monthlyOutputM  - estimated metres produced per month
+ * @returns { overheadPerM, totalMonthly }
  */
-export function calcOverheadCostPerMeter(directCostPerM: number, overheadPct: number): number {
-  return directCostPerM * (overheadPct / 100)
+export function calcOverheadCostPerMeter(
+  overheadItems: OverheadItem[],
+  monthlyOutputM: number
+): { overheadPerM: number; totalMonthly: number } {
+  const totalMonthly = overheadItems.reduce((sum, item) => sum + (item.monthlyAmount || 0), 0)
+  const overheadPerM = monthlyOutputM > 0 ? totalMonthly / monthlyOutputM : 0
+  return { overheadPerM, totalMonthly }
 }
 
 /**
@@ -332,8 +361,13 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     warpCostPerM + weftCostPerM + weaveCostPerM +
     warpingAndSizingPerM + windingPerM + processingPerM + finishingPerM
 
-  // ── Layer 8: Overhead (% of direct cost) ───────────────────────────────
-  const overheadPerM = calcOverheadCostPerMeter(directCostPerM, estimate.overheadPct)
+  // ── Layer 8: Overhead (sum of monthly fixed costs ÷ monthly output) ────
+  const { overheadPerM, totalMonthly: overheadTotalMonthly } = calcOverheadCostPerMeter(
+    estimate.overheadItems,
+    estimate.monthlyOutputM
+  )
+  // Effective % for display + backward-compat snapshot in saved quotes
+  const effectiveOverheadPct = directCostPerM > 0 ? (overheadPerM / directCostPerM) * 100 : 0
 
   const totalProductionCostPerM = directCostPerM + overheadPerM
 
@@ -364,6 +398,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     finishingPerM,
     directCostPerM,
     overheadPerM,
+    overheadTotalMonthly,
+    effectiveOverheadPct,
     totalProductionCostPerM,
     totalWarpKgPer100m,
     totalAllYarnKgPer100m,
@@ -401,6 +437,14 @@ export const DEFAULT_FACTORY_SECTIONS: FactorySections = {
   transport:  false,
 }
 
+/** Default overhead items — shown before fixed workers are loaded from DB */
+export const DEFAULT_OVERHEAD_ITEMS: Omit<OverheadItem, 'id'>[] = [
+  { label: 'Rent / Lease',         monthlyAmount: 25000, source: 'manual' },
+  { label: 'Electricity',           monthlyAmount: 20000, source: 'manual' },
+  { label: 'Water & Maintenance',   monthlyAmount: 3000,  source: 'manual' },
+  { label: 'Factory Consumables',   monthlyAmount: 5000,  source: 'manual' },
+]
+
 export function makeDefaultEstimateState(): EstimateState {
   return {
     warpRows:           [{ id: nanoid(), ...DEFAULT_WARP_ROW }],
@@ -412,7 +456,9 @@ export function makeDefaultEstimateState(): EstimateState {
     windingRatePerKg:   0,
     processingRatePerM: 0,
     finishingRatePerM:  0,
-    overheadPct:        8,
+    overheadItems:      DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
+    monthlyOutputM:     10000,
+    overheadPct:        0,   // will be computed — kept for compat
     commissionPct:      2,
     transportPerM:      0,
     profitPct:          15,
