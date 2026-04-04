@@ -55,6 +55,7 @@ import {
     getFixedWorkersForOverhead,
     deleteTemplate,
     updateTemplateRates,
+    renameTemplate,
 } from './actions'
 import { toast } from 'sonner'
 import { format, addDays } from 'date-fns'
@@ -360,6 +361,7 @@ export default function EstimatorPage() {
 
     // Template management — "edit rates" sheet
     const [editRatesTpl,     setEditRatesTpl]     = useState<any | null>(null)
+    const [editingTplName,   setEditingTplName]   = useState('')
     const [editingWarpRates, setEditingWarpRates] = useState<{ id: string; yarnRate: number }[]>([])
     const [editingWeftRates, setEditingWeftRates] = useState<{ id: string; yarnRate: number }[]>([])
     const [savingRates,      setSavingRates]      = useState(false)
@@ -434,6 +436,7 @@ export default function EstimatorPage() {
         const warpRows: WarpRow[] = tpl.warp_rows ?? []
         const weftRows: WeftRow[] = tpl.weft_rows ?? []
         setEditRatesTpl(tpl)
+        setEditingTplName(tpl.name)
         setEditingWarpRates(warpRows.map((r: WarpRow) => ({ id: r.id, yarnRate: r.yarnRate })))
         setEditingWeftRates(weftRows.map((r: WeftRow) => ({ id: r.id, yarnRate: r.yarnRate })))
     }, [])
@@ -442,7 +445,18 @@ export default function EstimatorPage() {
     const handleSaveRatesAndApply = async () => {
         if (!editRatesTpl) return
         setSavingRates(true)
-        // Merge new rates into the stored rows
+
+        // 1. Rename if changed
+        if (editingTplName.trim() && editingTplName.trim() !== editRatesTpl.name) {
+            const renameRes = await renameTemplate(editRatesTpl.id, editingTplName.trim())
+            if (renameRes.error) {
+                setSavingRates(false)
+                toast.error(`Rename failed: ${renameRes.error}`)
+                return
+            }
+        }
+
+        // 2. Update rates
         const updatedWarp: WarpRow[] = (editRatesTpl.warp_rows ?? []).map((r: WarpRow) => ({
             ...r,
             yarnRate: editingWarpRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
@@ -451,18 +465,22 @@ export default function EstimatorPage() {
             ...r,
             yarnRate: editingWeftRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
         }))
-        // Persist
+        
         const res = await updateTemplateRates({ id: editRatesTpl.id, warpRows: updatedWarp, weftRows: updatedWeft })
         setSavingRates(false)
         if (res.error) { toast.error(res.error); return }
-        // Refresh template list
+
+        // Success: refresh and apply
         const tRes = await getEstimatorTemplates()
         if (tRes.data) setTemplates(tRes.data)
-        // Apply to estimator with updated rates
-        dispatch({ type: 'APPLY_TEMPLATE', template: { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft } })
-        setQualityLabel(editRatesTpl.name)
+        
+        dispatch({
+            type: 'APPLY_TEMPLATE',
+            template: { ...editRatesTpl, name: editingTplName.trim(), warp_rows: updatedWarp, weft_rows: updatedWeft }
+        })
+        setQualityLabel(editingTplName.trim())
         setEditRatesTpl(null)
-        toast.success('Rates updated & template applied')
+        toast.success('Template updated & applied')
     }
 
     /** Apply template directly (without editing rates). */
@@ -1152,6 +1170,14 @@ export default function EstimatorPage() {
                         </DialogTitle>
                     </DialogHeader>
                     <div className="py-3 space-y-5">
+                        <div className="space-y-1.5">
+                            <Label className="text-[10px] uppercase font-black text-slate-500">Fabric Quality Name</Label>
+                            <Input
+                                value={editingTplName}
+                                onChange={e => setEditingTplName(e.target.value)}
+                                className="font-bold border-slate-200"
+                            />
+                        </div>
                         <p className="text-xs text-slate-500 leading-relaxed">
                             Update yarn rates below. The fabric structure (denier, ends, picks) stays the same.
                             Saving will update the stored template <span className="font-bold text-slate-700">and</span> apply it to the estimator.
