@@ -124,20 +124,18 @@ export async function getEstimatorTemplates() {
 }
 
 export async function saveAsFabricTemplate(data: {
-    name:               string
-    warpRows:           WarpRow[]
-    weftRows:           WeftRow[]
-    tapeLengthM:        number
-    perPickCostPaisa:   number
-    // Legacy single-denier fields kept for display compat in template cards
-    yarn_denier?:       number
-    beam_ends?:         number
-    weft_denier?:       number
+    name:             string
+    warpRows:         WarpRow[]
+    weftRows:         WeftRow[]
+    tapeLengthM:      number
+    perPickCostPaisa: number
+    yarnShortagePct?: number
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    // Derive legacy fields from first row for template card display
+    // Derive legacy flat fields from first row (legacy columns are now nullable,
+    // but we still populate them for any older UI that reads them)
     const firstWarp = data.warpRows[0]
     const firstWeft = data.weftRows[0]
 
@@ -146,21 +144,72 @@ export async function saveAsFabricTemplate(data: {
         .insert({
             org_id:              profile.org_id,
             name:                data.name,
-            // V3 recipe arrays (primary)
+            // V3 recipe arrays (primary store)
             warp_rows:           data.warpRows,
             weft_rows:           data.weftRows,
             per_pick_cost_paise: data.perPickCostPaisa,
             tape_length_m:       data.tapeLengthM,
-            // Legacy display fields derived from first row
-            yarn_denier:         firstWarp?.calcDenier ?? 75,
+            yarn_shortage_pct:   data.yarnShortagePct ?? 10,
+            // Legacy display fields — cast to integer to satisfy old column types
+            yarn_denier:         Math.round(firstWarp?.calcDenier ?? 75),
             calculated_yarn_denier: firstWarp?.calcDenier ?? 75,
             beam_ends:           firstWarp?.beamEnds ?? 3200,
-            ppi:                 firstWeft?.picks ?? 68,
-            reed_space:          firstWeft?.reedSpace ?? 110,
+            ppi:                 Math.round(firstWeft?.picks ?? 68),
+            reed_space:          firstWeft?.reedSpace ?? 62,
             weft_denier:         firstWeft?.calcDenier ?? 75,
             default_yarn_rate:   firstWarp?.yarnRate ?? 107,
+            gsm:                 80,   // legacy placeholder — not used in V3
             is_active:           true,
         })
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/owner/estimator')
+    return { success: true }
+}
+
+/**
+ * Update an existing template's yarn rates (warp + weft rows).
+ * Used when market rates change — owner wants to keep fabric structure
+ * but refresh the rate snapshot stored in the template.
+ */
+export async function updateTemplateRates(data: {
+    id:       string
+    warpRows: WarpRow[]
+    weftRows: WeftRow[]
+}) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const firstWarp = data.warpRows[0]
+
+    const { error } = await supabase
+        .from('estimator_templates')
+        .update({
+            warp_rows:         data.warpRows,
+            weft_rows:         data.weftRows,
+            // Sync legacy flat field too
+            default_yarn_rate: firstWarp?.yarnRate ?? 107,
+        })
+        .eq('id', data.id)
+        .eq('org_id', profile.org_id)
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/owner/estimator')
+    return { success: true }
+}
+
+/** Rename a template (owner can fix typos without recreating). */
+export async function renameTemplate(id: string, name: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { error } = await supabase
+        .from('estimator_templates')
+        .update({ name: name.trim() })
+        .eq('id', id)
+        .eq('org_id', profile.org_id)
 
     if (error) return { error: error.message }
 
