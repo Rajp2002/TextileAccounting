@@ -99,6 +99,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 monthlyOutputM:     Number(profile.monthly_output_m ?? 10000),
                 overheadOverridePerM: profile.overhead_override_per_m != null ? Number(profile.overhead_override_per_m) : null,
                 overheadPct:        0,
+                yarnShortagePct:    Number(profile.yarn_shortage_pct ?? 10),
                 commissionPct:      Number(profile.default_commission_pct  ?? 2),
                 transportPerM:      Number(profile.default_transport_per_m ?? 0),
                 enabledSections:    { ...sections },
@@ -128,6 +129,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                         : state.weftRows,
                     tapeLengthM:      Number(tpl.tape_length_m ?? state.tapeLengthM),
                     perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
+                    yarnShortagePct:  Number(tpl.yarn_shortage_pct ?? state.yarnShortagePct),
                 }
             }
             return {
@@ -647,7 +649,6 @@ export default function EstimatorPage() {
                                     <NumField label="Beam Ends" value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v })} />
                                     <NumField label="Rate (₹/kg)" value={row.yarnRate} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: v })} step={1} />
                                     <NumField label="GST %" value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v })} step={0.5} />
-                                    <NumField label="Shortage %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} step={0.5} />
                                 </RowCard>
                             ))}
                         </div>
@@ -694,7 +695,6 @@ export default function EstimatorPage() {
                                     <NumField label="Calc Denier" value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v })} unit="D" step={0.5} />
                                     <NumField label="Rate (₹/kg)" value={row.yarnRate} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v })} />
                                     <NumField label="GST %" value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v })} step={0.5} />
-                                    <NumField label="Shortage %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} step={0.5} />
                                 </RowCard>
                             ))}
                         </div>
@@ -732,6 +732,34 @@ export default function EstimatorPage() {
                                 </div>
                             </div>
                        </div>
+
+                        {/* Combined Yarn Shortage */}
+                        <div className="mt-5 pt-4 border-t border-amber-100">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                                <NumField
+                                    label="Combined Yarn Shortage %"
+                                    value={state.yarnShortagePct}
+                                    onChange={v => dispatch({ type: 'SET', field: 'yarnShortagePct', value: v })}
+                                    unit="%"
+                                    step={0.5}
+                                    hint="Applied to warp+weft combined total"
+                                />
+                                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                                    <div className="flex justify-between text-[11px] text-slate-500 font-medium">
+                                        <span>Base yarn (warp+weft)</span>
+                                        <span className="font-mono font-bold text-slate-700">₹{(totals.yarnBaseWarpPerM + totals.yarnBaseWeftPerM).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-[11px] text-amber-600 font-medium">
+                                        <span>+ {state.yarnShortagePct}% shortage</span>
+                                        <span className="font-mono font-bold">+₹{totals.yarnShortageCostPerM.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-[11px] font-black border-t border-slate-200 pt-1.5 text-slate-800">
+                                        <span>Total yarn cost</span>
+                                        <span className="font-mono">₹{(totals.warpCostPerM + totals.weftCostPerM).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
 
