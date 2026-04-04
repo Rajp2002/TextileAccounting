@@ -47,7 +47,8 @@ export interface WeftRow {
   id: string
   label?: string
   picks: number         // picks per inch (PPI) — industry standard in Surat
-  reedSpace: number     // fabric width in cm
+  reedSpace: number     // finished CLOTH width in cm (not loom/reed width)
+                        // Use the actual output cloth width — narrower than loom due to crimp
   calcDenier: number    // effective weft yarn denier
   yarnRate: number      // ₹/kg
   gstPct: number
@@ -172,20 +173,25 @@ export function calcWarpYarnKg(beamEnds: number, calcDenier: number): number {
 /**
  * Weft yarn weight per 100m of finished fabric.
  *
- * Formula: (picks × reedSpace × calcDenier × 100) / 9_000_000
- *   - picks = picks per INCH (PPI) — standard Surat unit
- *   - Each pick spans reedSpace cm of fabric width
- *   - Per 1m fabric length: picks × (reedSpace/100) m of weft thread
- *   - × 100 (per-100m) ÷ 9000 (denier→g/m) ÷ 1000 (g→kg)
- *   = picks × reedSpace × calcDenier × 100 / 9_000_000
+ * Formula: (picks × clothWidth × calcDenier × 100) / 9_000_000
+ *   - picks     = picks per INCH (PPI) — standard Surat unit
+ *   - clothWidth = FINISHED cloth output width in cm (NOT loom/reed width)
+ *
+ * IMPORTANT: Use the actual output cloth width, not the loom reed width.
+ * The loom reed may be 96–120cm wide but the cloth output is typically
+ * 60–80cm due to warp/weft crimp. Using reed width over-estimates weft
+ * consumption by ~20–35%.
+ *
+ *   Per 1m fabric length: picks × (clothWidth/100) m of weft thread
+ *   × 100 (per-100m) ÷ 9000 (denier→g/m) ÷ 1000 (g→kg)
  *
  * @param picks      - picks per inch (PPI)
- * @param reedSpace  - fabric width in cm
+ * @param clothWidth - finished cloth output width in cm
  * @param calcDenier - effective weft yarn denier
  * @returns kg per 100m
  */
-export function calcWeftYarnKg(picks: number, reedSpace: number, calcDenier: number): number {
-  return (picks * reedSpace * calcDenier * 100) / 9_000_000
+export function calcWeftYarnKg(picks: number, clothWidth: number, calcDenier: number): number {
+  return (picks * clothWidth * calcDenier * 100) / 9_000_000
 }
 
 /**
@@ -449,8 +455,8 @@ export const DEFAULT_WARP_ROW: Omit<WarpRow, 'id'> = {
 }
 
 export const DEFAULT_WEFT_ROW: Omit<WeftRow, 'id'> = {
-  picks:       68,
-  reedSpace:   110,
+  picks:       58,
+  reedSpace:   76,   // finished cloth width in cm (not loom reed width, not folded width)
   calcDenier:  75,
   yarnRate:    107,
   gstPct:      5,

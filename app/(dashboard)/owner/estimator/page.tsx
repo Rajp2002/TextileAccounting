@@ -53,6 +53,8 @@ import {
     saveEstimatorQuoteV3,
     convertQuoteToOrder,
     getFixedWorkersForOverhead,
+    deleteTemplate,
+    updateTemplateRates,
 } from './actions'
 import { toast } from 'sonner'
 import { format, addDays } from 'date-fns'
@@ -356,6 +358,13 @@ export default function EstimatorPage() {
     const [showConvert,      setShowConvert]      = useState(false)
     const [templateName,     setTemplateName]     = useState('')
 
+    // Template management — "edit rates" sheet
+    const [editRatesTpl,     setEditRatesTpl]     = useState<any | null>(null)
+    const [editingWarpRates, setEditingWarpRates] = useState<{ id: string; yarnRate: number }[]>([])
+    const [editingWeftRates, setEditingWeftRates] = useState<{ id: string; yarnRate: number }[]>([])
+    const [savingRates,      setSavingRates]      = useState(false)
+    const [deletingTpl,      setDeletingTpl]      = useState<string | null>(null)
+
     useEffect(() => {
         async function load() {
             setLoading(true)
@@ -406,6 +415,7 @@ export default function EstimatorPage() {
             weftRows:         state.weftRows,
             tapeLengthM:      state.tapeLengthM,
             perPickCostPaisa: state.perPickCostPaisa,
+            yarnShortagePct:  state.yarnShortagePct,
         })
         setSavingTemplate(false)
         if (res.success) {
@@ -413,10 +423,64 @@ export default function EstimatorPage() {
             if (tRes.data) setTemplates(tRes.data)
             setShowSaveTemplate(false)
             setTemplateName('')
-            toast.success('New fabric template created')
+            toast.success('Fabric template saved!')
         } else {
             toast.error(res.error ?? 'Failed to save template')
         }
+    }
+
+    /** Open the "update rates" sheet for a template. */
+    const openEditRates = useCallback((tpl: any) => {
+        const warpRows: WarpRow[] = tpl.warp_rows ?? []
+        const weftRows: WeftRow[] = tpl.weft_rows ?? []
+        setEditRatesTpl(tpl)
+        setEditingWarpRates(warpRows.map((r: WarpRow) => ({ id: r.id, yarnRate: r.yarnRate })))
+        setEditingWeftRates(weftRows.map((r: WeftRow) => ({ id: r.id, yarnRate: r.yarnRate })))
+    }, [])
+
+    /** Persist updated rates to template row AND apply to the estimator. */
+    const handleSaveRatesAndApply = async () => {
+        if (!editRatesTpl) return
+        setSavingRates(true)
+        // Merge new rates into the stored rows
+        const updatedWarp: WarpRow[] = (editRatesTpl.warp_rows ?? []).map((r: WarpRow) => ({
+            ...r,
+            yarnRate: editingWarpRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
+        }))
+        const updatedWeft: WeftRow[] = (editRatesTpl.weft_rows ?? []).map((r: WeftRow) => ({
+            ...r,
+            yarnRate: editingWeftRates.find(x => x.id === r.id)?.yarnRate ?? r.yarnRate,
+        }))
+        // Persist
+        const res = await updateTemplateRates({ id: editRatesTpl.id, warpRows: updatedWarp, weftRows: updatedWeft })
+        setSavingRates(false)
+        if (res.error) { toast.error(res.error); return }
+        // Refresh template list
+        const tRes = await getEstimatorTemplates()
+        if (tRes.data) setTemplates(tRes.data)
+        // Apply to estimator with updated rates
+        dispatch({ type: 'APPLY_TEMPLATE', template: { ...editRatesTpl, warp_rows: updatedWarp, weft_rows: updatedWeft } })
+        setQualityLabel(editRatesTpl.name)
+        setEditRatesTpl(null)
+        toast.success('Rates updated & template applied')
+    }
+
+    /** Apply template directly (without editing rates). */
+    const handleApplyCurrentRates = () => {
+        if (!editRatesTpl) return
+        dispatch({ type: 'APPLY_TEMPLATE', template: editRatesTpl })
+        setQualityLabel(editRatesTpl.name)
+        setEditRatesTpl(null)
+        toast.success(`Applied: ${editRatesTpl.name}`)
+    }
+
+    const handleDeleteTemplate = async (id: string) => {
+        setDeletingTpl(id)
+        const res = await deleteTemplate(id)
+        setDeletingTpl(null)
+        if (res.error) { toast.error(res.error); return }
+        setTemplates(prev => prev.filter(t => t.id !== id))
+        toast.success('Template deleted')
     }
 
     const handleConvertToOrder = async () => {
@@ -552,26 +616,37 @@ export default function EstimatorPage() {
             {/* ── MAIN FORM ────────────────────────────────────────────── */}
             <div className="max-w-4xl mx-auto space-y-6">
 
-                {/* Fabric Select Row */}
+                {/* Fabric Templates Row */}
                 {templates.length > 0 && (
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
                             <History className="h-3.5 w-3.5 text-slate-400" />
-                            <p className="text-[11px] uppercase tracking-widest text-slate-500 font-black">History & Templates</p>
+                            <p className="text-[11px] uppercase tracking-widest text-slate-500 font-black">Templates</p>
+                            <span className="ml-auto text-[10px] text-slate-400 font-medium">Tap to apply · Long-press to edit rates</span>
                         </div>
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                             {templates.map(tpl => (
-                                <button
-                                    key={tpl.id}
-                                    onClick={() => applyTemplate(tpl)}
-                                    className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold border transition-all shadow-sm ${
-                                        qualityLabel === tpl.name
-                                            ? 'bg-brand-accent border-brand-accent text-white shadow-brand-accent/20'
-                                            : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/50 hover:bg-slate-50'
-                                    }`}
-                                >
-                                    {tpl.name}
-                                </button>
+                                <div key={tpl.id} className="relative shrink-0 group">
+                                    <button
+                                        onClick={() => applyTemplate(tpl)}
+                                        onContextMenu={e => { e.preventDefault(); openEditRates(tpl) }}
+                                        className={`rounded-xl px-4 py-2 text-xs font-bold border transition-all shadow-sm ${
+                                            qualityLabel === tpl.name
+                                                ? 'bg-brand-accent border-brand-accent text-white shadow-brand-accent/20'
+                                                : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/50 hover:bg-slate-50'
+                                        } pr-8`}
+                                    >
+                                        {tpl.name}
+                                    </button>
+                                    {/* Edit rates button — visible on hover */}
+                                    <button
+                                        onClick={e => { e.stopPropagation(); openEditRates(tpl) }}
+                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded-md hover:bg-brand-accent/10 text-slate-400 hover:text-brand-accent"
+                                        title="Update yarn rates"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </button>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -691,7 +766,7 @@ export default function EstimatorPage() {
                                     costPer100m={totals.weftRows[i]?.costPer100m ?? 0}
                                 >
                                     <NumField label="Picks (PPI)" value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v })} />
-                                    <NumField label="Reed Width" value={row.reedSpace} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })} unit="cm" />
+                                    <NumField label="Cloth Width" value={row.reedSpace} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })} unit="cm" hint="Finished output width (not loom width)" />
                                     <NumField label="Calc Denier" value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v })} unit="D" step={0.5} />
                                     <NumField label="Rate (₹/kg)" value={row.yarnRate} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v })} />
                                     <NumField label="GST %" value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v })} step={0.5} />
@@ -1039,7 +1114,7 @@ export default function EstimatorPage() {
             <Dialog open={showSaveTemplate} onOpenChange={setShowSaveTemplate}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Save New Fabric Template</DialogTitle>
+                        <DialogTitle>Save Fabric Template</DialogTitle>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-1.5">
@@ -1048,11 +1123,13 @@ export default function EstimatorPage() {
                                 placeholder="Japan Satin, Canvas Shine"
                                 value={templateName}
                                 onChange={e => setTemplateName(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleSaveTemplate()}
                                 autoFocus
                             />
                         </div>
-                        <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 leading-relaxed">
-                            This will save all {state.warpRows.length} warp and {state.weftRows.length} weft blend layers for quick recall later.
+                        <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 leading-relaxed space-y-1">
+                            <p>Saves {state.warpRows.length} warp + {state.weftRows.length} weft blend layers including current yarn rates.</p>
+                            <p className="text-slate-400">Yarn rates can be updated anytime without recreating the template.</p>
                         </div>
                     </div>
                     <DialogFooter>
@@ -1060,6 +1137,109 @@ export default function EstimatorPage() {
                         <Button className="bg-brand-accent text-white" onClick={handleSaveTemplate} disabled={savingTemplate}>
                             {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                             Confirm & Save
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Template Rates Dialog */}
+            <Dialog open={!!editRatesTpl} onOpenChange={open => { if (!open) setEditRatesTpl(null) }}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-brand-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            Edit Template: {editRatesTpl?.name}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-3 space-y-5">
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                            Update yarn rates below. The fabric structure (denier, ends, picks) stays the same.
+                            Saving will update the stored template <span className="font-bold text-slate-700">and</span> apply it to the estimator.
+                        </p>
+
+                        {/* Warp rates */}
+                        {editingWarpRates.length > 0 && (
+                            <div className="space-y-2">
+                                <p className="text-[10px] uppercase tracking-widest font-black text-indigo-600">Warp Yarn Rates</p>
+                                {(editRatesTpl?.warp_rows ?? []).map((row: WarpRow, i: number) => (
+                                    <div key={row.id} className="flex items-center gap-3 bg-indigo-50/50 border border-indigo-100 rounded-xl px-3 py-2.5">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[11px] font-bold text-slate-700">{row.label ?? `Warp ${i + 1}`}</p>
+                                            <p className="text-[10px] text-slate-400 font-mono">{row.calcDenier}D · {row.beamEnds} ends · {row.gstPct}% GST</p>
+                                        </div>
+                                        <div className="relative shrink-0 w-32">
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                step={1}
+                                                value={editingWarpRates.find(x => x.id === row.id)?.yarnRate ?? row.yarnRate}
+                                                onChange={e => setEditingWarpRates(prev =>
+                                                    prev.map(x => x.id === row.id ? { ...x, yarnRate: Number(e.target.value) } : x)
+                                                )}
+                                                className="h-8 text-xs font-mono font-bold text-right pr-10 pl-6 border-indigo-100 focus:border-indigo-300 bg-white"
+                                            />
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">/kg</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Weft rates */}
+                        {editingWeftRates.length > 0 && (
+                            <div className="space-y-2">
+                                <p className="text-[10px] uppercase tracking-widest font-black text-emerald-600">Weft Yarn Rates</p>
+                                {(editRatesTpl?.weft_rows ?? []).map((row: WeftRow, i: number) => (
+                                    <div key={row.id} className="flex items-center gap-3 bg-emerald-50/50 border border-emerald-100 rounded-xl px-3 py-2.5">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[11px] font-bold text-slate-700">{row.label ?? `Weft ${i + 1}`}</p>
+                                            <p className="text-[10px] text-slate-400 font-mono">{row.calcDenier}D · {row.picks} PPI · {row.gstPct}% GST</p>
+                                        </div>
+                                        <div className="relative shrink-0 w-32">
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                step={1}
+                                                value={editingWeftRates.find(x => x.id === row.id)?.yarnRate ?? row.yarnRate}
+                                                onChange={e => setEditingWeftRates(prev =>
+                                                    prev.map(x => x.id === row.id ? { ...x, yarnRate: Number(e.target.value) } : x)
+                                                )}
+                                                className="h-8 text-xs font-mono font-bold text-right pr-10 pl-6 border-emerald-100 focus:border-emerald-300 bg-white"
+                                            />
+                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">/kg</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Delete zone */}
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                            <button
+                                onClick={() => {
+                                    if (editRatesTpl && window.confirm(`Delete template "${editRatesTpl.name}"?`)) {
+                                        handleDeleteTemplate(editRatesTpl.id)
+                                        setEditRatesTpl(null)
+                                    }
+                                }}
+                                disabled={deletingTpl === editRatesTpl?.id}
+                                className="text-[11px] font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
+                            >
+                                <Trash2 className="h-3 w-3" />
+                                Delete template
+                            </button>
+                            <p className="text-[10px] text-slate-400">Structure preserved · only rates change</p>
+                        </div>
+                    </div>
+                    <DialogFooter className="flex-col sm:flex-row gap-2">
+                        <Button variant="ghost" size="sm" onClick={handleApplyCurrentRates} className="text-slate-500">
+                            Apply as-is
+                        </Button>
+                        <Button className="bg-brand-accent text-white" onClick={handleSaveRatesAndApply} disabled={savingRates}>
+                            {savingRates ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                            Save Rates & Apply
                         </Button>
                     </DialogFooter>
                 </DialogContent>
