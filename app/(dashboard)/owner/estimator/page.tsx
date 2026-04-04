@@ -97,6 +97,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 windingRatePerKg:   Number(profile.winding_rate_per_kg ?? 0),
                 overheadItems:      savedItems ?? state.overheadItems,
                 monthlyOutputM:     Number(profile.monthly_output_m ?? 10000),
+                overheadOverridePerM: profile.overhead_override_per_m != null ? Number(profile.overhead_override_per_m) : null,
                 overheadPct:        0,
                 commissionPct:      Number(profile.default_commission_pct  ?? 2),
                 transportPerM:      Number(profile.default_transport_per_m ?? 0),
@@ -885,10 +886,63 @@ export default function EstimatorPage() {
                                     </p>
                                 </div>
                             </div>
+
+                            {/* Direct Override Input */}
+                            <div className={`rounded-xl border-2 transition-all ${
+                                state.overheadOverridePerM != null && state.overheadOverridePerM > 0
+                                    ? 'border-amber-400 bg-amber-50/60'
+                                    : 'border-dashed border-slate-200 bg-slate-50/40'
+                            } px-4 py-3 space-y-2`}>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-[10px] uppercase tracking-widest font-black text-slate-600">
+                                            Direct ₹/m Override
+                                        </p>
+                                        <p className="text-[10px] text-slate-400 font-medium">
+                                            {state.overheadOverridePerM != null && state.overheadOverridePerM > 0
+                                                ? '⚡ Override active — itemized calc is ignored'
+                                                : 'Enter a value to bypass the itemized calculation'}
+                                        </p>
+                                    </div>
+                                    {state.overheadOverridePerM != null && state.overheadOverridePerM > 0 && (
+                                        <button
+                                            onClick={() => dispatch({ type: 'SET', field: 'overheadOverridePerM', value: null })}
+                                            className="text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg px-2 py-1 transition-all"
+                                        >
+                                            ✕ Clear
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500 pointer-events-none">₹</span>
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        step={0.5}
+                                        placeholder="e.g. 12.50"
+                                        value={state.overheadOverridePerM ?? ''}
+                                        onChange={e => {
+                                            const v = e.target.value
+                                            dispatch({ type: 'SET', field: 'overheadOverridePerM', value: v === '' ? null : Number(v) })
+                                        }}
+                                        className={`h-10 text-sm font-mono font-bold pl-8 pr-14 transition-all ${
+                                            state.overheadOverridePerM != null && state.overheadOverridePerM > 0
+                                                ? 'border-amber-400 bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-300/50'
+                                                : 'border-slate-200 bg-white focus:border-slate-300'
+                                        }`}
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹/m</span>
+                                </div>
+                            </div>
+
+                            {/* Live Summary */}
                             <div className="flex items-center justify-between bg-rose-50/70 border border-rose-100 rounded-xl px-4 py-3">
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-rose-600/80 leading-none mb-1">Overhead per Metre</p>
                                     <p className="text-2xl font-black font-mono text-rose-700 leading-none">₹{totals.overheadPerM.toFixed(2)}</p>
+                                    {state.overheadOverridePerM != null && state.overheadOverridePerM > 0 && (
+                                        <p className="text-[9px] text-amber-600 font-bold mt-0.5">⚡ direct override</p>
+                                    )}
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 leading-none mb-1">Effective Rate</p>

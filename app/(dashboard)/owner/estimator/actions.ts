@@ -86,6 +86,7 @@ export async function upsertFactoryCostProfile(data: {
     enabled_sections:        FactorySections
     overhead_items?:         OverheadItem[]
     monthly_output_m?:       number
+    overhead_override_per_m?: number | null
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -219,6 +220,7 @@ export async function saveEstimatorQuoteV3(params: {
             // Overhead V2: store both the items snapshot and the computed effective %
             overhead_items:       estimate.overheadItems,
             monthly_output_m:     estimate.monthlyOutputM,
+            overhead_override_per_m: estimate.overheadOverridePerM ?? null,
             overhead_pct:         estimate.overheadPct,   // effective % computed by engine
             commission_pct:       estimate.commissionPct,
             transport_per_m:      estimate.transportPerM,
