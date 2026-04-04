@@ -90,6 +90,7 @@ export interface EstimateState {
   // ── Overhead V2: itemized breakdown ─────────────────────────────────────
   overheadItems:       OverheadItem[]  // list of monthly fixed cost line items
   monthlyOutputM:      number          // estimated metres produced per month (denominator)
+  overheadOverridePerM: number | null  // when set, bypasses the itemized calc entirely
   // ── kept for backward-compat serialisation (computed, never user-edited) ─
   overheadPct:         number          // effective overhead % — derived from items/denominator
   // ────────────────────────────────────────────────────────────────────────
@@ -362,10 +363,14 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     warpingAndSizingPerM + windingPerM + processingPerM + finishingPerM
 
   // ── Layer 8: Overhead (sum of monthly fixed costs ÷ monthly output) ────
-  const { overheadPerM, totalMonthly: overheadTotalMonthly } = calcOverheadCostPerMeter(
+  const { overheadPerM: calculatedOverheadPerM, totalMonthly: overheadTotalMonthly } = calcOverheadCostPerMeter(
     estimate.overheadItems,
     estimate.monthlyOutputM
   )
+  // Direct override takes precedence when set and positive
+  const overheadPerM = (estimate.overheadOverridePerM != null && estimate.overheadOverridePerM > 0)
+    ? estimate.overheadOverridePerM
+    : calculatedOverheadPerM
   // Effective % for display + backward-compat snapshot in saved quotes
   const effectiveOverheadPct = directCostPerM > 0 ? (overheadPerM / directCostPerM) * 100 : 0
 
@@ -458,6 +463,7 @@ export function makeDefaultEstimateState(): EstimateState {
     finishingRatePerM:  0,
     overheadItems:      DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
     monthlyOutputM:     10000,
+    overheadOverridePerM: null,
     overheadPct:        0,   // will be computed — kept for compat
     commissionPct:      2,
     transportPerM:      0,
