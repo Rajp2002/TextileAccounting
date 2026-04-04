@@ -87,6 +87,8 @@ export interface EstimateState {
   windingRatePerKg:    number          // ₹/kg charged for rewinding (0 if not applicable)
   processingRatePerM:  number          // flat ₹/m for dyeing/printing
   finishingRatePerM:   number          // flat ₹/m for calendering/heat-setting
+  // ── Yarn shortage — applied to combined warp+weft total ──────────────────
+  yarnShortagePct:     number          // single shortage % applied after summing all yarn costs
   // ── Overhead V2: itemized breakdown ─────────────────────────────────────
   overheadItems:       OverheadItem[]  // list of monthly fixed cost line items
   monthlyOutputM:      number          // estimated metres produced per month (denominator)
@@ -126,8 +128,11 @@ export interface OrderQuote {
 export interface EstimatorV3Totals {
   warpRows:                WarpRowResult[]
   weftRows:                WeftRowResult[]
-  warpCostPerM:            number
-  weftCostPerM:            number
+  warpCostPerM:            number   // includes combined shortage allocation
+  weftCostPerM:            number   // includes combined shortage allocation
+  yarnBaseWarpPerM:        number   // raw warp cost before combined shortage
+  yarnBaseWeftPerM:        number   // raw weft cost before combined shortage
+  yarnShortageCostPerM:    number   // the rupee value added by combined shortage
   weaveCostPerM:           number
   warpingAndSizingPerM:    number
   windingPerM:             number
@@ -315,17 +320,19 @@ export function calcOrderQuote(params: {
  * All layers derive from EstimateState; zero server round-trips.
  */
 export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
-  // ── Layer 1: Warp Yarn ──────────────────────────────────────────────────
+  // ── Layer 1: Warp Yarn (base cost — no per-row shortage) ────────────────
+  // costPer100m here = kg × rate × GST only (shortage=0 for individual rows)
+  // Combined shortage is applied below on the warp+weft total.
   const warpRows: WarpRowResult[] = estimate.warpRows.map(r => {
     const kgPer100m   = calcWarpYarnKg(r.beamEnds, r.calcDenier)
-    const costPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, r.shortagePct)
+    const costPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, 0)
     return { ...r, kgPer100m, costPer100m }
   })
 
-  // ── Layer 2: Weft Yarn ──────────────────────────────────────────────────
+  // ── Layer 2: Weft Yarn (base cost — no per-row shortage) ────────────────
   const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
     const kgPer100m   = calcWeftYarnKg(r.picks, r.reedSpace, r.calcDenier)
-    const costPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, r.shortagePct)
+    const costPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, 0)
     return { ...r, kgPer100m, costPer100m }
   })
 
@@ -333,8 +340,21 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const totalWeftKgPer100m    = weftRows.reduce((s, r) => s + r.kgPer100m, 0)
   const totalAllYarnKgPer100m = totalWarpKgPer100m + totalWeftKgPer100m
 
-  const warpCostPerM = warpRows.reduce((s, r) => s + r.costPer100m, 0) / 100
-  const weftCostPerM = weftRows.reduce((s, r) => s + r.costPer100m, 0) / 100
+  // Base yarn costs per metre (pre-shortage)
+  const yarnBaseWarpPerM = warpRows.reduce((s, r) => s + r.costPer100m, 0) / 100
+  const yarnBaseWeftPerM = weftRows.reduce((s, r) => s + r.costPer100m, 0) / 100
+  const yarnBaseTotalPerM = yarnBaseWarpPerM + yarnBaseWeftPerM
+
+  // ── Combined Yarn Shortage ───────────────────────────────────────────────
+  // Applied on the combined warp+weft subtotal (matches traditional manual calc).
+  // e.g. 10% shortage on ₹27.00 combined = ₹2.70 added, split pro-rata.
+  const shortageFactor    = (estimate.yarnShortagePct ?? 0) / 100
+  const yarnShortageCostPerM = yarnBaseTotalPerM * shortageFactor
+
+  // Distribute shortage back to warp/weft proportionally for display
+  const warpShare  = yarnBaseTotalPerM > 0 ? yarnBaseWarpPerM / yarnBaseTotalPerM : 0
+  const warpCostPerM = yarnBaseWarpPerM  + yarnShortageCostPerM * warpShare
+  const weftCostPerM = yarnBaseWeftPerM  + yarnShortageCostPerM * (1 - warpShare)
 
   // ── Layer 3: Weave Cost ─────────────────────────────────────────────────
   // Use the total picks from all weft rows (sum of PPI)
@@ -396,6 +416,9 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     weftRows,
     warpCostPerM,
     weftCostPerM,
+    yarnBaseWarpPerM,
+    yarnBaseWeftPerM,
+    yarnShortageCostPerM,
     weaveCostPerM,
     warpingAndSizingPerM,
     windingPerM,
@@ -461,6 +484,7 @@ export function makeDefaultEstimateState(): EstimateState {
     windingRatePerKg:   0,
     processingRatePerM: 0,
     finishingRatePerM:  0,
+    yarnShortagePct:    10,  // combined shortage applied to warp+weft total
     overheadItems:      DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
     monthlyOutputM:     10000,
     overheadOverridePerM: null,
