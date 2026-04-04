@@ -38,9 +38,11 @@ import {
     makeDefaultEstimateState,
     DEFAULT_WARP_ROW,
     DEFAULT_WEFT_ROW,
+    DEFAULT_OVERHEAD_ITEMS,
     type EstimateState,
     type WarpRow,
     type WeftRow,
+    type OverheadItem,
     type FactorySections,
     type EstimatorV3Totals,
 } from '@/lib/estimator'
@@ -50,6 +52,7 @@ import {
     saveAsFabricTemplate,
     saveEstimatorQuoteV3,
     convertQuoteToOrder,
+    getFixedWorkersForOverhead,
 } from './actions'
 import { toast } from 'sonner'
 import { format, addDays } from 'date-fns'
@@ -64,6 +67,7 @@ import { useRouter } from 'next/navigation'
 
 type Action =
     | { type: 'INIT_FROM_PROFILE'; data: { profile: any; sections: FactorySections } }
+    | { type: 'MERGE_FIXED_WORKERS'; workers: { id: number; name: string; role: string; monthly_salary: number }[] }
     | { type: 'APPLY_TEMPLATE'; template: any }
     | { type: 'SET'; field: keyof EstimateState; value: any }
     | { type: 'ADD_WARP_ROW' }
@@ -73,21 +77,44 @@ type Action =
     | { type: 'UPDATE_WEFT_ROW'; id: string; field: keyof WeftRow; value: any }
     | { type: 'REMOVE_WEFT_ROW'; id: string }
     | { type: 'ENABLE_SECTION'; section: keyof FactorySections }
+    | { type: 'ADD_OVERHEAD_ITEM' }
+    | { type: 'UPDATE_OVERHEAD_ITEM'; id: string; field: 'label' | 'monthlyAmount'; value: any }
+    | { type: 'REMOVE_OVERHEAD_ITEM'; id: string }
 
 function estimateReducer(state: EstimateState, action: Action): EstimateState {
     switch (action.type) {
         case 'INIT_FROM_PROFILE': {
             const { profile, sections } = action.data
+            // Hydrate overhead items from saved profile if present, else keep defaults
+            const savedItems: OverheadItem[] | undefined =
+                Array.isArray(profile.overhead_items) && profile.overhead_items.length > 0
+                    ? profile.overhead_items
+                    : undefined
             return {
                 ...state,
                 warpingRatePerKg:   Number(profile.warping_rate_per_kg ?? 2),
                 sizingRatePerKg:    Number(profile.sizing_rate_per_kg  ?? 1.5),
                 windingRatePerKg:   Number(profile.winding_rate_per_kg ?? 0),
-                overheadPct:        Number(profile.overhead_pct        ?? 8),
+                overheadItems:      savedItems ?? state.overheadItems,
+                monthlyOutputM:     Number(profile.monthly_output_m ?? 10000),
+                overheadPct:        0,
                 commissionPct:      Number(profile.default_commission_pct  ?? 2),
                 transportPerM:      Number(profile.default_transport_per_m ?? 0),
                 enabledSections:    { ...sections },
             }
+        }
+        case 'MERGE_FIXED_WORKERS': {
+            const { workers } = action
+            // Remove any existing fixed_worker_derived items, then re-add freshly from DB
+            const manualItems = state.overheadItems.filter(i => i.source !== 'fixed_worker_derived')
+            const workerItems: OverheadItem[] = workers.map(w => ({
+                id:            `fw-${w.id}`,
+                label:         `${w.name} (${w.role})`,
+                monthlyAmount: Number(w.monthly_salary),
+                source:        'fixed_worker_derived' as const,
+                workerId:      w.id,
+            }))
+            return { ...state, overheadItems: [...manualItems, ...workerItems] }
         }
         case 'APPLY_TEMPLATE': {
             const tpl = action.template
@@ -155,6 +182,26 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             return {
                 ...state,
                 enabledSections: { ...state.enabledSections, [action.section]: true },
+            }
+        case 'ADD_OVERHEAD_ITEM':
+            return {
+                ...state,
+                overheadItems: [
+                    ...state.overheadItems,
+                    { id: nanoid(), label: 'New Item', monthlyAmount: 0, source: 'manual' as const },
+                ],
+            }
+        case 'UPDATE_OVERHEAD_ITEM':
+            return {
+                ...state,
+                overheadItems: state.overheadItems.map(item =>
+                    item.id === action.id ? { ...item, [action.field]: action.value } : item
+                ),
+            }
+        case 'REMOVE_OVERHEAD_ITEM':
+            return {
+                ...state,
+                overheadItems: state.overheadItems.filter(item => item.id !== action.id),
             }
         default:
             return state
@@ -309,9 +356,10 @@ export default function EstimatorPage() {
     useEffect(() => {
         async function load() {
             setLoading(true)
-            const [pRes, tRes] = await Promise.all([
+            const [pRes, tRes, wRes] = await Promise.all([
                 getFactoryCostProfile(),
                 getEstimatorTemplates(),
+                getFixedWorkersForOverhead(),
             ])
             if (pRes.data) {
                 dispatch({
@@ -325,6 +373,14 @@ export default function EstimatorPage() {
                 })
             }
             if (tRes.data) setTemplates(tRes.data)
+            // Merge fixed workers into overhead items (only if not already saved in profile)
+            if (wRes.data && wRes.data.length > 0) {
+                // If profile had no saved overhead_items, we merge workers into the defaults
+                const profileHasItems = Array.isArray(pRes.data?.overhead_items) && pRes.data.overhead_items.length > 0
+                if (!profileHasItems) {
+                    dispatch({ type: 'MERGE_FIXED_WORKERS', workers: wRes.data })
+                }
+            }
             setLoading(false)
         }
         load()
@@ -678,33 +734,174 @@ export default function EstimatorPage() {
                     </CardContent>
                 </Card>
 
-                {/* 5. Production Layers */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Warping / Sizing */}
-                    <Card className="border-border/60 shadow-sm overflow-hidden">
-                        <SectionHeader title="Warping & Sizing" icon={TrendingUp} accent="violet" />
-                        <CardContent className="p-4 space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                                <NumField label="Warping / kg" value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v })} step={0.1} />
-                                <NumField label="Sizing / kg" value={state.sizingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v })} step={0.1} />
-                            </div>
-                            <div className="text-[10px] font-medium text-slate-400 italic">
-                                Applied on {totals.totalWarpKgPer100m.toFixed(2)} kg warp yarn consumption.
-                            </div>
-                        </CardContent>
-                    </Card>
+                {/* 5. Warping & Sizing */}
+                <Card className="border-border/60 shadow-sm overflow-hidden">
+                    <SectionHeader title="Warping & Sizing" icon={TrendingUp} accent="violet" />
+                    <CardContent className="p-4 space-y-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <NumField label="Warping / kg" value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v })} step={0.1} />
+                            <NumField label="Sizing / kg" value={state.sizingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v })} step={0.1} />
+                        </div>
+                        <div className="text-[10px] font-medium text-slate-400 italic">
+                            Applied on {totals.totalWarpKgPer100m.toFixed(2)} kg warp yarn consumption.
+                        </div>
+                    </CardContent>
+                </Card>
 
-                    {/* Overhead */}
-                    <Card className="border-border/60 shadow-sm overflow-hidden">
-                        <SectionHeader title="Factory Overhead" icon={Calculator} accent="rose" />
-                        <CardContent className="p-4">
-                            <NumField label="Overhead %" value={state.overheadPct} onChange={v => dispatch({ type: 'SET', field: 'overheadPct', value: v })} unit="%" step={0.5} />
-                            <div className="mt-3 text-[10px] font-medium text-slate-400">
-                                {state.overheadPct}% of direct cost (₹{totals.directCostPerM.toFixed(2)}) = ₹{totals.overheadPerM.toFixed(2)}/m
+                {/* 5b. Factory Overhead — Itemized Breakdown */}
+                <Card className="border-border/60 shadow-sm overflow-hidden">
+                    <SectionHeader
+                        title="Factory Overhead"
+                        icon={Calculator}
+                        accent="rose"
+                        badgeContent={
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-mono font-bold text-rose-700 bg-white/60 px-2 py-0.5 rounded-md border border-rose-100">
+                                    ₹{totals.overheadPerM.toFixed(2)}/m
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-400 bg-white/60 px-2 py-0.5 rounded-md border border-slate-200">
+                                    {totals.effectiveOverheadPct.toFixed(1)}% effective
+                                </span>
                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                        }
+                    />
+                    <CardContent className="p-5 space-y-5">
+
+                        {/* Facility & Running Costs */}
+                        <div className="space-y-2">
+                            <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">Facility & Running Costs</p>
+                            <div className="space-y-2">
+                                {state.overheadItems
+                                    .filter(item => item.source === 'manual')
+                                    .map(item => (
+                                        <div key={item.id} className="flex items-center gap-2 bg-rose-50/40 border border-rose-100 rounded-xl px-3 py-2">
+                                            <Input
+                                                value={item.label}
+                                                onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'label', value: e.target.value })}
+                                                className="flex-1 h-8 text-xs font-semibold border-0 bg-transparent focus:bg-white focus:border-rose-200 focus:ring-1 focus:ring-rose-200/50 transition-all px-2"
+                                                placeholder="Item name"
+                                            />
+                                            <div className="relative shrink-0 w-36">
+                                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
+                                                <Input
+                                                    type="number"
+                                                    min={0}
+                                                    step={500}
+                                                    value={item.monthlyAmount}
+                                                    onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: Number(e.target.value) })}
+                                                    className="h-8 text-xs font-mono font-bold text-right pr-10 pl-6 border-rose-100 focus:border-rose-300 bg-white"
+                                                />
+                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">/mo</span>
+                                            </div>
+                                            <button
+                                                onClick={() => dispatch({ type: 'REMOVE_OVERHEAD_ITEM', id: item.id })}
+                                                className="text-slate-300 hover:text-red-500 transition-colors shrink-0"
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full border-dashed border-rose-200 text-[10px] font-bold text-rose-500 hover:bg-rose-50 hover:border-rose-300 transition-all gap-1.5 h-8 uppercase tracking-widest"
+                                onClick={() => dispatch({ type: 'ADD_OVERHEAD_ITEM' })}
+                            >
+                                <Plus className="h-3 w-3" /> Add Cost Item
+                            </Button>
+                        </div>
+
+                        {/* Fixed Salary Workers — DB derived */}
+                        {state.overheadItems.filter(i => i.source === 'fixed_worker_derived').length > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">Fixed Salary Workers</p>
+                                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-violet-50 border-violet-100 text-violet-600 font-bold">
+                                        Pulled from registry
+                                    </Badge>
+                                </div>
+                                <div className="space-y-2">
+                                    {state.overheadItems
+                                        .filter(item => item.source === 'fixed_worker_derived')
+                                        .map(item => (
+                                            <div key={item.id} className="flex items-center gap-2 bg-violet-50/40 border border-violet-100 rounded-xl px-3 py-2">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[11px] font-bold text-slate-700 truncate">{item.label}</p>
+                                                    <p className="text-[9px] text-violet-500 font-semibold uppercase tracking-wider">Fixed Salary</p>
+                                                </div>
+                                                <div className="relative shrink-0 w-36">
+                                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
+                                                    <Input
+                                                        type="number"
+                                                        min={0}
+                                                        step={500}
+                                                        value={item.monthlyAmount}
+                                                        onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: Number(e.target.value) })}
+                                                        className="h-8 text-xs font-mono font-bold text-right pr-10 pl-6 border-violet-100 focus:border-violet-300 bg-white"
+                                                    />
+                                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">/mo</span>
+                                                </div>
+                                                <button
+                                                    onClick={() => dispatch({ type: 'REMOVE_OVERHEAD_ITEM', id: item.id })}
+                                                    className="text-slate-300 hover:text-red-500 transition-colors shrink-0"
+                                                    title="Exclude from overhead"
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </button>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                                <p className="text-[10px] text-violet-400 italic font-medium px-1">
+                                    Pre-filled from your Fixed Workers registry. Edit amounts here — payroll records are not affected.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Monthly Output Denominator + Summary */}
+                        <div className="pt-4 border-t border-rose-100 space-y-3">
+                            <div className="flex items-end gap-4">
+                                <div className="flex-1 space-y-1.5">
+                                    <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">Monthly Output (m)</Label>
+                                    <div className="relative">
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            step={500}
+                                            value={state.monthlyOutputM}
+                                            onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: Number(e.target.value) })}
+                                            className="h-10 text-sm font-mono font-bold text-center pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm"
+                                        />
+                                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">m</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 font-medium">Estimated metres woven per month — divides total overhead</p>
+                                </div>
+                                <div className="shrink-0 text-right pb-7">
+                                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Total Monthly</p>
+                                    <p className="text-lg font-black font-mono text-rose-600 leading-none">
+                                        ₹{totals.overheadTotalMonthly.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between bg-rose-50/70 border border-rose-100 rounded-xl px-4 py-3">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-rose-600/80 leading-none mb-1">Overhead per Metre</p>
+                                    <p className="text-2xl font-black font-mono text-rose-700 leading-none">₹{totals.overheadPerM.toFixed(2)}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 leading-none mb-1">Effective Rate</p>
+                                    <p className="text-2xl font-black font-mono text-slate-700 leading-none">{totals.effectiveOverheadPct.toFixed(1)}%</p>
+                                    <p className="text-[9px] text-slate-400 mt-0.5">of direct cost ₹{totals.directCostPerM.toFixed(2)}/m</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </CardContent>
+                </Card>
+
+
 
                 {/* 6. Optional Sections */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
