@@ -448,8 +448,11 @@ export async function getOnboardingStatus(): Promise<{
     const isComplete = hasMachine && hasWorker
 
     if (isComplete) {
-        // Flip the flag so future middleware checks use JWT cache, not DB
-        await supabase
+        // Flip the flag so future middleware checks use JWT cache, not DB.
+        // Use admin client to bypass RLS — the regular client's UPDATE policy
+        // depends on auth.jwt() ->> 'org_id' which may be absent on fresh signups.
+        const adminForUpdate = createAdminClient()
+        await adminForUpdate
             .from('organizations')
             .update({ onboarding_complete: true })
             .eq('id', orgId)
@@ -469,9 +472,15 @@ export async function markOnboardingComplete() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return { error: 'Not authenticated' }
 
+    // Use admin client to bypass RLS for the org update.
+    // The organizations UPDATE policy checks auth.jwt() ->> 'org_id', which
+    // may be absent on a fresh signup (stale JWT race condition). The admin
+    // client bypasses RLS entirely — it's safe because we've already
+    // verified the session server-side and derived orgId from the DB fallback.
+    const admin = createAdminClient()
+
     let orgId: string | undefined = session.user.app_metadata?.org_id
     if (!orgId) {
-        const admin = createAdminClient()
         const { data: profile } = await admin
             .from('profiles')
             .select('org_id')
@@ -481,7 +490,7 @@ export async function markOnboardingComplete() {
     }
     if (!orgId) return { error: 'No org found' }
 
-    const { error } = await supabase
+    const { error } = await admin
         .from('organizations')
         .update({ onboarding_complete: true })
         .eq('id', orgId)
