@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -373,7 +372,6 @@ const STEPS = [
 // ─── Main Component ───────────────────────────────────────────────────────────────
 
 export default function OnboardingChecklist({ initialStatus }: Props) {
-    const router = useRouter()
     const [status, setStatus] = useState<OnboardingStatus>(initialStatus)
     const [openStep, setOpenStep] = useState<string | null>(
         // Auto-open the first incomplete step
@@ -423,35 +421,37 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
     const handleGoToDashboard = async () => {
         if (!status.isComplete) return
         setCompleting(true)
+
+        // Step 1: Mark onboarding complete in DB
         try {
-            // 1. Write onboarding_complete=true to DB FIRST
-            //    so the JWT hook picks it up on the next token mint.
             const markRes = await markOnboardingComplete()
             if (markRes?.error) {
-                toast.error('Could not finalise setup. Please try again.')
+                toast.error(`Setup error: ${markRes.error}`)
                 setCompleting(false)
                 return
             }
-
-            // 2. Refresh session — hook now reads onboarding_complete=true
-            //    from DB → new JWT has the flag → middleware unblocks.
-            //    We make this non-fatal because the middleware has a DB fallback
-            //    if the JWT refresh fails or is slow.
-            try {
-                const supabase = createClient()
-                await supabase.auth.refreshSession()
-            } catch (err) {
-                console.warn('[OnboardingChecklist] Session refresh failed, proceeding anyway:', err)
-            }
-
-            // 3. Navigate — middleware will handle the final gate check
-            router.push('/owner/analytics')
         } catch (e) {
-            console.error('[OnboardingChecklist] handleGoToDashboard failed:', e)
-            toast.error('Something went wrong. Please try again.')
+            console.error('[OnboardingChecklist] markOnboardingComplete threw:', e)
+            toast.error('Could not finalise setup. Please refresh and try again.')
             setCompleting(false)
+            return
         }
+
+        // Step 2: Refresh JWT so middleware sees onboarding_complete=true (non-fatal)
+        try {
+            const supabase = createClient()
+            await supabase.auth.refreshSession()
+        } catch (err) {
+            console.warn('[OnboardingChecklist] Session refresh failed, proceeding anyway:', err)
+        }
+
+        // Step 3: Hard navigation — gives middleware a fresh full-page request
+        // so the DB fallback (reading onboarding_complete from DB) runs correctly.
+        // router.push uses client-side fetch navigation which can bypass the full
+        // middleware chain on Vercel's edge runtime.
+        window.location.href = '/owner/analytics'
     }
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 flex items-start justify-center p-4 pt-8">
