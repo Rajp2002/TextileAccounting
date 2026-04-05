@@ -573,58 +573,165 @@ export const gu = {
   estimator: {
     title: "નેગોશિએશન ડેશબોર્ડ",
     subtitle: "રીયલ-ટાઇમ સુરત ફેબ્રિક ખર્ચ કેલ્ક્યુલેટર",
-    core: {
-      title: "સેક્શન 1: મુખ્ય વિગતો",
-      party: "પાર્ટીનું નામ",
-      meters: "મીટર (ઓર્ડર સાઈઝ)",
-      ppi: "PPI (પિક્સ)",
-      denier: "ડેનિયર",
-      gsm: "GSM",
-      style: "ફેબ્રિક સ્ટાઇલ"
+    hud: {
+      prod_cost: "ઉત્પાદન ખર્ચ / મી",
+      quote_per_m: "કોટ / મી",
+      total_order: "કુલ ઓર્ડર",
+      margin: "માર્જિન",
+      net_profit: "ચોખ્ખો નફો",
+      order_btn: "ઓર્ડર",
+      save_template_btn: "ટેમ્પલેટ સેવ"
     },
-    process: {
-      title: "સેક્શન 2: ટેકનિકલ/પ્રક્રિયા",
-      yarn_rate: "વર્તમાન સૂત ભાવ (₹/કિલો)",
-      job_work: "બહારનું જોબ-વર્ક (ડાઇંગ, ડિજિટલ, વગેરે)",
-      add_process: "પ્રક્રિયા ઉમેરો",
-      grey_badge: "ગ્રે ખર્ચ"
+    templates: {
+      label: "ટેમ્પલેટ્સ",
+      hint: "લાગુ કરવા ટેપ કરો · રેટ્સ બદલવા લૉન્ગ-પ્રેસ કરો",
+      edit_rates_title: "સૂત રેટ્સ અપડેટ કરો",
+      delete_template: "ટેમ્પલેટ ડિલીટ કરો",
+      structure_preserved: "સ્ટ્રક્ચર સુરક્ષિત · ફક્ત રેટ્સ બદલાય છે"
     },
-    results: {
-      title: "લેન્ડેડ કોસ્ટ વિગત",
-      pure_cost: "શુદ્ધ ઉત્પાદન ખર્ચ",
-      gst: "GST",
-      final_cost: "અંતિમ લેન્ડેડ કોસ્ટ",
-      breakdown_helper: "આમાં વીજળી, ભાડું/એડમિન અને શ્રિંકેજ સામેલ છે."
+    order_basics: {
+      title: "ઓર્ડર અને ફેબ્રિક લેબલ",
+      party: "પાર્ટી / ગ્રાહક",
+      quality_label: "ક્વોલિટી / ફેબ્રિક લેબલ",
+      warp_construction: "તાણો બાંધણ (Warp Construction)",
+      weft_construction: "ભરણ બાંધણ (Weft Construction)"
     },
-    margin: {
-      title: "સેક્શન 4: માર્જિન",
-      quote_price: "કોટ પ્રાઇસ (પ્રતિ મીટર)",
-      estimated_profit: "અંદાજિત ચોખ્ખો નફો",
-      save_quote: "કોટ સેવ અને સ્નેપશોટ કરો",
-      convert_order: "લાઇવ ઓર્ડરમાં બદલો"
+    warp: {
+      title: "તાણો સૂત રચના (Warp)",
+      layer: "તાણો લેયર",
+      add_blend: "બ્લેન્ડ કૉમ્પોનન્ટ ઉમેરો",
+      tape_len: "ટેપ લંબાઈ",
+      beam_capacity: "બીમ ક્ષમતા"
     },
-    stress: {
-      title: "રિસ્ક સ્ટ્રેસ ટેસ્ટ",
-      yarn_hike: "જો સૂતનો ભાવ +5% વધે",
-      eff_drop: "જો કાર્યક્ષમતા 70% સુધી ઘટે",
-      helper: "હીટમેપ લેન્ડેડ કોસ્ટ વિરુદ્ધ વર્તમાન કોટ પ્રાઇસ બતાવે છે"
+    weft: {
+      title: "ભરણ સૂત રચના (Weft)",
+      layer: "ભરણ લેયર",
+      add_weft: "વેફ્ટ બ્લેન્ડ ઉમેરો",
+      cloth_width_hint: "તૈયાર કાપડની પહોળાઈ (લૂમ નહીં)"
     },
-    settings: {
-      master_title: "એસ્ટીમેટર માસ્ટર ડેટા",
-      master_desc: "ચોક્કસ કોટિંગ માટે ફેક્ટરી-વ્યાપી ડિફોલ્ટ ખર્ચ સેટ કરો.",
-      elec_rate: "વીજળી દર (₹/kWh)",
-      rent: "ફેક્ટરી ભાડું (₹/દિવસ)",
-      admin: "એડમિન/સ્ટાફ ઓવરહેડ (₹/દિવસ)",
-      efficiency: "સરેરાશ મશીન કાર્યક્ષમતા (0-1.0)",
-      gst_rate: "GST દર (%)",
-      gst_inclusive: "GST સમાવિષ્ટ લેન્ડેડ કોસ્ટ",
-      gst_helper: "ટેકનિકલ ઇનપુટમાં પહેલેથી હાજર GST ના આધારે કોટ ગણો.",
-      templates_title: "ફેબ્રિક ટેમ્પલેટ્સ",
-      templates_desc: "વિવિધ ફેબ્રિક સ્ટાઇલ માટે ટેકનિકલ વિગતો સેટ કરો.",
-      new_style: "નવી ફેબ્રિક સ્ટાઇલ",
-      edit_style: "સ્ટાઇલ એડિટ કરો",
-      fabric_name: "ફેબ્રિકનું નામ (સ્ટાઇલ)",
-      save_template: "ટેમ્પલેટ સેવ કરો"
+    weave: {
+      title: "વણાટ શુલ્ક (લૂમ)",
+      looms_charge: "પ્રતિ પિક લૂમ ચાર્જ",
+      paise_hint: "પ્રતિ પિક પૈસાની કિંમત",
+      ppi_impact: "PPI અસર",
+      picks: "પિક્સ",
+      cost_per_m: "ખર્ચ / મી",
+      shortage_title: "કુલ સૂત ઘટ %",
+      shortage_hint: "તાણો+ભરણ કુલ ખર્ચ પર લાગુ",
+      base_yarn: "આધાર સૂત (તાણો+ભરણ)",
+      shortage_row: "ઘટ",
+      total_yarn: "કુલ સૂત ખર્ચ"
+    },
+    warping_sizing: {
+      title: "વૉર્પિંગ અને સાઈઝિંગ",
+      warping_per_kg: "વૉર્પિંગ / કિલો",
+      sizing_per_kg: "સાઈઝિંગ / કિલો",
+      applied_on: "લાગુ થાય છે",
+      warp_consumption: "કિલો તાણો સૂત વપરાશ પર."
+    },
+    overhead: {
+      title: "ફેક્ટરી ઓવરહેડ",
+      effective_pct: "અસરકારક",
+      facility_costs: "સુવિધા અને સંચાલન ખર્ચ",
+      item_placeholder: "આઇટમ નામ",
+      add_cost_item: "ખર્ચ આઇટમ ઉમેરો",
+      fixed_salary_workers: "ફિક્સ પગાર કારીગરો",
+      pulled_from_registry: "રજિસ્ટ્રીમાંથી લેવાયું",
+      fixed_salary_label: "ફિક્સ પગાર",
+      pre_filled_note: "તમારા Fixed Workers રજિસ્ટ્રીમાંથી ભરેલું છે. અહીં રકમ બદલો — પેરોલ રેકોર્ડ પર અસર નહીં થાય.",
+      monthly_output: "માસિક ઉત્પાદન (મી)",
+      output_hint: "દર મહિને અંદાજિત મીટર વણાટ — કુલ ઓવરહેડ વહેંચે છે",
+      total_monthly: "કુલ માસિક",
+      direct_override_title: "સીધો ₹/મી ઓવરરાઇડ",
+      override_active_note: "⚡ ઓવરરાઇડ ચાલુ — આઇટેમાઇઝ્ડ ગણતરી અવગણાશે",
+      override_bypass_note: "આઇટેમાઇઝ્ડ ગણતરી બાયપાસ કરવા મૂલ્ય દાખલ કરો",
+      clear: "✕ સાફ કરો",
+      direct_override_badge: "⚡ સીધો ઓવરરાઇડ",
+      overhead_per_m: "ઓવરહેડ પ્રતિ મીટર",
+      effective_rate: "અસરકારક દર",
+      of_direct_cost: "સીધા ખર્ચના"
+    },
+    post_processing: {
+      title: "પોસ્ટ-પ્રોસેસિંગ અને લોજિસ્ટિક્સ",
+      winding: "વાઇન્ડિંગ",
+      processing: "પ્રોસેસિંગ",
+      finishing: "ફિનિશિંગ",
+      winding_per_kg: "વાઇન્ડિંગ / કિલો",
+      dyeing_processing: "ડાઇંગ/પ્રોસેસિંગ",
+      finishing_per_m: "ફિનિશિંગ / મી"
+    },
+    simulation: {
+      title: "સિમ્યુલેશન અને જથ્થો",
+      quantity: "સિમ્યુલેશન જથ્થો",
+      quantity_hint: "HUD કોટ્સ ચાલુ કરે છે",
+      commission: "બ્રોકર કમિશન %",
+      transport: "ટ્રાન્સપોર્ટ / મી"
+    },
+    save_template_dialog: {
+      title: "ફેબ્રિક ટેમ્પલેટ સેવ કરો",
+      quality_name_label: "ફેબ્રિક ક્વોલિટીનું નામ",
+      saves_note_prefix: "સેવ કરે છે",
+      saves_note_warp: "તાણો +",
+      saves_note_weft: "ભરણ બ્લેન્ડ લેયર્સ સહિત વર્તમાન સૂત રેટ્સ.",
+      rate_note: "ટેમ્પલેટ ફરીથી બનાવ્યા વગર સૂત રેટ્સ ગમે ત્યારે અપડેટ કરી શકાય.",
+      cancel: "રદ કરો",
+      confirm: "ખાતરી અને સેવ"
+    },
+    edit_template_dialog: {
+      title: "ટેમ્પલેટ એડિટ કરો:",
+      quality_name_label: "ફેબ્રિક ક્વોલિટીનું નામ",
+      structure_note_prefix: "નીચે સૂત રેટ્સ અપડેટ કરો. ફેબ્રિક સ્ટ્રક્ચર (ડેનિયર, એન્ડ્સ, પિક્સ) એ જ રહેશે. સેવ કરવાથી સ્ટોર્ડ ટેમ્પલેટ અપડેટ થશે",
+      structure_note_and: "અને",
+      structure_note_suffix: "એસ્ટીમેટરમાં લાગુ થશે.",
+      warp_rates: "તાણો સૂત રેટ્સ",
+      weft_rates: "ભરણ સૂત રેટ્સ",
+      delete_template_btn: "ટેમ્પલેટ ડિલીટ કરો",
+      structure_preserved: "સ્ટ્રક્ચર સુરક્ષિત · ફક્ત રેટ્સ બદલાય",
+      apply_as_is: "જેવું છે તેવું લાગુ કરો",
+      save_rates_apply: "રેટ્સ સેવ કરો અને લાગુ કરો"
+    },
+    convert_dialog: {
+      title: "પ્રોડક્શન ઓર્ડરમાં બદલો",
+      cost_summary: "ખર્ચ સારાંશ",
+      production_cost: "ઉત્પાદન ખર્ચ",
+      quote_price: "કોટ પ્રાઇસ",
+      total_order_value: "કુલ ઓર્ડર મૂલ્ય",
+      gross_profit: "કુલ નફો",
+      set_qty_hint: "પૂર્ણ નફો વિગત જોવા ઓર્ડર જથ્થો સેટ કરો",
+      total_metres: "કુલ મીટર",
+      deadline: "છેલ્લી તારીખ",
+      order_ready_note_prefix: "ઓર્ડર",
+      order_ready_note_section: "ઓર્ડર",
+      order_ready_note_suffix: "માં દેખાશે, મશીન સોંપણી માટે તૈયાર. ખર્ચ સ્નૅપશૉટ સેવ અને લિંક થશે.",
+      dismiss: "બંધ કરો",
+      start_production: "પ્રોડક્શન શરૂ કરો"
+    },
+    field_labels: {
+      calc_denier: "ડેનિયર",
+      beam_ends: "બીમ એન્ડ્સ",
+      rate_kg: "ભાવ (₹/કિલો)",
+      gst_pct: "GST %",
+      picks_ppi: "પિક્સ (PPI)",
+      cloth_width: "કાપડ પહોળાઈ",
+      shortage_pct: "કુલ સૂત ઘટ %",
+      winding_per_kg: "વાઇન્ડિંગ / કિલો",
+      dyeing_processing: "ડાઇંગ/પ્રોસેસિંગ",
+      finishing_per_m: "ફિનિશિંગ / મી",
+      simulation_qty: "સિમ્યુલેશન જથ્થો",
+      broker_comm: "બ્રોકર કમિશન %",
+      transport_per_m: "ટ્રાન્સપોર્ટ / મી"
+    },
+    toast: {
+      applied_template: "ફેબ્રિક ટેમ્પલેટ લાગુ:",
+      saved_template: "ફેબ્રિક ટેમ્પલેટ સેવ થઈ ગયું!",
+      template_deleted: "ટેમ્પલેટ ડિલીટ થઈ ગયું",
+      updated_applied: "ટેમ્પલેટ અપડેટ અને લાગુ થઈ ગયું",
+      applied_as_is: "લાગુ કર્યું:",
+      party_required: "પાર્ટીનું નામ જરૂરી છે",
+      quality_required: "ક્વોલિટી લેબલ જરૂરી છે",
+      converted_success: "કોટ સફળતાપૂર્વક રૂપાંતરિત",
+      save_template_name_error: "કૃપા કરીને ફેબ્રિકનું નામ દાખલ કરો",
+      rename_failed: "નામ બદલવામાં નિષ્ફળ:"
     }
   }
 }

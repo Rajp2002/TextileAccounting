@@ -583,58 +583,165 @@ export const en = {
   estimator: {
     title: "Negotiation Dashboard",
     subtitle: "Real-time Surat fabric cost calculator",
-    core: {
-      title: "Section 1: The Core",
-      party: "Party Name",
-      meters: "Meters (Order Size)",
-      ppi: "PPI (Picks)",
-      denier: "Denier",
-      gsm: "GSM",
-      style: "Fabric Style"
+    hud: {
+      prod_cost: "Prod. Cost / m",
+      quote_per_m: "Quote / m",
+      total_order: "Total Order",
+      margin: "Margin",
+      net_profit: "Net Profit",
+      order_btn: "Order",
+      save_template_btn: "Save Template"
     },
-    process: {
-      title: "Section 2: Technical/Process",
-      yarn_rate: "Current Yarn Rate (₹/KG)",
-      job_work: "External Job-Work (Dyeing, Digital, etc.)",
-      add_process: "Add Process",
-      grey_badge: "Grey Cost"
+    templates: {
+      label: "Templates",
+      hint: "Tap to apply · Long-press to edit rates",
+      edit_rates_title: "Update yarn rates",
+      delete_template: "Delete template",
+      structure_preserved: "Structure preserved · only rates change"
     },
-    results: {
-      title: "Landed Cost Breakdown",
-      pure_cost: "Pure Production Cost",
-      gst: "GST",
-      final_cost: "Final Landed Cost",
-      breakdown_helper: "Includes Power, Rent/Admin, and Shrinkage."
+    order_basics: {
+      title: "Order & Fabric Label",
+      party: "Party / Customer",
+      quality_label: "Quality / Fabric Label",
+      warp_construction: "Warp Construction",
+      weft_construction: "Weft Construction"
     },
-    margin: {
-      title: "Section 4: The Margin",
-      quote_price: "Quote Price Per Meter",
-      estimated_profit: "Estimated Net Profit",
-      save_quote: "Save & Snapshot Quote",
-      convert_order: "Convert to Live Order"
+    warp: {
+      title: "Warp Yarn Composition",
+      layer: "Warp Layer",
+      add_blend: "Add Blend Component",
+      tape_len: "Tape Len",
+      beam_capacity: "Beam Capacity"
     },
-    stress: {
-      title: "Risk Stress Test",
-      yarn_hike: "If Yarn Price hikes +5%",
-      eff_drop: "If Efficiency drops to 70%",
-      helper: "Heatmap shows Landed Cost vs. Current Quote Price"
+    weft: {
+      title: "Weft Yarn Composition",
+      layer: "Weft Layer",
+      add_weft: "Add Weft Blend",
+      cloth_width_hint: "Finished output width (not loom width)"
     },
-    settings: {
-      master_title: "Estimator Master Data",
-      master_desc: "Configure factory-wide default costs for more accurate quoting.",
-      elec_rate: "Electricity Rate (₹/kWh)",
-      rent: "Factory Rent (₹/Day)",
-      admin: "Admin/Staff Overseas (₹/Day)",
-      efficiency: "Avg Machine Efficiency (0-1.0)",
-      gst_rate: "GST Rate (%)",
-      gst_inclusive: "GST Inclusive Landed Cost",
-      gst_helper: "Calculate quote based on GST already in technical inputs.",
-      templates_title: "Fabric Templates",
-      templates_desc: "Setup technical specs for different fabric styles.",
-      new_style: "New Fabric Style",
-      edit_style: "Edit Style",
-      fabric_name: "Fabric Name (Style)",
-      save_template: "Save Template"
+    weave: {
+      title: "Weave Charges (Loom)",
+      looms_charge: "Looms Charge per Pick",
+      paise_hint: "Paise per pick value",
+      ppi_impact: "PPI Impact",
+      picks: "picks",
+      cost_per_m: "Cost / m",
+      shortage_title: "Combined Yarn Shortage %",
+      shortage_hint: "Applied to warp+weft combined total",
+      base_yarn: "Base yarn (warp+weft)",
+      shortage_row: "shortage",
+      total_yarn: "Total yarn cost"
+    },
+    warping_sizing: {
+      title: "Warping & Sizing",
+      warping_per_kg: "Warping / kg",
+      sizing_per_kg: "Sizing / kg",
+      applied_on: "Applied on",
+      warp_consumption: "kg warp yarn consumption."
+    },
+    overhead: {
+      title: "Factory Overhead",
+      effective_pct: "effective",
+      facility_costs: "Facility & Running Costs",
+      item_placeholder: "Item name",
+      add_cost_item: "Add Cost Item",
+      fixed_salary_workers: "Fixed Salary Workers",
+      pulled_from_registry: "Pulled from registry",
+      fixed_salary_label: "Fixed Salary",
+      pre_filled_note: "Pre-filled from your Fixed Workers registry. Edit amounts here — payroll records are not affected.",
+      monthly_output: "Monthly Output (m)",
+      output_hint: "Estimated metres woven per month — divides total overhead",
+      total_monthly: "Total Monthly",
+      direct_override_title: "Direct ₹/m Override",
+      override_active_note: "⚡ Override active — itemized calc is ignored",
+      override_bypass_note: "Enter a value to bypass the itemized calculation",
+      clear: "✕ Clear",
+      direct_override_badge: "⚡ direct override",
+      overhead_per_m: "Overhead per Metre",
+      effective_rate: "Effective Rate",
+      of_direct_cost: "of direct cost"
+    },
+    post_processing: {
+      title: "Post-Processing & Logistics",
+      winding: "Winding",
+      processing: "Processing",
+      finishing: "Finishing",
+      winding_per_kg: "Winding / kg",
+      dyeing_processing: "Dyeing/Processing",
+      finishing_per_m: "Finishing / m"
+    },
+    simulation: {
+      title: "Simulation & Quantity",
+      quantity: "Simulation Quantity",
+      quantity_hint: "Activates HUD quotes",
+      commission: "Broker Comm. %",
+      transport: "Transport / m"
+    },
+    save_template_dialog: {
+      title: "Save Fabric Template",
+      quality_name_label: "Fabric Quality Name",
+      saves_note_prefix: "Saves",
+      saves_note_warp: "warp +",
+      saves_note_weft: "weft blend layers including current yarn rates.",
+      rate_note: "Yarn rates can be updated anytime without recreating the template.",
+      cancel: "Cancel",
+      confirm: "Confirm & Save"
+    },
+    edit_template_dialog: {
+      title: "Edit Template:",
+      quality_name_label: "Fabric Quality Name",
+      structure_note_prefix: "Update yarn rates below. The fabric structure (denier, ends, picks) stays the same. Saving will update the stored template",
+      structure_note_and: "and",
+      structure_note_suffix: "apply it to the estimator.",
+      warp_rates: "Warp Yarn Rates",
+      weft_rates: "Weft Yarn Rates",
+      delete_template_btn: "Delete template",
+      structure_preserved: "Structure preserved · only rates change",
+      apply_as_is: "Apply as-is",
+      save_rates_apply: "Save Rates & Apply"
+    },
+    convert_dialog: {
+      title: "Convert to Production Order",
+      cost_summary: "Cost Summary",
+      production_cost: "Production Cost",
+      quote_price: "Quote Price",
+      total_order_value: "Total Order Value",
+      gross_profit: "Gross Profit",
+      set_qty_hint: "Set an order quantity to see full profit breakdown",
+      total_metres: "Total Metres",
+      deadline: "Deadline",
+      order_ready_note_prefix: "Order will appear in",
+      order_ready_note_section: "Orders",
+      order_ready_note_suffix: "ready for machine assignment. Cost snapshot is saved and linked.",
+      dismiss: "Dismiss",
+      start_production: "Start Production"
+    },
+    field_labels: {
+      calc_denier: "Calc Denier",
+      beam_ends: "Beam Ends",
+      rate_kg: "Rate (₹/kg)",
+      gst_pct: "GST %",
+      picks_ppi: "Picks (PPI)",
+      cloth_width: "Cloth Width",
+      shortage_pct: "Combined Yarn Shortage %",
+      winding_per_kg: "Winding / kg",
+      dyeing_processing: "Dyeing/Processing",
+      finishing_per_m: "Finishing / m",
+      simulation_qty: "Simulation Quantity",
+      broker_comm: "Broker Comm. %",
+      transport_per_m: "Transport / m"
+    },
+    toast: {
+      applied_template: "Applied fabric template:",
+      saved_template: "Fabric template saved!",
+      template_deleted: "Template deleted",
+      updated_applied: "Template updated & applied",
+      applied_as_is: "Applied:",
+      party_required: "Party name required",
+      quality_required: "Quality label required",
+      converted_success: "Quote converted successfully",
+      save_template_name_error: "Please enter a fabric name",
+      rename_failed: "Rename failed:"
     }
   }
 }

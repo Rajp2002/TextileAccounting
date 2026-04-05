@@ -575,58 +575,165 @@ export const hi = {
   estimator: {
     title: "नेगोशिएशन डैशबोर्ड",
     subtitle: "रियल-टाइम सूरत फैब्रिक लागत कैलकुलेटर",
-    core: {
-      title: "सेक्शन 1: मुख्य विवरण",
-      party: "पार्टी का नाम",
-      meters: "मीटर (ऑर्डर साइज)",
-      ppi: "PPI (पिक्‍स)",
-      denier: "डेनियर",
-      gsm: "GSM",
-      style: "फैब्रिक स्टाइल"
+    hud: {
+      prod_cost: "उत्पाद लागत / मी",
+      quote_per_m: "कोट / मी",
+      total_order: "कुल ऑर्डर",
+      margin: "मार्जिन",
+      net_profit: "शुद्ध लाभ",
+      order_btn: "ऑर्डर",
+      save_template_btn: "टेम्पलेट सेव"
     },
-    process: {
-      title: "सेक्शन 2: तकनीकी/प्रक्रिया",
-      yarn_rate: "वर्तमान सूत दर (₹/किलो)",
-      job_work: "बाहरी जॉब-वर्क (डाइंग, डिजिटल, आदि)",
-      add_process: "प्रक्रिया जोड़ें",
-      grey_badge: "ग्रे लागत"
+    templates: {
+      label: "टेम्पलेट्स",
+      hint: "लागू करने के लिए टैप करें · रेट्स बदलने के लिए लॉन्ग-प्रेस करें",
+      edit_rates_title: "सूत रेट्स अपडेट करें",
+      delete_template: "टेम्पलेट हटाएं",
+      structure_preserved: "संरचना सुरक्षित · केवल रेट्स बदलते हैं"
     },
-    results: {
-      title: "लैंडेड कोस्ट विवरण",
-      pure_cost: "शुद्ध उत्पादन लागत",
-      gst: "GST",
-      final_cost: "अंतिम लैंडेड कोस्ट",
-      breakdown_helper: "इसमें बिजली, किराया/एडमिन और श्रिंकेज शामिल है।"
+    order_basics: {
+      title: "ऑर्डर और फैब्रिक लेबल",
+      party: "पार्टी / ग्राहक",
+      quality_label: "क्वालिटी / फैब्रिक लेबल",
+      warp_construction: "ताना निर्माण (Warp Construction)",
+      weft_construction: "बाना निर्माण (Weft Construction)"
     },
-    margin: {
-      title: "सेक्शन 4: मार्जिन",
-      quote_price: "कोट प्राइस (प्रति मीटर)",
-      estimated_profit: "अनुमानित शुद्ध लाभ",
-      save_quote: "कोट सेव और स्नैपशॉट करें",
-      convert_order: "लाइव ऑर्डर में बदलें"
+    warp: {
+      title: "ताना सूत संरचना (Warp)",
+      layer: "ताना परत",
+      add_blend: "ब्लेंड कॉम्पोनेंट जोड़ें",
+      tape_len: "टेप लंबाई",
+      beam_capacity: "बीम क्षमता"
     },
-    stress: {
-      title: "रिस्क स्ट्रेस टेस्ट",
-      yarn_hike: "यदि सूत की कीमत +5% बढ़े",
-      eff_drop: "यदि दक्षता 70% तक गिर जाए",
-      helper: "हीटमैप लैंडेड कोस्ट बनाम वर्तमान कोट प्राइस दिखाता है"
+    weft: {
+      title: "बाना सूत संरचना (Weft)",
+      layer: "बाना परत",
+      add_weft: "वेफ्ट ब्लेंड जोड़ें",
+      cloth_width_hint: "तैयार कपड़े की चौड़ाई (करघे की नहीं)"
     },
-    settings: {
-      master_title: "एस्टीमेटर मास्टर डेटा",
-      master_desc: "सटीक कोटिंग के लिए फैक्ट्री-व्यापी डिफॉल्ट लागत कॉन्फ़िगर करें।",
-      elec_rate: "बिजली दर (₹/kWh)",
-      rent: "फैक्ट्री किराया (₹/दिन)",
-      admin: "एडमिन/स्टाफ ओवरहेड (₹/दिन)",
-      efficiency: "औसत मशीन दक्षता (0-1.0)",
-      gst_rate: "GST दर (%)",
-      gst_inclusive: "GST समावेशी लैंडेड कोस्ट",
-      gst_helper: "तकनीकी इनपुट में पहले से मौजूद GST के आधार पर कोट की गणना करें।",
-      templates_title: "फैब्रिक टेम्पलेट्स",
-      templates_desc: "विभिन्न फैब्रिक स्टाइल के लिए तकनीकी विवरण सेट करें।",
-      new_style: "नया फैब्रिक स्टाइल",
-      edit_style: "स्टाइल एडिट करें",
-      fabric_name: "फैब्रिक का नाम (स्टाइल)",
-      save_template: "टेम्पलेट सेव करें"
+    weave: {
+      title: "बुनाई शुल्क (लूम)",
+      looms_charge: "प्रति पिक लूम चार्ज",
+      paise_hint: "पिक प्रति पैसे का मूल्य",
+      ppi_impact: "PPI प्रभाव",
+      picks: "पिक्स",
+      cost_per_m: "लागत / मी",
+      shortage_title: "कुल सूत कमी %",
+      shortage_hint: "ताना+बाना की कुल लागत पर लागू",
+      base_yarn: "आधार सूत (ताना+बाना)",
+      shortage_row: "कमी",
+      total_yarn: "कुल सूत लागत"
+    },
+    warping_sizing: {
+      title: "वार्पिंग और साइज़िंग",
+      warping_per_kg: "वार्पिंग / किलो",
+      sizing_per_kg: "साइज़िंग / किलो",
+      applied_on: "लागू होता है",
+      warp_consumption: "किलो ताना सूत खपत पर।"
+    },
+    overhead: {
+      title: "फैक्ट्री ओवरहेड",
+      effective_pct: "प्रभावी",
+      facility_costs: "सुविधा और संचालन लागत",
+      item_placeholder: "आइटम का नाम",
+      add_cost_item: "लागत आइटम जोड़ें",
+      fixed_salary_workers: "तय वेतन कर्मचारी",
+      pulled_from_registry: "रजिस्ट्री से लिया गया",
+      fixed_salary_label: "तय वेतन",
+      pre_filled_note: "आपके Fixed Workers रिजिस्ट्री से पहले से भरा गया है। यहाँ राशि बदलें — पेरोल रिकॉर्ड पर कोई असर नहीं होगा।",
+      monthly_output: "मासिक उत्पादन (मी)",
+      output_hint: "प्रति माह अनुमानित मीटर बुनाई — कुल ओवरहेड को बाँटता है",
+      total_monthly: "कुल मासिक",
+      direct_override_title: "सीधा ₹/मी ओवरराइड",
+      override_active_note: "⚡ ओवरराइड सक्रिय — आइटमाइज़ड कैलक्युलेशन अनदेखा होगा",
+      override_bypass_note: "आइटमाइज़ड कैलक्युलेशन बायपास करने के लिए मूल्य दर्ज करें",
+      clear: "✕ हटाएं",
+      direct_override_badge: "⚡ सीधा ओवरराइड",
+      overhead_per_m: "ओवरहेड प्रति मीटर",
+      effective_rate: "प्रभावी दर",
+      of_direct_cost: "प्रत्यक्ष लागत का"
+    },
+    post_processing: {
+      title: "पोस्ट-प्रोसेसिंग और लॉजिस्टिक्स",
+      winding: "वाइंडिंग",
+      processing: "प्रोसेसिंग",
+      finishing: "फिनिशिंग",
+      winding_per_kg: "वाइंडिंग / किलो",
+      dyeing_processing: "डाइंग/प्रोसेसिंग",
+      finishing_per_m: "फिनिशिंग / मी"
+    },
+    simulation: {
+      title: "सिमुलेशन और मात्रा",
+      quantity: "सिमुलेशन मात्रा",
+      quantity_hint: "HUD कोट्स सक्रिय करता है",
+      commission: "ब्रोकर कमीशन %",
+      transport: "ट्रांसपोर्ट / मी"
+    },
+    save_template_dialog: {
+      title: "फैब्रिक टेम्पलेट सेव करें",
+      quality_name_label: "फैब्रिक क्वालिटी का नाम",
+      saves_note_prefix: "सेव करता है",
+      saves_note_warp: "ताना +",
+      saves_note_weft: "बाना ब्लेंड लेयर्स सहित वर्तमान सूत रेट्स।",
+      rate_note: "सूत रेट्स कभी भी टेम्पलेट पुनः बनाए बिना अपडेट किए जा सकते हैं।",
+      cancel: "रद्द करें",
+      confirm: "पुष्टि करें और सेव करें"
+    },
+    edit_template_dialog: {
+      title: "टेम्पलेट एडिट करें:",
+      quality_name_label: "फैब्रिक क्वालिटी का नाम",
+      structure_note_prefix: "नीचे सूत रेट्स अपडेट करें। फैब्रिक संरचना (डेनियर, एंड्स, पिक्स) वही रहेगी। सेव करने पर टेम्पलेट अपडेट होगा",
+      structure_note_and: "और",
+      structure_note_suffix: "एस्टीमेटर में लागू होगा।",
+      warp_rates: "ताना सूत रेट्स",
+      weft_rates: "बाना सूत रेट्स",
+      delete_template_btn: "टेम्पलेट हटाएं",
+      structure_preserved: "संरचना सुरक्षित · केवल रेट्स बदलते हैं",
+      apply_as_is: "जैसा है वैसे ही लागू करें",
+      save_rates_apply: "रेट्स सेव करें और लागू करें"
+    },
+    convert_dialog: {
+      title: "प्रोडक्शन ऑर्डर में बदलें",
+      cost_summary: "लागत सारांश",
+      production_cost: "उत्पादन लागत",
+      quote_price: "कोट प्राइस",
+      total_order_value: "कुल ऑर्डर मूल्य",
+      gross_profit: "कुल लाभ",
+      set_qty_hint: "पूरा लाभ विवरण देखने के लिए ऑर्डर मात्रा सेट करें",
+      total_metres: "कुल मीटर",
+      deadline: "अंतिम तिथि",
+      order_ready_note_prefix: "ऑर्डर दिखेगा",
+      order_ready_note_section: "ऑर्डर",
+      order_ready_note_suffix: "में, मशीन असाइनमेंट के लिए तैयार। लागत स्नैपशॉट सेव और लिंक होगा।",
+      dismiss: "बंद करें",
+      start_production: "प्रोडक्शन शुरू करें"
+    },
+    field_labels: {
+      calc_denier: "डेनियर",
+      beam_ends: "बीम एंड्स",
+      rate_kg: "दर (₹/किलो)",
+      gst_pct: "GST %",
+      picks_ppi: "पिक्स (PPI)",
+      cloth_width: "कपड़े की चौड़ाई",
+      shortage_pct: "कुल सूत कमी %",
+      winding_per_kg: "वाइंडिंग / किलो",
+      dyeing_processing: "डाइंग/प्रोसेसिंग",
+      finishing_per_m: "फिनिशिंग / मी",
+      simulation_qty: "सिमुलेशन मात्रा",
+      broker_comm: "ब्रोकर कमीशन %",
+      transport_per_m: "ट्रांसपोर्ट / मी"
+    },
+    toast: {
+      applied_template: "फैब्रिक टेम्पलेट लागू:",
+      saved_template: "फैब्रिक टेम्पलेट सेव हो गया!",
+      template_deleted: "टेम्पलेट हटाया गया",
+      updated_applied: "टेम्पलेट अपडेट और लागू हो गया",
+      applied_as_is: "लागू किया:",
+      party_required: "पार्टी का नाम आवश्यक है",
+      quality_required: "क्वालिटी लेबल आवश्यक है",
+      converted_success: "कोट सफलतापूर्वक परिवर्तित",
+      save_template_name_error: "कृपया फैब्रिक का नाम दर्ज करें",
+      rename_failed: "नाम बदलने में विफल:"
     }
   }
 }

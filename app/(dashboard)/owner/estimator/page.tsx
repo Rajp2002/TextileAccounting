@@ -33,6 +33,7 @@ import {
     CheckCircle2,
     History,
 } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n/context'
 import {
     calcFullTotals,
     makeDefaultEstimateState,
@@ -341,6 +342,7 @@ function RowCard({
 
 export default function EstimatorPage() {
     const router = useRouter()
+    const { t } = useTranslation()
     const [state, dispatch] = useReducer(estimateReducer, makeDefaultEstimateState())
     const [loading,   setLoading]   = useState(true)
     const [saving,    setSaving]    = useState(false)
@@ -405,11 +407,11 @@ export default function EstimatorPage() {
     const applyTemplate = useCallback((tpl: any) => {
         dispatch({ type: 'APPLY_TEMPLATE', template: tpl })
         setQualityLabel(tpl.name)
-        toast.success(`Applied fabric template: ${tpl.name}`)
-    }, [])
+        toast.success(`${t('estimator.toast.applied_template')} ${tpl.name}`)
+    }, [t])
 
     const handleSaveTemplate = async () => {
-        if (!templateName.trim()) return toast.error('Please enter a fabric name')
+        if (!templateName.trim()) return toast.error(t('estimator.toast.save_template_name_error'))
         setSavingTemplate(true)
         const res = await saveAsFabricTemplate({
             name:             templateName.trim(),
@@ -425,7 +427,7 @@ export default function EstimatorPage() {
             if (tRes.data) setTemplates(tRes.data)
             setShowSaveTemplate(false)
             setTemplateName('')
-            toast.success('Fabric template saved!')
+            toast.success(t('estimator.toast.saved_template'))
         } else {
             toast.error(res.error ?? 'Failed to save template')
         }
@@ -451,7 +453,7 @@ export default function EstimatorPage() {
             const renameRes = await renameTemplate(editRatesTpl.id, editingTplName.trim())
             if (renameRes.error) {
                 setSavingRates(false)
-                toast.error(`Rename failed: ${renameRes.error}`)
+                toast.error(`${t('estimator.toast.rename_failed')} ${renameRes.error}`)
                 return
             }
         }
@@ -480,7 +482,7 @@ export default function EstimatorPage() {
         })
         setQualityLabel(editingTplName.trim())
         setEditRatesTpl(null)
-        toast.success('Template updated & applied')
+        toast.success(t('estimator.toast.updated_applied'))
     }
 
     /** Apply template directly (without editing rates). */
@@ -489,7 +491,7 @@ export default function EstimatorPage() {
         dispatch({ type: 'APPLY_TEMPLATE', template: editRatesTpl })
         setQualityLabel(editRatesTpl.name)
         setEditRatesTpl(null)
-        toast.success(`Applied: ${editRatesTpl.name}`)
+        toast.success(`${t('estimator.toast.applied_as_is')} ${editRatesTpl.name}`)
     }
 
     const handleDeleteTemplate = async (id: string) => {
@@ -498,12 +500,12 @@ export default function EstimatorPage() {
         setDeletingTpl(null)
         if (res.error) { toast.error(res.error); return }
         setTemplates(prev => prev.filter(t => t.id !== id))
-        toast.success('Template deleted')
+        toast.success(t('estimator.toast.template_deleted'))
     }
 
     const handleConvertToOrder = async () => {
-        if (!partyName.trim())   return toast.error('Party name required')
-        if (!qualityLabel.trim()) return toast.error('Quality label required')
+        if (!partyName.trim())   return toast.error(t('estimator.toast.party_required'))
+        if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         setConverting(true)
         const res = await convertQuoteToOrder({
             party_name:          partyName.trim(),
@@ -519,7 +521,7 @@ export default function EstimatorPage() {
         setConverting(false)
         if (res.success) {
             setShowConvert(false)
-            toast.success('Quote converted successfully')
+            toast.success(t('estimator.toast.converted_success'))
             router.push('/owner/orders')
         } else {
             toast.error(res.error ?? 'Failed to create order')
@@ -547,7 +549,7 @@ export default function EstimatorPage() {
                     <div className="flex items-center gap-4">
                         {/* Production Cost */}
                         <div className="min-w-0">
-                            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Prod. Cost / m</p>
+                            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">{t('estimator.hud.prod_cost')}</p>
                             <p className="text-2xl font-black font-mono text-slate-900 leading-none">
                                 ₹{totals.totalProductionCostPerM.toFixed(2)}
                             </p>
@@ -558,7 +560,7 @@ export default function EstimatorPage() {
                                 <div className="h-8 w-px bg-slate-200 shrink-0 hidden sm:block" />
                                 {/* Quote Price */}
                                 <div className="min-w-0">
-                                    <p className="text-[10px] uppercase tracking-wider text-brand-accent font-black">Quote / m</p>
+                                    <p className="text-[10px] uppercase tracking-wider text-brand-accent font-black">{t('estimator.hud.quote_per_m')}</p>
                                     <p className="text-3xl font-black font-mono text-brand-accent leading-none">
                                         ₹{orderQuote.quotePricePerM.toFixed(2)}
                                     </p>
@@ -566,7 +568,7 @@ export default function EstimatorPage() {
                                 <div className="h-8 w-px bg-slate-200 shrink-0 hidden md:block" />
                                 {/* Total Value */}
                                 <div className="min-w-0 flex-1 hidden md:block text-right">
-                                    <p className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold">Total Order</p>
+                                    <p className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold">{t('estimator.hud.total_order')}</p>
                                     <p className="text-xl font-black font-mono text-slate-900 leading-none">
                                         ₹{orderQuote.totalOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                     </p>
@@ -581,7 +583,7 @@ export default function EstimatorPage() {
                                 className="h-9 px-4 bg-brand-accent hover:bg-brand-accent/90 text-white font-bold text-xs gap-2 shadow-lg shadow-brand-accent/15"
                                 onClick={() => setShowConvert(true)}
                             >
-                                <Package className="h-3.5 w-3.5" /> Order
+                                <Package className="h-3.5 w-3.5" /> {t('estimator.hud.order_btn')}
                             </Button>
                             <Button
                                 size="sm"
@@ -589,7 +591,7 @@ export default function EstimatorPage() {
                                 className="h-9 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-2 font-bold"
                                 onClick={() => setShowSaveTemplate(true)}
                             >
-                                <BookmarkPlus className="h-3.5 w-3.5" /> Save Template
+                                <BookmarkPlus className="h-3.5 w-3.5" /> {t('estimator.hud.save_template_btn')}
                             </Button>
                         </div>
                     </div>
@@ -598,7 +600,7 @@ export default function EstimatorPage() {
                     {hasOrderQty && orderQuote && (
                         <div className="flex items-center gap-4 bg-orange-50/50 p-2.5 rounded-xl border border-orange-100">
                             <div className="shrink-0">
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Margin</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t('estimator.hud.margin')}</p>
                                 <p className="text-sm font-black text-brand-accent leading-none">{state.profitPct.toFixed(1)}%</p>
                             </div>
                             <input
@@ -609,7 +611,7 @@ export default function EstimatorPage() {
                                 className="flex-1 h-2 rounded-full bg-slate-200 appearance-none cursor-pointer accent-brand-accent"
                             />
                             <div className="shrink-0 text-right">
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Net Profit</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t('estimator.hud.net_profit')}</p>
                                 <p className="text-sm font-black text-emerald-600 leading-none">
                                     ₹{orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                 </p>
@@ -639,8 +641,8 @@ export default function EstimatorPage() {
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
                             <History className="h-3.5 w-3.5 text-slate-400" />
-                            <p className="text-[11px] uppercase tracking-widest text-slate-500 font-black">Templates</p>
-                            <span className="ml-auto text-[10px] text-slate-400 font-medium">Tap to apply · Long-press to edit rates</span>
+                            <p className="text-[11px] uppercase tracking-widest text-slate-500 font-black">{t('estimator.templates.label')}</p>
+                            <span className="ml-auto text-[10px] text-slate-400 font-medium">{t('estimator.templates.hint')}</span>
                         </div>
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                             {templates.map(tpl => (
@@ -660,7 +662,7 @@ export default function EstimatorPage() {
                                     <button
                                         onClick={e => { e.stopPropagation(); openEditRates(tpl) }}
                                         className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded-md hover:bg-brand-accent/10 text-slate-400 hover:text-brand-accent"
-                                        title="Update yarn rates"
+                                        title={t('estimator.templates.edit_rates_title')}
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     </button>
@@ -672,11 +674,11 @@ export default function EstimatorPage() {
 
                 {/* 1. Order Basics */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
-                    <SectionHeader title="Order & Fabric Label" icon={Layers} accent="indigo" />
+                    <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="indigo" />
                     <CardContent className="p-5 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">Party / Customer</Label>
+                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.order_basics.party')}</Label>
                                 <Input
                                     value={partyName}
                                     onChange={e => setPartyName(e.target.value)}
@@ -685,7 +687,7 @@ export default function EstimatorPage() {
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">Quality / Fabric Label</Label>
+                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.order_basics.quality_label')}</Label>
                                 <Input
                                     value={qualityLabel}
                                     onChange={e => setQualityLabel(e.target.value)}
@@ -696,7 +698,7 @@ export default function EstimatorPage() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">Warp Construction</Label>
+                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.order_basics.warp_construction')}</Label>
                                 <Input
                                     value={warpInstruction}
                                     onChange={e => setWarpInstruction(e.target.value)}
@@ -705,7 +707,7 @@ export default function EstimatorPage() {
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">Weft Construction</Label>
+                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.order_basics.weft_construction')}</Label>
                                 <Input
                                     value={weftInstruction}
                                     onChange={e => setWeftInstruction(e.target.value)}
@@ -720,7 +722,7 @@ export default function EstimatorPage() {
                 {/* 2. Warp Yarn Rows */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
                     <SectionHeader 
-                        title="Warp Yarn Composition" 
+                        title={t('estimator.warp.title')} 
                         icon={Sparkles} 
                         accent="indigo"
                         badgeContent={<div className="text-[11px] font-mono font-bold text-indigo-700 bg-white/60 px-2 py-0.5 rounded-md border border-indigo-100">₹{totals.warpCostPerM.toFixed(2)}/m</div>}
@@ -730,7 +732,7 @@ export default function EstimatorPage() {
                             {state.warpRows.map((row, i) => (
                                 <RowCard
                                     key={row.id}
-                                    title="Warp Layer"
+                                    title={t('estimator.warp.layer')}
                                     index={i}
                                     accent="indigo"
                                     canRemove={state.warpRows.length > 1}
@@ -738,10 +740,10 @@ export default function EstimatorPage() {
                                     kgPer100m={totals.warpRows[i]?.kgPer100m ?? 0}
                                     costPer100m={totals.warpRows[i]?.costPer100m ?? 0}
                                 >
-                                    <NumField label="Calc Denier" value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calcDenier', value: v })} unit="D" step={0.5} />
-                                    <NumField label="Beam Ends" value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v })} />
-                                    <NumField label="Rate (₹/kg)" value={row.yarnRate} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: v })} step={1} />
-                                    <NumField label="GST %" value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v })} step={0.5} />
+                                    <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calcDenier', value: v })} unit="D" step={0.5} />
+                                    <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v })} />
+                                    <NumField label={t('estimator.field_labels.rate_kg')} value={row.yarnRate} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: v })} step={1} />
+                                    <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v })} step={0.5} />
                                 </RowCard>
                             ))}
                         </div>
@@ -750,12 +752,12 @@ export default function EstimatorPage() {
                             className="w-full border-dashed border-slate-300 py-6 text-slate-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all gap-2"
                             onClick={() => dispatch({ type: 'ADD_WARP_ROW' })}
                         >
-                            <Plus className="h-4 w-4" /> Add Blend Component
+                            <Plus className="h-4 w-4" /> {t('estimator.warp.add_blend')}
                         </Button>
                         <div className="pt-4 flex items-center justify-between border-t border-slate-100">
-                           <div className="w-32"><NumField label="Tape Len" value={state.tapeLengthM} onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v })} unit="m" /></div>
+                           <div className="w-32"><NumField label={t('estimator.warp.tape_len')} value={state.tapeLengthM} onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v })} unit="m" /></div>
                            <div className="text-right">
-                               <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Beam Capacity</p>
+                               <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">{t('estimator.warp.beam_capacity')}</p>
                                <p className="text-lg font-black font-mono text-indigo-600 leading-none">≈ {totals.estimatedBeamCapacityM.toFixed(0)} m</p>
                            </div>
                         </div>
@@ -765,7 +767,7 @@ export default function EstimatorPage() {
                 {/* 3. Weft Yarn Rows */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
                     <SectionHeader 
-                        title="Weft Yarn Composition" 
+                        title={t('estimator.weft.title')} 
                         icon={Scissors} 
                         accent="emerald"
                         badgeContent={<div className="text-[11px] font-mono font-bold text-emerald-700 bg-white/60 px-2 py-0.5 rounded-md border border-emerald-100">₹{totals.weftCostPerM.toFixed(2)}/m</div>}
@@ -775,7 +777,7 @@ export default function EstimatorPage() {
                             {state.weftRows.map((row, i) => (
                                 <RowCard
                                     key={row.id}
-                                    title="Weft Layer"
+                                    title={t('estimator.weft.layer')}
                                     index={i}
                                     accent="emerald"
                                     canRemove={state.weftRows.length > 1}
@@ -783,11 +785,11 @@ export default function EstimatorPage() {
                                     kgPer100m={totals.weftRows[i]?.kgPer100m ?? 0}
                                     costPer100m={totals.weftRows[i]?.costPer100m ?? 0}
                                 >
-                                    <NumField label="Picks (PPI)" value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v })} />
-                                    <NumField label="Cloth Width" value={row.reedSpace} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })} unit="cm" hint="Finished output width (not loom width)" />
-                                    <NumField label="Calc Denier" value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v })} unit="D" step={0.5} />
-                                    <NumField label="Rate (₹/kg)" value={row.yarnRate} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v })} />
-                                    <NumField label="GST %" value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v })} step={0.5} />
+                                    <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v })} />
+                                    <NumField label={t('estimator.field_labels.cloth_width')} value={row.reedSpace} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })} unit="cm" hint={t('estimator.weft.cloth_width_hint')} />
+                                    <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v })} unit="D" step={0.5} />
+                                    <NumField label={t('estimator.field_labels.rate_kg')} value={row.yarnRate} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v })} />
+                                    <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v })} step={0.5} />
                                 </RowCard>
                             ))}
                         </div>
@@ -796,31 +798,31 @@ export default function EstimatorPage() {
                             className="w-full border-dashed border-slate-300 py-6 text-slate-500 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all gap-2"
                             onClick={() => dispatch({ type: 'ADD_WEFT_ROW' })}
                         >
-                            <Plus className="h-4 w-4" /> Add Weft Blend
+                            <Plus className="h-4 w-4" /> {t('estimator.weft.add_weft')}
                         </Button>
                     </CardContent>
                 </Card>
 
                 {/* 4. Weave Cost */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
-                    <SectionHeader title="Weave Charges (Loom)" icon={Gauge} accent="amber" />
+                    <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="amber" />
                     <CardContent className="p-5">
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                             <NumField 
-                                label="Looms Charge per Pick" 
+                                label={t('estimator.weave.looms_charge')} 
                                 value={state.perPickCostPaisa} 
                                 onChange={v => dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v })} 
                                 unit="₹/pick"
                                 step={0.01} 
-                                hint="Paise per pick value"
+                                hint={t('estimator.weave.paise_hint')}
                             />
                             <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-100 flex items-center justify-between">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase text-amber-600/70 tracking-widest leading-none mb-1">PPI Impact</p>
-                                    <p className="text-sm font-bold text-slate-600">{state.weftRows.reduce((a,b)=>a+b.picks, 0)} picks</p>
+                                    <p className="text-[10px] font-black uppercase text-amber-600/70 tracking-widest leading-none mb-1">{t('estimator.weave.ppi_impact')}</p>
+                                    <p className="text-sm font-bold text-slate-600">{state.weftRows.reduce((a,b)=>a+b.picks, 0)} {t('estimator.weave.picks')}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] font-black uppercase text-amber-600/70 tracking-widest leading-none mb-1">Cost / m</p>
+                                    <p className="text-[10px] font-black uppercase text-amber-600/70 tracking-widest leading-none mb-1">{t('estimator.weave.cost_per_m')}</p>
                                     <p className="text-xl font-black font-mono text-amber-700">₹{totals.weaveCostPerM.toFixed(2)}</p>
                                 </div>
                             </div>
@@ -830,24 +832,24 @@ export default function EstimatorPage() {
                         <div className="mt-5 pt-4 border-t border-amber-100">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                                 <NumField
-                                    label="Combined Yarn Shortage %"
+                                    label={t('estimator.weave.shortage_title')}
                                     value={state.yarnShortagePct}
                                     onChange={v => dispatch({ type: 'SET', field: 'yarnShortagePct', value: v })}
                                     unit="%"
                                     step={0.5}
-                                    hint="Applied to warp+weft combined total"
+                                    hint={t('estimator.weave.shortage_hint')}
                                 />
                                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                                     <div className="flex justify-between text-[11px] text-slate-500 font-medium">
-                                        <span>Base yarn (warp+weft)</span>
+                                        <span>{t('estimator.weave.base_yarn')}</span>
                                         <span className="font-mono font-bold text-slate-700">₹{(totals.yarnBaseWarpPerM + totals.yarnBaseWeftPerM).toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-[11px] text-amber-600 font-medium">
-                                        <span>+ {state.yarnShortagePct}% shortage</span>
+                                        <span>+ {state.yarnShortagePct}% {t('estimator.weave.shortage_row')}</span>
                                         <span className="font-mono font-bold">+₹{totals.yarnShortageCostPerM.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-[11px] font-black border-t border-slate-200 pt-1.5 text-slate-800">
-                                        <span>Total yarn cost</span>
+                                        <span>{t('estimator.weave.total_yarn')}</span>
                                         <span className="font-mono">₹{(totals.warpCostPerM + totals.weftCostPerM).toFixed(2)}</span>
                                     </div>
                                 </div>
@@ -858,14 +860,14 @@ export default function EstimatorPage() {
 
                 {/* 5. Warping & Sizing */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
-                    <SectionHeader title="Warping & Sizing" icon={TrendingUp} accent="violet" />
+                    <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="violet" />
                     <CardContent className="p-4 space-y-4">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <NumField label="Warping / kg" value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v })} step={0.1} />
-                            <NumField label="Sizing / kg" value={state.sizingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v })} step={0.1} />
+                            <NumField label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v })} step={0.1} />
+                            <NumField label={t('estimator.warping_sizing.sizing_per_kg')} value={state.sizingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v })} step={0.1} />
                         </div>
                         <div className="text-[10px] font-medium text-slate-400 italic">
-                            Applied on {totals.totalWarpKgPer100m.toFixed(2)} kg warp yarn consumption.
+                            {t('estimator.warping_sizing.applied_on')} {totals.totalWarpKgPer100m.toFixed(2)} {t('estimator.warping_sizing.warp_consumption')}
                         </div>
                     </CardContent>
                 </Card>
@@ -873,7 +875,7 @@ export default function EstimatorPage() {
                 {/* 5b. Factory Overhead — Itemized Breakdown */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
                     <SectionHeader
-                        title="Factory Overhead"
+                        title={t('estimator.overhead.title')}
                         icon={Calculator}
                         accent="rose"
                         badgeContent={
@@ -882,7 +884,7 @@ export default function EstimatorPage() {
                                     ₹{totals.overheadPerM.toFixed(2)}/m
                                 </span>
                                 <span className="text-[10px] font-bold text-slate-400 bg-white/60 px-2 py-0.5 rounded-md border border-slate-200">
-                                    {totals.effectiveOverheadPct.toFixed(1)}% effective
+                                    {totals.effectiveOverheadPct.toFixed(1)}% {t('estimator.overhead.effective_pct')}
                                 </span>
                             </div>
                         }
@@ -891,7 +893,7 @@ export default function EstimatorPage() {
 
                         {/* Facility & Running Costs */}
                         <div className="space-y-2">
-                            <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">Facility & Running Costs</p>
+                            <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">{t('estimator.overhead.facility_costs')}</p>
                             <div className="space-y-2">
                                 {state.overheadItems
                                     .filter(item => item.source === 'manual')
@@ -901,7 +903,7 @@ export default function EstimatorPage() {
                                                 value={item.label}
                                                 onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'label', value: e.target.value })}
                                                 className="flex-1 h-8 text-xs font-semibold border-0 bg-transparent focus:bg-white focus:border-rose-200 focus:ring-1 focus:ring-rose-200/50 transition-all px-2"
-                                                placeholder="Item name"
+                                                placeholder={t('estimator.overhead.item_placeholder')}
                                             />
                                             <div className="relative shrink-0 w-36">
                                                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
@@ -931,7 +933,7 @@ export default function EstimatorPage() {
                                 className="w-full border-dashed border-rose-200 text-[10px] font-bold text-rose-500 hover:bg-rose-50 hover:border-rose-300 transition-all gap-1.5 h-8 uppercase tracking-widest"
                                 onClick={() => dispatch({ type: 'ADD_OVERHEAD_ITEM' })}
                             >
-                                <Plus className="h-3 w-3" /> Add Cost Item
+                                <Plus className="h-3 w-3" /> {t('estimator.overhead.add_cost_item')}
                             </Button>
                         </div>
 
@@ -939,9 +941,9 @@ export default function EstimatorPage() {
                         {state.overheadItems.filter(i => i.source === 'fixed_worker_derived').length > 0 && (
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">Fixed Salary Workers</p>
+                                    <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">{t('estimator.overhead.fixed_salary_workers')}</p>
                                     <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-violet-50 border-violet-100 text-violet-600 font-bold">
-                                        Pulled from registry
+                                        {t('estimator.overhead.pulled_from_registry')}
                                     </Badge>
                                 </div>
                                 <div className="space-y-2">
@@ -977,7 +979,7 @@ export default function EstimatorPage() {
                                     }
                                 </div>
                                 <p className="text-[10px] text-violet-400 italic font-medium px-1">
-                                    Pre-filled from your Fixed Workers registry. Edit amounts here — payroll records are not affected.
+                                    {t('estimator.overhead.pre_filled_note')}
                                 </p>
                             </div>
                         )}
@@ -986,7 +988,7 @@ export default function EstimatorPage() {
                         <div className="pt-4 border-t border-rose-100 space-y-3">
                             <div className="flex items-end gap-4">
                                 <div className="flex-1 space-y-1.5">
-                                    <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">Monthly Output (m)</Label>
+                                    <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">{t('estimator.overhead.monthly_output')}</Label>
                                     <div className="relative">
                                         <Input
                                             type="number"
@@ -998,10 +1000,10 @@ export default function EstimatorPage() {
                                         />
                                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">m</span>
                                     </div>
-                                    <p className="text-[10px] text-slate-400 font-medium">Estimated metres woven per month — divides total overhead</p>
+                                    <p className="text-[10px] text-slate-400 font-medium">{t('estimator.overhead.output_hint')}</p>
                                 </div>
                                 <div className="shrink-0 text-right pb-7">
-                                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Total Monthly</p>
+                                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">{t('estimator.overhead.total_monthly')}</p>
                                     <p className="text-lg font-black font-mono text-rose-600 leading-none">
                                         ₹{totals.overheadTotalMonthly.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                     </p>
@@ -1017,12 +1019,12 @@ export default function EstimatorPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-[10px] uppercase tracking-widest font-black text-slate-600">
-                                            Direct ₹/m Override
+                                            {t('estimator.overhead.direct_override_title')}
                                         </p>
                                         <p className="text-[10px] text-slate-400 font-medium">
                                             {state.overheadOverridePerM != null && state.overheadOverridePerM > 0
-                                                ? '⚡ Override active — itemized calc is ignored'
-                                                : 'Enter a value to bypass the itemized calculation'}
+                                                ? t('estimator.overhead.override_active_note')
+                                                : t('estimator.overhead.override_bypass_note')}
                                         </p>
                                     </div>
                                     {state.overheadOverridePerM != null && state.overheadOverridePerM > 0 && (
@@ -1030,7 +1032,7 @@ export default function EstimatorPage() {
                                             onClick={() => dispatch({ type: 'SET', field: 'overheadOverridePerM', value: null })}
                                             className="text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg px-2 py-1 transition-all"
                                         >
-                                            ✕ Clear
+                                            {t('estimator.overhead.clear')}
                                         </button>
                                     )}
                                 </div>
@@ -1059,16 +1061,16 @@ export default function EstimatorPage() {
                             {/* Live Summary */}
                             <div className="flex items-center justify-between bg-rose-50/70 border border-rose-100 rounded-xl px-4 py-3">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-rose-600/80 leading-none mb-1">Overhead per Metre</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-rose-600/80 leading-none mb-1">{t('estimator.overhead.overhead_per_m')}</p>
                                     <p className="text-2xl font-black font-mono text-rose-700 leading-none">₹{totals.overheadPerM.toFixed(2)}</p>
                                     {state.overheadOverridePerM != null && state.overheadOverridePerM > 0 && (
                                         <p className="text-[9px] text-amber-600 font-bold mt-0.5">⚡ direct override</p>
                                     )}
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 leading-none mb-1">Effective Rate</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 leading-none mb-1">{t('estimator.overhead.effective_rate')}</p>
                                     <p className="text-2xl font-black font-mono text-slate-700 leading-none">{totals.effectiveOverheadPct.toFixed(1)}%</p>
-                                    <p className="text-[9px] text-slate-400 mt-0.5">of direct cost ₹{totals.directCostPerM.toFixed(2)}/m</p>
+                                    <p className="text-[9px] text-slate-400 mt-0.5">{t('estimator.overhead.of_direct_cost')} ₹{totals.directCostPerM.toFixed(2)}/m</p>
                                 </div>
                             </div>
                         </div>
@@ -1080,23 +1082,23 @@ export default function EstimatorPage() {
 
                 {/* 6. Optional Sections */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
-                    <SectionHeader title="Post-Processing & Logistics" icon={Palette} accent="orange" />
+                    <SectionHeader title={t('estimator.post_processing.title')} icon={Palette} accent="orange" />
                     <CardContent className="p-5 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {state.enabledSections.winding ? (
-                                <NumField label="Winding / kg" value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v })} unit="₹/kg" />
+                                <NumField label={t('estimator.field_labels.winding_per_kg')} value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v })} unit="₹/kg" />
                             ) : (
-                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> Winding</button>
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'winding' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.winding')}</button>
                             )}
                             {state.enabledSections.processing ? (
-                                <NumField label="Dyeing/Processing" value={state.processingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v })} unit="₹/m" />
+                                <NumField label={t('estimator.field_labels.dyeing_processing')} value={state.processingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'processingRatePerM', value: v })} unit="₹/m" />
                             ) : (
-                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'processing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> Processing</button>
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'processing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.processing')}</button>
                             )}
                             {state.enabledSections.finishing ? (
-                                <NumField label="Finishing / m" value={state.finishingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v })} unit="₹/m" />
+                                <NumField label={t('estimator.field_labels.finishing_per_m')} value={state.finishingRatePerM} onChange={v => dispatch({ type: 'SET', field: 'finishingRatePerM', value: v })} unit="₹/m" />
                             ) : (
-                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'finishing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> Finishing</button>
+                                <button onClick={() => dispatch({ type: 'ENABLE_SECTION', section: 'finishing' })} className="h-10 rounded-xl border border-dashed border-slate-200 text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1.5 hover:bg-slate-50 hover:text-indigo-500 transition-all uppercase tracking-widest"><Plus className="h-3 w-3" /> {t('estimator.post_processing.finishing')}</button>
                             )}
                         </div>
                     </CardContent>
@@ -1104,21 +1106,21 @@ export default function EstimatorPage() {
 
                 {/* 7. Simulation / Order */}
                 <Card className="border-border/60 shadow-sm overflow-hidden bg-slate-50/20">
-                    <SectionHeader title="Simulation & Quantity" icon={Coins} accent="emerald" />
+                    <SectionHeader title={t('estimator.simulation.title')} icon={Coins} accent="emerald" />
                     <CardContent className="p-5 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <NumField 
-                                label="Simulation Quantity" 
+                                label={t('estimator.field_labels.simulation_qty')} 
                                 value={state.orderQuantityM ?? 1000} 
                                 onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v > 0 ? v : null })} 
                                 unit="m" 
                                 step={100}
-                                hint="Activates HUD quotes"
+                                hint={t('estimator.simulation.quantity_hint')}
                             />
                             {hasOrderQty && (
                                 <>
-                                    <NumField label="Broker Comm. %" value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v })} unit="%" step={0.5} />
-                                    <NumField label="Transport / m" value={state.transportPerM} onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v })} unit="₹/m" step={0.1} />
+                                    <NumField label={t('estimator.field_labels.broker_comm')} value={state.commissionPct} onChange={v => dispatch({ type: 'SET', field: 'commissionPct', value: v })} unit="%" step={0.5} />
+                                    <NumField label={t('estimator.field_labels.transport_per_m')} value={state.transportPerM} onChange={v => dispatch({ type: 'SET', field: 'transportPerM', value: v })} unit="₹/m" step={0.1} />
                                 </>
                             )}
                         </div>
@@ -1132,11 +1134,11 @@ export default function EstimatorPage() {
             <Dialog open={showSaveTemplate} onOpenChange={setShowSaveTemplate}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Save Fabric Template</DialogTitle>
+                        <DialogTitle>{t('estimator.save_template_dialog.title')}</DialogTitle>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">Fabric Quality Name</Label>
+                            <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.save_template_dialog.quality_name_label')}</Label>
                             <Input
                                 placeholder="Japan Satin, Canvas Shine"
                                 value={templateName}
@@ -1146,15 +1148,15 @@ export default function EstimatorPage() {
                             />
                         </div>
                         <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 leading-relaxed space-y-1">
-                            <p>Saves {state.warpRows.length} warp + {state.weftRows.length} weft blend layers including current yarn rates.</p>
-                            <p className="text-slate-400">Yarn rates can be updated anytime without recreating the template.</p>
+                            <p>{t('estimator.save_template_dialog.saves_note_prefix')} {state.warpRows.length} {t('estimator.save_template_dialog.saves_note_warp')} {state.weftRows.length} {t('estimator.save_template_dialog.saves_note_weft')}</p>
+                            <p className="text-slate-400">{t('estimator.save_template_dialog.rate_note')}</p>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setShowSaveTemplate(false)}>Cancel</Button>
+                        <Button variant="ghost" onClick={() => setShowSaveTemplate(false)}>{t('estimator.save_template_dialog.cancel')}</Button>
                         <Button className="bg-brand-accent text-white" onClick={handleSaveTemplate} disabled={savingTemplate}>
                             {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                            Confirm & Save
+                            {t('estimator.save_template_dialog.confirm')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -1166,12 +1168,12 @@ export default function EstimatorPage() {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-brand-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            Edit Template: {editRatesTpl?.name}
+                            {t('estimator.edit_template_dialog.title')} {editRatesTpl?.name}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="py-3 space-y-5">
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">Fabric Quality Name</Label>
+                            <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.edit_template_dialog.quality_name_label')}</Label>
                             <Input
                                 value={editingTplName}
                                 onChange={e => setEditingTplName(e.target.value)}
@@ -1179,14 +1181,13 @@ export default function EstimatorPage() {
                             />
                         </div>
                         <p className="text-xs text-slate-500 leading-relaxed">
-                            Update yarn rates below. The fabric structure (denier, ends, picks) stays the same.
-                            Saving will update the stored template <span className="font-bold text-slate-700">and</span> apply it to the estimator.
+                            {t('estimator.edit_template_dialog.structure_note_prefix')} <span className="font-bold text-slate-700">{t('estimator.edit_template_dialog.structure_note_and')}</span> {t('estimator.edit_template_dialog.structure_note_suffix')}
                         </p>
 
                         {/* Warp rates */}
                         {editingWarpRates.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest font-black text-indigo-600">Warp Yarn Rates</p>
+                                <p className="text-[10px] uppercase tracking-widest font-black text-indigo-600">{t('estimator.edit_template_dialog.warp_rates')}</p>
                                 {(editRatesTpl?.warp_rows ?? []).map((row: WarpRow, i: number) => (
                                     <div key={row.id} className="flex items-center gap-3 bg-indigo-50/50 border border-indigo-100 rounded-xl px-3 py-2.5">
                                         <div className="flex-1 min-w-0">
@@ -1215,7 +1216,7 @@ export default function EstimatorPage() {
                         {/* Weft rates */}
                         {editingWeftRates.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest font-black text-emerald-600">Weft Yarn Rates</p>
+                                <p className="text-[10px] uppercase tracking-widest font-black text-emerald-600">{t('estimator.edit_template_dialog.weft_rates')}</p>
                                 {(editRatesTpl?.weft_rows ?? []).map((row: WeftRow, i: number) => (
                                     <div key={row.id} className="flex items-center gap-3 bg-emerald-50/50 border border-emerald-100 rounded-xl px-3 py-2.5">
                                         <div className="flex-1 min-w-0">
@@ -1245,7 +1246,7 @@ export default function EstimatorPage() {
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                             <button
                                 onClick={() => {
-                                    if (editRatesTpl && window.confirm(`Delete template "${editRatesTpl.name}"?`)) {
+                                    if (editRatesTpl && window.confirm(t('estimator.edit_template_dialog.delete_confirm').replace('{name}', editRatesTpl.name))) {
                                         handleDeleteTemplate(editRatesTpl.id)
                                         setEditRatesTpl(null)
                                     }
@@ -1253,19 +1254,19 @@ export default function EstimatorPage() {
                                 disabled={deletingTpl === editRatesTpl?.id}
                                 className="text-[11px] font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
                             >
-                                <Trash2 className="h-3 w-3" />
-                                Delete template
-                            </button>
-                            <p className="text-[10px] text-slate-400">Structure preserved · only rates change</p>
+                                    <Trash2 className="h-3 w-3" />
+                                    {t('estimator.edit_template_dialog.delete_button')}
+                                </button>
+                                <p className="text-[10px] text-slate-400">{t('estimator.edit_template_dialog.delete_note')}</p>
                         </div>
                     </div>
                     <DialogFooter className="flex-col sm:flex-row gap-2">
                         <Button variant="ghost" size="sm" onClick={handleApplyCurrentRates} className="text-slate-500">
-                            Apply as-is
+                            {t('estimator.edit_template_dialog.apply_as_is')}
                         </Button>
                         <Button className="bg-brand-accent text-white" onClick={handleSaveRatesAndApply} disabled={savingRates}>
                             {savingRates ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                            Save Rates & Apply
+                            {t('estimator.edit_template_dialog.save_apply')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -1277,46 +1278,46 @@ export default function EstimatorPage() {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                            <Banknote className="h-5 w-5 text-emerald-500" />
-                           Convert to Production Order
+                           {t('estimator.convert_dialog.title')}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="py-2 space-y-4">
                         {/* ── Cost Summary Recap ── */}
                         <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
                             <div className="px-3 py-2 bg-slate-100 border-b border-slate-200">
-                                <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">Cost Summary</p>
+                                <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">{t('estimator.convert_dialog.cost_summary_title')}</p>
                             </div>
                             <div className="p-3 space-y-2">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-slate-500 font-medium">Production Cost</span>
+                                    <span className="text-xs text-slate-500 font-medium">{t('estimator.convert_dialog.prod_cost')}</span>
                                     <span className="font-mono font-bold text-sm text-slate-800">₹{totals.totalProductionCostPerM.toFixed(2)}/m</span>
                                 </div>
                                 {totals.orderQuote && (
                                     <>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-xs text-slate-500 font-medium">Quote Price</span>
-                                            <span className="font-mono font-bold text-base text-brand-accent">₹{totals.orderQuote.quotePricePerM.toFixed(2)}/m</span>
+                                            <span className="text-xs text-slate-500 font-medium">{t('estimator.convert_dialog.quote_price')}</span>
+                                            <span className="font-mono font-bold text-base text-brand-accent">₹{totals.orderQuote?.quotePricePerM.toFixed(2)}/m</span>
                                         </div>
                                         <div className="flex justify-between items-center border-t border-slate-200 pt-2">
                                             <span className="text-xs text-slate-500 font-medium">
-                                                Total Order Value
+                                                {t('estimator.convert_dialog.total_order_value')}
                                                 <span className="ml-1 text-slate-400">({targetMeters.toLocaleString('en-IN')}m)</span>
                                             </span>
                                             <span className="font-mono font-black text-sm text-emerald-700">
-                                                ₹{totals.orderQuote.totalOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                                ₹{totals.orderQuote?.totalOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-xs text-slate-500 font-medium">Gross Profit</span>
+                                            <span className="text-xs text-slate-500 font-medium">{t('estimator.convert_dialog.gross_profit')}</span>
                                             <span className="font-mono font-bold text-sm text-emerald-600">
-                                                ₹{totals.orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                                ₹{totals.orderQuote?.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                                 <span className="text-slate-400 font-normal"> ({state.profitPct.toFixed(1)}%)</span>
                                             </span>
                                         </div>
                                     </>
                                 )}
                                 {!totals.orderQuote && (
-                                    <p className="text-[11px] text-slate-400 italic">Set an order quantity to see full profit breakdown</p>
+                                    <p className="text-[11px] text-slate-400 italic">{t('estimator.convert_dialog.order_qty_hint')}</p>
                                 )}
                                 {/* Cost stack mini-pills */}
                                 <div className="flex flex-wrap gap-1.5 pt-1 border-t border-slate-100">
@@ -1331,23 +1332,23 @@ export default function EstimatorPage() {
                         {/* ── Order Fields ── */}
                         <div className="grid grid-cols-2 gap-3">
                            <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">Total Metres</Label>
+                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.convert_dialog.total_metres')}</Label>
                                 <Input type="number" value={targetMeters} onChange={e => setTargetMeters(Number(e.target.value))} className="font-mono font-bold" />
                            </div>
                            <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">Deadline</Label>
+                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.convert_dialog.deadline')}</Label>
                                 <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} />
                            </div>
                         </div>
                         <p className="text-[11px] text-slate-500 text-center px-4 leading-relaxed">
-                            Order will appear in <span className="text-indigo-600 font-bold">Orders</span> ready for machine assignment. Cost snapshot is saved and linked.
+                            {t('estimator.convert_dialog.success_note_prefix')} <span className="text-indigo-600 font-bold">{t('estimator.convert_dialog.success_note_orders')}</span> {t('estimator.convert_dialog.success_note_suffix')}
                         </p>
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setShowConvert(false)}>Dismiss</Button>
+                        <Button variant="ghost" onClick={() => setShowConvert(false)}>{t('estimator.convert_dialog.dismiss')}</Button>
                         <Button className="bg-brand-accent text-white w-full sm:w-auto" onClick={handleConvertToOrder} disabled={converting}>
                             {converting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-                            Start Production
+                            {t('estimator.convert_dialog.start_production')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
