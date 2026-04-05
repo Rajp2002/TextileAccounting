@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/app/(auth)/actions'
 import { OfflineSyncProvider } from '@/components/offline-sync-provider'
-import { SupervisorNav, MobileSupervisorNav, SupervisorRoleLabel } from '@/components/navigation/supervisor-nav'
+import { SupervisorNav, MobileSupervisorNav, MobileSupervisorBottomNav, SupervisorRoleLabel } from '@/components/navigation/supervisor-nav'
 import Image from 'next/image'
 import LogoutButton from '@/components/auth/logout-button'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
@@ -49,11 +49,14 @@ export default async function SupervisorLayout({ children }: { children: React.R
                 <SupervisorNav />
             </header>
 
-            <main className="max-w-5xl mx-auto p-4 md:p-6">
+            <main className="max-w-5xl mx-auto p-4 pb-[72px] md:pb-6 md:p-6">
                 <OfflineSyncProvider>
                     {children}
                 </OfflineSyncProvider>
             </main>
+
+            {/* Mobile bottom navigation — supervisor primary tabs */}
+            <MobileSupervisorBottomNav />
         </div>
     )
 }

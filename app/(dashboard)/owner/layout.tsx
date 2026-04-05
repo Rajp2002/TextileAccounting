@@ -30,7 +30,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
             />
 
             {/* Content area — offset by sidebar on desktop, padding-bottom for bottom nav on mobile */}
-            <div className="md:pl-[260px] pb-20 md:pb-0">
+            <div className="md:pl-[260px] pb-[72px] md:pb-0">
                 <main className="max-w-5xl mx-auto px-4 py-6 md:px-6 lg:px-8 lg:py-8">
                     {children}
                 </main>

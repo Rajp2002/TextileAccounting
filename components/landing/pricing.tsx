@@ -88,7 +88,7 @@ export default function LandingPricing() {
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: tierIdx * 0.15 }}
                             className={cn(
-                                tier.featured ? 'ring-2 ring-amber-600 dark:ring-amber-500 shadow-2xl scale-105' : 'ring-1 ring-gray-200 dark:ring-white/10 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm',
+                                tier.featured ? 'ring-2 ring-amber-600 dark:ring-amber-500 shadow-2xl lg:scale-105 my-2 lg:my-0' : 'ring-1 ring-gray-200 dark:ring-white/10 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm',
                                 'p-8 xl:p-10 rounded-[2rem] relative flex flex-col justify-between transition-transform duration-300 hover:-translate-y-2'
                             )}
                         >

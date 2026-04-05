@@ -299,7 +299,7 @@ function MeterWorkerRow({
                             </div>
 
                             {/* Actions Footer */}
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-gray-100">
                                 <div className="flex gap-2">
                                     <Button
                                         variant="outline"
@@ -523,7 +523,7 @@ function FixedWorkerRow({
                             </div>
                             
                             {/* Actions Footer */}
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-gray-100">
                                 <div className="flex gap-2">
                                     <Button
                                         variant="outline"
