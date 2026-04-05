@@ -34,7 +34,7 @@ export default function LandingHero() {
                 <rect width="100%" height="100%" strokeWidth={0} fill="url(#grid-pattern)" />
             </svg>
 
-            <div className="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:flex lg:px-8 lg:py-32 items-center">
+            <div className="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:flex lg:px-8 lg:py-32 lg:items-center">
                 <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl lg:flex-shrink-0 lg:pt-8">
                     <motion.div
                         initial="hidden"
@@ -115,7 +115,7 @@ export default function LandingHero() {
                     </motion.div>
                 </div>
 
-                <div className="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:ml-10 lg:mt-0 lg:mr-0 lg:max-w-none lg:flex-none xl:ml-32">
+                <div className="mt-10 w-full overflow-hidden sm:mt-16 lg:ml-10 lg:mt-0 lg:mr-0 lg:flex-none xl:ml-32">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 40 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -125,7 +125,7 @@ export default function LandingHero() {
                             type: "spring",
                             bounce: 0.2
                         }}
-                        className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none relative"
+                        className="relative w-full lg:max-w-none"
                     >
                         {/* Glow Behind the Image */}
                         <div className="absolute -inset-x-4 -inset-y-4 z-0 bg-gradient-to-tr from-amber-500/20 to-orange-500/20 blur-2xl rounded-[3rem] opacity-50 dark:opacity-40" />
@@ -142,12 +142,12 @@ export default function LandingHero() {
                                     loop
                                     muted
                                     playsInline
-                                    className="w-[76rem] object-cover transition-transform duration-500 group-hover:scale-[1.01]"
+                                    className="w-full max-w-[76rem] object-cover transition-transform duration-500 group-hover:scale-[1.01]"
                                 >
                                     Your browser does not support the video tag.
                                 </video>
                                 <div className="absolute inset-0 bg-black/5 pointer-events-none" />
-                                <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between pointer-events-none">
+                                <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 flex items-center justify-between pointer-events-none">
                                     <div className="px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-medium text-white tracking-wider uppercase">
                                         Product Preview
                                     </div>
