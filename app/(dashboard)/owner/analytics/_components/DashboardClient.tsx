@@ -117,7 +117,6 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
       <OrdersSection 
         orders={data.orders} 
         allMachines={data.machines || []}
-        onOrderCreated={handleRealtimeUpdate} 
         onRefresh={handleRealtimeUpdate}
       />
       <WorkerBreakdown entries={data.workerBreakdown} />
