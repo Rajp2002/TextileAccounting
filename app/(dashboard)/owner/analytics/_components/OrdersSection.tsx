@@ -3,27 +3,31 @@
 import { Order } from '../../actions/dashboard'
 import { OrderCard } from './OrderCard'
 import Link from 'next/link'
-import { NewOrderSheet } from './NewOrderSheet'
 import { Button } from '@/components/ui/button'
-import { Plus, PackagePlus, ArrowRight, LayoutDashboard, Users } from 'lucide-react'
+import { ArrowRight, PackagePlus, LayoutDashboard, Users } from 'lucide-react'
 import { motion } from 'framer-motion'
 
-// ─── Section Header ───────────────────────────────────────────────────────────
+// ─── Section Header (no create button — creation lives on Orders page) ─────────
 
-function SectionHeader({ title, count, onOrderCreated }: { title: string; count?: number; onOrderCreated?: () => void }) {
+function SectionHeader({ title, count }: { title: string; count?: number }) {
   return (
     <div className="flex justify-between items-end mb-4">
       <h2 className="text-xl font-bold">
         {title} {count !== undefined && <span className="text-muted-foreground ml-2">({count})</span>}
       </h2>
-      <NewOrderSheet onSuccess={onOrderCreated} />
+      <Link
+        href="/owner/orders"
+        className="flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+      >
+        Manage <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
     </div>
   )
 }
 
-// ─── Empty State ─────────────────────────────────────────────────────────────
+// ─── Empty State ──────────────────────────────────────────────────────────────
 
-function NoActiveOrders({ onOrderCreated }: { onOrderCreated?: () => void }) {
+function NoActiveOrders() {
   return (
     <motion.section
       initial={{ opacity: 0, y: 12 }}
@@ -53,32 +57,28 @@ function NoActiveOrders({ onOrderCreated }: { onOrderCreated?: () => void }) {
         </div>
 
         {/* Headline */}
-        <h2 className="text-2xl font-bold tracking-tight mb-2">Create your first order</h2>
+        <h2 className="text-2xl font-bold tracking-tight mb-2">No active orders</h2>
         <p className="text-muted-foreground text-sm max-w-xs mx-auto mb-8 leading-relaxed">
-          An order gives your supervisor something to log production against.
-          Once it exists, meters will start flowing in within minutes.
+          Create an order to start tracking production pace and deadlines.
         </p>
 
-        {/* Primary CTA */}
-        <NewOrderSheet
-          onSuccess={onOrderCreated}
-          trigger={
-            <Button
-              size="lg"
-              className="gap-2 rounded-full px-8 h-12 font-semibold text-base shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-            >
-              <Plus className="h-5 w-5" />
-              Add your first order
-            </Button>
-          }
-        />
+        {/* Primary CTA → navigates to orders page */}
+        <Link href="/owner/orders">
+          <Button
+            size="lg"
+            className="gap-2 rounded-full px-8 h-12 font-semibold text-base shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
+            Go to Orders
+            <ArrowRight className="h-5 w-5" />
+          </Button>
+        </Link>
 
         {/* Steps guide */}
         <div className="mt-10 grid grid-cols-3 gap-6 w-full max-w-sm text-left">
           {[
-            { icon: PackagePlus, label: 'Create order', sublabel: 'Party + fabric + meters', done: false, active: true },
-            { icon: LayoutDashboard, label: 'Assign machine', sublabel: 'Link loom to order', done: false, active: false },
-            { icon: Users, label: 'Log shifts', sublabel: 'Supervisor enters meters', done: false, active: false },
+            { icon: PackagePlus, label: 'Create order', sublabel: 'Party + fabric + meters', active: true },
+            { icon: LayoutDashboard, label: 'Assign machine', sublabel: 'Link loom to order', active: false },
+            { icon: Users, label: 'Log shifts', sublabel: 'Supervisor enters meters', active: false },
           ].map((step, i) => (
             <div key={i} className="flex flex-col items-center text-center gap-1.5">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-1 ${
@@ -95,14 +95,6 @@ function NoActiveOrders({ onOrderCreated }: { onOrderCreated?: () => void }) {
             </div>
           ))}
         </div>
-
-        {/* Secondary link */}
-        <Link
-          href="/owner/orders"
-          className="mt-8 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          View orders page <ArrowRight className="h-3 w-3" />
-        </Link>
       </div>
     </motion.section>
   )
@@ -135,12 +127,10 @@ function OrderCarousel({
 export function OrdersSection({
   orders,
   allMachines,
-  onOrderCreated,
   onRefresh,
 }: {
   orders: Order[] | null
   allMachines: Array<{ id: string; name: string; current_order_id: string | null }>
-  onOrderCreated?: () => void
   onRefresh?: () => void
 }) {
   if (!orders) {
@@ -153,13 +143,13 @@ export function OrdersSection({
   }
 
   if (orders.length === 0) {
-    return <NoActiveOrders onOrderCreated={onOrderCreated} />
+    return <NoActiveOrders />
   }
 
   if (orders.length === 1) {
     return (
       <section>
-        <SectionHeader title="Active orders" onOrderCreated={onOrderCreated} />
+        <SectionHeader title="Active orders" />
         <OrderCard order={orders[0]} variant="hero" allMachines={allMachines} onRefresh={onRefresh} />
       </section>
     )
@@ -168,7 +158,7 @@ export function OrdersSection({
   if (orders.length <= 4) {
     return (
       <section>
-        <SectionHeader title="Active orders" count={orders.length} onOrderCreated={onOrderCreated} />
+        <SectionHeader title="Active orders" count={orders.length} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {orders.map(o => <OrderCard key={o.id} order={o} variant="grid" allMachines={allMachines} onRefresh={onRefresh} />)}
         </div>
@@ -178,7 +168,7 @@ export function OrdersSection({
 
   return (
     <section>
-      <SectionHeader title="Active orders" count={orders.length} onOrderCreated={onOrderCreated} />
+      <SectionHeader title="Active orders" count={orders.length} />
       <OrderCarousel orders={orders} allMachines={allMachines} onRefresh={onRefresh} />
     </section>
   )

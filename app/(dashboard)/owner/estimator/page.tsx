@@ -1277,24 +1277,62 @@ export default function EstimatorPage() {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                            <Banknote className="h-5 w-5 text-emerald-500" />
-                           Review & Create Order
+                           Convert to Production Order
                         </DialogTitle>
                     </DialogHeader>
                     <div className="py-2 space-y-4">
-                        <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl space-y-2">
-                           <div className="flex justify-between items-center text-xs font-medium text-emerald-700">
-                               <span>Quote Price</span>
-                               <span className="font-mono font-black text-base">₹{(totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM).toFixed(2)}/m</span>
-                           </div>
-                           <div className="flex justify-between items-center text-xs font-medium text-emerald-700">
-                               <span>Expected Profit</span>
-                               <span className="font-mono font-black">₹{totals.orderQuote?.grossProfitRupees.toLocaleString('en-IN') ?? '0'}</span>
-                           </div>
+                        {/* ── Cost Summary Recap ── */}
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+                            <div className="px-3 py-2 bg-slate-100 border-b border-slate-200">
+                                <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">Cost Summary</p>
+                            </div>
+                            <div className="p-3 space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs text-slate-500 font-medium">Production Cost</span>
+                                    <span className="font-mono font-bold text-sm text-slate-800">₹{totals.totalProductionCostPerM.toFixed(2)}/m</span>
+                                </div>
+                                {totals.orderQuote && (
+                                    <>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs text-slate-500 font-medium">Quote Price</span>
+                                            <span className="font-mono font-bold text-base text-brand-accent">₹{totals.orderQuote.quotePricePerM.toFixed(2)}/m</span>
+                                        </div>
+                                        <div className="flex justify-between items-center border-t border-slate-200 pt-2">
+                                            <span className="text-xs text-slate-500 font-medium">
+                                                Total Order Value
+                                                <span className="ml-1 text-slate-400">({targetMeters.toLocaleString('en-IN')}m)</span>
+                                            </span>
+                                            <span className="font-mono font-black text-sm text-emerald-700">
+                                                ₹{totals.orderQuote.totalOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs text-slate-500 font-medium">Gross Profit</span>
+                                            <span className="font-mono font-bold text-sm text-emerald-600">
+                                                ₹{totals.orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                                <span className="text-slate-400 font-normal"> ({state.profitPct.toFixed(1)}%)</span>
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
+                                {!totals.orderQuote && (
+                                    <p className="text-[11px] text-slate-400 italic">Set an order quantity to see full profit breakdown</p>
+                                )}
+                                {/* Cost stack mini-pills */}
+                                <div className="flex flex-wrap gap-1.5 pt-1 border-t border-slate-100">
+                                    {totals.warpCostPerM > 0 && <span className="text-[10px] bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-0.5 rounded-full font-mono">🧶 ₹{totals.warpCostPerM.toFixed(2)}</span>}
+                                    {totals.weftCostPerM > 0 && <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-full font-mono">🧵 ₹{totals.weftCostPerM.toFixed(2)}</span>}
+                                    {totals.weaveCostPerM > 0 && <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded-full font-mono">⚙️ ₹{totals.weaveCostPerM.toFixed(2)}</span>}
+                                    {totals.overheadPerM > 0 && <span className="text-[10px] bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-full font-mono">🏭 ₹{totals.overheadPerM.toFixed(2)}</span>}
+                                </div>
+                            </div>
                         </div>
+
+                        {/* ── Order Fields ── */}
                         <div className="grid grid-cols-2 gap-3">
                            <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-black text-slate-500">Total Metres</Label>
-                                <Input type="number" value={targetMeters} onChange={e => setTargetMeters(Number(e.target.value))} />
+                                <Input type="number" value={targetMeters} onChange={e => setTargetMeters(Number(e.target.value))} className="font-mono font-bold" />
                            </div>
                            <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-black text-slate-500">Deadline</Label>
@@ -1302,7 +1340,7 @@ export default function EstimatorPage() {
                            </div>
                         </div>
                         <p className="text-[11px] text-slate-500 text-center px-4 leading-relaxed">
-                            Creating the order will move these specs to the <span className="text-indigo-600 font-bold">Floor Dashboard</span> for machine assignment.
+                            Order will appear in <span className="text-indigo-600 font-bold">Orders</span> ready for machine assignment. Cost snapshot is saved and linked.
                         </p>
                     </div>
                     <DialogFooter>

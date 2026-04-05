@@ -160,6 +160,63 @@ export async function deleteOrder(orderId: string) {
     return { success: true }
 }
 
+// ─── Order With Quote ─────────────────────────────────────────────────────────
+
+export async function getOrderWithQuote(orderId: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    // Fetch order progress row
+    const { data: order, error: orderError } = await supabase
+        .from('order_progress_summary')
+        .select('*')
+        .eq('order_id', orderId)
+        .eq('org_id', profile.org_id)
+        .maybeSingle()
+
+    if (orderError) return { error: orderError.message }
+    if (!order) return { error: 'Order not found' }
+
+    // Fetch linked quote (if any) — joined via estimator_quotes.order_id
+    const { data: quote } = await supabase
+        .from('estimator_quotes')
+        .select(
+            'id, quote_price_per_meter, landed_cost_per_meter, intended_margin_percent, meters, ' +
+            'warp_rows, weft_rows, overhead_pct, commission_pct, transport_per_m, ' +
+            'warping_rate_per_kg, sizing_rate_per_kg, overhead_items, monthly_output_m'
+        )
+        .eq('order_id', orderId)
+        .eq('org_id', profile.org_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+    // Fetch active machines for assignment
+    const { data: machines } = await supabase
+        .from('machines')
+        .select('id, name, current_order_id, status')
+        .eq('org_id', profile.org_id)
+        .eq('status', 'active')
+        .order('name', { ascending: true })
+
+    return { order, quote: quote ?? null, machines: machines ?? [] }
+}
+
+export async function getActiveMachinesList() {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('machines')
+        .select('id, name, current_order_id, status')
+        .eq('org_id', profile.org_id)
+        .eq('status', 'active')
+        .order('name', { ascending: true })
+
+    if (error) return { error: error.message }
+    return { data: data ?? [] }
+}
+
 /** Assign machines to an order */
 export async function assignMachinesToOrder(orderId: string, machineIds: string[]) {
     const { profile } = await requireRole(['owner'])

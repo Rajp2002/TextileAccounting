@@ -27,9 +27,9 @@ import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { useTranslation } from "@/lib/i18n/context"
 
 const primaryNavItems = [
-    { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
-    { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
     { name: "Dashboard", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
+    { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
+    { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
     { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll" },
 ]
 
