@@ -466,38 +466,49 @@ export async function getOnboardingStatus(): Promise<{
  * Call this BEFORE supabase.auth.refreshSession() in the client so the
  * custom_access_token_hook mints a JWT with onboarding_complete=true,
  * which unblocks the middleware gate on /owner/analytics.
+ *
+ * SAFETY: The entire body is wrapped in try/catch so this server action
+ * never throws — it always returns { success } or { error: string }.
+ * Unhandled throws from this action would propagate through the
+ * server action boundary and crash the client-side call.
  */
-export async function markOnboardingComplete() {
-    const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return { error: 'Not authenticated' }
+export async function markOnboardingComplete(): Promise<{ success?: boolean; error?: string }> {
+    try {
+        const supabase = await createClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return { error: 'Not authenticated' }
 
-    // Use admin client to bypass RLS for the org update.
-    // The organizations UPDATE policy checks auth.jwt() ->> 'org_id', which
-    // may be absent on a fresh signup (stale JWT race condition). The admin
-    // client bypasses RLS entirely — it's safe because we've already
-    // verified the session server-side and derived orgId from the DB fallback.
-    const admin = createAdminClient()
+        // Use admin client to bypass RLS for the org update.
+        // The organizations UPDATE policy relies on auth.jwt() org_id claim which
+        // may be absent on a fresh signup (stale JWT race condition).
+        const admin = createAdminClient()
 
-    let orgId: string | undefined = session.user.app_metadata?.org_id
-    if (!orgId) {
-        const { data: profile } = await admin
-            .from('profiles')
-            .select('org_id')
-            .eq('id', session.user.id)
-            .maybeSingle()
-        orgId = profile?.org_id ?? undefined
+        let orgId: string | undefined = session.user.app_metadata?.org_id
+        if (!orgId) {
+            const { data: profile } = await admin
+                .from('profiles')
+                .select('org_id')
+                .eq('id', session.user.id)
+                .maybeSingle()
+            orgId = profile?.org_id ?? undefined
+        }
+        if (!orgId) return { error: 'No org found — profile may still be loading' }
+
+        const { error } = await admin
+            .from('organizations')
+            .update({ onboarding_complete: true })
+            .eq('id', orgId)
+
+        if (error) {
+            console.error('[markOnboardingComplete] DB update failed:', error)
+            return { error: `DB error: ${error.message}` }
+        }
+
+        return { success: true }
+    } catch (e) {
+        // Catch ALL unhandled throws (e.g. missing env vars, network issues)
+        // so this action never propagates an exception to the client.
+        console.error('[markOnboardingComplete] Unexpected exception:', e)
+        return { error: `Unexpected: ${e instanceof Error ? e.message : String(e)}` }
     }
-    if (!orgId) return { error: 'No org found' }
-
-    const { error } = await admin
-        .from('organizations')
-        .update({ onboarding_complete: true })
-        .eq('id', orgId)
-
-    if (error) {
-        console.error('[markOnboardingComplete] DB update failed:', error)
-        return { error: 'Failed to complete onboarding' }
-    }
-    return { success: true }
 }

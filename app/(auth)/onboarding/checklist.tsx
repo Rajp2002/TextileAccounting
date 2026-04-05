@@ -422,19 +422,23 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
         if (!status.isComplete) return
         setCompleting(true)
 
-        // Step 1: Mark onboarding complete in DB
+        // Step 1: Mark onboarding complete in DB (non-fatal).
+        // The middleware has a DB fallback that reads onboarding_complete directly
+        // from the organizations table, so even if this call fails the user will
+        // still reach the dashboard on the next page load.
+        // getOnboardingStatus() (called on page render) already sets the flag
+        // when both machine and worker exist — so this is belt-and-suspenders.
         try {
             const markRes = await markOnboardingComplete()
             if (markRes?.error) {
-                toast.error(`Setup error: ${markRes.error}`)
-                setCompleting(false)
-                return
+                // Log the specific error but DO NOT block navigation.
+                // The middleware DB fallback will handle it.
+                console.warn('[OnboardingChecklist] markOnboardingComplete returned error:', markRes.error)
             }
         } catch (e) {
-            console.error('[OnboardingChecklist] markOnboardingComplete threw:', e)
-            toast.error('Could not finalise setup. Please refresh and try again.')
-            setCompleting(false)
-            return
+            // Server action threw (e.g. missing env var, network blip).
+            // Non-fatal — proceed to navigate; middleware DB fallback handles auth.
+            console.warn('[OnboardingChecklist] markOnboardingComplete threw (non-fatal):', e)
         }
 
         // Step 2: Refresh JWT so middleware sees onboarding_complete=true (non-fatal)
@@ -447,11 +451,8 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
 
         // Step 3: Hard navigation — gives middleware a fresh full-page request
         // so the DB fallback (reading onboarding_complete from DB) runs correctly.
-        // router.push uses client-side fetch navigation which can bypass the full
-        // middleware chain on Vercel's edge runtime.
         window.location.href = '/owner/analytics'
     }
-
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 flex items-start justify-center p-4 pt-8">
