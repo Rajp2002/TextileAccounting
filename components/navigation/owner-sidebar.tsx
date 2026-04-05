@@ -13,7 +13,6 @@ import {
     Menu,
     Activity,
     HandCoins,
-    PackageSearch,
     ShieldAlert,
     History,
     Calculator,
@@ -37,7 +36,6 @@ const secondaryNavItems = [
     { name: "Workers", href: "/owner/fixed-workers", icon: Users, translationKey: "workers" },
     { name: "Advances", href: "/owner/advances", icon: HandCoins, translationKey: "advances" },
     { name: "Machines", href: "/owner/machines", icon: Server, translationKey: "machines" },
-    { name: "Inventory", href: "/owner/inventory", icon: PackageSearch, translationKey: "inventory" },
     { name: "Safety & Incidents", href: "/owner/incidents", icon: ShieldAlert, translationKey: "safety & incidents" },
 ]
 

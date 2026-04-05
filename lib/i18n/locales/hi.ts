@@ -6,7 +6,7 @@ export const hi = {
     "machines": "मशीनें",
     "attendance": "अटेंडेंस (Attendance)",
     "dashboard": "डैशबोर्ड",
-    "inventory": "इन्वेंट्री",
+    "orders": "ऑर्डर",
     "settings": "सेटिंग्स",
     "audit trail": "ऑडिट ट्रेल (Audit Trail)",
     "quality": "क्वालिटी फॉर्म",

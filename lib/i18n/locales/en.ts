@@ -6,7 +6,7 @@ export const en = {
     "machines": "Machines",
     "attendance": "Attendance",
     "dashboard": "Dashboard",
-    "inventory": "Inventory",
+    "orders": "Orders",
     "settings": "Settings",
     "audit trail": "Audit Trail",
     "quality": "Quality Form",
