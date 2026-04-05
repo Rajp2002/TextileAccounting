@@ -146,6 +146,7 @@ async function _createOwnerProfile(
             org_id: orgId,
             role: 'owner',
             full_name: ownerName,
+            email: email,
             phone: phone,
         })
 
@@ -289,6 +290,7 @@ export async function joinOrganization(input: {
             org_id: org.id,
             role: 'supervisor',
             full_name: parsed.data.supervisorName,
+            email: parsed.data.email,
             phone: parsed.data.phone,
         })
 
