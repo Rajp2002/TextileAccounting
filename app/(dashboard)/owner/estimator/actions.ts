@@ -251,6 +251,12 @@ export async function saveEstimatorQuoteV3(params: {
 
     const { estimate } = params
 
+    // Compute loom-worker wage rate: Σ(picks across all weft rows) × perPickCostPaisa
+    // e.g. 58 picks × 0.16 = ₹9.28/m — this is what the weaver earns per metre
+    const workerRatePerM =
+        estimate.weftRows.reduce((sum, r) => sum + (r.picks ?? 0), 0)
+        * (estimate.perPickCostPaisa ?? 0)
+
     const { data: saved, error } = await supabase
         .from('estimator_quotes')
         .insert({
@@ -283,6 +289,8 @@ export async function saveEstimatorQuoteV3(params: {
             quote_price_per_meter:    params.quotePricePerM,
             intended_margin_percent:  estimate.profitPct,
             meters:                   estimate.orderQuantityM ?? 0,
+            // Weaver wage rate snapshot — flows downstream to shift_assignments
+            worker_rate_per_m:    workerRatePerM,
             // Legacy required fields with sane defaults
             ppi:     estimate.weftRows[0]?.picks ?? 68,
             yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
@@ -325,7 +333,15 @@ export async function convertQuoteToOrder(data: {
         if ('quoteId' in quoteRes && quoteRes.quoteId) quoteId = quoteRes.quoteId
     }
 
-    // 2. Create the flat order
+    // 2. Compute worker rate from estimate (if present) — same formula as saveEstimatorQuoteV3
+    let orderWorkerRatePerM: number | undefined
+    if (data.estimate) {
+        orderWorkerRatePerM =
+            data.estimate.weftRows.reduce((sum, r) => sum + (r.picks ?? 0), 0)
+            * (data.estimate.perPickCostPaisa ?? 0)
+    }
+
+    // 3. Create the flat order
     const { data: order, error } = await supabase
         .from('orders')
         .insert({
@@ -338,13 +354,15 @@ export async function convertQuoteToOrder(data: {
             start_date:           new Date().toISOString().split('T')[0],
             deadline:             data.deadline,
             status:               'active',
+            // Weaver wage rate snapshot from quote — supervisors see this on shift setup
+            worker_rate_per_m:    orderWorkerRatePerM ?? null,
         })
         .select('id')
         .single()
 
     if (error) return { error: error.message }
 
-    // 3. Link quote → order
+    // 4. Link quote → order
     if (quoteId && order?.id) {
         await supabase
             .from('estimator_quotes')

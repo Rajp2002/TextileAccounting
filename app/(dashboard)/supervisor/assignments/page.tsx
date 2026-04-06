@@ -79,18 +79,43 @@ function MachineRow({
 }: MachineRowProps) {
     const [workerId, setWorkerId] = useState<string>(assignment?.worker_id?.toString() ?? '')
     const [orderId, setOrderId] = useState<string>(assignment?.order_id ?? '')
+
+    // 3-tier rate priority:
+    // 1. Existing saved assignment rate (supervisor already confirmed it)
+    // 2. Order's worker_rate_per_m (from the linked estimator quote)
+    // 3. Machine default (fallback for orders without a quote link)
+    const getOrderRate = (oid: string) =>
+        orders.find((o: any) => o.id === oid)?.worker_rate_per_m ?? null
+    const initialOrderRate = getOrderRate(assignment?.order_id ?? '')
     const [rate, setRate] = useState<number>(
-        assignment?.rate_per_m ?? Number(machine.default_rate_per_m ?? 1.5)
+        assignment?.rate_per_m
+        ?? (initialOrderRate != null ? Number(initialOrderRate) : undefined)
+        ?? Number(machine.default_rate_per_m ?? 1.5)
     )
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
 
-    // Sync when assignment changes (e.g. after copy)
+    // Sync when assignment prop changes (e.g. after "Copy Yesterday")
     useEffect(() => {
         setWorkerId(assignment?.worker_id?.toString() ?? '')
         setOrderId(assignment?.order_id ?? '')
         setRate(assignment?.rate_per_m ?? Number(machine.default_rate_per_m ?? 1.5))
     }, [assignment, machine])
+
+    // Auto-fill rate when supervisor changes the order dropdown
+    // Priority: order's quote rate → machine default
+    // Does NOT override a rate the supervisor has already saved for this assignment.
+    useEffect(() => {
+        if (!orderId) return
+        // If this order is already saved in the assignment and has a confirmed rate, leave it
+        if (assignment?.order_id === orderId && assignment?.rate_per_m != null) return
+        const oRate = getOrderRate(orderId)
+        if (oRate != null) {
+            setRate(Number(oRate))
+        } else {
+            setRate(Number(machine.default_rate_per_m ?? 1.5))
+        }
+    }, [orderId]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSave = async () => {
         setSaving(true)

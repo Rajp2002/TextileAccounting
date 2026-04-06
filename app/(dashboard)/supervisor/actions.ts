@@ -700,7 +700,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             .order('name'),
         supabase
             .from('orders')
-            .select('id, quality_label, party_name, warp_instruction, weft_instruction, total_target_meters, deadline, status')
+            .select('id, quality_label, party_name, warp_instruction, weft_instruction, total_target_meters, deadline, status, worker_rate_per_m')
             .eq('org_id', orgId)
             .eq('status', 'active')
             .order('deadline'),

@@ -1319,6 +1319,25 @@ export default function EstimatorPage() {
                                         </div>
                                     </>
                                 )}
+                                {/* Loom Worker Wage — shown always so owner confirms rate before converting */}
+                                {(() => {
+                                    const totalPicks = state.weftRows.reduce((s, r) => s + (r.picks ?? 0), 0)
+                                    const workerRate = totalPicks * (state.perPickCostPaisa ?? 0)
+                                    if (workerRate <= 0) return null
+                                    return (
+                                        <div className="flex justify-between items-center border-t border-amber-100 pt-2 mt-1">
+                                            <span className="text-xs text-amber-700 font-semibold flex items-center gap-1">
+                                                🪡 Loom Worker Wage
+                                            </span>
+                                            <span className="font-mono font-bold text-sm text-amber-700">
+                                                ₹{workerRate.toFixed(2)}/m
+                                                <span className="text-slate-400 font-normal text-[10px] ml-1">
+                                                    ({totalPicks} picks × ₹{state.perPickCostPaisa}/pick)
+                                                </span>
+                                            </span>
+                                        </div>
+                                    )
+                                })()}
                                 {!totals.orderQuote && (
                                     <p className="text-[11px] text-slate-400 italic">{t('estimator.convert_dialog.order_qty_hint')}</p>
                                 )}
