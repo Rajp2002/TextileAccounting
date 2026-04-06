@@ -446,6 +446,10 @@ export async function loadSuratQualityTemplates() {
     return { success: true }
 }
 
+// closeYarnBatch and settleBatchAudit: still used by supervisor production page
+// to mark beams as consumed. send-yield-alert fire-and-forget has been removed
+// (yarn yield alerts are no longer in scope after the lean pivot).
+
 export async function closeYarnBatch(batchId: string, leftoverWeightKg: number = 0) {
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
@@ -453,23 +457,12 @@ export async function closeYarnBatch(batchId: string, leftoverWeightKg: number =
     const parsed = safeParse(CloseBatchSchema, { batchId, leftoverWeightKg })
     if ('error' in parsed) return { error: parsed.error }
 
-    // 1. Fetch yield report to check for leakage before closing
-    const { data: report, error: reportError } = await supabase
-        .rpc('get_batch_yield_report', { p_org_id: profile.org_id })
-        
-    const batchReport = report?.find((r: any) => r.batch_id === parsed.data.batchId)
-    
-    // Leakage logic: if efficiency variance is < -5%, flag it
-    const hasLeakage = batchReport ? Number(batchReport.efficiency_variance) < -5 : false
-
     const { error } = await supabase
         .from('yarn_batches')
         .update({
             status: 'consumed',
             current_machine_id: null,
             leftover_weight_kg: parsed.data.leftoverWeightKg,
-            leakage_alert: hasLeakage,
-            audit_status: hasLeakage ? 'pending' : 'settled'
         })
         .eq('id', parsed.data.batchId)
         .eq('org_id', profile.org_id)
@@ -477,25 +470,6 @@ export async function closeYarnBatch(batchId: string, leftoverWeightKg: number =
     if (error) {
         console.error('Failed to close yarn batch:', error)
         return { error: 'Failed to close batch. Please try again.' }
-    }
-
-    // ── Fire-and-forget: send yield alert WhatsApp if leakage detected ───────
-    if (hasLeakage) {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-        if (supabaseUrl && serviceRoleKey) {
-            fetch(`${supabaseUrl}/functions/v1/send-yield-alert`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${serviceRoleKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    org_id: profile.org_id,
-                    batch_id: parsed.data.batchId,
-                }),
-            }).catch((err) => console.error('[send-yield-alert] Notification failed:', err))
-        }
     }
 
     return { success: true }
@@ -506,9 +480,9 @@ export async function settleBatchAudit(batchId: string, status: 'settled' | 'dis
     const supabase = await createServerClient()
 
     const { error } = await supabase
-        .rpc('settle_batch_audit', { 
+        .rpc('settle_batch_audit', {
             p_batch_id: batchId,
-            p_status: status 
+            p_status: status
         })
 
     if (error) {
@@ -519,6 +493,7 @@ export async function settleBatchAudit(batchId: string, status: 'settled' | 'dis
     revalidatePath('/owner/inventory')
     return { success: true }
 }
+
 
 // ─── Order Actions ────────────────────────────────────────────────────────────
 

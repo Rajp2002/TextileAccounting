@@ -1,9 +1,8 @@
 // ─── monthly-brief ────────────────────────────────────────────────────────────
 // Scheduled by pg_cron on the 28th of every month at 18:00 UTC (23:30 IST).
-// Sends a full monthly production + payroll summary to all org owners via WhatsApp.
+// Sends a monthly production + payroll summary to all opted-in org owners.
 //
-// Auth: Bearer <SUPABASE_SERVICE_ROLE_KEY> — same pattern as all other Edge Functions.
-// (Previously used CRON_SECRET; standardized to service_role for consistency.)
+// Auth: Bearer <SUPABASE_SERVICE_ROLE_KEY>
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
@@ -11,9 +10,9 @@ import {
     sendInteraktTemplate,
     logDelivery,
     makeCallbackData,
+    formatInr,
 } from "../_shared/interakt.ts"
 
-// CORS headers: cron calls only — no browser interaction expected.
 const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') ?? 'https://vastra.app'
 
 const corsHeaders = {
@@ -22,107 +21,7 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-// ─── Types ─────────────────────────────────────────────────────
-
-interface MonthlyProdRow {
-    meters: number
-    worker_name: string
-    worker_id: number
-    machine_name: string
-    machine_id: string
-    rate_per_meter: number
-    shift: string
-}
-
-// ─── Message Builders ──────────────────────────────────────────
-
-function buildMeterWorkerBreakdown(rows: MonthlyProdRow[]): string {
-    // Group by shift → worker → machine
-    const shifts: Record<string, Record<string, {
-        total: number
-        totalPay: number
-        machines: Record<string, { meters: number; rate: number; pay: number }>
-    }>> = { day: {}, night: {} }
-
-    for (const r of rows) {
-        const shiftKey = r.shift === 'night' ? 'night' : 'day'
-        if (!shifts[shiftKey][r.worker_name]) {
-            shifts[shiftKey][r.worker_name] = { total: 0, totalPay: 0, machines: {} }
-        }
-        const entry = shifts[shiftKey][r.worker_name]
-        const meters = Number(r.meters)
-        const rate = Number(r.rate_per_meter)
-        const linePay = meters * rate
-
-        entry.total += meters
-        entry.totalPay += linePay
-
-        if (!entry.machines[r.machine_name]) {
-            entry.machines[r.machine_name] = { meters: 0, rate, pay: 0 }
-        }
-        entry.machines[r.machine_name].meters += meters
-        entry.machines[r.machine_name].pay += linePay
-    }
-
-    let text = ''
-
-    for (const [shiftKey, shiftLabel] of [['day', '☀️ *DAY SHIFT*'], ['night', '🌙 *NIGHT SHIFT*']]) {
-        const workers = Object.entries(shifts[shiftKey])
-        if (workers.length === 0) continue
-
-        if (text) text += '\n\n'
-        text += shiftLabel
-
-        for (const [worker, data] of workers) {
-            text += `\n\n  👷 *${worker}* — ${data.total} m`
-            for (const [machine, mData] of Object.entries(data.machines)) {
-                text += `\n      ${machine} (₹${mData.rate.toFixed(2)}/m): ${mData.meters} m → ₹${mData.pay.toFixed(2)}`
-            }
-            text += `\n      💰 *Pay: ₹${data.totalPay.toFixed(2)}*`
-        }
-    }
-
-    return text || '👷 No meter-based production this month.'
-}
-
-function buildFixedWorkerBreakdown(
-    workers: { id: number; name: string; role: string; monthly_salary: number }[],
-    attendanceCounts: Record<number, number>,
-    daysInMonth: number,
-): string {
-    const monthly = workers.filter(w => w.role !== 'daily')
-    const daily = workers.filter(w => w.role === 'daily')
-
-    let text = ''
-
-    // Monthly salaried workers
-    if (monthly.length > 0) {
-        text += `💼 *SALARIED STAFF*`
-        for (const w of monthly) {
-            const days = attendanceCounts[w.id] ?? 0
-            text += `\n  • ${w.name} (${w.role})`
-            text += `\n    ₹${Number(w.monthly_salary).toFixed(0)}/month`
-            text += `\n    📅 Attendance: ${days}/${daysInMonth} days`
-        }
-    }
-
-    // Daily workers
-    if (daily.length > 0) {
-        if (text) text += '\n\n'
-        text += `🔨 *DAILY WORKERS*`
-        for (const w of daily) {
-            const days = attendanceCounts[w.id] ?? 0
-            const monthlySalary = Number(w.monthly_salary)
-            const dailyRate = monthlySalary / 30
-            const totalPay = dailyRate * days
-            text += `\n  • ${w.name}`
-            text += `\n    ₹${monthlySalary.toFixed(0)}/month (₹${dailyRate.toFixed(0)}/day)`
-            text += `\n    📅 ${days} days → 💰 ₹${totalPay.toFixed(2)}`
-        }
-    }
-
-    return text || '🔧 No fixed/daily workers registered.'
-}
+const TEMPLATE_NAME = 'vastra_monthly_brief'
 
 // ─── Main Handler ──────────────────────────────────────────────
 
@@ -131,7 +30,7 @@ serve(async (req) => {
         return new Response('ok', { headers: corsHeaders })
     }
 
-    // Auth: must supply service_role key (set by pg_cron via app.settings.service_role_key)
+    // Auth: must supply service_role key (set by pg_cron)
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const authHeader = req.headers.get('Authorization') ?? ''
     if (authHeader !== `Bearer ${serviceRoleKey}`) {
@@ -139,28 +38,20 @@ serve(async (req) => {
     }
 
     try {
-        const supabaseClient = createClient(
+        const supabase = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+            serviceRoleKey
         )
-
-        const { data: orgs, error: orgError } = await supabaseClient
-            .from('organizations')
-            .select('id, name')
-        if (orgError) throw orgError
-
-        const results = []
 
         // Calculate report month (default: previous month, or override with ?month=2026-02)
         const now = new Date()
-        const istNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }))
         const url = new URL(req.url)
         let reportMonth: string
 
         if (url.searchParams.has('month')) {
             reportMonth = url.searchParams.get('month')!
         } else {
-            const prevMonth = new Date(istNow.getFullYear(), istNow.getMonth() - 1, 1)
+            const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
             reportMonth = prevMonth.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }).substring(0, 7)
         }
 
@@ -169,163 +60,139 @@ serve(async (req) => {
         const daysInMonth = new Date(year, month, 0).getDate()
         const endDate = `${reportMonth}-${String(daysInMonth).padStart(2, '0')}`
 
-        for (const org of orgs) {
+        // Fetch all opted-in owners
+        const { data: owners, error: ownersError } = await supabase
+            .from('profiles')
+            .select(`id, whatsapp_number, org_id, organizations ( name )`)
+            .eq('role', 'owner')
+            .eq('whatsapp_opted_in', true)
+            .not('whatsapp_number', 'is', null)
 
-            // Idempotency
-            const { data: existingLog } = await supabaseClient
+        if (ownersError) throw new Error(`Owners fetch failed: ${ownersError.message}`)
+        if (!owners?.length) {
+            return new Response(JSON.stringify({ sent: 0, message: "No opted-in owners" }), {
+                status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+            })
+        }
+
+        const results = []
+
+        for (const owner of owners) {
+            const orgId = owner.org_id
+            const factoryName = (owner.organizations as any)?.name ?? 'Your Factory'
+            const ownerPhone = owner.whatsapp_number as string
+
+            // ── Idempotency: skip if already sent for this month ──────────────
+            const { data: existingLog } = await supabase
                 .from('daily_brief_logs')
                 .select('id')
-                .eq('org_id', org.id)
+                .eq('org_id', orgId)
                 .eq('report_date', `${reportMonth}-01`)
                 .eq('status', 'monthly_sent')
                 .maybeSingle()
 
             if (existingLog) {
-                results.push({ org: org.name, status: 'skipped', reason: 'already_sent' })
+                results.push({ org: factoryName, status: 'skipped', reason: 'already_sent' })
                 continue
             }
 
-            // A. Production logs with worker, machine, and quality rate
-            const { data: productionLines, error: prodError } = await supabaseClient
+            // ── A. Production metrics (lean pivot: production_logs with rate snapshot) ──
+            const { data: prodRows } = await supabase
                 .from('production_logs')
-                .select('meters, worker_id, machine_id, workers(name), machines(name), yarn_batches(qualities(default_worker_rate_per_m))')
-                .eq('org_id', org.id)
+                .select('meters, worker_rate_snapshot')
+                .eq('org_id', orgId)
                 .gte('date', startDate)
                 .lte('date', endDate)
 
-            if (prodError) {
-                console.error(`Error fetching logs for org ${org.name}:`, prodError)
-                continue
-            }
+            const totalMeters = (prodRows ?? []).reduce((s: number, r: any) => s + Number(r.meters), 0)
+            const totalLaborCost = (prodRows ?? []).reduce(
+                (s: number, r: any) => s + Number(r.meters) * Number(r.worker_rate_snapshot ?? 0),
+                0
+            )
 
-            // B. Machine assignments for shift lookup
-            const { data: assignments } = await supabaseClient
-                .from('machine_assignments')
-                .select('machine_id, worker_id, shift')
-                .eq('org_id', org.id)
+            // ── B. Payroll settlements for the month ──────────────────────────
+            const { data: settlements } = await supabase
+                .from('payroll_settlements')
+                .select('gross_pay, net_payout, advance_deducted')
+                .eq('org_id', orgId)
+                .eq('month', reportMonth)
 
-            const shiftLookup: Record<string, string> = {}
-            for (const a of (assignments || [])) {
-                shiftLookup[`${a.machine_id}_${a.worker_id}`] = a.shift
-            }
+            const settledCount = (settlements ?? []).length
+            const totalGrossPay = (settlements ?? []).reduce((s: number, r: any) => s + Number(r.gross_pay), 0)
+            const totalNetPaid = (settlements ?? []).reduce((s: number, r: any) => s + Number(r.net_payout), 0)
 
-            const rows: MonthlyProdRow[] = (productionLines || []).map((r: any) => {
-                const batch: any = r.yarn_batches
-                const rate = batch?.qualities?.default_worker_rate_per_m || 0
-                return {
-                    meters: Number(r.meters),
-                    worker_name: r.workers?.name ?? 'Unknown',
-                    worker_id: r.worker_id,
-                    machine_name: r.machines?.name ?? 'Unknown',
-                    machine_id: r.machine_id,
-                    rate_per_meter: Number(rate),
-                    shift: shiftLookup[`${r.machine_id}_${r.worker_id}`] || 'day',
-                }
+            // ── C. Format month label ─────────────────────────────────────────
+            const monthLabel = new Date(`${reportMonth}-01`).toLocaleDateString('en-IN', {
+                month: 'long',
+                year: 'numeric',
             })
 
-            // C. Fixed workers + attendance
-            const { data: fixedWorkers } = await supabaseClient
-                .from('fixed_workers')
-                .select('id, name, role, monthly_salary')
-                .eq('org_id', org.id)
-                .eq('is_active', true)
-
-            const { data: attendanceRows } = await supabaseClient
-                .from('attendance')
-                .select('fixed_worker_id')
-                .eq('org_id', org.id)
-                .eq('present', true)
-                .gte('date', startDate)
-                .lte('date', endDate)
-
-            const attendanceCounts: Record<number, number> = {}
-            for (const row of (attendanceRows || [])) {
-                attendanceCounts[row.fixed_worker_id] = (attendanceCounts[row.fixed_worker_id] || 0) + 1
-            }
-
-            // D. Owner phone
-            const { data: owners } = await supabaseClient
-                .from('profiles')
-                .select('phone')
-                .eq('org_id', org.id)
-                .eq('role', 'owner')
-                .limit(1)
-
-            if (!owners || owners.length === 0 || !owners[0].phone) {
-                results.push({ org: org.name, status: 'skipped', reason: 'no_owner_phone' })
-                continue
-            }
-
-            const ownerPhone = owners[0].phone
-
-            // ─── Build Message ───
+            // ── D. Build message body ─────────────────────────────────────────
             const divider = '─────────────────'
-            const header = `📊 *MONTHLY REPORT*\n${org.name}\n📅 ${reportMonth}\n${divider}`
+            const lines = [
+                `📊 *MONTHLY REPORT — ${factoryName}*`,
+                `📅 ${monthLabel}`,
+                divider,
+                `🏭 Production: *${Math.round(totalMeters).toLocaleString('en-IN')} meters*`,
+                `💰 Gross Payroll: *₹${formatInr(totalGrossPay)}*`,
+                `💸 Net Paid Out: *₹${formatInr(totalNetPaid)}*`,
+                `👷 Workers Settled: *${settledCount}*`,
+            ]
 
-            const section1 = buildMeterWorkerBreakdown(rows)
-            const section2 = buildFixedWorkerBreakdown(fixedWorkers || [], attendanceCounts, daysInMonth)
-
-            const messageBody = [header, section1, divider, section2]
-                .filter(Boolean)
-                .join('\n\n')
-
-            // E. Fetch owner profile id for delivery log
-            const { data: ownerProfile } = await supabaseClient
-                .from('profiles')
-                .select('id')
-                .eq('org_id', org.id)
-                .eq('role', 'owner')
-                .limit(1)
-                .maybeSingle()
-
-            // F. Send via shared Interakt helper
-            //    Template: vastra_monthly_brief with a single body variable (the full message text)
-            const apiKey = Deno.env.get('INTERAKT_API_KEY') ?? ''
-            const callbackData = makeCallbackData('monthly', org.id)
-            const TEMPLATE_NAME = 'vastra_monthly_brief'
-
-            let sendStatus = 'simulated'
-            let interaktMessageId: string | null = null
-
-            if (apiKey) {
-                const result = await sendInteraktTemplate(
-                    apiKey,
-                    ownerPhone,
-                    TEMPLATE_NAME,
-                    'en',
-                    [messageBody],   // {{1}} = full report text
-                    callbackData,
-                )
-                sendStatus = result.success ? 'sent' : 'failed'
-                interaktMessageId = result.interaktMessageId
-
-                // Log to whatsapp_delivery_log (same audit trail as all other functions)
-                await logDelivery(supabaseClient, {
-                    orgId: org.id,
-                    ownerProfileId: ownerProfile?.id ?? null,
-                    recipientPhone: ownerPhone,
-                    templateName: TEMPLATE_NAME,
-                    notificationType: 'monthly_brief',
-                    callbackData,
-                    interaktMessageId,
-                    status: result.success ? 'sent' : 'failed',
-                    errorMessage: result.success ? null : JSON.stringify(result.responseBody),
-                    payloadSnapshot: { month: reportMonth, messageLength: messageBody.length },
-                })
-            } else {
-                console.log(`[SIMULATION] Monthly WhatsApp to ${ownerPhone}:`)
-                console.log(messageBody)
+            if (totalLaborCost > 0 && settledCount === 0) {
+                // Production happened but payroll not yet settled
+                lines.push(`⚠️ Accrued Labor Cost: *₹${formatInr(totalLaborCost)}* (unsettled)`)
             }
 
-            const briefStatus = (sendStatus === 'sent' || sendStatus === 'simulated') ? 'monthly_sent' : 'monthly_failed'
-            await supabaseClient.from('daily_brief_logs').insert({
-                org_id: org.id, report_date: `${reportMonth}-01`, status: briefStatus,
-                details: { type: 'monthly', month: reportMonth, message: messageBody },
+            lines.push(divider)
+            lines.push(`_Generated by Vastra_`)
+
+            const messageBody = lines.join('\n')
+
+            // ── E. Send via Interakt ──────────────────────────────────────────
+            const apiKey = Deno.env.get('INTERAKT_API_KEY') ?? ''
+            const callbackData = makeCallbackData('monthly', orgId)
+
+            const result = await sendInteraktTemplate(
+                apiKey,
+                ownerPhone,
+                TEMPLATE_NAME,
+                'en',
+                [messageBody],   // {{1}} = full report text
+                callbackData,
+            )
+
+            // ── F. Log delivery ───────────────────────────────────────────────
+            await logDelivery(supabase, {
+                orgId,
+                ownerProfileId: owner.id,
+                recipientPhone: ownerPhone,
+                templateName: TEMPLATE_NAME,
+                notificationType: 'monthly_brief',
+                callbackData,
+                interaktMessageId: result.interaktMessageId,
+                status: result.success ? 'sent' : 'failed',
+                errorMessage: result.success ? null : JSON.stringify(result.responseBody),
+                payloadSnapshot: { month: reportMonth, totalMeters, settledCount },
+            })
+
+            // ── G. Idempotency marker ─────────────────────────────────────────
+            const briefStatus = result.success ? 'monthly_sent' : 'monthly_failed'
+            await supabase.from('daily_brief_logs').insert({
+                org_id: orgId,
+                report_date: `${reportMonth}-01`,
+                status: briefStatus,
+                details: { type: 'monthly', month: reportMonth, totalMeters, settledCount },
             })
 
             results.push({
-                org: org.name, phone: ownerPhone, month: reportMonth,
-                status: sendStatus, interaktMessageId,
+                org: factoryName,
+                phone: ownerPhone,
+                month: reportMonth,
+                totalMeters: Math.round(totalMeters),
+                settledCount,
+                status: result.success ? 'sent' : 'failed',
+                interaktMessageId: result.interaktMessageId,
             })
         }
 
