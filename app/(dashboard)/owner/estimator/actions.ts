@@ -130,6 +130,7 @@ export async function saveAsFabricTemplate(data: {
     tapeLengthM:      number
     perPickCostPaisa: number
     yarnShortagePct?: number
+    overheadOverridePerM?: number | null
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -150,6 +151,7 @@ export async function saveAsFabricTemplate(data: {
             per_pick_cost_paise: data.perPickCostPaisa,
             tape_length_m:       data.tapeLengthM,
             yarn_shortage_pct:   data.yarnShortagePct ?? 10,
+            overhead_override_per_m: data.overheadOverridePerM ?? null,
             // Legacy display fields — cast to integer to satisfy old column types
             yarn_denier:         Math.round(firstWarp?.calcDenier ?? 75),
             calculated_yarn_denier: firstWarp?.calcDenier ?? 75,
