@@ -1,6 +1,6 @@
 // ─── send-payslip ─────────────────────────────────────────────────────────────
-// Event-driven: called from settlePayrollAndNotify() server action.
-// Sends a personalised payslip to the worker's WhatsApp number.
+// Event-driven: called from toggleWorkerPaid() server action after settlement.
+// Sends a personalised payslip to the worker's WhatsApp number via Interakt.
 // Multi-machine breakdown is newline-joined into a single template variable.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -8,15 +8,14 @@ import {
   sendInteraktTemplate,
   logDelivery,
   formatInr,
-  getSuratDateLabel,
   makeCallbackData,
 } from "../_shared/interakt.ts";
 
-// Template names must match exactly what was approved in Interakt
+// Template names must match exactly what is approved in Interakt
 const TEMPLATES: Record<string, string> = {
-  en: "vastra_payslip_en",
-  hi: "vastra_payslip_hi",
-  gu: "vastra_payslip_gu",
+  en: "worker_payslips",
+  hi: "worker_payslips",   // use same template until hi/gu variants are approved
+  gu: "worker_payslips",
 };
 
 // Language codes for Interakt API
@@ -61,7 +60,7 @@ Deno.serve(async (req) => {
       .single();
     const factoryName = org?.name ?? "Your Factory";
 
-    // 3. Fetch worker info (name, WhatsApp number, language)
+    // 3. Fetch worker info (name, WhatsApp number, language preference)
     const workerTable = worker_type === "meter" ? "workers" : "fixed_workers";
     const { data: worker, error: workerError } = await supabase
       .from(workerTable)
@@ -81,19 +80,19 @@ Deno.serve(async (req) => {
     let machineBreakdown = "";
     if (worker_type === "meter") {
       // Fetch production logs for the settlement month
+      // ✅ FIX: Use worker_rate_snapshot from production_logs (not workers.rate_per_meter)
       const monthStart = `${settlement.month}-01`;
-      const monthEnd = new Date(
-        Number(settlement.month.split("-")[0]),
-        Number(settlement.month.split("-")[1]),
-        0,
-      ).toISOString().split("T")[0]; // last day of month
+      const [year, month] = settlement.month.split("-");
+      const monthEnd = new Date(Number(year), Number(month), 0)
+        .toISOString()
+        .split("T")[0]; // last day of month
 
       const { data: logs } = await supabase
         .from("production_logs")
         .select(`
           meters,
-          machines ( name ),
-          workers ( rate_per_meter )
+          worker_rate_snapshot,
+          machines ( name )
         `)
         .eq("org_id", org_id)
         .eq("worker_id", worker_id)
@@ -104,7 +103,8 @@ Deno.serve(async (req) => {
       const machineMap: Record<string, { meters: number; rate: number }> = {};
       for (const log of logs ?? []) {
         const machineName = (log.machines as any)?.name ?? "Machine";
-        const rate = Number((log.workers as any)?.rate_per_meter ?? 0);
+        // ✅ Use worker_rate_snapshot directly from the log row
+        const rate = Number(log.worker_rate_snapshot ?? 0);
         if (!machineMap[machineName]) machineMap[machineName] = { meters: 0, rate };
         machineMap[machineName].meters += Number(log.meters);
       }
@@ -131,17 +131,18 @@ Deno.serve(async (req) => {
 
     // 6. Build body values (7 variables for payslip template)
     const lang = worker.whatsapp_language ?? "en";
-    const templateName = 'worker_payslips';
+    // ✅ FIX: Use the TEMPLATES map, not a hardcoded string
+    const templateName = TEMPLATES[lang] ?? TEMPLATES["en"];
     const langCode = LANG_CODES[lang] ?? "en";
 
     const bodyValues = [
-      factoryName,                            // {{1}} Factory name
-      monthLabel,                             // {{2}} Month Year
-      worker.name,                            // {{3}} Worker name
-      machineBreakdown,                       // {{4}} Production breakdown (newline-joined)
-      formatInr(Number(settlement.gross_pay)), // {{5}} Gross earnings
-      formatInr(Number(settlement.advance_deducted)), // {{6}} Advance deducted
-      formatInr(Number(settlement.net_payout)),       // {{7}} Net paid
+      factoryName,                                         // {{1}} Factory name
+      monthLabel,                                          // {{2}} Month Year
+      worker.name,                                         // {{3}} Worker name
+      machineBreakdown,                                    // {{4}} Production breakdown (newline-joined)
+      formatInr(Number(settlement.gross_pay)),             // {{5}} Gross earnings
+      formatInr(Number(settlement.advance_deducted)),      // {{6}} Advance deducted
+      formatInr(Number(settlement.net_payout)),            // {{7}} Net paid
     ];
 
     const callbackData = makeCallbackData("payslip", org_id);

@@ -23,7 +23,7 @@ import { generateMeterPayslip, generateFixedPayslip } from '@/lib/generate-paysl
 import { MIN_WAGE_DAILY, isBelowMinWage } from '@/lib/wage-config'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
-import { sendWhatsAppPayslip } from '@/lib/whatsapp'
+import { sendPayslipWhatsApp } from './whatsapp-actions'
 import {
     Dialog,
     DialogContent,
@@ -55,6 +55,7 @@ interface SettlementRecord {
 interface WorkerBase {
     id: number
     name: string
+    whatsapp_number?: string | null
     totalAdvances: number
     settlement?: SettlementRecord
 }
@@ -143,6 +144,7 @@ function MeterWorkerRow({
 }) {
     const [expanded, setExpanded] = useState(false)
     const [isFinalSettlement, setIsFinalSettlement] = useState(false)
+    const [waSending, setWaSending] = useState(false)
     const { t } = useTranslation()
     const tl = useTransliterate()
     const isPaid = worker.settlement?.status === 'paid'
@@ -330,10 +332,38 @@ function MeterWorkerRow({
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-8 text-[11px] gap-1.5 text-green-700 border-green-200 hover:bg-green-50"
-                                        onClick={() => {/* WhatsApp logic */}}
+                                        className={cn(
+                                            'h-8 text-[11px] gap-1.5 transition-all',
+                                            worker.whatsapp_number && isPaid
+                                                ? 'text-green-700 border-green-200 hover:bg-green-50'
+                                                : 'text-gray-300 border-gray-200 cursor-not-allowed'
+                                        )}
+                                        disabled={!worker.whatsapp_number || !isPaid || waSending}
+                                        title={
+                                            !worker.whatsapp_number
+                                                ? 'Worker has no WhatsApp number'
+                                                : !isPaid
+                                                ? 'Settle payroll first to send payslip'
+                                                : 'Send payslip via WhatsApp'
+                                        }
+                                        onClick={async () => {
+                                            if (!worker.settlement?.id) return
+                                            setWaSending(true)
+                                            const result = await sendPayslipWhatsApp(
+                                                worker.id,
+                                                'meter',
+                                                worker.settlement.id
+                                            )
+                                            setWaSending(false)
+                                            if (result.error) toast.error(result.error)
+                                            else if (result.skipped) toast.info(`Skipped: ${result.reason}`)
+                                            else toast.success('Payslip sent via WhatsApp ✅')
+                                        }}
                                     >
-                                        <Send className="h-3.5 w-3.5" />
+                                        {waSending
+                                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            : <Send className="h-3.5 w-3.5" />
+                                        }
                                         WhatsApp
                                     </Button>
                                 </div>
@@ -391,6 +421,7 @@ function FixedWorkerRow({
 }) {
     const [expanded, setExpanded] = useState(false)
     const [isFinalSettlement, setIsFinalSettlement] = useState(false)
+    const [waSending, setWaSending] = useState(false)
     const { t } = useTranslation()
     const tl = useTransliterate()
     const isPaid = worker.settlement?.status === 'paid'
@@ -573,10 +604,38 @@ function FixedWorkerRow({
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-8 text-[11px] gap-1.5 text-green-700 border-green-200 hover:bg-green-50"
-                                        onClick={() => {/* WhatsApp logic */}}
+                                        className={cn(
+                                            'h-8 text-[11px] gap-1.5 transition-all',
+                                            worker.whatsapp_number && isPaid
+                                                ? 'text-green-700 border-green-200 hover:bg-green-50'
+                                                : 'text-gray-300 border-gray-200 cursor-not-allowed'
+                                        )}
+                                        disabled={!worker.whatsapp_number || !isPaid || waSending}
+                                        title={
+                                            !worker.whatsapp_number
+                                                ? 'Worker has no WhatsApp number'
+                                                : !isPaid
+                                                ? 'Settle payroll first to send payslip'
+                                                : 'Send payslip via WhatsApp'
+                                        }
+                                        onClick={async () => {
+                                            if (!worker.settlement?.id) return
+                                            setWaSending(true)
+                                            const result = await sendPayslipWhatsApp(
+                                                worker.id,
+                                                'fixed',
+                                                worker.settlement.id
+                                            )
+                                            setWaSending(false)
+                                            if (result.error) toast.error(result.error)
+                                            else if (result.skipped) toast.info(`Skipped: ${result.reason}`)
+                                            else toast.success('Payslip sent via WhatsApp ✅')
+                                        }}
                                     >
-                                        <Send className="h-3.5 w-3.5" />
+                                        {waSending
+                                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            : <Send className="h-3.5 w-3.5" />
+                                        }
                                         WhatsApp
                                     </Button>
                                 </div>
@@ -674,7 +733,7 @@ export default function PayrollPage() {
             // Fetch workers
             const { data: workers, error: wErr } = await supabase
                 .from('workers')
-                .select('id, name')
+                .select('id, name, whatsapp_number')
                 .eq('org_id', userProfile!.org_id)
                 .eq('is_active', true)
             if (wErr) throw wErr
@@ -744,6 +803,7 @@ export default function PayrollPage() {
                 result.push({
                     id: worker.id,
                     name: worker.name,
+                    whatsapp_number: worker.whatsapp_number ?? null,
                     machines: machineBreakdown,
                     totalMeters,
                     totalPay,
@@ -815,6 +875,7 @@ export default function PayrollPage() {
                 return {
                     id: w.id,
                     name: w.name,
+                    whatsapp_number: w.whatsapp_number ?? null,
                     role: w.role,
                     monthly_salary: w.monthly_salary,
                     daysWorked,

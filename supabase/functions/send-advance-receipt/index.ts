@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     const workerTable = worker_type === "meter" ? "workers" : "fixed_workers";
     const { data: worker } = await supabase
       .from(workerTable)
-      .select("name, whatsapp_number")
+      .select("name, whatsapp_number, whatsapp_language")
       .eq("id", worker_id)
       .eq("org_id", org_id)
       .single();
@@ -90,12 +90,13 @@ Deno.serve(async (req) => {
 
     const callbackData = makeCallbackData("advance", org_id);
 
-    // 6. Send
+    // 6. Send — use worker's language preference
+    const langCode = (worker as any).whatsapp_language ?? "en";
     const result = await sendInteraktTemplate(
       apiKey,
       worker.whatsapp_number,
       TEMPLATE_NAME,
-      "en",
+      langCode,
       bodyValues,
       callbackData,
     );

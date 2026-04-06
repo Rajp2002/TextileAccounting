@@ -13,7 +13,7 @@ import {
   makeCallbackData,
 } from "../_shared/interakt.ts";
 
-const TEMPLATE_PIVOT_BRIEF = "vastra_daily_brief_v2"; // A hypothetical new template name for the pivot
+const TEMPLATE_PIVOT_BRIEF = "vastra_daily_brief_v2";
 const TEMPLATE_DEADLINE = "vastra_deadline_risk";
 
 Deno.serve(async (_req) => {
@@ -69,12 +69,13 @@ async function processOwner(
   // 2. Postgres RPC will be updated to return this flat structure.
   // We expect: total_meters, active_orders (count), top_machine_name, top_machine_meters, labor_liability_inr
   const { data: statsData, error: statsError } = await supabase.rpc(
-    "get_daily_brief_stats_v2", // Note: Need to update the RPC or create this new one. 
+    "get_daily_brief_stats_v2",
     { p_org_id: orgId, p_date: todayStr },
   );
 
-  const stats = (!statsError && statsData)
-    ? statsData
+  // ✅ FIX: RPC returns a table (array), unwrap first row
+  const stats = (!statsError && statsData?.[0])
+    ? statsData[0]
     : { total_meters: 0, active_orders: 0, top_machine_name: 'None', top_machine_meters: 0, labor_liability_inr: 0 };
 
   if (statsError) console.warn(`Stats fetch failed for org ${orgId}: ${statsError.message}`);
