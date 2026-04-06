@@ -349,9 +349,18 @@ export async function signIn(input: { email: string; password: string }) {
         return { error: 'Session error. Please try again.' }
     }
 
-    // Retrieve properties natively natively from app_metadata
-    const userRole = data.session.user.app_metadata?.role
-    const onboardingComplete = data.session.user.app_metadata?.onboarding_complete
+    // The custom_access_token_hook injects role/org_id at JWT mint time,
+    // but signInWithPassword returns app_metadata from raw_app_meta_data
+    // which may be stale (especially on re-login in PWA standalone mode).
+    // Refreshing the session forces the hook to re-run and populate claims.
+    let userRole = data.session.user.app_metadata?.role
+    let onboardingComplete = data.session.user.app_metadata?.onboarding_complete
+
+    if (!userRole) {
+        const { data: refreshed } = await supabase.auth.refreshSession()
+        userRole = refreshed.session?.user.app_metadata?.role
+        onboardingComplete = refreshed.session?.user.app_metadata?.onboarding_complete
+    }
 
     if (userRole === 'owner') {
         if (!onboardingComplete) {
@@ -361,8 +370,8 @@ export async function signIn(input: { email: string; password: string }) {
     } else if (userRole === 'supervisor') {
         redirect('/supervisor/production')
     } else {
-        // No org_id in JWT — profile doesn't exist yet (race condition)
-        return { error: 'Session error. Please try again.' }
+        // Role still absent after refresh — profile may not exist
+        return { error: 'Account setup incomplete. Please contact support.' }
     }
 }
 
