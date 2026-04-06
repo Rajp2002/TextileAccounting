@@ -113,11 +113,10 @@ A fully automated, zero-touch notification system powered by PostgreSQL crons an
 
 ---
 
-## 8. Multi-Language (i18n) & Compliance
+## 8. Multi-Language (i18n)
 
 - **Tri-Lingual Interface**: English, Hindi, and Gujarati (`t()` based translation).
 - **Phonetic Transliteration**: Automatic translation of employee names to Devanagari/Gujarati for accurate payslip delivery.
-- **OSHWC Safety**: Dedicated safety incident logging required for Indian operational compliance.
 
 ---
 

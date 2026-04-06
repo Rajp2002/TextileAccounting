@@ -422,7 +422,6 @@ Owner can filter the audit log by:
 | Workers | Purple | `workers`, `fixed_workers` |
 | Machines | Orange | `machines` |
 | Payroll | Gold | `payroll_settlements` |
-| Incidents | Red | `incidents` |
 
 ### Retention & Compliance
 - Designed for **3-year retention** under Indian Labour laws
@@ -438,65 +437,6 @@ Owner can filter the audit log by:
 | **Production Logging** | Every log create/edit logged with before/after snapshot |
 | **Payroll** | Settlements logged with full snapshot |
 | **Workers** | Add/delete/edit logged |
-| **Incidents** | Safety incident create/edit logged |
-
----
-
-## Feature 11: Safety Incidents (`/supervisor/incidents`, `/owner/incidents`)
-
-### What It Does
-A structured digital "Accident Register" for logging workplace safety events in compliance with the Occupational Safety, Health and Working Conditions Code (OSHWC), 2020. Every incident is timestamped, categorized, and triggers an immediate owner notification for Critical and Major events.
-
-### Who Uses It
-- **Supervisor**: Creates incident reports on the floor
-- **Owner**: Reviews all incidents, filters by severity, exports for compliance
-
-### Inputs (Create Incident Form)
-
-| Field | Type | Required | Notes |
-|---|---|---|---|
-| Date & Time | DateTime | Yes | Defaults to Surat now |
-| Severity | Enum | Yes | `minor` \| `major` \| `critical` |
-| Worker Involved | Select | Yes | From active piece-rate + fixed workers |
-| Description | Text | Yes | Free-form; what happened |
-| Action Taken | Text | Yes | Immediate response taken |
-| Injury Type | Text | No | Body part / nature of injury |
-| Follow-up Required | Boolean | No | Checkbox |
-
-### Severity Triage
-| Level | Meaning | WhatsApp Alert? |
-|---|---|---|
-| Minor | First aid level; no lost time | No |
-| Major | Medical attention required; possible lost time | Yes |
-| Critical | Hospitalization / fatality risk | Yes (immediately) |
-
-### WhatsApp Alert on Major/Critical
-When `severity = 'major'` or `'critical'`:
-- `send-safety-alert` Edge Function called immediately (fire-and-forget)
-- Interakt template message to owner's WhatsApp:
-  > *"⚠️ Safety Incident — [Factory Name] | Worker: [Name] | Severity: CRITICAL | [Description] | Action: [Action Taken]"*
-- No cooldown on safety alerts — every incident triggers a fresh notification
-- Logged in `whatsapp_delivery_log`
-
-### Incident List UI (Owner View)
-- **Filterable** by: Severity, Date Range, Worker Name
-- **Colour-coded rows**: Red (Critical), Amber (Major), Grey (Minor)
-- **Export**: Owners can export the incident register as PDF for statutory submission
-- Expandable row: shows full description + action taken + follow-up status
-
-### Compliance Notes
-- The `incidents` table structure satisfies the OSHWC "Form 19" register requirements:
-  - Date/Time, Nature of Injury, Worker Details, Action Taken
-- DPDP Act compliance: captures minimum required PII (worker name, injury nature only)
-- Audit trigger on `incidents` — every edit is tracked with before/after snapshot
-
-### Connections to Other Features
-| Feature | How |
-|---|---|
-| **Workers** | Incident is linked to a worker by `worker_id` |
-| **WhatsApp** | Major/Critical incidents fire `send-safety-alert` Edge Function |
-| **Audit Trail** | Incident create/edit triggers audit log entry |
-| **Owner Dashboard** | Incident count can surface as a KPI (future expansion) |
 
 ---
 
@@ -675,21 +615,15 @@ A complete push notification system delivering factory intelligence, financial d
 - **Cooldown**: 24-hour TTL per `order_id` in `whatsapp_cooldowns`
 - **Recipient**: Owner
 
-#### 7. `send-safety-alert`
-- **Trigger**: Safety incident logged with severity = `major` or `critical`
-- **Message**: Severity badge · Worker name · Description · Action taken
-- **No cooldown** — every incident gets a notification
-- **Recipient**: Owner
-
-#### 8. `monthly-brief`
+#### 7. `monthly-brief`
 - **Trigger**: End-of-month scheduled (pg_cron)
 - **Message**: Month totals for meters, wages, active orders, efficiency
 - **Recipient**: Owner
 
-#### 9. `daily-brief` (older variant, deprecated in favour of `send-daily-brief`)
+#### 8. `daily-brief` (older variant, deprecated in favour of `send-daily-brief`)
 - Retained for backward compatibility
 
-#### 10. `whatsapp-summary`
+#### 9. `whatsapp-summary`
 - General WhatsApp summary utility used internally by other functions
 
 ### Delivery Audit Log
@@ -735,7 +669,6 @@ No external scheduler — the database drives its own notifications.
 | **Inventory** | `send-yield-alert` triggered on batch close with leakage |
 | **Orders** | `send-deadline-alert` triggered on Pace Index risk |
 | **Payroll** | `send-payslip` and `send-advance-receipt` triggered by payroll actions |
-| **Incidents** | `send-safety-alert` triggered on major/critical incident |
 | **Owner Settings** | Opt-in managed via `saveWhatsAppPreferences()` |
 
 ---
@@ -830,9 +763,6 @@ graph TD
     AccessCode    --> Workers
     AccessCode    --> Attendance
     AccessCode    --> Inventory
-
-    Incidents     --> Audit
-    Incidents     --> WhatsApp
 
     Estimator     --> Orders
     Estimator     --> Inventory
