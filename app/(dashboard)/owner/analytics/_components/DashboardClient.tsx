@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { KpiStrip } from './KpiStrip'
 import { YieldAlertBanner } from './YieldAlertBanner'
-import { OrdersSection } from './OrdersSection'
+import { OrderHealthSummary } from './OrderHealthSummary'
+import { MachineUtilization } from './MachineUtilization'
+import { ProductionTrend } from './ProductionTrend'
 import { WorkerBreakdown } from './WorkerBreakdown'
 import { refreshLiveDashboard, fetchHistoricalData } from '../../actions/dashboard'
 import type { DashboardData } from '../../actions/dashboard'
@@ -91,6 +93,7 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
 
   return (
     <div className="flex flex-col gap-6 p-6">
+      {/* Date picker row */}
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center space-x-2 w-full justify-end">
           {!isConnected && selectedDate === getSuratTodayString() && (
@@ -112,13 +115,23 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
           </div>
         </div>
       </div>
+
+      {/* KPI Strip */}
       <KpiStrip yesterday={data.yesterday} today={data.today} isConnected={isConnected} selectedDate={selectedDate} />
+
+      {/* Yield Alert */}
       {data.yieldAlert && <YieldAlertBanner alert={data.yieldAlert} />}
-      <OrdersSection 
-        orders={data.orders} 
-        allMachines={data.machines || []}
-        onRefresh={handleRealtimeUpdate}
-      />
+
+      {/* Analytics widgets — 2-col on md+ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <OrderHealthSummary orders={data.orders} />
+        <MachineUtilization machines={data.machines} />
+      </div>
+
+      {/* 7-day trend — full width */}
+      <ProductionTrend data={data.trend} />
+
+      {/* Worker breakdown */}
       <WorkerBreakdown entries={data.workerBreakdown} />
     </div>
   )

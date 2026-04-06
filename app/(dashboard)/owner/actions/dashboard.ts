@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getSuratTodayString, getSuratYesterdayString } from '@/lib/time'
 import { parseJWT } from '@/lib/auth'
+import { subDays, format } from 'date-fns'
 
 export type WorkerBreakdownEntry = {
   worker_id: string
@@ -34,6 +35,11 @@ export type Order = {
   assigned_machines: Array<{ id: string, name: string }>
 }
 
+export type DailyMeterPoint = {
+  date: string
+  total_meters: number
+}
+
 export type DashboardData = {
   yesterday: {
     total_meters: number
@@ -57,6 +63,7 @@ export type DashboardData = {
   orders: Order[] | null
   workerBreakdown: WorkerBreakdownEntry[] | null
   machines: Array<{ id: string, name: string, current_order_id: string | null }> | null
+  trend: DailyMeterPoint[] | null
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
@@ -69,6 +76,11 @@ export async function getDashboardData(): Promise<DashboardData> {
   const today     = getSuratTodayString()
   const yesterday = getSuratYesterdayString()
 
+  // Build last-7-days date range (Surat IST)
+  const last7Days = Array.from({ length: 7 }, (_, i) =>
+    format(subDays(new Date(today), 6 - i), 'yyyy-MM-dd')
+  )
+
   const results = await Promise.allSettled([
     supabase.rpc('get_kpi_yesterday',             { p_org_id: org_id, p_date: yesterday }),
     supabase.rpc('get_kpi_today_live',            { p_org_id: org_id, p_date: today }),
@@ -76,11 +88,29 @@ export async function getDashboardData(): Promise<DashboardData> {
     supabase.rpc('get_active_orders_with_pace',   { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_worker_breakdown_today',    { p_org_id: org_id, p_date: today }),
     supabase.from('machines').select('id, name, current_order_id').eq('org_id', org_id).eq('status', 'active'),
+    // 7-day trend: sum meters per day from production_logs
+    supabase
+      .from('production_logs')
+      .select('logged_date, meters')
+      .eq('org_id', org_id)
+      .gte('logged_date', last7Days[0])
+      .lte('logged_date', today)
+      .order('logged_date', { ascending: true }),
   ])
 
-  const [kpiYesterday, kpiToday, yieldAlert, orders, workerBreakdown, machines] = results.map(r =>
+  const [kpiYesterday, kpiToday, yieldAlert, orders, workerBreakdown, machines, rawLogs] = results.map(r =>
     r.status === 'fulfilled' ? r.value.data : null
   )
+
+  // Aggregate production_logs rows into a daily DailyMeterPoint array
+  const trendMap = new Map<string, number>()
+  last7Days.forEach(d => trendMap.set(d, 0)) // seed all 7 days with 0
+  if (rawLogs) {
+    for (const row of rawLogs as Array<{ logged_date: string; meters: number }>) {
+      trendMap.set(row.logged_date, (trendMap.get(row.logged_date) ?? 0) + row.meters)
+    }
+  }
+  const trend = last7Days.map(d => ({ date: d, total_meters: trendMap.get(d) ?? 0 }))
 
   return {
     yesterday:       kpiYesterday,
@@ -89,6 +119,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     orders:          (orders as any) || null,
     workerBreakdown: (workerBreakdown as any) || null,
     machines:        (machines as any) || null,
+    trend,
   }
 }
 
