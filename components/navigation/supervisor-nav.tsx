@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { ClipboardList, ClipboardCheck, Users, Settings, Calendar, Menu, ShieldAlert } from "lucide-react"
+import { ClipboardList, ClipboardCheck, Users, Settings, Calendar, Menu } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { useTranslation } from "@/lib/i18n/context"
@@ -16,7 +16,6 @@ export const navItems = [
     { name: "Workers", href: "/supervisor/workers", icon: Users, translationKey: "workers" },
     { name: "Machines", href: "/supervisor/machines", icon: Settings, translationKey: "machines" },
     { name: "Attendance", href: "/supervisor/attendance", icon: Calendar, translationKey: "attendance" },
-    { name: "Incidents", href: "/supervisor/incidents", icon: ShieldAlert, translationKey: "incidents" },
 ]
 
 // Primary tabs shown in the bottom bar (4 items)
@@ -30,7 +29,6 @@ const primaryNavItems = [
 // Items shown in the "More" sheet drawer
 const moreNavItems = [
     { name: "Machines", href: "/supervisor/machines", icon: Settings, translationKey: "machines" },
-    { name: "Incidents", href: "/supervisor/incidents", icon: ShieldAlert, translationKey: "incidents" },
 ]
 
 export function SupervisorNav() {

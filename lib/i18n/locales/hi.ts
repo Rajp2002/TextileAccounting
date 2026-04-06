@@ -14,8 +14,7 @@ export const hi = {
     "payroll": "पेरोल (Payroll)",
     "advances": "एडवांस (Advances)",
     "estimator": "एस्टीमेटर (Estimator)",
-    "safety & incidents": "सुरक्षा और घटनाएं",
-    "incidents": "घटनाएँ",
+
     "system health": "सिस्टम हेल्थ",
   },
   attendance: {
