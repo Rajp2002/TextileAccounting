@@ -134,6 +134,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                     tapeLengthM:      Number(tpl.tape_length_m ?? state.tapeLengthM),
                     perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
                     yarnShortagePct:  Number(tpl.yarn_shortage_pct ?? state.yarnShortagePct),
+                    overheadOverridePerM: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? Number(tpl.overhead_override_per_m) : state.overheadOverridePerM,
                 }
             }
             return {
@@ -157,6 +158,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 }],
                 tapeLengthM:      Number(tpl.tape_length_m ?? state.tapeLengthM),
                 perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
+                overheadOverridePerM: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? Number(tpl.overhead_override_per_m) : state.overheadOverridePerM,
             }
         }
         case 'SET':
@@ -420,6 +422,7 @@ export default function EstimatorPage() {
             tapeLengthM:      state.tapeLengthM,
             perPickCostPaisa: state.perPickCostPaisa,
             yarnShortagePct:  state.yarnShortagePct,
+            overheadOverridePerM: state.overheadOverridePerM,
         })
         setSavingTemplate(false)
         if (res.success) {
