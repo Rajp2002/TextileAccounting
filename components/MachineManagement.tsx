@@ -49,6 +49,10 @@ interface Machine {
     name: string
     status: string
     current_order_id?: string | null
+    orders?: {
+        worker_rate_per_m: number
+        quality_label: string
+    } | null
 }
 
 interface Assignment {
@@ -112,7 +116,7 @@ export function MachineManagement({
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('machines')
-                .select('*')
+                .select('*, orders(worker_rate_per_m, quality_label)')
                 .eq('org_id', orgId)
                 .order('name')
             if (error) throw error
@@ -172,22 +176,6 @@ export function MachineManagement({
         }
     })
 
-    // Fetch active yarn batches with quality rate info
-    const { data: activeBatches } = useQuery({
-        queryKey: ['active_yarn_batches_mgmt', orgId],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('yarn_batches')
-                .select('id, name, current_machine_id, quality_id, qualities(name, default_worker_rate_per_m)')
-                .eq('org_id', orgId)
-                .eq('status', 'active')
-            if (error) throw error
-            return data.map((b: any) => ({
-                ...b,
-                quality: b.qualities
-            })) as YarnBatch[]
-        }
-    })
 
     const handleAddMachine = async () => {
         if (!newMachineName) return
@@ -402,10 +390,12 @@ export function MachineManagement({
                         const nightAssignment = assignments?.find(a => a.machine_id === machine.id && a.shift === 'night')
                         const isInactive = machine.status === 'inactive'
 
-                        // Derive rate from the active beam's quality
-                        const activeBatch = activeBatches?.find(b => b.current_machine_id === machine.id)
-                        const activeRate = activeBatch?.quality?.default_worker_rate_per_m
-                        const activeQualityName = activeBatch?.quality?.name
+                        const hasAssignments = !!dayAssignment || !!nightAssignment
+                        const isEffectivelyActive = !isInactive && hasAssignments
+
+                        // Derive rate from the active order
+                        const activeRate = machine.orders?.worker_rate_per_m
+                        const activeQualityName = machine.orders?.quality_label
 
                         return (
                             <div
@@ -419,30 +409,32 @@ export function MachineManagement({
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <div className="font-semibold text-lg">{machine.name}</div>
 
-                                        {/* Dynamic Rate Badge — derived from active beam's quality */}
-                                        {activeBatch ? (
+                                        {/* Dynamic Rate Badge — derived from active order */}
+                                        {machine.current_order_id ? (
                                             <div className="text-sm text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 flex items-center gap-1">
                                                 <Tag className="h-3 w-3" />
                                                 ₹{activeRate ?? '—'}/m
-                                                <span className="text-teal-500 font-normal text-xs">
-                                                    ({activeQualityName})
-                                                </span>
+                                                {activeQualityName && (
+                                                    <span className="text-teal-500 font-normal text-xs">
+                                                        ({activeQualityName})
+                                                    </span>
+                                                )}
                                             </div>
                                         ) : (
                                             <div className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 flex items-center gap-1">
                                                 <Tag className="h-3 w-3" />
-                                                Rate set by Quality
+                                                No active order
                                             </div>
                                         )}
 
                                         {/* Status Badge */}
                                         <span className={cn(
-                                            "text-xs px-2 py-0.5 rounded-full font-medium",
-                                            isInactive
-                                                ? "bg-gray-200 text-gray-600"
-                                                : "bg-green-100 text-green-700"
-                                        )}>
-                                            {isInactive ? t('machines.inactive') : t('machines.active_status')}
+                                            "text-xs px-2 py-0.5 rounded-full font-medium transition-colors",
+                                            isEffectivelyActive
+                                                ? "bg-green-100 text-green-700"
+                                                : "bg-gray-100 text-gray-500"
+                                        )} title={!hasAssignments && !isInactive ? "No workers assigned" : ""}>
+                                            {isEffectivelyActive ? t('machines.active_status') : t('machines.inactive')}
                                         </span>
                                     </div>
 
