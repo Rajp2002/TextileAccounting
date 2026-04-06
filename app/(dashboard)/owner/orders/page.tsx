@@ -132,20 +132,20 @@ function MachineAssignInline({
                             className={cn(
                                 'flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all',
                                 isSelected
-                                    ? 'border-indigo-500 bg-indigo-500/10'
-                                    : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                                    ? 'border-primary bg-primary/10'
+                                    : 'border-slate-200 bg-slate-50 hover:border-slate-300'
                             )}
                         >
                             <div className={cn(
                                 'w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all',
-                                isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-slate-500'
+                                isSelected ? 'bg-primary border-primary' : 'border-slate-300'
                             )}>
-                                {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                                {isSelected && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-white truncate">{m.name}</p>
+                                <p className="text-sm font-semibold text-slate-900 truncate">{m.name}</p>
                                 {linkedToOther && (
-                                    <p className="text-[10px] text-amber-400 font-medium">Currently on another order</p>
+                                    <p className="text-[10px] text-amber-600 font-medium">Currently on another order</p>
                                 )}
                             </div>
                         </div>
@@ -155,7 +155,7 @@ function MachineAssignInline({
             {changed && (
                 <Button
                     size="sm"
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 font-bold gap-2"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-2"
                     onClick={handleSave}
                     disabled={saving}
                 >
@@ -179,26 +179,26 @@ function QuoteCostBreakdown({ quote, targetMeters }: { quote: any; targetMeters:
         <div className="space-y-3">
             {/* Key metrics */}
             <div className="grid grid-cols-2 gap-2">
-                <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
                     <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Production Cost</p>
-                    <p className="text-lg font-black font-mono text-white">₹{landedCost.toFixed(2)}<span className="text-xs text-slate-400 font-normal">/m</span></p>
+                    <p className="text-lg font-black font-mono text-slate-900">₹{landedCost.toFixed(2)}<span className="text-xs text-slate-500 font-normal">/m</span></p>
                 </div>
-                <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-3">
-                    <p className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold mb-1">Quote Price</p>
-                    <p className="text-lg font-black font-mono text-indigo-300">₹{quotePrice.toFixed(2)}<span className="text-xs text-indigo-400/60 font-normal">/m</span></p>
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3">
+                    <p className="text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Quote Price</p>
+                    <p className="text-lg font-black font-mono text-primary">₹{quotePrice.toFixed(2)}<span className="text-xs text-primary/60 font-normal">/m</span></p>
                 </div>
             </div>
 
-            <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3 flex items-center justify-between">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
                 <div>
                     <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-0.5">Total Order Value</p>
-                    <p className="text-xl font-black font-mono text-emerald-400">
+                    <p className="text-xl font-black font-mono text-emerald-600">
                         ₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                     </p>
                 </div>
                 <div className="text-right">
                     <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-0.5">Margin</p>
-                    <p className="text-lg font-black text-amber-400">{marginPct.toFixed(1)}%</p>
+                    <p className="text-lg font-black text-amber-600">{marginPct.toFixed(1)}%</p>
                 </div>
             </div>
 
@@ -206,9 +206,9 @@ function QuoteCostBreakdown({ quote, targetMeters }: { quote: any; targetMeters:
             <div className="space-y-1.5">
                 <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Cost Stack</p>
                 {quote.warp_rows?.length > 0 && (
-                    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-800">
-                        <span className="text-indigo-400 font-medium">🧶 Warp Yarn</span>
-                        <span className="font-mono text-white">
+                    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-100">
+                        <span className="text-primary font-medium">🧶 Warp Yarn</span>
+                        <span className="font-mono text-slate-900">
                             ₹{((quote.warp_rows as any[]).reduce((acc: number, r: any) => {
                                 const kgPer100m = (r.calcDenier * r.beamEnds) / (9000 * 1000)
                                 const costPer100m = kgPer100m * r.yarnRate * (1 + r.gstPct / 100)
@@ -218,9 +218,9 @@ function QuoteCostBreakdown({ quote, targetMeters }: { quote: any; targetMeters:
                     </div>
                 )}
                 {quote.weft_rows?.length > 0 && (
-                    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-800">
-                        <span className="text-emerald-400 font-medium">🧵 Weft Yarn</span>
-                        <span className="font-mono text-white">
+                    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-100">
+                        <span className="text-emerald-600 font-medium">🧵 Weft Yarn</span>
+                        <span className="font-mono text-slate-900">
                             ₹{((quote.weft_rows as any[]).reduce((acc: number, r: any) => {
                                 const kgPer100m = (r.picks * r.reedSpace * r.calcDenier) / (9000 * 100 * 100)
                                 const costPer100m = kgPer100m * r.yarnRate * (1 + r.gstPct / 100)
@@ -230,15 +230,15 @@ function QuoteCostBreakdown({ quote, targetMeters }: { quote: any; targetMeters:
                     </div>
                 )}
                 {quote.overhead_pct > 0 && (
-                    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-800">
-                        <span className="text-rose-400 font-medium">🏭 Overhead</span>
-                        <span className="font-mono text-white">{Number(quote.overhead_pct).toFixed(1)}% effective</span>
+                    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-100">
+                        <span className="text-rose-500 font-medium">🏭 Overhead</span>
+                        <span className="font-mono text-slate-900">{Number(quote.overhead_pct).toFixed(1)}% effective</span>
                     </div>
                 )}
                 {quote.commission_pct > 0 && (
                     <div className="flex items-center justify-between text-xs py-1">
-                        <span className="text-amber-400 font-medium">💼 Commission</span>
-                        <span className="font-mono text-white">{Number(quote.commission_pct).toFixed(1)}%</span>
+                        <span className="text-amber-600 font-medium">💼 Commission</span>
+                        <span className="font-mono text-slate-900">{Number(quote.commission_pct).toFixed(1)}%</span>
                     </div>
                 )}
             </div>
@@ -338,7 +338,7 @@ function OrderDetailDrawer({
         <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
             <SheetContent
                 side="right"
-                className="w-full sm:max-w-md bg-slate-950 border-slate-800 text-white p-0 flex flex-col"
+                className="w-full sm:max-w-md bg-card border-l border-border text-slate-900 p-0 flex flex-col"
             >
                 {loading || !order ? (
                     <div className="flex-1 flex items-center justify-center">
@@ -350,15 +350,15 @@ function OrderDetailDrawer({
                 ) : (
                     <>
                         {/* Header */}
-                        <div className="px-5 pt-5 pb-4 border-b border-slate-800 space-y-1 shrink-0">
+                        <div className="px-5 pt-5 pb-4 border-b border-border space-y-1 shrink-0">
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
-                                    <p className="font-black text-lg text-white leading-tight truncate">
+                                    <p className="font-black text-lg text-slate-900 leading-tight truncate">
                                         {order.display_quality_name ?? order.quality_label ?? 'Unnamed'}
                                     </p>
-                                    <p className="text-sm text-slate-400 truncate">{order.party_name}</p>
+                                    <p className="text-sm text-slate-500 truncate">{order.party_name}</p>
                                 </div>
-                                <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors shrink-0 mt-0.5">
+                                <button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-colors shrink-0 mt-0.5">
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
@@ -367,12 +367,12 @@ function OrderDetailDrawer({
                             {(order.warp_instruction || order.weft_instruction) && (
                                 <div className="flex gap-2 flex-wrap pt-1">
                                     {order.warp_instruction && (
-                                        <span className="text-[10px] bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-mono">
+                                        <span className="text-[10px] bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-full font-mono">
                                             Warp: {order.warp_instruction}
                                         </span>
                                     )}
                                     {order.weft_instruction && (
-                                        <span className="text-[10px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-mono">
+                                        <span className="text-[10px] bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-0.5 rounded-full font-mono">
                                             Weft: {order.weft_instruction}
                                         </span>
                                     )}
@@ -386,13 +386,13 @@ function OrderDetailDrawer({
                             {/* Progress */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between text-xs">
-                                    <span className="font-mono font-bold text-white">
+                                    <span className="font-mono font-bold text-slate-900">
                                         {metersProduced.toLocaleString('en-IN')}m
                                         <span className="text-slate-500"> / {target.toLocaleString('en-IN')}m</span>
                                     </span>
                                     <span className={`font-bold ${daysCls}`}>{daysText}</span>
                                 </div>
-                                <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+                                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
                                     <div
                                         className={`h-full rounded-full transition-all duration-500 ${progressBarColor(progress)}`}
                                         style={{ width: `${Math.min(100, progress)}%` }}
@@ -415,7 +415,7 @@ function OrderDetailDrawer({
                                 </p>
 
                                 {/* Target Meters */}
-                                <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3 flex items-center justify-between gap-2">
+                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-2">
                                     <div className="min-w-0">
                                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Target Meters</p>
                                         {editingTarget ? (
@@ -424,31 +424,31 @@ function OrderDetailDrawer({
                                                     type="number"
                                                     value={targetVal}
                                                     onChange={e => setTargetVal(e.target.value)}
-                                                    className="h-7 w-28 text-xs font-mono bg-slate-900 border-slate-600 text-white"
+                                                    className="h-7 w-28 text-xs font-mono bg-white border-slate-200 text-slate-900"
                                                     autoFocus
                                                 />
-                                                <button onClick={handleSaveTarget} disabled={savingEdit} className="text-emerald-400 hover:text-emerald-300">
+                                                <button onClick={handleSaveTarget} disabled={savingEdit} className="text-emerald-500 hover:text-emerald-600">
                                                     {savingEdit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                                                 </button>
-                                                <button onClick={() => setEditingTarget(false)} className="text-slate-500 hover:text-white">
+                                                <button onClick={() => setEditingTarget(false)} className="text-slate-400 hover:text-slate-900">
                                                     <X className="h-3.5 w-3.5" />
                                                 </button>
                                             </div>
                                         ) : (
-                                            <p className="text-base font-black font-mono text-white">
+                                            <p className="text-base font-black font-mono text-slate-900">
                                                 {target.toLocaleString('en-IN')} m
                                             </p>
                                         )}
                                     </div>
                                     {!editingTarget && (
-                                        <button onClick={() => setEditingTarget(true)} className="text-slate-600 hover:text-slate-300 transition-colors">
+                                        <button onClick={() => setEditingTarget(true)} className="text-slate-400 hover:text-slate-600 transition-colors">
                                             <Pencil className="h-3.5 w-3.5" />
                                         </button>
                                     )}
                                 </div>
 
                                 {/* Deadline */}
-                                <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-3 flex items-center justify-between gap-2">
+                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-2">
                                     <div className="min-w-0">
                                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1">
                                             <Calendar className="h-3 w-3" /> Deadline
@@ -459,24 +459,24 @@ function OrderDetailDrawer({
                                                     type="date"
                                                     value={deadlineVal}
                                                     onChange={e => setDeadlineVal(e.target.value)}
-                                                    className="h-7 text-xs bg-slate-900 border-slate-600 text-white"
+                                                    className="h-7 text-xs bg-white border-slate-200 text-slate-900"
                                                     autoFocus
                                                 />
-                                                <button onClick={handleSaveDeadline} disabled={savingEdit} className="text-emerald-400 hover:text-emerald-300">
+                                                <button onClick={handleSaveDeadline} disabled={savingEdit} className="text-emerald-500 hover:text-emerald-600">
                                                     {savingEdit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                                                 </button>
-                                                <button onClick={() => setEditingDeadline(false)} className="text-slate-500 hover:text-white">
+                                                <button onClick={() => setEditingDeadline(false)} className="text-slate-400 hover:text-slate-900">
                                                     <X className="h-3.5 w-3.5" />
                                                 </button>
                                             </div>
                                         ) : (
-                                            <p className="text-base font-black font-mono text-white">
+                                            <p className="text-base font-black font-mono text-slate-900">
                                                 {format(new Date(order.deadline), 'dd MMM yyyy')}
                                             </p>
                                         )}
                                     </div>
                                     {!editingDeadline && (
-                                        <button onClick={() => setEditingDeadline(true)} className="text-slate-600 hover:text-slate-300 transition-colors">
+                                        <button onClick={() => setEditingDeadline(true)} className="text-slate-400 hover:text-slate-600 transition-colors">
                                             <Pencil className="h-3.5 w-3.5" />
                                         </button>
                                     )}
@@ -509,15 +509,15 @@ function OrderDetailDrawer({
                                 {quote ? (
                                     <QuoteCostBreakdown quote={quote} targetMeters={target} />
                                 ) : (
-                                    <div className="bg-slate-800/40 border border-dashed border-slate-700 rounded-xl p-4 text-center">
-                                        <Calculator className="h-6 w-6 text-slate-600 mx-auto mb-2" />
+                                    <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4 text-center">
+                                        <Calculator className="h-6 w-6 text-slate-400 mx-auto mb-2" />
                                         <p className="text-xs text-slate-500 font-medium">No estimator quote linked</p>
-                                        <p className="text-[10px] text-slate-600 mt-1">
+                                        <p className="text-[10px] text-slate-400 mt-1">
                                             Use Estimator → "Order" to create an order with a cost snapshot
                                         </p>
                                         <a
                                             href="/owner/estimator"
-                                            className="mt-2 inline-flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold"
+                                            className="mt-2 inline-flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-semibold"
                                         >
                                             Go to Estimator <ArrowUpRight className="h-3 w-3" />
                                         </a>
@@ -527,18 +527,18 @@ function OrderDetailDrawer({
                         </div>
 
                         {/* Footer actions */}
-                        <div className="shrink-0 border-t border-slate-800 px-5 py-4 flex gap-2">
+                        <div className="shrink-0 border-t border-slate-100 px-5 py-4 flex gap-2">
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="flex-1 border-rose-800/60 text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 font-bold"
+                                className="flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-bold"
                                 onClick={handleCancel}
                             >
                                 <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel Order
                             </Button>
                             <Button
                                 size="sm"
-                                className="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white font-bold"
+                                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                                 onClick={handleComplete}
                             >
                                 <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Mark Complete
@@ -571,16 +571,16 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
 
     return (
         <div
-            className="bg-slate-800/70 border border-slate-700/60 rounded-2xl p-4 space-y-3 hover:border-indigo-500/40 hover:bg-slate-800/90 transition-all cursor-pointer group"
+            className="bg-card border border-border shadow-sm rounded-2xl p-4 space-y-3 hover:border-primary/40 hover:shadow-md transition-all cursor-pointer group"
             onClick={() => onSelect(order.order_id)}
         >
             {/* Header */}
             <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                    <p className="font-bold text-white text-base leading-tight truncate">
+                    <p className="font-bold text-slate-900 text-base leading-tight truncate">
                         {order.display_quality_name ?? order.quality_label ?? 'Unnamed Quality'}
                     </p>
-                    <p className="text-xs text-slate-400 mt-0.5 truncate">{order.party_name}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 truncate">{order.party_name}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                     {paceIndex !== null && (
@@ -596,22 +596,22 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 text-slate-500 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-7 w-7 text-slate-400 hover:text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <MoreVertical className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700 text-white">
+                        <DropdownMenuContent align="end" className="bg-white border-slate-200 text-slate-900 shadow-md">
                             <DropdownMenuItem
-                                className="text-emerald-400 focus:text-emerald-400 focus:bg-emerald-950/40 cursor-pointer"
+                                className="text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50 cursor-pointer"
                                 onClick={(e) => { e.stopPropagation(); onComplete(order.order_id) }}
                             >
                                 <CheckCircle2 className="h-4 w-4 mr-2" />
                                 Mark Completed
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                className="text-rose-400 focus:text-rose-400 focus:bg-rose-950/40 cursor-pointer"
+                                className="text-rose-600 focus:text-rose-700 focus:bg-rose-50 cursor-pointer"
                                 onClick={(e) => { e.stopPropagation(); onCancel(order.order_id) }}
                             >
                                 <Ban className="h-4 w-4 mr-2" />
@@ -624,17 +624,17 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
 
             {/* Floor Instructions */}
             {(order.warp_instruction || order.weft_instruction) && (
-                <div className="bg-slate-900/60 rounded-lg p-2 border border-slate-700/50 text-[11px] font-mono space-y-0.5">
+                <div className="bg-slate-50 rounded-lg p-2 border border-slate-100 text-[11px] font-mono space-y-0.5">
                     {order.warp_instruction && (
                         <div className="flex gap-2">
                             <span className="text-slate-500 shrink-0">Warp:</span>
-                            <span className="text-slate-300 truncate">{order.warp_instruction}</span>
+                            <span className="text-slate-700 truncate">{order.warp_instruction}</span>
                         </div>
                     )}
                     {order.weft_instruction && (
                         <div className="flex gap-2">
                             <span className="text-slate-500 shrink-0">Weft:</span>
-                            <span className="text-slate-300 truncate">{order.weft_instruction}</span>
+                            <span className="text-slate-700 truncate">{order.weft_instruction}</span>
                         </div>
                     )}
                 </div>
@@ -643,13 +643,13 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
             {/* Progress bar */}
             <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
-                    <span className="font-mono font-bold text-white">
+                    <span className="font-mono font-bold text-slate-900">
                         {metersProduced.toLocaleString('en-IN')}m
                         <span className="text-slate-500"> / {target.toLocaleString('en-IN')}m</span>
                     </span>
                     <span className={`font-bold ${daysCls}`}>{daysText}</span>
                 </div>
-                <div className="h-2.5 bg-slate-900 rounded-full overflow-hidden">
+                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
                         className={`h-full rounded-full transition-all duration-500 ${progressBarColor(progress)}`}
                         style={{ width: `${Math.min(100, progress)}%` }}
@@ -672,12 +672,12 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
                         {order.assigned_machines_count} machine{order.assigned_machines_count > 1 ? 's' : ''} running
                     </div>
                 ) : (
-                    <div className="text-[10px] text-slate-600 flex items-center gap-1">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-600" />
+                    <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300" />
                         No machines assigned
                     </div>
                 )}
-                <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-indigo-400 transition-colors" />
+                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-primary transition-colors" />
             </div>
         </div>
     )
@@ -702,8 +702,8 @@ function KanbanColumn({
         <div className="flex-1 min-w-0">
             <div className={`flex items-center gap-2 mb-3 px-1`}>
                 <Icon className={`h-4 w-4 ${accent}`} />
-                <h2 className="text-sm font-bold text-white">{title}</h2>
-                <Badge variant="secondary" className="bg-slate-800 text-slate-400 text-[10px] border-slate-700">
+                <h2 className="text-sm font-bold text-slate-900">{title}</h2>
+                <Badge variant="secondary" className="bg-slate-100 text-slate-600 text-[10px] border-slate-200">
                     {count}
                 </Badge>
             </div>
@@ -752,57 +752,57 @@ function NewOrderSheet({ open, onClose, onCreated }: { open: boolean; onClose: (
         <Sheet open={open} onOpenChange={onClose}>
             <SheetContent
                 side="right"
-                className="bg-slate-900 border-slate-700 text-white w-full sm:max-w-md flex flex-col p-0 h-full"
+                className="bg-card border-l border-border text-slate-900 w-full sm:max-w-md flex flex-col p-0 h-full"
             >
-                <SheetHeader className="px-6 pt-6 pb-4 border-b border-slate-800 shrink-0">
-                    <SheetTitle className="text-white flex items-center gap-2 text-xl font-black">
-                        <Package className="h-5 w-5 text-indigo-400" />
+                <SheetHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
+                    <SheetTitle className="text-slate-900 flex items-center gap-2 text-xl font-black">
+                        <Package className="h-5 w-5 text-primary" />
                         New Floor Order
                     </SheetTitle>
-                    <p className="text-sm text-slate-400 mt-1">
-                        Or use <a href="/owner/estimator" className="text-indigo-400 underline">Estimator</a> to generate a costed order
+                    <p className="text-sm text-slate-500 mt-1">
+                        Or use <a href="/owner/estimator" className="text-primary hover:underline font-medium">Estimator</a> to generate a costed order
                     </p>
                 </SheetHeader>
 
                 <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
                     <div className="space-y-1.5">
-                        <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">Party Name *</Label>
+                        <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500">Party Name *</Label>
                         <Input
                             placeholder="e.g. Sundaram Textiles"
                             value={partyName}
                             onChange={(e) => setPartyName(e.target.value)}
-                            className="h-12 bg-slate-800 border-slate-600 text-white"
+                            className="h-12 bg-white border-slate-200 text-slate-900"
                             autoFocus
                         />
                     </div>
                     <div className="space-y-1.5">
-                        <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">Quality / Fabric Label *</Label>
+                        <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500">Quality / Fabric Label *</Label>
                         <Input
                             placeholder="e.g. Japan Satin, Canvas Shine"
                             value={qualityLabel}
                             onChange={(e) => setQualityLabel(e.target.value)}
-                            className="h-12 bg-slate-800 border-slate-600 text-white"
+                            className="h-12 bg-white border-slate-200 text-slate-900"
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">Target Meters</Label>
+                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500">Target Meters</Label>
                             <Input
                                 type="number"
                                 value={targetMeters}
                                 onChange={(e) => setTargetMeters(Number(e.target.value))}
-                                className="h-12 font-mono font-bold text-center bg-slate-800 border-slate-600 text-white"
+                                className="h-12 font-mono font-bold text-center bg-white border-slate-200 text-slate-900"
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400 flex items-center gap-1">
+                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500 flex items-center gap-1">
                                 <Calendar className="h-3 w-3" /> Deadline
                             </Label>
                             <Input
                                 type="date"
                                 value={deadline}
                                 onChange={(e) => setDeadline(e.target.value)}
-                                className="h-12 bg-slate-800 border-slate-600 text-white"
+                                className="h-12 bg-white border-slate-200 text-slate-900"
                             />
                         </div>
                     </div>
@@ -810,40 +810,40 @@ function NewOrderSheet({ open, onClose, onCreated }: { open: boolean; onClose: (
                     <button
                         type="button"
                         onClick={() => setShowAdvanced(v => !v)}
-                        className="text-xs text-slate-500 hover:text-slate-300 font-medium flex items-center gap-1 transition-colors"
+                        className="text-xs text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1 transition-colors"
                     >
                         {showAdvanced ? '▲ Hide' : '▼ Add'} warp / weft spec
                     </button>
                     {showAdvanced && (
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1.5">
-                                <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">Warp Spec</Label>
+                                <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500">Warp Spec</Label>
                                 <Input
                                     placeholder="50/48 + 70/36"
                                     value={warpInstruction}
                                     onChange={(e) => setWarpInstruction(e.target.value)}
-                                    className="h-11 bg-slate-800 border-slate-600 text-white text-sm font-mono"
+                                    className="h-11 bg-white border-slate-200 text-slate-900 text-sm font-mono"
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-400">Weft Spec</Label>
+                                <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500">Weft Spec</Label>
                                 <Input
                                     placeholder="50/48"
                                     value={weftInstruction}
                                     onChange={(e) => setWeftInstruction(e.target.value)}
-                                    className="h-11 bg-slate-800 border-slate-600 text-white text-sm font-mono"
+                                    className="h-11 bg-white border-slate-200 text-slate-900 text-sm font-mono"
                                 />
                             </div>
                         </div>
                     )}
                 </div>
 
-                <SheetFooter className="px-6 py-4 border-t border-slate-800 gap-3 shrink-0">
-                    <Button variant="outline" className="flex-1 border-slate-700 text-slate-400" onClick={onClose}>
+                <SheetFooter className="px-6 py-4 border-t border-border gap-3 shrink-0">
+                    <Button variant="outline" className="flex-1 border-slate-200 text-slate-600 hover:bg-slate-50" onClick={onClose}>
                         Cancel
                     </Button>
                     <Button
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-500 font-bold"
+                        className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
                         onClick={handleCreate}
                         disabled={loading}
                     >
@@ -955,15 +955,15 @@ export default function OrdersPage() {
                         </div>
                         <div className="flex items-center justify-center gap-3">
                             <Button
-                                className="bg-indigo-600 hover:bg-indigo-500 font-bold gap-2"
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-2"
                                 onClick={() => setShowNewOrder(true)}
                             >
                                 <Plus className="h-4 w-4" />
                                 New Order
                             </Button>
                             <a href="/owner/estimator">
-                                <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 font-bold gap-2">
-                                    <Calculator className="h-4 w-4 text-indigo-400" />
+                                <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50 font-bold gap-2">
+                                    <Calculator className="h-4 w-4 text-primary" />
                                     Go to Estimator
                                 </Button>
                             </a>
@@ -972,10 +972,10 @@ export default function OrdersPage() {
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Pending Setup */}
-                        <KanbanColumn title="Pending Setup" icon={Clock} count={pendingOrders.length} accent="text-slate-400">
+                        <KanbanColumn title="Pending Setup" icon={Clock} count={pendingOrders.length} accent="text-slate-500">
                             {pendingOrders.length === 0 ? (
-                                <div className="border border-dashed border-slate-700 rounded-2xl p-6 text-center">
-                                    <p className="text-xs text-slate-600">No pending orders</p>
+                                <div className="border border-dashed border-slate-300 rounded-2xl p-6 text-center">
+                                    <p className="text-xs text-slate-500">No pending orders</p>
                                 </div>
                             ) : (
                                 pendingOrders.map((order) => (
@@ -991,10 +991,10 @@ export default function OrdersPage() {
                         </KanbanColumn>
 
                         {/* In Production */}
-                        <KanbanColumn title="In Production" icon={Package} count={activeOrders.length} accent="text-indigo-400">
+                        <KanbanColumn title="In Production" icon={Package} count={activeOrders.length} accent="text-primary">
                             {activeOrders.length === 0 ? (
-                                <div className="border border-dashed border-slate-700 rounded-2xl p-6 text-center">
-                                    <p className="text-xs text-slate-600">No orders in production</p>
+                                <div className="border border-dashed border-slate-300 rounded-2xl p-6 text-center">
+                                    <p className="text-xs text-slate-500">No orders in production</p>
                                 </div>
                             ) : (
                                 activeOrders.map((order) => (
@@ -1010,10 +1010,10 @@ export default function OrdersPage() {
                         </KanbanColumn>
 
                         {/* Completed */}
-                        <KanbanColumn title="Completed" icon={CheckCircle2} count={completedOrders.length} accent="text-emerald-400">
+                        <KanbanColumn title="Completed" icon={CheckCircle2} count={completedOrders.length} accent="text-emerald-600">
                             {completedOrders.length === 0 ? (
-                                <div className="border border-dashed border-slate-700 rounded-2xl p-6 text-center">
-                                    <p className="text-xs text-slate-600">No completed orders yet</p>
+                                <div className="border border-dashed border-slate-300 rounded-2xl p-6 text-center">
+                                    <p className="text-xs text-slate-500">No completed orders yet</p>
                                 </div>
                             ) : (
                                 completedOrders.slice(0, 5).map((order) => (
