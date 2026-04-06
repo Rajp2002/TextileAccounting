@@ -142,14 +142,16 @@ function MeterWorkerRow({
     factoryName: string
 }) {
     const [expanded, setExpanded] = useState(false)
+    const [isFinalSettlement, setIsFinalSettlement] = useState(false)
     const { t } = useTranslation()
     const tl = useTransliterate()
     const isPaid = worker.settlement?.status === 'paid'
     const hasAdvances = worker.totalAdvances > 0
     
-    // Live preview values if not paid yet
-    const previewNet = parseFloat(calculateNetPay(worker.totalPay, worker.totalAdvances, 50))
-    const previewDebt = parseFloat(calculateRemainingDebt(worker.totalPay, worker.totalAdvances, 50))
+    // Live preview — switches between 50% cap (regular) and 100% cap (final) based on checkbox
+    const previewPct = isFinalSettlement ? 100 : 50
+    const previewNet = parseFloat(calculateNetPay(worker.totalPay, worker.totalAdvances, previewPct))
+    const previewDebt = parseFloat(calculateRemainingDebt(worker.totalPay, worker.totalAdvances, previewPct))
     
     const displayNet = isPaid ? worker.settlement!.net_payout : previewNet
     const displayDeduction = isPaid ? worker.settlement!.advance_deducted : (worker.totalPay - previewNet)
@@ -278,10 +280,16 @@ function MeterWorkerRow({
                                             </span>
                                             <span className="font-bold">-{formatINR(displayDeduction)}</span>
                                         </div>
-                                        {isCapped && (
+                                        {isCapped && !isFinalSettlement && (
                                             <div className="flex items-center gap-2 text-[10px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-100 italic">
                                                 <Info className="h-3 w-3 flex-shrink-0" />
                                                 Legally capped at 50% of gross earnings.
+                                            </div>
+                                        )}
+                                        {isFinalSettlement && worker.totalAdvances > 0 && !isPaid && (
+                                            <div className="flex items-center gap-2 text-[10px] text-red-700 bg-red-50 p-2 rounded border border-red-100 font-bold">
+                                                <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                                                Final settlement — 100% of advances will be recovered.
                                             </div>
                                         )}
                                         <div className="border-t pt-2 mt-1 flex justify-between text-base font-black text-gray-900">
@@ -333,18 +341,28 @@ function MeterWorkerRow({
                                     <div className="flex items-center gap-3">
                                         <label className="flex items-center gap-2 cursor-pointer group">
                                             <input 
-                                                type="checkbox" 
-                                                className="w-3.5 h-3.5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" 
-                                                onChange={(e) => {/* State for final settlement toggle could be added if needed, but for now we pass it to onToggle */}}
+                                                type="checkbox"
+                                                checked={isFinalSettlement}
+                                                className="w-3.5 h-3.5 text-red-600 rounded border-gray-300 focus:ring-red-500 accent-red-600" 
+                                                onChange={(e) => setIsFinalSettlement(e.target.checked)}
                                             />
-                                            <span className="text-[11px] font-bold text-gray-500 group-hover:text-red-600 transition-colors uppercase tracking-tight">Final Settlement</span>
+                                            <span className={cn(
+                                                "text-[11px] font-bold transition-colors uppercase tracking-tight",
+                                                isFinalSettlement ? "text-red-600" : "text-gray-500 group-hover:text-red-600"
+                                            )}>Final Settlement</span>
                                         </label>
                                         <Button 
                                             size="sm" 
                                             variant="destructive" 
-                                            className="h-8 text-[11px] font-black uppercase tracking-widest bg-red-600"
-                                            onClick={() => onToggle(true)}
-                                            disabled={isMutating}
+                                            className={cn(
+                                                "h-8 text-[11px] font-black uppercase tracking-widest transition-all",
+                                                isFinalSettlement 
+                                                    ? "bg-red-600 hover:bg-red-700 shadow-md" 
+                                                    : "bg-gray-400 hover:bg-gray-500 cursor-default"
+                                            )}
+                                            onClick={() => isFinalSettlement && onToggle(true)}
+                                            disabled={isMutating || !isFinalSettlement}
+                                            title={!isFinalSettlement ? 'Check "Final Settlement" to enable' : undefined}
                                         >
                                             Settle All
                                         </Button>
@@ -372,15 +390,17 @@ function FixedWorkerRow({
     factoryName: string
 }) {
     const [expanded, setExpanded] = useState(false)
+    const [isFinalSettlement, setIsFinalSettlement] = useState(false)
     const { t } = useTranslation()
     const tl = useTransliterate()
     const isPaid = worker.settlement?.status === 'paid'
     const isDaily = worker.role === 'daily'
     const hasAdvances = worker.totalAdvances > 0
 
-    // Live preview values if not paid yet
-    const previewNet = parseFloat(calculateNetPay(worker.earnedPay, worker.totalAdvances, 50))
-    const previewDebt = parseFloat(calculateRemainingDebt(worker.earnedPay, worker.totalAdvances, 50))
+    // Live preview — switches between 50% cap (regular) and 100% cap (final) based on checkbox
+    const previewPct = isFinalSettlement ? 100 : 50
+    const previewNet = parseFloat(calculateNetPay(worker.earnedPay, worker.totalAdvances, previewPct))
+    const previewDebt = parseFloat(calculateRemainingDebt(worker.earnedPay, worker.totalAdvances, previewPct))
     
     const displayNet = isPaid ? worker.settlement!.net_payout : previewNet
     const displayDeduction = isPaid ? worker.settlement!.advance_deducted : (worker.earnedPay - previewNet)
@@ -502,10 +522,16 @@ function FixedWorkerRow({
                                             </span>
                                             <span className="font-bold">-{formatINR(displayDeduction)}</span>
                                         </div>
-                                        {isCapped && (
+                                        {isCapped && !isFinalSettlement && (
                                             <div className="flex items-center gap-2 text-[10px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-100 italic">
                                                 <Info className="h-3 w-3 flex-shrink-0" />
                                                 Legally capped at 50% of gross earnings.
+                                            </div>
+                                        )}
+                                        {isFinalSettlement && worker.totalAdvances > 0 && !isPaid && (
+                                            <div className="flex items-center gap-2 text-[10px] text-red-700 bg-red-50 p-2 rounded border border-red-100 font-bold">
+                                                <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                                                Final settlement — 100% of advances will be recovered.
                                             </div>
                                         )}
                                         <div className="border-t pt-2 mt-1 flex justify-between text-base font-black text-gray-900">
@@ -558,18 +584,28 @@ function FixedWorkerRow({
                                     <div className="flex items-center gap-3">
                                         <label className="flex items-center gap-2 cursor-pointer group">
                                             <input 
-                                                type="checkbox" 
-                                                className="w-3.5 h-3.5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" 
-                                                onChange={(e) => {/* Final settlement toggle */}}
+                                                type="checkbox"
+                                                checked={isFinalSettlement}
+                                                className="w-3.5 h-3.5 text-red-600 rounded border-gray-300 focus:ring-red-500 accent-red-600" 
+                                                onChange={(e) => setIsFinalSettlement(e.target.checked)}
                                             />
-                                            <span className="text-[11px] font-bold text-gray-500 group-hover:text-red-600 transition-colors uppercase tracking-tight">Final Settlement</span>
+                                            <span className={cn(
+                                                "text-[11px] font-bold transition-colors uppercase tracking-tight",
+                                                isFinalSettlement ? "text-red-600" : "text-gray-500 group-hover:text-red-600"
+                                            )}>Final Settlement</span>
                                         </label>
                                         <Button 
                                             size="sm" 
                                             variant="destructive" 
-                                            className="h-8 text-[11px] font-black uppercase tracking-widest bg-red-600"
-                                            onClick={() => onToggle(true)}
-                                            disabled={isMutating}
+                                            className={cn(
+                                                "h-8 text-[11px] font-black uppercase tracking-widest transition-all",
+                                                isFinalSettlement 
+                                                    ? "bg-red-600 hover:bg-red-700 shadow-md" 
+                                                    : "bg-gray-400 hover:bg-gray-500 cursor-default"
+                                            )}
+                                            onClick={() => isFinalSettlement && onToggle(true)}
+                                            disabled={isMutating || !isFinalSettlement}
+                                            title={!isFinalSettlement ? 'Check "Final Settlement" to enable' : undefined}
                                         >
                                             Settle All
                                         </Button>
