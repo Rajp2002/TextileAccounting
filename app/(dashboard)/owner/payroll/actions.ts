@@ -27,7 +27,7 @@ export async function toggleWorkerPaid(
 
         const { data: logs } = await supabase
             .from('production_logs')
-            .select('meters, yarn_batches(qualities(default_worker_rate_per_m))')
+            .select('meters, worker_rate_snapshot')
             .eq('org_id', profile.org_id)
             .eq('worker_id', workerId)
             .gte('date', monthStart)
@@ -35,7 +35,7 @@ export async function toggleWorkerPaid(
 
         const payItems = (logs || []).map((log: any) => ({
             meters: log.meters,
-            rate: (log.yarn_batches as any)?.qualities?.default_worker_rate_per_m || 0
+            rate: log.worker_rate_snapshot || 0,
         }))
 
         calculatedAmountStr = calculateTotalPay(payItems)

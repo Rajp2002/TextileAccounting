@@ -135,29 +135,23 @@ export default function AdvancesPage() {
             if (selectedWorker!.type === 'fixed') {
                 return selectedWorker!.monthly_salary || 0
             }
-            // For piece-rate workers, estimate from last month's production
+            // For piece-rate workers, estimate from last month's production logs.
+            // Uses worker_rate_snapshot (the actual rate at time of logging) — same
+            // source as the payroll page client query, so the figure is consistent.
             const now = new Date()
             const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
             const monthStr = lastMonth.toISOString().substring(0, 7)
 
             const { data: logs } = await supabase
                 .from('production_logs')
-                .select('meters, machine_id, yarn_batches(qualities(default_worker_rate_per_m))')
+                .select('meters, worker_rate_snapshot')
                 .eq('org_id', userProfile!.org_id)
                 .eq('worker_id', selectedWorker!.id)
                 .gte('date', `${monthStr}-01`)
                 .lte('date', `${monthStr}-31`)
 
-            const { data: machines } = await supabase
-                .from('machines')
-                .select('id, name')
-                .eq('org_id', userProfile!.org_id)
-
-            const machineMap = Object.fromEntries((machines || []).map((m: any) => [m.id, m]))
             const total = (logs || []).reduce((sum: number, log: any) => {
-                const batch: any = log.yarn_batches
-                const rate = batch?.qualities?.default_worker_rate_per_m || 0
-                return sum + (parseFloat(log.meters) || 0) * rate
+                return sum + (parseFloat(log.meters) || 0) * (log.worker_rate_snapshot || 0)
             }, 0)
 
             return total
