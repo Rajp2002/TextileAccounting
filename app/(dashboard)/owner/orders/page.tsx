@@ -906,46 +906,44 @@ export default function OrdersPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className="min-h-[50vh] flex items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white">
+        <div className="space-y-6 pt-2">
             {/* Header */}
-            <div className="px-4 pt-6 pb-4 border-b border-slate-800">
-                <div className="max-w-5xl mx-auto flex items-center justify-between">
-                    <div>
-                        <h1 className="text-xl font-black text-white">Orders</h1>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                            {activeOrders.length + pendingOrders.length} active · {completedOrders.length} completed
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <a href="/owner/estimator">
-                            <Button
-                                variant="outline"
-                                className="border-slate-700 text-slate-300 hover:bg-slate-800 font-bold gap-2 h-10 hidden sm:flex"
-                            >
-                                <Calculator className="h-4 w-4 text-indigo-400" />
-                                Estimator
-                            </Button>
-                        </a>
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-black text-white tracking-tight">Orders</h1>
+                    <p className="text-sm text-slate-400 mt-1">
+                        {activeOrders.length + pendingOrders.length} active · {completedOrders.length} completed
+                    </p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <a href="/owner/estimator">
                         <Button
-                            className="bg-indigo-600 hover:bg-indigo-500 font-bold gap-2 h-10"
-                            onClick={() => setShowNewOrder(true)}
+                            variant="outline"
+                            className="border-slate-700 text-slate-300 hover:bg-slate-800 font-bold gap-2 hidden sm:flex"
                         >
-                            <Plus className="h-4 w-4" />
-                            New Order
+                            <Calculator className="h-4 w-4 text-indigo-400" />
+                            Estimator
                         </Button>
-                    </div>
+                    </a>
+                    <Button
+                        className="bg-indigo-600 hover:bg-indigo-500 font-bold gap-2"
+                        onClick={() => setShowNewOrder(true)}
+                    >
+                        <Plus className="h-4 w-4" />
+                        New Order
+                    </Button>
                 </div>
             </div>
 
             {/* Kanban */}
-            <div className="px-4 py-5 max-w-5xl mx-auto">
+            <div>
                 {orders.length === 0 ? (
                     <div className="text-center py-24 space-y-4">
                         <Package className="h-12 w-12 text-slate-700 mx-auto" />
