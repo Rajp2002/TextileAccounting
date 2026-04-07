@@ -10,6 +10,9 @@ Small-to-mid-sized textile mills in India bleed money in ways that are almost im
 
 - **Unprofitable Orders** — Negotiating rates blindly without factoring in exact warps, wefts, sizing, and dynamic overheads leads to accepting orders that lose money.
 - **Production Stalls & Loose Machine Tracking** — Without a centralized view, factory owners lose track of which machine is idle or which worker is underperforming on an active order.
+
+
+
 - **Payroll Over-payments** — Piece-rate pay is calculated by multiplying per-meter rates across workers and machines. The complexity leads to daily rounding errors and over-spending.
 - **Advance (Upaad) Chaos** — Workers frequently take cash advances. Without centralized tracking, owners lose money to unrecovered advances.
 - **Zero Real-Time Visibility** — Nothing stops a supervisor from retroactively inflating production unless the owner is physically present.

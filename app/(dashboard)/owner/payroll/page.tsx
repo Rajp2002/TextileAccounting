@@ -973,7 +973,7 @@ export default function PayrollPage() {
             .single()
             
         if (org?.access_code && accessCode !== org.access_code) {
-            toast.error('Invalid access code')
+        toast.error(t('payroll_ext.invalid_code'))
             return
         }
 
@@ -1067,13 +1067,13 @@ export default function PayrollPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <Card className="border-none shadow-sm bg-indigo-50/50">
                     <CardContent className="pt-4 pb-3">
-                        <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Gross Target</div>
+                        <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{t('payroll_ext.gross_target')}</div>
                         <div className="text-xl font-black text-indigo-700 tracking-tight">{formatINR(summary.totalGross)}</div>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-green-50/50">
                     <CardContent className="pt-4 pb-3">
-                        <div className="text-[10px] font-black text-green-400 uppercase tracking-widest mb-1">Net Paid</div>
+                        <div className="text-[10px] font-black text-green-400 uppercase tracking-widest mb-1">{t('payroll_ext.net_paid')}</div>
                         <div className="text-xl font-black text-green-700 tracking-tight">{formatINR(summary.totalPaidNet)}</div>
                     </CardContent>
                 </Card>
@@ -1081,14 +1081,14 @@ export default function PayrollPage() {
                     <CardContent className="pt-4 pb-3">
                         <div className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1 flex items-center gap-1">
                             <HandCoins className="h-3 w-3" />
-                            Recovered
+                            {t('payroll_ext.recovered')}
                         </div>
                         <div className="text-xl font-black text-amber-700 tracking-tight">{formatINR(summary.totalDeducted)}</div>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-red-50/50">
                     <CardContent className="pt-4 pb-3">
-                        <div className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Outstanding</div>
+                        <div className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">{t('payroll_ext.outstanding')}</div>
                         <div className="text-xl font-black text-red-700 tracking-tight">{formatINR(summary.outstanding)}</div>
                     </CardContent>
                 </Card>
@@ -1099,7 +1099,7 @@ export default function PayrollPage() {
                 <div className="relative w-full md:w-72">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input 
-                        placeholder="Search worker name..." 
+                        placeholder={t('payroll_ext.search_placeholder')} 
                         className="pl-9 bg-white border-gray-200"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -1115,7 +1115,7 @@ export default function PayrollPage() {
                         onClick={() => setActiveTab('meter')}
                     >
                         <HardHat className="h-3.5 w-3.5" />
-                        Piece-Rate
+                        {t('payroll_ext.piece_rate_tab')}
                         {meterWorkers && (
                             <span className={cn(
                                 'text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-1',
@@ -1133,7 +1133,7 @@ export default function PayrollPage() {
                         onClick={() => setActiveTab('fixed')}
                     >
                         <Briefcase className="h-3.5 w-3.5" />
-                        Monthly/Daily
+                        {t('payroll_ext.monthly_daily_tab')}
                         {fixedWorkers && (
                             <span className={cn(
                                 'text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-1',
@@ -1156,7 +1156,7 @@ export default function PayrollPage() {
                         />
                     </div>
                     <p className="text-[10px] font-black text-gray-400 text-right uppercase tracking-widest">
-                        {Math.round(((summary.totalPaidNet + summary.totalDeducted) / summary.totalGross) * 100)}% Settled
+                        {Math.round(((summary.totalPaidNet + summary.totalDeducted) / summary.totalGross) * 100)}{t('payroll_ext.settled_pct')}
                     </p>
                 </div>
             )}
@@ -1191,7 +1191,7 @@ export default function PayrollPage() {
                     ) : (
                         <>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">
-                                Showing {filteredMeterWorkers.length} results
+                                {t('payroll_ext.showing_results').replace('{count}', String(filteredMeterWorkers.length))}
                             </p>
                             {filteredMeterWorkers.map(w => (
                                 <MeterWorkerRow
@@ -1235,7 +1235,7 @@ export default function PayrollPage() {
                     ) : (
                         <>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">
-                                Showing {filteredFixedWorkers.length} results
+                                {t('payroll_ext.showing_results').replace('{count}', String(filteredFixedWorkers.length))}
                             </p>
                             {filteredFixedWorkers.map((w: FixedWorkerPayroll) => (
                                 <FixedWorkerRow
@@ -1258,10 +1258,10 @@ export default function PayrollPage() {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Lock className="h-5 w-5 text-red-600" />
-                            Secure Reversal
+                            {t('payroll_ext.secure_reversal_title')}
                         </DialogTitle>
                         <DialogDescription>
-                            You are attempting to revert a confirmed settlement. This will re-open advances and update financial records. Please enter your organization's access code to proceed.
+                            {t('payroll_ext.secure_reversal_desc')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex flex-col items-center justify-center py-6 gap-4">
@@ -1288,7 +1288,7 @@ export default function PayrollPage() {
                                 setPendingAction(null)
                             }}
                         >
-                            Cancel
+                            {t('payroll_ext.cancel')}
                         </Button>
                         <Button
                             type="button"
@@ -1297,7 +1297,7 @@ export default function PayrollPage() {
                             disabled={accessCode.length < 4}
                             onClick={confirmRevert}
                         >
-                            Confirm Reversal
+                            {t('payroll_ext.confirm_reversal')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
