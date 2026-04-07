@@ -368,23 +368,18 @@ export async function signIn(input: { email: string; password: string }) {
     // Mirror the pattern used in getOnboardingStatus() — query DB directly.
     if (!userRole) {
         const admin = createAdminClient()
+        // Use a single join query to fetch both profile role and org onboarding status
         const { data: profile } = await admin
             .from('profiles')
-            .select('role, org_id')
+            .select('role, org_id, organizations(onboarding_complete)')
             .eq('id', data.session.user.id)
             .maybeSingle()
 
         if (profile?.role) {
             userRole = profile.role
 
-            // Also fetch onboarding_complete from organizations if needed
-            if (profile.org_id) {
-                const { data: org } = await admin
-                    .from('organizations')
-                    .select('onboarding_complete')
-                    .eq('id', profile.org_id)
-                    .maybeSingle()
-                onboardingComplete = org?.onboarding_complete ?? false
+            if (profile.organizations && typeof profile.organizations === 'object' && !Array.isArray(profile.organizations)) {
+                onboardingComplete = (profile.organizations as any).onboarding_complete ?? false
             }
         }
     }

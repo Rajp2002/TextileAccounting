@@ -159,23 +159,43 @@ export async function updateSession(request: NextRequest) {
 
     // 1. Authenticated user hitting public/auth pages → redirect to their home
     if (user && isPublicRoute(pathname) && pathname !== '/auth/callback') {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-            const jwt = parseJWTClaims(session.access_token)
-            const role = jwt.user_role
-            const onboardingComplete = jwt.onboarding_complete
-
-            if (role === 'owner') {
-                // Owner hasn't completed onboarding → send to checklist
-                if (!onboardingComplete) {
-                    return NextResponse.redirect(new URL('/onboarding', request.url))
-                }
-                return NextResponse.redirect(new URL('/owner/analytics', request.url))
-            } else if (role === 'supervisor') {
-                return NextResponse.redirect(new URL('/supervisor/production', request.url))
-            }
-            // Role unknown → let them through to the public page (edge case)
+        const token = request.cookies.get('sb-' + process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID + '-auth-token')
+        
+        let jwt: Record<string, any> = {}
+        if (token) {
+             // Supabase stores cookies as JSON arrays, so parse and take the first item token
+             try {
+                 const parsedToken = JSON.parse(token.value);
+                 if (Array.isArray(parsedToken) && parsedToken.length > 0) {
+                     jwt = parseJWTClaims(parsedToken[0]);
+                 }
+             } catch(e) {
+                 // Ignore parsing errors, JWT will just be empty
+             }
         }
+        
+        // If cookie parsing failed, rely on getting session from supabase
+        if(Object.keys(jwt).length === 0){
+             const { data: { session } } = await supabase.auth.getSession()
+             if(session) {
+                 jwt = parseJWTClaims(session.access_token)
+             }
+        }
+        
+        const role = jwt.user_role
+        const onboardingComplete = jwt.onboarding_complete
+
+        if (role === 'owner') {
+            // Owner hasn't completed onboarding → send to checklist
+            if (!onboardingComplete) {
+                return NextResponse.redirect(new URL('/onboarding', request.url))
+            }
+            return NextResponse.redirect(new URL('/owner/analytics', request.url))
+        } else if (role === 'supervisor') {
+            return NextResponse.redirect(new URL('/supervisor/production', request.url))
+        }
+        // Role unknown → let them through to the public page (edge case)
+        
         return response
     }
 
@@ -188,12 +208,31 @@ export async function updateSession(request: NextRequest) {
 
     // 3. Authenticated user on protected routes — enforce guards
     if (user && !isPublicRoute(pathname)) {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
-            return NextResponse.redirect(new URL('/login', request.url))
+        const token = request.cookies.get('sb-' + process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID + '-auth-token')
+        
+        let jwt: Record<string, any> = {}
+        if (token) {
+             // Supabase stores cookies as JSON arrays, so parse and take the first item token
+             try {
+                 const parsedToken = JSON.parse(token.value);
+                 if (Array.isArray(parsedToken) && parsedToken.length > 0) {
+                     jwt = parseJWTClaims(parsedToken[0]);
+                 }
+             } catch(e) {
+                 // Ignore parsing errors, JWT will just be empty
+             }
+        }
+        
+        // If cookie parsing failed, rely on getting session from supabase
+        if(Object.keys(jwt).length === 0){
+             const { data: { session } } = await supabase.auth.getSession()
+             if (session) {
+                 jwt = parseJWTClaims(session.access_token)
+             } else {
+                 return NextResponse.redirect(new URL('/login', request.url))
+             }
         }
 
-        const jwt = parseJWTClaims(session.access_token)
         const role = jwt.user_role
         const onboardingComplete = jwt.onboarding_complete
         const orgId = jwt.org_id
@@ -207,45 +246,48 @@ export async function updateSession(request: NextRequest) {
                 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
                 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
                 if (serviceKey && supabaseUrl) {
-                    const profileRes = await fetch(
-                        `${supabaseUrl}/rest/v1/profiles?select=org_id&id=eq.${user!.id}&limit=1`,
-                        {
-                            headers: {
-                                apikey: serviceKey,
-                                Authorization: `Bearer ${serviceKey}`,
-                                'Content-Type': 'application/json',
-                            },
-                        }
-                    )
-                    if (profileRes.ok) {
-                        const [profile] = await profileRes.json()
-                        resolvedOrgId = profile?.org_id ?? undefined
+                    // Parallelize DB fallback fetches using Promise.all
+                    const fetches = [
+                        fetch(
+                            `${supabaseUrl}/rest/v1/profiles?select=org_id&id=eq.${user!.id}&limit=1`,
+                            {
+                                headers: {
+                                    apikey: serviceKey,
+                                    Authorization: `Bearer ${serviceKey}`,
+                                    'Content-Type': 'application/json',
+                                },
+                            }
+                        ).then(async (res) => res.ok ? (await res.json())[0]?.org_id : undefined)
+                    ]
+                    
+                    if (role === 'owner') {
+                         fetches.push(
+                            fetch(
+                                `${supabaseUrl}/rest/v1/profiles?select=organizations(onboarding_complete)&id=eq.${user!.id}&limit=1`,
+                                {
+                                    headers: {
+                                        apikey: serviceKey,
+                                        Authorization: `Bearer ${serviceKey}`,
+                                        'Content-Type': 'application/json',
+                                    },
+                                }
+                            ).then(async (res) => {
+                                if (res.ok) {
+                                    const profile = (await res.json())[0];
+                                    if (profile?.organizations && typeof profile.organizations === 'object' && !Array.isArray(profile.organizations)) {
+                                         return profile.organizations.onboarding_complete
+                                    }
+                                }
+                                return undefined;
+                             })
+                        )
                     }
-                }
-            } catch {
-                // DB lookup failed
-            }
-        }
 
-        // DB fallback for onboardingComplete if JWT says false but they might have finished it
-        if (role === 'owner' && !resolvedOnboarding && resolvedOrgId) {
-            try {
-                const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-                if (serviceKey && supabaseUrl) {
-                    const orgRes = await fetch(
-                        `${supabaseUrl}/rest/v1/organizations?select=onboarding_complete&id=eq.${resolvedOrgId}&limit=1`,
-                        {
-                            headers: {
-                                apikey: serviceKey,
-                                Authorization: `Bearer ${serviceKey}`,
-                                'Content-Type': 'application/json',
-                            },
-                        }
-                    )
-                    if (orgRes.ok) {
-                        const [org] = await orgRes.json()
-                        resolvedOnboarding = org?.onboarding_complete ?? false
+                    const [profileOrgId, profileOrgOnboarding] = await Promise.all(fetches)
+                    
+                    resolvedOrgId = profileOrgId ?? undefined
+                    if (role === 'owner' && profileOrgOnboarding !== undefined) {
+                        resolvedOnboarding = profileOrgOnboarding
                     }
                 }
             } catch {
