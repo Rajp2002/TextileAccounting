@@ -165,4 +165,10 @@
       linear-gradient(to right, oklch(0.85 0.05 60 / 0.15) 1px, transparent 1px),
       linear-gradient(to bottom, oklch(0.85 0.05 60 / 0.15) 1px, transparent 1px);
   }
+
+  /* Safe Area Padding Utilities for Mobile Apps */
+  .pb-safe { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pl-safe { padding-left: env(safe-area-inset-left); }
+  .pr-safe { padding-right: env(safe-area-inset-right); }
 }

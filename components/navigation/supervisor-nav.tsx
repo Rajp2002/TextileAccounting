@@ -140,7 +140,7 @@ export function MobileSupervisorBottomNav() {
     return (
         <>
             {/* Mobile Bottom Navigation Bar */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border flex justify-around items-center z-50 px-2 pb-safe pt-1.5 shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)] h-[68px]">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border flex justify-around items-center z-50 px-2 pb-safe pt-2 shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)] min-h-[68px]">
                 {primaryNavItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname.startsWith(item.href)
