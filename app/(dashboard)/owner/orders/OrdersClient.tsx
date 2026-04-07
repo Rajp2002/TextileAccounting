@@ -88,6 +88,7 @@ function MachineAssignInline({
     allMachines: Array<{ id: string; name: string; current_order_id: string | null }>
     onSuccess: () => void
 }) {
+    const { t } = useTranslation()
     const [selected, setSelected] = useState<Set<string>>(new Set(currentMachineIds))
     const [saving, setSaving] = useState(false)
     const changed = JSON.stringify(Array.from(selected).sort()) !== JSON.stringify([...currentMachineIds].sort())
@@ -104,18 +105,18 @@ function MachineAssignInline({
         const res = await assignMachinesToOrder(orderId, Array.from(selected))
         setSaving(false)
         if (res.success) {
-            toast.success('Machines updated')
+            toast.success(t('orders_page.machines_updated'))
             onSuccess()
         } else {
-            toast.error(res.error ?? 'Failed to update machines')
+            toast.error(res.error ?? t('orders_page.failed_to_update'))
         }
     }
 
     if (allMachines.length === 0) {
         return (
             <p className="text-xs text-slate-500 italic py-2">
-                No active machines. Add machines in{' '}
-                <a href="/owner/machines" className="text-indigo-400 underline">Machine Management</a>.
+                {t('orders_page.no_active_machines')}{' '}
+                <a href="/owner/machines" className="text-indigo-400 underline">{t('orders_page.machine_mgmt')}</a>.
             </p>
         )
     }
@@ -146,7 +147,7 @@ function MachineAssignInline({
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-slate-900 truncate">{m.name}</p>
                                 {linkedToOther && (
-                                    <p className="text-[10px] text-amber-600 font-medium">Currently on another order</p>
+                                    <p className="text-[10px] text-amber-600 font-medium">{t('orders_page.on_another_order')}</p>
                                 )}
                             </div>
                         </div>
@@ -161,7 +162,7 @@ function MachineAssignInline({
                     disabled={saving}
                 >
                     {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                    Save Assignment
+                    {t('orders_page.save_assignment')}
                 </Button>
             )}
         </div>
@@ -890,14 +891,14 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
 
     const handleComplete = async (id: string) => {
         const res = await updateOrderStatus(id, 'completed')
-        if (res.success) { toast.success('Order marked complete'); fetchOrders() }
-        else toast.error(res.error ?? 'Failed to update')
+        if (res.success) { toast.success(t('orders_page.order_marked_complete')); fetchOrders() }
+        else toast.error(res.error ?? t('orders_page.failed_to_update'))
     }
 
     const handleCancel = async (id: string) => {
         const res = await deleteOrder(id)
-        if (res.success) { toast.success('Order cancelled'); fetchOrders() }
-        else toast.error(res.error ?? 'Failed to update')
+        if (res.success) { toast.success(t('orders_page.order_cancelled')); fetchOrders() }
+        else toast.error(res.error ?? t('orders_page.failed_to_update'))
     }
 
     // Split orders by phase
@@ -922,9 +923,9 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
             {/* Header */}
             <div className="flex items-start justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-white tracking-tight">Orders</h1>
+                    <h1 className="text-2xl font-black text-white tracking-tight">{t('orders_page.title')}</h1>
                     <p className="text-sm text-slate-400 mt-1">
-                        {activeOrders.length + pendingOrders.length} active · {completedOrders.length} completed
+                        {activeOrders.length + pendingOrders.length} {t('orders_page.active_summary')} · {completedOrders.length} {t('orders_page.completed_summary')}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -934,7 +935,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                             className="border-slate-700 text-slate-300 hover:bg-slate-800 font-bold gap-2 hidden sm:flex"
                         >
                             <Calculator className="h-4 w-4 text-indigo-400" />
-                            Estimator
+                            {t('orders_page.estimator_btn')}
                         </Button>
                     </a>
                     <Button
@@ -942,7 +943,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                         onClick={() => setShowNewOrder(true)}
                     >
                         <Plus className="h-4 w-4" />
-                        New Order
+                        {t('orders_page.new_order')}
                     </Button>
                 </div>
             </div>
@@ -953,9 +954,9 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                     <div className="text-center py-24 space-y-4">
                         <Package className="h-12 w-12 text-slate-700 mx-auto" />
                         <div>
-                            <p className="text-slate-400 font-medium">No orders yet</p>
+                            <p className="text-slate-400 font-medium">{t('orders_page.no_orders_yet')}</p>
                             <p className="text-slate-600 text-sm mt-1">
-                                Create an order manually, or use the Estimator to generate a costed order
+                                {t('orders_page.create_or_estimator')}
                             </p>
                         </div>
                         <div className="flex items-center justify-center gap-3">
@@ -964,12 +965,12 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                                 onClick={() => setShowNewOrder(true)}
                             >
                                 <Plus className="h-4 w-4" />
-                                New Order
+                                {t('orders_page.new_order')}
                             </Button>
                             <a href="/owner/estimator">
                                 <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50 font-bold gap-2">
                                     <Calculator className="h-4 w-4 text-primary" />
-                                    Go to Estimator
+                                    {t('orders_page.go_to_estimator')}
                                 </Button>
                             </a>
                         </div>
@@ -977,10 +978,10 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Pending Setup */}
-                        <KanbanColumn title="Pending Setup" icon={Clock} count={pendingOrders.length} accent="text-slate-500">
+                        <KanbanColumn title={t('orders_page.pending_setup')} icon={Clock} count={pendingOrders.length} accent="text-slate-500">
                             {pendingOrders.length === 0 ? (
                                 <div className="border border-dashed border-slate-300 rounded-2xl p-6 text-center">
-                                    <p className="text-xs text-slate-500">No pending orders</p>
+                                    <p className="text-xs text-slate-500">{t('orders_page.no_pending')}</p>
                                 </div>
                             ) : (
                                 pendingOrders.map((order) => (
@@ -996,10 +997,10 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                         </KanbanColumn>
 
                         {/* In Production */}
-                        <KanbanColumn title="In Production" icon={Package} count={activeOrders.length} accent="text-primary">
+                        <KanbanColumn title={t('orders_page.in_production')} icon={Package} count={activeOrders.length} accent="text-primary">
                             {activeOrders.length === 0 ? (
                                 <div className="border border-dashed border-slate-300 rounded-2xl p-6 text-center">
-                                    <p className="text-xs text-slate-500">No orders in production</p>
+                                    <p className="text-xs text-slate-500">{t('orders_page.no_in_production')}</p>
                                 </div>
                             ) : (
                                 activeOrders.map((order) => (
@@ -1015,10 +1016,10 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                         </KanbanColumn>
 
                         {/* Completed */}
-                        <KanbanColumn title="Completed" icon={CheckCircle2} count={completedOrders.length} accent="text-emerald-600">
+                        <KanbanColumn title={t('orders_page.completed_col')} icon={CheckCircle2} count={completedOrders.length} accent="text-emerald-600">
                             {completedOrders.length === 0 ? (
                                 <div className="border border-dashed border-slate-300 rounded-2xl p-6 text-center">
-                                    <p className="text-xs text-slate-500">No completed orders yet</p>
+                                    <p className="text-xs text-slate-500">{t('orders_page.no_completed')}</p>
                                 </div>
                             ) : (
                                 completedOrders.slice(0, 5).map((order) => (

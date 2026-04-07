@@ -342,15 +342,68 @@ function RowCard({
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function EstimatorPage() {
+export function EstimatorClient(props: {
+    initialProfile?: any
+    initialTemplates?: any[]
+    initialWorkers?: { id: number; name: string; role: string; monthly_salary: number }[]
+}) { return EstimatorPage(props) }
+
+export default function EstimatorPage({
+    initialProfile,
+    initialTemplates,
+    initialWorkers,
+}: {
+    initialProfile?: any
+    initialTemplates?: any[]
+    initialWorkers?: { id: number; name: string; role: string; monthly_salary: number }[]
+}) {
     const router = useRouter()
     const { t } = useTranslation()
-    const [state, dispatch] = useReducer(estimateReducer, makeDefaultEstimateState())
-    const [loading,   setLoading]   = useState(true)
+
+    // Build the initial state synchronously from server-provided data (no loading flash)
+    const initialState = useMemo(() => {
+        const base = makeDefaultEstimateState()
+        if (!initialProfile) return base
+
+        // Apply profile — mirrors INIT_FROM_PROFILE reducer case
+        const sections = initialProfile.enabled_sections ?? {
+            winding: false, processing: false, finishing: false, commission: true, transport: false,
+        }
+        let next = {
+            ...base,
+            warpingRatePerKg:  Number(initialProfile.warping_rate_per_kg  ?? base.warpingRatePerKg),
+            sizingRatePerKg:   Number(initialProfile.sizing_rate_per_kg   ?? base.sizingRatePerKg),
+            windingRatePerKg:  Number(initialProfile.winding_rate_per_kg  ?? base.windingRatePerKg),
+            overheadPct:       Number(initialProfile.overhead_pct         ?? base.overheadPct),
+            commissionPct:     Number(initialProfile.default_commission_pct ?? base.commissionPct),
+            transportPerM:     Number(initialProfile.default_transport_per_m ?? base.transportPerM),
+            enabledSections:   sections,
+            monthlyOutputM:    Number(initialProfile.monthly_output_m     ?? base.monthlyOutputM),
+            overheadOverridePerM: initialProfile.overhead_override_per_m !== undefined && initialProfile.overhead_override_per_m !== null
+                ? Number(initialProfile.overhead_override_per_m) : base.overheadOverridePerM,
+        }
+        // Apply overhead items from profile if saved, otherwise merge fixed workers
+        if (Array.isArray(initialProfile.overhead_items) && initialProfile.overhead_items.length > 0) {
+            next = { ...next, overheadItems: initialProfile.overhead_items }
+        } else if (initialWorkers && initialWorkers.length > 0) {
+            const fixedItems = initialWorkers.map(w => ({
+                id:            String(w.id),
+                label:         `${w.name} (${w.role})`,
+                monthlyAmount: w.monthly_salary,
+                source:        'fixed_worker_derived' as const,
+            }))
+            next = { ...next, overheadItems: [...DEFAULT_OVERHEAD_ITEMS.map(i => ({ ...i, id: nanoid() })), ...fixedItems] }
+        }
+        return next
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []) // Run once — initialProfile is stable
+
+    const [state, dispatch] = useReducer(estimateReducer, initialState)
+    const [loading,   setLoading]   = useState(false) // No loading needed — data comes from server
     const [saving,    setSaving]    = useState(false)
     const [converting, setConverting] = useState(false)
     const [savingTemplate, setSavingTemplate] = useState(false)
-    const [templates, setTemplates] = useState<any[]>([])
+    const [templates, setTemplates] = useState<any[]>(initialTemplates ?? [])
 
     const [partyName,       setPartyName]       = useState('')
     const [qualityLabel,    setQualityLabel]    = useState('')
@@ -371,7 +424,10 @@ export default function EstimatorPage() {
     const [savingRates,      setSavingRates]      = useState(false)
     const [deletingTpl,      setDeletingTpl]      = useState<string | null>(null)
 
+
+    // Fallback fetch: only runs if no initial data was server-provided (direct navigation without RSC wrapper)
     useEffect(() => {
+        if (initialProfile !== undefined) return // Server already gave us data — skip
         async function load() {
             setLoading(true)
             const [pRes, tRes, wRes] = await Promise.all([
@@ -391,9 +447,7 @@ export default function EstimatorPage() {
                 })
             }
             if (tRes.data) setTemplates(tRes.data)
-            // Merge fixed workers into overhead items (only if not already saved in profile)
             if (wRes.data && wRes.data.length > 0) {
-                // If profile had no saved overhead_items, we merge workers into the defaults
                 const profileHasItems = Array.isArray(pRes.data?.overhead_items) && pRes.data.overhead_items.length > 0
                 if (!profileHasItems) {
                     dispatch({ type: 'MERGE_FIXED_WORKERS', workers: wRes.data })
@@ -402,6 +456,7 @@ export default function EstimatorPage() {
             setLoading(false)
         }
         load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const totals: EstimatorV3Totals = useMemo(() => calcFullTotals(state), [state])
