@@ -280,7 +280,27 @@ export const hi = {
       full_monthly_salary: "पूरा मासिक वेतन (कुल)",
       m_across: "मीटर, कुल",
       machines: "मशीनों पर",
-      machine: "मशीन पर"
+      machine: "मशीन पर",
+      earnings_breakdown: "कमाई का विवरण (Earnings Breakdown)",
+      settlement_audit: "भुगतान ऑडिट",
+      gross_total: "कुल राशि",
+      gross_earnings: "कुल कमाई",
+      advances_recovered: "एडवांस काटा गया",
+      legally_capped: "वेतन का अधिकतम 50% कट सकता है।",
+      final_settlement_100pct: "अंतिम भुगतान — पूरा एडवांस 100% काटा जाएगा।",
+      final_settlement_label: "अंतिम भुगतान (फाइनल सेटलमेंट)",
+      net_payout: "अंतिम भुगतान",
+      carry_forward: "बाकी कर्ज (Carry-Forward)",
+      mark_unpaid: "अनपेड करें (Unmark)",
+      mark_paid: "भुगतान मार्क करें",
+      pdf_slip: "PDF स्लिप",
+      whatsapp: "WhatsApp",
+      settle_all: "सभी का सेटलमेंट करें",
+      calculations: "कैलकुलेशंस",
+      fixed_monthly: "मासिक तय वेतन",
+      days_present: "उपस्थित दिन",
+      earned_gross: "कुल कमाई (Earned)",
+      cap_applied: "50% की सीमा लागू"
     },
     empty: {
       no_production: "इस महीने कोई उत्पादन रिकॉर्ड नहीं है",
@@ -734,5 +754,44 @@ export const hi = {
       save_template_name_error: "कृपया फैब्रिक का नाम दर्ज करें",
       rename_failed: "नाम बदलने में विफल:"
     }
+  },
+  kpi_strip: {
+    selected_date: "चुनी गई तारीख",
+    yesterday: "कल का (Yesterday)",
+    no_data: "कोई डेटा नहीं",
+    finalized: "फाइनल (Finalized)",
+    meters_produced: "कुल उत्पादित मीटर",
+    floor_wages_today: "आज की मज़दूरी",
+    salary_burden_today: "आज का वेतन खर्च",
+    overall_efficiency: "कुल दक्षता",
+    today: "आज का (Today)",
+    live: "लाइव",
+    no_logs_yet: "आज कोई रिकॉर्ड नहीं है। सुपरवाइज़र के मीटर दर्ज करते ही उत्पादन यहाँ दिखेगा।",
+    est: "अनुमानित",
+    machines: "मशीनें",
+    machines_running: "चल रही मशीनें",
+  },
+  machines_util: {
+    title: "मशीनों का उपयोग",
+    no_configured: "कोई मशीन कॉन्फ़िगर नहीं की गई",
+    active: "सक्रिय",
+    idle: "खाली (idle)",
+    total: "कुल"
+  },
+  trend: {
+    title: "7 दिन का प्रोडक्शन ट्रेंड",
+    no_data: "पिछले 7 दिनों का कोई डेटा नहीं है",
+    steady: "स्थिर (Steady)",
+    vs_yesterday: "कल के मुकाबले",
+    avg_7_day: "7-दिन का औसत:"
+  },
+  worker: {
+    title: "आज के कारीगर",
+    no_logs: "आज कोई प्रोडक्शन दर्ज नहीं",
+    rate_locked_on: "दर {date} पर लॉक हो गई है—क्वालिटी रेट बदलने पर भी यह नहीं बदलेगी।"
+  },
+  dashboard: {
+    date: "तारीख",
+    reconnecting: "लाइव डेटा के साथ फिर से जुड़ने की कोशिश हो रही है..."
   }
 }

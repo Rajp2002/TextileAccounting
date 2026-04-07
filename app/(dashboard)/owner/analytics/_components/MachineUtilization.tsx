@@ -2,10 +2,12 @@
 
 import { motion } from 'framer-motion'
 import { Server, Zap } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n/context'
 
 type Machine = { id: string; name: string; current_order_id: string | null }
 
 export function MachineUtilization({ machines }: { machines: Machine[] | null }) {
+  const { t } = useTranslation()
   if (!machines) return null
 
   const total  = machines.length
@@ -35,7 +37,7 @@ export function MachineUtilization({ machines }: { machines: Machine[] | null })
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-bold flex items-center gap-2">
           <Server className="h-4 w-4 text-muted-foreground" />
-          Machine Utilisation
+          {t('machines_util.title')}
         </h2>
         <div className={`flex items-center gap-1.5 text-sm font-bold tabular-nums ${labelColor}`}>
           <Zap className="h-3.5 w-3.5" />
@@ -45,7 +47,7 @@ export function MachineUtilization({ machines }: { machines: Machine[] | null })
 
       {/* Big progress bar */}
       {total === 0 ? (
-        <p className="text-sm text-muted-foreground italic">No machines configured</p>
+        <p className="text-sm text-muted-foreground italic">{t('machines_util.no_configured')}</p>
       ) : (
         <>
           <div className="h-3 w-full bg-muted rounded-full overflow-hidden mb-4">
@@ -62,16 +64,16 @@ export function MachineUtilization({ machines }: { machines: Machine[] | null })
             <div className="flex items-center gap-1.5">
               <span className="inline-block h-2 w-2 rounded-full bg-success" />
               <span className="text-sm font-semibold text-foreground">{active}</span>
-              <span className="text-xs text-muted-foreground">active</span>
+              <span className="text-xs text-muted-foreground">{t('machines_util.active')}</span>
             </div>
             <span className="text-border">·</span>
             <div className="flex items-center gap-1.5">
               <span className="inline-block h-2 w-2 rounded-full bg-muted-foreground/40" />
               <span className="text-sm font-semibold text-foreground">{idle}</span>
-              <span className="text-xs text-muted-foreground">idle</span>
+              <span className="text-xs text-muted-foreground">{t('machines_util.idle')}</span>
             </div>
             <span className="text-border">·</span>
-            <span className="text-xs text-muted-foreground">{total} total</span>
+            <span className="text-xs text-muted-foreground">{total} {t('machines_util.total')}</span>
           </div>
 
           {/* Individual machine pills — only shows if ≤ 12 machines */}
