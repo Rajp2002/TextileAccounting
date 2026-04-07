@@ -281,7 +281,27 @@ export const en = {
       full_monthly_salary: "Full monthly salary (Gross)",
       m_across: "m across",
       machines: "machines",
-      machine: "machine"
+      machine: "machine",
+      earnings_breakdown: "Earnings Breakdown",
+      settlement_audit: "Settlement Audit",
+      gross_total: "Gross Total",
+      gross_earnings: "Gross Earnings",
+      advances_recovered: "Advances Recovered",
+      legally_capped: "Legally capped at 50% of gross earnings.",
+      final_settlement_100pct: "Final settlement — 100% of advances will be recovered.",
+      final_settlement_label: "Final Settlement",
+      net_payout: "Net Payout",
+      carry_forward: "Carry-Forward Debt",
+      mark_unpaid: "Mark Unpaid",
+      mark_paid: "Mark Paid",
+      pdf_slip: "PDF Slip",
+      whatsapp: "WhatsApp",
+      settle_all: "Settle All",
+      calculations: "Calculations",
+      fixed_monthly: "Fixed Monthly",
+      days_present: "Days Present",
+      earned_gross: "Earned Gross",
+      cap_applied: "50% Cap Applied"
     },
     empty: {
       no_production: "No production logged this month",
@@ -741,5 +761,44 @@ export const en = {
       save_template_name_error: "Please enter a fabric name",
       rename_failed: "Rename failed:"
     }
+  },
+  kpi_strip: {
+    selected_date: "Selected Date",
+    yesterday: "Yesterday",
+    no_data: "No data",
+    finalized: "Finalized",
+    meters_produced: "Meters produced",
+    floor_wages_today: "Floor wages today",
+    salary_burden_today: "Salary burden today",
+    overall_efficiency: "Overall efficiency",
+    today: "Today",
+    live: "LIVE",
+    no_logs_yet: "No logs yet today. Production will appear here as supervisors log meters.",
+    est: "est.",
+    machines: "machines",
+    machines_running: "Machines running",
+  },
+  machines_util: {
+    title: "Machine Utilisation",
+    no_configured: "No machines configured",
+    active: "active",
+    idle: "idle",
+    total: "total"
+  },
+  trend: {
+    title: "7-Day Production Trend",
+    no_data: "No production data in the last 7 days",
+    steady: "Steady",
+    vs_yesterday: "vs yesterday",
+    avg_7_day: "7-day avg:"
+  },
+  worker: {
+    title: "Today's workers",
+    no_logs: "No production logged today",
+    rate_locked_on: "Rate locked on {date} — won't change even if you update the quality rate."
+  },
+  dashboard: {
+    date: "Date",
+    reconnecting: "Attempting to reconnect live data..."
   }
 }

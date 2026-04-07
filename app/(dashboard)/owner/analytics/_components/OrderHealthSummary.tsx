@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight, CheckCircle2, AlertTriangle, XCircle, Package } from 'lucide-react'
 import type { Order } from '../../actions/dashboard'
+import { useTranslation } from '@/lib/i18n/context'
 
 // ─── Pace classification ─────────────────────────────────────────────────────
 
@@ -17,22 +18,23 @@ function classifyOrder(order: Order): 'on-track' | 'at-risk' | 'critical' {
 // ─── Individual order row ─────────────────────────────────────────────────────
 
 function OrderRow({ order }: { order: Order }) {
+  const { t } = useTranslation()
   const status = classifyOrder(order)
 
   const statusConfig = {
     'on-track': {
       icon:  <CheckCircle2 className="h-4 w-4 text-success shrink-0" />,
-      label: 'On track',
+      label: t('analytics.orders.card.active'), 
       bar:   'bg-success',
     },
     'at-risk': {
       icon:  <AlertTriangle className="h-4 w-4 text-warning shrink-0" />,
-      label: 'At risk',
+      label: t('analytics.orders.card.at_risk'),
       bar:   'bg-warning',
     },
     'critical': {
       icon:  <XCircle className="h-4 w-4 text-danger shrink-0" />,
-      label: order.days_remaining <= 0 ? 'Overdue' : 'Critical',
+      label: order.days_remaining <= 0 ? t('analytics.orders.card.overdue') : t('analytics.orders.card.at_risk'),
       bar:   'bg-danger',
     },
   }[status]
@@ -64,6 +66,8 @@ function OrderRow({ order }: { order: Order }) {
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export function OrderHealthSummary({ orders }: { orders: Order[] | null }) {
+  const { t } = useTranslation()
+  
   if (!orders || orders.length === 0) {
     return (
       <motion.section
@@ -75,7 +79,7 @@ export function OrderHealthSummary({ orders }: { orders: Order[] | null }) {
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-bold flex items-center gap-2">
             <Package className="h-4 w-4 text-muted-foreground" />
-            Order Health
+            {t('analytics.orders.card.health_index')}
           </h2>
           <Link
             href="/owner/orders"
@@ -84,7 +88,7 @@ export function OrderHealthSummary({ orders }: { orders: Order[] | null }) {
             Manage <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
-        <p className="text-sm text-muted-foreground text-center py-4 italic">No active orders</p>
+        <p className="text-sm text-muted-foreground text-center py-4 italic">{t('analytics.orders.no_active')}</p>
       </motion.section>
     )
   }
@@ -108,7 +112,7 @@ export function OrderHealthSummary({ orders }: { orders: Order[] | null }) {
       <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border/60">
         <h2 className="text-base font-bold flex items-center gap-2">
           <Package className="h-4 w-4 text-muted-foreground" />
-          Order Health
+          {t('analytics.orders.card.health_index')}
           <span className="text-muted-foreground font-normal text-sm">({orders.length})</span>
         </h2>
         <Link
@@ -122,9 +126,9 @@ export function OrderHealthSummary({ orders }: { orders: Order[] | null }) {
       {/* Summary pills */}
       <div className="grid grid-cols-3 divide-x divide-border/60 border-b border-border/60">
         {[
-          { label: 'On Track',  count: counts['on-track'], color: 'text-success',  bg: 'bg-success/8' },
-          { label: 'At Risk',   count: counts['at-risk'],  color: 'text-warning',  bg: 'bg-warning/8' },
-          { label: 'Critical',  count: counts['critical'], color: 'text-danger',   bg: 'bg-danger/8'  },
+          { label: t('analytics.orders.card.active'),  count: counts['on-track'], color: 'text-success',  bg: 'bg-success/8' },
+          { label: t('analytics.orders.card.at_risk'),   count: counts['at-risk'],  color: 'text-warning',  bg: 'bg-warning/8' },
+          { label: t('analytics.orders.card.at_risk'),  count: counts['critical'], color: 'text-danger',   bg: 'bg-danger/8'  },
         ].map(({ label, count, color, bg }) => (
           <div key={label} className={`flex flex-col items-center py-3 ${bg}`}>
             <span className={`text-2xl font-bold tabular-nums ${color}`}>{count}</span>

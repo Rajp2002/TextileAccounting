@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Minus, BarChart2 } from 'lucide-react'
 import { formatMeters } from '@/lib/format'
+import { useTranslation } from '@/lib/i18n/context'
 
 export type DailyMeterPoint = {
   date: string       // 'YYYY-MM-DD'
@@ -15,6 +16,8 @@ function shortDate(dateStr: string): string {
 }
 
 export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
+  const { t } = useTranslation()
+  
   if (!data || data.length === 0) {
     return (
       <motion.section
@@ -25,10 +28,10 @@ export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
       >
         <div className="flex items-center gap-2 mb-4">
           <BarChart2 className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-base font-bold">7-Day Production Trend</h2>
+          <h2 className="text-base font-bold">{t('trend.title')}</h2>
         </div>
         <p className="text-sm text-muted-foreground italic text-center py-4">
-          No production data in the last 7 days
+          {t('trend.no_data')}
         </p>
       </motion.section>
     )
@@ -57,11 +60,11 @@ export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-base font-bold flex items-center gap-2">
           <BarChart2 className="h-4 w-4 text-muted-foreground" />
-          7-Day Production Trend
+          {t('trend.title')}
         </h2>
         <div className={`flex items-center gap-1 text-sm font-semibold ${trendColor}`}>
           <TrendIcon className="h-4 w-4" />
-          {Math.abs(delta) < 1 ? 'Steady' : `${delta > 0 ? '+' : ''}${delta.toFixed(0)}% vs yesterday`}
+          {Math.abs(delta) < 1 ? t('trend.steady') : `${delta > 0 ? '+' : ''}${delta.toFixed(0)}% ${t('trend.vs_yesterday')}`}
         </div>
       </div>
 
@@ -105,7 +108,7 @@ export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
       <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border/60">
         <span className="inline-block h-px w-6 bg-muted-foreground/40 border-t border-dashed border-muted-foreground/40" />
         <span className="text-xs text-muted-foreground">
-          7-day avg: <span className="font-semibold text-foreground">{formatMeters(avg)}</span>
+          {t('trend.avg_7_day')} <span className="font-semibold text-foreground">{formatMeters(avg)}</span>
         </span>
       </div>
 

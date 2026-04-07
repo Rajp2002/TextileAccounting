@@ -5,23 +5,20 @@ import { WorkerBreakdownEntry } from '../../actions/dashboard'
 import { formatMeters, formatRupees, formatDate } from '@/lib/format'
 import { transliterate } from '@/lib/transliterate'
 import { ChevronRight, ChevronDown, Lock } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n/context'
 
-// Simplistic mock hook since we don't have the exact path for the real profile hook.
-// This typically comes from a UserProvider or ProfileProvider.
-function useLanguagePreference() {
-  return 'en' // Defaulting to english
-}
+// Removes the old mock hook
 
 export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] | null }) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const lang = useLanguagePreference()
+  const { language, t } = useTranslation() 
 
   if (!entries || entries.length === 0) {
     return (
       <section>
-        <h2 className="text-xl font-bold mb-4 text-foreground/80 font-heading">Today&apos;s workers</h2>
+        <h2 className="text-xl font-bold mb-4 text-foreground/80 font-heading">{t('worker.title')}</h2>
         <div className="bg-card border border-border shadow-sm rounded-xl p-8 text-center bg-muted/5">
-          <p className="text-muted-foreground/60 font-medium italic">No production logged today</p>
+          <p className="text-muted-foreground/60 font-medium italic">{t('worker.no_logs')}</p>
         </div>
       </section>
     )
@@ -36,7 +33,7 @@ export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] |
 
   return (
     <section>
-      <h2 className="text-xl font-bold mb-4">Today&apos;s workers</h2>
+      <h2 className="text-xl font-bold mb-4">{t('worker.title')}</h2>
       <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
         {entries.map((w, index) => {
           const isExpanded = expanded.has(w.worker_id)
@@ -51,7 +48,7 @@ export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] |
                     {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                   </span>
                   <span className="font-semibold text-foreground">
-                    {transliterate(w.worker_name, lang)}
+                    {transliterate(w.worker_name, language)}
                   </span>
                 </div>
                 <div className="flex items-center gap-6">
@@ -82,7 +79,7 @@ export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] |
                             <Lock size={12} className="text-warning ml-1 shrink-0" />
                             {/* Tooltip implementation */}
                             <div className="absolute bottom-full mb-2 right-0 hidden group-hover:block w-48 p-2 bg-popover text-popover-foreground text-xs rounded border shadow-md z-10">
-                              Rate locked on {logDateFormatted} — won&apos;t change even if you update the quality rate.
+                              {t('worker.rate_locked_on').replace('{date}', logDateFormatted)}
                             </div>
                           </div>
                           <div className="text-right font-medium text-foreground">

@@ -721,45 +721,40 @@ export default function PayrollPage() {
             const monthStart = `${selectedMonth}-01`
             const monthEnd = `${selectedMonth}-31`
 
-            // Fetch production logs for the month
-            const { data: logs, error: logsErr } = await supabase
-                .from('production_logs')
-                .select('worker_id, machine_id, meters, worker_rate_snapshot')
-                .eq('org_id', userProfile!.org_id)
-                .gte('date', monthStart)
-                .lte('date', monthEnd)
-            if (logsErr) throw logsErr
+            const [logsRes, workersRes, machinesRes, settlementsRes, advancesRes] = await Promise.all([
+                supabase.from('production_logs')
+                    .select('worker_id, machine_id, meters, worker_rate_snapshot')
+                    .eq('org_id', userProfile!.org_id)
+                    .gte('date', monthStart)
+                    .lte('date', monthEnd),
+                supabase.from('workers')
+                    .select('id, name, whatsapp_number')
+                    .eq('org_id', userProfile!.org_id)
+                    .eq('is_active', true),
+                supabase.from('machines')
+                    .select('id, name')
+                    .eq('org_id', userProfile!.org_id),
+                supabase.from('payroll_settlements')
+                    .select('*')
+                    .eq('org_id', userProfile!.org_id)
+                    .eq('worker_type', 'meter')
+                    .eq('month', selectedMonth),
+                supabase.from('worker_advances')
+                    .select('meter_worker_id, amount')
+                    .eq('org_id', userProfile!.org_id)
+                    .eq('status', 'pending')
+                    .not('meter_worker_id', 'is', null)
+            ])
 
-            // Fetch workers
-            const { data: workers, error: wErr } = await supabase
-                .from('workers')
-                .select('id, name, whatsapp_number')
-                .eq('org_id', userProfile!.org_id)
-                .eq('is_active', true)
-            if (wErr) throw wErr
+            if (logsRes.error) throw logsRes.error
+            if (workersRes.error) throw workersRes.error
+            if (machinesRes.error) throw machinesRes.error
 
-            // Fetch machines (for names)
-            const { data: machines, error: mErr } = await supabase
-                .from('machines')
-                .select('id, name')
-                .eq('org_id', userProfile!.org_id)
-            if (mErr) throw mErr
-
-            // Fetch settlement snapshots from the new table
-            const { data: settlements } = await supabase
-                .from('payroll_settlements')
-                .select('*')
-                .eq('org_id', userProfile!.org_id)
-                .eq('worker_type', 'meter')
-                .eq('month', selectedMonth)
-
-            // Fetch pending advances for all meter workers
-            const { data: advances } = await supabase
-                .from('worker_advances')
-                .select('meter_worker_id, amount')
-                .eq('org_id', userProfile!.org_id)
-                .eq('status', 'pending')
-                .not('meter_worker_id', 'is', null)
+            const logs = logsRes.data
+            const workers = workersRes.data
+            const machines = machinesRes.data
+            const settlements = settlementsRes.data
+            const advances = advancesRes.data
 
             // Build map
             const advanceMap: Record<number, number> = {}
@@ -820,46 +815,48 @@ export default function PayrollPage() {
         queryKey: ['payroll_fixed', userProfile?.org_id, selectedMonth],
         enabled: !!userProfile?.org_id && !!selectedMonth,
         queryFn: async () => {
-            const { data: workers, error } = await supabase
+            const workersRes = await supabase
                 .from('fixed_workers')
                 .select('*')
                 .eq('org_id', userProfile!.org_id)
                 .order('role').order('name')
-            if (error) throw error
+            if (workersRes.error) throw workersRes.error
+            const workers = workersRes.data
 
-            // Attendance for daily workers
             const dailyIds = (workers || []).filter((w: any) => w.role === 'daily').map((w: any) => w.id)
-            let attendanceMap: Record<number, number> = {}
-            if (dailyIds.length > 0) {
-                const { data: att } = await supabase
-                    .from('attendance')
-                    .select('fixed_worker_id, present')
+
+            const [attRes, settlementsRes, advancesRes] = await Promise.all([
+                dailyIds.length > 0
+                    ? supabase.from('attendance')
+                        .select('fixed_worker_id, present')
+                        .eq('org_id', userProfile!.org_id)
+                        .in('fixed_worker_id', dailyIds)
+                        .gte('date', `${selectedMonth}-01`)
+                        .lte('date', `${selectedMonth}-31`)
+                        .eq('present', true)
+                    : Promise.resolve({ data: [] }),
+                supabase.from('payroll_settlements')
+                    .select('*')
                     .eq('org_id', userProfile!.org_id)
-                    .in('fixed_worker_id', dailyIds)
-                    .gte('date', `${selectedMonth}-01`)
-                    .lte('date', `${selectedMonth}-31`)
-                    .eq('present', true)
-                ;(att || []).forEach((a: any) => {
-                    attendanceMap[a.fixed_worker_id] = (attendanceMap[a.fixed_worker_id] || 0) + 1
-                })
-            }
+                    .eq('worker_type', 'fixed')
+                    .eq('month', selectedMonth),
+                supabase.from('worker_advances')
+                    .select('fixed_worker_id, amount')
+                    .eq('org_id', userProfile!.org_id)
+                    .eq('status', 'pending')
+                    .not('fixed_worker_id', 'is', null)
+            ])
 
-            // Settlement snapshots
-            const { data: settlements } = await supabase
-                .from('payroll_settlements')
-                .select('*')
-                .eq('org_id', userProfile!.org_id)
-                .eq('worker_type', 'fixed')
-                .eq('month', selectedMonth)
+            const att = attRes.data
+            const settlements = settlementsRes.data
+            const advances = advancesRes.data
+
+            let attendanceMap: Record<number, number> = {}
+            ;(att || []).forEach((a: any) => {
+                attendanceMap[a.fixed_worker_id] = (attendanceMap[a.fixed_worker_id] || 0) + 1
+            })
+
             const settlementMap = Object.fromEntries((settlements || []).map((s: any) => [s.fixed_worker_id, s]))
-
-            // Fetch pending advances
-            const { data: advances } = await supabase
-                .from('worker_advances')
-                .select('fixed_worker_id, amount')
-                .eq('org_id', userProfile!.org_id)
-                .eq('status', 'pending')
-                .not('fixed_worker_id', 'is', null)
 
             const advanceMap: Record<number, number> = {}
             ;(advances || []).forEach((a: any) => {

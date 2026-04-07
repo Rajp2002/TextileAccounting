@@ -13,6 +13,7 @@ import type { DashboardData } from '../../actions/dashboard'
 import { getSuratTodayString } from '@/lib/time'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useTranslation } from '@/lib/i18n/context'
 
 export function DashboardClient({ initialData, orgId }: { initialData: DashboardData, orgId: string }) {
   const [data, setData] = useState(initialData)
@@ -20,6 +21,7 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
   const [selectedDate, setSelectedDate] = useState<string>(getSuratTodayString())
   const supabase = createClient()
   const debounceTimer = useRef<NodeJS.Timeout | null>(null)
+  const { t } = useTranslation()
 
   const handleRealtimeUpdate = useCallback(() => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current)
@@ -99,11 +101,11 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
           {!isConnected && selectedDate === getSuratTodayString() && (
             <div className="text-sm text-warning flex items-center mr-4">
               <span className="w-2 h-2 bg-background-warning rounded-full mr-2"></span>
-              Attempting to reconnect live data...
+              {t('dashboard.reconnecting')}
             </div>
           )}
           <div className="flex items-center space-x-2">
-            <Label htmlFor="date-picker">Date</Label>
+            <Label htmlFor="date-picker">{t('dashboard.date')}</Label>
             <Input 
               id="date-picker"
               type="date"
