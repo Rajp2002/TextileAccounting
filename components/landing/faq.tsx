@@ -10,8 +10,8 @@ const faqs = [
         answer: "Every day, supervisors log the meter production for each worker and machine. The system automatically aggregates these logs, calculates wages based on piece-rates, and prepares the monthly payroll—no more manual tallying or error-prone logbooks."
     },
     {
-        question: "Can I use Vastra if my factory has poor internet?",
-        answer: "Yes! Vastra is built with 'offline-first' technology. You can log production even when there is no internet connection. The data stays safely on your phone and automatically syncs with our servers as soon as you are back online."
+        question: "Can I use Loomi if my factory has poor internet?",
+        answer: "Yes! Loomi is built with 'offline-first' technology. You can log production even when there is no internet connection. The data stays safely on your phone and automatically syncs with our servers as soon as you are back online."
     },
     {
         question: "How do the WhatsApp Daily Briefs work?",
@@ -52,7 +52,7 @@ export default function LandingFAQ() {
                             Common Questions
                         </p>
                         <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300">
-                            Everything you need to know about about the Vastra platform and how it helps your textile business.
+                            Everything you need to know about about the Loomi platform and how it helps your textile business.
                         </p>
                     </motion.div>
                 </div>

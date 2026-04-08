@@ -3,8 +3,8 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-    title: 'Refund & Cancellation Policy — Vastra',
-    description: 'Learn about Vastra\'s refund, cancellation, and data export policies for subscription plans.',
+    title: 'Refund & Cancellation Policy — Loomi',
+    description: 'Learn about Loomi\'s refund, cancellation, and data export policies for subscription plans.',
 }
 
 export default function RefundPolicyPage() {
@@ -18,9 +18,9 @@ export default function RefundPolicyPage() {
                 <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
                         <div className="relative h-9 w-9">
-                            <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
+                            <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain" />
                         </div>
-                        <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Vastra</span>
+                        <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Loomi</span>
                     </Link>
                     <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-300">
                         <Link href="/terms" className="hover:text-amber-700 dark:hover:text-amber-500 transition-colors">Terms</Link>
@@ -48,7 +48,7 @@ export default function RefundPolicyPage() {
                     <article className="px-8 py-10 sm:px-12 sm:py-12 prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-amber-600 hover:prose-a:text-amber-700 prose-a:underline-offset-4 prose-a:decoration-amber-200 hover:prose-a:decoration-amber-600 transition-all font-medium">
 
                         <p className="lead text-lg text-gray-600 dark:text-gray-400 mb-8">
-                        This Refund &amp; Cancellation Policy applies to all paid subscriptions and services offered by Vastra. We aim to make our policies transparent and fair in compliance with the <strong>Consumer Protection Act, 2019</strong> and the <strong>Consumer Protection (E-Commerce) Rules, 2020</strong>.
+                        This Refund &amp; Cancellation Policy applies to all paid subscriptions and services offered by Loomi. We aim to make our policies transparent and fair in compliance with the <strong>Consumer Protection Act, 2019</strong> and the <strong>Consumer Protection (E-Commerce) Rules, 2020</strong>.
                     </p>
 
                     <h2>1. Free Trial</h2>
@@ -66,8 +66,8 @@ export default function RefundPolicyPage() {
                         You may cancel your subscription at any time through:
                     </p>
                     <ul>
-                        <li>The account settings page within the Vastra dashboard, or</li>
-                        <li>By emailing <a href="mailto:support@vastra.app">support@vastra.app</a> with your registered email address</li>
+                        <li>The account settings page within the Loomi dashboard, or</li>
+                        <li>By emailing <a href="mailto:support@loomi.app">support@loomi.app</a> with your registered email address</li>
                     </ul>
                     <p>
                         Cancellation is designed to be at least as easy as the subscription process, in compliance with Consumer Protection rules.
@@ -102,7 +102,7 @@ export default function RefundPolicyPage() {
                     <ul>
                         <li>Refunds are processed to the original payment method within <strong>5–7 business days</strong>.</li>
                         <li>GST paid on refunded amounts will also be refunded.</li>
-                        <li>To request a refund, email <a href="mailto:support@vastra.app">support@vastra.app</a> with your account details and reason for the request.</li>
+                        <li>To request a refund, email <a href="mailto:support@loomi.app">support@loomi.app</a> with your account details and reason for the request.</li>
                     </ul>
 
                     <h2>4. Plan Downgrades</h2>
@@ -125,7 +125,7 @@ export default function RefundPolicyPage() {
 
                     <h2>6. Exceptional Circumstances</h2>
                     <p>
-                        In cases of billing errors, unauthorized charges, or other exceptional circumstances, please contact us immediately at <a href="mailto:support@vastra.app">support@vastra.app</a>. We will investigate and resolve such issues promptly.
+                        In cases of billing errors, unauthorized charges, or other exceptional circumstances, please contact us immediately at <a href="mailto:support@loomi.app">support@loomi.app</a>. We will investigate and resolve such issues promptly.
                     </p>
 
                     <h2>7. Changes to This Policy</h2>
@@ -135,8 +135,8 @@ export default function RefundPolicyPage() {
 
                     <h2>8. Contact</h2>
                     <div className="bg-gray-50 rounded-xl p-6 not-prose text-sm text-gray-700 space-y-1 my-4">
-                        <p className="font-semibold text-gray-900">Vastra Support</p>
-                        <p>Email: <a href="mailto:support@vastra.app" className="text-amber-700 hover:underline">support@vastra.app</a></p>
+                        <p className="font-semibold text-gray-900">Loomi Support</p>
+                        <p>Email: <a href="mailto:support@loomi.app" className="text-amber-700 hover:underline">support@loomi.app</a></p>
                         <p className="text-xs text-gray-500 mt-2">We aim to respond to all refund requests within 2 business days.</p>
                     </div>
                     </article>
@@ -146,7 +146,7 @@ export default function RefundPolicyPage() {
             {/* Footer */}
             <footer className="mt-12 border-t border-gray-200/50 dark:border-white/10 bg-white/50 dark:bg-zinc-950/50 py-10 px-6 backdrop-blur-md">
                 <div className="mx-auto max-w-5xl flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
-                    <p>© {new Date().getFullYear()} Vastra. All rights reserved.</p>
+                    <p>© {new Date().getFullYear()} Loomi. All rights reserved.</p>
                     <div className="flex gap-8">
                         <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
                         <Link href="/terms" className="hover:text-gray-900 dark:hover:text-white transition-colors">Terms of Service</Link>

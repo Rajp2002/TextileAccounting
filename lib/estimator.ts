@@ -1,5 +1,5 @@
 /**
- * lib/estimator.ts — Vastra Estimator V3 (Clean Break)
+ * lib/estimator.ts — Loomi Estimator V3 (Clean Break)
  *
  * Complete rewrite. All V1 code (calculateLandedCost, runStressTests,
  * DEFAULT_ESTIMATOR_INPUTS) has been removed. calcFullTotals is the

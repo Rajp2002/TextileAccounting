@@ -57,51 +57,7 @@ export async function getActiveOrders() {
 
 // ─── Write ─────────────────────────────────────────────────────────────────────
 
-export async function createFlatOrder(data: {
-    party_name: string
-    quality_label: string
-    warp_instruction?: string
-    weft_instruction?: string
-    notes?: string
-    total_target_meters: number
-    start_date: string
-    deadline: string
-}) {
-    const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
 
-    if (!data.party_name.trim()) return { error: 'Party name is required' }
-    if (!data.quality_label.trim()) return { error: 'Quality label is required' }
-    if (!data.total_target_meters || data.total_target_meters <= 0)
-        return { error: 'Target meters must be greater than 0' }
-    if (!data.deadline) return { error: 'Deadline is required' }
-
-    const { data: order, error } = await supabase
-        .from('orders')
-        .insert({
-            org_id: profile.org_id,
-            party_name: data.party_name.trim(),
-            quality_label: data.quality_label.trim(),
-            warp_instruction: data.warp_instruction?.trim() || null,
-            weft_instruction: data.weft_instruction?.trim() || null,
-            notes: data.notes?.trim() || null,
-            total_target_meters: data.total_target_meters,
-            start_date: data.start_date,
-            deadline: data.deadline,
-            status: 'active',
-        })
-        .select('id')
-        .single()
-
-    if (error) {
-        console.error('createFlatOrder error:', error)
-        return { error: 'Failed to create order. Please try again.' }
-    }
-
-    revalidatePath('/owner/orders')
-    revalidatePath('/owner/analytics')
-    return { success: true, orderId: order.id }
-}
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
     const { profile } = await requireRole(['owner'])

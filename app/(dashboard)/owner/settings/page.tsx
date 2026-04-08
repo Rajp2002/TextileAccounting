@@ -81,7 +81,7 @@ export default function SettingsPage() {
             const url = URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
-            a.download = `vastra-data-export-${new Date().toISOString().split('T')[0]}.json`
+            a.download = `loomi-data-export-${new Date().toISOString().split('T')[0]}.json`
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)
@@ -389,11 +389,11 @@ export default function SettingsPage() {
                     <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4 space-y-2">
                         <div className="space-y-1">
                             <p className="text-sm font-semibold text-gray-900">Grievance Officer</p>
-                            <p className="text-sm text-gray-600">Vastra Support Team</p>
+                            <p className="text-sm text-gray-600">Loomi Support Team</p>
                             <p className="text-sm text-gray-600">
                                 Email:{' '}
-                                <a href="mailto:privacy@vastra.app" className="text-emerald-700 hover:underline font-medium">
-                                    privacy@vastra.app
+                                <a href="mailto:privacy@loomi.app" className="text-emerald-700 hover:underline font-medium">
+                                    privacy@loomi.app
                                 </a>
                             </p>
                         </div>

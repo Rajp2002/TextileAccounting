@@ -29,9 +29,9 @@ export default function LandingHeader() {
                     <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                         <Link href="/" className="flex items-center gap-3 group">
                             <div className="relative h-10 w-10 md:h-12 md:w-12 group-hover:scale-105 transition-all duration-300">
-                                <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" priority />
+                                <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain" priority />
                             </div>
-                            <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">Vastra</span>
+                            <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">Loomi</span>
                         </Link>
 
                         {/* Desktop Nav */}
