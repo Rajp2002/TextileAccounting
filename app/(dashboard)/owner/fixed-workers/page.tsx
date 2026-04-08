@@ -330,9 +330,9 @@ export default function FixedWorkersPage() {
                                 <CardContent className="pt-0">
                                     <div className="divide-y">
                                         {workers.map(w => (
-                                            <div key={w.id} className="flex justify-between items-center py-3">
-                                                <div>
-                                                    <span className={cn('font-medium', !w.is_active && 'text-gray-400 line-through')}>
+                                            <div key={w.id} className="flex justify-between items-center py-3 gap-4">
+                                                <div className="min-w-0 flex-1">
+                                                    <span className={cn('font-medium truncate block', !w.is_active && 'text-gray-400 line-through')}>
                                                         {tl(w.name)}
                                                     </span>
                                                     {roleInfo.value === 'daily' && (
@@ -344,7 +344,7 @@ export default function FixedWorkersPage() {
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2 shrink-0">
                                                     <span className="text-sm font-semibold text-gray-700">
                                                         {formatINR(w.monthly_salary)}{t('common.per_month')}
                                                     </span>
@@ -382,9 +382,9 @@ export default function FixedWorkersPage() {
                                     <CardContent className="pt-0">
                                         <div className="divide-y">
                                             {workers.map(w => (
-                                                <div key={w.id} className="flex justify-between items-center py-3">
-                                                    <div>
-                                                        <span className={cn('font-medium', !w.is_active && 'text-gray-400 line-through')}>
+                                                <div key={w.id} className="flex justify-between items-center py-3 gap-4">
+                                                    <div className="min-w-0 flex-1">
+                                                        <span className={cn('font-medium truncate block', !w.is_active && 'text-gray-400 line-through')}>
                                                             {tl(w.name)}
                                                         </span>
                                                         {w.pf_esi_eligible && (

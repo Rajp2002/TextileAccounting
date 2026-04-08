@@ -257,7 +257,7 @@ function NumField({
 }) {
     return (
         <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">{label}</Label>
+            <Label className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">{label}</Label>
             <div className="relative group">
                 <Input
                     type="number"
@@ -693,7 +693,7 @@ export default function EstimatorClient({
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
                             <History className="h-3.5 w-3.5 text-slate-400" />
-                            <p className="text-[11px] uppercase tracking-widest text-slate-500 font-black">{t('estimator.templates.label')}</p>
+                            <p className="text-[11px] uppercase tracking-widest text-slate-500 font-bold">{t('estimator.templates.label')}</p>
                             <span className="ml-auto text-[10px] text-slate-400 font-medium">{t('estimator.templates.hint')}</span>
                         </div>
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
@@ -730,7 +730,7 @@ export default function EstimatorClient({
                     <CardContent className="p-5 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.order_basics.party')}</Label>
+                                <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.party')}</Label>
                                 <Input
                                     value={partyName}
                                     onChange={e => setPartyName(e.target.value)}
@@ -739,7 +739,7 @@ export default function EstimatorClient({
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.order_basics.quality_label')}</Label>
+                                <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.quality_label')}</Label>
                                 <Input
                                     value={qualityLabel}
                                     onChange={e => setQualityLabel(e.target.value)}
@@ -750,7 +750,7 @@ export default function EstimatorClient({
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.order_basics.warp_construction')}</Label>
+                                <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.warp_construction')}</Label>
                                 <Input
                                     value={warpInstruction}
                                     onChange={e => setWarpInstruction(e.target.value)}
@@ -759,7 +759,7 @@ export default function EstimatorClient({
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.order_basics.weft_construction')}</Label>
+                                <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.weft_construction')}</Label>
                                 <Input
                                     value={weftInstruction}
                                     onChange={e => setWeftInstruction(e.target.value)}

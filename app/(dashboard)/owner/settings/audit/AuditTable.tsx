@@ -213,13 +213,12 @@ export default function AuditTable() {
     return (
         <div className="space-y-4">
             {/* ── Filters ── */}
-            <div className="flex flex-wrap items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                <Tags className="h-4 w-4 text-gray-400 shrink-0" />
-
+            <div className="flex flex-wrap items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 mb-6">
+                {/* ── Category Filter ── */}
                 <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Category</span>
                     <Select value={categoryFilter} onValueChange={handleCategoryChange}>
-                        <SelectTrigger className="w-[190px] h-8 text-sm bg-white">
+                        <SelectTrigger className="w-[180px] h-8 text-sm bg-white">
                             <SelectValue placeholder="All Categories" />
                         </SelectTrigger>
                         <SelectContent>
@@ -241,12 +240,13 @@ export default function AuditTable() {
                     </Select>
                 </div>
 
-                <div className="h-4 w-px bg-gray-300" />
+                <div className="h-4 w-px bg-gray-300 hidden sm:block" />
 
+                {/* ── Action Filter ── */}
                 <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Action</span>
                     <Select value={actionFilter} onValueChange={handleActionChange}>
-                        <SelectTrigger className="w-[140px] h-8 text-sm bg-white">
+                        <SelectTrigger className="w-[130px] h-8 text-sm bg-white">
                             <SelectValue placeholder="All Actions" />
                         </SelectTrigger>
                         <SelectContent>
@@ -258,7 +258,7 @@ export default function AuditTable() {
                     </Select>
                 </div>
 
-                <div className="h-4 w-px bg-gray-300" />
+                <div className="h-4 w-px bg-gray-300 hidden sm:block" />
 
                 {/* ── Date Filter ── */}
                 <div className="flex items-center gap-2">

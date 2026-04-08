@@ -1,6 +1,5 @@
 import { formatMeters, formatRupees, formatPct, formatDate } from '@/lib/format'
 import { getSuratTodayString, getSuratYesterdayString } from '@/lib/time'
-import { Badge } from '@/components/ui/badge'
 import { useTranslation } from '@/lib/i18n/context'
 
 type KpiStripProps = {
@@ -21,98 +20,116 @@ type KpiStripProps = {
 }
 
 function efficiencyColor(pct: number | null): string {
-  if (pct === null) return 'text-secondary'    // no data yet
-  if (pct >= 95)    return 'text-success'       // green
-  if (pct >= 85)    return 'text-warning'       // amber
-  return 'text-danger'                          // red
+  if (pct === null) return 'text-muted-foreground'
+  if (pct >= 95)    return 'text-emerald-600 dark:text-emerald-400'
+  if (pct >= 85)    return 'text-amber-500 dark:text-amber-400'
+  return 'text-red-500 dark:text-red-400'
+}
+
+interface KpiCardProps {
+  label: string
+  value: string
+  sub?: string
+  accent?: string
+  dimmed?: boolean
+}
+
+function KpiCard({ label, value, sub, accent, dimmed }: KpiCardProps) {
+  return (
+    <div className="flex flex-col gap-1 min-w-0">
+      <span className="text-[11px] uppercase tracking-widest font-medium text-muted-foreground/70 truncate">
+        {label}
+      </span>
+      <div className={`text-xl font-semibold leading-tight tracking-tight truncate ${accent ?? 'text-foreground'} ${dimmed ? 'opacity-50' : ''}`}>
+        {value}
+        {sub && <span className="text-sm font-normal text-muted-foreground ml-1">{sub}</span>}
+      </div>
+    </div>
+  )
 }
 
 export function KpiStrip({ yesterday, today, isConnected = true, selectedDate }: KpiStripProps) {
   const { t } = useTranslation()
-  // Graceful empty states handling
   const yData = yesterday || { total_meters: null, piece_rate_wages: null, fixed_payroll: null, efficiency_pct: null }
   const tData = today || { total_meters: null, piece_rate_wages: null, active_machines: null, date: getSuratTodayString() }
-  
   const isHistorical = selectedDate && selectedDate !== getSuratTodayString()
 
+  const sectionLabel = isHistorical
+    ? `${t('kpi_strip.selected_date')} · ${formatDate(selectedDate)}`
+    : yesterday
+      ? `${t('kpi_strip.yesterday')} · ${formatDate(getSuratYesterdayString())}`
+      : t('kpi_strip.no_data')
+
   return (
-    <div className="flex flex-col rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-      {/* Historical OR Yesterday Row */}
-      <div className={`flex flex-col space-y-4 p-5 ${!isHistorical ? 'bg-muted/30 border-b border-border' : ''}`}>
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm text-foreground/80">
-            {isHistorical ? t('kpi_strip.selected_date') : t('kpi_strip.yesterday')} · {" "}
-            {isHistorical 
-              ? formatDate(selectedDate)
-              : yesterday 
-                ? formatDate(getSuratYesterdayString())
-                : t('kpi_strip.no_data')}
-          </h3>
-          <Badge variant="secondary" className="uppercase tracking-wider text-[10px] font-medium">{t('kpi_strip.finalized')}</Badge>
+    <div className="grid grid-cols-1 gap-3">
+
+      {/* ── Historical / Yesterday row ─────────────────── */}
+      <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+        {/* Row header */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/50">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+            {sectionLabel}
+          </span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 bg-muted px-2 py-0.5 rounded-full">
+            {t('kpi_strip.finalized')}
+          </span>
         </div>
-        <div className="grid grid-cols-4 gap-4">
-          <div>
-            <div className="text-2xl font-semibold">
-              {yData.total_meters !== null ? formatMeters(yData.total_meters) : '—'}
+
+        {/* KPI columns */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border/40">
+          {[
+            { label: t('kpi_strip.meters_produced'), value: yData.total_meters !== null ? formatMeters(yData.total_meters) : '—' },
+            { label: t('kpi_strip.floor_wages_today'), value: yData.piece_rate_wages !== null ? formatRupees(yData.piece_rate_wages) : '—' },
+            { label: t('kpi_strip.salary_burden_today'), value: yData.fixed_payroll !== null ? formatRupees(yData.fixed_payroll) : '—' },
+            {
+              label: t('kpi_strip.overall_efficiency'),
+              value: yData.efficiency_pct === null ? '—' : formatPct(yData.efficiency_pct),
+              accent: efficiencyColor(yData.efficiency_pct as number | null),
+            },
+          ].map(({ label, value, accent }) => (
+            <div key={label} className="bg-card px-5 py-4">
+              <KpiCard label={label} value={value ?? '—'} accent={accent} />
             </div>
-            <div className="text-sm text-muted-foreground mt-1">{t('kpi_strip.meters_produced')}</div>
-          </div>
-          <div>
-            <div className="text-2xl font-semibold">
-              {yData.piece_rate_wages !== null ? formatRupees(yData.piece_rate_wages) : '—'}
-            </div>
-            <div className="text-sm text-muted-foreground mt-1">{t('kpi_strip.floor_wages_today')}</div>
-          </div>
-          <div>
-            <div className="text-2xl font-semibold">
-              {yData.fixed_payroll !== null ? formatRupees(yData.fixed_payroll) : '—'}
-            </div>
-            <div className="text-sm text-muted-foreground mt-1">{t('kpi_strip.salary_burden_today')}</div>
-          </div>
-          <div>
-            <div className={`text-2xl font-semibold ${efficiencyColor(yData.efficiency_pct)}`}>
-              {yData.efficiency_pct === null ? '—' : formatPct(yData.efficiency_pct)}
-            </div>
-            <div className="text-sm text-muted-foreground mt-1">{t('kpi_strip.overall_efficiency')}</div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Today Row (Hidden in Historical View) */}
+      {/* ── Today (live) row ──────────────────────────── */}
       {!isHistorical && (
-        <div className="flex flex-col space-y-4 p-5">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm text-foreground/80">
+        <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+          {/* Row header */}
+          <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/50">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
               {t('kpi_strip.today')} · {formatDate(tData.date)}
-            </h3>
-            <Badge variant="outline" className="uppercase tracking-wider text-[10px] font-medium bg-success/10 text-success border-success/20 flex items-center gap-1.5">
-              {t('kpi_strip.live')}
-              {isConnected ? (
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
-                </span>
-              ) : (
-                <span className="relative flex h-2 w-2 inline-flex rounded-full bg-muted-foreground"></span>
-              )}
-            </Badge>
+            </span>
+            {/* Live pill */}
+            <span className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
+              isConnected
+                ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+                : 'text-muted-foreground bg-muted'
+            }`}>
+              {isConnected
+                ? <><span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" /></span>{t('kpi_strip.live')}</>
+                : t('kpi_strip.live')
+              }
+            </span>
           </div>
+
           {!today ? (
-            <div className="text-sm text-muted-foreground">{t('kpi_strip.no_logs_yet')}</div>
+            <div className="px-5 py-6 text-sm text-muted-foreground italic">
+              {t('kpi_strip.no_logs_yet')}
+            </div>
           ) : (
-            <div className="grid grid-cols-4 gap-4">
-              <div>
-                <div className="text-2xl font-semibold text-foreground">{tData.total_meters !== null ? formatMeters(tData.total_meters) : '—'}</div>
-                <div className="text-sm text-muted-foreground mt-1">{t('kpi_strip.meters_produced')}</div>
-              </div>
-              <div>
-                <div className="text-2xl font-semibold text-foreground">{tData.piece_rate_wages !== null ? formatRupees(tData.piece_rate_wages) : '—'} <span className="text-sm text-muted-foreground font-normal">{t('kpi_strip.est')}</span></div>
-                <div className="text-sm text-muted-foreground mt-1">{t('kpi_strip.floor_wages_today')}</div>
-              </div>
-              <div>
-                <div className="text-2xl font-semibold text-foreground">{tData.active_machines ?? '—'} <span className="text-sm font-normal text-muted-foreground">{t('kpi_strip.machines')}</span></div>
-                <div className="text-sm text-muted-foreground mt-1">{t('kpi_strip.machines_running')}</div>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-px bg-border/40">
+              {[
+                { label: t('kpi_strip.meters_produced'), value: tData.total_meters !== null ? formatMeters(tData.total_meters) : '—' },
+                { label: t('kpi_strip.floor_wages_today'), value: tData.piece_rate_wages !== null ? formatRupees(tData.piece_rate_wages) : '—', sub: t('kpi_strip.est') },
+                { label: t('kpi_strip.machines_running'), value: tData.active_machines !== null ? String(tData.active_machines) : '—', sub: t('kpi_strip.machines') },
+              ].map(({ label, value, sub }) => (
+                <div key={label} className="bg-card px-5 py-4">
+                  <KpiCard label={label} value={value ?? '—'} sub={sub} />
+                </div>
+              ))}
             </div>
           )}
         </div>

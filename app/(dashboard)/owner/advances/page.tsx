@@ -259,14 +259,14 @@ export default function AdvancesPage() {
                                                 : 'hover:bg-gray-50 text-gray-700'
                                         )}
                                     >
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">
                                                 {tl(w.name)[0]}
                                             </div>
-                                            <span>{tl(w.name)}</span>
+                                            <span className="truncate">{tl(w.name)}</span>
                                         </div>
                                         <span className={cn(
-                                            'text-[10px] px-1.5 py-0.5 rounded-full font-medium',
+                                            'text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ml-2',
                                             w.type === 'meter'
                                                 ? 'bg-indigo-50 text-indigo-600'
                                                 : 'bg-orange-50 text-orange-600'

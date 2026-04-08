@@ -134,12 +134,12 @@ function MachineRow({
 
     if (logMode) {
         return (
-            <div className="flex items-center gap-3 bg-slate-800/70 border border-slate-700/50 rounded-xl p-3">
+            <div className="flex items-center gap-3 bg-card border border-border bg-white shadow-sm rounded-xl p-3">
                 {/* Machine name */}
                 <div className="w-16 shrink-0">
-                    <p className="text-xs font-bold text-white truncate">{machine.name}</p>
+                    <p className="text-xs font-bold text-foreground truncate">{machine.name}</p>
                     {assignment?.worker_id && (
-                        <p className="text-[10px] text-slate-500 truncate">
+                        <p className="text-[10px] text-muted-foreground truncate">
                             {workers.find((w) => w.id === assignment.worker_id)?.name ?? '—'}
                         </p>
                     )}
@@ -148,7 +148,7 @@ function MachineRow({
                 {/* Order context */}
                 {selectedOrder && (
                     <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-slate-500 truncate">
+                        <p className="text-[10px] text-muted-foreground truncate">
                             {selectedOrder.quality_label ?? selectedOrder.party_name}
                         </p>
                     </div>
@@ -164,25 +164,25 @@ function MachineRow({
                             placeholder="0"
                             value={metersValue || ''}
                             onChange={(e) => onMetersChange(Number(e.target.value))}
-                            className="h-14 text-2xl font-black text-center font-mono bg-slate-900 border-slate-600 text-white focus:border-indigo-500"
+                            className="h-14 text-2xl font-black text-center font-mono bg-background border-border text-foreground focus:border-indigo-500"
                         />
-                        <span className="absolute right-2 bottom-1 text-[9px] text-slate-600">m</span>
+                        <span className="absolute right-2 bottom-1 text-[9px] text-muted-foreground">m</span>
                     </div>
                 </div>
                 {/* Rate display */}
                 <div className="w-14 text-right shrink-0">
-                    <p className="text-[10px] text-slate-500">Rate</p>
-                    <p className="text-xs font-mono font-bold text-slate-300">₹{rate}</p>
+                    <p className="text-[10px] text-muted-foreground">Rate</p>
+                    <p className="text-xs font-mono font-bold text-foreground">₹{rate}</p>
                 </div>
             </div>
         )
     }
 
     return (
-        <div className="bg-slate-800/70 border border-slate-700/50 rounded-xl p-3 space-y-2.5">
+        <div className="bg-card border border-border bg-white shadow-sm rounded-xl p-3 space-y-2.5">
             {/* Machine name */}
             <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-white">{machine.name}</p>
+                <p className="text-sm font-bold text-foreground">{machine.name}</p>
                 {saved && (
                     <span className="text-[10px] text-emerald-400 flex items-center gap-1">
                         <Check className="h-3 w-3" /> Saved
@@ -192,19 +192,19 @@ function MachineRow({
 
             {/* Worker select */}
             <div>
-                <Label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 block">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1 block">
                     Worker
                 </Label>
                 <Select value={workerId} onValueChange={setWorkerId}>
-                    <SelectTrigger className="h-11 bg-slate-900 border-slate-600 text-white text-sm">
+                    <SelectTrigger className="h-11 bg-background border-border text-foreground text-sm">
                         <SelectValue placeholder="Assign worker…" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700 text-white max-h-52">
+                    <SelectContent className="bg-background border-border text-foreground max-h-52">
                         {workers.map((w) => (
                             <SelectItem
                                 key={w.id}
                                 value={w.id.toString()}
-                                className="focus:bg-slate-700 focus:text-white"
+                                className="focus:bg-muted/50 focus:text-foreground"
                             >
                                 {w.name}
                             </SelectItem>
@@ -215,28 +215,28 @@ function MachineRow({
 
             {/* Order select */}
             <div>
-                <Label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1 block">
+                <Label className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-1 block">
                     Order
                 </Label>
                 <Select value={orderId} onValueChange={setOrderId}>
-                    <SelectTrigger className="h-11 bg-slate-900 border-slate-600 text-white text-sm">
+                    <SelectTrigger className="h-11 bg-background border-border text-foreground text-sm">
                         <SelectValue placeholder="Assign order…" />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-slate-700 text-white max-h-52">
+                    <SelectContent className="bg-background border-border text-foreground max-h-52">
                         {orders.map((o) => (
                             <SelectItem
                                 key={o.id}
                                 value={o.id}
-                                className="focus:bg-slate-700 focus:text-white"
+                                className="focus:bg-muted/50 focus:text-foreground"
                             >
                                 <span className="font-medium">{o.quality_label ?? 'Unnamed'}</span>
-                                <span className="text-slate-400 text-xs ml-1">— {o.party_name}</span>
+                                <span className="text-muted-foreground text-xs ml-1">— {o.party_name}</span>
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
                 {selectedOrder?.warp_instruction && (
-                    <p className="text-[10px] text-slate-500 font-mono mt-1">
+                    <p className="text-[10px] text-muted-foreground font-mono mt-1">
                         Warp: {selectedOrder.warp_instruction}
                         {selectedOrder.weft_instruction && (
                             <> · Weft: {selectedOrder.weft_instruction}</>
@@ -248,7 +248,7 @@ function MachineRow({
             {/* Rate + Save */}
             <div className="flex items-end gap-2">
                 <div className="flex-1 space-y-1">
-                    <Label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                    <Label className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
                         Rate (₹/m)
                     </Label>
                     <Input
@@ -256,7 +256,7 @@ function MachineRow({
                         step={0.05}
                         value={rate}
                         onChange={(e) => setRate(Number(e.target.value))}
-                        className="h-10 font-mono text-center bg-slate-900 border-slate-600 text-white text-sm"
+                        className="h-10 font-mono text-center bg-background border-border text-foreground text-sm"
                     />
                 </div>
                 <Button
@@ -348,30 +348,30 @@ function LogProductionSheet({
         <Sheet open={open} onOpenChange={onClose}>
             <SheetContent
                 side="bottom"
-                className="bg-slate-900 border-slate-700 text-white rounded-t-2xl max-h-[92vh] overflow-y-auto"
+                className="bg-background border-border text-foreground rounded-t-2xl max-h-[92vh] overflow-y-auto"
             >
                 <SheetHeader className="pb-3">
-                    <SheetTitle className="text-white flex items-center gap-2">
+                    <SheetTitle className="text-foreground flex items-center gap-2">
                         <ClipboardList className="h-5 w-5 text-indigo-400" />
                         Log Shift Production
                     </SheetTitle>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                         Enter meters produced per machine for the{' '}
-                        <span className="text-white font-bold">{shift}</span> shift on{' '}
-                        <span className="text-white font-bold">{format(new Date(date), 'dd MMM')}</span>
+                        <span className="text-foreground font-bold">{shift}</span> shift on{' '}
+                        <span className="text-foreground font-bold">{format(new Date(date), 'dd MMM')}</span>
                     </p>
                 </SheetHeader>
 
                 {/* Totals strip */}
                 {totalMeters > 0 && (
-                    <div className="flex gap-3 bg-slate-800 rounded-xl p-3 mb-4">
+                    <div className="flex gap-3 bg-muted rounded-xl p-3 mb-4">
                         <div className="flex-1 text-center">
-                            <p className="text-[10px] text-slate-500">Total Meters</p>
-                            <p className="text-xl font-black font-mono text-white">{totalMeters.toLocaleString('en-IN')}</p>
+                            <p className="text-[10px] text-muted-foreground">Total Meters</p>
+                            <p className="text-xl font-black font-mono text-foreground">{totalMeters.toLocaleString('en-IN')}</p>
                         </div>
-                        <div className="w-px bg-slate-700" />
+                        <div className="w-px bg-muted/50" />
                         <div className="flex-1 text-center">
-                            <p className="text-[10px] text-slate-500">Labor Liability</p>
+                            <p className="text-[10px] text-muted-foreground">Labor Liability</p>
                             <p className="text-xl font-black font-mono text-emerald-400">₹{totalWages.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
                         </div>
                     </div>
@@ -380,9 +380,9 @@ function LogProductionSheet({
                 <div className="space-y-2 pb-4">
                     {assignedMachines.length === 0 ? (
                         <div className="text-center py-10">
-                            <AlertCircle className="h-8 w-8 text-slate-600 mx-auto mb-2" />
-                            <p className="text-slate-500 text-sm">No machines assigned for this shift yet.</p>
-                            <p className="text-slate-600 text-xs">Go back and assign workers first.</p>
+                            <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-muted-foreground text-sm">No machines assigned for this shift yet.</p>
+                            <p className="text-muted-foreground text-xs">Go back and assign workers first.</p>
                         </div>
                     ) : (
                         assignedMachines.map((m) => {
@@ -409,7 +409,7 @@ function LogProductionSheet({
                 <SheetFooter className="gap-3 pt-2">
                     <Button
                         variant="outline"
-                        className="flex-1 border-slate-700 text-slate-400"
+                        className="flex-1 border-border text-muted-foreground"
                         onClick={onClose}
                     >
                         Cancel
@@ -512,15 +512,15 @@ export default function ShiftSetupPage() {
     const assignedCount = assignments.filter((a) => a.worker_id).length
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white">
+        <div className="overflow-x-hidden">
             {/* Header */}
-            <div className="sticky top-0 z-30 bg-slate-950/95 backdrop-blur border-b border-slate-800 px-4 py-3">
+            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border px-4 py-3">
                 <div className="max-w-2xl mx-auto space-y-3">
                     {/* Title + Copy */}
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-lg font-black text-white">Shift Setup</h1>
-                            <p className="text-xs text-slate-500">
+                            <h1 className="text-lg font-black text-foreground">Shift Setup</h1>
+                            <p className="text-xs text-muted-foreground">
                                 {assignedCount}/{machines.length} machines assigned
                             </p>
                         </div>
@@ -528,7 +528,7 @@ export default function ShiftSetupPage() {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-slate-700 text-slate-300 hover:text-white text-xs gap-1.5"
+                                className="border-border text-foreground hover:text-foreground text-xs gap-1.5"
                                 onClick={handleCopyPrevious}
                                 disabled={copying}
                             >
@@ -557,12 +557,12 @@ export default function ShiftSetupPage() {
                             type="date"
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
-                            className="flex-1 h-10 bg-slate-800 border-slate-700 text-white text-sm"
+                            className="flex-1 h-10 bg-muted border-border text-foreground text-sm"
                         />
                         <Button
                             variant={shift === 'day' ? 'default' : 'outline'}
                             size="sm"
-                            className={`h-10 gap-1.5 ${shift === 'day' ? 'bg-amber-500 hover:bg-amber-400 text-white border-none' : 'border-slate-700 text-slate-400'}`}
+                            className={`h-10 gap-1.5 ${shift === 'day' ? 'bg-amber-500 hover:bg-amber-400 text-foreground border-none' : 'border-border text-muted-foreground'}`}
                             onClick={() => setShift('day')}
                         >
                             <Sun className="h-3.5 w-3.5" /> Day
@@ -570,7 +570,7 @@ export default function ShiftSetupPage() {
                         <Button
                             variant={shift === 'night' ? 'default' : 'outline'}
                             size="sm"
-                            className={`h-10 gap-1.5 ${shift === 'night' ? 'bg-indigo-600 hover:bg-indigo-500 text-white border-none' : 'border-slate-700 text-slate-400'}`}
+                            className={`h-10 gap-1.5 ${shift === 'night' ? 'bg-indigo-600 hover:bg-indigo-500 text-foreground border-none' : 'border-border text-muted-foreground'}`}
                             onClick={() => setShift('night')}
                         >
                             <Moon className="h-3.5 w-3.5" /> Night
@@ -587,8 +587,8 @@ export default function ShiftSetupPage() {
                     </div>
                 ) : machines.length === 0 ? (
                     <div className="text-center py-20 space-y-2">
-                        <p className="text-slate-400">No active machines found.</p>
-                        <p className="text-slate-600 text-sm">Add machines in the owner dashboard first.</p>
+                        <p className="text-muted-foreground">No active machines found.</p>
+                        <p className="text-muted-foreground text-sm">Add machines in the owner dashboard first.</p>
                     </div>
                 ) : (
                     machines.map((machine) => {
