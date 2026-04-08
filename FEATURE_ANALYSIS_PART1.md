@@ -1,8 +1,8 @@
-# Vastra — Comprehensive Feature Analysis (Part 1 of 2)
+# Loomi — Comprehensive Feature Analysis (Part 1 of 2)
 
-> **Coverage**: Owner Dashboard & Analytics · Machine Management · Inventory & Yarn · Orders
+> **Coverage**: Owner Dashboard & Analytics · Machine Management · Lean Beam Tracking · Orders
 >
-> **Part 2 covers**: Production Logging · Payroll & Advances · Access Code Guard · Audit Trail · Safety Incidents · Estimator · WhatsApp Notifications · i18n & Transliteration
+> **Part 2 covers**: Production Logging · Payroll & Advances · Access Code Guard · Audit Trail · Estimator · WhatsApp Notifications · i18n & Transliteration
 
 ---
 
@@ -181,138 +181,50 @@ When a supervisor taps "Start Beam" on a machine:
 
 ---
 
-## Feature 3: Inventory & Yarn Management (`/owner/inventory`)
+## Feature 3: Lean Beam Tracking (Floor-Native)
 
 ### What It Does
-Inventory management tracks the complete lifecycle of yarn from receipt to fabric — covering Quality definitions (the fabric specification standard), Yarn Batch creation, beam linking, yield variance analysis, and batch closure with leakage detection.
+Loomi uses a streamlined **Beam Tracking** system integrated directly into the factory floor. Supervisors manage yarn supply inline while logging production, ensuring real-time yield tracking without a complex separate inventory module.
 
 ### Who Uses It
-- **Owner**: Full control — add/edit/delete qualities, add/close batches, review yield audit reports, settle or dismiss leakage alerts
-- **Supervisor**: Can add yarn batches, start beams, and mark batches as consumed
+- **Supervisor**: Primary user. Adds new beams as they arrive on the floor and links them to machines.
+- **Owner**: Read-only oversight via the Audit Log.
 
-### Sub-Feature 3A: Quality Definitions
+### Inputs (Add Beam Modal)
+Supervisors access this modal directly from the Production Entry screen.
 
-#### What It Stores
-A Quality is a fabric specification that becomes the "measuring stick" for yield expectations.
-
-| Field | Type | Purpose |
+| Field | Type | Validation |
 |---|---|---|
-| `name` | Text | Human label, e.g. "60g Georgette" |
-| `target_yield` | Decimal | Expected meters per kg of yarn (e.g. 9.5 m/kg) |
-| `avg_sale_price_per_m` | Decimal | Revenue used for monetary loss calculations |
-| `default_worker_rate_per_m` | Decimal | Base piece-rate for workers producing this quality |
+| `name` | Text | Unique identifier for the beam/batch |
+| `quality_id` | UUID | Must exist in org's qualities (auto-created via Estimator) |
+| `total_weight_kg` | Decimal | Required for yield audit |
 
-#### Inputs (Add/Edit Quality Form)
-All 4 fields required. Validated via Zod `QualitySchema` server-side before any DB operation.
+### The "Start Beam" Lifecycle
+1. **Unlinked State**: A beam exists in the "active" pool but is not yet assigned to a machine.
+2. **Linked State**: Supervisor calls `startBeam(batchId, machineId)`. This marks the beam as `current` on that specific loom.
+3. **Consumption**: When the beam runs out, the supervisor clicks "Mark Consumed", enters the `leftover_weight_kg`, and the beam is archived to the `consumed` state.
 
-#### Surat Templates
-Owner can click "Load Surat Templates" to pre-populate 5 common Surat fabric types:
-```
-60g Georgette    → 9.5 m/kg,  ₹25/m, ₹12/m worker rate
-Japan Satin      → 6.2 m/kg,  ₹45/m, ₹15/m worker rate
-Cotton 40s       → 4.5 m/kg,  ₹60/m, ₹18/m worker rate
-Micro Crepe      → 8.0 m/kg,  ₹35/m, ₹14/m worker rate
-Dani Georgette   → 10.5 m/kg, ₹22/m, ₹10/m worker rate
-```
-
-#### Rate Change Safety
-When `default_worker_rate_per_m` is edited:
-- The quality record is updated in the DB
-- **All existing production logs are NOT affected** — they store `worker_rate_snapshot` (the rate at log time)
-- **All future production logs** on batches of this quality will use the new rate (captured at INSERT time via the snapshot pattern)
-
-#### Deletion Guard
-`deleteQuality()` server action:
-1. Queries `yarn_batches` where `quality_id = id AND status = 'active'`
-2. If count > 0 → returns `{ error: 'Quality in use by active batches' }` (HTTP 200, no DB change)
-3. If count = 0 → proceeds with delete
-4. FK violation (consumed batches referencing this quality) → error code `23503` caught and returned as a user-friendly message
-
-### Sub-Feature 3B: Yarn Batch Lifecycle
-
-#### Lifecycle States
-```
-active  →  [closeYarnBatch()]  →  consumed
-consumed  →  [unconsumeBatchWithCode()]  →  active   (requires access code)
-```
-
-#### Add Yarn Batch
-**Inputs**: Batch name (text), Quality (select from org's quality list), Total weight in kg (decimal)  
-**Who**: Owner or Supervisor  
-**Server Action**: `addYarnBatch()` — inserts with `status: 'active'`, `org_id` from JWT
-
-#### Start Beam (Link Batch to Machine)
-**Server Action**: `startBeam(batchId, machineId)`  
-**Steps**:
-1. Fetches batch to confirm it belongs to this org and retrieves quality rate
-2. Unlinks any other active batch from this machine (`current_machine_id = null`)
-3. Sets `yarn_batches.current_machine_id = machineId` for the selected batch
-4. Production logs from this moment forward reference this batch
-
-#### Close Batch (Mark as Consumed)
-**Server Action**: `closeYarnBatch(batchId, leftoverWeightKg)`  
-**Inputs**: Batch ID, optional leftover weight (what remained on the beam, unrewound)  
-**Steps**:
-1. Calls `get_batch_yield_report` RPC to compute current efficiency variance
-2. If variance < −5% → sets `leakage_alert = true`, `audit_status = 'pending'`
-3. Updates batch: `status = 'consumed'`, `current_machine_id = null`, `leftover_weight_kg = X`
-4. **Fire-and-forget**: If leakage detected, calls `send-yield-alert` Edge Function → Owner gets WhatsApp notification
-
-#### Yield Audit Calculation
-```
-Net Usable Yarn = total_weight_kg - leftover_weight_kg
-Expected Meters = Net Usable Yarn × target_yield (from quality)
-Actual Meters   = SUM(production_logs.meters) where yarn_batch_id = this batch
-Actual Yield    = Actual Meters / Net Usable Yarn
-Variance %      = (Actual Yield - Expected Yield) / Expected Yield × 100
-
-< -5%  → LEAKAGE  (waste / theft)
-> +10% → PADDING  (over-reporting / misconfiguration)
-```
-
-#### Monetary Loss Formula
-```
-Loss = (Expected Meters − Actual Meters) × avg_sale_price_per_m
-```
-Calculated using `calculateMonetaryLoss()` from `lib/finance.ts` (Decimal.js, no floating-point errors).
-
-#### Leakage Alert Flow (UX)
-1. Supervisor closes batch → system computes variance
-2. If variance < -5%: batch card shows amber/red "Leakage Detected" badge
-3. Owner's WhatsApp receives a message: batch name, efficiency %, estimated loss in ₹
-4. In Inventory UI: Owner can tap "Settle Audit" (accept the loss, mark as `settled`) or "Dismiss" (false alarm, mark as `dismissed`)
-5. This calls `settle_batch_audit()` RPC
-
-#### Un-Consume Batch (Access Code Required)
-If a batch was closed in error:
-- Supervisor calls `unconsumeBatchWithCode(batchId, accessCode)`
-- Access code validated and consumed
-- Batch reverted to `status = 'active'`, `leakage_alert = false`, `audit_status = 'pending'`
-- Machine can be re-linked
-
-### Yield Audit Report Table
-Owner sees a table of all batches (active and consumed) with columns:
-- Batch Name · Quality · Weight (kg) · Leftover (kg) · Expected m · Actual m · Efficiency % · Variance Badge · Monetary Loss (₹) · Audit Status
+### Yield Audit (Automated)
+The system calculates real-time yield:
+`Actual Yield = Total Meters Produced on Beam / (Total Weight - Leftover Weight)`
+- This is audited against the **Target Yield** defined in the original Estimator Quote.
+- Significant deviations are flagged in the Owner Dashboard and Audit Log.
 
 ### Connections to Other Features
 | Connects To | How |
 |---|---|
-| **Machine Management** | Batch is linked to a machine; machine's "current beam" is derived from this |
-| **Production Logging** | Every log entry references the batch's machine; meters accumulate toward actual yield |
-| **Orders** | Quality is shared between batches and orders (same fabric standard) |
-| **Payroll** | `worker_rate_snapshot` is seeded from `qualities.default_worker_rate_per_m` at log time |
+| **Machine Management** | Machines are linked to active yarn beams |
+| **Production Logging** | Logs are tagged with the active `yarn_batch_id` for yield math |
+| **Owner Dashboard** | Yield performance is tracked centrally |
+| **Estimator** | Qualities used for beams are published from the Estimator |
 | **WhatsApp** | Batch closure with leakage fires `send-yield-alert` Edge Function |
-| **Estimator** | Estimator uses quality target yield as a baseline for cost projections |
-
----
 
 ## Feature 4: Orders Management (`/owner/analytics` + order actions)
 
-### What It Does
-Orders represent customer commitments — a party has ordered X meters of a specific quality by a specific deadline. The orders system tracks production progress in real-time, calculates pace/forecast, and allows machine assignment directly from the dashboard.
+Orders represent customer commitments derived from profitable quotes. Every order in Loomi must originate from the Estimator to ensure mathematical profit protection. The orders system tracks production progress in real-time, calculates pace/forecast, and allows machine assignment directly from the dashboard.
 
 ### Who Uses It
-- **Owner**: Full CRUD — create, edit, delete, assign machines
+- **Owner**: Management — publishes quotes to orders from the Estimator, edits deadlines, deletes orders, assigns machines
 - **Supervisor**: Read-only awareness via machine assignment (sees "Linked Order" on machine card); can link order to machine via `linkOrderToMachine()`
 
 ### Inputs (Create / Edit Order Form)
@@ -326,7 +238,7 @@ Orders represent customer commitments — a party has ordered X meters of a spec
 | `deadline` | Date | Must be ≥ start_date |
 | `status` | Enum | `active` \| `completed` \| `cancelled` |
 
-Validated via Zod `OrderSchema` server-side before upsert.
+Validated via Zod `OrderSchema` server-side before upsert. All new orders are generated via the `convertToOrder` flow in the Estimator to ensure wage and yarn constraints are locked in correctly.
 
 ### Order Progress Calculation
 The database maintains an `orders_with_progress` materialized view (or computed join) that tracks:
@@ -403,7 +315,7 @@ Each order card renders:
 ## Feature 5: Worker Management (`/supervisor/workers` + `/owner/analytics`)
 
 ### What It Does
-Vastra manages two types of workers:
+Loomi manages two types of workers:
 - **Piece-rate (Meter) Workers** — paid per meter woven; the vast majority of the factory floor
 - **Fixed (Salaried) Workers** — managers, security, admin; paid a monthly salary regardless of production
 
@@ -485,4 +397,4 @@ Owner can assign a WhatsApp number and language preference (`en`/`hi`/`gu`) to a
 
 ---
 
-*→ Continue in **FEATURE_ANALYSIS_PART2.md** for: Production Logging · Payroll & Advances · Access Code Guard · Audit Trail · Safety Incidents · Estimator · WhatsApp Pipeline · i18n*
+*→ Continue in **FEATURE_ANALYSIS_PART2.md** for: Production Logging · Payroll & Advances · Access Code Guard · Audit Trail · Estimator · WhatsApp Pipeline · i18n*

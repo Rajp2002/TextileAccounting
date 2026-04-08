@@ -1,6 +1,6 @@
 # Security Operations: Secret Rotation Workflow
 
-This document outlines the standard operating procedures (SOPs) for safely rotating critical secrets in the Textile SaaS (Vastra) production environment without causing application downtime.
+This document outlines the standard operating procedures (SOPs) for safely rotating critical secrets in the Textile SaaS (Loomi) production environment without causing application downtime.
 
 ## 1. Supabase JWT Secret Rotation
 

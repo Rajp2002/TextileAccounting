@@ -81,7 +81,7 @@
 
 ### 2.3 Supervisor Header & Navigation
 - [ ] Login as Supervisor. Verify the **sticky header** shows:
-  - Factory name (or "Vastra" fallback)
+  - Factory name (or "Loomi" fallback)
   - "Supervisor" badge in uppercase teal text
   - Language switcher dropdown
   - Logout button
@@ -95,32 +95,28 @@
 
 ### 3.1 Owner — Add Machine
 - [ ] Navigate to the **Machines** page as Owner.
-- [ ] Click **"Add Machine"**. Verify the dialog appears with "Machine Name" and "Rate per Meter (₹)" fields.
-- [ ] Enter a name (e.g., "Loom Test-A") and a rate (e.g., `2.50`). Click Save.
+- [ ] Click **"Add Machine"**. Verify the dialog appears with "Machine Name" field.
+- [ ] Enter a name (e.g., "Loom Test-A"). Click Save.
 - [ ] Verify a success toast ("Machine added successfully") and the new machine appears in the list.
-- [ ] Verify the rate is displayed correctly (₹2.50).
 
-### 3.2 Owner — Edit Machine Rate
-- [ ] On an existing machine, click to edit the rate. Change it (e.g., from ₹2.50 to ₹3.00).
-- [ ] Verify a success toast ("Rate updated") and the new rate persists after page refresh.
+### 3.2 Owner — Edit Machine
+- [ ] On an existing machine, click to edit. Change the name.
+- [ ] Verify a success toast ("Machine updated") and the new name persists after page refresh.
 
-### 3.3 Owner — Rename Machine
-- [ ] Rename an existing machine. Verify the new name persists.
-
-### 3.4 Owner — Deactivate Machine
+### 3.3 Owner — Deactivate Machine
 - [ ] Mark a machine as **inactive**. Verify it no longer appears in active assignment lists on the Supervisor dashboard.
 - [ ] Verify it still appears in historical production logs if it was used before.
 
-### 3.5 Owner — Delete Machine (Access Code Required)
+### 3.4 Owner — Delete Machine (Access Code Required)
 - [ ] Attempt to delete a machine. Verify the system prompts for a **6-character access code**.
 - [ ] Enter an **invalid code**. Verify it is rejected.
 - [ ] Generate a valid code from Settings. Enter it. Verify the machine is deleted with a success toast.
 
-### 3.6 Supervisor — View-Only Restrictions
+### 3.5 Supervisor — View-Only Restrictions
 - [ ] Login as Supervisor. Navigate to the Machines page.
 - [ ] Verify you can **see** machines and their names.
 - [ ] Verify there is **no** "Add Machine" button visible.
-- [ ] Verify there is **no** option to edit rates or delete machines.
+- [ ] Verify there is **no** option to edit or delete machines.
 - [ ] Verify worker-to-shift assignment dropdowns **are** visible and functional.
 
 ---
@@ -321,10 +317,16 @@
 - [ ] **2–3 orders**: Verify they display in a **grid** layout.
 - [ ] **4+ orders**: Verify the display switches to a **carousel** with scroll-snapping and navigation affordances.
 
-### 9.4 Create / Edit / Delete Order
-- [ ] Click **"Create New Order"**. Verify the dialog asks for: Party Name, Quality, Target (meters), Start Date, Deadline.
-- [ ] Fill in details and click **"Launch Order"**. Verify success toast and the new order appears.
-- [ ] Click **"Edit Order"** on an existing order. Modify values. Click **"Update Order"**. Verify changes persist.
+### 9.4 Estimator-to-Order Pipeline (Mandatory Conversion)
+- [ ] **Verify Manual Bypass Removal**: Ensure there is **no** "Create New Order" or "+" button that allows creating an order directly without a quote.
+- [ ] Navigate to **Estimator** (`/owner/estimator`).
+- [ ] Build a costing recipe: Enter PPI, Denier, Yarn Rate, and itemized Job-Work charges.
+- [ ] Verify the Landed Cost and Profit Simulator update in real-time.
+- [ ] Click **"Publish / Convert to Order"**.
+- [ ] Verify the Order dialog is pre-filled with the Estimator's quality specs and party name.
+- [ ] Click **"Launch Order"**. Verify success toast and the new order appears on the dashboard.
+- [ ] **Data Integrity**: Verify the new order inherits the exact `worker_rate` and `target_yield` calculated in the estimator.
+- [ ] Click **"Edit Order"** on an existing order. Modify deadline or party name. Click **"Update Order"**. Verify changes persist.
 - [ ] Click **"Delete Order"**. Verify the confirmation dialog appears. Confirm deletion. Verify the order is removed.
 
 ### 9.5 Order Machine Linking
@@ -447,58 +449,30 @@
 
 ---
 
-## 12. Inventory — Yarn & Qualities
+## 12. Lean Beam Tracking (Supervisor Floor)
 
-### 12.1 Page Load & Tabs
-- [ ] Navigate to **Inventory** as Owner. Verify two tabs: **"Batches (Beams)"** and **"Qualities"**.
+### 12.1 Add New Beam / Quality
+- [ ] Login as Supervisor. Navigate to **Production Entry** (`/supervisor/production`).
+- [ ] Click **"Add Beam"** in the header.
+- [ ] Verify the "Add New Beam" dialog appears.
+- [ ] Enter:
+  - **Beam Name**: "Test-Beam-101"
+  - **Quality**: Select an existing quality (e.g., "60g Georgette")
+  - **Initial Weight**: "150.00" kg
+- [ ] Click **"Confirm"**. Verify success toast and that the beam is now available for linking.
 
-### 12.2 Qualities — Add Quality
-- [ ] Switch to the **Qualities** tab. If empty, verify the empty state with "No Qualities Defined" and a "Load Surat Presets" button.
-- [ ] Click **"Load Surat Presets (Templates)"**. Verify preset qualities are loaded with a success toast.
-- [ ] Click **"Add Quality"**. Verify the form has: Fabric Name, Target Yield (m/kg), Avg Sale Price (₹/m), Worker Rate (₹/m).
-- [ ] Fill in details and save. Verify the new quality appears in the list.
-- [ ] Verify each quality card shows: name, target yield, estimated sale value, worker rate.
+### 12.2 Link Beam to Machine (Start Beam)
+- [ ] Find an active machine card with no "Active Beam".
+- [ ] Click **"Start Beam"**.
+- [ ] Select "Test-Beam-101" from the dropdown.
+- [ ] Click **"Link"**. Verify the machine card now shows the beam badge.
 
-### 12.3 Qualities — Validation
-- [ ] Try to save a quality without a name or target yield. Verify the save button is disabled.
-
-### 12.4 Yarn Batches — Add Batch
-- [ ] Switch to the **Batches** tab. Click **"Add Batch"**.
-- [ ] Verify the form requires: Batch Name, Quality (dropdown from defined qualities), Total Weight (kg).
-- [ ] If no qualities exist, verify the warning message: "Please add Qualities first."
-- [ ] Fill in details and save. Verify:
-  - Success toast ("Batch added successfully").
-  - The batch card appears with name, quality, weight, expected production (`weight × target_yield`), and status "active".
-
-### 12.5 Batch Cards — Detail Verification
-- [ ] Verify each batch card shows:
-  - Status badge (active = teal, consumed = gray).
-  - Quality name in indigo.
-  - Weight (kg) and Expected Production (meters).
-  - Current Machine Location (machine name or "Storage / Unassigned").
-- [ ] For **active** batches: Verify a "Mark Consumed (Audit)" button is visible.
-- [ ] For **consumed** batches: Verify a "View Final Audit" button is visible.
-
-### 12.6 Batch Audit Report
-- [ ] Click **"Mark Consumed (Audit)"** on an active batch with production data.
-- [ ] Verify the **Audit Report** modal opens with:
-  - Quality, Input Weight, Target Yield, Actual Yield.
-  - **Production vs Expected** progress bar comparison.
-  - **Efficiency Variance** percentage.
-- [ ] If variance < −5%: Verify the **"Significant Leakage Detected"** red alert appears with Estimated Monetary Loss.
-- [ ] If variance > +10%: Verify the **"Abnormal Over-Production"** amber alert appears.
-- [ ] If the batch is still active: Verify the **"Leftover Yarn? (Tali)"** input is shown for leftover weight.
-
-### 12.7 Close Batch
-- [ ] Enter a leftover yarn weight (e.g., `2.5` kg) in the Tali field.
-- [ ] Click **"Mark as Consumed (Close Batch)"**. Verify:
-  - Success toast ("Batch successfully closed and audited.").
-  - The batch card status changes from "active" to "consumed."
-  - The "Mark Consumed" button is replaced by "View Final Audit."
-
-### 12.8 Real-Time Updates
-- [ ] While on the Inventory page, have a Supervisor log production on a machine linked to a batch.
-- [ ] Verify the batch data updates automatically (real-time listener) without needing a page refresh.
+### 12.3 Beam Consumption & Yield Audit
+- [ ] On a machine with an active beam, click the **"Mark Consumed"** button.
+- [ ] Enter **Leftover Weight**: "2.00" kg.
+- [ ] Click **"Mark Consumed"**.
+- [ ] **Audit Check**: Login as Owner. Verify the **Audit Log** shows the "Batch Consumed" event with actual yield calculations.
+- [ ] **Data Check**: Verify the `Actual Yield` matches `Meters / (150.00 - 2.00)`.
 
 ---
 
