@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/app/(auth)/actions'
@@ -8,6 +7,7 @@ import Image from 'next/image'
 import LogoutButton from '@/components/auth/logout-button'
 import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 import { requireRole } from '@/lib/auth'
+import { PwaSessionGuard } from '@/components/pwa-session-guard'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
     // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs
@@ -28,6 +28,9 @@ export default async function SupervisorLayout({ children }: { children: React.R
 
     return (
         <div className="min-h-screen bg-background bg-grid-pattern overflow-x-hidden">
+            {/* Signs out stale sessions when the PWA is killed from multitasking */}
+            <PwaSessionGuard />
+
             <header className="bg-background shadow-sm border-b border-border sticky top-0 z-30">
                 <div className="px-4 py-3 flex justify-between items-center max-w-5xl mx-auto">
                     <div className="flex items-center gap-3">
