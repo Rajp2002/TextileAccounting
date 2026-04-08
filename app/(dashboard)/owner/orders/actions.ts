@@ -8,7 +8,7 @@ import { revalidatePath } from 'next/cache'
 
 export type OrderStatus = 'active' | 'completed' | 'cancelled'
 
-export interface FlatOrder {
+export interface OrderSummary {
     id: string
     party_name: string
     quality_label: string | null

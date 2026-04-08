@@ -147,7 +147,7 @@ export default function TermsOfServicePage() {
                             Loomi provides software tools to assist with factory management and calculation. However, <strong>Loomi is NOT a legal, HR, or compliance advisor.</strong> You, as the factory owner, are solely responsible for ensuring that your factory complies with all applicable local, state, and central labor laws, including but not limited to the Occupational Safety, Health and Working Conditions Code (OSHWC), the Employees' Provident Funds and Miscellaneous Provisions Act, the Employees' State Insurance Act, and the Code on Wages.
                         </p>
                         <p className="text-sm text-red-800">
-                            <strong>We accept zero liability</strong> for any statutory fines, penalties, labor disputes, unpaid wages, or compensation claims resulting from data entered into Loomi, algorithmic output, or your use (or misuse) of the platform. The platform's fields for ESI, PF, and OSHWC incident tracking are provided for your administrative convenience only and do not guarantee legal compliance.
+                            <strong>We accept zero liability</strong> for any statutory fines, penalties, labor disputes, unpaid wages, or compensation claims resulting from data entered into Loomi, algorithmic output, or your use (or misuse) of the platform. The platform's fields for ESI and PF tracking are provided for your administrative convenience only and do not guarantee legal compliance.
                         </p>
                     </div>
 

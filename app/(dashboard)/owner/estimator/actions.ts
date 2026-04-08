@@ -341,7 +341,7 @@ export async function convertQuoteToOrder(data: {
             * (data.estimate.perPickCostPaisa ?? 0)
     }
 
-    // 3. Create the flat order
+    // 3. Create the order
     const { data: order, error } = await supabase
         .from('orders')
         .insert({
