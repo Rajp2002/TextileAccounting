@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { OwnerSidebar } from '@/components/navigation/owner-sidebar'
 import { requireRole } from '@/lib/auth'
+import { PwaSessionGuard } from '@/components/pwa-session-guard'
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
     // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs
@@ -24,6 +24,9 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
 
     return (
         <div className="min-h-screen bg-background bg-grid-pattern overflow-x-hidden">
+            {/* Signs out stale sessions when the PWA is killed from multitasking */}
+            <PwaSessionGuard />
+
             <OwnerSidebar
                 factoryName={factoryName}
                 userName={userFullName || undefined}

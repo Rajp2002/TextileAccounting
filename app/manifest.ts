@@ -5,11 +5,15 @@ export default function manifest(): MetadataRoute.Manifest {
         name: 'Loomi — Production Management',
         short_name: 'Loomi',
         description: 'Track production, manage workers, and automate daily briefs.',
-        start_url: '/',
+        // Start directly at /login so cold PWA opens skip the middleware
+        // auth-check → redirect chain (saves 3+ sequential server round-trips).
+        start_url: '/login',
+        scope: '/',
         display: 'standalone',
-        background_color: '#fafaf9', // bg-stone-50 tone
+        // Warm brand color painted by the OS before JS loads — eliminates black flash.
+        background_color: '#c2410c',
         orientation: 'portrait',
-        theme_color: '#b45309', // amber-700 / terracotta primary
+        theme_color: '#c2410c',
         icons: [
             {
                 src: '/icon-192x192.png',
