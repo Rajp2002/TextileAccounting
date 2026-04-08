@@ -160,35 +160,36 @@ export default function SettingsPage() {
                         <Label>Factory join code</Label>
                         {/* Code display + actions */}
                         <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 space-y-3">
-                            <div className="flex items-center gap-3">
-                                <p className="flex-1 font-mono font-bold tracking-[0.25em] text-2xl text-blue-900">
+                            <div className="flex flex-wrap items-center gap-3">
+                                <p className="flex-1 min-w-[140px] font-mono font-bold tracking-[0.25em] text-2xl text-blue-900 truncate">
                                     {org?.join_code || '—'}
                                 </p>
-                                <Button
-                                    id="copy-join-code-btn"
-                                    variant="outline"
-                                    size="sm"
-                                    className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-100"
-                                    onClick={() => {
-                                        if (org?.join_code) {
-                                            navigator.clipboard.writeText(org.join_code)
-                                            toast.success('Join code copied!')
-                                        }
-                                    }}
-                                >
-                                    <Copy className="h-3.5 w-3.5" /> Copy
-                                </Button>
-                                <Dialog open={regenerateDialogOpen} onOpenChange={setRegenerateDialogOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button
-                                            id="regenerate-join-code-btn"
-                                            variant="outline"
-                                            size="sm"
-                                            className="gap-1.5 border-orange-300 text-orange-700 hover:bg-orange-50"
-                                        >
-                                            <RefreshCw className="h-3.5 w-3.5" /> Regenerate
-                                        </Button>
-                                    </DialogTrigger>
+                                <div className="flex items-center gap-2 ml-auto shrink-0">
+                                    <Button
+                                        id="copy-join-code-btn"
+                                        variant="outline"
+                                        size="sm"
+                                        className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-100"
+                                        onClick={() => {
+                                            if (org?.join_code) {
+                                                navigator.clipboard.writeText(org.join_code)
+                                                toast.success('Join code copied!')
+                                            }
+                                        }}
+                                    >
+                                        <Copy className="h-3.5 w-3.5" /> Copy
+                                    </Button>
+                                    <Dialog open={regenerateDialogOpen} onOpenChange={setRegenerateDialogOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button
+                                                id="regenerate-join-code-btn"
+                                                variant="outline"
+                                                size="sm"
+                                                className="gap-1.5 border-orange-300 text-orange-700 hover:bg-orange-50"
+                                            >
+                                                <RefreshCw className="h-3.5 w-3.5" /> Regenerate
+                                            </Button>
+                                        </DialogTrigger>
                                     <DialogContent className="sm:max-w-[420px]">
                                         <DialogHeader>
                                             <DialogTitle className="flex items-center gap-2 text-orange-700">
@@ -217,7 +218,8 @@ export default function SettingsPage() {
                                             </Button>
                                         </DialogFooter>
                                     </DialogContent>
-                                </Dialog>
+                                    </Dialog>
+                                </div>
                             </div>
 
                             {/* Expiry date */}

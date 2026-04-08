@@ -4,21 +4,23 @@ import { useState } from 'react'
 import { WorkerBreakdownEntry } from '../../actions/dashboard'
 import { formatMeters, formatRupees, formatDate } from '@/lib/format'
 import { transliterate } from '@/lib/transliterate'
-import { ChevronRight, ChevronDown, Lock } from 'lucide-react'
+import { ChevronRight, ChevronDown, Lock, Users } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
-
-// Removes the old mock hook
+import { motion, AnimatePresence } from 'framer-motion'
 
 export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] | null }) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const { language, t } = useTranslation() 
+  const { language, t } = useTranslation()
 
   if (!entries || entries.length === 0) {
     return (
       <section>
-        <h2 className="text-xl font-bold mb-4 text-foreground/80 font-heading">{t('worker.title')}</h2>
-        <div className="bg-card border border-border shadow-sm rounded-xl p-8 text-center bg-muted/5">
-          <p className="text-muted-foreground/60 font-medium italic">{t('worker.no_logs')}</p>
+        <div className="flex items-center gap-2 mb-3">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-foreground">{t('worker.title')}</h2>
+        </div>
+        <div className="bg-card border border-border rounded-2xl shadow-sm p-8 text-center">
+          <p className="text-sm text-muted-foreground italic">{t('worker.no_logs')}</p>
         </div>
       </section>
     )
@@ -33,64 +35,98 @@ export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] |
 
   return (
     <section>
-      <h2 className="text-xl font-bold mb-4">{t('worker.title')}</h2>
-      <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
+      <div className="flex items-center gap-2 mb-3">
+        <Users className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-semibold text-foreground">{t('worker.title')}</h2>
+        <span className="text-xs text-muted-foreground">({entries.length})</span>
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+        {/* Table header */}
+        <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2.5 border-b border-border/50 bg-muted/30">
+          <span className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/60">Worker</span>
+          <span className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/60 text-right w-20">Output</span>
+          <span className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/60 text-right w-24">Wages</span>
+        </div>
+
         {entries.map((w, index) => {
           const isExpanded = expanded.has(w.worker_id)
+
           return (
-            <div key={w.worker_id} className={`flex flex-col ${index > 0 ? 'border-t border-border' : ''}`}>
-              <div 
-                className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/30 transition-colors"
+            <div key={w.worker_id} className={index > 0 ? 'border-t border-border/40' : ''}>
+              {/* Worker row */}
+              <button
+                className="w-full grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-3.5 items-center cursor-pointer hover:bg-muted/20 transition-colors text-left"
                 onClick={() => toggle(w.worker_id)}
+                aria-expanded={isExpanded}
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground shrink-0 w-5">
-                    {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-muted-foreground shrink-0 transition-transform">
+                    {isExpanded
+                      ? <ChevronDown size={15} className="text-primary" />
+                      : <ChevronRight size={15} />
+                    }
                   </span>
-                  <span className="font-semibold text-foreground">
+                  <span className="text-sm font-medium text-foreground truncate">
                     {transliterate(w.worker_name, language)}
                   </span>
                 </div>
-                <div className="flex items-center gap-6">
-                  <span className="text-muted-foreground w-20 text-right">
-                    {formatMeters(w.total_meters) ?? '—'}
-                  </span>
-                  <span className="font-semibold text-foreground w-24 text-right">
-                    {formatRupees(w.total_wages) ?? '—'}
-                  </span>
-                </div>
-              </div>
+                <span className="text-sm text-muted-foreground tabular-nums text-right w-20">
+                  {formatMeters(w.total_meters) ?? '—'}
+                </span>
+                <span className="text-sm font-semibold text-foreground tabular-nums text-right w-24">
+                  {formatRupees(w.total_wages) ?? '—'}
+                </span>
+              </button>
 
-              {isExpanded && (
-                <div className="bg-muted/10 p-4 pt-0">
-                  <div className="rounded border border-border bg-card overflow-hidden text-sm">
-                    {w.entries.map((entry: any, idx: number) => {
-                      const logDateFormatted = formatDate(entry.logged_at)
-                      return (
-                        <div key={idx} className={`grid grid-cols-4 gap-4 p-3 items-center ${idx > 0 ? 'border-t border-border' : ''}`}>
-                          <div className="font-medium text-foreground">
-                            {entry.machine_name} <span className="text-muted-foreground font-normal ml-1 capitalize text-xs">({entry.shift})</span>
-                          </div>
-                          <div className="text-right text-muted-foreground">
-                            {formatMeters(entry.meters) ?? '—'}
-                          </div>
-                          <div className="flex items-center justify-end gap-1 text-muted-foreground group relative cursor-help">
-                            {formatRupees(entry.rate) ?? '—'}/m
-                            <Lock size={12} className="text-warning ml-1 shrink-0" />
-                            {/* Tooltip implementation */}
-                            <div className="absolute bottom-full mb-2 right-0 hidden group-hover:block w-48 p-2 bg-popover text-popover-foreground text-xs rounded border shadow-md z-10">
-                              {t('worker.rate_locked_on').replace('{date}', logDateFormatted)}
+              {/* Expanded detail */}
+              <AnimatePresence initial={false}>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mx-4 mb-3 rounded-xl border border-border/60 overflow-hidden bg-muted/10">
+                      {/* Sub-header */}
+                      <div className="grid grid-cols-4 gap-3 px-4 py-2 bg-muted/30 border-b border-border/40">
+                        {['Machine', 'Output', 'Rate', 'Wages'].map(h => (
+                          <span key={h} className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/50 last:text-right">{h}</span>
+                        ))}
+                      </div>
+                      {w.entries.map((entry: any, idx: number) => {
+                        const logDateFormatted = formatDate(entry.logged_at)
+                        return (
+                          <div
+                            key={idx}
+                            className={`grid grid-cols-4 gap-3 px-4 py-3 items-center text-sm ${idx > 0 ? 'border-t border-border/30' : ''}`}
+                          >
+                            <div className="font-medium text-foreground truncate">
+                              {entry.machine_name}
+                              <span className="text-muted-foreground font-normal ml-1 text-xs capitalize">({entry.shift})</span>
+                            </div>
+                            <div className="text-right text-muted-foreground tabular-nums">
+                              {formatMeters(entry.meters) ?? '—'}
+                            </div>
+                            <div className="flex items-center justify-end gap-1 text-muted-foreground tabular-nums group relative cursor-help">
+                              {formatRupees(entry.rate) ?? '—'}/m
+                              <Lock size={10} className="text-amber-500 ml-0.5 shrink-0" />
+                              <div className="absolute bottom-full mb-2 right-0 hidden group-hover:block w-48 p-2 bg-popover text-popover-foreground text-xs rounded-xl border shadow-md z-10">
+                                {t('worker.rate_locked_on').replace('{date}', logDateFormatted)}
+                              </div>
+                            </div>
+                            <div className="text-right font-semibold text-foreground tabular-nums">
+                              {formatRupees(entry.wages) ?? '—'}
                             </div>
                           </div>
-                          <div className="text-right font-medium text-foreground">
-                            {formatRupees(entry.wages) ?? '—'}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
+                        )
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )
         })}

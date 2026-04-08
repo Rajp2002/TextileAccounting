@@ -13,7 +13,7 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
     return (
-        <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-amber-50 via-white to-orange-50 flex items-center justify-center p-4">
+        <div className="relative min-h-[100svh] w-full overflow-hidden bg-gradient-to-br from-amber-50 via-white to-orange-50 flex items-center justify-center p-4">
             {/* Decorative background elements */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-amber-400/10 blur-3xl" />

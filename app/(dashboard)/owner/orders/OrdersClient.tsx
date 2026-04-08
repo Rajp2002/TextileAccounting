@@ -354,16 +354,13 @@ function OrderDetailDrawer({
                         {/* Header */}
                         <div className="px-5 pt-5 pb-4 border-b border-border space-y-1 shrink-0">
                             <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0">
-                                    <p className="font-black text-lg text-slate-900 leading-tight truncate">
-                                        {order.display_quality_name ?? order.quality_label ?? 'Unnamed'}
-                                    </p>
-                                    <p className="text-sm text-slate-500 truncate">{order.party_name}</p>
+                                    <div className="min-w-0">
+                                        <p className="font-black text-lg text-slate-900 leading-tight truncate">
+                                            {order.display_quality_name ?? order.quality_label ?? 'Unnamed'}
+                                        </p>
+                                        <p className="text-sm text-slate-500 truncate">{order.party_name}</p>
+                                    </div>
                                 </div>
-                                <button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-colors shrink-0 mt-0.5">
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
 
                             {/* Warp / Weft spec badges */}
                             {(order.warp_instruction || order.weft_instruction) && (

@@ -47,7 +47,7 @@ export function SupervisorNav() {
                             key={item.name}
                             href={item.href}
                             className={cn(
-                                "flex-1 flex items-center justify-center gap-2 py-4 px-4 text-sm font-medium border-b-2 transition-colors min-w-[120px]",
+                                "flex-1 flex items-center justify-center gap-2 py-4 px-4 text-sm font-medium border-b-2 transition-colors min-w-0 sm:min-w-[120px]",
                                 isActive
                                     ? "border-primary text-primary bg-primary/10"
                                     : "border-transparent text-muted-foreground hover:text-foreground hover:bg-black/5 hover:border-border dark:hover:bg-white/5"
@@ -140,7 +140,7 @@ export function MobileSupervisorBottomNav() {
     return (
         <>
             {/* Mobile Bottom Navigation Bar */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border flex justify-around items-center z-50 px-2 pb-safe pt-2 shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)] min-h-[68px]">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border flex justify-around items-center z-50 px-2 pb-safe pt-[calc(0.5rem+env(safe-area-inset-top))] shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)] min-h-[68px]">
                 {primaryNavItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname.startsWith(item.href)

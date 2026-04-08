@@ -27,7 +27,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
     }
 
     return (
-        <div className="min-h-screen bg-background bg-grid-pattern">
+        <div className="min-h-screen bg-background bg-grid-pattern overflow-x-hidden">
             <header className="bg-background shadow-sm border-b border-border sticky top-0 z-30">
                 <div className="px-4 py-3 flex justify-between items-center max-w-5xl mx-auto">
                     <div className="flex items-center gap-3">
@@ -35,7 +35,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
                         <div className="relative h-10 w-10 shrink-0 rounded-lg overflow-hidden">
                             <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                             <h1 className="text-lg font-bold text-gray-900 leading-tight truncate max-w-[200px] sm:max-w-xs">{factoryName || "Vastra"}</h1>
                             <SupervisorRoleLabel />
                         </div>
