@@ -154,7 +154,7 @@ export function WhatsAppOptIn() {
 
                 {/* Legal disclaimer */}
                 <p className="text-xs text-gray-400 leading-relaxed border-t border-gray-100 pt-3">
-                    By saving, you agree to receive automated WhatsApp messages from Vastra about
+                    By saving, you agree to receive automated WhatsApp messages from Loomi about
                     your factory activity. Messages are sent only at scheduled times or when
                     critical events occur. Standard WhatsApp rates may apply.
                     You can opt out any time using the button above.

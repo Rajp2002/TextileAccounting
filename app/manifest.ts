@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'Vastra — Production Management',
-        short_name: 'Vastra',
+        name: 'Loomi — Production Management',
+        short_name: 'Loomi',
         description: 'Track production, manage workers, and automate daily briefs.',
         start_url: '/',
         display: 'standalone',

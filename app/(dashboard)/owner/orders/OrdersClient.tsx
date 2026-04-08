@@ -43,7 +43,6 @@ import { toast } from 'sonner'
 import { format, differenceInDays, addDays } from 'date-fns'
 import {
     getOrdersWithProgress,
-    createFlatOrder,
     updateOrderStatus,
     deleteOrder,
     getOrderWithQuote,
@@ -711,157 +710,13 @@ function KanbanColumn({
     )
 }
 
-// ─── New Order Sheet ──────────────────────────────────────────────────────────
-
-function NewOrderSheet({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
-    const [loading, setLoading] = useState(false)
-    const [partyName, setPartyName] = useState('')
-    const [qualityLabel, setQualityLabel] = useState('')
-    const [warpInstruction, setWarpInstruction] = useState('')
-    const [weftInstruction, setWeftInstruction] = useState('')
-    const [targetMeters, setTargetMeters] = useState(10000)
-    const [deadline, setDeadline] = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
-    const [showAdvanced, setShowAdvanced] = useState(false)
-
-    const handleCreate = async () => {
-        if (!partyName.trim()) return toast.error('Party name is required')
-        if (!qualityLabel.trim()) return toast.error('Quality label is required')
-        setLoading(true)
-        const res = await createFlatOrder({
-            party_name: partyName.trim(),
-            quality_label: qualityLabel.trim(),
-            warp_instruction: warpInstruction.trim() || undefined,
-            weft_instruction: weftInstruction.trim() || undefined,
-            total_target_meters: targetMeters,
-            start_date: new Date().toISOString().split('T')[0],
-            deadline,
-        })
-        setLoading(false)
-        if (res.success) {
-            toast.success('Order created!')
-            setPartyName(''); setQualityLabel(''); setWarpInstruction(''); setWeftInstruction('')
-            setTargetMeters(10000); setShowAdvanced(false)
-            onClose(); onCreated()
-        } else {
-            toast.error(res.error ?? 'Failed to create order')
-        }
-    }
-
-    return (
-        <Sheet open={open} onOpenChange={onClose}>
-            <SheetContent
-                side="right"
-                className="bg-card border-l border-border text-slate-900 w-full sm:max-w-md flex flex-col p-0 h-full"
-            >
-                <SheetHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
-                    <SheetTitle className="text-slate-900 flex items-center gap-2 text-xl font-black">
-                        <Package className="h-5 w-5 text-primary" />
-                        New Floor Order
-                    </SheetTitle>
-                    <p className="text-sm text-slate-500 mt-1">
-                        Or use <a href="/owner/estimator" className="text-primary hover:underline font-medium">Estimator</a> to generate a costed order
-                    </p>
-                </SheetHeader>
-
-                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-                    <div className="space-y-1.5">
-                        <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500">Party Name *</Label>
-                        <Input
-                            placeholder="e.g. Sundaram Textiles"
-                            value={partyName}
-                            onChange={(e) => setPartyName(e.target.value)}
-                            className="h-12 bg-white border-slate-200 text-slate-900"
-                            autoFocus
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500">Quality / Fabric Label *</Label>
-                        <Input
-                            placeholder="e.g. Japan Satin, Canvas Shine"
-                            value={qualityLabel}
-                            onChange={(e) => setQualityLabel(e.target.value)}
-                            className="h-12 bg-white border-slate-200 text-slate-900"
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500">Target Meters</Label>
-                            <Input
-                                type="number"
-                                value={targetMeters}
-                                onChange={(e) => setTargetMeters(Number(e.target.value))}
-                                className="h-12 font-mono font-bold text-center bg-white border-slate-200 text-slate-900"
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500 flex items-center gap-1">
-                                <Calendar className="h-3 w-3" /> Deadline
-                            </Label>
-                            <Input
-                                type="date"
-                                value={deadline}
-                                onChange={(e) => setDeadline(e.target.value)}
-                                className="h-12 bg-white border-slate-200 text-slate-900"
-                            />
-                        </div>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={() => setShowAdvanced(v => !v)}
-                        className="text-xs text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1 transition-colors"
-                    >
-                        {showAdvanced ? '▲ Hide' : '▼ Add'} warp / weft spec
-                    </button>
-                    {showAdvanced && (
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                                <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500">Warp Spec</Label>
-                                <Input
-                                    placeholder="50/48 + 70/36"
-                                    value={warpInstruction}
-                                    onChange={(e) => setWarpInstruction(e.target.value)}
-                                    className="h-11 bg-white border-slate-200 text-slate-900 text-sm font-mono"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[11px] uppercase tracking-widest font-bold text-slate-500">Weft Spec</Label>
-                                <Input
-                                    placeholder="50/48"
-                                    value={weftInstruction}
-                                    onChange={(e) => setWeftInstruction(e.target.value)}
-                                    className="h-11 bg-white border-slate-200 text-slate-900 text-sm font-mono"
-                                />
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <SheetFooter className="px-6 py-4 border-t border-border gap-3 shrink-0">
-                    <Button variant="outline" className="flex-1 border-slate-200 text-slate-600 hover:bg-slate-50" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button
-                        className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
-                        onClick={handleCreate}
-                        disabled={loading}
-                    >
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-                        Create Order
-                    </Button>
-                </SheetFooter>
-            </SheetContent>
-        </Sheet>
-    )
-}
-
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
     const { t } = useTranslation()
     const [loading, setLoading] = useState(false)
     const [orders, setOrders] = useState<any[]>(initialOrders)
-    const [showNewOrder, setShowNewOrder] = useState(false)
+
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
 
     const fetchOrders = useCallback(async () => {
@@ -935,13 +790,14 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                             {t('orders_page.estimator_btn')}
                         </Button>
                     </a>
-                    <Button
-                        className="bg-indigo-600 hover:bg-indigo-500 font-bold gap-2"
-                        onClick={() => setShowNewOrder(true)}
-                    >
-                        <Plus className="h-4 w-4" />
-                        {t('orders_page.new_order')}
-                    </Button>
+                    <a href="/owner/estimator">
+                        <Button
+                            className="bg-indigo-600 hover:bg-indigo-500 font-bold gap-2"
+                        >
+                            <Plus className="h-4 w-4" />
+                            {t('orders_page.new_order')}
+                        </Button>
+                    </a>
                 </div>
             </div>
 
@@ -957,13 +813,12 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                             </p>
                         </div>
                         <div className="flex items-center justify-center gap-3">
-                            <Button
-                                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-2"
-                                onClick={() => setShowNewOrder(true)}
-                            >
-                                <Plus className="h-4 w-4" />
-                                {t('orders_page.new_order')}
-                            </Button>
+                            <a href="/owner/estimator">
+                                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-2">
+                                    <Plus className="h-4 w-4" />
+                                    {t('orders_page.new_order')}
+                                </Button>
+                            </a>
                             <a href="/owner/estimator">
                                 <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50 font-bold gap-2">
                                     <Calculator className="h-4 w-4 text-primary" />
@@ -1034,12 +889,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                 )}
             </div>
 
-            {/* New Order Sheet */}
-            <NewOrderSheet
-                open={showNewOrder}
-                onClose={() => setShowNewOrder(false)}
-                onCreated={fetchOrders}
-            />
+
 
             {/* Order Detail Drawer */}
             <OrderDetailDrawer

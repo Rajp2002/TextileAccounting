@@ -30,7 +30,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                     <div className="p-8 pb-6 text-center">
                         {/* App Logo */}
                         <div className="mx-auto mb-6 h-20 w-20 relative flex items-center justify-center transform hover:scale-105 transition-transform">
-                            <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" priority />
+                            <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain" priority />
                         </div>
 
                         <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-2">
@@ -48,7 +48,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
 
                 {/* Footer links or branding */}
                 <div className="mt-6 text-center">
-                    <p className="text-xs text-gray-400 font-medium">Vastra &copy; {getSuratDate().getFullYear()}</p>
+                    <p className="text-xs text-gray-400 font-medium">Loomi &copy; {getSuratDate().getFullYear()}</p>
                 </div>
             </motion.div>
         </div>

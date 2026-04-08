@@ -50,12 +50,12 @@ export default function Home() {
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
           <div className="flex items-center gap-3 group cursor-pointer">
             <div className="relative h-12 w-12">
-              <Image src="/logo.png" alt="Vastra Logo" fill className="object-contain" />
+              <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-white">Vastra</span>
+            <span className="text-xl font-bold tracking-tight text-white">Loomi</span>
           </div>
           <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} Vastra. All rights reserved.
+            © {new Date().getFullYear()} Loomi. All rights reserved.
           </p>
           <div className="flex flex-wrap justify-center gap-6 sm:gap-8 text-sm font-medium text-gray-400">
             <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
