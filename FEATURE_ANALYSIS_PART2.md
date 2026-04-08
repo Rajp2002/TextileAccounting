@@ -1,8 +1,8 @@
-# Vastra — Comprehensive Feature Analysis (Part 2 of 2)
+# Loomi — Comprehensive Feature Analysis (Part 2 of 2)
 
-> **Coverage**: Production Logging · Payroll & Advances · Access Code Guard · Audit Trail · Safety Incidents · Estimator · WhatsApp Pipeline · i18n & Transliteration
+> **Coverage**: Production Logging · Payroll & Advances · Access Code Guard · Audit Trail · Estimator · WhatsApp Pipeline · i18n & Transliteration
 >
-> **Part 1 covers**: Owner Dashboard · Machine Management · Inventory & Yarn · Orders · Worker Management
+> **Part 1 covers**: Owner Dashboard · Machine Management · Lean Beam Tracking · Orders · Worker Management
 
 ---
 
@@ -380,7 +380,6 @@ PostgreSQL triggers on these tables fire on `INSERT`, `UPDATE`, and `DELETE`:
 - `yarn_batches`
 - `qualities`
 - `payroll_settlements`
-- `incidents`
 - `attendance`
 
 Each trigger writes to `audit_log`:
@@ -410,7 +409,7 @@ The UI parses `old_data` and `new_data` to show:
 
 ### Filtering & Navigation
 Owner can filter the audit log by:
-- **Event Category**: Production, Inventory, Workers, Machines, Payroll, Incidents
+- **Event Category**: Production, Inventory, Workers, Machines, Payroll
 - **Date Range**: From/To date picker
 - **Access Code Events**: Toggle to show only actions that required owner approval
 
@@ -440,10 +439,10 @@ Owner can filter the audit log by:
 
 ---
 
-## Feature 12: Vastra Estimator (`/owner/estimator`)
+## Feature 12: Loomi Estimator (`/owner/estimator`)
 
 ### What It Does
-A professional pre-production costing engine for negotiating order prices. The Owner inputs fabric technical specs, yarn costs, job-work charges, and factory overheads — the estimator computes the exact landed cost per meter, shows profit simulation, and can convert the quote into a live Production Order.
+The Loomi Estimator is the central gateway to the entire platform. It serves as a professional pre-production profit-guard, ensuring that every customer commitment is mathematically sound. The Owner inputs technical specs, yarn costs, and overheads; the estimator computes the landed cost per meter and allows for a one-click "Publish" to the live production floor.
 
 ### Who Uses It
 **Owner only.** Used before accepting a new party order to determine minimum viable price.
@@ -588,7 +587,7 @@ A complete push notification system delivering factory intelligence, financial d
 #### 2. `send-access-code`
 - **Trigger**: `generateAccessCode()` or `requestAccessCode()` server action (fire-and-forget)
 - **Payload**: `{ org_id, code, expires_at, requested_by? }`
-- **Message**: "Your Vastra access code is: [CODE]. Valid for 15 minutes. Requested by: [Supervisor Name]"
+- **Message**: "Your Loomi access code is: [CODE]. Valid for 15 minutes. Requested by: [Supervisor Name]"
 - **Recipient**: Owner
 
 #### 3. `send-payslip`
@@ -620,9 +619,6 @@ A complete push notification system delivering factory intelligence, financial d
 - **Message**: Month totals for meters, wages, active orders, efficiency
 - **Recipient**: Owner
 
-#### 8. `daily-brief` (older variant, deprecated in favour of `send-daily-brief`)
-- Retained for backward compatibility
-
 #### 9. `whatsapp-summary`
 - General WhatsApp summary utility used internally by other functions
 
@@ -651,7 +647,7 @@ Every outbound message creates a row in `whatsapp_delivery_log`:
 ```sql
 -- Stored in migration 20260401030000_pg_cron_schedule.sql
 SELECT cron.schedule(
-  'vastra-daily-brief',
+  'loomi-daily-brief',
   '30 14 * * *',   -- 14:30 UTC = 20:00 IST
   $$ SELECT net.http_post(
        url := supabase_url || '/functions/v1/send-daily-brief',
@@ -676,7 +672,7 @@ No external scheduler — the database drives its own notifications.
 ## Feature 14: i18n & Transliteration
 
 ### What It Does
-Vastra is fully multilingual (English, Hindi, Gujarati) with phonetic transliteration for worker names — ensuring that workers see their own names correctly in their native script without requiring manual dual entry.
+Loomi is fully multilingual (English, Hindi, Gujarati) with phonetic transliteration for worker names — ensuring that workers see their own names correctly in their native script without requiring manual dual entry.
 
 ### i18n System
 

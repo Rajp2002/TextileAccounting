@@ -1,4 +1,4 @@
-# Vastra — In-Depth Project Overview
+# Loomi — In-Depth Project Overview
 
 > **For new team members.** This document is your complete guide to understanding what we're building, why it matters, and exactly how every feature works. Read this top-to-bottom before your first commit.
 
@@ -17,7 +17,7 @@ Small-to-mid-sized textile mills in India bleed money in ways that are almost im
 - **Advance (Upaad) Chaos** — Workers frequently take cash advances. Without centralized tracking, owners lose money to unrecovered advances.
 - **Zero Real-Time Visibility** — Nothing stops a supervisor from retroactively inflating production unless the owner is physically present.
 
-**Vastra is a profit-saving platform built around a lean "Quote-to-Production" loop.** Every feature exists to help factory owners quote accurately, track live production seamlessly, and ensure payroll is auditable.
+**Loomi is a profit-saving platform built around a strict "Estimator-First" workflow.** Every feature exists to ensure that every meter produced is mathematically profitable from the moment it is quoted.
 
 ---
 
@@ -30,36 +30,35 @@ Data is strictly partitioned via PostgreSQL Row Level Security (RLS).
 
 | Role | Who they are | Primary Focus | Key Permissions |
 |---|---|---|---|
-| **Owner** | Factory proprietor | Strategy & Profits | All data, yield audits, payroll settlement, machine rates, access codes, analytics |
-| **Supervisor** | Floor manager | Daily Operations | Production logging, worker management, machine tracking, incident reporting |
+| **Owner** | Factory proprietor | Strategy & Profits | All data, yield audits, payroll settlement, access codes, analytics |
+| **Supervisor** | Floor manager | Daily Operations | Production logging, worker management, machine tracking, beam management |
 
 ### 2.2 Standard Time Engine (Surat Standard)
 To prevent server-client drift (e.g., UTC vs. IST), all date/time logic is centralized in `lib/time.ts` (Asia/Kolkata).
 
 ---
 
-## 3. The Core Loop: Quote to Production
+## 3. The Core Loop: Estimator to Production
 
-Vastra operates on a streamlined, output-driven architecture focused on getting factories up and running in minutes, bypassing legacy inventory bottlenecks.
+Loomi operates on a mandatory estimation-first architecture designed to protect factory margins by ensuring no production starts without a precise costing blueprint.
 
 ### 3.1 Frictionless Onboarding
 The onboarding flow is optimized for immediate value delivery:
 1. **Join & Verify Phone**: Fast organization setup with mandatory phone verification.
-2. **Minimal Setup**: To unlock the dashboard, a factory only needs to define at least one **Machine** and one **Worker**.
-3. **No Heavy Inventory**: Legacy requirements (complex quality definitions, yarn batch definitions) have been entirely removed to facilitate a rapid "Create First Order" workflow.
+3. **Data-Driven Onboarding**: To unlock the dashboard, a factory only needs to define at least one **Machine** and one **Worker**. All production is driven by the Estimator to ensure financial discipline and accurate yield tracking.
 
-### 3.2 The Estimator (Costing Engine)
-A professional multi-layered costing engine (`/owner/estimator`) that allows owners to quote orders precisely before a single meter is produced:
+### 3.2 The Estimator (The Gateway)
+A professional multi-layered costing engine (`/owner/estimator`) that serves as the entry point for all organizational activity:
 - **Surat-Standard Formulas**: Accurately calculates warping, sizing, winding, processing, and finishing costs using PPI-based weave formulas.
 - **Granular Overhead**: Replaces flat overheads with itemized fixed-salary and dynamic factory expense modeling.
 - **Margin Simulation**: Real-time margin slider to protect per-meter order profit mathematically.
 - **Template Persistence**: Costing recipes (JSON arrays) can be saved, edited, and instantly recalled.
 
-### 3.3 Seamless Order Conversion
-Once a quote looks profitable, it seamlessly translates into a **Live Order**:
-- **One-Click Convert**: Cost snapshots and structural recipes from the Estimator directly populate new Orders.
-- **Flat Order Architecture**: Direct mapping between an Order and its production output, skipping redundant inventory/beam abstractions.
-- **Inline Order Creation**: Super-fast "New Order" sheet accessible directly from the dashboard.
+### 3.3 Precise Order Conversion
+Once a quote is Accepted, it translates into a **Live Order**:
+- **Strict Lineage**: Every Order is "Published" from a finalized Estimator Quote, inheriting its cost snapshots and structural recipes.
+- **Profit Guardrails**: Direct mapping between an Order and its quote ensures that actual yield and wage costs are audited against the original projection.
+- **Rapid Launch**: One-click conversion from the Estimator dashboard bypasses manual order entry errors.
 
 ### 3.4 Machine Assignment & Production Logging
 Orders are then routed to the factory floor:
