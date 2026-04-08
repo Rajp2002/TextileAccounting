@@ -67,7 +67,7 @@ const CATEGORIES: Record<CategoryKey, CategoryConfig> = {
     },
     settings_security: {
         label: 'Settings & Profiles',
-        tables: ['profiles', 'incidents'],
+        tables: ['profiles'],
         color: 'text-amber-700',
         bgColor: 'bg-amber-50',
         borderColor: 'border-amber-200',
@@ -99,7 +99,6 @@ const TABLE_LABELS: Record<string, string> = {
     yarn_batches: 'Yarn Batch',
     qualities: 'Quality',
     profiles: 'User Profile',
-    incidents: 'Incident',
     factory_cost_profile: 'Factory Cost Profile',
     estimator_templates: 'Estimator Template',
     estimator_quotes: 'Quote',

@@ -48,7 +48,7 @@ const features = [
     },
     {
         name: 'Built-in Labour Law Compliance',
-        description: 'Automatically maintain digital wage registers, generate legally compliant worker payslips (PDF), track workplace safety incidents (OSHWC), and monitor minimum wage alerts—keeping your textile factory 100% compliant with the latest Gov. of India Labour Codes without any extra paperwork.',
+        description: 'Automatically maintain digital wage registers, generate legally compliant worker payslips (PDF), and monitor minimum wage alerts—keeping your textile factory 100% compliant with the latest Gov. of India Labour Codes without any extra paperwork.',
         icon: ShieldCheck,
         className: 'md:col-span-2 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 dark:from-yellow-500/5 dark:to-amber-500/5',
         iconBg: 'bg-gradient-to-br from-yellow-500 to-amber-500',
