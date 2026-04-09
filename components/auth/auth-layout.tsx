@@ -29,8 +29,8 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                 <div className="backdrop-blur-xl bg-white/70 border border-white/50 shadow-2xl rounded-2xl overflow-hidden">
                     <div className="p-8 pb-6 text-center">
                         {/* App Logo */}
-                        <div className="mx-auto mb-6 h-20 w-20 relative flex items-center justify-center transform hover:scale-105 transition-transform">
-                            <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain" priority />
+                        <div className="mx-auto mb-6 h-24 w-32 relative flex items-center justify-center transform hover:scale-105 transition-transform">
+                            <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" priority />
                         </div>
 
                         <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-2">

@@ -8,9 +8,12 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
+import LandingBackground from "@/components/landing/background";
+
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white dark:bg-zinc-950 font-sans selection:bg-indigo-500/30 pt-24">
+    <main className="min-h-screen bg-white dark:bg-zinc-950 font-sans selection:bg-indigo-500/30 pt-24 relative isolate">
+      <LandingBackground />
       <LandingHeader />
       <LandingHero />
       <LandingFeatures />
@@ -38,21 +41,15 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        {/* Subtle Background Glow */}
-        <div className="absolute -top-24 -right-24 -z-10 transform-gpu overflow-hidden blur-3xl" aria-hidden="true">
-          <div className="aspect-[1155/678] w-[36.125rem] bg-gradient-to-tr from-[#f59e0b] to-[#c2410c] opacity-20" />
-        </div>
       </section>
 
       {/* Upgraded Footer */}
       <footer className="bg-zinc-950 py-12 px-6 border-t border-white/10 text-white">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
-          <div className="flex items-center gap-2.5">
-            <div className="relative h-10 w-10">
-              <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain" />
+          <div className="flex items-center">
+            <div className="relative h-10 w-28">
+              <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" />
             </div>
-            <span className="text-lg font-semibold text-white">Loomi</span>
           </div>
           <p className="text-gray-400 text-sm">
             © {new Date().getFullYear()} Loomi. All rights reserved.
