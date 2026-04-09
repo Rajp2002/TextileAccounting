@@ -47,7 +47,7 @@ export default function Home() {
       <footer className="bg-zinc-950 py-12 px-6 border-t border-white/10 text-white">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
           <div className="flex items-center">
-            <div className="relative h-10 w-28">
+            <div className="relative h-14 w-36">
               <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" />
             </div>
           </div>

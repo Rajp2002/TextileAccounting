@@ -17,7 +17,7 @@ export default function TermsOfServicePage() {
             <header className="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
                 <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
-                        <div className="relative h-9 w-24">
+                        <div className="relative h-12 w-32">
                             <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" />
                         </div>
                     </Link>

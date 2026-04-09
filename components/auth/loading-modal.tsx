@@ -25,7 +25,7 @@ export default function LoadingModal({ isOpen, message = 'Loading...' }: Loading
                         exit={{ scale: 0.9, opacity: 0 }}
                         className="bg-white p-8 rounded-2xl shadow-2xl border border-amber-100 flex flex-col items-center max-w-xs w-full"
                     >
-                        <div className="relative h-16 w-24 mb-4">
+                        <div className="relative h-16 w-32 mb-4">
                             <Image
                                 src="/images/LoomiLogo.png"
                                 alt="Loomi Logo"

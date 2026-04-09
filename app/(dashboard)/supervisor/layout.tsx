@@ -35,7 +35,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
                 <div className="px-4 py-3 flex justify-between items-center max-w-5xl mx-auto">
                     <div className="flex items-center gap-3">
                         <MobileSupervisorNav />
-                        <div className="relative h-10 w-20 shrink-0 overflow-hidden">
+                        <div className="relative h-12 w-28 sm:w-36 shrink-0 overflow-hidden">
                             <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" />
                         </div>
                         <div className="min-w-0">
