@@ -56,8 +56,8 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
     return (
         <div className="flex flex-col h-full bg-sidebar">
             {/* Factory branding */}
-            <div className="px-4 py-4 border-b border-sidebar-border flex items-center">
-                <div className="relative h-16 w-24 shrink-0">
+            <div className="px-4 py-4 border-b border-sidebar-border flex items-center justify-center">
+                <div className="relative h-20 w-36 shrink-0">
                     <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" priority />
                 </div>
             </div>
@@ -178,7 +178,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
             {/* Mobile header bar */}
             <header className="md:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 py-2">
                 <div className="flex items-center">
-                    <div className="relative h-12 w-20 shrink-0">
+                    <div className="relative h-10 w-28 shrink-0">
                         <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" priority />
                     </div>
                 </div>
