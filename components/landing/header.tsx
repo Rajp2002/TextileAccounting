@@ -22,12 +22,11 @@ export default function LandingHeader() {
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="fixed top-0 left-0 right-0 z-50 px-4 py-4 sm:px-6 lg:px-8"
+            className="fixed top-0 left-0 right-0 z-50 border-b border-white/20 bg-white/70 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 transition-all dark:bg-zinc-950/70 dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]"
         >
             <div className="mx-auto max-w-7xl">
-                <div className="rounded-full border border-white/20 bg-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 transition-all dark:bg-zinc-950/60 dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
-                    <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-                        <Link href="/" className="flex items-center group">
+                <div className="flex items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+                    <Link href="/" className="flex items-center group">
                             <div className="relative h-8 w-24 sm:w-28 group-hover:opacity-80 transition-opacity duration-200">
                                 <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" priority />
                             </div>
@@ -76,7 +75,6 @@ export default function LandingHeader() {
                             </button>
                         </div>
                     </div>
-                </div>
 
                 {/* Mobile Menu */}
                 <AnimatePresence>
