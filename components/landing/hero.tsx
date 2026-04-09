@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-import { ArrowRight, PlayCircle } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 export default function LandingHero() {
     return (
@@ -34,8 +34,8 @@ export default function LandingHero() {
                 <rect width="100%" height="100%" strokeWidth={0} fill="url(#grid-pattern)" />
             </svg>
 
-            <div className="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:flex lg:px-8 lg:py-32 lg:items-center">
-                <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-xl lg:flex-shrink-0 lg:pt-8">
+            <div className="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:px-8 lg:py-32">
+                <div className="mx-auto max-w-3xl text-center">
                     <motion.div
                         initial="hidden"
                         animate="visible"
@@ -66,7 +66,7 @@ export default function LandingHero() {
 
                         <motion.p
                             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-                            className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300 max-w-lg"
+                            className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto"
                         >
                             Track production, manage workers, and automate daily reporting. The all-in-one SaaS platform built specifically for modern textile manufacturers.
                         </motion.p>
@@ -75,8 +75,8 @@ export default function LandingHero() {
                             variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
                             className="mt-10 space-y-4"
                         >
-                            {/* Two-path CTAs (F1 spec §6) */}
-                            <div className="flex flex-col sm:flex-row gap-3">
+                            {/* Two-path CTAs */}
+                            <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                 <Link href="/signup" className="flex-1 sm:flex-none">
                                     <Button
                                         id="hero-owner-signup-btn"
@@ -99,61 +99,14 @@ export default function LandingHero() {
                                     </Button>
                                 </Link>
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center justify-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                                 <p>Already have an account?{' '}
                                     <Link href="/login" className="text-amber-700 hover:underline font-medium dark:text-amber-500">
                                         Log in
                                     </Link>
                                 </p>
-                                <span className="hidden sm:inline text-gray-300 dark:text-zinc-700">•</span>
-                                <Link href="#demo" className="hidden sm:flex items-center gap-1.5 hover:text-gray-700 transition-colors group">
-                                    <PlayCircle className="h-4 w-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
-                                    Watch demo
-                                </Link>
                             </div>
                         </motion.div>
-                    </motion.div>
-                </div>
-
-                <div className="mt-10 w-full overflow-hidden sm:mt-16 lg:ml-10 lg:mt-0 lg:mr-0 lg:flex-none xl:ml-32">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 40 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{
-                            duration: 1,
-                            delay: 0.2,
-                            type: "spring",
-                            bounce: 0.2
-                        }}
-                        className="relative w-full lg:max-w-none"
-                    >
-                        {/* Glow Behind the Image */}
-                        <div className="absolute -inset-x-4 -inset-y-4 z-0 bg-gradient-to-tr from-amber-500/20 to-orange-500/20 blur-2xl rounded-[3rem] opacity-50 dark:opacity-40" />
-
-                        <div className="relative z-10 -m-2 rounded-2xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-[2rem] lg:p-4 dark:bg-white/5 dark:ring-white/10 backdrop-blur-sm">
-                            <motion.div
-                                animate={{ y: [0, -10, 0] }}
-                                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                                className="relative group overflow-hidden rounded-xl shadow-2xl ring-1 ring-gray-900/10 dark:ring-white/10"
-                            >
-                                <video
-                                    src="/videos/hero-tutorial.mov"
-                                    autoPlay
-                                    loop
-                                    muted
-                                    playsInline
-                                    className="w-full max-w-[76rem] object-cover transition-transform duration-500 group-hover:scale-[1.01]"
-                                >
-                                    Your browser does not support the video tag.
-                                </video>
-                                <div className="absolute inset-0 bg-black/5 pointer-events-none" />
-                                <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 flex items-center justify-between pointer-events-none">
-                                    <div className="px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-medium text-white tracking-wider uppercase">
-                                        Product Preview
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </div>
                     </motion.div>
                 </div>
             </div>

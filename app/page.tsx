@@ -1,4 +1,5 @@
 import LandingHeader from "@/components/landing/header";
+import LandingHero from "@/components/landing/hero";
 import LandingFeatures from "@/components/landing/features";
 import LandingPricing from "@/components/landing/pricing";
 import LandingFAQ from "@/components/landing/faq";
@@ -11,6 +12,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-white dark:bg-zinc-950 font-sans selection:bg-indigo-500/30 pt-24">
       <LandingHeader />
+      <LandingHero />
       <LandingFeatures />
       <LandingPricing />
       <LandingFAQ />
