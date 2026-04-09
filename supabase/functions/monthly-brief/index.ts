@@ -21,7 +21,7 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-const TEMPLATE_NAME = 'vastra_monthly_brief'
+const TEMPLATE_NAME = 'loomi_monthly_brief'
 
 // ─── Main Handler ──────────────────────────────────────────────
 

@@ -1,5 +1,4 @@
 import LandingHeader from "@/components/landing/header";
-import LandingHero from "@/components/landing/hero";
 import LandingFeatures from "@/components/landing/features";
 import LandingPricing from "@/components/landing/pricing";
 import LandingFAQ from "@/components/landing/faq";
@@ -10,9 +9,8 @@ import { ArrowRight } from 'lucide-react';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white dark:bg-zinc-950 font-sans selection:bg-indigo-500/30">
+    <main className="min-h-screen bg-white dark:bg-zinc-950 font-sans selection:bg-indigo-500/30 pt-24">
       <LandingHeader />
-      <LandingHero />
       <LandingFeatures />
       <LandingPricing />
       <LandingFAQ />
@@ -48,11 +46,10 @@ export default function Home() {
       {/* Upgraded Footer */}
       <footer className="bg-zinc-950 py-12 px-6 border-t border-white/10 text-white">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
-          <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="relative h-12 w-12">
+          <div className="flex items-center group cursor-pointer">
+            <div className="relative h-12 w-40">
               <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-white">Loomi</span>
           </div>
           <p className="text-gray-400 text-sm">
             © {new Date().getFullYear()} Loomi. All rights reserved.

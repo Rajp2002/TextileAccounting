@@ -6,7 +6,7 @@
 -- months (February is the shortest at 28 days).
 --
 -- Calls the monthly-brief Supabase Edge Function via http_post.
--- Auth uses service_role key (same pattern as vastra-daily-brief).
+-- Auth uses service_role key (same pattern as loomi-daily-brief).
 --
 -- PREREQUISITES: app.settings.supabase_url and
 --               app.settings.service_role_key must be set.
@@ -18,14 +18,14 @@ CREATE EXTENSION IF NOT EXISTS pg_net  WITH SCHEMA extensions;
 -- Remove if already exists (idempotent)
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'vastra-monthly-brief') THEN
-        PERFORM cron.unschedule('vastra-monthly-brief');
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'loomi-monthly-brief') THEN
+        PERFORM cron.unschedule('loomi-monthly-brief');
     END IF;
 END;
 $$;
 
 SELECT cron.schedule(
-    'vastra-monthly-brief',   -- job name
+    'loomi-monthly-brief',   -- job name
     '0 18 28 * *',            -- 18:00 UTC on the 28th of every month = 23:30 IST
     $$
     SELECT net.http_post(

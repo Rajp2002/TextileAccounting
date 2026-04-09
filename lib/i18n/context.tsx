@@ -25,7 +25,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setIsMounted(true)
-    const savedLang = localStorage.getItem("vastra_language") as Language
+    const savedLang = localStorage.getItem("loomi_language") as Language
     if (savedLang && ["en", "hi", "gu"].includes(savedLang)) {
       setLanguageState(savedLang)
     }
@@ -33,7 +33,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
-    localStorage.setItem("vastra_language", lang)
+    localStorage.setItem("loomi_language", lang)
   }
 
   const t = (key: string): string => {

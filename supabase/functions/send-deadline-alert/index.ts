@@ -1,6 +1,6 @@
 // ─── send-deadline-alert ──────────────────────────────────────────────────────
 // Event-driven: called from production log writes (via DailyEntry server action).
-// Checks order pace_index and fires vastra_deadline_risk with 24h cooldown per order.
+// Checks order pace_index and fires loomi_deadline_risk with 24h cooldown per order.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
@@ -9,7 +9,7 @@ import {
   makeCallbackData,
 } from "../_shared/interakt.ts";
 
-const TEMPLATE_NAME = "vastra_deadline_risk";
+const TEMPLATE_NAME = "loomi_deadline_risk";
 
 Deno.serve(async (req) => {
   try {
