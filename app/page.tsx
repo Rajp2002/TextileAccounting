@@ -12,37 +12,29 @@ import LandingBackground from "@/components/landing/background";
 
 export default function Home() {
   return (
-    <>
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          html {
-            scroll-snap-type: y mandatory;
-            scroll-behavior: smooth;
-          }
-        `
-      }} />
-      <main className="min-h-screen bg-white dark:bg-zinc-950 font-sans selection:bg-indigo-500/30 pt-24 relative isolate">
+    <main className="h-[100dvh] w-full overflow-y-auto overflow-x-hidden snap-y snap-mandatory bg-white dark:bg-zinc-950 font-sans selection:bg-indigo-500/30 scroll-smooth">
+      <div className="relative w-full min-h-max">
         <LandingBackground />
         <LandingHeader />
         
-        <div className="snap-start">
+        <div className="snap-start shrink-0">
           <LandingHero />
         </div>
         
-        <div className="snap-start">
+        <div className="snap-start shrink-0">
           <LandingFeatures />
         </div>
         
-        <div className="snap-start">
+        <div className="snap-start shrink-0">
           <LandingPricing />
         </div>
         
-        <div className="snap-start">
+        <div className="snap-start shrink-0">
           <LandingFAQ />
         </div>
 
         {/* Pre-footer CTA */}
-        <div className="snap-start">
+        <div className="snap-start shrink-0">
           <section className="relative isolate overflow-hidden bg-zinc-900 border-y border-white/10 mt-24">
             <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
               <div className="mx-auto max-w-2xl text-center">
@@ -67,7 +59,7 @@ export default function Home() {
         </div>
 
         {/* Upgraded Footer */}
-        <div className="snap-end">
+        <div className="snap-end shrink-0">
           <footer className="bg-zinc-950 py-12 px-6 border-t border-white/10 text-white">
             <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
               <div className="flex items-center">
@@ -86,7 +78,7 @@ export default function Home() {
             </div>
           </footer>
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }
