@@ -1,5 +1,5 @@
 -- ============================================================
--- MIGRATION: Vastra Estimator (Surat Logic)
+-- MIGRATION: Loomi Estimator (Surat Logic)
 -- ============================================================
 
 -- 1. ESTIMATOR SETTINGS: Factory-wide defaults

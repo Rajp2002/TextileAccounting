@@ -56,17 +56,9 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
     return (
         <div className="flex flex-col h-full bg-sidebar">
             {/* Factory branding */}
-            <div className="p-5 border-b border-sidebar-border flex items-center gap-3">
-                <div className="relative h-10 w-10 shrink-0">
-                    <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain" />
-                </div>
-                <div className="flex flex-col overflow-hidden">
-                    <h2 className="text-base font-semibold text-sidebar-foreground truncate">
-                        {factoryName || "Loomi"}
-                    </h2>
-                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
-                        {t('common.owner')} {t('common.panel')}
-                    </span>
+            <div className="p-5 border-b border-sidebar-border flex items-center justify-center">
+                <div className="relative h-12 w-full shrink-0">
+                    <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain" priority />
                 </div>
             </div>
 
@@ -186,19 +178,8 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
             {/* Mobile header bar */}
             <header className="md:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2.5">
-                    <div className="relative h-8 w-8 shrink-0 bg-primary/10 rounded-lg p-1">
-                        <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain p-1" />
-                    </div>
-                    <div className="flex flex-col">
-                        <h2 className="text-sm font-bold text-foreground leading-tight truncate max-w-[150px] sm:max-w-[180px]">
-                            {factoryName || "Loomi"}
-                        </h2>
-                        <div className="flex items-center gap-1.5">
-                            <span className="h-1 w-1 rounded-full bg-primary animate-pulse" />
-                            <span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground font-bold">
-                                {t('common.owner')} {t('common.panel')}
-                            </span>
-                        </div>
+                    <div className="relative h-10 w-32 shrink-0">
+                        <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain" priority />
                     </div>
                 </div>
 

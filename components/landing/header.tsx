@@ -27,11 +27,10 @@ export default function LandingHeader() {
             <div className="mx-auto max-w-7xl">
                 <div className="rounded-full border border-white/20 bg-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 transition-all dark:bg-zinc-950/60 dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
                     <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-                        <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative h-10 w-10 md:h-12 md:w-12 group-hover:scale-105 transition-all duration-300">
+                        <Link href="/" className="flex items-center group">
+                            <div className="relative h-12 w-40 group-hover:scale-105 transition-all duration-300">
                                 <Image src="/logo.png" alt="Loomi Logo" fill className="object-contain" priority />
                             </div>
-                            <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white transition-colors">Loomi</span>
                         </Link>
 
                         {/* Desktop Nav */}

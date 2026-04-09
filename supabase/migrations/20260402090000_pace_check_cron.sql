@@ -18,14 +18,14 @@ CREATE EXTENSION IF NOT EXISTS pg_net  WITH SCHEMA extensions;
 -- Remove if already exists (idempotent)
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'vastra-pace-check') THEN
-        PERFORM cron.unschedule('vastra-pace-check');
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'loomi-pace-check') THEN
+        PERFORM cron.unschedule('loomi-pace-check');
     END IF;
 END;
 $$;
 
 SELECT cron.schedule(
-    'vastra-pace-check',     -- job name
+    'loomi-pace-check',     -- job name
     '0 */6 * * *',           -- every 6 hours: 00:00, 06:00, 12:00, 18:00 UTC
     $$
     SELECT net.http_post(

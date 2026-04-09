@@ -11,7 +11,7 @@ import {
   makeCallbackData,
 } from "../_shared/interakt.ts";
 
-const TEMPLATE_NAME = "vastra_access_code";
+const TEMPLATE_NAME = "loomi_access_code";
 
 Deno.serve(async (req) => {
   try {

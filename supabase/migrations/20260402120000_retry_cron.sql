@@ -18,14 +18,14 @@ CREATE EXTENSION IF NOT EXISTS pg_net  WITH SCHEMA extensions;
 -- Remove if already exists (idempotent)
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'vastra-retry-failed-messages') THEN
-        PERFORM cron.unschedule('vastra-retry-failed-messages');
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'loomi-retry-failed-messages') THEN
+        PERFORM cron.unschedule('loomi-retry-failed-messages');
     END IF;
 END;
 $$;
 
 SELECT cron.schedule(
-    'vastra-retry-failed-messages',  -- job name
+    'loomi-retry-failed-messages',  -- job name
     '0 * * * *',                     -- top of every hour
     $$
     SELECT net.http_post(

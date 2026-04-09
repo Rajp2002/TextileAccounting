@@ -1,6 +1,6 @@
 // ─── send-daily-brief ─────────────────────────────────────────────────────────
 // Scheduled by pg_cron at 20:00 IST (14:30 UTC) daily.
-// Sends Vastra Daily Brief WhatsApp to all opted-in owners.
+// Sends Loomi Daily Brief WhatsApp to all opted-in owners.
 // Also checks active orders pace_index and sends deadline risk alerts.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -13,8 +13,8 @@ import {
   makeCallbackData,
 } from "../_shared/interakt.ts";
 
-const TEMPLATE_PIVOT_BRIEF = "vastra_daily_brief_v2";
-const TEMPLATE_DEADLINE = "vastra_deadline_risk";
+const TEMPLATE_PIVOT_BRIEF = "loomi_daily_brief_v2";
+const TEMPLATE_DEADLINE = "loomi_deadline_risk";
 
 Deno.serve(async (_req) => {
   try {
