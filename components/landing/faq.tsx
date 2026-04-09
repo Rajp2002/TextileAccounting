@@ -35,10 +35,7 @@ export default function LandingFAQ() {
     const [openIndex, setOpenIndex] = useState<number | null>(null)
 
     return (
-        <section className="bg-white py-16 sm:py-24 dark:bg-zinc-950 relative overflow-hidden" id="faq">
-            {/* Background Accent */}
-            <div className="absolute bottom-0 right-0 w-[40rem] h-[40rem] bg-amber-500/5 blur-[120px] rounded-full pointer-events-none translate-x-1/2 translate-y-1/2" />
-
+        <section className="py-16 sm:py-24 relative overflow-hidden" id="faq">
             <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
                 <div className="mx-auto max-w-2xl text-center">
                     <motion.div

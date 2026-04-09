@@ -3,6 +3,7 @@ import LandingHero from "@/components/landing/hero";
 import LandingFeatures from "@/components/landing/features";
 import LandingPricing from "@/components/landing/pricing";
 import LandingFAQ from "@/components/landing/faq";
+import LandingBackground from "@/components/landing/background";
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,8 @@ import { ArrowRight } from 'lucide-react';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white dark:bg-zinc-950 font-sans selection:bg-indigo-500/30 pt-24">
+    <main className="min-h-screen bg-white dark:bg-zinc-950 font-sans selection:bg-indigo-500/30 pt-24 relative isolate">
+      <LandingBackground />
       <LandingHeader />
       <LandingHero />
       <LandingFeatures />
@@ -37,11 +39,6 @@ export default function Home() {
               </Link>
             </div>
           </div>
-        </div>
-
-        {/* Subtle Background Glow */}
-        <div className="absolute -top-24 -right-24 -z-10 transform-gpu overflow-hidden blur-3xl" aria-hidden="true">
-          <div className="aspect-[1155/678] w-[36.125rem] bg-gradient-to-tr from-[#f59e0b] to-[#c2410c] opacity-20" />
         </div>
       </section>
 

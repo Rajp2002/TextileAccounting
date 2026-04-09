@@ -57,10 +57,7 @@ const features = [
 
 export default function LandingFeatures() {
     return (
-        <div className="bg-white py-16 sm:py-24 dark:bg-zinc-950 relative overflow-hidden" id="features">
-            {/* Background Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60rem] h-[60rem] bg-amber-500/10 dark:bg-amber-500/5 blur-[120px] rounded-full pointer-events-none" />
-
+        <div className="py-16 sm:py-24 relative overflow-hidden" id="features">
             <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
                 <div className="mx-auto max-w-2xl lg:text-center">
                     <motion.div
