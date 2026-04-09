@@ -60,11 +60,7 @@ const tiers = [
 
 export default function LandingPricing() {
     return (
-        <div className="bg-gray-50 dark:bg-zinc-900/50 py-16 sm:py-24 relative overflow-hidden" id="pricing">
-            {/* Background Glow */}
-            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-[50rem] h-[50rem] bg-amber-500/10 dark:bg-amber-500/5 blur-[120px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-[50rem] h-[50rem] bg-orange-500/10 dark:bg-orange-500/5 blur-[120px] rounded-full pointer-events-none" />
-
+        <div className="py-16 sm:py-24 relative overflow-hidden" id="pricing">
             <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
                 <div className="mx-auto max-w-4xl text-center">
                     <h2 className="text-base font-semibold leading-7 text-amber-700 dark:text-amber-500 tracking-widest uppercase">Pricing</h2>

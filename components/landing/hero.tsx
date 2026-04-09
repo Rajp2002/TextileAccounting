@@ -7,33 +7,7 @@ import { ArrowRight } from 'lucide-react'
 
 export default function LandingHero() {
     return (
-        <div className="relative isolate overflow-hidden bg-white dark:bg-zinc-950 pt-14">
-            {/* Animated Background Gradients */}
-            <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#f59e0b] to-[#c2410c] opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] dark:opacity-30"
-                    style={{
-                        clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)',
-                    }}
-                />
-            </div>
-
-            {/* Subtle Grid Pattern overlay */}
-            <svg
-                className="absolute inset-0 -z-10 h-full w-full stroke-gray-200/50 [mask-image:radial-gradient(100%_100%_at_top_center,white,transparent)] dark:stroke-zinc-800/50"
-                aria-hidden="true"
-            >
-                <defs>
-                    <pattern id="grid-pattern" width={40} height={40} x="50%" y={-1} patternUnits="userSpaceOnUse">
-                        <path d="M40 40V.5M.5 .5H40" fill="none" />
-                    </pattern>
-                </defs>
-                <rect width="100%" height="100%" strokeWidth={0} fill="url(#grid-pattern)" />
-            </svg>
-
+        <div className="relative isolate overflow-hidden pt-14">
             <div className="mx-auto max-w-7xl px-6 pb-24 pt-10 sm:pb-32 lg:px-8 lg:py-32">
                 <div className="mx-auto max-w-3xl text-center">
                     <motion.div
