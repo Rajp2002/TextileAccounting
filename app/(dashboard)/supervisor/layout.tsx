@@ -1,21 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
-import { Button } from '@/components/ui/button'
-import { signOut } from '@/app/(auth)/actions'
-import { OfflineSyncProvider } from '@/components/offline-sync-provider'
-import { SupervisorNav, MobileSupervisorNav, MobileSupervisorBottomNav, SupervisorRoleLabel } from '@/components/navigation/supervisor-nav'
-import Image from 'next/image'
-import LogoutButton from '@/components/auth/logout-button'
-import { LanguageSwitcher } from '@/components/i18n/language-switcher'
+import { SupervisorSidebar } from '@/components/navigation/supervisor-nav'
 import { requireRole } from '@/lib/auth'
 import { PwaSessionGuard } from '@/components/pwa-session-guard'
+import { OfflineSyncProvider } from '@/components/offline-sync-provider'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
     // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs
     const { profile } = await requireRole(['supervisor'])
-    const userRole = profile.role
     const userOrgId = profile.org_id
+    const userFullName = profile.full_name
 
-    let factoryName = 'Textile SaaS'
+    // Fetch factory name for the sidebar
+    let factoryName = 'Loomi'
     if (userOrgId) {
         const supabase = await createClient()
         const { data: org } = await supabase
@@ -31,35 +27,31 @@ export default async function SupervisorLayout({ children }: { children: React.R
             {/* Signs out stale sessions when the PWA is killed from multitasking */}
             <PwaSessionGuard />
 
-            <header className="bg-background shadow-sm border-b border-border sticky top-0 z-30">
-                <div className="px-4 py-3 flex justify-between items-center max-w-5xl mx-auto">
-                    <div className="flex items-center gap-3">
-                        <MobileSupervisorNav />
-                        <div className="relative h-12 w-28 sm:w-36 shrink-0 overflow-hidden">
-                            <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" />
-                        </div>
-                        <div className="min-w-0">
-                            <h1 className="text-lg font-bold text-gray-900 leading-tight truncate max-w-[200px] sm:max-w-xs">{factoryName || "Loomi"}</h1>
-                            <SupervisorRoleLabel />
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <LanguageSwitcher />
-                        <LogoutButton variant="header" />
-                    </div>
-                </div>
+            <SupervisorSidebar
+                factoryName={factoryName}
+                userName={userFullName || undefined}
+            />
 
-                <SupervisorNav />
-            </header>
-
-            <main className="max-w-5xl mx-auto p-4 pb-[72px] md:pb-6 md:p-6">
-                <OfflineSyncProvider>
-                    {children}
-                </OfflineSyncProvider>
-            </main>
-
-            {/* Mobile bottom navigation — supervisor primary tabs */}
-            <MobileSupervisorBottomNav />
+            {/*
+             * Content area
+             *
+             * md:pl-[260px]  — push content right of the persistent sidebar on desktop
+             *
+             * pb-[...]:      — bottom padding clears the mobile bottom nav bar.
+             *   calc(72px + env(safe-area-inset-bottom)) accounts for the iPhone
+             *   home indicator / Android gesture bar so no content is obscured.
+             *   On desktop (md:) this collapses to 0.
+             *
+             * px-safe        — side clearance for iPhone landscape where the
+             *   rounded screen corners / Dynamic Island eat into the sides.
+             */}
+            <div className="md:pl-[260px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0 px-safe md:px-0">
+                <main className="max-w-6xl mx-auto px-4 py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
+                    <OfflineSyncProvider>
+                        {children}
+                    </OfflineSyncProvider>
+                </main>
+            </div>
         </div>
     )
 }
