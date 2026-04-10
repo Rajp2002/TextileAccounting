@@ -12,7 +12,7 @@ import LandingBackground from "@/components/landing/background";
 
 export default function Home() {
   return (
-    <main className="h-[100dvh] w-full overflow-y-auto overflow-x-hidden snap-y snap-mandatory bg-white dark:bg-zinc-950 font-sans selection:bg-indigo-500/30 scroll-smooth">
+    <main className="h-[100dvh] w-full overflow-y-auto overflow-x-hidden snap-y snap-mandatory font-sans selection:bg-indigo-500/30 scroll-smooth">
       <div className="relative w-full min-h-max">
         <LandingBackground />
         <LandingHeader />
