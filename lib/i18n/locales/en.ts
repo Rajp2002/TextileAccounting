@@ -799,7 +799,9 @@ export const en = {
   },
   dashboard: {
     date: "Date",
-    reconnecting: "Attempting to reconnect live data..."
+    reconnecting: "Attempting to reconnect live data...",
+    connecting: "Connecting to live feed...",
+    sync_error: "Live updates paused (WiFi connected?)"
   },
   orders_page: {
     title: "Orders",
