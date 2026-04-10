@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
 import LandingBackground from "@/components/landing/background";
+import LandingFooter from "@/components/landing/footer";
 
 export default function Home() {
   return (
@@ -58,26 +59,7 @@ export default function Home() {
           </section>
         </div>
 
-        {/* Upgraded Footer */}
-        <div className="snap-end shrink-0">
-          <footer className="relative z-10 bg-zinc-950 py-12 px-6 border-t border-white/10 text-white">
-            <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
-              <div className="flex items-center">
-                <div className="relative h-14 w-36">
-                  <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" />
-                </div>
-              </div>
-              <p className="text-gray-400 text-sm">
-                © {new Date().getFullYear()} Loomi. All rights reserved.
-              </p>
-              <div className="flex flex-wrap justify-center gap-6 sm:gap-8 text-sm font-medium text-gray-400">
-                <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
-                <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
-                <a href="/refund-policy" className="hover:text-white transition-colors">Refund Policy</a>
-              </div>
-            </div>
-          </footer>
-        </div>
+        <LandingFooter />
       </div>
     </main>
   );

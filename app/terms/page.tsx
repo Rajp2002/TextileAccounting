@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
-
+import LandingFooter from "@/components/landing/footer"
 export const metadata: Metadata = {
     title: 'Terms of Service — Loomi',
     description: 'Terms and conditions governing your use of the Loomi textile production management platform.',
@@ -227,15 +227,7 @@ export default function TermsOfServicePage() {
             </div>
 
             {/* Footer */}
-            <footer className="mt-12 border-t border-gray-200/50 dark:border-white/10 bg-white/50 dark:bg-zinc-950/50 py-10 px-6 backdrop-blur-md">
-                <div className="mx-auto max-w-5xl flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
-                    <p>© {new Date().getFullYear()} Loomi. All rights reserved.</p>
-                    <div className="flex gap-8">
-                        <Link href="/privacy" className="hover:text-gray-900 dark:hover:text-white transition-colors">Privacy Policy</Link>
-                        <Link href="/refund-policy" className="hover:text-gray-900 dark:hover:text-white transition-colors">Refund Policy</Link>
-                    </div>
-                </div>
-            </footer>
+            <LandingFooter />
         </main>
     )
 }
