@@ -17,9 +17,10 @@ import { CalendarDays, Wifi, WifiOff } from 'lucide-react'
 
 export function DashboardClient({ initialData, orgId }: { initialData: DashboardData, orgId: string }) {
   const [data, setData] = useState(initialData)
-  const [isConnected, setIsConnected] = useState(true)
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
   const [selectedDate, setSelectedDate] = useState<string>(getSuratTodayString())
   const supabase = createClient()
+  const channelRef = useRef<any>(null)
   const debounceTimer = useRef<NodeJS.Timeout | null>(null)
   const { t } = useTranslation()
 
@@ -49,19 +50,31 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
       return
     }
 
+    const channelName = `org-${orgId || 'no-org'}-production-logs`
     const channel = supabase
-      .channel(`org-${orgId}-production-logs`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'production_logs' },
         handleRealtimeUpdate
       )
       .subscribe((status: string) => {
-        setIsConnected(status === 'SUBSCRIBED')
+        console.log(`[Dashboard] Realtime status for ${channelName}:`, status)
+        if (status === 'SUBSCRIBED') {
+          setConnectionStatus('connected')
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setConnectionStatus('error')
+        } else {
+          setConnectionStatus('connecting')
+        }
       })
 
+    channelRef.current = channel
+
     return () => {
-      supabase.removeChannel(channel)
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+      }
       if (debounceTimer.current) clearTimeout(debounceTimer.current)
     }
   }, [supabase, handleRealtimeUpdate, orgId, selectedDate])
@@ -107,11 +120,20 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
         {/* Date + connection status */}
         <div className="flex items-center gap-3">
           {isToday && (
-            <div className={`flex items-center gap-1.5 text-xs font-medium ${isConnected ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
-              {isConnected
-                ? <><span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" /></span> Live</>
-                : <><WifiOff className="h-3 w-3" /> {t('dashboard.reconnecting')}</>
-              }
+            <div className={`flex items-center gap-1.5 text-xs font-medium transition-colors duration-300 ${
+              connectionStatus === 'connected' ? 'text-emerald-600 dark:text-emerald-400' : 
+              connectionStatus === 'error' ? 'text-amber-600 dark:text-amber-400' :
+              'text-muted-foreground'
+            }`}>
+              {connectionStatus === 'connected' && (
+                <><span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" /></span> Live</>
+              )}
+              {connectionStatus === 'connecting' && (
+                <><span className="inline-block animate-pulse">●</span> {t('dashboard.connecting')}</>
+              )}
+              {connectionStatus === 'error' && (
+                <><WifiOff className="h-3 w-3" /> {t('dashboard.sync_error')}</>
+              )}
             </div>
           )}
           <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-1.5 shadow-sm">
@@ -129,7 +151,7 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
       </div>
 
       {/* KPI Strip */}
-      <KpiStrip yesterday={data.yesterday} today={data.today} isConnected={isConnected} selectedDate={selectedDate} />
+      <KpiStrip yesterday={data.yesterday} today={data.today} isConnected={connectionStatus === 'connected'} selectedDate={selectedDate} />
 
       {/* Yield Alert */}
       {data.yieldAlert && <YieldAlertBanner alert={data.yieldAlert} />}
