@@ -719,7 +719,10 @@ export default function PayrollPage() {
         enabled: !!userProfile?.org_id && !!selectedMonth,
         queryFn: async () => {
             const monthStart = `${selectedMonth}-01`
-            const monthEnd = `${selectedMonth}-31`
+            
+            const [year, month] = selectedMonth.split('-')
+            const lastDay = new Date(Number(year), Number(month), 0).getDate()
+            const monthEnd = `${selectedMonth}-${lastDay}`
 
             const [logsRes, workersRes, machinesRes, settlementsRes, advancesRes] = await Promise.all([
                 supabase.from('production_logs')
