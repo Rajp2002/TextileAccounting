@@ -409,8 +409,22 @@ export async function regenerateJoinCode() {
 
     if (!session) return { error: 'Not authenticated' }
 
-    const userRole = session.user.app_metadata?.role
-    const orgId = session.user.app_metadata?.org_id
+    let userRole = session.user.app_metadata?.role
+    let orgId = session.user.app_metadata?.org_id
+
+    const adminClient = createAdminClient()
+
+    if (!userRole || !orgId) {
+        const { data: profile } = await adminClient
+            .from('profiles')
+            .select('role, org_id')
+            .eq('id', session.user.id)
+            .maybeSingle()
+        if (profile) {
+            userRole = userRole || profile.role
+            orgId = orgId || profile.org_id
+        }
+    }
 
     if (userRole !== 'owner') return { error: 'Unauthorized' }
     if (!orgId) return { error: 'Organization not found' }
@@ -420,7 +434,7 @@ export async function regenerateJoinCode() {
 
     // Use admin client to bypass the "only owner can update own org" RLS check
     // (which reads auth.jwt() ->> 'user_role' — safe since we verified above)
-    const { error } = await supabase
+    const { error } = await adminClient
         .from('organizations')
         .update({
             join_code: newCode,

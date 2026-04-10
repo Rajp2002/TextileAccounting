@@ -10,14 +10,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queueMutation } from '@/lib/db'
 import { createClient } from '@/lib/supabase/client'
 import { useOnlineStatus } from '@/hooks/use-online-status'
-import { formatINR, calculateDailyPay } from '@/lib/finance'
 import { 
     verifyAccessCode, 
-    startBeam, 
     linkOrderToMachine, 
     shiftHandover 
 } from '@/app/(dashboard)/supervisor/actions'
-import { addYarnBatch, closeYarnBatch } from '@/app/(dashboard)/owner/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
@@ -27,9 +24,6 @@ import {
     Loader2, 
     RotateCcw, 
     Lock, 
-    BoxSelect, 
-    Search, 
-    Link as LinkIcon, 
     ClipboardList, 
     UserMinus, 
     AlertCircle, 
@@ -37,7 +31,6 @@ import {
     Settings2 
 } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from '@/lib/utils'
 
 interface Order {
@@ -66,14 +59,6 @@ interface Assignment {
     shift: 'day' | 'night'
 }
 
-interface YarnBatch {
-    id: string
-    name: string
-    quality_id: string
-    quality: { name: string, target_yield: number, default_worker_rate_per_m: number }
-    current_machine_id: string | null
-    status: string
-}
 
 export default function ProductionEntryForm() {
     const [metersInput, setMetersInput] = useState<Record<string, number>>({})
@@ -87,12 +72,6 @@ export default function ProductionEntryForm() {
     const [accessCode, setAccessCode] = useState('')
     const [verifying, setVerifying] = useState(false)
 
-    // Start Beam State
-    const [beamModalOpen, setBeamModalOpen] = useState(false)
-    const [linkingMachineId, setLinkingMachineId] = useState<string | null>(null)
-    const [linkingBatchId, setLinkingBatchId] = useState<string>('')
-    const [linkingBeam, setLinkingBeam] = useState(false)
-
     // Order Linking State
     const [orderModalOpen, setOrderModalOpen] = useState(false)
     const [linkingOrderMachineId, setLinkingOrderMachineId] = useState<string | null>(null)
@@ -102,20 +81,6 @@ export default function ProductionEntryForm() {
     const [handoverOpen, setHandoverOpen] = useState(false)
     const [handoverMachineId, setHandoverMachineId] = useState<string | null>(null)
     const [performingHandover, setPerformingHandover] = useState(false)
-
-    // Add Beam State
-    const [addBeamModalOpen, setAddBeamModalOpen] = useState(false)
-    const [addBeamForm, setAddBeamForm] = useState({ name: '', quality_id: '', total_weight_kg: '' })
-    const [addingBeam, setAddingBeam] = useState(false)
-
-    // Consume Beam State
-    const [consumeModalOpen, setConsumeModalOpen] = useState(false)
-    const [consumingBatchId, setConsumingBatchId] = useState<string | null>(null)
-    const [leftoverWeightKg, setLeftoverWeightKg] = useState<string>('0')
-    const [closingBatch, setClosingBatch] = useState(false)
-    // Move Beam Confirmation State
-    const [moveConfirmationOpen, setMoveConfirmationOpen] = useState(false)
-    const [pendingBatchId, setPendingBatchId] = useState<string | null>(null)
 
     const isOnline = useOnlineStatus()
     const supabase = createClient()
@@ -164,21 +129,6 @@ export default function ProductionEntryForm() {
             )
             .subscribe()
 
-        // Listen for new/updated yarn batches (e.g. owner adds new beam)
-        const batchesChannel = supabase.channel('supervisor_batches_changes')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'yarn_batches',
-                    filter: `org_id=eq.${userProfile.org_id}`
-                },
-                () => {
-                    queryClient.invalidateQueries({ queryKey: ['active_yarn_batches'] })
-                }
-            )
-            .subscribe()
 
         // Listen for machine changes (e.g. owner renames or deactivates a machine)
         const machinesChannel = supabase.channel('supervisor_machines_changes')
@@ -198,7 +148,6 @@ export default function ProductionEntryForm() {
 
         return () => {
             supabase.removeChannel(ordersChannel)
-            supabase.removeChannel(batchesChannel)
             supabase.removeChannel(machinesChannel)
         }
     }, [supabase, queryClient, userProfile?.org_id])
@@ -260,22 +209,6 @@ export default function ProductionEntryForm() {
         }
     })
 
-    const { data: activeBatches, isLoading: batchesLoading } = useQuery({
-        queryKey: ['active_yarn_batches', userProfile?.org_id],
-        enabled: !!userProfile?.org_id,
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('yarn_batches')
-                .select('id, name, current_machine_id, status, quality_id, qualities(name, target_yield, default_worker_rate_per_m)')
-                .eq('org_id', userProfile!.org_id)
-                .eq('status', 'active')
-            if (error) throw error
-            return data.map((b: any) => ({
-                ...b,
-                quality: Array.isArray(b.qualities) ? b.qualities[0] : b.qualities
-            })) as YarnBatch[]
-        }
-    })
 
     const { data: activeOrders, isLoading: ordersLoading } = useQuery({
         queryKey: ['active_orders', userProfile?.org_id],
@@ -321,10 +254,9 @@ export default function ProductionEntryForm() {
                 const effectiveWorkerId = existingLog ? existingLog.worker_id : assignedWorkerId
                 const isSaved = !!existingLog
                 
-                const activeBatch = activeBatches?.find(b => b.current_machine_id === machine.id)
                 const activeOrder = activeOrders?.find(o => o.id === (machine as any).current_order_id)
 
-                const isReadyToRun = !!effectiveWorkerId && !!activeBatch && !!activeOrder
+                const isReadyToRun = !!effectiveWorkerId && !!activeOrder
 
                 return {
                     machine,
@@ -333,12 +265,11 @@ export default function ProductionEntryForm() {
                     meters: existingLog ? Number(existingLog.meters) : (metersInput[machine.id] || 0),
                     isSaved,
                     existingLogId: existingLog?.id,
-                    activeBatch,
                     activeOrder,
                     isReadyToRun
                 }
             })
-    }, [machines, assignments, activeBatches, activeOrders, currentShift, metersInput, existingLogs])
+    }, [machines, assignments, activeOrders, currentShift, metersInput, existingLogs])
 
 
     const handleMetersChange = (machineId: string, value: number, isSaved: boolean) => {
@@ -410,9 +341,8 @@ export default function ProductionEntryForm() {
                     date: selectedDate,
                     shift: currentShift,
                     org_id: userProfile!.org_id,
-                    yarn_batch_id: item.activeBatch?.id || null, 
                     order_id: item.activeOrder?.id || null, 
-                    worker_rate_snapshot: item.activeBatch?.quality?.default_worker_rate_per_m || 0,
+                    worker_rate_snapshot: 0,
                 }
 
                 if (item.existingLogId) {
@@ -451,81 +381,6 @@ export default function ProductionEntryForm() {
         }
     }
 
-    const handleAddBeam = async () => {
-        if (!addBeamForm.name || !addBeamForm.quality_id || !addBeamForm.total_weight_kg) return
-        setAddingBeam(true)
-        try {
-            const res = await addYarnBatch({
-                name: addBeamForm.name,
-                quality_id: addBeamForm.quality_id,
-                total_weight_kg: Number(addBeamForm.total_weight_kg)
-            })
-            if (res.error) throw new Error(res.error)
-            toast.success(t('inventory.batches.add_modal.success'))
-            setAddBeamModalOpen(false)
-            setAddBeamForm({ name: '', quality_id: '', total_weight_kg: '' })
-            queryClient.invalidateQueries({ queryKey: ['active_yarn_batches'] })
-        } catch (err: any) {
-            toast.error(err.message || "Failed to add beam")
-        } finally {
-            setAddingBeam(false)
-        }
-    }
-
-    const handleCloseBatch = async () => {
-        if (!consumingBatchId) return
-        setClosingBatch(true)
-        try {
-            const res = await closeYarnBatch(consumingBatchId, Number(leftoverWeightKg || 0))
-            if (res.error) throw new Error(res.error)
-            toast.success(t('inventory.audit.success'))
-            setConsumeModalOpen(false)
-            setConsumingBatchId(null)
-            setLeftoverWeightKg('0')
-            queryClient.invalidateQueries({ queryKey: ['active_yarn_batches'] })
-        } catch (err: any) {
-            toast.error(err.message || "Failed to close batch")
-        } finally {
-            setClosingBatch(false)
-        }
-    }
-
-    const handleStartBeam = async () => {
-        if (!linkingMachineId || !linkingBatchId) return
-        if (!isOnline) {
-            toast.error(t('production.offline_beam'))
-            return
-        }
-
-        const batch = activeBatches?.find(b => b.id === linkingBatchId)
-        if (batch?.current_machine_id && batch.current_machine_id !== linkingMachineId) {
-            setPendingBatchId(linkingBatchId)
-            setMoveConfirmationOpen(true)
-            return
-        }
-
-        await executeStartBeam(linkingBatchId)
-    }
-
-    const executeStartBeam = async (batchId: string) => {
-        if (!linkingMachineId) return
-        setLinkingBeam(true)
-        try {
-            const res = await startBeam(batchId, linkingMachineId)
-            if (res.error) throw new Error(res.error)
-            toast.success(t('production.beam_linked'))
-            setBeamModalOpen(false)
-            setMoveConfirmationOpen(false)
-            setLinkingMachineId(null)
-            setLinkingBatchId('')
-            setPendingBatchId(null)
-            queryClient.invalidateQueries({ queryKey: ['active_yarn_batches', userProfile?.org_id] })
-        } catch (err: any) {
-            toast.error(err.message || t('production.beam_link_failed'))
-        } finally {
-            setLinkingBeam(false)
-        }
-    }
 
     const handleLinkOrder = async () => {
         if (!linkingOrderMachineId || !selectedOrderId) return
@@ -601,13 +456,7 @@ export default function ProductionEntryForm() {
                                 onChange={(e) => setSelectedDate(e.target.value)}
                                 className="h-10 w-[140px] text-sm"
                             />
-                            <Button 
-                                className="h-10 bg-indigo-600 hover:bg-indigo-700" 
-                                onClick={() => setAddBeamModalOpen(true)}
-                            >
-                                <BoxSelect className="h-4 w-4 mr-2" />
-                                {t('production.add_beam')}
-                            </Button>
+
                         </div>
                     </div>
                 </CardHeader>
@@ -656,7 +505,7 @@ export default function ProductionEntryForm() {
             ) : machineCards.length === 0 ? (
                 <div className="py-16 text-center border-2 border-dashed rounded-xl border-gray-200 bg-white">
                     <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <BoxSelect className="h-8 w-8" />
+                        <ClipboardList className="h-8 w-8" />
                     </div>
                     <p className="text-gray-900 font-semibold text-lg">{t('production.no_machines')}</p>
                     <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">{t('production.no_machines_desc')}</p>
@@ -664,10 +513,8 @@ export default function ProductionEntryForm() {
             ) : null}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {machineCards.map(({ machine, assignedWorkerId, effectiveWorkerId, meters, isSaved, activeBatch, activeOrder, isReadyToRun }) => {
-                    const rate = activeBatch?.quality?.default_worker_rate_per_m || 0
+                {machineCards.map(({ machine, assignedWorkerId, effectiveWorkerId, meters, isSaved, activeOrder, isReadyToRun }) => {
                     const displayMeters = metersInput[machine.id] !== undefined ? metersInput[machine.id] : meters
-                    const pay = displayMeters > 0 ? calculateDailyPay(displayMeters, rate) : null
                     const worker = workers?.find(w => w.id === effectiveWorkerId)
                     const disabled = isSaved && !unlocked
 
@@ -677,13 +524,7 @@ export default function ProductionEntryForm() {
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <div className="font-semibold text-lg">{machine.name}</div>
-                                        <div className="text-xs text-gray-500">{t('production.rate')}: ₹{rate}/m</div>
                                     </div>
-                                    {pay && (
-                                        <span className={cn("text-sm font-bold px-2 py-1 rounded", disabled ? "bg-gray-200 text-gray-600" : "text-green-700 bg-green-50")}>
-                                            {t('production.est')}: {formatINR(pay)}
-                                        </span>
-                                    )}
                                 </div>
 
                                 <div className="space-y-1">
@@ -709,50 +550,7 @@ export default function ProductionEntryForm() {
                                     </div>
                                 </div>
                                 
-                                <div className="grid grid-cols-2 gap-2 mt-1 border-t pt-2">
-                                     <div className="space-y-1">
-                                          <Label className="text-xs text-gray-500">{t('production.active_beam')}</Label>
-                                          <div className="text-sm font-medium h-10 flex items-center">
-                                             {activeBatch ? (
-                                                <div className="flex flex-col gap-1 w-full">
-                                                    <span className="text-indigo-700 bg-indigo-50 px-2 py-1 rounded text-[10px] font-semibold truncate" title={`${activeBatch.name} (${activeBatch.quality?.name})`}>
-                                                        {activeBatch.name} 
-                                                        <span className="font-normal text-indigo-500 ml-1">
-                                                            ({activeBatch.quality?.name})
-                                                        </span>
-                                                    </span>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-6 px-1 text-[10px] text-rose-600 hover:bg-rose-50 border border-rose-100"
-                                                        onClick={() => {
-                                                            setConsumingBatchId(activeBatch.id)
-                                                            setConsumeModalOpen(true)
-                                                        }}
-                                                        disabled={disabled}
-                                                    >
-                                                        {t('production.mark_consumed')}
-                                                    </Button>
-                                                </div>
-                                             ) : (
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    className="h-8 w-full text-[10px] border-dashed text-gray-500 px-1"
-                                                    onClick={() => {
-                                                        setLinkingMachineId(machine.id)
-                                                        setLinkingBatchId('')
-                                                        setBeamModalOpen(true)
-                                                    }}
-                                                    disabled={disabled}
-                                                >
-                                                    <LinkIcon className="h-3 w-3 mr-1" />
-                                                    {t('production.start_beam')}
-                                                </Button>
-                                             )}
-                                          </div>
-                                     </div>
-
+                                <div className="mt-1 border-t pt-2">
                                      <div className="space-y-1">
                                           <Label className="text-xs text-gray-500">{t('production.active_order')}</Label>
                                           <div className="text-sm font-medium h-10 flex items-center">
@@ -795,10 +593,7 @@ export default function ProductionEntryForm() {
                                                     <span className="text-gray-600">{t('production.worker_assigned')}</span>
                                                     {effectiveWorkerId ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <AlertCircle className="h-3.5 w-3.5 text-red-400" />}
                                                 </div>
-                                                <div className="flex items-center justify-between text-xs">
-                                                    <span className="text-gray-600">{t('production.beam_loaded')}</span>
-                                                    {activeBatch ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <AlertCircle className="h-3.5 w-3.5 text-red-400" />}
-                                                </div>
+
                                                 <div className="flex items-center justify-between text-xs">
                                                     <span className="text-gray-600">{t('production.order_linked')}</span>
                                                     {activeOrder ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> : <AlertCircle className="h-3.5 w-3.5 text-red-400" />}
@@ -882,198 +677,6 @@ export default function ProductionEntryForm() {
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={beamModalOpen} onOpenChange={setBeamModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-indigo-700">
-                            <LinkIcon className="h-5 w-5" /> {t('modals.start_new_beam')}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {t('modals.link_batch_desc')}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label>{t('modals.select_batch')}</Label>
-                            {activeBatches && activeBatches.length > 0 ? (
-                                <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2">
-                                    {activeBatches
-                                        .filter(b => b.current_machine_id !== linkingMachineId)
-                                        .map(batch => {
-                                            const currentMachineName = machines?.find(m => m.id === batch.current_machine_id)?.name
-                                            return (
-                                                <button
-                                                    key={batch.id}
-                                                    onClick={() => setLinkingBatchId(batch.id)}
-                                                    className={cn(
-                                                        "flex flex-col text-left p-3 rounded-lg border transition-all",
-                                                        linkingBatchId === batch.id 
-                                                            ? "border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600" 
-                                                            : "border-gray-200 hover:border-indigo-300 hover:bg-gray-50"
-                                                    )}
-                                                >
-                                                    <div className="flex justify-between items-start gap-2">
-                                                        <div className="flex flex-col flex-1">
-                                                            <span className="font-medium text-gray-900">{batch.name}</span>
-                                                            <span className="text-xs text-gray-500">{batch.quality?.name}</span>
-                                                        </div>
-                                                        {currentMachineName && (
-                                                            <span className="shrink-0 text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">
-                                                                {currentMachineName}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </button>
-                                            )
-                                        })}
-                                </div>
-                            ) : (
-                                <div className="text-sm text-gray-500 p-4 border rounded bg-gray-50 text-center">
-                                    {t('modals.no_active_batches')}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => { setBeamModalOpen(false); setLinkingBatchId('') }}>{t('common.cancel')}</Button>
-                        <Button
-                            disabled={!linkingBatchId || linkingBeam}
-                            className="bg-indigo-600 hover:bg-indigo-700"
-                            onClick={handleStartBeam}
-                        >
-                            {linkingBeam ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            {t('modals.link_start')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={addBeamModalOpen} onOpenChange={setAddBeamModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{t('inventory.batches.add_modal.title')}</DialogTitle>
-                        <DialogDescription>{t('inventory.batches.add_modal.desc')}</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label>{t('inventory.batches.add_modal.name')}</Label>
-                            <Input 
-                                placeholder={t('inventory.batches.add_modal.name_ph')} 
-                                value={addBeamForm.name}
-                                onChange={e => setAddBeamForm({ ...addBeamForm, name: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>{t('inventory.batches.add_modal.quality')}</Label>
-                            <Select 
-                                value={addBeamForm.quality_id} 
-                                onValueChange={v => setAddBeamForm({ ...addBeamForm, quality_id: v })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder={t('inventory.batches.add_modal.quality_ph')} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {activeOrders?.map((o: any) => (
-                                        <SelectItem key={o.quality_id} value={o.quality_id}>{o.quality_name}</SelectItem>
-                                    ))}
-                                    {(!activeOrders || activeOrders.length === 0) && (
-                                        <div className="p-2 text-xs text-rose-500">No active orders/qualities available.</div>
-                                    )}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>{t('inventory.batches.add_modal.weight')}</Label>
-                            <Input 
-                                type="number" step="0.1" placeholder={t('inventory.batches.add_modal.weight_ph')} 
-                                value={addBeamForm.total_weight_kg}
-                                onChange={e => setAddBeamForm({ ...addBeamForm, total_weight_kg: e.target.value })}
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setAddBeamModalOpen(false)}>{t('common.cancel')}</Button>
-                        <Button 
-                            className="bg-indigo-600 hover:bg-indigo-700"
-                            disabled={addingBeam || !addBeamForm.name || !addBeamForm.quality_id || !addBeamForm.total_weight_kg}
-                            onClick={handleAddBeam}
-                        >
-                            {addingBeam ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            {t('inventory.batches.add_modal.save')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={consumeModalOpen} onOpenChange={setConsumeModalOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-rose-600">
-                            <BoxSelect className="h-5 w-5" /> {t('production.mark_consumed')}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {t('inventory.audit.desc')} this batch.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Label className="text-sm font-bold text-indigo-900">{t('inventory.audit.tali.title')}</Label>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="relative flex-1">
-                                    <Input 
-                                        type="number" 
-                                        step="0.1" 
-                                        value={leftoverWeightKg}
-                                        onChange={e => setLeftoverWeightKg(e.target.value)}
-                                        className="pr-8 bg-white"
-                                    />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">kg</span>
-                                </div>
-                                <p className="text-[10px] text-indigo-700 leading-tight flex-1">
-                                    {t('inventory.audit.tali.desc')}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setConsumeModalOpen(false)}>{t('common.cancel')}</Button>
-                        <Button 
-                            className="bg-rose-600 hover:bg-rose-700"
-                            disabled={closingBatch || !consumingBatchId}
-                            onClick={handleCloseBatch}
-                        >
-                            {closingBatch ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            {t('inventory.audit.mark_consumed')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={moveConfirmationOpen} onOpenChange={setMoveConfirmationOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-amber-600">
-                            <AlertCircle className="h-5 w-5" /> {t('modals.batch_already_linked_title')}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {t('modals.batch_already_linked_desc').replace('{machineName}', machines?.find(m => m.id === activeBatches?.find(b => b.id === (pendingBatchId || linkingBatchId))?.current_machine_id)?.name || 'another machine')}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setMoveConfirmationOpen(false)}>{t('common.cancel')}</Button>
-                        <Button
-                            className="bg-amber-600 hover:bg-amber-700"
-                            onClick={() => executeStartBeam(pendingBatchId || linkingBatchId)}
-                            disabled={linkingBeam}
-                        >
-                            {linkingBeam ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            {t('modals.move_beam')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
             <Dialog open={orderModalOpen} onOpenChange={setOrderModalOpen}>
                 <DialogContent>
