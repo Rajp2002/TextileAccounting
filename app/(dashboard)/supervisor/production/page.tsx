@@ -721,7 +721,7 @@ export default function ProductionEntryForm() {
                 </DialogContent>
             </Dialog>
 
-            <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] flex justify-center z-40 pb-[env(safe-area-inset-bottom,16px)] md:pb-6">
+            <div className="fixed bottom-0 left-0 md:left-[260px] right-0 p-4 md:p-6 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-8px_30px_rgba(0,0,0,0.08)] flex justify-center z-20 pb-[env(safe-area-inset-bottom,16px)] md:pb-6">
                 <div className="w-full max-w-5xl md:flex md:justify-end md:px-0">
                     <Button
                         onClick={handleSaveAll}
