@@ -91,11 +91,11 @@ export async function getDashboardData(): Promise<DashboardData> {
     // 7-day trend: sum meters per day from production_logs
     supabase
       .from('production_logs')
-      .select('logged_date, meters')
+      .select('date, meters')
       .eq('org_id', org_id)
-      .gte('logged_date', last7Days[0])
-      .lte('logged_date', today)
-      .order('logged_date', { ascending: true }),
+      .gte('date', last7Days[0])
+      .lte('date', today)
+      .order('date', { ascending: true }),
   ])
 
   const [kpiYesterday, kpiToday, yieldAlert, orders, workerBreakdown, machines, rawLogs] = results.map(r =>
@@ -106,8 +106,8 @@ export async function getDashboardData(): Promise<DashboardData> {
   const trendMap = new Map<string, number>()
   last7Days.forEach(d => trendMap.set(d, 0)) // seed all 7 days with 0
   if (rawLogs) {
-    for (const row of rawLogs as Array<{ logged_date: string; meters: number }>) {
-      trendMap.set(row.logged_date, (trendMap.get(row.logged_date) ?? 0) + row.meters)
+    for (const row of rawLogs as Array<{ date: string; meters: number }>) {
+      trendMap.set(row.date, (trendMap.get(row.date) ?? 0) + row.meters)
     }
   }
   const trend = last7Days.map(d => ({ date: d, total_meters: trendMap.get(d) ?? 0 }))

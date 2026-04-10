@@ -37,6 +37,7 @@ interface Order {
     id: string
     party_name: string
     quality_id: string
+    worker_rate_per_m: number
     quality_name: string
     status: string
 }
@@ -216,7 +217,7 @@ export default function ProductionEntryForm() {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('orders')
-                .select('id, party_name, quality_id, qualities(name), status')
+                .select('id, party_name, quality_id, worker_rate_per_m, qualities(name), status')
                 .eq('org_id', userProfile!.org_id)
                 .eq('status', 'active')
                 .order('party_name', { ascending: true })
@@ -227,6 +228,7 @@ export default function ProductionEntryForm() {
                     id: o.id,
                     party_name: o.party_name,
                     quality_id: o.quality_id,
+                    worker_rate_per_m: o.worker_rate_per_m || 0,
                     quality_name: quality?.name || 'Unknown Quality',
                     status: o.status
                 }
@@ -342,7 +344,7 @@ export default function ProductionEntryForm() {
                     shift: currentShift,
                     org_id: userProfile!.org_id,
                     order_id: item.activeOrder?.id || null, 
-                    worker_rate_snapshot: 0,
+                    worker_rate_snapshot: (item.activeOrder as any)?.worker_rate_per_m || 1.5,
                 }
 
                 if (item.existingLogId) {
