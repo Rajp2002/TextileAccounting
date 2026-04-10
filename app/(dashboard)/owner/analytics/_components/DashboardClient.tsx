@@ -46,7 +46,7 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
     const isToday = selectedDate === getSuratTodayString()
     
     if (!isToday) {
-      setIsConnected(false)
+      setConnectionStatus('error')
       return
     }
 
