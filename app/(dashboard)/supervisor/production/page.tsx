@@ -391,16 +391,6 @@ export default function ProductionEntryForm() {
         
         const machine = machineCards.find(c => c.machine.id === linkingOrderMachineId)
         const order = activeOrders?.find(o => o.id === selectedOrderId)
-        
-        if (machine?.activeBatch && order && machine.activeBatch.quality_id !== order.quality_id) {
-            toast.warning(
-                `Quality Mismatch! Order is "${order.quality_name}" but Machine has "${machine.activeBatch.quality?.name}" beam.`,
-                { 
-                    duration: 6000,
-                    description: "Physical yarn on machine doesn't match order requirements."
-                }
-            )
-        }
 
         setLinkingOrder(true)
         try {
