@@ -7,7 +7,7 @@ export default function LandingBackground() {
     const blobPolygon = 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)';
 
     return (
-        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none bg-white dark:bg-zinc-950">
             {/* The same grid from the hero, but spanning the entire absolute container height. 
                 Using a mask that fades at the very bottom of the page, not halfway. */}
             <svg

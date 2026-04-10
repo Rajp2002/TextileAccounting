@@ -293,6 +293,7 @@ export async function saveEstimatorQuoteV3(params: {
             worker_rate_per_m:    workerRatePerM,
             // Legacy required fields with sane defaults
             ppi:     estimate.weftRows[0]?.picks ?? 68,
+            yarn_denier: estimate.warpRows[0]?.calcDenier ?? 75,
             yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
         })
         .select('id')
@@ -330,7 +331,11 @@ export async function convertQuoteToOrder(data: {
             totalProductionCostPerM: data.totalProductionCostPerM ?? 0,
             quotePricePerM:          data.quote_price_per_m,
         })
-        if ('quoteId' in quoteRes && quoteRes.quoteId) quoteId = quoteRes.quoteId
+        if (quoteRes.error) {
+            console.error('Failed to save estimator quote:', quoteRes.error)
+            return { error: 'Failed to save linked quote: ' + quoteRes.error }
+        }
+        if (quoteRes.quoteId) quoteId = quoteRes.quoteId
     }
 
     // 2. Compute worker rate from estimate (if present) — same formula as saveEstimatorQuoteV3

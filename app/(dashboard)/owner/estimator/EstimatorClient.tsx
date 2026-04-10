@@ -1337,11 +1337,11 @@ export default function EstimatorClient({
                         {/* ── Cost Summary Recap ── */}
                         <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
                             <div className="px-3 py-2 bg-slate-100 border-b border-slate-200">
-                                <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">{t('estimator.convert_dialog.cost_summary_title')}</p>
+                                <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">{t('estimator.convert_dialog.cost_summary')}</p>
                             </div>
                             <div className="p-3 space-y-2">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-slate-500 font-medium">{t('estimator.convert_dialog.prod_cost')}</span>
+                                    <span className="text-xs text-slate-500 font-medium">{t('estimator.convert_dialog.production_cost')}</span>
                                     <span className="font-mono font-bold text-sm text-slate-800">₹{totals.totalProductionCostPerM.toFixed(2)}/m</span>
                                 </div>
                                 {totals.orderQuote && (
@@ -1388,7 +1388,7 @@ export default function EstimatorClient({
                                     )
                                 })()}
                                 {!totals.orderQuote && (
-                                    <p className="text-[11px] text-slate-400 italic">{t('estimator.convert_dialog.order_qty_hint')}</p>
+                                    <p className="text-[11px] text-slate-400 italic">{t('estimator.convert_dialog.set_qty_hint')}</p>
                                 )}
                                 {/* Cost stack mini-pills */}
                                 <div className="flex flex-wrap gap-1.5 pt-1 border-t border-slate-100">
@@ -1412,7 +1412,7 @@ export default function EstimatorClient({
                            </div>
                         </div>
                         <p className="text-[11px] text-slate-500 text-center px-4 leading-relaxed">
-                            {t('estimator.convert_dialog.success_note_prefix')} <span className="text-indigo-600 font-bold">{t('estimator.convert_dialog.success_note_orders')}</span> {t('estimator.convert_dialog.success_note_suffix')}
+                            {t('estimator.convert_dialog.order_ready_note_prefix')} <span className="text-indigo-600 font-bold">{t('estimator.convert_dialog.order_ready_note_section')}</span> {t('estimator.convert_dialog.order_ready_note_suffix')}
                         </p>
                     </div>
                     <DialogFooter>
