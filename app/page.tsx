@@ -60,7 +60,7 @@ export default function Home() {
 
         {/* Upgraded Footer */}
         <div className="snap-end shrink-0">
-          <footer className="bg-zinc-950 py-12 px-6 border-t border-white/10 text-white">
+          <footer className="relative z-10 bg-zinc-950 py-12 px-6 border-t border-white/10 text-white">
             <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
               <div className="flex items-center">
                 <div className="relative h-14 w-36">
