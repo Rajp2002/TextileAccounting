@@ -447,20 +447,20 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const DEFAULT_WARP_ROW: Omit<WarpRow, 'id'> = {
-  calcDenier:  75,
-  beamEnds:    3200,
-  yarnRate:    107,
-  gstPct:      5,
-  shortagePct: 5,
+  calcDenier:  0,
+  beamEnds:    0,
+  yarnRate:    0,
+  gstPct:      0,
+  shortagePct: 0,
 }
 
 export const DEFAULT_WEFT_ROW: Omit<WeftRow, 'id'> = {
-  picks:       58,
-  reedSpace:   76,   // finished cloth width in cm (not loom reed width, not folded width)
-  calcDenier:  75,
-  yarnRate:    107,
-  gstPct:      5,
-  shortagePct: 3,
+  picks:       0,
+  reedSpace:   0,   // finished cloth width in cm (not loom reed width, not folded width)
+  calcDenier:  0,
+  yarnRate:    0,
+  gstPct:      0,
+  shortagePct: 0,
 }
 
 export const DEFAULT_FACTORY_SECTIONS: FactorySections = {
@@ -473,31 +473,31 @@ export const DEFAULT_FACTORY_SECTIONS: FactorySections = {
 
 /** Default overhead items — shown before fixed workers are loaded from DB */
 export const DEFAULT_OVERHEAD_ITEMS: Omit<OverheadItem, 'id'>[] = [
-  { label: 'Rent / Lease',         monthlyAmount: 25000, source: 'manual' },
-  { label: 'Electricity',           monthlyAmount: 20000, source: 'manual' },
-  { label: 'Water & Maintenance',   monthlyAmount: 3000,  source: 'manual' },
-  { label: 'Factory Consumables',   monthlyAmount: 5000,  source: 'manual' },
+  { label: 'Rent / Lease',         monthlyAmount: 0, source: 'manual' },
+  { label: 'Electricity',           monthlyAmount: 0, source: 'manual' },
+  { label: 'Water & Maintenance',   monthlyAmount: 0,  source: 'manual' },
+  { label: 'Factory Consumables',   monthlyAmount: 0,  source: 'manual' },
 ]
 
 export function makeDefaultEstimateState(): EstimateState {
   return {
     warpRows:           [{ id: nanoid(), ...DEFAULT_WARP_ROW }],
     weftRows:           [{ id: nanoid(), ...DEFAULT_WEFT_ROW }],
-    tapeLengthM:        100,
-    perPickCostPaisa:   0.16,
-    warpingRatePerKg:   2.00,
-    sizingRatePerKg:    1.50,
+    tapeLengthM:        0,
+    perPickCostPaisa:   0,
+    warpingRatePerKg:   0,
+    sizingRatePerKg:    0,
     windingRatePerKg:   0,
     processingRatePerM: 0,
     finishingRatePerM:  0,
-    yarnShortagePct:    10,  // combined shortage applied to warp+weft total
+    yarnShortagePct:    0,  // combined shortage applied to warp+weft total
     overheadItems:      DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
-    monthlyOutputM:     10000,
+    monthlyOutputM:     0,
     overheadOverridePerM: null,
     overheadPct:        0,   // will be computed — kept for compat
-    commissionPct:      2,
+    commissionPct:      0,
     transportPerM:      0,
-    profitPct:          15,
+    profitPct:          0,
     orderQuantityM:     null,
     enabledSections:    { ...DEFAULT_FACTORY_SECTIONS },
   }
