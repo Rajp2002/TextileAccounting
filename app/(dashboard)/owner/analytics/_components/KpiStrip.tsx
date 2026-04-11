@@ -56,9 +56,7 @@ export function KpiStrip({ yesterday, today, isConnected = true, selectedDate }:
 
   const sectionLabel = isHistorical
     ? `${t('kpi_strip.selected_date')} · ${formatDate(selectedDate)}`
-    : yesterday
-      ? `${t('kpi_strip.yesterday')} · ${formatDate(getSuratYesterdayString())}`
-      : t('kpi_strip.no_data')
+    : `${t('kpi_strip.yesterday')} · ${formatDate(getSuratYesterdayString())}`
 
   return (
     <div className="grid grid-cols-1 gap-3">
@@ -79,8 +77,8 @@ export function KpiStrip({ yesterday, today, isConnected = true, selectedDate }:
         <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border/40">
           {[
             { label: t('kpi_strip.meters_produced'), value: yData.total_meters !== null ? formatMeters(yData.total_meters) : '—' },
-            { label: t('kpi_strip.floor_wages_today'), value: yData.piece_rate_wages !== null ? formatRupees(yData.piece_rate_wages) : '—' },
-            { label: t('kpi_strip.salary_burden_today'), value: yData.fixed_payroll !== null ? formatRupees(yData.fixed_payroll) : '—' },
+            { label: t('kpi_strip.floor_wages'), value: yData.piece_rate_wages !== null ? formatRupees(yData.piece_rate_wages) : '—' },
+            { label: t('kpi_strip.salary_burden'), value: yData.fixed_payroll !== null ? formatRupees(yData.fixed_payroll) : '—' },
             {
               label: t('kpi_strip.overall_efficiency'),
               value: yData.efficiency_pct === null ? '—' : formatPct(yData.efficiency_pct),
@@ -123,7 +121,7 @@ export function KpiStrip({ yesterday, today, isConnected = true, selectedDate }:
             <div className="grid grid-cols-2 md:grid-cols-3 gap-px bg-border/40">
               {[
                 { label: t('kpi_strip.meters_produced'), value: tData.total_meters !== null ? formatMeters(tData.total_meters) : '—' },
-                { label: t('kpi_strip.floor_wages_today'), value: tData.piece_rate_wages !== null ? formatRupees(tData.piece_rate_wages) : '—', sub: t('kpi_strip.est') },
+                { label: t('kpi_strip.floor_wages'), value: tData.piece_rate_wages !== null ? formatRupees(tData.piece_rate_wages) : '—', sub: t('kpi_strip.est') },
                 { label: t('kpi_strip.machines_running'), value: tData.active_machines !== null ? String(tData.active_machines) : '—', sub: t('kpi_strip.machines') },
               ].map(({ label, value, sub }) => (
                 <div key={label} className="bg-card px-5 py-4">
