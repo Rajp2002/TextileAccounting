@@ -206,8 +206,8 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                 </Sheet>
             </header>
 
-            {/* Mobile Bottom Navigation Bar - Showing Primary Items Only */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border flex justify-around items-center z-50 px-2 pb-safe pt-[calc(0.5rem+env(safe-area-inset-top))] shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)] min-h-[68px]">
+            {/* Mobile Bottom Navigation Form Factor */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border flex justify-around items-center z-50 px-2 pb-safe pt-[calc(0.5rem+env(safe-area-inset-top,0px))] shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)] min-h-[68px]">
                 {primaryNavItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href || pathname.startsWith(item.href + "/")

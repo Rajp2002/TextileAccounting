@@ -13,29 +13,29 @@ import LandingFooter from "@/components/landing/footer";
 
 export default function Home() {
   return (
-    <main className="h-[100dvh] w-full overflow-y-auto overflow-x-hidden snap-y snap-mandatory font-sans selection:bg-indigo-500/30 scroll-smooth">
+    <main className="min-h-screen w-full overflow-x-hidden font-sans selection:bg-indigo-500/30 scroll-smooth">
       <div className="relative w-full min-h-max">
         <LandingBackground />
         <LandingHeader />
         
-        <div className="snap-start shrink-0">
+        <div>
           <LandingHero />
         </div>
         
-        <div className="snap-start shrink-0">
+        <div>
           <LandingFeatures />
         </div>
         
-        <div className="snap-start shrink-0">
+        <div>
           <LandingPricing />
         </div>
         
-        <div className="snap-start shrink-0">
+        <div>
           <LandingFAQ />
         </div>
 
         {/* Pre-footer CTA */}
-        <div className="snap-start shrink-0">
+        <div>
           <section className="relative isolate overflow-hidden bg-zinc-900 border-y border-white/10 mt-24">
             <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
               <div className="mx-auto max-w-2xl text-center">

@@ -43,7 +43,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
+      <body
+        className={`${jakarta.variable} ${geistMono.variable} antialiased font-sans`}
+      >
         {/* Inline script: adds app-ready class to body as early as possible
             so the PWA splash background (#c2410c) transitions to the real
             app background without waiting for a full React render cycle.
@@ -51,13 +53,9 @@ export default function RootLayout({
             user input. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){document.body&&document.body.classList.add('app-ready')})()`,
+            __html: `document.body.classList.add('app-ready');`,
           }}
         />
-      </head>
-      <body
-        className={`${jakarta.variable} ${geistMono.variable} antialiased font-sans`}
-      >
         <Providers>
           {children}
         </Providers>
