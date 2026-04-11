@@ -738,12 +738,12 @@ export default function ProductionEntryForm() {
                 </DialogContent>
             </Dialog>
 
-            <div className="fixed bottom-0 left-0 md:left-[260px] right-0 p-4 md:p-6 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-8px_30px_rgba(0,0,0,0.08)] flex justify-center z-20 pb-[env(safe-area-inset-bottom,16px)] md:pb-6">
+            <div className="fixed bottom-0 left-0 md:left-[260px] right-0 p-4 md:p-6 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-8px_30px_rgba(0,0,0,0.08)] flex justify-center z-20 pb-[calc(80px+env(safe-area-inset-bottom))] md:pb-6">
                 <div className="w-full max-w-5xl md:flex md:justify-end md:px-0">
                     <Button
                         onClick={handleSaveAll}
                         disabled={loading || machineCards.length === 0}
-                        className="w-full md:w-[240px] h-[52px] text-lg font-bold shadow-md bg-teal-600 hover:bg-teal-700 text-white rounded-xl mb-14 md:mb-0 transition-all"
+                        className="w-full md:w-[240px] h-[52px] text-lg font-bold shadow-md bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-all"
                     >
                         {loading ? t('production.saving') : t('production.save_all')}
                     </Button>
