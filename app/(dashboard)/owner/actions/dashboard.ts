@@ -1,3 +1,5 @@
+'use server'
+
 import { createClient } from '@/lib/supabase/server'
 import { getSuratTodayString, getSuratYesterdayString, formatToSurat } from '@/lib/time'
 import { parseJWT } from '@/lib/auth'
