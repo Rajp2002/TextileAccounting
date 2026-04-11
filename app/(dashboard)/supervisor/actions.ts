@@ -827,6 +827,36 @@ export async function bulkLogProduction(entries: {
 
     if (logs.length === 0) return { success: true, logged: 0 }
 
+    // ── Guard: production date must not be before the order's start date ──
+    const orderIds = [...new Set(logs.map((l) => l.order_id).filter(Boolean))] as string[]
+    if (orderIds.length > 0) {
+        const { data: orders, error: ordersError } = await supabase
+            .from('orders')
+            .select('id, created_at')
+            .in('id', orderIds)
+            .eq('org_id', profile.org_id)
+
+        if (ordersError) {
+            console.error('bulkLogProduction – order lookup error:', ordersError)
+            return { error: 'Failed to validate order dates. Please try again.' }
+        }
+
+        const orderStartMap = new Map(
+            (orders ?? []).map((o) => [o.id, o.created_at.split('T')[0]])
+        )
+
+        for (const log of logs) {
+            if (!log.order_id) continue
+            const orderStart = orderStartMap.get(log.order_id)
+            if (orderStart && log.date < orderStart) {
+                return {
+                    error: `Production date (${log.date}) cannot be before the order's start date (${orderStart}).`,
+                }
+            }
+        }
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
     const { error } = await supabase.from('production_logs').insert(logs)
 
     if (error) {

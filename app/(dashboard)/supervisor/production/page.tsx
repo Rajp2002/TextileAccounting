@@ -40,6 +40,7 @@ interface Order {
     worker_rate_per_m: number
     quality_name: string
     status: string
+    created_at: string  // ISO date string – used to gate production entry dates
 }
 
 interface Worker {
@@ -217,7 +218,7 @@ export default function ProductionEntryForm() {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('orders')
-                .select('id, party_name, quality_id, worker_rate_per_m, qualities(name), status')
+                .select('id, party_name, quality_id, worker_rate_per_m, qualities(name), status, created_at')
                 .eq('org_id', userProfile!.org_id)
                 .eq('status', 'active')
                 .order('party_name', { ascending: true })
@@ -230,7 +231,8 @@ export default function ProductionEntryForm() {
                     quality_id: o.quality_id,
                     worker_rate_per_m: o.worker_rate_per_m || 0,
                     quality_name: quality?.name || 'Unknown Quality',
-                    status: o.status
+                    status: o.status,
+                    created_at: o.created_at,
                 }
             }) as Order[]
         }
@@ -325,6 +327,19 @@ export default function ProductionEntryForm() {
         if (missingWorker) {
             toast.error(t('production.assign_worker_for'))
             return
+        }
+
+        // Guard: block production logging for dates before the order was created
+        for (const item of entriesToSave) {
+            if (item.activeOrder?.created_at) {
+                const orderStartDate = item.activeOrder.created_at.split('T')[0]
+                if (selectedDate < orderStartDate) {
+                    toast.error(
+                        `Cannot log production for ${item.activeOrder.party_name}: selected date (${selectedDate}) is before the order was created (${orderStartDate}).`
+                    )
+                    return
+                }
+            }
         }
 
         setLoading(true)

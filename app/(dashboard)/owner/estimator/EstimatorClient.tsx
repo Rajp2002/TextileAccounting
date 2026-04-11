@@ -399,6 +399,9 @@ export default function EstimatorClient({
     const [savingTemplate, setSavingTemplate] = useState(false)
     const [templates, setTemplates] = useState<any[]>(initialTemplates ?? [])
 
+    // Loom wage per meter input — bidirectional with perPickCostPaisa
+    const [wagePerMInput, setWagePerMInput] = useState<string>('')
+
     const [partyName,       setPartyName]       = useState('')
     const [qualityLabel,    setQualityLabel]    = useState('')
     const [warpInstruction, setWarpInstruction] = useState('')
@@ -858,30 +861,91 @@ export default function EstimatorClient({
                 {/* 4. Weave Cost */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
                     <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="amber" />
-                    <CardContent className="p-5">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                            <NumField 
-                                label={t('estimator.weave.looms_charge')} 
-                                value={state.perPickCostPaisa} 
-                                onChange={v => dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v })} 
-                                unit="₹/pick"
-                                step={0.01} 
-                                hint={t('estimator.weave.paise_hint')}
-                            />
-                            <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-100 flex items-center justify-between">
-                                <div>
-                                    <p className="text-[10px] font-black uppercase text-amber-600/70 tracking-widest leading-none mb-1">{t('estimator.weave.ppi_impact')}</p>
-                                    <p className="text-sm font-bold text-slate-600">{state.weftRows.reduce((a,b)=>a+b.picks, 0)} {t('estimator.weave.picks')}</p>
+                    <CardContent className="p-5 space-y-5">
+
+                        {/* ── Loom Wage per Meter → auto-derives paisa/pick ── */}
+                        {(() => {
+                            const totalPicks = state.weftRows.reduce((a, b) => a + b.picks, 0)
+                            const derivedWagePerM = totalPicks > 0
+                                ? (state.perPickCostPaisa * totalPicks).toFixed(2)
+                                : '0.00'
+                            return (
+                                <div className="rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/40 p-4 space-y-3">
+                                    <div className="flex items-center gap-2">
+                                        <Banknote className="h-4 w-4 text-amber-600" />
+                                        <p className="text-[11px] uppercase tracking-widest font-black text-amber-700">Loom Weave Wage</p>
+                                        <span className="ml-auto text-[10px] text-amber-500 font-medium bg-amber-100 px-2 py-0.5 rounded-full">₹/m ↔ paisa/pick</span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* Input: ₹ per meter */}
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] uppercase tracking-wider font-semibold text-amber-700/80">Wage per Meter (₹/m)</Label>
+                                            <div className="relative group">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500 pointer-events-none">₹</span>
+                                                <Input
+                                                    type="number"
+                                                    min={0}
+                                                    step={0.5}
+                                                    placeholder={derivedWagePerM}
+                                                    value={wagePerMInput}
+                                                    onChange={e => {
+                                                        const raw = e.target.value
+                                                        setWagePerMInput(raw)
+                                                        const wageNum = Number(raw)
+                                                        if (!isNaN(wageNum) && wageNum > 0 && totalPicks > 0) {
+                                                            const derived = wageNum / totalPicks
+                                                            dispatch({ type: 'SET', field: 'perPickCostPaisa', value: Math.round(derived * 10000) / 10000 })
+                                                        }
+                                                    }}
+                                                    onBlur={() => setWagePerMInput('')}
+                                                    className="h-11 text-sm font-mono font-bold text-center pl-8 pr-12 bg-white border-amber-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm"
+                                                />
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/m</span>
+                                            </div>
+                                            <p className="text-[10px] text-amber-600/70 font-medium">e.g. 8 for ₹8 per meter loom wage</p>
+                                        </div>
+
+                                        {/* Display: derived paisa/pick + live impact */}
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Paisa per Pick (₹/pick)</Label>
+                                            <div className="relative group">
+                                                <Input
+                                                    type="number"
+                                                    min={0}
+                                                    step={0.001}
+                                                    value={state.perPickCostPaisa}
+                                                    onChange={e => {
+                                                        const v = Number(e.target.value)
+                                                        dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v })
+                                                        setWagePerMInput('')
+                                                    }}
+                                                    className="h-11 text-sm font-mono font-bold text-center pr-14 bg-white border-slate-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm group-hover:border-slate-300"
+                                                />
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/pick</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 font-medium">Direct entry or auto-derived from ₹/m above</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Live equivalence banner */}
+                                    <div className="flex items-center justify-between bg-white/70 border border-amber-100 rounded-lg px-3 py-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">At {totalPicks} picks</span>
+                                            <span className="text-[10px] text-slate-400">→</span>
+                                            <span className="text-[11px] font-black font-mono text-amber-800">₹{derivedWagePerM}/m</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-[10px] text-slate-400 font-medium">Weave cost</span>
+                                            <span className="text-sm font-black font-mono text-amber-700">₹{totals.weaveCostPerM.toFixed(2)}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-black uppercase text-amber-600/70 tracking-widest leading-none mb-1">{t('estimator.weave.cost_per_m')}</p>
-                                    <p className="text-xl font-black font-mono text-amber-700">₹{totals.weaveCostPerM.toFixed(2)}</p>
-                                </div>
-                            </div>
-                       </div>
+                            )
+                        })()}
 
                         {/* Combined Yarn Shortage */}
-                        <div className="mt-5 pt-4 border-t border-amber-100">
+                        <div className="pt-1 border-t border-amber-100">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                                 <NumField
                                     label={t('estimator.weave.shortage_title')}
