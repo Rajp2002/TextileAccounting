@@ -119,10 +119,9 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
 
         {/* Date + connection status */}
         <div className="flex items-center gap-3">
-          {isToday && (
+          {isToday && connectionStatus !== 'error' && (
             <div className={`flex items-center gap-1.5 text-xs font-medium transition-colors duration-300 ${
               connectionStatus === 'connected' ? 'text-emerald-600 dark:text-emerald-400' : 
-              connectionStatus === 'error' ? 'text-amber-600 dark:text-amber-400' :
               'text-muted-foreground'
             }`}>
               {connectionStatus === 'connected' && (
@@ -130,9 +129,6 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
               )}
               {connectionStatus === 'connecting' && (
                 <><span className="inline-block animate-pulse">●</span> {t('dashboard.connecting')}</>
-              )}
-              {connectionStatus === 'error' && (
-                <><WifiOff className="h-3 w-3" /> {t('dashboard.sync_error')}</>
               )}
             </div>
           )}

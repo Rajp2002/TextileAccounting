@@ -79,12 +79,11 @@ export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
 
             return (
               <div key={point.date} className="flex-1 flex flex-col items-center gap-0.5 group relative">
-                {/* Tooltip */}
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-10 pointer-events-none">
-                  <div className="bg-popover border border-border text-popover-foreground text-[11px] font-medium rounded-lg px-2 py-1 shadow-md whitespace-nowrap">
-                    {formatMeters(point.total_meters)}
+                {/* Value Label */}
+                <div className="absolute bottom-full mb-1 flex flex-col items-center z-10 pointer-events-none">
+                  <div className={`text-[9px] font-bold whitespace-nowrap ${isLast ? 'text-primary' : 'text-slate-400'}`}>
+                    {point.total_meters > 0 ? formatMeters(point.total_meters) : ''}
                   </div>
-                  <div className="w-1.5 h-1.5 bg-popover border-r border-b border-border rotate-45 -mt-1" />
                 </div>
 
                 {/* Bar */}

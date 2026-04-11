@@ -701,26 +701,40 @@ export default function EstimatorClient({
                         </div>
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
                             {templates.map(tpl => (
-                                <div key={tpl.id} className="relative shrink-0 group">
+                                <div key={tpl.id} className="relative shrink-0 group flex items-center">
                                     <button
                                         onClick={() => applyTemplate(tpl)}
                                         onContextMenu={e => { e.preventDefault(); openEditRates(tpl) }}
                                         className={`rounded-xl px-4 py-2 text-xs font-bold border transition-all shadow-sm ${
                                             qualityLabel === tpl.name
                                                 ? 'bg-brand-accent border-brand-accent text-white shadow-brand-accent/20'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/50 hover:bg-slate-50'
-                                        } pr-8`}
+                                                : 'bg-white border-slate-200 text-slate-600 group-hover:border-brand-accent/50 group-hover:bg-slate-50'
+                                        } pr-14`}
                                     >
                                         {tpl.name}
                                     </button>
-                                    {/* Edit rates button — visible on hover */}
-                                    <button
-                                        onClick={e => { e.stopPropagation(); openEditRates(tpl) }}
-                                        className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded-md hover:bg-brand-accent/10 text-slate-400 hover:text-brand-accent"
-                                        title={t('estimator.templates.edit_rates_title')}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                    </button>
+                                    <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={e => { e.stopPropagation(); openEditRates(tpl) }}
+                                            className="p-1 rounded-md hover:bg-brand-accent/10 text-slate-400 hover:text-brand-accent transition-colors"
+                                            title={t('estimator.templates.edit_rates_title')}
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                        </button>
+                                        <button
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                if (window.confirm(t('estimator.edit_template_dialog.delete_confirm').replace('{name}', tpl.name))) {
+                                                    handleDeleteTemplate(tpl.id)
+                                                }
+                                            }}
+                                            disabled={deletingTpl === tpl.id}
+                                            className="p-1 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
+                                            title={t('estimator.edit_template_dialog.delete_button')}
+                                        >
+                                            {deletingTpl === tpl.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
