@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { SupervisorSidebar } from '@/components/navigation/supervisor-nav'
 import { requireRole } from '@/lib/auth'
-import { PwaSessionGuard } from '@/components/pwa-session-guard'
 import { OfflineSyncProvider } from '@/components/offline-sync-provider'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
@@ -24,8 +23,6 @@ export default async function SupervisorLayout({ children }: { children: React.R
 
     return (
         <div className="min-h-screen bg-background bg-grid-pattern overflow-x-hidden">
-            {/* Signs out stale sessions when the PWA is killed from multitasking */}
-            <PwaSessionGuard />
 
             <SupervisorSidebar
                 factoryName={factoryName}
