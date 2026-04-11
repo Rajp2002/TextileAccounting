@@ -124,7 +124,7 @@ export function WhatsAppOptIn() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-3 pt-1">
+                <div className="flex flex-wrap items-center gap-3 pt-1">
                     <Button
                         onClick={handleSave}
                         disabled={isPending}

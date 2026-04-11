@@ -72,6 +72,10 @@ export const CreateOrgSchema = z.object({
     phone:       z.string().trim().regex(/^\d{10}$/, 'Phone must be exactly 10 digits'),
 })
 
+export const UpdateOrgNameSchema = z.object({
+    name: z.string().trim().min(2, 'Factory name required').max(120, 'Factory name too long'),
+})
+
 /**
  * JoinOrgSchema — supervisor join form (F1 spec §4)
  * Used by joinOrganization() server action.

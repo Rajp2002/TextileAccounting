@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
 import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
+import { updateOrganizationName } from '@/app/(dashboard)/owner/actions'
 
 export default function SettingsPage() {
     const { t } = useTranslation()
@@ -34,6 +35,8 @@ export default function SettingsPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [deleteConfirmation, setDeleteConfirmation] = useState('')
     const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false)
+    const [factoryName, setFactoryName] = useState('')
+    const [isEditingName, setIsEditingName] = useState(false)
 
     // Fetch organization details on the client
     const { data: org, isLoading: orgLoading } = useQuery({
@@ -46,7 +49,26 @@ export default function SettingsPage() {
                 .eq('id', userProfile!.org_id)
                 .single()
             if (error) throw error
+            // Initialize local name state once data is loaded
+            if (data?.name) setFactoryName(data.name)
             return data
+        }
+    })
+
+    // Update factory name mutation
+    const updateNameMutation = useMutation({
+        mutationFn: async (newName: string) => {
+            const result = await updateOrganizationName(newName)
+            if (result.error) throw new Error(result.error)
+            return result
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['organization'] })
+            setIsEditingName(false)
+            toast.success('Factory name updated successfully')
+        },
+        onError: (err: any) => {
+            toast.error(err.message || 'Failed to update name')
         }
     })
 
@@ -152,8 +174,39 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label>{t('settings.factory.name')}</Label>
-                        <Input value={org?.name || ''} readOnly className="bg-gray-50" />
+                        <div className="flex items-center justify-between">
+                            <Label>{t('settings.factory.name')}</Label>
+                            {factoryName !== org?.name && !isEditingName && (
+                                <Button 
+                                    variant="link" 
+                                    size="sm" 
+                                    className="h-auto p-0 text-blue-600"
+                                    onClick={() => updateNameMutation.mutate(factoryName)}
+                                    disabled={updateNameMutation.isPending}
+                                >
+                                    {updateNameMutation.isPending ? 'Saving...' : 'Save Changes'}
+                                </Button>
+                            )}
+                        </div>
+                        <div className="flex gap-2">
+                            <Input 
+                                value={factoryName} 
+                                onChange={(e) => setFactoryName(e.target.value)}
+                                className="flex-1"
+                                placeholder="Enter factory name"
+                                disabled={updateNameMutation.isPending}
+                            />
+                            {factoryName !== org?.name && (
+                                <Button 
+                                    className="bg-blue-600 hover:bg-blue-700 text-white shrink-0" 
+                                    size="sm"
+                                    onClick={() => updateNameMutation.mutate(factoryName)}
+                                    disabled={updateNameMutation.isPending}
+                                >
+                                    {updateNameMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+                                </Button>
+                            )}
+                        </div>
                     </div>
 
                     <div className="space-y-3">

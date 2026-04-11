@@ -19,6 +19,7 @@ import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
+import { Amount } from '@/components/ui/amount'
 
 const ROLES = [
     { value: 'master', defaultSalary: 30000 },
@@ -229,7 +230,7 @@ export default function FixedWorkersPage() {
                                     <SelectContent>
                                         {ROLES.map(r => (
                                             <SelectItem key={r.value} value={r.value}>
-                                                {t(`workers.roles.${r.value}`)} — {formatINR(r.defaultSalary)}{t('common.per_month')}
+                                                {t(`workers.roles.${r.value}`)} — <Amount value={r.defaultSalary} />{t('common.per_month')}
                                             </SelectItem>
                                         ))}
                                         {editingWorker && !ROLES.find(r => r.value === editingWorker.role) && (
@@ -265,8 +266,8 @@ export default function FixedWorkersPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-3xl font-bold text-green-700">
-                        {formatINR(totalMonthly)}
+                    <div className="text-2xl font-bold text-green-700">
+                        <Amount value={totalMonthly} />
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                         {(fixedWorkers || []).filter(w => w.is_active).length} {t('fixed_page.active_count')}
@@ -345,8 +346,8 @@ export default function FixedWorkersPage() {
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
-                                                    <span className="text-sm font-semibold text-gray-700">
-                                                        {formatINR(w.monthly_salary)}{t('common.per_month')}
+                                                    <span className="text-sm text-gray-700">
+                                                        <Amount value={w.monthly_salary} />{t('common.per_month')}
                                                     </span>
                                                     <Button variant="ghost" size="sm" onClick={() => openEditDialog(w)}>
                                                         <Pencil className="h-3.5 w-3.5" />
@@ -394,8 +395,8 @@ export default function FixedWorkersPage() {
                                                         )}
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <span className="text-sm font-semibold text-gray-700">
-                                                            {formatINR(w.monthly_salary)}{t('common.per_month')}
+                                                        <span className="text-sm text-gray-700">
+                                                            <Amount value={w.monthly_salary} />{t('common.per_month')}
                                                         </span>
                                                         <Button variant="ghost" size="sm" onClick={() => openEditDialog(w)}>
                                                             <Pencil className="h-3.5 w-3.5" />
@@ -433,7 +434,7 @@ export default function FixedWorkersPage() {
                                 <div>
                                     <p className="text-sm font-bold text-amber-900">{t('fixed_page.outstanding')}</p>
                                     <p className="text-xs text-amber-700 mt-0.5">
-                                        {t('fixed_page.balance')} <strong className="text-amber-900">{formatINR(workerDebt)}</strong>{t('fixed_page.settle')}
+                                        {t('fixed_page.balance')} <strong className="text-amber-900"><Amount value={workerDebt} /></strong>{t('fixed_page.settle')}
                                     </p>
                                 </div>
                             </div>

@@ -66,14 +66,17 @@ export function sumMeters(logs: { meters: number | string }[]): string {
 /**
  * Format a number as Indian Rupees.
  * e.g. "1250.00" → "₹1,250.00"
+ * @param amount - the amount to format
+ * @param options - optional configuration (e.g. hideDecimals: true to remove .00)
  */
-export function formatINR(amount: string | number): string {
+export function formatINR(amount: string | number, options?: { hideDecimals?: boolean }): string {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount
+    const hide = options?.hideDecimals && num % 1 === 0
     return new Intl.NumberFormat('en-IN', {
         style: 'currency',
         currency: 'INR',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: hide ? 0 : 2,
+        maximumFractionDigits: hide ? 0 : 2,
     }).format(num)
 }
 

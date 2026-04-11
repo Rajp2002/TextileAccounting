@@ -13,6 +13,7 @@ import {
     UuidSchema,
     PositiveIntSchema,
     AccessCodeSchema,
+    UpdateOrgNameSchema,
     safeParse,
 } from '@/lib/schemas'
 
@@ -227,6 +228,27 @@ export async function generateAccessCode() {
     }
 
     return { success: true, code }
+}
+
+export async function updateOrganizationName(newName: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(UpdateOrgNameSchema, { name: newName })
+    if ('error' in parsed) return { error: parsed.error }
+
+    const { error } = await supabase
+        .from('organizations')
+        .update({ name: parsed.data.name })
+        .eq('id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to update organization name:', error)
+        return { error: 'Failed to update factory name. Please try again.' }
+    }
+
+    revalidatePath('/owner/settings')
+    return { success: true }
 }
 
 export async function validateAndRotateAccessCode(orgId: string, inputCode: string): Promise<boolean> {
