@@ -35,9 +35,9 @@ export function getSuratTodayString(): string {
  * Fixes timezone drift where yesterday might compute incorrectly.
  */
 export function getSuratYesterdayString(): string {
-    const now = getSuratDate()
-    now.setDate(now.getDate() - 1)
-    return format(now, 'yyyy-MM-dd')
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    return formatToSurat(yesterday, 'yyyy-MM-dd')
 }
 
 /**
