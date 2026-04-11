@@ -116,32 +116,33 @@ export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ pathLength: 1, opacity: 1 }}
               transition={{ duration: 0.8, ease: "easeInOut" }}
             />
-            {/* Data Points */}
+          </svg>
+
+          {/* HTML Data Points Layer for Perfect Circles */}
+          <div className="absolute inset-0 z-20 pointer-events-none">
             {data.map((point, i) => {
               const x = (i / (data.length - 1)) * 100
               const y = 100 - (maxVal === 0 ? 0 : (point.total_meters / maxVal) * 90)
               const isLast = i === data.length - 1
               return (
-                <motion.circle
+                <motion.div
                   key={point.date}
-                  cx={x}
-                  cy={y}
-                  r="2.5"
-                  fill="white"
-                  stroke="var(--primary)"
-                  strokeWidth="2"
+                  className={`absolute w-3 h-3 bg-white border-2 border-primary rounded-full flex items-center justify-center -ml-1.5 -mt-1.5 ${
+                    isLast ? 'shadow-[0_0_12px_rgba(var(--primary),0.5)] ring-4 ring-primary/20' : ''
+                  }`}
+                  style={{ left: `${x}%`, top: `${y}%` }}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.5 + i * 0.05 }}
-                  className={isLast ? 'shadow-lg shadow-primary' : ''}
                 />
               )
             })}
-          </svg>
+          </div>
 
           {/* Bar chart behind */}
           <div className="absolute inset-0 flex items-end gap-2.5">
