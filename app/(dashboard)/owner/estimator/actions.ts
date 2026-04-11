@@ -97,7 +97,7 @@ export async function upsertFactoryCostProfile(data: {
             factory_id: profile.org_id,
             ...data,
             updated_at: new Date().toISOString(),
-        })
+        }, { onConflict: 'factory_id' })
 
     if (error) return { error: error.message }
 
