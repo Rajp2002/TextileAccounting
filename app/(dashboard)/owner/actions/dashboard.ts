@@ -1,9 +1,7 @@
-'use server'
-
 import { createClient } from '@/lib/supabase/server'
-import { getSuratTodayString, getSuratYesterdayString } from '@/lib/time'
+import { getSuratTodayString, getSuratYesterdayString, formatToSurat } from '@/lib/time'
 import { parseJWT } from '@/lib/auth'
-import { subDays, format } from 'date-fns'
+import { subDays, format, parseISO } from 'date-fns'
 
 export type WorkerBreakdownEntry = {
   worker_id: string
@@ -76,9 +74,9 @@ export async function getDashboardData(): Promise<DashboardData> {
   const today     = getSuratTodayString()
   const yesterday = getSuratYesterdayString()
 
-  // Build last-7-days date range (Surat IST)
+  const todayDate = parseISO(today)
   const last7Days = Array.from({ length: 7 }, (_, i) =>
-    format(subDays(new Date(today), 6 - i), 'yyyy-MM-dd')
+    formatToSurat(subDays(todayDate, 6 - i), 'yyyy-MM-dd')
   )
 
   const results = await Promise.allSettled([
