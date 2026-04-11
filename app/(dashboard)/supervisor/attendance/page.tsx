@@ -205,13 +205,13 @@ export default function AttendancePage() {
         <div className="space-y-4 pb-28 max-w-2xl mx-auto">
             <Card className="shadow-sm">
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
                             <CalendarDays className="h-5 w-5 text-indigo-600" />
                             <CardTitle>{t('attendance.title')}</CardTitle>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" onClick={setToday} className="h-8 px-2 text-xs">
+                        <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto">
+                            <Button variant="outline" size="sm" onClick={setToday} className="h-8 px-2 text-xs shrink-0 flex-1 sm:flex-none">
                                 <RotateCcw className="h-3 w-3 mr-1" />
                                 {t('attendance.today')}
                             </Button>
@@ -220,7 +220,7 @@ export default function AttendancePage() {
                                 value={selectedDate}
                                 max={new Date().toISOString().split('T')[0]} // Prevent future dates
                                 onChange={(e) => setSelectedDate(e.target.value)}
-                                className="h-8 w-auto text-sm"
+                                className="h-8 text-sm flex-1 sm:w-[150px]"
                             />
                         </div>
                     </div>
@@ -310,12 +310,12 @@ export default function AttendancePage() {
                 </Card>
             )}
 
-            <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] flex justify-center z-40 pb-[env(safe-area-inset-bottom,16px)] md:pb-6">
+            <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] flex justify-center z-40 pb-[calc(80px+env(safe-area-inset-bottom))] md:pb-6">
                 <div className="w-full max-w-2xl md:flex md:justify-end md:px-0">
                     <Button
                         onClick={prepareSaveFlow}
                         disabled={saving || totalCount === 0}
-                        className="w-full md:w-[240px] h-[52px] text-lg font-bold shadow-md bg-teal-600 hover:bg-teal-700 text-white rounded-xl mb-14 md:mb-0 transition-all"
+                        className="w-full md:w-[240px] h-[52px] text-lg font-bold shadow-md bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-all"
                     >
                         {saving ? t('attendance.saving') : t('attendance.save')}
                     </Button>
