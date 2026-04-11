@@ -72,95 +72,25 @@ export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
 
       <div className="px-5 pb-5 pt-8">
         {/* Chart Container */}
-        <div className="relative h-28 w-full group/chart">
-          {/* SVG Line Overlay */}
-          <svg
-            className="absolute inset-0 z-10 pointer-events-none overflow-visible"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-          >
-            <defs>
-              <linearGradient id="line-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.1" />
-              </linearGradient>
-            </defs>
-            {/* Area under the line */}
-            <motion.path
-              d={(() => {
-                const pts = data.map((p, i) => {
-                  const x = (i / (data.length - 1)) * 100
-                  const y = 100 - (maxVal === 0 ? 0 : (p.total_meters / maxVal) * 90) // scale to 90% height
-                  return { x, y }
-                })
-                const pathStr = pts.reduce((acc, p, i) => i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`, '')
-                return `${pathStr} L 100 100 L 0 100 Z`
-              })()}
-              fill="url(#line-gradient)"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.15 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            />
-            {/* The Line */}
-            <motion.path
-              d={(() => {
-                const pts = data.map((p, i) => {
-                  const x = (i / (data.length - 1)) * 100
-                  const y = 100 - (maxVal === 0 ? 0 : (p.total_meters / maxVal) * 90)
-                  return { x, y }
-                })
-                return pts.reduce((acc, p, i) => i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`, '')
-              })()}
-              fill="none"
-              stroke="var(--primary)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              vectorEffect="non-scaling-stroke"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              transition={{ duration: 0.8, ease: "easeInOut" }}
-            />
-          </svg>
-
-          {/* HTML Data Points Layer for Perfect Circles */}
-          <div className="absolute inset-0 z-20 pointer-events-none">
-            {data.map((point, i) => {
-              const x = (i / (data.length - 1)) * 100
-              const y = 100 - (maxVal === 0 ? 0 : (point.total_meters / maxVal) * 90)
-              const isLast = i === data.length - 1
-              return (
-                <motion.div
-                  key={point.date}
-                  className={`absolute w-3 h-3 bg-white border-2 border-primary rounded-full flex items-center justify-center -ml-1.5 -mt-1.5 ${
-                    isLast ? 'shadow-[0_0_12px_rgba(var(--primary),0.5)] ring-4 ring-primary/20' : ''
-                  }`}
-                  style={{ left: `${x}%`, top: `${y}%` }}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.5 + i * 0.05 }}
-                />
-              )
-            })}
-          </div>
-
-          {/* Bar chart behind */}
+        <div className="relative h-32 w-full group/chart pt-2">
+          {/* Simple Bar Chart */}
           <div className="absolute inset-0 flex items-end gap-2.5">
             {data.map((point, i) => {
-              const heightPct = maxVal === 0 ? 0 : (point.total_meters / maxVal) * 90
+              const chartMax = maxVal === 0 ? 100 : Math.max(maxVal * 1.15, maxVal + 20)
+              const heightPct = chartMax === 0 ? 0 : (point.total_meters / chartMax) * 100
               const isLast    = i === data.length - 1
 
               return (
                 <div key={point.date} className="flex-1 flex flex-col items-center gap-0.5 group relative h-full">
                   {/* Slot Background Highlight */}
-                  <div className="absolute inset-x-[-2px] bottom-0 top-[-20px] bg-slate-50/50 dark:bg-slate-900/10 opacity-0 group-hover:opacity-100 rounded-lg transition-opacity -z-10" />
+                  <div className="absolute inset-x-[-2px] inset-y-[-10px] bg-slate-50/50 dark:bg-slate-900/20 opacity-0 group-hover:opacity-100 rounded-lg transition-opacity -z-10" />
 
                   {/* Value Label */}
-                  <div className="absolute bottom-full mb-1 flex flex-col items-center z-20 pointer-events-none">
-                    <div className={`text-[9px] font-black whitespace-nowrap bg-background/80 backdrop-blur-[2px] px-1 rounded-md ${
-                      isLast ? 'text-primary' : 'text-slate-500'
+                  <div className="absolute bottom-full mb-1.5 flex flex-col items-center z-20 pointer-events-none">
+                    <div className={`text-[10px] font-bold whitespace-nowrap px-1.5 py-0.5 rounded-md transition-colors ${
+                      isLast ? 'text-primary bg-primary/10' : 'text-slate-500 bg-background/80 backdrop-blur-sm shadow-sm'
                     }`}>
-                      {point.total_meters > 0 ? formatMeters(point.total_meters) : ''}
+                      {point.total_meters > 0 ? formatMeters(point.total_meters) : '0'}
                     </div>
                   </div>
 
@@ -172,9 +102,9 @@ export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {
                           ? 'bg-primary shadow-lg shadow-primary/20'
                           : point.total_meters === 0
                           ? 'bg-slate-100 dark:bg-slate-800'
-                          : 'bg-primary/5 group-hover:bg-primary/10'
+                          : 'bg-primary/20 dark:bg-primary/30 hover:bg-primary/30 dark:hover:bg-primary/40'
                       }`}
-                      style={{ height: `${Math.max(heightPct, point.total_meters === 0 ? 4 : 8)}%` }}
+                      style={{ height: `${Math.max(heightPct, point.total_meters === 0 ? 2 : 4)}%` }}
                       initial={{ scaleY: 0, originY: 1 }}
                       animate={{ scaleY: 1 }}
                       transition={{ duration: 0.45, delay: i * 0.04, ease: 'easeOut' }}
