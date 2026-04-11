@@ -39,11 +39,11 @@ interface KpiCardProps {
 function KpiCard({ label, value, sub, accent, dimmed, icon }: KpiCardProps) {
   return (
     <div className="flex flex-col gap-1 min-w-0">
-      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-medium text-muted-foreground/70 truncate">
-        {icon && <span className="opacity-70">{icon}</span>}
-        <span>{label}</span>
+      <div className="flex items-start gap-1.5 text-[10.5px] sm:text-[11px] uppercase tracking-wider font-medium text-muted-foreground/70 pr-1">
+        {icon && <div className="opacity-70 shrink-0 pt-[2px]">{icon}</div>}
+        <span className="leading-snug break-words">{label}</span>
       </div>
-      <div className={`text-xl font-semibold leading-tight tracking-tight truncate ${accent ?? 'text-foreground'} ${dimmed ? 'opacity-50' : ''}`}>
+      <div className={`text-xl font-semibold leading-tight tracking-tight truncate mt-0.5 ${accent ?? 'text-foreground'} ${dimmed ? 'opacity-50' : ''}`}>
         {value}
         {sub && <span className="text-sm font-normal text-muted-foreground ml-1">{sub}</span>}
       </div>
@@ -89,7 +89,7 @@ export function KpiStrip({ yesterday, today, isConnected = true, selectedDate }:
               icon: <Zap className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" />
             },
           ].map(({ label, value, accent, icon }) => (
-            <div key={label} className="bg-card px-5 py-4">
+            <div key={label} className="bg-card px-4 py-4 sm:px-5">
               <KpiCard label={label} value={value ?? '—'} accent={accent} icon={icon} />
             </div>
           ))}
@@ -127,8 +127,8 @@ export function KpiStrip({ yesterday, today, isConnected = true, selectedDate }:
                 { label: t('kpi_strip.meters_produced'), value: tData.total_meters !== null ? formatMeters(tData.total_meters) : '—', icon: <Activity className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" /> },
                 { label: t('kpi_strip.floor_wages'), value: tData.piece_rate_wages !== null ? formatRupees(tData.piece_rate_wages) : '—', sub: t('kpi_strip.est'), icon: <IndianRupee className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" /> },
                 { label: t('kpi_strip.machines_running'), value: tData.active_machines !== null ? String(tData.active_machines) : '—', sub: t('kpi_strip.machines'), icon: <Factory className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" /> },
-              ].map(({ label, value, sub, icon }) => (
-                <div key={label} className="bg-card px-5 py-4">
+              ].map(({ label, value, sub, icon }, idx) => (
+                <div key={label} className={`bg-card px-4 py-4 sm:px-5 ${idx === 2 ? 'col-span-2 md:col-span-1' : ''}`}>
                   <KpiCard label={label} value={value ?? '—'} sub={sub} icon={icon} />
                 </div>
               ))}

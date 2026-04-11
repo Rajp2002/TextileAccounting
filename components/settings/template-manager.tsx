@@ -82,10 +82,10 @@ export function TemplateManager() {
             <CardHeader>
                 <div className="flex items-center gap-2">
                     <FileText className="h-5 w-5 text-blue-500" />
-                    <CardTitle>{t('estimator.settings.templates_title')}</CardTitle>
+                    <CardTitle>Saved Fabric Templates</CardTitle>
                 </div>
                 <CardDescription>
-                    {t('estimator.settings.templates_desc')} Templates are saved from the estimator page using "Save as Fabric".
+                    Manage your frequently used fabric configurations. Templates are saved from the estimator page using "Save as Fabric".
                 </CardDescription>
             </CardHeader>
             <CardContent>

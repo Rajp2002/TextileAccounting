@@ -332,7 +332,7 @@ export default function FixedWorkersPage() {
                                         {workers.map(w => (
                                             <div key={w.id} className="flex justify-between items-center py-3 gap-4">
                                                 <div className="min-w-0 flex-1">
-                                                    <span className={cn('font-medium truncate block', !w.is_active && 'text-gray-400 line-through')}>
+                                                    <span className={cn('font-medium break-words block', !w.is_active && 'text-gray-400 line-through')}>
                                                         {tl(w.name)}
                                                     </span>
                                                     {roleInfo.value === 'daily' && (
@@ -384,7 +384,7 @@ export default function FixedWorkersPage() {
                                             {workers.map(w => (
                                                 <div key={w.id} className="flex justify-between items-center py-3 gap-4">
                                                     <div className="min-w-0 flex-1">
-                                                        <span className={cn('font-medium truncate block', !w.is_active && 'text-gray-400 line-through')}>
+                                                        <span className={cn('font-medium break-words block', !w.is_active && 'text-gray-400 line-through')}>
                                                             {tl(w.name)}
                                                         </span>
                                                         {w.pf_esi_eligible && (

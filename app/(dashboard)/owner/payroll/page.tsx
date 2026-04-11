@@ -165,41 +165,43 @@ function MeterWorkerRow({
             'border rounded-xl overflow-hidden transition-all duration-300',
             isPaid ? 'border-green-200 bg-green-50/20 shadow-sm' : 'border-gray-200 bg-white hover:border-indigo-200'
         )}>
-            <div className="flex items-center justify-between p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center p-4 gap-3">
                 <button
                     onClick={() => setExpanded(e => !e)}
-                    className="flex items-center gap-3 text-left flex-1 min-w-0 group"
+                    className="flex items-center gap-3 text-left flex-1 min-w-0 group w-full"
                 >
                     <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-base flex-shrink-0 group-hover:bg-indigo-100 transition-colors">
                         {tl(worker.name)[0]}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                         <div className="font-bold text-gray-900 truncate flex items-center gap-2">
                             {tl(worker.name)}
                             {isPaid && <Check className="h-3.5 w-3.5 text-green-500" />}
                         </div>
-                        <div className="text-xs text-gray-500 flex items-center gap-2">
-                            <span>{worker.totalMeters.toFixed(1)}m production</span>
-                            <span className="w-1 h-1 rounded-full bg-gray-300" />
+                        <div className="text-[11px] sm:text-xs text-gray-500 flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
+                            <span>{worker.totalMeters.toFixed(1)}m</span>
+                            <span className="hidden sm:inline w-1 h-1 rounded-full bg-gray-300" />
                             <span>{worker.machines.length} {worker.machines.length === 1 ? 'machine' : 'machines'}</span>
                         </div>
-                        <div className="flex items-center gap-2 mt-1.5">
-                            {hasAdvances && (
-                                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-100 text-[9px] h-4 px-1.5 font-bold uppercase tracking-tight">
-                                    <HandCoins className="h-2.5 w-2.5 mr-1" />
-                                    {formatINR(worker.totalAdvances)} Adv
-                                </Badge>
-                            )}
-                            <DeductionBadge complianceFlag={isCapped} />
-                        </div>
+                        {(hasAdvances || isCapped) && (
+                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                {hasAdvances && (
+                                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-100 text-[9px] h-4 px-1.5 font-bold uppercase tracking-tight">
+                                        <HandCoins className="h-2.5 w-2.5 mr-1" />
+                                        {formatINR(worker.totalAdvances)} Adv
+                                    </Badge>
+                                )}
+                                <DeductionBadge complianceFlag={isCapped} />
+                            </div>
+                        )}
                     </div>
                 </button>
-                <div className="flex items-center gap-4 flex-shrink-0 ml-3">
-                    <div className="text-right">
-                        <div className={cn("font-black text-lg tracking-tight", isPaid ? "text-green-700" : "text-gray-900")}>
+                <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto bg-gray-50/50 sm:bg-transparent -mx-4 px-4 py-3 sm:p-0 border-t sm:border-0 border-gray-100">
+                    <div className="text-left sm:text-right flex-1 sm:flex-none flex flex-col justify-center gap-1.5 sm:gap-1">
+                        <div className={cn("font-black text-lg tracking-tight leading-none", isPaid ? "text-green-700" : "text-gray-900")}>
                             {formatINR(displayNet)}
                         </div>
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-start sm:justify-end gap-1.5">
                             {isPaid && worker.settlement?.is_final_settlement && (
                                 <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none text-[8px] h-3.5 px-1 font-black uppercase">Final</Badge>
                             )}
@@ -210,7 +212,7 @@ function MeterWorkerRow({
                         size="sm"
                         variant={isPaid ? 'outline' : 'default'}
                         className={cn(
-                            'h-9 px-4 text-xs font-bold rounded-lg transition-all',
+                            'h-9 px-4 text-xs font-bold rounded-lg transition-all whitespace-nowrap',
                             isPaid 
                                 ? 'border-green-200 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600' 
                                 : 'bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg active:scale-95'
@@ -443,12 +445,12 @@ function FixedWorkerRow({
             'border rounded-xl overflow-hidden transition-all duration-300',
             isPaid ? 'border-green-200 bg-green-50/20 shadow-sm' : 'border-gray-200 bg-white hover:border-indigo-200'
         )}>
-            <div className="flex items-center justify-between p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center p-4 gap-3">
                 <button
                     onClick={() => setExpanded(e => !e)}
-                    className="flex items-center gap-3 text-left flex-1 min-w-0 group"
+                    className="flex items-start sm:items-center gap-3 text-left flex-1 min-w-0 group w-full"
                 >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
                             <span className={cn('text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider', ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700')}>
                                 {t(`workers.roles.${worker.role}`) || worker.role}
@@ -456,23 +458,25 @@ function FixedWorkerRow({
                             {isPaid && <Check className="h-3 w-3 text-green-500" />}
                         </div>
                         <span className="font-bold text-gray-900 truncate block text-base">{tl(worker.name)}</span>
-                        <div className="flex items-center gap-2 mt-1.5">
-                            {hasAdvances && (
-                                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-100 text-[9px] h-4 px-1.5 font-bold uppercase tracking-tight">
-                                    <HandCoins className="h-2.5 w-2.5 mr-1" />
-                                    {formatINR(worker.totalAdvances)} Adv
-                                </Badge>
-                            )}
-                            <DeductionBadge complianceFlag={isCapped} />
-                        </div>
+                        {(hasAdvances || isCapped) && (
+                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                {hasAdvances && (
+                                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-100 text-[9px] h-4 px-1.5 font-bold uppercase tracking-tight">
+                                        <HandCoins className="h-2.5 w-2.5 mr-1" />
+                                        {formatINR(worker.totalAdvances)} Adv
+                                    </Badge>
+                                )}
+                                <DeductionBadge complianceFlag={isCapped} />
+                            </div>
+                        )}
                     </div>
                 </button>
-                <div className="flex items-center gap-4 flex-shrink-0 ml-3">
-                    <div className="text-right">
-                        <div className={cn("font-black text-lg tracking-tight", isPaid ? "text-green-700" : "text-gray-900")}>
+                <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto bg-gray-50/50 sm:bg-transparent -mx-4 px-4 py-3 sm:p-0 border-t sm:border-0 border-gray-100">
+                    <div className="text-left sm:text-right flex-1 sm:flex-none flex flex-col justify-center gap-1.5 sm:gap-1">
+                        <div className={cn("font-black text-lg tracking-tight leading-none", isPaid ? "text-green-700" : "text-gray-900")}>
                             {formatINR(displayNet)}
                         </div>
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-start sm:justify-end gap-1.5">
                             {isPaid && worker.settlement?.is_final_settlement && (
                                 <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none text-[8px] h-3.5 px-1 font-black uppercase">Final</Badge>
                             )}
@@ -483,7 +487,7 @@ function FixedWorkerRow({
                         size="sm"
                         variant={isPaid ? 'outline' : 'default'}
                         className={cn(
-                            'h-9 px-4 text-xs font-bold rounded-lg transition-all',
+                            'h-9 px-4 text-xs font-bold rounded-lg transition-all whitespace-nowrap',
                             isPaid 
                                 ? 'border-green-200 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600' 
                                 : 'bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg active:scale-95'
