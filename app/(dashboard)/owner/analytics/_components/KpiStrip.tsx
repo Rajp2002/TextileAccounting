@@ -1,6 +1,7 @@
 import { formatMeters, formatRupees, formatPct, formatDate } from '@/lib/format'
 import { getSuratTodayString, getSuratYesterdayString } from '@/lib/time'
 import { useTranslation } from '@/lib/i18n/context'
+import { Activity, IndianRupee, WalletCards, Zap, Factory } from 'lucide-react'
 
 type KpiStripProps = {
   yesterday: {
@@ -32,14 +33,16 @@ interface KpiCardProps {
   sub?: string
   accent?: string
   dimmed?: boolean
+  icon?: React.ReactNode
 }
 
-function KpiCard({ label, value, sub, accent, dimmed }: KpiCardProps) {
+function KpiCard({ label, value, sub, accent, dimmed, icon }: KpiCardProps) {
   return (
     <div className="flex flex-col gap-1 min-w-0">
-      <span className="text-[11px] uppercase tracking-widest font-medium text-muted-foreground/70 truncate">
-        {label}
-      </span>
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-medium text-muted-foreground/70 truncate">
+        {icon && <span className="opacity-70">{icon}</span>}
+        <span>{label}</span>
+      </div>
       <div className={`text-xl font-semibold leading-tight tracking-tight truncate ${accent ?? 'text-foreground'} ${dimmed ? 'opacity-50' : ''}`}>
         {value}
         {sub && <span className="text-sm font-normal text-muted-foreground ml-1">{sub}</span>}
@@ -76,17 +79,18 @@ export function KpiStrip({ yesterday, today, isConnected = true, selectedDate }:
         {/* KPI columns */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border/40">
           {[
-            { label: t('kpi_strip.meters_produced'), value: yData.total_meters !== null ? formatMeters(yData.total_meters) : '—' },
-            { label: t('kpi_strip.floor_wages'), value: yData.piece_rate_wages !== null ? formatRupees(yData.piece_rate_wages) : '—' },
-            { label: t('kpi_strip.salary_burden'), value: yData.fixed_payroll !== null ? formatRupees(yData.fixed_payroll) : '—' },
+            { label: t('kpi_strip.meters_produced'), value: yData.total_meters !== null ? formatMeters(yData.total_meters) : '—', icon: <Activity className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" /> },
+            { label: t('kpi_strip.floor_wages'), value: yData.piece_rate_wages !== null ? formatRupees(yData.piece_rate_wages) : '—', icon: <IndianRupee className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" /> },
+            { label: t('kpi_strip.salary_burden'), value: yData.fixed_payroll !== null ? formatRupees(yData.fixed_payroll) : '—', icon: <WalletCards className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" /> },
             {
               label: t('kpi_strip.overall_efficiency'),
               value: yData.efficiency_pct === null ? '—' : formatPct(yData.efficiency_pct),
               accent: efficiencyColor(yData.efficiency_pct as number | null),
+              icon: <Zap className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" />
             },
-          ].map(({ label, value, accent }) => (
+          ].map(({ label, value, accent, icon }) => (
             <div key={label} className="bg-card px-5 py-4">
-              <KpiCard label={label} value={value ?? '—'} accent={accent} />
+              <KpiCard label={label} value={value ?? '—'} accent={accent} icon={icon} />
             </div>
           ))}
         </div>
@@ -120,12 +124,12 @@ export function KpiStrip({ yesterday, today, isConnected = true, selectedDate }:
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-px bg-border/40">
               {[
-                { label: t('kpi_strip.meters_produced'), value: tData.total_meters !== null ? formatMeters(tData.total_meters) : '—' },
-                { label: t('kpi_strip.floor_wages'), value: tData.piece_rate_wages !== null ? formatRupees(tData.piece_rate_wages) : '—', sub: t('kpi_strip.est') },
-                { label: t('kpi_strip.machines_running'), value: tData.active_machines !== null ? String(tData.active_machines) : '—', sub: t('kpi_strip.machines') },
-              ].map(({ label, value, sub }) => (
+                { label: t('kpi_strip.meters_produced'), value: tData.total_meters !== null ? formatMeters(tData.total_meters) : '—', icon: <Activity className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" /> },
+                { label: t('kpi_strip.floor_wages'), value: tData.piece_rate_wages !== null ? formatRupees(tData.piece_rate_wages) : '—', sub: t('kpi_strip.est'), icon: <IndianRupee className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" /> },
+                { label: t('kpi_strip.machines_running'), value: tData.active_machines !== null ? String(tData.active_machines) : '—', sub: t('kpi_strip.machines'), icon: <Factory className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" /> },
+              ].map(({ label, value, sub, icon }) => (
                 <div key={label} className="bg-card px-5 py-4">
-                  <KpiCard label={label} value={value ?? '—'} sub={sub} />
+                  <KpiCard label={label} value={value ?? '—'} sub={sub} icon={icon} />
                 </div>
               ))}
             </div>
