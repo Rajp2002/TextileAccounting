@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import crypto from 'crypto'
@@ -614,8 +615,7 @@ export async function saveWhatsAppPreferences(
     phone: string,
     optedIn: boolean
 ) {
-    const { user, profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
+    const { user } = await requireRole(['owner'])
 
     const cleanPhone = phone.replace(/\D/g, '')
     if (optedIn && cleanPhone.length !== 10) {
@@ -633,7 +633,10 @@ export async function saveWhatsAppPreferences(
         updateData.whatsapp_opted_in_at = null
     }
 
-    const { error } = await supabase
+    // Use admin client (service_role) to bypass RLS.
+    // Auth + authorization already verified by requireRole above.
+    const admin = createAdminClient()
+    const { error } = await admin
         .from('profiles')
         .update(updateData)
         .eq('id', user.id)
