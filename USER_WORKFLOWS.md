@@ -39,9 +39,14 @@ None. Data is loaded automatically for Surat Today (`Asia/Kolkata` timezone).
 | Section | Content |
 |---|---|
 | **Live Orders Panel** | One card per active order: party name, quality, meters produced vs target, progress %, Pace Index, forecast date, machine assignments |
-| **KPI Strip** | Today's meters, today's piece-rate wages, pro-rated fixed payroll, avg yield efficiency |
+| **KPI Strip** | Today's meters, today's piece-rate wages, pro-rated fixed payroll, avg yield efficiency — with synchronization indicators and branded icons |
+| **Production Trend** | High-precision scaling bar graph showing the last 7 days of production history, synchronized with today's metrics |
 | **Worker Breakdown** | Accordion: each worker's machines, meters logged per machine, rate snapshot, row total in ₹ |
 | **Yield Alert Banner** | Appears if efficiency < 95%: shows ₹ loss estimate + link to failing batch |
+
+**Real-Time Resilience**
+- **Connection Status**: UX indicators ("Syncing...", "Live") show the health of the Supabase Realtime connection.
+- **Improved Cold-Boot**: Restrictive authentication guards have been removed to ensure the dashboard loads instantly on returning to the app.
 
 **Value Derived**
 - Catch pace issues before they become deadline failures
@@ -247,7 +252,6 @@ Looms often run the same fabric "quality" repeatedly — only the party name and
 2. Server inserts into `estimator_templates` table:
    - Full warp_rows and weft_rows recipe arrays (V3 format)
    - Per-pick cost, tape length, yarn shortage %, overhead override
-   - Legacy flat fields (yarn_denier, ppi, beam_ends) derived from first rows for any backwards-compatible reads
 3. Template appears in the template picker on the next visit.
 
 **Value Derived**
@@ -1736,6 +1740,37 @@ Supervisor wants to edit a locked production log entry. The UI first calls `veri
 
 **Value Derived**
 - Decouples authorization from the specific action — the unlocked UI state can be used for multiple edits within the same session before the next code is needed
+
+---
+
+### Workflow K-5: Update Factory Name (Settings)
+
+**What It Does**
+Owner updates the official name of the factory/organization. This name is used across all supervisor devices, order records, and printed worker payslips.
+
+**Why It Exists**
+Factory names may change legally or simply need correction. The owner needs a way to update this without administrative intervention.
+
+**Who Can Perform**
+Owner only.
+
+**Inputs Required**
+- `New Name`: Text (min 2, max 120 characters)
+
+**Action Triggered**
+`updateOrganizationName(newName)` (owner/actions.ts)
+
+**How It Functions**
+1. Owner opens Settings → enters new name in the Factory Name field.
+2. Owner clicks "Save" or "Save Changes".
+3. Server validates input using `UpdateOrgNameSchema`.
+4. RLS ensures only the owner of the organization can perform the update.
+5. Organization name is updated in the `organizations` table.
+6. Client-side cache is invalidated, and the new name propagates to all views instantly.
+
+**Value Derived**
+- Professional flexibility in branding and legal naming
+- No downtime or manual data correction needed for re-branding
 
 ---
 

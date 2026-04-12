@@ -8,8 +8,8 @@
 -- Calls the monthly-brief Supabase Edge Function via http_post.
 -- Auth uses service_role key (same pattern as loomi-daily-brief).
 --
--- PREREQUISITES: app.settings.supabase_url and
---               app.settings.service_role_key must be set.
+-- PREREQUISITES:
+--   Requires 'supabase_url' and 'service_role_key' in whatsapp_settings table.
 -- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA extensions;
@@ -29,9 +29,9 @@ SELECT cron.schedule(
     '0 18 28 * *',            -- 18:00 UTC on the 28th of every month = 23:30 IST
     $$
     SELECT net.http_post(
-        url     := current_setting('app.settings.supabase_url') || '/functions/v1/monthly-brief',
+        url     := (SELECT value FROM whatsapp_settings WHERE key = 'supabase_url') || '/functions/v1/monthly-brief',
         headers := jsonb_build_object(
-            'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key'),
+            'Authorization', 'Bearer ' || (SELECT value FROM whatsapp_settings WHERE key = 'service_role_key'),
             'Content-Type', 'application/json'
         ),
         body    := '{}'::jsonb

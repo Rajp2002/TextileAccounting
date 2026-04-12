@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,15 +11,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { formatINR } from '@/lib/finance'
-import { Plus, Pencil, Trash2, Users, Briefcase, KeyRound, AlertCircle, Loader2 } from 'lucide-react'
+import { Pencil, Trash2, Users, Briefcase, KeyRound, AlertCircle, Loader2, Gauge, MessageCircle } from 'lucide-react'
 import { getWorkerDebt } from '@/app/(dashboard)/supervisor/actions'
-import { deleteFixedWorkerWithCode, upsertFixedWorker } from '@/app/(dashboard)/owner/actions'
+import { deleteFixedWorkerWithCode, upsertFixedWorker, updateMeterWorker, deleteMeterWorkerWithCode } from '@/app/(dashboard)/owner/actions'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
 import { Amount } from '@/components/ui/amount'
+import { AddWorkerDialog } from '@/components/AddWorkerDialog'
 
 const ROLES = [
     { value: 'master', defaultSalary: 30000 },
@@ -41,6 +42,15 @@ interface FixedWorker {
     pf_number?: string
 }
 
+interface MeterWorker {
+    id: number
+    name: string
+    is_active: boolean
+    pf_esi_eligible?: boolean
+    whatsapp_number?: string | null
+    whatsapp_language?: string | null
+}
+
 function getRoleLabel(role: string, t: any) {
     return t(`workers.roles.${role}`) || role
 }
@@ -57,7 +67,343 @@ function getRoleColor(role: string) {
     return colors[role] || 'bg-gray-100 text-gray-800'
 }
 
-export default function FixedWorkersPage() {
+// ─── Edit Meter Worker Dialog ─────────────────────────────────────────────────
+
+function EditMeterWorkerDialog({
+    worker,
+    onClose,
+}: {
+    worker: MeterWorker
+    onClose: () => void
+}) {
+    const queryClient = useQueryClient()
+    const [name, setName] = useState(worker.name)
+    const [phone, setPhone] = useState(worker.whatsapp_number || '')
+    const [lang, setLang] = useState<'en' | 'hi' | 'gu'>(
+        (worker.whatsapp_language as 'en' | 'hi' | 'gu') || 'en'
+    )
+    const [consent, setConsent] = useState(false)
+
+    const mutation = useMutation({
+        mutationFn: () =>
+            updateMeterWorker({
+                id: worker.id,
+                name,
+                phone: phone || undefined,
+                language: lang,
+                consentGiven: phone.length === 10 ? consent : true,
+            }),
+        onSuccess: (result) => {
+            if ('error' in result && result.error) {
+                toast.error(result.error)
+                return
+            }
+            toast.success('Worker updated')
+            queryClient.invalidateQueries({ queryKey: ['meter_workers'] })
+            queryClient.invalidateQueries({ queryKey: ['workers'] })
+            onClose()
+        },
+        onError: (err: any) => toast.error(err.message || 'Failed to update worker'),
+    })
+
+    const canSave =
+        name.trim().length > 0 &&
+        (phone.length === 0 || (phone.length === 10 && consent))
+
+    return (
+        <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+                <DialogTitle>Edit Piece Rate Worker</DialogTitle>
+                <DialogDescription>Update name or WhatsApp number</DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+                <div className="space-y-1.5">
+                    <Label htmlFor="mw-name">Worker Name <span className="text-red-500">*</span></Label>
+                    <Input
+                        id="mw-name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Worker name"
+                        autoFocus
+                    />
+                </div>
+
+                <div className="border-t border-gray-100 pt-3 space-y-2">
+                    <p className="text-xs font-medium text-gray-700">
+                        WhatsApp Number <span className="text-gray-400 font-normal">(optional)</span>
+                    </p>
+                    <p className="text-xs text-gray-400">Used for payroll messages and advance receipts</p>
+                    <div className="flex gap-2">
+                        <div className="flex items-center px-2.5 bg-gray-50 border border-gray-200 rounded-md text-xs text-gray-600 font-medium whitespace-nowrap">
+                            +91
+                        </div>
+                        <Input
+                            type="tel"
+                            inputMode="numeric"
+                            placeholder="9898989898"
+                            value={phone}
+                            onChange={(e) => {
+                                setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))
+                                if (e.target.value.length === 0) setConsent(false)
+                            }}
+                            maxLength={10}
+                            className="font-mono"
+                        />
+                        <select
+                            value={lang}
+                            onChange={(e) => setLang(e.target.value as 'en' | 'hi' | 'gu')}
+                            className="border border-gray-200 rounded-md text-xs px-2 bg-white text-gray-700"
+                        >
+                            <option value="en">English</option>
+                            <option value="hi">हिंदी</option>
+                            <option value="gu">ગુજરાતી</option>
+                        </select>
+                    </div>
+
+                    {phone.length === 10 && (
+                        <div className="flex items-start gap-2">
+                            <input
+                                type="checkbox"
+                                id="mw-consent"
+                                checked={consent}
+                                onChange={(e) => setConsent(e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 cursor-pointer"
+                            />
+                            <label htmlFor="mw-consent" className="text-xs text-gray-500 leading-snug cursor-pointer">
+                                I confirm this worker has consented to receive WhatsApp payroll messages on this number
+                            </label>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <DialogFooter>
+                <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>
+                    Cancel
+                </Button>
+                <Button onClick={() => mutation.mutate()} disabled={!canSave || mutation.isPending}>
+                    {mutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving…</> : 'Save Changes'}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    )
+}
+
+// ─── Piece Rate Workers Tab ───────────────────────────────────────────────────
+
+function PieceRateTab({ orgId }: { orgId: string }) {
+    const { t } = useTranslation()
+    const tl = useTransliterate()
+    const supabase = createClient()
+    const queryClient = useQueryClient()
+
+    const [editWorker, setEditWorker] = useState<MeterWorker | null>(null)
+    const [workerToDelete, setWorkerToDelete] = useState<MeterWorker | null>(null)
+    const [workerDebt, setWorkerDebt] = useState<number>(0)
+    const [accessCode, setAccessCode] = useState('')
+    const [deleting, setDeleting] = useState(false)
+    const [fetchingDebt, setFetchingDebt] = useState(false)
+    const [verificationOpen, setVerificationOpen] = useState(false)
+
+    const { data: meterWorkers, isLoading } = useQuery({
+        queryKey: ['meter_workers', orgId],
+        enabled: !!orgId,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('workers')
+                .select('id, name, is_active, pf_esi_eligible, whatsapp_number, whatsapp_language')
+                .eq('org_id', orgId)
+                .order('name')
+            if (error) throw error
+            return data as MeterWorker[]
+        },
+    })
+
+    const handleDelete = async (worker: MeterWorker) => {
+        setFetchingDebt(true)
+        try {
+            const res = await getWorkerDebt(worker.id, 'meter')
+            setWorkerDebt(res.balance || 0)
+            setWorkerToDelete(worker)
+            setAccessCode('')
+            setVerificationOpen(true)
+        } finally {
+            setFetchingDebt(false)
+        }
+    }
+
+    const executeDelete = async () => {
+        if (!workerToDelete) return
+        setDeleting(true)
+        try {
+            const result = await deleteMeterWorkerWithCode(workerToDelete.id, accessCode)
+            if (!result.success) {
+                toast.error(result.error || t('auth.invalid_code'))
+                return
+            }
+            toast.success(t('common.removed'))
+            setVerificationOpen(false)
+            setWorkerToDelete(null)
+            queryClient.invalidateQueries({ queryKey: ['meter_workers'] })
+            queryClient.invalidateQueries({ queryKey: ['workers'] })
+        } catch (err: any) {
+            toast.error(err.message)
+        } finally {
+            setDeleting(false)
+        }
+    }
+
+    const activeCount = (meterWorkers || []).filter((w) => w.is_active).length
+
+    return (
+        <div className="space-y-4">
+            {/* Summary */}
+            <Card>
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                        Piece Rate Workers
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-orange-600">{activeCount}</div>
+                    <p className="text-xs text-muted-foreground mt-1">active piece rate workers</p>
+                </CardContent>
+            </Card>
+
+            {/* Add button */}
+            <div className="flex justify-end">
+                <AddWorkerDialog orgId={orgId} onWorkerAdded={() => queryClient.invalidateQueries({ queryKey: ['meter_workers'] })} />
+            </div>
+
+            {/* List */}
+            {isLoading ? (
+                <Card>
+                    <CardContent className="pt-4 space-y-3">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="flex justify-between items-center py-2">
+                                <Skeleton className="h-5 w-32" />
+                                <div className="flex gap-2">
+                                    <Skeleton className="h-8 w-8 rounded-md" />
+                                    <Skeleton className="h-8 w-8 rounded-md" />
+                                </div>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            ) : (meterWorkers || []).length === 0 ? (
+                <Card>
+                    <CardContent className="py-12 text-center">
+                        <Gauge className="h-10 w-10 mx-auto text-gray-300 mb-3" />
+                        <p className="font-medium text-gray-500">No piece rate workers yet</p>
+                        <p className="text-sm text-gray-400 mt-1">Add workers who are paid per meter woven</p>
+                    </CardContent>
+                </Card>
+            ) : (
+                <Card>
+                    <CardContent className="pt-0">
+                        <div className="divide-y">
+                            {(meterWorkers || []).map((w) => (
+                                <div key={w.id} className="flex justify-between items-center py-3 gap-4">
+                                    <div className="min-w-0 flex-1">
+                                        <span className={cn('font-medium break-words block', !w.is_active && 'text-gray-400 line-through')}>
+                                            {tl(w.name)}
+                                        </span>
+                                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                            <span className="text-xs text-orange-600 font-medium">Per metre</span>
+                                            {w.pf_esi_eligible && (
+                                                <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
+                                                    ESI/PF ✓
+                                                </span>
+                                            )}
+                                            {w.whatsapp_number && (
+                                                <span className="flex items-center gap-1 text-[10px] font-semibold bg-green-50 text-green-700 px-1.5 py-0.5 rounded">
+                                                    <MessageCircle className="h-2.5 w-2.5" />
+                                                    WA ✓
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <Dialog open={editWorker?.id === w.id} onOpenChange={(open) => { if (!open) setEditWorker(null) }}>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" size="sm" onClick={() => setEditWorker(w)}>
+                                                    <Pencil className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </DialogTrigger>
+                                            {editWorker?.id === w.id && (
+                                                <EditMeterWorkerDialog worker={editWorker} onClose={() => setEditWorker(null)} />
+                                            )}
+                                        </Dialog>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-red-500 hover:text-red-700"
+                                            onClick={() => handleDelete(w)}
+                                            disabled={fetchingDebt}
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Delete verification modal */}
+            <Dialog open={verificationOpen} onOpenChange={setVerificationOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <KeyRound className="h-5 w-5" /> {t('fixed_page.auth_title')}
+                        </DialogTitle>
+                        <DialogDescription>{t('fixed_page.auth_desc')}</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        {workerDebt > 0 && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
+                                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-bold text-amber-900">{t('fixed_page.outstanding')}</p>
+                                    <p className="text-xs text-amber-700 mt-0.5">
+                                        {t('fixed_page.balance')} <strong className="text-amber-900"><Amount value={workerDebt} /></strong>{t('fixed_page.settle')}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        <div className="space-y-2">
+                            <Label>{t('fixed_page.access_code')}</Label>
+                            <Input
+                                placeholder={t('fixed_page.code_ph')}
+                                value={accessCode}
+                                onChange={(e) => setAccessCode(e.target.value)}
+                                className="font-mono uppercase tracking-widest text-lg"
+                                maxLength={6}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setVerificationOpen(false)}>{t('fixed_page.cancel')}</Button>
+                        <Button
+                            variant="destructive"
+                            disabled={accessCode.length < 6 || deleting}
+                            onClick={executeDelete}
+                        >
+                            {deleting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                            {t('fixed_page.verify_delete')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
+    )
+}
+
+// ─── Fixed Workers Tab ────────────────────────────────────────────────────────
+
+function FixedWorkersTab({ orgId }: { orgId: string }) {
     const { t } = useTranslation()
     const tl = useTransliterate()
     const supabase = createClient()
@@ -70,7 +416,6 @@ export default function FixedWorkersPage() {
     const [formSalary, setFormSalary] = useState('')
     const [saving, setSaving] = useState(false)
 
-    // Deletion State
     const [workerToDelete, setWorkerToDelete] = useState<FixedWorker | null>(null)
     const [workerDebt, setWorkerDebt] = useState<number>(0)
     const [accessCode, setAccessCode] = useState('')
@@ -78,21 +423,19 @@ export default function FixedWorkersPage() {
     const [fetchingDebt, setFetchingDebt] = useState(false)
     const [verificationOpen, setVerificationOpen] = useState(false)
 
-    const { data: userProfile } = useUserProfile()
-
     const { data: fixedWorkers, isLoading } = useQuery({
-        queryKey: ['fixed_workers', userProfile?.org_id],
-        enabled: !!userProfile?.org_id,
+        queryKey: ['fixed_workers', orgId],
+        enabled: !!orgId,
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('fixed_workers')
                 .select('*')
-                .eq('org_id', userProfile!.org_id)
+                .eq('org_id', orgId)
                 .order('role')
                 .order('name')
             if (error) throw error
             return data as FixedWorker[]
-        }
+        },
     })
 
     const openAddDialog = () => {
@@ -113,9 +456,8 @@ export default function FixedWorkersPage() {
 
     const handleRoleChange = (role: string) => {
         setFormRole(role)
-        // Auto-fill default salary if adding new worker
         if (!editingWorker) {
-            const defaultSalary = ROLES.find(r => r.value === role)?.defaultSalary
+            const defaultSalary = ROLES.find((r) => r.value === role)?.defaultSalary
             if (defaultSalary) setFormSalary(defaultSalary.toString())
         }
     }
@@ -125,7 +467,6 @@ export default function FixedWorkersPage() {
             toast.error(t('common.fill_all'))
             return
         }
-
         setSaving(true)
         try {
             const result = await upsertFixedWorker({
@@ -135,7 +476,6 @@ export default function FixedWorkersPage() {
                 monthly_salary: parseFloat(formSalary),
             })
             if (result.error) throw new Error(result.error)
-
             toast.success(editingWorker ? t('common.updated') : t('common.added'))
             setDialogOpen(false)
             queryClient.invalidateQueries({ queryKey: ['fixed_workers'] })
@@ -147,7 +487,6 @@ export default function FixedWorkersPage() {
     }
 
     const handleDelete = async (worker: FixedWorker) => {
-        if (!userProfile?.org_id) return
         setFetchingDebt(true)
         try {
             const res = await getWorkerDebt(worker.id, 'fixed')
@@ -161,17 +500,14 @@ export default function FixedWorkersPage() {
     }
 
     const executeDelete = async () => {
-        if (!workerToDelete || !userProfile?.org_id) return
-        
+        if (!workerToDelete) return
         setDeleting(true)
         try {
-            // Verify access code and delete in a single server action (SEC-004)
             const result = await deleteFixedWorkerWithCode(workerToDelete.id, accessCode)
             if (!result.success) {
                 toast.error(result.error || t('auth.invalid_code'))
                 return
             }
-
             toast.success(t('common.removed'))
             setVerificationOpen(false)
             setWorkerToDelete(null)
@@ -183,7 +519,6 @@ export default function FixedWorkersPage() {
         }
     }
 
-    // Group workers by role
     const grouped = (fixedWorkers || []).reduce((acc, w) => {
         if (!acc[w.role]) acc[w.role] = []
         acc[w.role].push(w)
@@ -191,20 +526,33 @@ export default function FixedWorkersPage() {
     }, {} as Record<string, FixedWorker[]>)
 
     const totalMonthly = (fixedWorkers || [])
-        .filter(w => w.is_active)
+        .filter((w) => w.is_active)
         .reduce((sum, w) => sum + Number(w.monthly_salary), 0)
 
     return (
-        <div className="p-4 space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold">{t('fixed_page.title')}</h1>
-                    <p className="text-sm text-gray-500">{t('fixed_page.subtitle')}</p>
-                </div>
+        <div className="space-y-4">
+            {/* Summary Card */}
+            <Card>
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                        {t('fixed_page.monthly_payroll')}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-green-700">
+                        <Amount value={totalMonthly} />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {(fixedWorkers || []).filter((w) => w.is_active).length} {t('fixed_page.active_count')}
+                    </p>
+                </CardContent>
+            </Card>
+
+            {/* Add button */}
+            <div className="flex justify-end">
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                         <Button onClick={openAddDialog}>
-                            <Plus className="h-4 w-4 mr-1" />
                             {t('fixed_page.add_worker')}
                         </Button>
                     </DialogTrigger>
@@ -228,12 +576,12 @@ export default function FixedWorkersPage() {
                                         <SelectValue placeholder={t('fixed_page.select_role')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {ROLES.map(r => (
+                                        {ROLES.map((r) => (
                                             <SelectItem key={r.value} value={r.value}>
                                                 {t(`workers.roles.${r.value}`)} — <Amount value={r.defaultSalary} />{t('common.per_month')}
                                             </SelectItem>
                                         ))}
-                                        {editingWorker && !ROLES.find(r => r.value === editingWorker.role) && (
+                                        {editingWorker && !ROLES.find((r) => r.value === editingWorker.role) && (
                                             <SelectItem value={editingWorker.role}>
                                                 {editingWorker.role} ({t('fixed_page.custom')})
                                             </SelectItem>
@@ -258,27 +606,10 @@ export default function FixedWorkersPage() {
                 </Dialog>
             </div>
 
-            {/* Summary Card */}
-            <Card>
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                        {t('fixed_page.monthly_payroll')}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold text-green-700">
-                        <Amount value={totalMonthly} />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                        {(fixedWorkers || []).filter(w => w.is_active).length} {t('fixed_page.active_count')}
-                    </p>
-                </CardContent>
-            </Card>
-
-            {/* Workers by Role */}
+            {/* Workers list */}
             {isLoading ? (
                 <div className="space-y-4">
-                    {[1, 2].map(i => (
+                    {[1, 2].map((i) => (
                         <Card key={i}>
                             <CardHeader className="pb-2">
                                 <div className="flex items-center gap-2">
@@ -289,7 +620,7 @@ export default function FixedWorkersPage() {
                             </CardHeader>
                             <CardContent className="pt-0">
                                 <div className="divide-y">
-                                    {[1, 2].map(j => (
+                                    {[1, 2].map((j) => (
                                         <div key={j} className="flex justify-between items-center py-3">
                                             <Skeleton className="h-5 w-24" />
                                             <div className="flex items-center gap-3">
@@ -314,7 +645,7 @@ export default function FixedWorkersPage() {
                 </Card>
             ) : (
                 <div className="space-y-4">
-                    {ROLES.map(roleInfo => {
+                    {ROLES.map((roleInfo) => {
                         const workers = grouped[roleInfo.value]
                         if (!workers || workers.length === 0) return null
                         return (
@@ -330,7 +661,7 @@ export default function FixedWorkersPage() {
                                 </CardHeader>
                                 <CardContent className="pt-0">
                                     <div className="divide-y">
-                                        {workers.map(w => (
+                                        {workers.map((w) => (
                                             <div key={w.id} className="flex justify-between items-center py-3 gap-4">
                                                 <div className="min-w-0 flex-1">
                                                     <span className={cn('font-medium break-words block', !w.is_active && 'text-gray-400 line-through')}>
@@ -366,7 +697,7 @@ export default function FixedWorkersPage() {
 
                     {/* Custom Roles */}
                     {Object.entries(grouped)
-                        .filter(([roleName]) => !ROLES.find(r => r.value === roleName))
+                        .filter(([roleName]) => !ROLES.find((r) => r.value === roleName))
                         .map(([roleName, workers]) => {
                             if (!workers || workers.length === 0) return null
                             return (
@@ -382,7 +713,7 @@ export default function FixedWorkersPage() {
                                     </CardHeader>
                                     <CardContent className="pt-0">
                                         <div className="divide-y">
-                                            {workers.map(w => (
+                                            {workers.map((w) => (
                                                 <div key={w.id} className="flex justify-between items-center py-3 gap-4">
                                                     <div className="min-w-0 flex-1">
                                                         <span className={cn('font-medium break-words block', !w.is_active && 'text-gray-400 line-through')}>
@@ -415,18 +746,15 @@ export default function FixedWorkersPage() {
                 </div>
             )}
 
-            {/* Deletion & Authorization Modal */}
+            {/* Delete verification modal */}
             <Dialog open={verificationOpen} onOpenChange={setVerificationOpen}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-red-600">
                             <KeyRound className="h-5 w-5" /> {t('fixed_page.auth_title')}
                         </DialogTitle>
-                        <DialogDescription>
-                            {t('fixed_page.auth_desc')}
-                        </DialogDescription>
+                        <DialogDescription>{t('fixed_page.auth_desc')}</DialogDescription>
                     </DialogHeader>
-
                     <div className="space-y-4 py-4">
                         {workerDebt > 0 && (
                             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
@@ -439,7 +767,6 @@ export default function FixedWorkersPage() {
                                 </div>
                             </div>
                         )}
-
                         <div className="space-y-2">
                             <Label>{t('fixed_page.access_code')}</Label>
                             <Input
@@ -451,7 +778,6 @@ export default function FixedWorkersPage() {
                             />
                         </div>
                     </div>
-
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setVerificationOpen(false)}>{t('fixed_page.cancel')}</Button>
                         <Button
@@ -465,6 +791,59 @@ export default function FixedWorkersPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+        </div>
+    )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+export default function WorkersPage() {
+    const { t } = useTranslation()
+    const { data: userProfile } = useUserProfile()
+    const [activeTab, setActiveTab] = useState<'piece-rate' | 'fixed'>('piece-rate')
+
+    return (
+        <div className="p-4 space-y-6">
+            <div>
+                <h1 className="text-2xl font-bold">{t('nav.workers')}</h1>
+                <p className="text-sm text-gray-500">Manage piece rate and salaried staff</p>
+            </div>
+
+            {/* Tab switcher */}
+            <div className="flex rounded-lg border overflow-hidden w-full max-w-xs">
+                <button
+                    type="button"
+                    className={cn(
+                        'flex-1 py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1.5',
+                        activeTab === 'piece-rate'
+                            ? 'bg-gray-900 text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-50'
+                    )}
+                    onClick={() => setActiveTab('piece-rate')}
+                >
+                    <Gauge className="h-3.5 w-3.5" />
+                    Piece Rate
+                </button>
+                <button
+                    type="button"
+                    className={cn(
+                        'flex-1 py-2 text-sm font-medium transition-colors border-l flex items-center justify-center gap-1.5',
+                        activeTab === 'fixed'
+                            ? 'bg-gray-900 text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-50'
+                    )}
+                    onClick={() => setActiveTab('fixed')}
+                >
+                    <Briefcase className="h-3.5 w-3.5" />
+                    Fixed Salary
+                </button>
+            </div>
+
+            {userProfile?.org_id && (
+                activeTab === 'piece-rate'
+                    ? <PieceRateTab orgId={userProfile.org_id} />
+                    : <FixedWorkersTab orgId={userProfile.org_id} />
+            )}
         </div>
     )
 }
