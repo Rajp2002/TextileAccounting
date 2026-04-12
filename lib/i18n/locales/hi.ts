@@ -483,7 +483,7 @@ export const hi = {
     }
   },
   system_health: {
-    title: "सिस्टम हेल्थ (System Health)",
+    title: "WhatsApp हेल्थ",
     subtitle: "बैकग्राउंड जॉब्स और डेली ब्रीफ डिलीवरी ट्रैक करें",
     logs: {
       title: "डेली ब्रीफ रिकॉर्ड (Last 30 days)",

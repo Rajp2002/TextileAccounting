@@ -481,7 +481,7 @@ export const gu = {
     }
   },
   system_health: {
-    title: "સિસ્ટમ હેલ્થ (System Health)",
+    title: "WhatsApp હેલ્થ",
     subtitle: "બેકગ્રાઉન્ડ જોબ્સ અને દૈનિક બ્રીફ ડિલિવરી ટ્રેક કરો",
     logs: {
       title: "દૈનિક બ્રીફ રેકોર્ડ (Last 30 days)",
