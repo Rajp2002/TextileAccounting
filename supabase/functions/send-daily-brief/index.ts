@@ -66,6 +66,24 @@ async function processOwner(
   const phone = owner.whatsapp_number as string;
   const ownerProfileId = owner.id as string;
 
+  // 1. Acquire idempotency lock using whatsapp_cooldowns.
+  // pg_cron occasionally duplicate-fires, or a local dev environment might ping the same remote function.
+  // Inserting a row guarantees the concurrent execution will hit a PK violation and abort.
+  const { error: lockError } = await supabase.from("whatsapp_cooldowns").insert({
+    org_id: orgId,
+    alert_type: "daily_brief",
+    ref_id: todayStr,
+    sent_at: new Date().toISOString(),
+  });
+
+  if (lockError) {
+    if (lockError.code === "23505") { // 23505 is PostgreSQL unique_violation
+      console.log(`[send-daily-brief] Org ${orgId} already processed for ${todayStr}. Skipping to prevent duplicate.`);
+      return;
+    }
+    console.warn(`[send-daily-brief] Failed to acquire lock for org ${orgId}: ${lockError.message}`);
+  }
+
   // 2. Postgres RPC will be updated to return this flat structure.
   // We expect: total_meters, active_orders (count), top_machine_name, top_machine_meters, labor_liability_inr
   const { data: statsData, error: statsError } = await supabase.rpc(

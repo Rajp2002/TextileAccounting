@@ -799,3 +799,63 @@ export async function saveWorkerWhatsApp(data: {
     revalidatePath('/owner/advances')
     return { success: true }
 }
+
+export async function retryWhatsAppMessage(logId: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    // 1. Verify the log belongs to this organization
+    const { data: log, error: checkError } = await supabase
+        .from('whatsapp_delivery_log')
+        .select('id, status')
+        .eq('id', logId)
+        .eq('org_id', profile.org_id)
+        .single()
+
+    if (checkError || !log) {
+        return { error: 'Message log not found or unauthorized.' }
+    }
+
+    if (log.status !== 'failed') {
+        return { error: 'Only failed messages can be retried.' }
+    }
+
+    // 2. Reset the log to make it eligible for immediate retry
+    // The cron filters by sent_at > NOW() - 24h, status = 'failed', retry_count < 3
+    const { error: resetError } = await supabase
+        .from('whatsapp_delivery_log')
+        .update({
+            retry_count: 0,
+            sent_at: new Date().toISOString(),
+        })
+        .eq('id', logId)
+
+    if (resetError) {
+        console.error('Failed to reset message log:', resetError)
+        return { error: 'Failed to queue message for retry.' }
+    }
+
+    // 3. Immediately invoke the retry Edge Function so we don't wait for the top of the hour
+    try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        
+        // ping the robust retry edge function. It will process all pending retries (including this one)
+        const fetchRes = await fetch(`${supabaseUrl}/functions/v1/retry-failed-messages`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${serviceRoleKey}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        
+        if (!fetchRes.ok) {
+            console.warn('Edge function retry trigger failed, message will still send at next hour', await fetchRes.text())
+        }
+    } catch (e) {
+        console.warn('Network err triggering retry edge function:', e)
+    }
+
+    revalidatePath('/owner/system-health')
+    return { success: true }
+}

@@ -14,7 +14,7 @@ export const en = {
     "payroll": "Payroll",
     "advances": "Advances",
     "estimator": "Estimator",
-    "system health": "System Health",
+    "system health": "WhatsApp Health",
   },
   attendance: {
     title: "Daily Attendance",
@@ -489,18 +489,18 @@ export const en = {
       warning: "⚠️ Copy this now. It won't be shown again."
     }
   },
-  system_health: {
-    title: "System Health",
-    subtitle: "Monitor background jobs and daily brief deliveries",
+  whatsapp_health: {
+    title: "WhatsApp Health",
+    subtitle: "Monitor background jobs and message deliveries",
     logs: {
-      title: "Daily Brief Logs (Last 30 days)",
-      desc: "Status of the automated 8:00 PM WhatsApp performance reports",
-      empty: "No job logs found. Ensure your cron jobs and Edge Functions are enabled.",
+      title: "Delivery Logs (Last 50 messages)",
+      desc: "Status of automated WhatsApp pipeline",
+      empty: "No logs found. Ensure your WhatsApp integration is enabled.",
       cols: {
-        timestamp: "Timestamp",
-        target_date: "Target Date",
-        status: "Status",
-        details: "Details"
+        timestamp: "TIMESTAMP",
+        target_date: "RECIPIENT",
+        status: "STATUS",
+        details: "DETAILS/TYPE",
       },
       status: {
         success: "Success",
