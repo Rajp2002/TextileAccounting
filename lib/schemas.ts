@@ -97,12 +97,6 @@ export const SignInSchema = z.object({
     password: z.string().min(1, 'Password required'),
 })
 
-/**
- * @deprecated Use CreateOrgSchema instead.
- * Kept temporarily so any lingering references compile.
- */
-export const SignupSchema = CreateOrgSchema
-
 // ─── Inventory Schemas ────────────────────────────────────────────────────────
 
 export const QualitySchema = z.object({

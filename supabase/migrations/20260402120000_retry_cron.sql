@@ -8,8 +8,8 @@
 --   status = 'failed'  AND  sent_at > NOW() - 24h  AND  retry_count < 3
 -- and re-attempts to send them via Interakt.
 --
--- PREREQUISITES: app.settings.supabase_url and
---               app.settings.service_role_key must be set.
+-- PREREQUISITES:
+--   Requires 'supabase_url' and 'service_role_key' in whatsapp_settings table.
 -- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA extensions;
@@ -29,9 +29,9 @@ SELECT cron.schedule(
     '0 * * * *',                     -- top of every hour
     $$
     SELECT net.http_post(
-        url     := current_setting('app.settings.supabase_url') || '/functions/v1/retry-failed-messages',
+        url     := (SELECT value FROM whatsapp_settings WHERE key = 'supabase_url') || '/functions/v1/retry-failed-messages',
         headers := jsonb_build_object(
-            'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key'),
+            'Authorization', 'Bearer ' || (SELECT value FROM whatsapp_settings WHERE key = 'service_role_key'),
             'Content-Type', 'application/json'
         ),
         body    := '{}'::jsonb

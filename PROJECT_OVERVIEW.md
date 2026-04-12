@@ -70,6 +70,8 @@ Orders are then routed to the factory floor:
 ### 4.1 Order Intelligence & Historical Views
 The dashboard provides an instant pulse on the factory via **Supabase Realtime**:
 - **Live Orders Grid/Carousel**: Real-time meters produced vs target bounds.
+- **Production Trends**: Modern scaling bar graphs showing the last 7 days of production, synchronized across all KPI metrics.
+- **Branded Visuals**: High-contrast icons and color-coded health indicators (Order Health Index) for instant floor awareness.
 - **Pace Forecasting**: PostgreSQL RPC predicting finish dates based on trailing daily averages.
 - **Historical Insights**: A unified date picker allows the owner to instantly rewind the dashboard to previous production days, inspecting historical logs natively.
 
@@ -77,12 +79,19 @@ The dashboard provides an instant pulse on the factory via **Supabase Realtime**
 - **Daily Metrics**: Production totals, Piece-rate wages today, and Pro-rated fixed payroll.
 - **Expandable Worker Breakdown**: Shows exactly what machines each worker operated, zero/null-production state clarity, and granular daily wage accrual.
 
+### 4.3 Real-Time Sync & Resilience
+The system is built for the factory floor's connectivity challenges:
+- **Resilient Realtime**: Supabase WebSocket connections automatically reconnect with "Syncing..." status indicators to ensure data integrity during spotty internet.
+- **Offline-First Logging**: Supervisors can log production without a connection; data is cached and pushed the moment the device reconnects.
+- **Fast Cold-Boots**: Optimized authentication flow removes restrictive guards (like the old PwaSessionGuard) for instant access on return to the app.
+
 ---
 
 ## 5. The Payroll & Advances (Upaad) System
 
 ### 5.1 Settlement Engine (`lib/finance.ts`)
 - **Decimal.js Hardened**: 20-digit precision arithmetic for all piece-rate and rate-snapshot operations.
+- **Smart Currency Display**: Professional Indian Rupee (₹) formatting via `formatINR`. It hides unnecessary ".00" for whole numbers and uses a smaller font size for non-zero decimals to maximize professional appearance.
 - **Immutable Wage Snapshots**: Every production log freezes its applicable `worker_rate_snapshot`. Modifications to order rates impact only future production.
 - **Double-Lock Safety**: Settled months are locked via RLS policies and `payroll_settlements` history.
 
@@ -102,13 +111,20 @@ High-stakes actions (editing locked logs, editing payroll) require a **single-us
 
 ## 7. WhatsApp Notification Suite
 
-A fully automated, zero-touch notification system powered by PostgreSQL crons and Supabase Edge Functions mapping to the Meta-approved **Interakt** WhatsApp API.
+A fully automated, zero-touch notification system powered by **PostgreSQL crons** and **Supabase Edge Functions**, dispatching messages via the Meta-approved **Interakt** WhatsApp API.
 
-| Pipeline Element | Details |
-|---|---|
-| **Daily Brief Cron** | Pushes a daily production and payroll summary to Owners at 20:00 IST via `pg_cron`. |
-| **Worker Payslips** | Pushes gross pay, deductions, and advance receipts to workers instantly. |
-| **Pace Alerts** | Notifies the owner if active Orders risk missing delivery dates. |
+| Notification Type | Recipient | Trigger |
+|---|---|---|
+| **Daily Factory Brief** | Owner | Every day at 20:00 IST via `pg_cron` |
+| **Deadline Risk Alert** | Owner | Every 6 hours when any active order has `pace_index < 1.0`, with a 24h cooldown per order |
+| **Monthly Summary** | Owner | 28th of each month at 23:30 IST |
+| **Access Code** | Owner | Immediately on every access code generation |
+| **Worker Payslip** | Worker | Immediately on payroll settlement |
+| **Advance Receipt** | Worker | Immediately on every advance record |
+
+Failed sends are automatically retried up to **3 times over 24 hours** by the `retry-failed-messages` cron, making the system robust against transient API failures without requiring webhook callbacks.
+
+> **Full setup and configuration guide:** [WHATSAPP_INTEGRATION_GUIDE.md](./WHATSAPP_INTEGRATION_GUIDE.md)
 
 ---
 
@@ -116,6 +132,14 @@ A fully automated, zero-touch notification system powered by PostgreSQL crons an
 
 - **Tri-Lingual Interface**: English, Hindi, and Gujarati (`t()` based translation).
 - **Phonetic Transliteration**: Automatic translation of employee names to Devanagari/Gujarati for accurate payslip delivery.
+
+---
+
+## 9. Factory Customization & Settings
+
+Owners have full control over their organizational profile:
+- **Factory Personalization**: Owners can customize their factory name at any time. Updates propagate instantly to all supervisors and worker payslips.
+- **Join Code Management**: Secure regeneration of worker/supervisor join codes to maintain floor security.
 
 ---
 

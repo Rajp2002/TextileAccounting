@@ -187,6 +187,59 @@ export async function updateFixedWorkerSalary(workerId: number, salary: number) 
     return { success: true }
 }
 
+// ─── Piece Rate Worker Management ────────────────────────────────────────────
+
+/**
+ * Update a piece-rate (meter) worker's name and optionally their WhatsApp details.
+ * Owner-only.
+ */
+export async function updateMeterWorker(data: {
+    id: number
+    name: string
+    phone?: string
+    language?: 'en' | 'hi' | 'gu'
+    consentGiven?: boolean
+}) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(PositiveIntSchema, data.id)
+    if ('error' in parsed) return { error: parsed.error }
+
+    const name = data.name.trim()
+    if (!name) return { error: 'Worker name is required.' }
+
+    const updatePayload: Record<string, any> = { name }
+
+    // Only update WhatsApp fields if phone provided and consent given
+    if (data.phone !== undefined) {
+        const cleanPhone = data.phone.replace(/\D/g, '')
+        if (cleanPhone && cleanPhone.length !== 10) {
+            return { error: 'Please enter a valid 10-digit mobile number.' }
+        }
+        if (cleanPhone && !data.consentGiven) {
+            return { error: 'Worker consent must be confirmed before saving WhatsApp number.' }
+        }
+        updatePayload.whatsapp_number = cleanPhone || null
+        if (data.language) updatePayload.whatsapp_language = data.language
+    }
+
+    const { error } = await supabase
+        .from('workers')
+        .update(updatePayload)
+        .eq('id', parsed.data)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to update meter worker:', error)
+        return { error: 'Failed to update worker. Please try again.' }
+    }
+
+    revalidatePath('/owner/fixed-workers')
+    revalidatePath('/owner/payroll')
+    return { success: true }
+}
+
 // ─── Access Code ──────────────────────────────────────────────────────────────
 
 
@@ -332,6 +385,54 @@ export async function deleteFixedWorkerWithCode(workerId: number, accessCode: st
 
     if (error) {
         console.error('Error deleting fixed worker:', error)
+        return { error: 'Failed to delete worker. Please try again.' }
+    }
+
+    return { success: true }
+}
+
+/**
+ * Delete a piece-rate (meter) worker. Only owners can do this.
+ * Requires a one-time access code. orgId is derived server-side.
+ */
+export async function deleteMeterWorkerWithCode(workerId: number, accessCode: string) {
+    const { profile } = await requireRole(['owner'])
+    const orgId = profile.org_id
+
+    const workerParsed = safeParse(PositiveIntSchema, workerId)
+    if ('error' in workerParsed) return { error: workerParsed.error }
+
+    const codeParsed = safeParse(AccessCodeSchema, accessCode)
+    if ('error' in codeParsed) return { error: 'Invalid access code format' }
+
+    const supabase = await createServerClient()
+
+    const { data: org, error: orgError } = await supabase
+        .from('organizations')
+        .select('access_code_hash, access_code_expires_at')
+        .eq('id', orgId)
+        .single()
+
+    if (orgError || !org || !org.access_code_hash) return { error: 'Invalid or expired access code' }
+    if (new Date(org.access_code_expires_at) < new Date()) return { error: 'Invalid or expired access code' }
+
+    const inputHash = crypto.createHash('sha256').update(codeParsed.data).digest('hex')
+    const isValid = crypto.timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(org.access_code_hash, 'hex'))
+    if (!isValid) return { error: 'Invalid or expired access code' }
+
+    await supabase
+        .from('organizations')
+        .update({ access_code_hash: null, access_code_expires_at: null })
+        .eq('id', orgId)
+
+    const { error } = await supabase
+        .from('workers')
+        .delete()
+        .eq('id', workerParsed.data)
+        .eq('org_id', orgId)
+
+    if (error) {
+        console.error('Error deleting meter worker:', error)
         return { error: 'Failed to delete worker. Please try again.' }
     }
 

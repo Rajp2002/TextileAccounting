@@ -122,14 +122,18 @@ Factories are localized bio-clocks.
 
 ## 4. WhatsApp Notification Pipeline (Serverless)
 
-An entirely serverless, cron-driven infrastructure for factory observability, decoupled from client-side events.
+An entirely serverless, cron-driven infrastructure for factory observability, decoupled from client-side events. The pipeline uses **Interakt** (Meta-approved BSP) for delivery and is designed to be fully resilient on the Free Tier without requiring webhook callbacks.
 
-### 4.1 Pipeline Architecture
-1. **Trigger Phase**: A native PostgreSQL cron (`14:30 UTC` / 8:00 PM IST) running entirely within the DB layer.
-2. **Post/Fetch**: `pg_net` acts as a webhook from Postgres -> Supabase Edge Functions (`send-daily-brief`).
-3. **Execution**: Deno edge functions compile daily summaries via optimized RPCs (`get_daily_brief_stats`), packaging production logs, pace indices, and missing wages.
-4. **Dispatch**: Transmitted to owners via **Interakt** (Meta BSP). Fully localized into Hindi/Gujarati based on worker DB preference.
-5. **Cooldown Guard**: `whatsapp_cooldowns` utilizes a composite primary key layout to throttle identical spam (e.g. repeated Risk Alerts for the same Order ID).
+**7 Edge Functions** handle distinct notification types:
+- `send-daily-brief` — daily production summary to owners (20:00 IST)
+- `check-pace-index` — deadline risk alerts scanned every 6 hours
+- `monthly-brief` — monthly payroll summary (28th of each month at 23:30 IST)
+- `send-access-code` — security codes pushed to owner's WhatsApp instantly
+- `send-payslip` — worker payslips on payroll settlement
+- `send-advance-receipt` — instant advance receipts to workers
+- `retry-failed-messages` — hourly cron retrying failed sends (max 3 per 24h)
+
+> **See the full guide:** [WHATSAPP_INTEGRATION_GUIDE.md](./WHATSAPP_INTEGRATION_GUIDE.md) — detailed setup instructions, template variable mappings, SQL configuration steps, and monitoring guidance.
 
 ---
 
