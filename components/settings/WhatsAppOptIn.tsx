@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { MessageCircle, CheckCircle2, XCircle, Loader2, Phone } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,6 +17,7 @@ import { useUserProfile } from '@/hooks/use-user-profile'
  * Compliant with WhatsApp's opt-in policy — owner must explicitly save & enable.
  */
 export function WhatsAppOptIn() {
+    const queryClient = useQueryClient()
     const { data: userProfile, isLoading } = useUserProfile()
     const [phone, setPhone] = useState('')
     const [isPending, startTransition] = useTransition()
@@ -42,6 +44,8 @@ export function WhatsAppOptIn() {
             } else {
                 toast.success('WhatsApp notifications enabled ✓')
                 setPhone('')
+                // Force React Query to refetch the profile so the badge updates
+                queryClient.invalidateQueries({ queryKey: ['user_profile_id'] })
             }
         })
     }
@@ -53,6 +57,8 @@ export function WhatsAppOptIn() {
                 toast.error(result.error)
             } else {
                 toast.success('WhatsApp notifications disabled')
+                // Force React Query to refetch the profile so the badge updates
+                queryClient.invalidateQueries({ queryKey: ['user_profile_id'] })
             }
         })
     }
