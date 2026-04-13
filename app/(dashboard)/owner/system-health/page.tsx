@@ -85,6 +85,7 @@ export default function SystemHealthPage() {
                 <div className="p-2 bg-green-100 text-green-700 rounded-lg">
                     <Server className="h-6 w-6" />
                 </div>
+                <div>
                     <h1 className="text-2xl font-bold text-gray-900">{t('system_health.title')}</h1>
                     <p className="text-sm text-gray-500">{t('system_health.subtitle')}</p>
                 </div>
