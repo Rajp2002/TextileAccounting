@@ -482,25 +482,21 @@ export const gu = {
   },
   system_health: {
     title: "WhatsApp હેલ્થ",
-    subtitle: "બેકગ્રાઉન્ડ જોબ્સ અને દૈનિક બ્રીફ ડિલિવરી ટ્રેક કરો",
+    subtitle: "બેકગ્રાઉન્ડ જોબ્સ અને નોટિફિકેશન ડિલિવરી ટ્રેક કરો",
     logs: {
-      title: "દૈનિક બ્રીફ રેકોર્ડ (Last 30 days)",
-      desc: "રોજ રાત્રે 8:00 વાગ્યે WhatsApp પર જતો રિપોર્ટનું સ્ટેટસ",
-      empty: "કોઈ રેકોર્ડ મળ્યો નથી. ખાતરી કરો કે બેકગ્રાઉન્ડ જોબ્સ ચાલુ છે.",
+      title: "નોટિફિકેશન ઇતિહાસ (Last 30 days)",
+      desc: "ઓટોમેટેડ રસીદો અને દૈનિક સારાંશની સ્થિતિ",
+      empty: "કોઈ લોગ મળ્યા નથી. ખાતરી કરો કે કારીગરો પાસે WhatsApp નંબર છે.",
       cols: {
-        timestamp: "સમય (Timestamp)",
-        target_date: "કઈ તારીખનો રિપોર્ટ",
-        status: "સ્ટેટસ",
-        details: "વિગત"
+        timestamp: "સમય (Sent At)",
+        recipient: "પ્રાપ્તકર્તા (Recipient)",
+        status: "સ્થિતિ (Status)",
+        details: "ટેમ્પલેટ / વિગત"
       },
       status: {
-        success: "સફળ (Success)",
+        success: "મોકલી દીધું (Sent)",
         skipped: "છોડ્યું (Skipped)",
         failed: "નિષ્ફળ (Failed)"
-      },
-      details: {
-        no_phone: "ઓનર નો નંબર મળ્યો નથી અથવા મેસેજ પહેલેથી જ મોકલાઈ ગયો છે",
-        prepared: "મેસેજ તૈયાર/મોકલી દેવાયો છે"
       }
     }
   },
