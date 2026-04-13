@@ -86,15 +86,15 @@ export default function SystemHealthPage() {
                     <Server className="h-6 w-6" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{t('system_health.title')}</h1>
-                    <p className="text-sm text-gray-500">{t('system_health.subtitle')}</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('whatsapp_health.title')}</h1>
+                    <p className="text-sm text-gray-500">{t('whatsapp_health.subtitle')}</p>
                 </div>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>{t('system_health.logs.title')}</CardTitle>
-                    <CardDescription>{t('system_health.logs.desc')}</CardDescription>
+                    <CardTitle>{t('whatsapp_health.logs.title')}</CardTitle>
+                    <CardDescription>{t('whatsapp_health.logs.desc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {isLoading ? (
@@ -111,17 +111,17 @@ export default function SystemHealthPage() {
                     ) : !logs || logs.length === 0 ? (
                         <div className="py-12 text-center text-gray-500">
                             <Server className="h-10 w-10 mx-auto text-gray-300 mb-2" />
-                            <p>{t('system_health.logs.empty')}</p>
+                            <p>{t('whatsapp_health.logs.empty')}</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm text-left">
                                 <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b">
                                     <tr>
-                                        <th className="px-4 py-3">{t('system_health.logs.cols.timestamp')}</th>
-                                        <th className="px-4 py-3">{t('system_health.logs.cols.target_date')}</th>
-                                        <th className="px-4 py-3 text-center">{t('system_health.logs.cols.status')}</th>
-                                        <th className="px-4 py-3">{t('system_health.logs.cols.details')}</th>
+                                        <th className="px-4 py-3">{t('whatsapp_health.logs.cols.timestamp')}</th>
+                                        <th className="px-4 py-3">{t('whatsapp_health.logs.cols.target_date')}</th>
+                                        <th className="px-4 py-3 text-center">{t('whatsapp_health.logs.cols.status')}</th>
+                                        <th className="px-4 py-3">{t('whatsapp_health.logs.cols.details')}</th>
                                         <th className="px-4 py-3 text-right">ACTION</th>
                                     </tr>
                                 </thead>
@@ -132,12 +132,12 @@ export default function SystemHealthPage() {
                                                 {format(new Date(log.sent_at), 'PPP pp')}
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap text-gray-900 font-medium">
-                                                +{log.recipient_phone}
+                                                +91 {log.recipient_phone}
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 {log.status === 'sent' ? (
                                                     <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 gap-1.5">
-                                                        <CheckCircle2 className="h-3.5 w-3.5" /> {t('system_health.logs.status.success')}
+                                                        <CheckCircle2 className="h-3.5 w-3.5" /> {t('whatsapp_health.logs.status.success')}
                                                     </Badge>
                                                 ) : log.status === 'skipped' ? (
                                                     <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 gap-1.5">
@@ -145,7 +145,7 @@ export default function SystemHealthPage() {
                                                     </Badge>
                                                 ) : (
                                                     <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 gap-1.5">
-                                                        <XCircle className="h-3.5 w-3.5" /> {t('system_health.logs.status.failed')}
+                                                        <XCircle className="h-3.5 w-3.5" /> {t('whatsapp_health.logs.status.failed')}
                                                     </Badge>
                                                 )}
                                             </td>
