@@ -489,27 +489,23 @@ export const en = {
       warning: "⚠️ Copy this now. It won't be shown again."
     }
   },
-  whatsapp_health: {
+  system_health: {
     title: "WhatsApp Health",
-    subtitle: "Monitor background jobs and message deliveries",
+    subtitle: "Monitor background jobs and notification delivery status.",
     logs: {
-      title: "Delivery Logs (Last 50 messages)",
-      desc: "Status of automated WhatsApp pipeline",
-      empty: "No logs found. Ensure your WhatsApp integration is enabled.",
+      title: "Notification History (Last 30 days)",
+      desc: "Status of automated receipts and daily briefs.",
+      empty: "No logs found. Ensure you have workers with WhatsApp numbers.",
       cols: {
-        timestamp: "TIMESTAMP",
-        target_date: "RECIPIENT",
-        status: "STATUS",
-        details: "DETAILS/TYPE",
+        timestamp: "Sent At",
+        recipient: "Recipient",
+        status: "Status",
+        details: "Template / Details"
       },
       status: {
-        success: "Success",
+        success: "Sent",
         skipped: "Skipped",
         failed: "Failed"
-      },
-      details: {
-        no_phone: "No owner phone found or already sent",
-        prepared: "Message prepared/sent"
       }
     }
   },

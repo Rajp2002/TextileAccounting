@@ -484,25 +484,21 @@ export const hi = {
   },
   system_health: {
     title: "WhatsApp हेल्थ",
-    subtitle: "बैकग्राउंड जॉब्स और डेली ब्रीफ डिलीवरी ट्रैक करें",
+    subtitle: "बैकग्राउंड जॉब्स और नोटिफिकेशन डिलीवरी ट्रैक करें",
     logs: {
-      title: "डेली ब्रीफ रिकॉर्ड (Last 30 days)",
-      desc: "रोज रात 8:00 बजे WhatsApp पर जाने वाली परफॉरमेंस रिपोर्ट का स्टेटस",
-      empty: "कोई रिकॉर्ड नहीं मिला। यह पक्का करें कि आपके क्रॉन जॉब (cron jobs) काम कर रहे हैं।",
+      title: "नोटिफिकेशन का इतिहास (Last 30 days)",
+      desc: "स्वचालित रसीदों और दैनिक संक्षिप्त विवरण का स्टेटस",
+      empty: "कोई लॉग नहीं मिला। सुनिश्चित करें कि आपके पास WhatsApp नंबर वाले कर्मचारी हैं।",
       cols: {
-        timestamp: "समय (Timestamp)",
-        target_date: "रिपोर्ट की तारीख",
+        timestamp: "समय (Sent At)",
+        recipient: "प्राप्तकर्ता (Recipient)",
         status: "स्टेटस",
-        details: "विवरण"
+        details: "टेम्पलेट / विवरण"
       },
       status: {
-        success: "सफल (Success)",
+        success: "भेजा गया (Sent)",
         skipped: "छोड़ दिया (Skipped)",
         failed: "फ़ेल (Failed)"
-      },
-      details: {
-        no_phone: "ओनर का फोन नंबर नहीं मिला या पहले ही भेजा जा चुका है",
-        prepared: "मैसेज तैयार हुआ / भेज दिया गया"
       }
     }
   },

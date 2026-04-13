@@ -60,7 +60,18 @@ export async function sendInteraktTemplate(
   let responseBody: Record<string, unknown> = {};
   let httpStatus = 0;
 
-  try {
+    // Support for provider simulation (testing mode)
+    const provider = Deno.env.get("WHATSAPP_PROVIDER") || "interakt";
+    if (provider === "simulate") {
+      console.log(`[SIMULATE] WhatsApp to ${phone}: ${templateName}`);
+      return { 
+        success: true, 
+        responseBody: { simulated: true }, 
+        httpStatus: 200, 
+        interaktMessageId: `sim_${Date.now()}` 
+      };
+    }
+
     const res = await fetch(INTERAKT_API, {
       method: "POST",
       headers: {
