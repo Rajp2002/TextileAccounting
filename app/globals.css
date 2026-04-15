@@ -196,7 +196,7 @@
 @media (display-mode: standalone) {
   html, body {
     /* Match the manifest background_color exactly */
-    background-color: #c2410c;
+    background-color: #fdf6e9;
   }
 
   /* Once the app shell has mounted and React takes over, transition back to

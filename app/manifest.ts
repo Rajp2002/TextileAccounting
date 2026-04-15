@@ -11,7 +11,7 @@ export default function manifest(): MetadataRoute.Manifest {
         scope: '/',
         display: 'standalone',
         // Warm brand color painted by the OS before JS loads — eliminates black flash.
-        background_color: '#c2410c',
+        background_color: '#fdf6e9',
         orientation: 'portrait',
         theme_color: '#c2410c',
         icons: [

@@ -15,7 +15,7 @@
 // shows the full retry history via retry_count + last_retry_at.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { sendInteraktTemplate } from "../_shared/interakt.ts";
+import { sendWhatsAppTemplate } from "../_shared/whatsapp.ts";
 
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("Authorization") ?? "";
@@ -29,7 +29,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       serviceRoleKey,
     );
-    const apiKey = Deno.env.get("INTERAKT_API_KEY")!;
+    const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
+    const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
 
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -78,8 +79,9 @@ Deno.serve(async (req) => {
 
       let result;
       try {
-        result = await sendInteraktTemplate(
-          apiKey,
+        result = await sendWhatsAppTemplate(
+          metaAccessToken,
+          metaPhoneNumberId,
           row.recipient_phone,
           row.template_name,
           snapshot.languageCode ?? "en",
@@ -107,7 +109,7 @@ Deno.serve(async (req) => {
           status: result.success ? "sent" : "failed",
           retry_count: (row.retry_count ?? 0) + 1,
           last_retry_at: new Date().toISOString(),
-          interakt_message_id: result.interaktMessageId ?? undefined,
+          interakt_message_id: result.messageId ?? undefined,
           error_message: result.success
             ? null
             : `retry_${(row.retry_count ?? 0) + 1}: ${JSON.stringify(result.responseBody)}`,

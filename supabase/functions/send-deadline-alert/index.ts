@@ -4,10 +4,10 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
-  sendInteraktTemplate,
+  sendWhatsAppTemplate,
   logDelivery,
   makeCallbackData,
-} from "../_shared/interakt.ts";
+} from "../_shared/whatsapp.ts";
 
 const TEMPLATE_NAME = "loomi_deadline_risk";
 
@@ -24,7 +24,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    const apiKey = Deno.env.get("INTERAKT_API_KEY")!;
+    const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
+    const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
 
     // 1. Fetch current order pace from the order_progress_summary view
     const { data: orderSummary, error: orderError } = await supabase
@@ -104,8 +105,9 @@ Deno.serve(async (req) => {
     const callbackData = makeCallbackData("deadline", org_id);
 
     // 8. Send
-    const result = await sendInteraktTemplate(
-      apiKey,
+    const result = await sendWhatsAppTemplate(
+      metaAccessToken,
+      metaPhoneNumberId,
       owner.whatsapp_number,
       TEMPLATE_NAME,
       "en",
@@ -129,7 +131,7 @@ Deno.serve(async (req) => {
       templateName: TEMPLATE_NAME,
       notificationType: "deadline_risk",
       callbackData,
-      interaktMessageId: result.interaktMessageId,
+      messageId: result.messageId,
       status: result.success ? "sent" : "failed",
       errorMessage: result.success ? null : JSON.stringify(result.responseBody),
       payloadSnapshot: { bodyValues, order_id, pace_index: orderSummary.pace_index },

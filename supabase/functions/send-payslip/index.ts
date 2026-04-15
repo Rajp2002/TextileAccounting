@@ -5,11 +5,11 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
-  sendInteraktTemplate,
+  sendWhatsAppTemplate,
   logDelivery,
   formatInr,
   makeCallbackData,
-} from "../_shared/interakt.ts";
+} from "../_shared/whatsapp.ts";
 
 // Template names must match exactly what is approved in Interakt
 const TEMPLATES: Record<string, string> = {
@@ -38,7 +38,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    const apiKey = Deno.env.get("INTERAKT_API_KEY")!;
+    const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
+    const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
 
     // 1. Fetch the payroll settlement record
     const { data: settlement, error: settlementError } = await supabase
@@ -147,9 +148,10 @@ Deno.serve(async (req) => {
 
     const callbackData = makeCallbackData("payslip", org_id);
 
-    // 7. Send to Interakt
-    const result = await sendInteraktTemplate(
-      apiKey,
+    // 7. Send to WhatsApp
+    const result = await sendWhatsAppTemplate(
+      metaAccessToken,
+      metaPhoneNumberId,
       worker.whatsapp_number,
       templateName,
       langCode,
@@ -165,7 +167,7 @@ Deno.serve(async (req) => {
       templateName,
       notificationType: "payslip",
       callbackData,
-      interaktMessageId: result.interaktMessageId,
+      messageId: result.messageId,
       status: result.success ? "sent" : "failed",
       errorMessage: result.success ? null : JSON.stringify(result.responseBody),
       payloadSnapshot: { bodyValues, worker_id, settlement_id },

@@ -148,7 +148,7 @@ export default function AdvancesPage() {
                 .eq('org_id', userProfile!.org_id)
                 .eq('worker_id', selectedWorker!.id)
                 .gte('date', `${monthStr}-01`)
-                .lte('date', `${monthStr}-31`)
+                .lte('date', `${monthStr}-${new Date(Number(monthStr.split('-')[0]), Number(monthStr.split('-')[1]), 0).getDate()}`)
 
             const total = (logs || []).reduce((sum: number, log: any) => {
                 return sum + (parseFloat(log.meters) || 0) * (log.worker_rate_snapshot || 0)

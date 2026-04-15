@@ -177,7 +177,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                      *   never fills the entire screen and the user can tap outside
                      *   to dismiss it.
                      */}
-                    <SheetContent side="left" className="w-[min(280px,85vw)] p-0 bg-sidebar border-sidebar-border">
+                    <SheetContent side="left" className="w-[min(280px,85vw)] bg-sidebar border-sidebar-border">
                         <SheetHeader className="sr-only">
                             <SheetTitle>{t("common.navigation")}</SheetTitle>
                         </SheetHeader>

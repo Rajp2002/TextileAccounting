@@ -5,13 +5,13 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
-  sendInteraktTemplate,
+  sendWhatsAppTemplate,
   logDelivery,
   formatInr,
   getSuratDateLabel,
   getSuratTodayString,
   makeCallbackData,
-} from "../_shared/interakt.ts";
+} from "../_shared/whatsapp.ts";
 
 const TEMPLATE_PIVOT_BRIEF = "loomi_daily_brief_v2";
 const TEMPLATE_DEADLINE = "loomi_deadline_risk";
@@ -22,7 +22,8 @@ Deno.serve(async (_req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    const apiKey = Deno.env.get("INTERAKT_API_KEY")!;
+    const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
+    const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
     const todayStr = getSuratTodayString();
     const dateLabel = getSuratDateLabel();
 
@@ -40,7 +41,7 @@ Deno.serve(async (_req) => {
     }
 
     const results = await Promise.allSettled(
-      owners.map((owner) => processOwner(owner, supabase, apiKey, todayStr, dateLabel)),
+      owners.map((owner) => processOwner(owner, supabase, metaAccessToken, metaPhoneNumberId, todayStr, dateLabel)),
     );
 
     const sent = results.filter((r) => r.status === "fulfilled").length;
@@ -57,7 +58,8 @@ Deno.serve(async (_req) => {
 async function processOwner(
   owner: any,
   supabase: any,
-  apiKey: string,
+  metaAccessToken: string,
+  metaPhoneNumberId: string,
   todayStr: string,
   dateLabel: string,
 ) {
@@ -117,7 +119,7 @@ async function processOwner(
   ];
 
   // 4. Send daily brief
-  const result = await sendInteraktTemplate(apiKey, phone, TEMPLATE_PIVOT_BRIEF, "en", bodyValues, callbackData);
+  const result = await sendWhatsAppTemplate(metaAccessToken, metaPhoneNumberId, phone, TEMPLATE_PIVOT_BRIEF, "en", bodyValues, callbackData);
 
   await logDelivery(supabase, {
     orgId,
@@ -126,7 +128,7 @@ async function processOwner(
     templateName: TEMPLATE_PIVOT_BRIEF,
     notificationType: "daily_brief",
     callbackData,
-    interaktMessageId: result.interaktMessageId,
+    messageId: result.messageId,
     status: result.success ? "sent" : "failed",
     errorMessage: result.success ? null : JSON.stringify(result.responseBody),
     payloadSnapshot: { bodyValues, template: TEMPLATE_PIVOT_BRIEF },
@@ -137,12 +139,13 @@ async function processOwner(
   }
 
   // 5. Check active orders pace and send deadline risk alerts
-  await checkAndSendDeadlineAlerts(supabase, apiKey, orgId, ownerProfileId, phone, factoryName);
+  await checkAndSendDeadlineAlerts(supabase, metaAccessToken, metaPhoneNumberId, orgId, ownerProfileId, phone, factoryName);
 }
 
 async function checkAndSendDeadlineAlerts(
   supabase: any,
-  apiKey: string,
+  metaAccessToken: string,
+  metaPhoneNumberId: string,
   orgId: string,
   ownerProfileId: string,
   phone: string,
@@ -179,7 +182,7 @@ async function checkAndSendDeadlineAlerts(
     // Using quality_label fallback because of flat structure
     const orderName = order.quality_label || order.party_name;
 
-    const result = await sendInteraktTemplate(apiKey, phone, TEMPLATE_DEADLINE, "en", [
+    const result = await sendWhatsAppTemplate(metaAccessToken, metaPhoneNumberId, phone, TEMPLATE_DEADLINE, "en", [
       factoryName,
       orderName,
       String(Math.round(Number(order.progress_percent))),
@@ -201,7 +204,7 @@ async function checkAndSendDeadlineAlerts(
       templateName: TEMPLATE_DEADLINE,
       notificationType: "deadline_risk",
       callbackData,
-      interaktMessageId: result.interaktMessageId,
+      messageId: result.messageId,
       status: result.success ? "sent" : "failed",
       errorMessage: result.success ? null : JSON.stringify(result.responseBody),
       payloadSnapshot: { order_id: order.order_id, party: order.party_name },

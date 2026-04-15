@@ -31,6 +31,9 @@ export const metadata: Metadata = {
     // 'black-translucent' lets content extend behind the status bar
     statusBarStyle: "black-translucent",
   },
+  icons: {
+    apple: "/apple-icon.png",
+  },
 }
 
 import Providers from "@/components/providers"
@@ -47,7 +50,7 @@ export default function RootLayout({
         className={`${jakarta.variable} ${geistMono.variable} antialiased font-sans`}
       >
         {/* Inline script: adds app-ready class to body as early as possible
-            so the PWA splash background (#c2410c) transitions to the real
+            so the PWA splash background (#fdf6e9) transitions to the real
             app background without waiting for a full React render cycle.
             dangerouslySetInnerHTML is safe here — this is static JS with no
             user input. */}
