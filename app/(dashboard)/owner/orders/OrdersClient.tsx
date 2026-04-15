@@ -339,7 +339,7 @@ function OrderDetailDrawer({
         <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
             <SheetContent
                 side="right"
-                className="w-full sm:max-w-md bg-card border-l border-border text-slate-900 p-0 flex flex-col"
+                className="w-full sm:max-w-md bg-card border-l border-border text-slate-900 flex flex-col"
             >
                 {loading || !order ? (
                     <div className="flex-1 flex items-center justify-center">
@@ -351,7 +351,7 @@ function OrderDetailDrawer({
                 ) : (
                     <>
                         {/* Header */}
-                        <div className="px-5 pt-5 pb-4 border-b border-border space-y-1 shrink-0">
+                        <div className="px-5 pt-5 pb-4 border-b border-border space-y-1 shrink-0 pt-safe">
                             <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0">
                                         <p className="font-black text-lg text-slate-900 leading-tight truncate">

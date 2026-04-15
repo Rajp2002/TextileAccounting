@@ -192,7 +192,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                     </SheetTrigger>
                     <SheetContent
                         side="left"
-                        className="w-[280px] p-0 bg-sidebar border-sidebar-border"
+                        className="w-[280px] bg-sidebar border-sidebar-border"
                     >
                         <SheetHeader className="sr-only">
                             <SheetTitle>{t('common.navigation')}</SheetTitle>

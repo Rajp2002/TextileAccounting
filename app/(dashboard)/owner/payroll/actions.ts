@@ -22,8 +22,10 @@ export async function toggleWorkerPaid(
     let calculatedAmountStr = '0'
 
     if (workerType === 'meter') {
+        const [year, m] = month.split('-')
+        const lastDay = new Date(Number(year), Number(m), 0).getDate()
         const monthStart = `${month}-01`
-        const monthEnd = `${month}-31`
+        const monthEnd = `${month}-${lastDay}`
 
         const { data: logs } = await supabase
             .from('production_logs')
@@ -50,13 +52,15 @@ export async function toggleWorkerPaid(
         if (workerError || !worker) return { error: 'Worker not found' }
 
         if (worker.role === 'daily') {
+            const [year, m] = month.split('-')
+            const lastDay = new Date(Number(year), Number(m), 0).getDate()
             const { count } = await supabase
                 .from('attendance')
                 .select('*', { count: 'exact', head: true })
                 .eq('org_id', profile.org_id)
                 .eq('fixed_worker_id', workerId)
                 .gte('date', `${month}-01`)
-                .lte('date', `${month}-31`)
+                .lte('date', `${month}-${lastDay}`)
                 .eq('present', true)
 
             const daysWorked = count || 0

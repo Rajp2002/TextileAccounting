@@ -7,11 +7,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
 import {
-    sendInteraktTemplate,
+    sendWhatsAppTemplate,
     logDelivery,
     makeCallbackData,
     formatInr,
-} from "../_shared/interakt.ts"
+} from "../_shared/whatsapp.ts"
 
 const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') ?? 'https://loomi.app'
 
@@ -143,12 +143,14 @@ serve(async (req) => {
                 String(settledCount) + laborNote,                      // {{6}} Workers settled (+ unsettled note)
             ]
 
-            // ── E. Send via Interakt ──────────────────────────────────────────
-            const apiKey = Deno.env.get('INTERAKT_API_KEY') ?? ''
+            // ── E. Send via WhatsApp ──────────────────────────────────────────
+            const metaAccessToken = Deno.env.get('META_ACCESS_TOKEN') ?? ''
+            const metaPhoneNumberId = Deno.env.get('META_PHONE_NUMBER_ID') ?? ''
             const callbackData = makeCallbackData('monthly', orgId)
 
-            const result = await sendInteraktTemplate(
-                apiKey,
+            const result = await sendWhatsAppTemplate(
+                metaAccessToken,
+                metaPhoneNumberId,
                 ownerPhone,
                 TEMPLATE_NAME,
                 'en',
@@ -164,7 +166,7 @@ serve(async (req) => {
                 templateName: TEMPLATE_NAME,
                 notificationType: 'monthly_brief',
                 callbackData,
-                interaktMessageId: result.interaktMessageId,
+                messageId: result.messageId,
                 status: result.success ? 'sent' : 'failed',
                 errorMessage: result.success ? null : JSON.stringify(result.responseBody),
                 payloadSnapshot: { month: reportMonth, totalMeters, settledCount },
@@ -186,7 +188,7 @@ serve(async (req) => {
                 totalMeters: Math.round(totalMeters),
                 settledCount,
                 status: result.success ? 'sent' : 'failed',
-                interaktMessageId: result.interaktMessageId,
+                messageId: result.messageId,
             })
         }
 

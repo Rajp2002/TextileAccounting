@@ -1,20 +1,17 @@
-// ─── Shared Interakt WhatsApp Utility ─────────────────────────────────────────
+// ─── Shared Meta WhatsApp Utility ─────────────────────────────────────────────
 // Used by all send-* edge functions. Import with:
-//   import { sendInteraktTemplate, logDelivery, formatInr, getSuratDateLabel, getSuratTodayString } from "../_shared/interakt.ts";
+//   import { sendWhatsAppTemplate, logDelivery, formatInr, getSuratDateLabel, getSuratTodayString, makeCallbackData } from "../_shared/whatsapp.ts";
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-export const INTERAKT_API = "https://api.interakt.ai/v1/public/message/";
-export const COUNTRY_CODE = "+91";
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export interface InteraktResult {
+export interface WhatsAppResult {
   success: boolean;
   responseBody: Record<string, unknown>;
   httpStatus: number;
-  /** Message ID returned by Interakt — persisted to whatsapp_delivery_log for webhook correlation */
-  interaktMessageId: string | null;
+  /** Message ID returned by Meta — persisted to whatsapp_delivery_log */
+  messageId: string | null;
 }
 
 export interface LogDeliveryParams {
@@ -27,55 +24,80 @@ export interface LogDeliveryParams {
   status: "sent" | "failed";
   errorMessage?: string | null;
   payloadSnapshot: Record<string, unknown>;
-  /** Interakt's message ID from the send response — used as webhook correlation key */
-  interaktMessageId?: string | null;
+  /** Meta's message ID from the send response */
+  messageId?: string | null;
 }
 
 // ─── Core Send Function ───────────────────────────────────────────────────────
 
 /**
- * Sends a WhatsApp template message via Interakt API.
+ * Sends a WhatsApp template message via official Meta WhatsApp Cloud API.
  * Returns result including parsed response body for logging.
  */
-export async function sendInteraktTemplate(
-  apiKey: string,
+export async function sendWhatsAppTemplate(
+  accessToken: string,
+  phoneNumberId: string,
   phone: string,
   templateName: string,
   languageCode: string = "en",
   bodyValues: string[],
   callbackData: string,
-): Promise<InteraktResult> {
+): Promise<WhatsAppResult> {
+  // Ensure phone has Indian country code prefix
+  const formattedPhone = phone.startsWith("91") && phone.length === 12 
+    ? phone 
+    : phone.length === 10 ? `91${phone}` : phone;
+
+  const META_API = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
+
+  // Map simple string arrays to Meta's verbose component structure
+  const parameters = bodyValues.map(val => ({
+    type: "text",
+    text: String(val)
+  }));
+
   const payload = {
-    countryCode: COUNTRY_CODE,
-    phoneNumber: phone,
-    callbackData,
-    type: "Template",
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: formattedPhone,
+    type: "template",
     template: {
       name: templateName,
-      languageCode,
-      bodyValues,
+      language: {
+        code: languageCode,
+      },
+      // Only include body component if there are values to inject
+      components: parameters.length > 0 ? [
+        {
+          type: "body",
+          parameters: parameters
+        }
+      ] : []
     },
+    // Meta doesn't have a native passthrough for random callbackData like Interakt does,
+    // but the WABA webhooks will send back the `wamid` which we store to correlate.
   };
 
   let responseBody: Record<string, unknown> = {};
   let httpStatus = 0;
 
+  try {
     // Support for provider simulation (testing mode)
-    const provider = Deno.env.get("WHATSAPP_PROVIDER") || "interakt";
+    const provider = Deno.env.get("WHATSAPP_PROVIDER") || "meta";
     if (provider === "simulate") {
-      console.log(`[SIMULATE] WhatsApp to ${phone}: ${templateName}`);
+      console.log(`[SIMULATE] WhatsApp to ${formattedPhone}: ${templateName}`);
       return { 
         success: true, 
         responseBody: { simulated: true }, 
         httpStatus: 200, 
-        interaktMessageId: `sim_${Date.now()}` 
+        messageId: `sim_wamid_${Date.now()}` 
       };
     }
 
-    const res = await fetch(INTERAKT_API, {
+    const res = await fetch(META_API, {
       method: "POST",
       headers: {
-        Authorization: `Basic ${apiKey}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
@@ -84,31 +106,25 @@ export async function sendInteraktTemplate(
     httpStatus = res.status;
     responseBody = await res.json().catch(() => ({}));
 
-    // Interakt returns the message ID in the response body — capture it for webhook correlation
-    const interaktMessageId =
-      typeof responseBody.id === "string" ? responseBody.id
-      : typeof (responseBody.data as Record<string, unknown>)?.id === "string"
-        ? (responseBody.data as Record<string, unknown>).id as string
-        : null;
+    // Meta returns the message ID inside messages[0].id
+    let messageId = null;
+    if (responseBody.messages && Array.isArray(responseBody.messages) && responseBody.messages.length > 0) {
+      messageId = responseBody.messages[0].id;
+    }
 
-    return { success: res.ok, responseBody, httpStatus, interaktMessageId };
+    return { success: res.ok, responseBody, httpStatus, messageId };
   } catch (err) {
     return {
       success: false,
       responseBody: { fetchError: String(err) },
       httpStatus: 0,
-      interaktMessageId: null,
+      messageId: null,
     };
   }
 }
 
 // ─── Delivery Logging ─────────────────────────────────────────────────────────
 
-/**
- * Writes a delivery record to whatsapp_delivery_log.
- * Called after every send attempt regardless of outcome.
- * Uses service_role client so it bypasses RLS.
- */
 export async function logDelivery(
   supabase: SupabaseClient,
   params: LogDeliveryParams,
@@ -121,20 +137,18 @@ export async function logDelivery(
     notification_type: params.notificationType,
     status: params.status,
     interakt_callback_data: params.callbackData,
-    interakt_message_id: params.interaktMessageId ?? null,
+    interakt_message_id: params.messageId ?? null, // Storing Meta wamid here for now to avoid migration
     error_message: params.errorMessage ?? null,
     payload_snapshot: params.payloadSnapshot,
   });
 
   if (error) {
-    // Log but don't throw — delivery logging failure should never crash the send path
     console.error("[logDelivery] Failed to log delivery:", error.message);
   }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Returns "31 Mar 2026" style date label in IST (Asia/Kolkata) */
 export function getSuratDateLabel(): string {
   return new Intl.DateTimeFormat("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -144,14 +158,12 @@ export function getSuratDateLabel(): string {
   }).format(new Date());
 }
 
-/** Returns "YYYY-MM-DD" in IST — matches production_logs.date format */
 export function getSuratTodayString(): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata",
   }).format(new Date());
 }
 
-/** Returns "HH:MM" time string in IST */
 export function getSuratTimeLabel(): string {
   return new Intl.DateTimeFormat("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -161,14 +173,12 @@ export function getSuratTimeLabel(): string {
   }).format(new Date());
 }
 
-/** Formats a number as Indian locale: 1,23,456 (no ₹ prefix — templates add their own) */
 export function formatInr(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     maximumFractionDigits: 0,
   }).format(Math.round(amount));
 }
 
-/** Unique callback data for tracing in Interakt delivery webhooks */
 export function makeCallbackData(prefix: string, orgId: string): string {
   return `${prefix}_${orgId}_${Date.now()}`;
 }
