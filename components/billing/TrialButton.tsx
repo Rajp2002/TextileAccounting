@@ -16,8 +16,21 @@ export function TrialButton({ onSuccess, compact }: TrialButtonProps) {
     async function handleStartTrial() {
         setLoading(true)
         try {
-            const res = await fetch('/api/subscriptions/trial', { method: 'POST' })
+            console.log('[TrialButton] Starting fetch to /api/subscriptions/trial...')
+            const res = await fetch('/api/subscriptions/trial', { 
+                method: 'POST',
+                headers: { 'Accept': 'application/json' }
+            })
+
+            const contentType = res.headers.get('content-type')
+            if (!contentType?.includes('application/json')) {
+                const text = await res.text()
+                console.error('[TrialButton] Received non-JSON response:', text.substring(0, 100))
+                throw new Error(`Server returned ${res.status} (${contentType}). Please refresh and try again.`)
+            }
+
             const body = await res.json()
+            console.log('[TrialButton] Response body:', body)
 
             if (!res.ok || body.error) {
                 throw new Error(body.error ?? 'Failed to start trial')
@@ -28,12 +41,14 @@ export function TrialButton({ onSuccess, compact }: TrialButtonProps) {
             })
 
             toast.success(`🎉 Trial activated! Enjoy Premium access until ${endDate}.`)
-
-            // Call onSuccess to update parent UI — this is sufficient,
-            // no need for router.refresh() which throws a DOMException in Safari.
             onSuccess?.(body.trialEnd)
         } catch (err: any) {
-            toast.error(err.message ?? 'Something went wrong. Please try again.')
+            console.error('[TrialButton] Error:', err)
+            // Show the actual error message or the Safari-specific error with context
+            const msg = err.message || 'Something went wrong'
+            toast.error(msg === 'The string did not match the expected pattern.' 
+                ? 'Browser error: Connection interrupted. Please try again.' 
+                : msg)
         } finally {
             setLoading(false)
         }
