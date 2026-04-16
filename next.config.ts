@@ -34,9 +34,14 @@ const nextConfig: NextConfig = {
     serverActions: {
       allowedOrigins: [
         'localhost:3000',
+        // Production Vercel deployment
+        'textile-accounting.vercel.app',
+        // All Vercel preview deployments  (textile-accounting-*.vercel.app)
         ...(process.env.NEXT_PUBLIC_SITE_URL
           ? [process.env.NEXT_PUBLIC_SITE_URL.replace(/^https?:\/\//, '')]
           : []),
+        // Vercel system env (set automatically on all deployments)
+        ...(process.env.VERCEL_URL ? [process.env.VERCEL_URL] : []),
       ],
     },
     optimizePackageImports: ['lucide-react', 'date-fns', 'framer-motion'],
