@@ -416,38 +416,42 @@ function PlanSelectionForm({ onDone }: { onDone: () => void }) {
             <div className="grid grid-cols-1 gap-3">
                 {/* Base */}
                 {BASE_PLAN_ID && (
-                    <div className="rounded-xl border border-gray-200 bg-white p-4 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <Zap className="h-4 w-4 text-amber-600 shrink-0" />
+                    <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-start sm:items-center gap-3 sm:gap-2 min-w-0">
+                            <Zap className="h-5 w-5 sm:h-4 sm:w-4 text-amber-600 shrink-0 mt-0.5 sm:mt-0" />
                             <div>
                                 <p className="text-sm font-semibold text-gray-900">Base</p>
                                 <p className="text-xs text-gray-500">₹2,360/mo incl. GST · Estimator only</p>
                             </div>
                         </div>
-                        <SubscribeButton
-                            planId={BASE_PLAN_ID}
-                            tierName="Base"
-                            displayAmount="₹2,360/mo"
-                            onSuccess={() => onDone()}
-                        />
+                        <div className="w-full sm:w-auto shrink-0">
+                            <SubscribeButton
+                                planId={BASE_PLAN_ID}
+                                tierName="Base"
+                                displayAmount="₹2,360/mo"
+                                onSuccess={() => onDone()}
+                            />
+                        </div>
                     </div>
                 )}
                 {/* Premium */}
                 {PREMIUM_PLAN_ID && (
-                    <div className="rounded-xl border-2 border-amber-300 bg-amber-50/40 p-4 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <Star className="h-4 w-4 text-amber-500 fill-amber-400 shrink-0" />
+                    <div className="rounded-xl border-2 border-amber-300 bg-amber-50/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-start sm:items-center gap-3 sm:gap-2 min-w-0">
+                            <Star className="h-5 w-5 sm:h-4 sm:w-4 text-amber-500 fill-amber-400 shrink-0 mt-0.5 sm:mt-0" />
                             <div>
                                 <p className="text-sm font-semibold text-gray-900">Premium</p>
                                 <p className="text-xs text-gray-500">₹5,900/mo incl. GST · Full access</p>
                             </div>
                         </div>
-                        <SubscribeButton
-                            planId={PREMIUM_PLAN_ID}
-                            tierName="Premium"
-                            displayAmount="₹5,900/mo"
-                            onSuccess={() => onDone()}
-                        />
+                        <div className="w-full sm:w-auto shrink-0">
+                            <SubscribeButton
+                                planId={PREMIUM_PLAN_ID}
+                                tierName="Premium"
+                                displayAmount="₹5,900/mo"
+                                onSuccess={() => onDone()}
+                            />
+                        </div>
                     </div>
                 )}
             </div>
