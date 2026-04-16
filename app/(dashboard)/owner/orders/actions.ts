@@ -3,6 +3,8 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import crypto from 'crypto'
+import { checkAccessCodeRateLimit, checkAccessCodeLockout, recordAccessCodeFailure, resetAccessCodeFailures } from '@/lib/rate-limit'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -86,6 +88,75 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
     return { success: true }
 }
 
+// ─── Access Code Validation (owner-side) ─────────────────────────────────────
+
+async function validateOwnerAccessCode(userId: string, orgId: string, inputCode: string): Promise<boolean> {
+    const isLockedOut = await checkAccessCodeLockout(userId)
+    if (isLockedOut) throw new Error('Account temporarily locked due to too many failed attempts. Try again in 1 hour.')
+
+    const rl = await checkAccessCodeRateLimit(userId)
+    if (rl) throw new Error(`Too many attempts. Try again in ${Math.ceil(rl / 1000)} seconds.`)
+
+    if (!inputCode || inputCode.length !== 6) {
+        await recordAccessCodeFailure(userId)
+        return false
+    }
+
+    const supabase = await createServerClient()
+    const { data: org, error } = await supabase
+        .from('organizations')
+        .select('access_code_hash, access_code_expires_at')
+        .eq('id', orgId)
+        .single()
+
+    if (error || !org || !org.access_code_hash) {
+        await recordAccessCodeFailure(userId)
+        return false
+    }
+
+    if (new Date(org.access_code_expires_at) < new Date()) {
+        await recordAccessCodeFailure(userId)
+        return false
+    }
+
+    const inputHash = crypto.createHash('sha256').update(inputCode.toUpperCase()).digest('hex')
+    const isValid = crypto.timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(org.access_code_hash, 'hex'))
+    if (!isValid) {
+        await recordAccessCodeFailure(userId)
+        return false
+    }
+
+    // Consume the code
+    await supabase
+        .from('organizations')
+        .update({ access_code_hash: null, access_code_expires_at: null })
+        .eq('id', orgId)
+
+    await resetAccessCodeFailures(userId)
+    return true
+}
+
+// ─── Request a new access code (owner can call this too) ──────────────────────
+
+export async function requestAccessCodeAsOwner() {
+    const { user, profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const code = crypto.randomBytes(3).toString('hex').toUpperCase()
+    const hash = crypto.createHash('sha256').update(code).digest('hex')
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
+
+    const { error } = await supabase
+        .from('organizations')
+        .update({ access_code_hash: hash, access_code_expires_at: expiresAt })
+        .eq('id', profile.org_id)
+
+    if (error) return { error: 'Failed to generate code. Please try again.' }
+
+    // Return the code directly to the owner (they are the owner viewing the dashboard)
+    return { success: true, code }
+}
+
 export async function updateOrderDetails(orderId: string, data: {
     party_name?: string
     quality_label?: string
@@ -94,20 +165,49 @@ export async function updateOrderDetails(orderId: string, data: {
     notes?: string
     total_target_meters?: number
     deadline?: string
-}) {
-    const { profile } = await requireRole(['owner'])
+}, accessCode: string) {
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    // Validate access code
+    let isCodeValid = false
+    try {
+        isCodeValid = await validateOwnerAccessCode(user.id, profile.org_id, accessCode)
+    } catch (e: any) {
+        return { error: e.message }
+    }
+    if (!isCodeValid) return { error: 'Invalid or expired access code' }
+
+    // Fetch current order state before updating
+    const { data: currentOrder } = await supabase
+        .from('orders')
+        .select('status, total_target_meters')
+        .eq('id', orderId)
+        .eq('org_id', profile.org_id)
+        .single()
+
+    const updatePayload: any = { ...data }
+
+    // If target is being increased on a completed order, reactivate it
+    if (
+        data.total_target_meters !== undefined &&
+        currentOrder?.status === 'completed' &&
+        data.total_target_meters > Number(currentOrder.total_target_meters)
+    ) {
+        updatePayload.status = 'active'
+    }
 
     const { error } = await supabase
         .from('orders')
-        .update(data)
+        .update(updatePayload)
         .eq('id', orderId)
         .eq('org_id', profile.org_id)
 
     if (error) return { error: error.message }
 
     revalidatePath('/owner/orders')
-    return { success: true }
+    revalidatePath('/owner/analytics')
+    return { success: true, reactivated: updatePayload.status === 'active' }
 }
 
 export async function deleteOrder(orderId: string) {

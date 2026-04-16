@@ -41,6 +41,8 @@ interface Order {
     quality_name: string
     status: string
     created_at: string  // ISO date string – used to gate production entry dates
+    total_target_meters: number
+    total_meters_produced: number
 }
 
 interface Worker {
@@ -217,24 +219,23 @@ export default function ProductionEntryForm() {
         enabled: !!userProfile?.org_id,
         queryFn: async () => {
             const { data, error } = await supabase
-                .from('orders')
-                .select('id, party_name, quality_id, worker_rate_per_m, qualities(name), status, created_at')
+                .from('order_progress_summary')
+                .select('order_id, party_name, quality_id, quality_label, worker_rate_per_m, status, created_at, total_target_meters, total_meters_produced')
                 .eq('org_id', userProfile!.org_id)
                 .eq('status', 'active')
                 .order('party_name', { ascending: true })
             if (error) throw error
-            return data.map((o: any) => {
-                const quality = Array.isArray(o.qualities) ? o.qualities[0] : o.qualities
-                return {
-                    id: o.id,
-                    party_name: o.party_name,
-                    quality_id: o.quality_id,
-                    worker_rate_per_m: o.worker_rate_per_m || 0,
-                    quality_name: quality?.name || 'Unknown Quality',
-                    status: o.status,
-                    created_at: o.created_at,
-                }
-            }) as Order[]
+            return data.map((o: any) => ({
+                id: o.order_id,
+                party_name: o.party_name,
+                quality_id: o.quality_id,
+                worker_rate_per_m: o.worker_rate_per_m || 0,
+                quality_name: o.quality_label || 'Unknown Quality',
+                status: o.status,
+                created_at: o.created_at,
+                total_target_meters: Number(o.total_target_meters),
+                total_meters_produced: Number(o.total_meters_produced),
+            })) as Order[]
         }
     })
 
@@ -327,6 +328,25 @@ export default function ProductionEntryForm() {
         if (missingWorker) {
             toast.error(t('production.assign_worker_for'))
             return
+        }
+
+        // Guard: block production logging if entry would exceed order target
+        for (const item of entriesToSave) {
+            if (item.activeOrder) {
+                const alreadyProduced = item.activeOrder.total_meters_produced ?? 0
+                const target = item.activeOrder.total_target_meters ?? 0
+                const thisEntry = metersInput[item.machine.id] !== undefined
+                    ? metersInput[item.machine.id]
+                    : item.meters
+                const remaining = target - alreadyProduced
+
+                if (target > 0 && thisEntry > remaining) {
+                    toast.error(
+                        `Cannot log ${thisEntry}m for ${item.activeOrder.party_name}: only ${remaining.toLocaleString('en-IN')}m remaining of ${target.toLocaleString('en-IN')}m target`
+                    )
+                    return
+                }
+            }
         }
 
         // Guard: block production logging for dates before the order was created
