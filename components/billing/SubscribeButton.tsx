@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Loader2, CreditCard } from 'lucide-react'
 import { toast } from 'sonner'
@@ -22,6 +23,7 @@ interface SubscribeButtonProps {
 
 export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, className }: SubscribeButtonProps) {
     const [loading, setLoading] = useState(false)
+    const router = useRouter()
     const loadRazorpayScript = () => {
         return new Promise((resolve) => {
             if (typeof window !== 'undefined' && window.Razorpay) return resolve(true)
@@ -80,8 +82,10 @@ export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, cl
                     razorpay_subscription_id: string
                     razorpay_signature: string
                 }) {
-                    toast.success('Payment successful! Your subscription will activate shortly.')
+                    toast.success('🎉 Payment successful! Your subscription is now activating.')
                     onSuccess?.(response.razorpay_payment_id)
+                    // Refresh server component so billing page shows updated subscription state
+                    setTimeout(() => router.refresh(), 1500)
                 },
                 modal: {
                     ondismiss: () => setLoading(false),

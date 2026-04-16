@@ -14,6 +14,7 @@ export const en = {
     "payroll": "Payroll",
     "advances": "Advances",
     "estimator": "Estimator",
+    "billing": "Billing",
     "system health": "WhatsApp Health",
   },
   attendance: {

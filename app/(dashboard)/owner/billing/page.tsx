@@ -190,8 +190,12 @@ export default async function BillingPage() {
         ? PLANS.find(p => p.tier === subscription.plan_tier)
         : null
 
-    // ── BLOCKED STATE (no subscription) ──────────────────────────────────────
+    // ── BLOCKED STATE (no subscription or expired) ───────────────────────────
     if (tier === 'none') {
+        // Check if they have a Razorpay subscription being processed (authenticated but current_end not set yet)
+        const isActivating = subscription?.status === 'authenticated' || 
+                             (subscription?.status === 'created' && subscription.razorpay_subscription_id)
+
         return (
             <div className="space-y-8 max-w-3xl pb-10">
                 <div>
@@ -199,21 +203,46 @@ export default async function BillingPage() {
                     <p className="text-sm text-gray-500 mt-0.5">Choose a plan to unlock Loomi</p>
                 </div>
 
-                {/* Blocking banner */}
-                <div className="rounded-2xl border border-red-200 bg-red-50 p-5 flex items-start gap-4">
-                    <Lock className="h-6 w-6 text-red-500 shrink-0 mt-0.5" />
-                    <div>
-                        <p className="font-semibold text-red-900">Your access has expired</p>
-                        <p className="text-sm text-red-700 mt-1">
-                            {subscription?.plan_tier === 'trial'
-                                ? 'Your 7-day free trial has ended. Subscribe to continue using Loomi.'
-                                : 'Your subscription is no longer active. Renew to restore access.'}
-                        </p>
+                {/* Status banner */}
+                {isActivating ? (
+                    // Payment done, waiting for webhook / first billing cycle
+                    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 flex items-start gap-4">
+                        <Clock className="h-6 w-6 text-blue-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-blue-900">Your subscription is activating</p>
+                            <p className="text-sm text-blue-700 mt-1">
+                                Payment received — your {subscription?.plan_tier === 'premium' ? 'Premium' : 'Base'} subscription is being set up. This usually takes a few seconds. Refresh the page to check.
+                            </p>
+                        </div>
                     </div>
-                </div>
+                ) : subscription ? (
+                    // Had a subscription, now expired
+                    <div className="rounded-2xl border border-red-200 bg-red-50 p-5 flex items-start gap-4">
+                        <Lock className="h-6 w-6 text-red-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-red-900">Your access has expired</p>
+                            <p className="text-sm text-red-700 mt-1">
+                                {subscription.plan_tier === 'trial'
+                                    ? 'Your 7-day free trial has ended. Subscribe to continue using Loomi.'
+                                    : 'Your subscription is no longer active. Renew to restore access.'}
+                            </p>
+                        </div>
+                    </div>
+                ) : (
+                    // Brand new account — no subscription ever
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 flex items-start gap-4">
+                        <ShieldCheck className="h-6 w-6 text-amber-500 shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-amber-900">No active plan</p>
+                            <p className="text-sm text-amber-700 mt-1">
+                                Start a free 7-day trial or subscribe to a plan to unlock Loomi.
+                            </p>
+                        </div>
+                    </div>
+                )}
 
-                {/* Trial CTA — only if they haven't already had a trial */}
-                {(!subscription || subscription.plan_tier !== 'trial') && (
+                {/* Trial CTA — only for brand-new accounts with no prior subscription */}
+                {!subscription && (
                     <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
                             <p className="font-semibold text-emerald-900 flex items-center gap-2">
@@ -228,7 +257,7 @@ export default async function BillingPage() {
                     </div>
                 )}
 
-                <PlanCards label="Choose a subscription plan" />
+                {!isActivating && <PlanCards label={subscription ? 'Renew your subscription' : 'Choose a subscription plan'} />}
             </div>
         )
     }

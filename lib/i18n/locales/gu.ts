@@ -15,6 +15,7 @@ export const gu = {
     "advances": "એડવાન્સ (Advances)",
     "estimator": "એસ્ટીમેટર (Estimator)",
 
+    "billing": "બિલિંગ (Billing)",
     "system health": "સિસ્ટમ હેલ્થ",
   },
   attendance: {
