@@ -338,9 +338,11 @@ export async function updateSession(request: NextRequest) {
         }
 
         // Onboarding guard: owners must complete setup before accessing ops routes
+        // NOTE: API routes must NEVER be redirected to HTML pages — they need JSON responses.
         if (
             role === 'owner' &&
             !resolvedOnboarding &&
+            !pathname.startsWith('/api/') &&
             !pathname.startsWith('/onboarding') &&
             !pathname.startsWith('/owner/machines') &&
             !pathname.startsWith('/owner/inventory') &&
