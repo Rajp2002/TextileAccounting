@@ -55,9 +55,9 @@ export default function LandingHero() {
                                     <Button
                                         id="hero-owner-signup-btn"
                                         size="lg"
-                                        className="w-full sm:w-auto rounded-full px-7 py-6 text-base font-semibold bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 shadow-xl shadow-gray-900/10 dark:shadow-white/10 transition-all hover:-translate-y-1 hover:scale-105"
+                                        className="w-full sm:w-auto rounded-full px-7 py-6 text-base font-semibold bg-amber-600 hover:bg-amber-700 text-white shadow-xl shadow-amber-500/20 transition-all hover:-translate-y-1 hover:scale-105"
                                     >
-                                        Start as owner
+                                        Start free 7-day trial
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     </Button>
                                 </Link>
@@ -73,13 +73,22 @@ export default function LandingHero() {
                                     </Button>
                                 </Link>
                             </div>
-                            <div className="flex items-center justify-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                                <p>Already have an account?{' '}
-                                    <Link href="/login" className="text-amber-700 hover:underline font-medium dark:text-amber-500">
-                                        Log in
-                                    </Link>
+                            <div className="flex items-center justify-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+                                <p className="flex items-center gap-1">
+                                    <span className="text-emerald-500">✓</span> Full Premium access
+                                </p>
+                                <p className="flex items-center gap-1">
+                                    <span className="text-emerald-500">✓</span> No credit card required
+                                </p>
+                                <p className="flex items-center gap-1">
+                                    <span className="text-emerald-500">✓</span> 7 days free
                                 </p>
                             </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Already have an account?{' '}
+                                <Link href="/login" className="text-amber-700 hover:underline font-medium dark:text-amber-500">
+                                    Log in
+                                </Link>
+                            </p>
                         </motion.div>
                     </motion.div>
                 </div>
