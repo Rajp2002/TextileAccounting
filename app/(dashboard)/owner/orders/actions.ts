@@ -21,6 +21,7 @@ export interface OrderSummary {
     deadline: string
     status: OrderStatus
     created_at: string
+    worker_rate_per_m: number | null
 }
 
 // ─── Read ──────────────────────────────────────────────────────────────────────
@@ -71,6 +72,15 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
 
     if (error) return { error: error.message }
 
+    // If order is completed, unlink all machines assigned to it
+    if (status === 'completed') {
+        await supabase
+            .from('machines')
+            .update({ current_order_id: null })
+            .eq('current_order_id', orderId)
+            .eq('org_id', profile.org_id)
+    }
+
     revalidatePath('/owner/orders')
     revalidatePath('/owner/analytics')
     return { success: true }
@@ -112,6 +122,13 @@ export async function deleteOrder(orderId: string) {
 
     if (error) return { error: error.message }
 
+    // Unlink all machines assigned to this order
+    await supabase
+        .from('machines')
+        .update({ current_order_id: null })
+        .eq('current_order_id', orderId)
+        .eq('org_id', profile.org_id)
+
     revalidatePath('/owner/orders')
     return { success: true }
 }
@@ -139,7 +156,7 @@ export async function getOrderWithQuote(orderId: string) {
         .select(
             'id, quote_price_per_meter, landed_cost_per_meter, intended_margin_percent, meters, ' +
             'warp_rows, weft_rows, overhead_pct, commission_pct, transport_per_m, ' +
-            'warping_rate_per_kg, sizing_rate_per_kg, overhead_items, monthly_output_m'
+            'warping_rate_per_kg, sizing_rate_per_kg, overhead_items, monthly_output_m, worker_rate_per_m'
         )
         .eq('order_id', orderId)
         .eq('org_id', profile.org_id)
@@ -150,7 +167,7 @@ export async function getOrderWithQuote(orderId: string) {
     // Fetch active machines for assignment
     const { data: machines } = await supabase
         .from('machines')
-        .select('id, name, current_order_id, status')
+        .select('id, name, current_order_id, status, linked_order:orders(status)')
         .eq('org_id', profile.org_id)
         .eq('status', 'active')
         .order('name', { ascending: true })
@@ -164,7 +181,7 @@ export async function getActiveMachinesList() {
 
     const { data, error } = await supabase
         .from('machines')
-        .select('id, name, current_order_id, status')
+        .select('id, name, current_order_id, status, linked_order:orders(status)')
         .eq('org_id', profile.org_id)
         .eq('status', 'active')
         .order('name', { ascending: true })

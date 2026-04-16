@@ -37,6 +37,7 @@ import {
     InputOTPGroup,
     InputOTPSlot,
 } from '@/components/ui/input-otp'
+import { REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 
@@ -61,7 +62,7 @@ interface WorkerBase {
 }
 
 interface MeterWorkerPayroll extends WorkerBase {
-    machines: { machineName: string; meters: number; rate: number; pay: number }[]
+    machines: { machineName: string; orderLabel?: string; meters: number; rate: number; pay: number }[]
     totalMeters: number
     totalPay: number       // gross pay
 }
@@ -257,7 +258,14 @@ function MeterWorkerRow({
                                             <tbody className="divide-y">
                                                 {worker.machines.map((m, i) => (
                                                     <tr key={i}>
-                                                        <td className="px-3 py-2 font-medium">{m.machineName}</td>
+                                                        <td className="px-3 py-2">
+                                                            <span className="font-medium">{m.machineName}</span>
+                                                            {m.orderLabel && (
+                                                                <span className="block text-[10px] text-indigo-500/80 font-medium truncate max-w-[120px]" title={m.orderLabel}>
+                                                                    {m.orderLabel}
+                                                                </span>
+                                                            )}
+                                                        </td>
                                                         <td className="px-3 py-2 text-right text-gray-500">{m.meters.toFixed(1)} @ ₹{m.rate}</td>
                                                         <td className="px-3 py-2 text-right font-semibold">{formatINR(m.pay)}</td>
                                                     </tr>
@@ -728,16 +736,17 @@ export default function PayrollPage() {
             const lastDay = new Date(Number(year), Number(month), 0).getDate()
             const monthEnd = `${selectedMonth}-${lastDay}`
 
-            const [logsRes, workersRes, machinesRes, settlementsRes, advancesRes] = await Promise.all([
+            const [logsRes, workersRes, machinesRes, settlementsRes, advancesRes, ordersRes] = await Promise.all([
+                // Fetch order_id too — needed for order attribution per wage line
                 supabase.from('production_logs')
-                    .select('worker_id, machine_id, meters, worker_rate_snapshot')
+                    .select('worker_id, machine_id, meters, worker_rate_snapshot, order_id')
                     .eq('org_id', userProfile!.org_id)
                     .gte('date', monthStart)
                     .lte('date', monthEnd),
+                // Fetch ALL workers (active + inactive) — inactive workers who worked this month must still appear
                 supabase.from('workers')
-                    .select('id, name, whatsapp_number')
-                    .eq('org_id', userProfile!.org_id)
-                    .eq('is_active', true),
+                    .select('id, name, whatsapp_number, is_active')
+                    .eq('org_id', userProfile!.org_id),
                 supabase.from('machines')
                     .select('id, name')
                     .eq('org_id', userProfile!.org_id),
@@ -750,7 +759,12 @@ export default function PayrollPage() {
                     .select('meter_worker_id, amount')
                     .eq('org_id', userProfile!.org_id)
                     .eq('status', 'pending')
-                    .not('meter_worker_id', 'is', null)
+                    .not('meter_worker_id', 'is', null),
+                // Fetch all orders (active + recently completed) for order label lookup
+                supabase.from('orders')
+                    .select('id, party_name, quality_label')
+                    .eq('org_id', userProfile!.org_id)
+                    .in('status', ['active', 'completed', 'cancelled'])
             ])
 
             if (logsRes.error) throw logsRes.error
@@ -762,8 +776,9 @@ export default function PayrollPage() {
             const machines = machinesRes.data
             const settlements = settlementsRes.data
             const advances = advancesRes.data
+            const orders = ordersRes.data
 
-            // Build map
+            // Build maps
             const advanceMap: Record<number, number> = {}
             ;(advances || []).forEach((a: any) => {
                 advanceMap[a.meter_worker_id] = (advanceMap[a.meter_worker_id] || 0) + parseFloat(a.amount)
@@ -771,28 +786,49 @@ export default function PayrollPage() {
 
             const machineMap = Object.fromEntries((machines || []).map((m: any) => [m.id, m]))
             const settlementMap = Object.fromEntries((settlements || []).map((s: any) => [s.meter_worker_id, s]))
+            // Order label: prefer quality_label, fall back to party_name alone
+            const orderLabelMap = Object.fromEntries(
+                (orders || []).map((o: any) => [
+                    o.id,
+                    o.quality_label ? `${o.party_name} · ${o.quality_label}` : o.party_name
+                ])
+            )
 
-            // Group logs by worker → machine
+            // Determine which worker IDs actually have logs this month (for inactive worker inclusion)
+            const workerIdsWithLogs = new Set((logs || []).map((l: any) => l.worker_id))
+
+            // Group logs by worker → order + machine + rate
             const result: MeterWorkerPayroll[] = []
             for (const worker of (workers || [])) {
+                // Include worker if active OR if they have logs this period (handles mid-cycle deactivation)
+                if (!worker.is_active && !workerIdsWithLogs.has(worker.id)) continue
+
                 const workerLogs = (logs || []).filter((l: any) => l.worker_id === worker.id)
                 if (workerLogs.length === 0 && !settlementMap[worker.id]) continue
 
-                // Group by machine + rate
-                const machineGroups: Record<string, { meters: number; rate: number; name: string }> = {}
+                // Group by order + machine + rate — separates wage lines per order
+                const machineGroups: Record<string, { meters: number; rate: number; name: string; orderLabel?: string }> = {}
                 for (const log of workerLogs) {
                     const machine = machineMap[log.machine_id]
                     const rate = log.worker_rate_snapshot || 0
-                    const key = `${log.machine_id}-${rate}`
+                    const orderId = log.order_id || '__no_order__'
+                    // Key on order + machine + rate so different orders on same machine split cleanly
+                    const key = `${orderId}-${log.machine_id}-${rate}`
                     
                     if (!machineGroups[key]) {
-                        machineGroups[key] = { meters: 0, rate: rate, name: machine?.name || 'Unknown' }
+                        machineGroups[key] = {
+                            meters: 0,
+                            rate,
+                            name: machine?.name || 'Unknown',
+                            orderLabel: log.order_id ? orderLabelMap[log.order_id] : undefined,
+                        }
                     }
                     machineGroups[key].meters += parseFloat(log.meters) || 0
                 }
                 
                 const machineBreakdown = Object.values(machineGroups).map(mg => ({
                     machineName: mg.name,
+                    orderLabel: mg.orderLabel,
                     meters: mg.meters,
                     rate: mg.rate,
                     pay: mg.meters * mg.rate,
@@ -1273,7 +1309,8 @@ export default function PayrollPage() {
                     </DialogHeader>
                     <div className="flex flex-col items-center justify-center py-6 gap-4">
                         <InputOTP
-                            maxLength={4}
+                            maxLength={6}
+                            pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
                             value={accessCode}
                             onChange={(val) => setAccessCode(val)}
                         >
@@ -1282,6 +1319,8 @@ export default function PayrollPage() {
                                 <InputOTPSlot index={1} />
                                 <InputOTPSlot index={2} />
                                 <InputOTPSlot index={3} />
+                                <InputOTPSlot index={4} />
+                                <InputOTPSlot index={5} />
                             </InputOTPGroup>
                         </InputOTP>
                     </div>
@@ -1301,7 +1340,7 @@ export default function PayrollPage() {
                             type="button"
                             variant="destructive"
                             className="bg-red-600 font-bold uppercase tracking-widest text-xs"
-                            disabled={accessCode.length < 4}
+                            disabled={accessCode.length < 6}
                             onClick={confirmRevert}
                         >
                             {t('payroll_ext.confirm_reversal')}

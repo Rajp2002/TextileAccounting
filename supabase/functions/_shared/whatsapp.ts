@@ -136,8 +136,8 @@ export async function logDelivery(
     template_name: params.templateName,
     notification_type: params.notificationType,
     status: params.status,
-    interakt_callback_data: params.callbackData,
-    interakt_message_id: params.messageId ?? null, // Storing Meta wamid here for now to avoid migration
+    meta_callback_data: params.callbackData,
+    meta_message_id: params.messageId ?? null, // Storing Meta wamid here
     error_message: params.errorMessage ?? null,
     payload_snapshot: params.payloadSnapshot,
   });

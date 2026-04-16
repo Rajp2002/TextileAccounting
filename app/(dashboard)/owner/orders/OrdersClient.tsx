@@ -25,6 +25,7 @@ import {
     ArrowUpRight,
     Pencil,
     Check,
+    CircleDollarSign,
 } from 'lucide-react'
 import {
     Sheet,
@@ -123,9 +124,11 @@ function MachineAssignInline({
     return (
         <div className="space-y-2">
             <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                {allMachines.map((m) => {
+                {allMachines.map((m: any) => {
                     const isSelected = selected.has(m.id)
-                    const linkedToOther = m.current_order_id && m.current_order_id !== orderId
+                    const linkedToOther = m.current_order_id && 
+                                        m.current_order_id !== orderId && 
+                                        m.linked_order?.status === 'active'
                     return (
                         <div
                             key={m.id}
@@ -134,7 +137,8 @@ function MachineAssignInline({
                                 'flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all',
                                 isSelected
                                     ? 'border-primary bg-primary/10'
-                                    : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                                    : 'border-slate-200 bg-slate-50 hover:border-slate-300',
+                                linkedToOther && !isSelected && 'opacity-60 grayscale-[0.5]'
                             )}
                         >
                             <div className={cn(
@@ -234,6 +238,14 @@ function QuoteCostBreakdown({ quote, targetMeters }: { quote: any; targetMeters:
                     <div className="flex items-center justify-between text-xs py-1 border-b border-slate-100">
                         <span className="text-rose-500 font-medium">🏭 Overhead</span>
                         <span className="font-mono text-slate-900">{Number(quote.overhead_pct).toFixed(1)}% effective</span>
+                    </div>
+                )}
+                {quote.worker_rate_per_m > 0 && (
+                    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-100">
+                        <span className="text-amber-500 font-medium">👷 Weaver Wage</span>
+                        <span className="font-mono text-slate-900">
+                            ₹{Number(quote.worker_rate_per_m).toFixed(2)}/m
+                        </span>
                     </div>
                 )}
                 {quote.commission_pct > 0 && (
@@ -479,6 +491,20 @@ function OrderDetailDrawer({
                                         </button>
                                     )}
                                 </div>
+
+                                {/* Worker Wage (Snapshot) */}
+                                {order.worker_rate_per_m !== null && (
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                                                <CircleDollarSign className="h-3 w-3" /> Worker Wage
+                                            </p>
+                                            <p className="text-base font-black font-mono text-slate-900">
+                                                ₹{Number(order.worker_rate_per_m).toFixed(2)} /m
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Machine Assignment */}

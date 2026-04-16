@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     // 1. Find retryable failed rows
     const { data: failures, error: fetchError } = await supabase
       .from("whatsapp_delivery_log")
-      .select("id, recipient_phone, template_name, interakt_callback_data, payload_snapshot, retry_count")
+      .select("id, recipient_phone, template_name, meta_callback_data, payload_snapshot, retry_count")
       .eq("status", "failed")
       .gt("sent_at", cutoff)
       .lt("retry_count", 3)
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
           row.template_name,
           snapshot.languageCode ?? "en",
           snapshot.bodyValues,
-          row.interakt_callback_data ?? `retry_${row.id}`,
+          row.meta_callback_data ?? `retry_${row.id}`,
         );
       } catch (sendErr) {
         // Network-level failure — still increment retry_count
@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
           status: result.success ? "sent" : "failed",
           retry_count: (row.retry_count ?? 0) + 1,
           last_retry_at: new Date().toISOString(),
-          interakt_message_id: result.messageId ?? undefined,
+          meta_message_id: result.messageId ?? undefined,
           error_message: result.success
             ? null
             : `retry_${(row.retry_count ?? 0) + 1}: ${JSON.stringify(result.responseBody)}`,
