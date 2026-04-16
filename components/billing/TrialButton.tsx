@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
 
 interface TrialButtonProps {
     onSuccess?: (trialEnd: string) => void
@@ -13,7 +12,6 @@ interface TrialButtonProps {
 
 export function TrialButton({ onSuccess, compact }: TrialButtonProps) {
     const [loading, setLoading] = useState(false)
-    const router = useRouter()
 
     async function handleStartTrial() {
         setLoading(true)
@@ -30,10 +28,10 @@ export function TrialButton({ onSuccess, compact }: TrialButtonProps) {
             })
 
             toast.success(`🎉 Trial activated! Enjoy Premium access until ${endDate}.`)
-            onSuccess?.(body.trialEnd)
 
-            // Reload to show trial state
-            router.refresh()
+            // Call onSuccess to update parent UI — this is sufficient,
+            // no need for router.refresh() which throws a DOMException in Safari.
+            onSuccess?.(body.trialEnd)
         } catch (err: any) {
             toast.error(err.message ?? 'Something went wrong. Please try again.')
         } finally {
