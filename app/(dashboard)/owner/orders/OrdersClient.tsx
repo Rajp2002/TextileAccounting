@@ -26,6 +26,9 @@ import {
     Pencil,
     Check,
     CircleDollarSign,
+    KeyRound,
+    Lock,
+    RefreshCw,
 } from 'lucide-react'
 import {
     Sheet,
@@ -34,6 +37,14 @@ import {
     SheetTitle,
     SheetFooter,
 } from '@/components/ui/sheet'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -49,6 +60,7 @@ import {
     getOrderWithQuote,
     assignMachinesToOrder,
     updateOrderDetails,
+    requestAccessCodeAsOwner,
 } from './actions'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -261,6 +273,99 @@ function QuoteCostBreakdown({ quote, targetMeters }: { quote: any; targetMeters:
 
 // ─── Order Detail Drawer ─────────────────────────────────────────────────────
 
+// ─── Access Code Dialog for Owner Edits ──────────────────────────────────────
+
+function OwnerAccessCodeDialog({
+    open,
+    onClose,
+    onVerified,
+    actionLabel,
+}: {
+    open: boolean
+    onClose: () => void
+    onVerified: (code: string) => void
+    actionLabel: string
+}) {
+    const [code, setCode] = useState('')
+    const [generatingCode, setGeneratingCode] = useState(false)
+    const [generatedCode, setGeneratedCode] = useState<string | null>(null)
+
+    const handleGenerateCode = async () => {
+        setGeneratingCode(true)
+        const res = await requestAccessCodeAsOwner()
+        setGeneratingCode(false)
+        if ('error' in res && res.error) {
+            toast.error(res.error)
+        } else if (res.code) {
+            setGeneratedCode(res.code)
+            setCode(res.code) // auto-fill the input
+        }
+    }
+
+    const handleClose = () => {
+        setCode('')
+        setGeneratedCode(null)
+        onClose()
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+            <DialogContent className="max-w-sm">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-amber-600">
+                        <KeyRound className="h-5 w-5" /> Owner Authorisation Required
+                    </DialogTitle>
+                    <DialogDescription>
+                        Generate a one-time access code to {actionLabel}. The code expires in 15 minutes.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                    <Button
+                        variant="outline"
+                        className="w-full gap-2 border-amber-200 text-amber-700 hover:bg-amber-50"
+                        onClick={handleGenerateCode}
+                        disabled={generatingCode}
+                    >
+                        {generatingCode ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                        {generatedCode ? 'Regenerate Code' : 'Generate Access Code'}
+                    </Button>
+
+                    {generatedCode && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center space-y-1">
+                            <p className="text-[10px] uppercase tracking-widest text-amber-600 font-bold">Your Access Code</p>
+                            <p className="text-3xl font-black font-mono tracking-[0.3em] text-amber-700">{generatedCode}</p>
+                            <p className="text-[10px] text-amber-500">Valid for 15 minutes · Single use</p>
+                        </div>
+                    )}
+
+                    <div className="space-y-1.5">
+                        <Label className="text-xs text-slate-600 font-semibold">Enter Access Code</Label>
+                        <Input
+                            value={code}
+                            onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 6))}
+                            placeholder="XXXXXX"
+                            className="font-mono uppercase tracking-widest text-lg text-center h-12 border-slate-200"
+                            maxLength={6}
+                        />
+                    </div>
+                </div>
+                <DialogFooter className="gap-2">
+                    <Button variant="outline" onClick={handleClose}>Cancel</Button>
+                    <Button
+                        disabled={code.length < 6}
+                        className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+                        onClick={() => { onVerified(code); handleClose() }}
+                    >
+                        <Check className="h-4 w-4 mr-2" /> Confirm
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+// ─── Order Detail Drawer ─────────────────────────────────────────────────────
+
 function OrderDetailDrawer({
     orderId,
     open,
@@ -279,6 +384,10 @@ function OrderDetailDrawer({
     const [editingTarget, setEditingTarget] = useState(false)
     const [targetVal, setTargetVal] = useState('')
     const [savingEdit, setSavingEdit] = useState(false)
+
+    // Access code dialog state
+    const [codeDialogOpen, setCodeDialogOpen] = useState(false)
+    const [codeDialogAction, setCodeDialogAction] = useState<'target' | 'deadline'>('target')
 
     const load = useCallback(async () => {
         if (!orderId) return
@@ -313,29 +422,65 @@ function OrderDetailDrawer({
         else toast.error(res.error ?? 'Failed to cancel')
     }
 
-    const handleSaveDeadline = async () => {
+    /** Called after the access-code dialog resolves with a valid code */
+    const handleCodeVerified = async (accessCode: string) => {
         if (!orderId) return
-        setSavingEdit(true)
-        const res = await updateOrderDetails(orderId, { deadline: deadlineVal })
-        setSavingEdit(false)
-        if (res.success) { toast.success('Deadline updated'); setEditingDeadline(false); load() }
-        else toast.error(res.error ?? 'Failed to update')
+        if (codeDialogAction === 'deadline') {
+            await doSaveDeadline(accessCode)
+        } else {
+            await doSaveTarget(accessCode)
+        }
     }
 
-    const handleSaveTarget = async () => {
+    const handleSaveDeadline = () => {
+        setCodeDialogAction('deadline')
+        setCodeDialogOpen(true)
+    }
+
+    const doSaveDeadline = async (accessCode: string) => {
+        if (!orderId) return
+        setSavingEdit(true)
+        const res = await updateOrderDetails(orderId, { deadline: deadlineVal }, accessCode)
+        setSavingEdit(false)
+        if (res.success) {
+            toast.success('Deadline updated')
+            setEditingDeadline(false)
+            load()
+        } else {
+            toast.error(res.error ?? 'Failed to update')
+        }
+    }
+
+    const handleSaveTarget = () => {
+        setCodeDialogAction('target')
+        setCodeDialogOpen(true)
+    }
+
+    const doSaveTarget = async (accessCode: string) => {
         if (!orderId) return
         const t = Number(targetVal)
-        if (!t || t <= 0) return toast.error('Invalid target')
+        if (!t || t <= 0) { toast.error('Invalid target'); return }
         setSavingEdit(true)
-        const res = await updateOrderDetails(orderId, { total_target_meters: t })
+        const res = await updateOrderDetails(orderId, { total_target_meters: t }, accessCode)
         setSavingEdit(false)
-        if (res.success) { toast.success('Target updated'); setEditingTarget(false); load() }
-        else toast.error(res.error ?? 'Failed to update')
+        if (res.success) {
+            if ((res as any).reactivated) {
+                toast.success('Target updated · Order reactivated — machines can now be reassigned')
+            } else {
+                toast.success('Target updated')
+            }
+            setEditingTarget(false)
+            load()
+            onRefresh()
+        } else {
+            toast.error(res.error ?? 'Failed to update')
+        }
     }
 
-    const order   = data?.order
-    const quote   = data?.quote
+    const order    = data?.order
+    const quote    = data?.quote
     const machines = data?.machines ?? []
+    const isCompleted = order?.status === 'completed'
 
     const progress = Number(order?.progress_percent ?? 0)
     const daysRemaining = order ? differenceInDays(new Date(order.deadline), new Date()) : 0
@@ -425,7 +570,7 @@ function OrderDetailDrawer({
                                 </p>
 
                                 {/* Target Meters */}
-                                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-2">
+                                <div className={cn("border rounded-xl p-3 flex items-center justify-between gap-2", isCompleted ? "bg-emerald-50 border-emerald-200" : "bg-slate-50 border-slate-200")}>
                                     <div className="min-w-0">
                                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Target Meters</p>
                                         {editingTarget ? (
@@ -436,6 +581,7 @@ function OrderDetailDrawer({
                                                     onChange={e => setTargetVal(e.target.value)}
                                                     className="h-7 w-28 text-xs font-mono bg-white border-slate-200 text-slate-900"
                                                     autoFocus
+                                                    min={Number(order?.total_meters_produced ?? 0) + 1}
                                                 />
                                                 <button onClick={handleSaveTarget} disabled={savingEdit} className="text-emerald-500 hover:text-emerald-600">
                                                     {savingEdit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
@@ -449,9 +595,16 @@ function OrderDetailDrawer({
                                                 {target.toLocaleString('en-IN')} m
                                             </p>
                                         )}
+                                        {isCompleted && !editingTarget && (
+                                            <p className="text-[10px] text-emerald-600 font-medium mt-0.5">Increase to reactivate order</p>
+                                        )}
                                     </div>
                                     {!editingTarget && (
-                                        <button onClick={() => setEditingTarget(true)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                        <button
+                                            onClick={() => setEditingTarget(true)}
+                                            className="text-slate-400 hover:text-amber-500 transition-colors"
+                                            title="Requires access code"
+                                        >
                                             <Pencil className="h-3.5 w-3.5" />
                                         </button>
                                     )}
@@ -486,7 +639,11 @@ function OrderDetailDrawer({
                                         )}
                                     </div>
                                     {!editingDeadline && (
-                                        <button onClick={() => setEditingDeadline(true)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                        <button
+                                            onClick={() => setEditingDeadline(true)}
+                                            className="text-slate-400 hover:text-amber-500 transition-colors"
+                                            title="Requires access code"
+                                        >
                                             <Pencil className="h-3.5 w-3.5" />
                                         </button>
                                     )}
@@ -511,18 +668,28 @@ function OrderDetailDrawer({
                             <div className="space-y-2">
                                 <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1.5">
                                     <Server className="h-3 w-3" /> Machine Assignment
-                                    {currentMachineIds.length > 0 && (
+                                    {currentMachineIds.length > 0 && !isCompleted && (
                                         <span className="text-emerald-400">
                                             · {currentMachineIds.length} running
                                         </span>
                                     )}
                                 </p>
-                                <MachineAssignInline
-                                    orderId={order.order_id}
-                                    currentMachineIds={currentMachineIds}
-                                    allMachines={machines}
-                                    onSuccess={() => { load(); onRefresh() }}
-                                />
+                                {isCompleted ? (
+                                    <div className="flex items-center gap-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4">
+                                        <Lock className="h-5 w-5 text-slate-400 shrink-0" />
+                                        <div>
+                                            <p className="text-xs font-semibold text-slate-700">Order Completed</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5">Increase the target above to reactivate this order and reassign machines.</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <MachineAssignInline
+                                        orderId={order.order_id}
+                                        currentMachineIds={currentMachineIds}
+                                        allMachines={machines}
+                                        onSuccess={() => { load(); onRefresh() }}
+                                    />
+                                )}
                             </div>
 
                             {/* Estimator Quote Cost Breakdown */}
@@ -552,26 +719,44 @@ function OrderDetailDrawer({
 
                         {/* Footer actions */}
                         <div className="shrink-0 border-t border-slate-100 px-5 py-4 flex gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-bold"
-                                onClick={handleCancel}
-                            >
-                                <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel Order
-                            </Button>
-                            <Button
-                                size="sm"
-                                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                                onClick={handleComplete}
-                            >
-                                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Mark Complete
-                            </Button>
+                            {!isCompleted && (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-bold"
+                                        onClick={handleCancel}
+                                    >
+                                        <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel Order
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                                        onClick={handleComplete}
+                                    >
+                                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Mark Complete
+                                    </Button>
+                                </>
+                            )}
+                            {isCompleted && (
+                                <div className="flex-1 flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                                    <p className="text-xs font-semibold text-emerald-700">Order completed · Increase target to continue production</p>
+                                </div>
+                            )}
                         </div>
                     </>
                 )}
             </SheetContent>
         </Sheet>
+
+        {/* Access Code Dialog */}
+        <OwnerAccessCodeDialog
+            open={codeDialogOpen}
+            onClose={() => setCodeDialogOpen(false)}
+            onVerified={handleCodeVerified}
+            actionLabel={codeDialogAction === 'target' ? 'update the target meters' : 'update the deadline'}
+        />
     )
 }
 
