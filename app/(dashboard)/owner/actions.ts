@@ -140,6 +140,7 @@ export async function upsertFixedWorker(data: {
     name: string
     role: string
     monthly_salary: number
+    start_date?: string   // 'YYYY-MM-DD' — used for payroll month filtering
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -148,16 +149,26 @@ export async function upsertFixedWorker(data: {
     if (!name || !data.role || !data.monthly_salary) return { error: 'All fields are required.' }
 
     if (data.id) {
+        const updatePayload: Record<string, any> = { name, role: data.role, monthly_salary: data.monthly_salary }
+        if (data.start_date) updatePayload.start_date = data.start_date
         const { error } = await supabase
             .from('fixed_workers')
-            .update({ name, role: data.role, monthly_salary: data.monthly_salary })
+            .update(updatePayload)
             .eq('id', data.id)
             .eq('org_id', profile.org_id)
         if (error) { console.error(error); return { error: 'Failed to update worker.' } }
     } else {
+        const insertPayload: Record<string, any> = {
+            name,
+            role: data.role,
+            monthly_salary: data.monthly_salary,
+            org_id: profile.org_id,
+        }
+        // If a start_date is provided use it; otherwise DB default (CURRENT_DATE) applies
+        if (data.start_date) insertPayload.start_date = data.start_date
         const { error } = await supabase
             .from('fixed_workers')
-            .insert({ name, role: data.role, monthly_salary: data.monthly_salary, org_id: profile.org_id })
+            .insert(insertPayload)
         if (error) { console.error(error); return { error: 'Failed to add worker.' } }
     }
 

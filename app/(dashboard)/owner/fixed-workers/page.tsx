@@ -37,6 +37,7 @@ interface FixedWorker {
     role: string
     monthly_salary: number
     is_active: boolean
+    start_date?: string   // 'YYYY-MM-DD'
     pf_esi_eligible?: boolean
     esi_number?: string
     pf_number?: string
@@ -414,6 +415,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const [formName, setFormName] = useState('')
     const [formRole, setFormRole] = useState('')
     const [formSalary, setFormSalary] = useState('')
+    const [formStartDate, setFormStartDate] = useState(new Date().toISOString().substring(0, 10))
     const [saving, setSaving] = useState(false)
 
     const [workerToDelete, setWorkerToDelete] = useState<FixedWorker | null>(null)
@@ -443,6 +445,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormName('')
         setFormRole('')
         setFormSalary('')
+        setFormStartDate(new Date().toISOString().substring(0, 10))
         setDialogOpen(true)
     }
 
@@ -451,6 +454,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormName(worker.name)
         setFormRole(worker.role)
         setFormSalary(worker.monthly_salary.toString())
+        setFormStartDate(worker.start_date || new Date().toISOString().substring(0, 10))
         setDialogOpen(true)
     }
 
@@ -474,6 +478,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                 name: formName.trim(),
                 role: formRole,
                 monthly_salary: parseFloat(formSalary),
+                start_date: formStartDate,
             })
             if (result.error) throw new Error(result.error)
             toast.success(editingWorker ? t('common.updated') : t('common.added'))
@@ -598,6 +603,18 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                     placeholder="30000"
                                 />
                             </div>
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-1">
+                                    Start Date
+                                    <span className="text-[10px] text-gray-400 font-normal ml-1">Used to hide worker from past payroll months</span>
+                                </Label>
+                                <Input
+                                    type="date"
+                                    value={formStartDate}
+                                    onChange={(e) => setFormStartDate(e.target.value)}
+                                    max={new Date().toISOString().substring(0, 10)}
+                                />
+                            </div>
                             <Button onClick={handleSave} disabled={saving} className="w-full">
                                 {saving ? t('fixed_page.saving') : editingWorker ? t('fixed_page.update') : t('fixed_page.add_worker')}
                             </Button>
@@ -667,14 +684,21 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                                     <span className={cn('font-medium break-words block', !w.is_active && 'text-gray-400 line-through')}>
                                                         {tl(w.name)}
                                                     </span>
-                                                    {roleInfo.value === 'daily' && (
-                                                        <span className="text-xs text-orange-600 ml-2">{t('fixed_page.attendance_based')}</span>
-                                                    )}
-                                                    {w.pf_esi_eligible && (
-                                                        <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded ml-2">
-                                                            ESI/PF ✓
-                                                        </span>
-                                                    )}
+                                                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                                        {roleInfo.value === 'daily' && (
+                                                            <span className="text-xs text-orange-600 font-medium">{t('fixed_page.attendance_based')}</span>
+                                                        )}
+                                                        {w.start_date && (
+                                                            <span className="text-[10px] text-gray-400">
+                                                                Since {new Date(w.start_date + 'T00:00:00').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                                                            </span>
+                                                        )}
+                                                        {w.pf_esi_eligible && (
+                                                            <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
+                                                                ESI/PF ✓
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     <span className="text-sm text-gray-700">

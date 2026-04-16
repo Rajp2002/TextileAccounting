@@ -858,6 +858,10 @@ export default function PayrollPage() {
         queryKey: ['payroll_fixed', userProfile?.org_id, selectedMonth],
         enabled: !!userProfile?.org_id && !!selectedMonth,
         queryFn: async () => {
+            const [fYear, fMonth] = selectedMonth.split('-')
+            const fLastDay = new Date(Number(fYear), Number(fMonth), 0).getDate()
+            const monthEnd = `${selectedMonth}-${String(fLastDay).padStart(2, '0')}`
+
             const workersRes = await supabase
                 .from('fixed_workers')
                 .select('*')
@@ -906,7 +910,11 @@ export default function PayrollPage() {
                 advanceMap[a.fixed_worker_id] = (advanceMap[a.fixed_worker_id] || 0) + parseFloat(a.amount)
             })
 
-            return (workers || []).map((w: any) => {
+            return (workers || [])
+                // Only show workers who had joined on or before the last day of the selected month.
+                // This prevents a supervisor added in March 2026 from appearing in December 2025 payroll.
+                .filter((w: any) => !w.start_date || w.start_date <= monthEnd)
+                .map((w: any) => {
                 const daysWorked = w.role === 'daily' ? (attendanceMap[w.id] || 0) : undefined
                 const earnedPay = w.role === 'daily'
                     ? Math.min(w.monthly_salary, (w.monthly_salary / 30) * (daysWorked ?? 0))
