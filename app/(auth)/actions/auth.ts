@@ -461,6 +461,7 @@ export async function regenerateJoinCode() {
 export async function getOnboardingStatus(): Promise<{
     hasMachine: boolean
     hasWorker: boolean
+    hasPlan: boolean
     isComplete: boolean
 }> {
     const supabase = await createClient()
@@ -485,19 +486,36 @@ export async function getOnboardingStatus(): Promise<{
     // If we still have no org_id after the DB fallback, the account is truly broken
     if (!orgId) redirect('/login')
 
-    const [machines, workers] = await Promise.all([
+    const [machines, workers, subscription] = await Promise.all([
         supabase.from('machines').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
         supabase.from('workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
+        supabase.from('org_subscriptions')
+            .select('status, plan_tier, current_end')
+            .eq('org_id', orgId)
+            .in('status', ['active', 'authenticated'])
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
     ])
 
     const hasMachine = (machines.count ?? 0) > 0
     const hasWorker  = (workers.count  ?? 0) > 0
-    const isComplete = hasMachine && hasWorker
+
+    // Check if subscription is valid (not expired)
+    let hasPlan = false
+    if (subscription.data) {
+        const sub = subscription.data
+        if (sub.current_end) {
+            hasPlan = new Date(sub.current_end).getTime() > Date.now()
+        } else {
+            hasPlan = true // no end date = perpetual (shouldn't happen but safe)
+        }
+    }
+
+    const isComplete = hasMachine && hasWorker && hasPlan
 
     if (isComplete) {
         // Flip the flag so future middleware checks use JWT cache, not DB.
-        // Use admin client to bypass RLS — the regular client's UPDATE policy
-        // depends on auth.jwt() ->> 'org_id' which may be absent on fresh signups.
         const adminForUpdate = createAdminClient()
         await adminForUpdate
             .from('organizations')
@@ -505,7 +523,7 @@ export async function getOnboardingStatus(): Promise<{
             .eq('id', orgId)
     }
 
-    return { hasMachine, hasWorker, isComplete }
+    return { hasMachine, hasWorker, hasPlan, isComplete }
 }
 
 /**

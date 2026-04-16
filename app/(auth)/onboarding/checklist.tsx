@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import {
     CheckCircle2, ArrowRight, Loader2,
     Cpu, Layers, Users, Plus, Trash2, Upload,
-    ChevronDown, ChevronUp
+    ChevronDown, ChevronUp, CreditCard, Sparkles, Star, Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -16,12 +16,15 @@ import { createClient } from '@/lib/supabase/client'
 import { addMachine, saveWorkerWhatsApp } from '@/app/(dashboard)/owner/actions'
 import { addMeterWorker } from '@/app/(dashboard)/supervisor/actions'
 import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/actions/auth'
+import { TrialButton } from '@/components/billing/TrialButton'
+import { SubscribeButton } from '@/components/billing/SubscribeButton'
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
 interface OnboardingStatus {
     hasMachine: boolean
     hasWorker: boolean
+    hasPlan: boolean
     isComplete: boolean
 }
 
@@ -348,6 +351,110 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
     )
 }
 
+// ─── Plan Selection Form ──────────────────────────────────────────────────────────
+
+const BASE_PLAN_ID    = process.env.NEXT_PUBLIC_RAZORPAY_PLAN_ID_BASE    ?? ''
+const PREMIUM_PLAN_ID = process.env.NEXT_PUBLIC_RAZORPAY_PLAN_ID_PREMIUM ?? ''
+
+function PlanSelectionForm({ onDone }: { onDone: () => void }) {
+    const [trialEnd, setTrialEnd] = useState<string | null>(null)
+
+    const trialEndFormatted = trialEnd
+        ? new Date(trialEnd).toLocaleDateString('en-IN', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        })
+        : null
+
+    if (trialEnd) {
+        return (
+            <div className="pt-4 border-t border-gray-100 space-y-4">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                    <p className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4" />
+                        7-day Premium trial activated!
+                    </p>
+                    <p className="text-sm text-emerald-700 mt-1">
+                        Your trial ends on <strong>{trialEndFormatted}</strong>.
+                        You can subscribe anytime from the Billing page.
+                    </p>
+                </div>
+                <Button
+                    onClick={onDone}
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white h-10 font-semibold"
+                >
+                    Continue to dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+            </div>
+        )
+    }
+
+    return (
+        <div className="pt-4 border-t border-gray-100 space-y-4">
+            <p className="text-sm text-gray-500">Choose how you'd like to get started</p>
+
+            {/* Free trial option */}
+            <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-emerald-600" />
+                    <span className="font-semibold text-emerald-900 text-sm">7-Day Free Trial</span>
+                    <span className="ml-auto bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">RECOMMENDED</span>
+                </div>
+                <p className="text-xs text-emerald-700">Full Premium access for 7 days. No credit card required.</p>
+                <TrialButton
+                    compact
+                    onSuccess={(end) => { setTrialEnd(end) }}
+                />
+            </div>
+
+            <div className="relative flex items-center py-1">
+                <div className="flex-grow border-t border-gray-200" />
+                <span className="mx-3 text-xs text-gray-400">or start a paid plan</span>
+                <div className="flex-grow border-t border-gray-200" />
+            </div>
+
+            {/* Paid plan options */}
+            <div className="grid grid-cols-1 gap-3">
+                {/* Base */}
+                {BASE_PLAN_ID && (
+                    <div className="rounded-xl border border-gray-200 bg-white p-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <Zap className="h-4 w-4 text-amber-600 shrink-0" />
+                            <div>
+                                <p className="text-sm font-semibold text-gray-900">Base</p>
+                                <p className="text-xs text-gray-500">₹2,360/mo incl. GST · Estimator only</p>
+                            </div>
+                        </div>
+                        <SubscribeButton
+                            planId={BASE_PLAN_ID}
+                            tierName="Base"
+                            displayAmount="₹2,360/mo"
+                            onSuccess={() => onDone()}
+                        />
+                    </div>
+                )}
+                {/* Premium */}
+                {PREMIUM_PLAN_ID && (
+                    <div className="rounded-xl border-2 border-amber-300 bg-amber-50/40 p-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <Star className="h-4 w-4 text-amber-500 fill-amber-400 shrink-0" />
+                            <div>
+                                <p className="text-sm font-semibold text-gray-900">Premium</p>
+                                <p className="text-xs text-gray-500">₹5,900/mo incl. GST · Full access</p>
+                            </div>
+                        </div>
+                        <SubscribeButton
+                            planId={PREMIUM_PLAN_ID}
+                            tierName="Premium"
+                            displayAmount="₹5,900/mo"
+                            onSuccess={() => onDone()}
+                        />
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
 // ─── Step Card ───────────────────────────────────────────────────────────────────
 
 const STEPS = [
@@ -367,6 +474,14 @@ const STEPS = [
         accentColor: 'emerald',
         form: WorkerForm,
     },
+    {
+        key: 'hasPlan' as keyof OnboardingStatus,
+        icon: CreditCard,
+        title: 'Choose your plan',
+        description: 'Start a free 7-day trial or subscribe immediately. No card required for trial.',
+        accentColor: 'amber',
+        form: PlanSelectionForm,
+    },
 ]
 
 // ─── Main Component ───────────────────────────────────────────────────────────────
@@ -380,8 +495,8 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
     const [refreshing, setRefreshing] = useState(false)
     const [completing, setCompleting] = useState(false)
 
-    const completedCount = [status.hasMachine, status.hasWorker].filter(Boolean).length
-    const progressPct = (completedCount / 2) * 100
+    const completedCount = [status.hasMachine, status.hasWorker, status.hasPlan].filter(Boolean).length
+    const progressPct = (completedCount / 3) * 100
 
     const refresh = async () => {
         setRefreshing(true)
@@ -406,7 +521,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
         // blank-page issue. Local state is sufficient: each form only calls
         // this after its own save succeeds, so we know that step is complete.
         const newStatus = { ...status, [key]: true }
-        newStatus.isComplete = newStatus.hasMachine && newStatus.hasWorker
+        newStatus.isComplete = newStatus.hasMachine && newStatus.hasWorker && newStatus.hasPlan
         setStatus(newStatus)
         if (newStatus.isComplete) {
             toast.success('All done! 🎉 Click "Go to dashboard" to continue.')
@@ -467,7 +582,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                         <Layers className="h-7 w-7 text-amber-700" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Set up your factory</h1>
-                    <p className="text-gray-500 mt-1 text-sm">Complete these 2 steps to start tracking production</p>
+                    <p className="text-gray-500 mt-1 text-sm">Complete these 3 steps to start tracking production</p>
 
                     {/* Progress */}
                     <div className="mt-5 flex items-center gap-3">
@@ -479,8 +594,8 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                                 transition={{ duration: 0.6, ease: 'easeOut' }}
                             />
                         </div>
-                        <span className="text-sm font-semibold text-gray-700 tabular-nums w-8 text-right">
-                            {completedCount}/2
+                        <span className="text-sm font-semibold text-gray-700 tabular-nums w-12 text-right">
+                            {completedCount}/3
                         </span>
                     </div>
                 </div>
