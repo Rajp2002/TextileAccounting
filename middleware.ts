@@ -72,6 +72,26 @@ export async function updateSession(request: NextRequest) {
 
     const { pathname } = request.nextUrl
 
+    // ── 0. API Route Protection (CRITICAL FOR SAFARI) ──────────────────────────
+    // API routes MUST return JSON, never HTML redirects.
+    // We check this first to prevent any later redirects from sending HTML to fetch().
+    if (pathname.startsWith('/api/') && !isPublicRoute(pathname)) {
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() { return request.cookies.getAll() },
+                    setAll() {},
+                },
+            }
+        )
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 })
+        }
+    }
+
     // ── IP-based rate limiting for auth routes ─────────────────────────────
     if (isAuthRoute(pathname)) {
         const ip =

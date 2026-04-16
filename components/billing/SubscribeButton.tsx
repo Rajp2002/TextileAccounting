@@ -36,22 +36,38 @@ export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, cl
     async function handleSubscribe() {
         setLoading(true)
         try {
+            console.log('[SubscribeButton] Initializing subscription for plan:', planId)
+            
             const isLoaded = await loadRazorpayScript()
             if (!isLoaded) {
                 throw new Error('Failed to load payment gateway. Please check your internet connection.')
             }
+
+            // 1. Create subscription via our API
             const res = await fetch('/api/subscriptions/create', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({ planId }),
             })
-            const body = await res.json()
 
-            if (!res.ok || body.error) {
-                throw new Error(body.error ?? 'Failed to initiate subscription')
+            const contentType = res.headers.get('content-type')
+            if (!contentType?.includes('application/json')) {
+                const text = await res.text()
+                console.error('[SubscribeButton] Received non-JSON response:', text.substring(0, 100))
+                throw new Error(`Server returned ${res.status} (${contentType}). Please refresh and try again.`)
             }
 
-            const { subscriptionId, keyId } = body
+            const data = await res.json()
+            console.log('[SubscribeButton] API response:', data)
+
+            if (!res.ok || data.error) {
+                throw new Error(data.error || 'Failed to create subscription')
+            }
+
+            const { subscriptionId, keyId } = data
 
             const rzp = new window.Razorpay({
                 key: keyId,
