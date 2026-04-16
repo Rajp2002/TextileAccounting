@@ -82,7 +82,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                                 className={cn(
                                     "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
                                     isActive
-                                        ? "bg-primary text-primary-foreground shadow-[0_4px_14px_0_oklch(0.65_0.20_40/0.3)]"
+                                        ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(from_var(--primary)_l_c_h_/_0.3)]"
                                         : "text-muted-foreground hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
                                 )}
                             >
@@ -108,14 +108,14 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                                 href={item.href}
                                 onClick={onLinkClick}
                                 className={cn(
-                                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                                    "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
                                     isActive
-                                        ? "bg-primary text-primary-foreground shadow-[0_4px_14px_0_oklch(0.65_0.20_40/0.3)]"
+                                        ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(from_var(--primary)_l_c_h_/_0.3)]"
                                         : "text-muted-foreground hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
                                 )}
                             >
-                                <Icon className="h-4 w-4" />
-                                {t(`nav.${item.translationKey}`)}
+                                <Icon className="h-[18px] w-[18px]" />
+                                {t(`nav.${item.translationKey}`) || item.name}
                             </Link>
                         )
                     })}
@@ -137,14 +137,14 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                                 href={item.href}
                                 onClick={onLinkClick}
                                 className={cn(
-                                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                                    "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
                                     isActive
-                                        ? "bg-primary text-primary-foreground shadow-[0_4px_14px_0_oklch(0.65_0.20_40/0.3)]"
+                                        ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(from_var(--primary)_l_c_h_/_0.3)]"
                                         : "text-muted-foreground hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
                                 )}
                             >
-                                <Icon className="h-4 w-4" />
-                                {t(`nav.${item.translationKey}`)}
+                                <Icon className="h-[18px] w-[18px]" />
+                                {t(`nav.${item.translationKey}`) || item.name}
                             </Link>
                         )
                     })}

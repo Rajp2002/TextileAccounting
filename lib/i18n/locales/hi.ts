@@ -15,6 +15,7 @@ export const hi = {
     "advances": "एडवांस (Advances)",
     "estimator": "एस्टीमेटर (Estimator)",
 
+    "billing": "बिलिंग (Billing)",
     "system health": "सिस्टम हेल्थ",
   },
   attendance: {
