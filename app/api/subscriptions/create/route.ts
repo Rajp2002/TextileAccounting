@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { razorpay } from '@/lib/razorpay'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -108,13 +109,14 @@ export async function POST(req: NextRequest) {
             },
         })
 
-        // ── Persist to Supabase ───────────────────────────────────────────────
-        // Derive tier from which env var matched
+        // ── Persist to Supabase via admin client (bypasses RLS) ──────────────
+        // Must use service_role here — org_subscriptions INSERT is restricted by RLS.
         const planTier = selectedPlanId === process.env.RAZORPAY_PLAN_ID_PREMIUM
             ? 'premium'
             : 'base'
 
-        const { error: insertError } = await supabase
+        const admin = createAdminClient()
+        const { error: insertError } = await admin
             .from('org_subscriptions')
             .insert({
                 org_id:                   profile.org_id,
