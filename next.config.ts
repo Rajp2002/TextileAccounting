@@ -4,15 +4,16 @@ import { withSentryConfig } from "@sentry/nextjs";
 // ─── Security Headers ─────────────────────────────────────────────────────────
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'"};
+  script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'"} https://checkout.razorpay.com;
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: https:;
-  font-src 'self' data:;
-  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://o*.ingest.sentry.io;
+  font-src 'self' data: https://checkout.razorpay.com;
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://o*.ingest.sentry.io https://api.razorpay.com https://lumberjack.razorpay.com https://lumberjack-dx.razorpay.com;
   media-src 'self';
+  frame-src https://api.razorpay.com https://checkout.razorpay.com;
   frame-ancestors 'none';
   base-uri 'self';
-  form-action 'self';
+  form-action 'self' https://api.razorpay.com https://checkout.razorpay.com;
 `.replace(/\s{2,}/g, ' ').trim()
 
 const securityHeaders = [
