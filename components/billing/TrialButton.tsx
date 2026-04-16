@@ -44,6 +44,7 @@ export function TrialButton({ onSuccess, compact }: TrialButtonProps) {
     if (compact) {
         return (
             <Button
+                type="button"
                 id="start-trial-btn"
                 onClick={handleStartTrial}
                 disabled={loading}
@@ -58,6 +59,7 @@ export function TrialButton({ onSuccess, compact }: TrialButtonProps) {
 
     return (
         <Button
+            type="button"
             id="start-trial-btn"
             onClick={handleStartTrial}
             disabled={loading}

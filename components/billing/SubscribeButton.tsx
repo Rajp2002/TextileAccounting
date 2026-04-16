@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2, CreditCard } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 declare global {
     interface Window {
@@ -16,33 +17,29 @@ interface SubscribeButtonProps {
     tierName: string       // e.g. "Base" or "Premium"
     displayAmount: string  // e.g. "₹2,360/mo"
     onSuccess?: (paymentId: string) => void
+    className?: string
 }
 
-export function SubscribeButton({ planId, tierName, displayAmount, onSuccess }: SubscribeButtonProps) {
+export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, className }: SubscribeButtonProps) {
     const [loading, setLoading] = useState(false)
-    const [scriptReady, setScriptReady] = useState(false)
-
-    useEffect(() => {
-        if (typeof window !== 'undefined' && window.Razorpay) {
-            setScriptReady(true)
-            return
-        }
-        const interval = setInterval(() => {
-            if (window.Razorpay) {
-                setScriptReady(true)
-                clearInterval(interval)
-            }
-        }, 300)
-        const timeout = setTimeout(() => clearInterval(interval), 10000)
-        return () => {
-            clearInterval(interval)
-            clearTimeout(timeout)
-        }
-    }, [])
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            if (typeof window !== 'undefined' && window.Razorpay) return resolve(true)
+            const script = document.createElement('script')
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+            script.onload = () => resolve(true)
+            script.onerror = () => resolve(false)
+            document.body.appendChild(script)
+        })
+    }
 
     async function handleSubscribe() {
         setLoading(true)
         try {
+            const isLoaded = await loadRazorpayScript()
+            if (!isLoaded) {
+                throw new Error('Failed to load payment gateway. Please check your internet connection.')
+            }
             const res = await fetch('/api/subscriptions/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -90,11 +87,12 @@ export function SubscribeButton({ planId, tierName, displayAmount, onSuccess }: 
 
     return (
         <Button
+            type="button"
             id={`subscribe-btn-${planId}`}
             onClick={handleSubscribe}
-            disabled={loading || !scriptReady}
+            disabled={loading}
             size="lg"
-            className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-200/50 transition-all"
+            className={cn("w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-200/50 transition-all", className)}
         >
             {loading ? (
                 <>
