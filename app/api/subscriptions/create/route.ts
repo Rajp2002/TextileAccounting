@@ -75,20 +75,23 @@ export async function POST(req: NextRequest) {
         .eq('id', profile.org_id)
         .single()
 
-    // ── Check for existing active subscription ────────────────────────────────
+    // ── Check for existing ACTIVE (non-expired) subscription ─────────────────
     const { data: existing } = await supabase
         .from('org_subscriptions')
-        .select('status')
+        .select('status, current_end')
         .eq('org_id', profile.org_id)
         .in('status', ['active', 'authenticated', 'created'])
         .limit(1)
         .single()
 
     if (existing) {
-        return NextResponse.json(
-            { error: 'An active subscription already exists for this organization.' },
-            { status: 409 }
-        )
+        const isExpired = existing.current_end && new Date(existing.current_end).getTime() <= Date.now()
+        if (!isExpired) {
+            return NextResponse.json(
+                { error: 'An active subscription already exists for this organization.' },
+                { status: 409 }
+            )
+        }
     }
 
     // ── Create Razorpay subscription ──────────────────────────────────────────

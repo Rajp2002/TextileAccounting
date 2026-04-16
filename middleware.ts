@@ -199,8 +199,12 @@ export async function updateSession(request: NextRequest) {
         return response
     }
 
-    // 2. Unauthenticated user hitting protected route → /login
+    // 2. Unauthenticated user hitting protected route → /login (JSON 401 for API routes)
     if (!user && !isPublicRoute(pathname)) {
+        // API routes must get JSON errors, not HTML page redirects
+        if (pathname.startsWith('/api/')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
@@ -297,6 +301,10 @@ export async function updateSession(request: NextRequest) {
 
         // If org_id is still absent after DB fallback, the session is genuinely broken
         if (!resolvedOrgId && !pathname.startsWith('/onboarding')) {
+            // API routes: return JSON error instead of signing out and redirecting to HTML
+            if (pathname.startsWith('/api/')) {
+                return NextResponse.json({ error: 'Session incomplete. Please sign in again.' }, { status: 403 })
+            }
             await supabase.auth.signOut()
             const url = request.nextUrl.clone()
             url.pathname = '/login'

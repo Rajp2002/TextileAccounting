@@ -41,21 +41,26 @@ export async function POST(_req: NextRequest) {
         return NextResponse.json({ error: 'No organization found' }, { status: 404 })
     }
 
-    // ── Check for any existing active subscription (including previous trials) ──
+    // ── Check for any existing ACTIVE (non-expired) subscription ─────────────────
+    const now = new Date().toISOString()
     const { data: existing } = await supabase
         .from('org_subscriptions')
-        .select('status, plan_tier')
+        .select('status, plan_tier, current_end')
         .eq('org_id', profile.org_id)
         .in('status', ['active', 'authenticated', 'created'])
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 
+    // Only block if the subscription is still valid (not expired)
     if (existing) {
-        const msg = existing.plan_tier === 'trial'
-            ? 'You have already used your free trial.'
-            : 'An active subscription already exists.'
-        return NextResponse.json({ error: msg }, { status: 409 })
+        const isExpired = existing.current_end && new Date(existing.current_end).getTime() <= Date.now()
+        if (!isExpired) {
+            const msg = existing.plan_tier === 'trial'
+                ? 'You have already used your free trial.'
+                : 'An active subscription already exists.'
+            return NextResponse.json({ error: msg }, { status: 409 })
+        }
     }
 
     // ── Create trial record via admin client ──────────────────────────────────
