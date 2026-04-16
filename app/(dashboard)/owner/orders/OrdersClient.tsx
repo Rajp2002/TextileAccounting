@@ -493,7 +493,8 @@ function OrderDetailDrawer({
         .map((m: any) => m.id)
 
     return (
-        <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+        <>
+            <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
             <SheetContent
                 side="right"
                 className="w-full sm:max-w-md bg-card border-l border-border text-slate-900 flex flex-col"
@@ -751,12 +752,13 @@ function OrderDetailDrawer({
         </Sheet>
 
         {/* Access Code Dialog */}
-        <OwnerAccessCodeDialog
-            open={codeDialogOpen}
-            onClose={() => setCodeDialogOpen(false)}
-            onVerified={handleCodeVerified}
-            actionLabel={codeDialogAction === 'target' ? 'update the target meters' : 'update the deadline'}
-        />
+            <OwnerAccessCodeDialog
+                open={codeDialogOpen}
+                onClose={() => setCodeDialogOpen(false)}
+                onVerified={handleCodeVerified}
+                actionLabel={codeDialogAction === 'target' ? 'update the target meters' : 'update the deadline'}
+            />
+        </>
     )
 }
 
