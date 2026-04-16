@@ -1,9 +1,3 @@
-# Loomi — WhatsApp Integration Guide (Interakt · Free Tier · English)
-
-> **What this document covers.** Everything you need to set up, configure, deploy, and maintain Loomi's production-ready WhatsApp notification pipeline. Written for the **Interakt Free Tier** (no webhook callbacks). All templates are English-only.
-
----
-
 ## Table of Contents
 
 1. [Architecture Overview](#1-architecture-overview)
