@@ -3,9 +3,10 @@ import { requireRole } from '@/lib/auth'
 import { getSubscriptionDetail } from '@/lib/subscription'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { TrialButton } from '@/components/billing/TrialButton'
+import { AutoRenewToggle } from '@/components/billing/AutoRenewToggle'
 import {
     CheckCircle2, AlertCircle, Clock, XCircle,
-    ShieldCheck, ReceiptText, Star, Zap, Timer, Lock,
+    ShieldCheck, ReceiptText, Star, Zap, Timer, Lock, RefreshCw,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
@@ -382,6 +383,34 @@ export default async function BillingPage() {
                     <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
                         <ShieldCheck className="h-4 w-4 shrink-0" />
                         Subscription active — auto-renews via your registered payment method.
+                    </div>
+
+                    {/* Auto-renewal status */}
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                            <RefreshCw className={`h-4 w-4 shrink-0 ${
+                                subscription?.cancel_at_cycle_end ? 'text-amber-500' : 'text-emerald-500'
+                            }`} />
+                            <div>
+                                <p className="text-xs font-medium text-gray-700">
+                                    Auto-renewal:{' '}
+                                    <span className={subscription?.cancel_at_cycle_end ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
+                                        {subscription?.cancel_at_cycle_end ? 'Off' : 'On'}
+                                    </span>
+                                </p>
+                                {subscription?.cancel_at_cycle_end && subscription.current_end && (
+                                    <p className="text-[11px] text-amber-600 mt-0.5">
+                                        Expires {formatShortDate(subscription.current_end)} — subscribe again to continue.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        {!subscription?.cancel_at_cycle_end && subscription?.razorpay_subscription_id && (
+                            <AutoRenewToggle
+                                currentEnd={subscription.current_end}
+                                subscriptionTier={activePlanDef?.name}
+                            />
+                        )}
                     </div>
 
                     {/* Upgrade nudge for base plan users */}

@@ -33,12 +33,15 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Parse + validate plan selection ──────────────────────────────────────
-    let body: { planId?: string } = {}
+    let body: { planId?: string; autoRenew?: boolean } = {}
     try {
         body = await req.json()
     } catch {
         return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
     }
+
+    // Default autoRenew to true if not provided
+    const autoRenew = body.autoRenew !== false
 
     const ALLOWED_PLAN_IDS = [
         process.env.RAZORPAY_PLAN_ID_BASE,
@@ -125,10 +128,22 @@ export async function POST(req: NextRequest) {
                 plan_tier:                planTier,
                 status:                   subscription.status,
                 total_count:              subscription.total_count,
+                cancel_at_cycle_end:      !autoRenew,
             })
 
         if (insertError) {
             console.error('[subscriptions/create] Supabase insert failed:', insertError)
+        }
+
+        // ── If user opted out of auto-renew, tell Razorpay to cancel at cycle end ──
+        if (!autoRenew) {
+            try {
+                await razorpay.subscriptions.cancel(subscription.id, true)
+                console.log(`[subscriptions/create] cancel_at_cycle_end set for ${subscription.id}`)
+            } catch (cancelErr: any) {
+                // Non-fatal — DB already records the intent; log and move on
+                console.error('[subscriptions/create] Failed to set cancel_at_cycle_end on Razorpay:', cancelErr?.message)
+            }
         }
 
         return NextResponse.json({
