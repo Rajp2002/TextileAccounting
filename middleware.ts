@@ -59,7 +59,9 @@ function isPublicRoute(pathname: string): boolean {
         pathname.startsWith('/verify') ||
         pathname.startsWith('/privacy') ||
         pathname.startsWith('/terms') ||
-        pathname.startsWith('/refund-policy')
+        pathname.startsWith('/refund-policy') ||
+        // Webhooks authenticate via HMAC signature inside the route — no cookie auth needed
+        pathname.startsWith('/api/webhooks/')
     )
 }
 
