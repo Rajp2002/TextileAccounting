@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { processReferralConversion, issueReferralRefund } from '@/lib/referral-webhook'
 
 export const dynamic = 'force-dynamic'
 
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
             const sub = event.payload?.subscription?.entity
             if (!sub?.id) break
 
-            await supabase
+            const { data: activeSubData } = await supabase
                 .from('org_subscriptions')
                 .update({
                     status: 'active',
@@ -106,6 +107,12 @@ export async function POST(req: NextRequest) {
                     updated_at:      new Date().toISOString(),
                 })
                 .eq('razorpay_subscription_id', sub.id)
+                .select()
+                .single()
+                
+            if (activeSubData) {
+                await processReferralConversion(activeSubData.org_id)
+            }
             break
         }
 
@@ -148,6 +155,9 @@ export async function POST(req: NextRequest) {
                         method:              payment.method ?? null,
                         captured_at:         new Date().toISOString(),
                     })
+                    
+                    // Issue a referral refund if applicable
+                    await issueReferralRefund(orgSub.org_id, payment.id, payment.amount);
                 }
             }
             break

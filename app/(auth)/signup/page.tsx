@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -33,7 +34,11 @@ function getPasswordStrength(password: string): {
     return { score, label: labels[score] ?? '', color: colors[score] ?? '', checks }
 }
 
-export default function SignupPage() {
+function SignupForm() {
+    const searchParams = useSearchParams()
+    
+    const [referralCode, setReferralCode] = useState(searchParams?.get('ref') || '')
+    
     const [loading, setLoading] = useState(false)
     const [ownerName, setOwnerName]     = useState('')
     const [email, setEmail]             = useState('')
@@ -78,6 +83,7 @@ export default function SignupPage() {
                 phone: phone.trim(),
                 password,
                 factoryName: factoryName.trim(),
+                referralCode: referralCode.trim() || undefined,
             })
             // If result comes back (not a redirect), it's an error
             if (result && 'error' in result) {
@@ -262,6 +268,22 @@ export default function SignupPage() {
                     {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
                 </div>
 
+                {/* Referral Code (Optional) */}
+                <div className="space-y-1.5">
+                    <Label htmlFor="referralCode" className="text-gray-700 font-medium">
+                        Referral Code (Optional)
+                    </Label>
+                    <Input
+                        id="referralCode"
+                        type="text"
+                        placeholder="e.g. LOOMI-XXXX"
+                        value={referralCode}
+                        onChange={(e) => setReferralCode(e.target.value)}
+                        className="h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all uppercase"
+                        disabled={loading}
+                    />
+                </div>
+
                 {/* Consent Checkbox (DPDP Act requirement) */}
                 <div className="flex items-start gap-3 py-1">
                     <input
@@ -316,5 +338,13 @@ export default function SignupPage() {
                 </div>
             </form>
         </AuthLayout>
+    )
+}
+
+export default function SignupPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <SignupForm />
+        </Suspense>
     )
 }

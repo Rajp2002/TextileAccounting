@@ -70,6 +70,7 @@ export const CreateOrgSchema = z.object({
     password:    PasswordSchema,
     factoryName: z.string().trim().min(2, 'Factory name required').max(120, 'Factory name too long'),
     phone:       z.string().trim().regex(/^\d{10}$/, 'Phone must be exactly 10 digits'),
+    referralCode: z.string().trim().optional(),
 })
 
 export const UpdateOrgNameSchema = z.object({
