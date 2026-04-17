@@ -4,6 +4,8 @@ import { getSubscriptionDetail } from '@/lib/subscription'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { TrialButton } from '@/components/billing/TrialButton'
 import { AutoRenewToggle } from '@/components/billing/AutoRenewToggle'
+import { ReferralCard } from '@/components/billing/ReferralCard'
+import { getReferralStatsAction, getOrCreateReferralCodeAction } from '../actions'
 import {
     CheckCircle2, AlertCircle, Clock, XCircle,
     ShieldCheck, ReceiptText, Star, Zap, Timer, Lock, RefreshCw,
@@ -190,6 +192,8 @@ export default async function BillingPage() {
     const activePlanDef = subscription?.plan_tier
         ? PLANS.find(p => p.tier === subscription.plan_tier)
         : null
+
+    const referralStats = await getReferralStatsAction()
 
     // ── BLOCKED STATE (no subscription or expired) ───────────────────────────
     if (tier === 'none') {
@@ -434,6 +438,8 @@ export default async function BillingPage() {
                     )}
                 </CardContent>
             </Card>
+
+            <ReferralCard stats={referralStats} />
 
             {/* Payment History */}
             {payments && payments.length > 0 && (

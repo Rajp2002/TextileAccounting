@@ -56,6 +56,7 @@ export async function createOrganization(input: {
     password: string
     factoryName: string
     phone: string
+    referralCode?: string
 }) {
     const parsed = safeParse(CreateOrgSchema, input)
     if ('error' in parsed) return { error: parsed.error }
@@ -126,7 +127,19 @@ export async function createOrganization(input: {
         return { error: 'Failed to create organization. Please try again.' }
     }
 
-    return await _createOwnerProfile(adminClient, userId, org.id, parsed.data.ownerName, parsed.data.email, parsed.data.password, parsed.data.phone)
+    const result = await _createOwnerProfile(adminClient, userId, org.id, parsed.data.ownerName, parsed.data.email, parsed.data.password, parsed.data.phone)
+    
+    if (result.success && parsed.data.referralCode) {
+        try {
+            const { applyReferralCode } = await import('@/lib/referral')
+            await applyReferralCode(parsed.data.referralCode, org.id)
+        } catch (e) {
+            console.error('Failed to apply referral code during signup:', e)
+            // we don't block signup if referral fails
+        }
+    }
+    
+    return result
 }
 
 async function _createOwnerProfile(
@@ -192,6 +205,7 @@ export async function createOrganizationAndRedirect(input: {
     password: string
     factoryName: string
     phone: string
+    referralCode?: string
 }) {
     const result = await createOrganization(input)
     if (result && 'error' in result) return result

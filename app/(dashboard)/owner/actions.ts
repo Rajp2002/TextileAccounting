@@ -870,3 +870,18 @@ export async function retryWhatsAppMessage(logId: string) {
     revalidatePath('/owner/system-health')
     return { success: true }
 }
+
+export async function getReferralStatsAction() {
+    const { profile } = await requireRole(['owner']);
+    const { getReferralStats } = await import('@/lib/referral');
+    if (!profile.org_id) return { code: null, total: 0, converted: 0, activeWindows: [], currentDiscountPct: 0 };
+    return await getReferralStats(profile.org_id);
+}
+
+export async function getOrCreateReferralCodeAction() {
+    const { profile } = await requireRole(['owner']);
+    const { getOrCreateReferralCode } = await import('@/lib/referral');
+    if (!profile.org_id) throw new Error('Organization not found');
+    return await getOrCreateReferralCode(profile.org_id);
+}
+
