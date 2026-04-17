@@ -49,7 +49,8 @@ export async function getReferralStats(orgId: string) {
         .single();
     
     if (!codeData) {
-        return { code: null, total: 0, converted: 0, activeWindows: [], currentDiscountPct: 0 };
+        const code = await getOrCreateReferralCode(orgId);
+        return { code, total: 0, converted: 0, activeWindows: [], currentDiscountPct: 0, history: [] };
     }
 
     // Get referrals
