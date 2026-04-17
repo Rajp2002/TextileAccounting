@@ -263,6 +263,8 @@ export default async function BillingPage() {
                 )}
 
                 {!isActivating && <PlanCards label={subscription ? 'Renew your subscription' : 'Choose a subscription plan'} />}
+                
+                <ReferralCard stats={referralStats} />
             </div>
         )
     }
@@ -334,6 +336,8 @@ export default async function BillingPage() {
                 </Card>
 
                 <PlanCards label="Subscribe before your trial ends" />
+
+                <ReferralCard stats={referralStats} />
             </div>
         )
     }
