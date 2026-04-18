@@ -11,6 +11,7 @@ import {
     UuidSchema,
     WorkerIdSchema,
     ShiftSchema,
+    MachineStatusSchema,
     WorkerTypeSchema,
     PositiveIntSchema,
     safeParse,
