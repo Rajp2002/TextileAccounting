@@ -28,11 +28,13 @@ export function KharchiDialog({
     onOpenChange,
     workerId,
     workerName,
+    workerType = 'meter',
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     workerId: number
     workerName: string
+    workerType?: 'meter' | 'fixed'
 }) {
     const isOnline = useOnlineStatus()
     const { data: userProfile } = useUserProfile()
@@ -62,7 +64,12 @@ export function KharchiDialog({
 
         try {
             if (isOnline) {
-                const res = await recordKharchi(workerId, dispersalAmount, description)
+                const res = await recordKharchi({
+                    workerType,
+                    workerId,
+                    amount: dispersalAmount,
+                    description,
+                })
                 if (res.error) throw new Error(res.error)
                 toast.success(`₹${dispersalAmount} dispersed to ${tl(workerName)}`)
             } else {
