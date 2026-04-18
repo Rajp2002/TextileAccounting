@@ -44,6 +44,9 @@ export const AccessCodeSchema = z
     .toUpperCase()
     .regex(/^[A-Z0-9]{6}$/, 'Access code must be exactly 6 alphanumeric characters')
 
+/** Machine status enum — used in the unified supervisor dashboard */
+export const MachineStatusSchema = z.enum(['running', 'idle', 'maintenance'])
+
 /** Shift enum */
 export const ShiftSchema = z.enum(['day', 'night'])
 

@@ -11,12 +11,31 @@ export async function toggleWorkerPaid(
     workerId: number,
     month: string,
     currentPaid: boolean,
-    isFinalSettlement: boolean = false
+    isFinalSettlement: boolean = false,
+    manualDeductionOverride: number | null = null,
+    cycleStartDate: string | null = null
 ) {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const newPaid = !currentPaid
+
+    // 1. Get Cycle Config for server-side derivation if cycleStartDate is missing
+    let cycleStart = cycleStartDate
+    if (newPaid && !cycleStart) {
+        const { data: config } = await supabase
+            .from('payroll_configs')
+            .select('cycle_start_day')
+            .eq('org_id', profile.org_id)
+            .maybeSingle()
+        
+        const cycleStartDay = config?.cycle_start_day || 1
+        const { data: bounds } = await supabase.rpc('get_cycle_bounds', {
+            p_date: `${month}-01`,
+            p_cycle_start_day: cycleStartDay
+        }).single()
+        cycleStart = (bounds as any).cycle_start
+    }
 
     // ── Calculate gross amount server-side ───────────────────────────────
     let calculatedAmountStr = '0'
@@ -82,15 +101,16 @@ export async function toggleWorkerPaid(
             p_org_id: profile.org_id,
             p_worker_type: workerType,
             p_worker_id: workerId,
-            p_month: month,
+            p_cycle_start: cycleStart,
             p_gross_amount: grossAmount,
             p_is_final_settlement: isFinalSettlement,
+            p_manual_deduction_override: manualDeductionOverride,
             p_actor_id: user.id
         })
 
         if (error) {
             console.error('Settlement failed:', error)
-            return { error: 'Settlement failed. Please try again.' }
+            return { error: error.message || 'Settlement failed. Please try again.' }
         }
 
         // ── Fire-and-forget: send payslip WhatsApp to worker ─────────────────
@@ -133,7 +153,7 @@ export async function toggleWorkerPaid(
 
         if (error) {
             console.error('Unsettle failed:', error)
-            return { error: 'Failed to revert payment. Please try again.' }
+            return { error: error.message || 'Failed to revert payment. Please try again.' }
         }
 
         revalidatePath('/owner/payroll')
@@ -141,7 +161,8 @@ export async function toggleWorkerPaid(
         return {
             success: true,
             status: 'pending',
-            reverted_advances: data?.reverted_advances ?? 0
+            reverted_advances: (data as any)?.reverted_advances ?? 0
         }
     }
+}
 }

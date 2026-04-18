@@ -619,7 +619,9 @@ export const hi = {
       layer: "ताना परत",
       add_blend: "ब्लेंड कॉम्पोनेंट जोड़ें",
       tape_len: "टेप लंबाई",
-      beam_capacity: "बीम क्षमता"
+      beam_capacity: "बीम क्षमता",
+      crimp_pct: "ताने की सिकुड़न %",
+      crimp_hint: "बुनाई में खपत %"
     },
     weft: {
       title: "बाना सूत संरचना (Weft)",

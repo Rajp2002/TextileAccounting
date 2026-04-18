@@ -53,6 +53,8 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Settlement not found" }), { status: 404 });
     }
 
+    const payload = settlement.itemization_payload || {};
+
     // 2. Fetch factory name
     const { data: org } = await supabase
       .from("organizations")
@@ -61,7 +63,7 @@ Deno.serve(async (req) => {
       .single();
     const factoryName = org?.name ?? "Your Factory";
 
-    // 3. Fetch worker info (name, WhatsApp number, language preference)
+    // 3. Fetch worker info
     const workerTable = worker_type === "meter" ? "workers" : "fixed_workers";
     const { data: worker, error: workerError } = await supabase
       .from(workerTable)
@@ -77,70 +79,72 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 4. Build machine breakdown for piece-rate workers
-    let machineBreakdown = "";
-    if (worker_type === "meter") {
-      // Fetch production logs for the settlement month
-      // ✅ FIX: Use worker_rate_snapshot from production_logs (not workers.rate_per_meter)
-      const monthStart = `${settlement.month}-01`;
-      const [year, month] = settlement.month.split("-");
-      const monthEnd = new Date(Number(year), Number(month), 0)
-        .toISOString()
-        .split("T")[0]; // last day of month
-
-      const { data: logs } = await supabase
-        .from("production_logs")
-        .select(`
-          meters,
-          worker_rate_snapshot,
-          machines ( name )
-        `)
-        .eq("org_id", org_id)
-        .eq("worker_id", worker_id)
-        .gte("date", monthStart)
-        .lte("date", monthEnd);
-
-      // Group by machine name
-      const machineMap: Record<string, { meters: number; rate: number }> = {};
-      for (const log of logs ?? []) {
-        const machineName = (log.machines as any)?.name ?? "Machine";
-        // ✅ Use worker_rate_snapshot directly from the log row
-        const rate = Number(log.worker_rate_snapshot ?? 0);
-        if (!machineMap[machineName]) machineMap[machineName] = { meters: 0, rate };
-        machineMap[machineName].meters += Number(log.meters);
-      }
-
-      // Newline-joined breakdown: "Machine A — 1,200m @ ₹2.50 = ₹3,000"
-      machineBreakdown = Object.entries(machineMap)
-        .map(([name, { meters, rate }]) =>
-          `${name} — ${Math.round(meters)}m @ ₹${rate.toFixed(2)} = ₹${formatInr(meters * rate)}`
-        )
-        .join("\n");
-
-      if (!machineBreakdown) machineBreakdown = "—";
-    } else {
-      // Fixed worker: show salary details
-      machineBreakdown = `Monthly salary`;
+    // 4. Build Itemized Breakdown (For the second message)
+    // We use the JSONB snapshot from the settlement to ensure 100% accuracy with what was actually paid.
+    let detailMessage = `📋 *Payment Breakdown* (${settlement.month})\n\n`;
+    
+    // Bonuses
+    if (payload.bonuses?.length > 0) {
+      detailMessage += `*Earnings:*\n`;
+      payload.bonuses.forEach((b: any) => {
+        detailMessage += `• ${b.category}: ₹${formatInr(b.amount)}\n`;
+      });
+      detailMessage += `\n`;
     }
 
-    // 5. Format month label (e.g. "March 2026")
-    const [year, month] = settlement.month.split("-");
-    const monthLabel = new Date(`${year}-${month}-01`).toLocaleDateString("en-IN", {
+    // Fines
+    if (payload.fines?.length > 0) {
+      detailMessage += `*Deductions/Fines:*\n`;
+      payload.fines.forEach((f: any) => {
+        detailMessage += `• ${f.category}: ₹${formatInr(f.amount)}\n`;
+      });
+      detailMessage += `\n`;
+    }
+
+    // Advances Recovered
+    if (payload.advances_recovered?.length > 0) {
+      detailMessage += `*Advance Recovered:*\n`;
+      payload.advances_recovered.forEach((a: any) => {
+        detailMessage += `• ${a.label || 'Upaad'}: ₹${formatInr(a.recovered)}`;
+        if (a.carried_forward > 0) {
+          detailMessage += ` (Remaining: ₹${formatInr(a.carried_forward)})`;
+        }
+        detailMessage += `\n`;
+      });
+      detailMessage += `\n`;
+    }
+
+    // Statutory
+    if (payload.pf?.employee > 0 || payload.esic?.employee > 0) {
+      detailMessage += `*Statutory:*\n`;
+      if (payload.pf?.employee > 0) detailMessage += `• PF (Worker): ₹${formatInr(payload.pf.employee)}\n`;
+      if (payload.esic?.employee > 0) detailMessage += `• ESI (Worker): ₹${formatInr(payload.esic.employee)}\n`;
+      detailMessage += `\n`;
+    }
+
+    detailMessage += `*Total Net Paid: ₹${formatInr(settlement.net_payout)}*`;
+
+    // 5. Build Summary Body (Existing Template)
+    const monthLabel = new Date(`${settlement.month}-01`).toLocaleDateString("en-IN", {
       month: "long",
       year: "numeric",
     });
 
-    // 6. Build body values (7 variables for payslip template)
     const lang = worker.whatsapp_language ?? "en";
-    // ✅ FIX: Use the TEMPLATES map, not a hardcoded string
     const templateName = TEMPLATES[lang] ?? TEMPLATES["en"];
     const langCode = LANG_CODES[lang] ?? "en";
+
+    // Summary Body Variables (7 total)
+    // {{4}} shows a simple summary since details are in message #2
+    const summaryBreakdown = worker_type === "meter" 
+      ? `Piece-rate production for ${monthLabel}`
+      : `Monthly Salary for ${monthLabel}`;
 
     const bodyValues = [
       factoryName,                                         // {{1}} Factory name
       monthLabel,                                          // {{2}} Month Year
       worker.name,                                         // {{3}} Worker name
-      machineBreakdown,                                    // {{4}} Production breakdown (newline-joined)
+      summaryBreakdown,                                    // {{4}} Summary link
       formatInr(Number(settlement.gross_pay)),             // {{5}} Gross earnings
       formatInr(Number(settlement.advance_deducted)),      // {{6}} Advance deducted
       formatInr(Number(settlement.net_payout)),            // {{7}} Net paid
@@ -148,8 +152,8 @@ Deno.serve(async (req) => {
 
     const callbackData = makeCallbackData("payslip", org_id);
 
-    // 7. Send to WhatsApp
-    const result = await sendWhatsAppTemplate(
+    // 6. Send Part 1: Summary Template
+    const templateResult = await sendWhatsAppTemplate(
       metaAccessToken,
       metaPhoneNumberId,
       worker.whatsapp_number,
@@ -159,24 +163,62 @@ Deno.serve(async (req) => {
       callbackData,
     );
 
-    // 8. Log delivery
+    // 7. Send Part 2: Itemized Free-form (Success of #1 is not a hard gate, but logical)
+    let freeformResult = { success: false };
+    if (templateResult.success) {
+      // Small delay to ensure order in the app
+      await new Promise(r => setTimeout(r, 500));
+      freeformResult = await import("../_shared/whatsapp.ts").then(m => 
+        m.sendWhatsAppFreeform(metaAccessToken, metaPhoneNumberId, worker.whatsapp_number, detailMessage)
+      );
+    }
+
+    // 8. Log delivery (of the main template)
     await logDelivery(supabase, {
       orgId: org_id,
-      ownerProfileId: null, // worker-facing message
+      ownerProfileId: null,
       recipientPhone: worker.whatsapp_number,
       templateName,
-      notificationType: "payslip",
+      notificationType: "payslip_summary",
       callbackData,
-      messageId: result.messageId,
-      status: result.success ? "sent" : "failed",
-      errorMessage: result.success ? null : JSON.stringify(result.responseBody),
-      payloadSnapshot: { bodyValues, worker_id, settlement_id },
+      messageId: templateResult.messageId,
+      status: templateResult.success ? "sent" : "failed",
+      errorMessage: templateResult.success ? null : JSON.stringify(templateResult.responseBody),
+      payloadSnapshot: { 
+        bodyValues, 
+        itemization: payload, 
+        settlement_id,
+        detail_sent: freeformResult.success
+      },
     });
 
+    // 9. If Part 2 failed, log a specific failure entry for owner visibility
+    if (templateResult.success && !freeformResult.success) {
+      await logDelivery(supabase, {
+        orgId: org_id,
+        recipientPhone: worker.whatsapp_number,
+        templateName: "FREEFORM_TEXT",
+        notificationType: "payslip_details_fallback",
+        callbackData,
+        status: "failed",
+        errorMessage: "WhatsApp session window expired (24h). Itemized details not delivered.",
+        payloadSnapshot: { detailMessage, settlement_id },
+      });
+    }
+
     return new Response(
-      JSON.stringify({ success: result.success, worker: worker.name }),
+      JSON.stringify({ 
+        success: templateResult.success, 
+        detail_sent: freeformResult.success,
+        worker: worker.name 
+      }),
       { status: 200 },
     );
+  } catch (err) {
+    console.error("Error in send-payslip:", err);
+    return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
+  }
+});
   } catch (err) {
     console.error("Error in send-payslip:", err);
     return new Response(JSON.stringify({ error: String(err) }), { status: 500 });

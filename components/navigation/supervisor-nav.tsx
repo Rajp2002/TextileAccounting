@@ -22,17 +22,17 @@ import { useTranslation } from "@/lib/i18n/context"
 // ─── Nav item definitions ────────────────────────────────────────────────────
 
 const primaryNavItems = [
-    { name: "Shift Setup",    href: "/supervisor/assignments", icon: ClipboardCheck, translationKey: "assignments" },
-    { name: "Log Production", href: "/supervisor/production",  icon: ClipboardList,  translationKey: "production"  },
+    { name: "Dashboard",      href: "/supervisor/dashboard",  icon: ClipboardList,  translationKey: "dashboard"   },
     { name: "Workers",        href: "/supervisor/workers",     icon: Users,           translationKey: "workers"     },
     { name: "Attendance",     href: "/supervisor/attendance",  icon: Calendar,        translationKey: "attendance"  },
 ]
 
 const secondaryNavItems = [
+    { name: "Shift Setup",    href: "/supervisor/assignments", icon: ClipboardCheck, translationKey: "assignments" },
     { name: "Machines", href: "/supervisor/machines", icon: Settings, translationKey: "machines" },
 ]
 
-// Bottom nav shows primary items + "More" button (mirrors owner pattern)
+// Bottom nav shows Dashboard, Workers, Attendance
 const bottomNavItems = primaryNavItems
 
 // ─── Supervisor Role Label ────────────────────────────────────────────────────
@@ -40,7 +40,7 @@ const bottomNavItems = primaryNavItems
 export function SupervisorRoleLabel() {
     const { t } = useTranslation()
     return (
-        <span className="text-[10px] uppercase tracking-widest text-teal-600 font-bold">
+        <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
             {t("common.supervisor")}
         </span>
     )
@@ -84,7 +84,7 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
                                 className={cn(
                                     "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
                                     isActive
-                                        ? "bg-primary text-primary-foreground shadow-[0_4px_14px_0_oklch(0.65_0.20_40/0.3)]"
+                                        ? "bg-primary text-primary-foreground shadow-[0_4px_14px_0_rgba(255,87,34,0.3)]"
                                         : "text-muted-foreground hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
                                 )}
                             >

@@ -123,6 +123,71 @@ export async function sendWhatsAppTemplate(
   }
 }
 
+/**
+ * Sends a free-form (non-template) WhatsApp text message.
+ * This is only perimtted within a 24-hour service window initiated by the customer.
+ * Used for sending itemized payslip breakdowns after the initial summary template.
+ */
+export async function sendWhatsAppFreeform(
+  accessToken: string,
+  phoneNumberId: string,
+  phone: string,
+  message: string,
+): Promise<WhatsAppResult> {
+  const formattedPhone = phone.startsWith("91") && phone.length === 12 
+    ? phone 
+    : phone.length === 10 ? `91${phone}` : phone;
+
+  const META_API = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
+
+  const payload = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: formattedPhone,
+    type: "text",
+    text: {
+      body: message
+    }
+  };
+
+  try {
+    const provider = Deno.env.get("WHATSAPP_PROVIDER") || "meta";
+    if (provider === "simulate") {
+      console.log(`[SIMULATE FREEFORM] WhatsApp to ${formattedPhone}: ${message}`);
+      return { 
+        success: true, 
+        responseBody: { simulated: true }, 
+        httpStatus: 200, 
+        messageId: `sim_free_wamid_${Date.now()}` 
+      };
+    }
+
+    const res = await fetch(META_API, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const responseBody = await res.json().catch(() => ({}));
+    let messageId = null;
+    if (responseBody.messages?.[0]?.id) {
+      messageId = responseBody.messages[0].id;
+    }
+
+    return { success: res.ok, responseBody, httpStatus: res.status, messageId };
+  } catch (err) {
+    return {
+      success: false,
+      responseBody: { fetchError: String(err) },
+      httpStatus: 0,
+      messageId: null,
+    };
+  }
+}
+
 // ─── Delivery Logging ─────────────────────────────────────────────────────────
 
 export async function logDelivery(

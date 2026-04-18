@@ -613,11 +613,13 @@ export const gu = {
       weft_construction: "ભરણ બાંધણ (Weft Construction)"
     },
     warp: {
-      title: "તાણો સૂત રચના (Warp)",
-      layer: "તાણો લેયર",
-      add_blend: "બ્લેન્ડ કૉમ્પોનન્ટ ઉમેરો",
+      title: "તાણા સુતર રચના (Warp)",
+      layer: "તાણા સ્તર",
+      add_blend: "બ્લેન્ડ પરિબળ ઉમેરો",
       tape_len: "ટેપ લંબાઈ",
-      beam_capacity: "બીમ ક્ષમતા"
+      beam_capacity: "બીમ ક્ષમતા",
+      crimp_pct: "વાર્પ ક્રિમ્પ %",
+      crimp_hint: "વણાટમાં વપરાશ %"
     },
     weft: {
       title: "ભરણ સૂત રચના (Weft)",
