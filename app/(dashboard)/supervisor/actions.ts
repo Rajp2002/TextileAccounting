@@ -712,7 +712,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             .order('name'),
         supabase
             .from('shift_assignments')
-            .select('id, machine_id, worker_id, order_id, rate_per_m')
+            .select('id, machine_id, worker_id, order_id, rate_per_m, breakdown_category, breakdown_notes')
             .eq('org_id', orgId)
             .eq('date', date)
             .eq('shift', shift),
@@ -867,5 +867,226 @@ export async function bulkLogProduction(entries: {
     revalidatePath('/supervisor/production')
     revalidatePath('/owner/orders')
     return { success: true, logged: logs.length }
+}
+
+// ─── Payroll & Float Management (Module 5) ────────────────────────────────────
+
+/**
+ * recordKharchi — Supervisor-facing action to disperse small cash stipends.
+ * Implementation of Task 3.1: Late-sync aware advance recording.
+ */
+export async function recordKharchi(params: {
+    workerType: 'meter' | 'fixed'
+    workerId: number
+    amount: number
+    description: string
+}) {
+    const { user, profile } = await requireRole(['supervisor', 'owner'])
+    const supabase = await createServerClient()
+
+    // 1. Get Cycle Config
+    const { data: config } = await supabase
+        .from('payroll_configs')
+        .select('cycle_start_day')
+        .eq('org_id', profile.org_id)
+        .maybeSingle()
+
+    const cycleStartDay = config?.cycle_start_day || 1
+
+    // 2. Derive Current Cycle Start Date (Postgres Helper)
+    const { data: bounds, error: boundsErr } = await supabase
+        .rpc('get_cycle_bounds', {
+            p_date: new Date().toISOString().split('T')[0],
+            p_cycle_start_day: cycleStartDay,
+        })
+        .single()
+
+    if (boundsErr) {
+        console.error('Failed to get cycle bounds:', boundsErr)
+        return { error: 'Failed to determine payroll cycle.' }
+    }
+
+    let cycleStartDate = (bounds as any).cycle_start
+
+    // 3. Late Sync Check: Is this specific worker's cycle already settled?
+    const { data: existingSettlement } = await supabase
+        .from('payroll_settlements')
+        .select('id, status')
+        .eq('org_id', profile.org_id)
+        .eq('cycle_start_date', cycleStartDate)
+        .eq(params.workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', params.workerId)
+        .maybeSingle()
+
+    let wasLateSync = false
+    if (existingSettlement && existingSettlement.status === 'paid') {
+        // Already paid! Roll to NEXT cycle
+        const { data: nextBounds } = await supabase
+            .rpc('get_cycle_bounds', {
+                p_date: new Date(new Date(cycleStartDate).getTime() + 32 * 24 * 60 * 60 * 1000)
+                    .toISOString()
+                    .split('T')[0],
+                p_cycle_start_day: cycleStartDay,
+            })
+            .single()
+        cycleStartDate = (nextBounds as any).cycle_start
+        wasLateSync = true
+    }
+
+    // 4. Record advance
+    const { data: advance, error: advErr } = await supabase
+        .from('worker_advances')
+        .insert({
+            org_id: profile.org_id,
+            meter_worker_id: params.workerType === 'meter' ? params.workerId : null,
+            fixed_worker_id: params.workerType === 'fixed' ? params.workerId : null,
+            amount: params.amount,
+            description: params.description,
+            type: 'kharchi',
+            cycle_start_date: cycleStartDate,
+            status: 'pending',
+        })
+        .select('id')
+        .single()
+
+    if (advErr) {
+        console.error('Failed to record kharchi advance:', advErr)
+        return { error: 'Failed to record entry.' }
+    }
+
+    // 5. Log Float Disbursement
+    const { error: floatErr } = await supabase.from('supervisor_float_transactions').insert({
+        org_id: profile.org_id,
+        supervisor_id: user.id,
+        type: 'disbursement',
+        amount: params.amount,
+        worker_advance_id: advance.id,
+    })
+
+    if (floatErr) {
+        console.error('Failed to log float transaction:', floatErr)
+    }
+
+    revalidatePath('/owner/advances')
+    revalidatePath('/owner/payroll')
+    revalidatePath('/supervisor')
+
+    return {
+        success: true,
+        rolledOver: wasLateSync,
+        cycleStartDate,
+    }
+}
+
+/**
+ * refillSupervisorFloat — Owner-facing action to recharge a supervisor's cash float.
+ */
+export async function refillSupervisorFloat(supervisorId: string, amount: number) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { error } = await supabase.from('supervisor_float_transactions').insert({
+        org_id: profile.org_id,
+        supervisor_id: supervisorId,
+        type: 'refill',
+        amount: amount,
+    })
+
+    if (error) {
+        console.error('Failed to refill float:', error)
+        return { error: 'Failed to refill float.' }
+    }
+
+    revalidatePath('/owner/settings')
+    revalidatePath('/supervisor')
+    return { success: true }
+}
+
+/**
+ * getSupervisorBalance — Derives the current balance from the transaction ledger.
+ */
+export async function getSupervisorBalance(supervisorId: string) {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('supervisor_float_transactions')
+        .select('type, amount')
+        .eq('org_id', profile.org_id)
+        .eq('supervisor_id', supervisorId)
+
+    if (error) return 0
+
+    const credits = data.filter((t) => t.type === 'refill').reduce((acc, t) => acc + Number(t.amount), 0)
+    const debits = data
+        .filter((t) => t.type === 'disbursement')
+        .reduce((acc, t) => acc + Number(t.amount), 0)
+
+    return credits - debits
+}
+
+/**
+ * Update the machine_status column in the machines table.
+ * Used for the high-contrast status badges on the supervisor dashboard.
+ */
+export async function updateMachineStatus(machineId: string, status: 'running' | 'idle' | 'maintenance') {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const machineParsed = safeParse(UuidSchema, machineId)
+    if ('error' in machineParsed) return { error: machineParsed.error }
+
+    const statusParsed = safeParse(MachineStatusSchema, status)
+    if ('error' in statusParsed) return { error: statusParsed.error }
+
+    const { error } = await supabase
+        .from('machines')
+        .update({ machine_status: statusParsed.data })
+        .eq('id', machineParsed.data)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to update machine status:', error)
+        return { error: 'Failed to update machine status. Please try again.' }
+    }
+
+    revalidatePath('/supervisor/production')
+    return { success: true }
+}
+
+/**
+ * Update breakdown categories and notes for a machine shift.
+ * Persists data to the shift_assignments table.
+ */
+export async function updateMachineBreakdown(params: {
+    machineId: string
+    date: string
+    shift: 'day' | 'night'
+    category: string | null
+    notes: string
+}) {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const machineParsed = safeParse(UuidSchema, params.machineId)
+    if ('error' in machineParsed) return { error: machineParsed.error }
+
+    const { error } = await supabase
+        .from('shift_assignments')
+        .update({
+            breakdown_category: params.category,
+            breakdown_notes: params.notes
+        })
+        .eq('machine_id', machineParsed.data)
+        .eq('date', params.date)
+        .eq('shift', params.shift)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to update machine breakdown:', error)
+        return { error: 'Failed to save breakdown details.' }
+    }
+
+    revalidatePath('/supervisor/dashboard')
+    return { success: true }
 }
 

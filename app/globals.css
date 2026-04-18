@@ -66,8 +66,8 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.05 35);
 
-  /* Sophisticated Loomy Orange */
-  --primary: oklch(0.62 0.18 40);
+  /* Vibrant Weavly Orange */
+  --primary: #FF5722;
   --primary-foreground: oklch(0.985 0 0);
 
   /* Secondary / Muted - Warm beige */
@@ -78,7 +78,7 @@
 
   /* Accent / Soft Orange */
   --accent: oklch(0.94 0.05 60);
-  --accent-foreground: oklch(0.55 0.20 40);
+  --accent-foreground: #FF5722;
 
   --destructive: oklch(0.577 0.245 27.325);
 
@@ -87,26 +87,26 @@
   --input: oklch(0.92 0.02 85);
 
   /* Focus Ring */
-  --ring: oklch(0.62 0.18 40);
+  --ring: #FF5722;
 
-  --brand-accent: oklch(0.62 0.18 40);
+  --brand-accent: #FF5722;
 
   /* Warm chart palette */
-  --chart-1: oklch(0.62 0.18 40);
+  --chart-1: #FF5722;
   --chart-2: oklch(0.85 0.05 60);
   --chart-3: oklch(0.7 0.15 75);
   --chart-4: oklch(0.6 0.15 140);
   --chart-5: oklch(0.5 0.15 15);
 
-  /* Sidebar */
-  --sidebar: oklch(0.965 0.015 80);
-  --sidebar-foreground: oklch(0.2 0.05 35);
-  --sidebar-primary: oklch(0.62 0.18 40);
+  /* Sidebar - Dark Ink */
+  --sidebar: #1A1A1B;
+  --sidebar-foreground: oklch(0.985 0.005 85);
+  --sidebar-primary: #FF5722;
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.94 0.05 60);
-  --sidebar-accent-foreground: oklch(0.62 0.18 40);
-  --sidebar-border: oklch(0.92 0.02 85);
-  --sidebar-ring: oklch(0.62 0.18 40);
+  --sidebar-accent: oklch(0.3 0.02 45);
+  --sidebar-accent-foreground: oklch(0.985 0.005 85);
+  --sidebar-border: oklch(0.25 0.02 45);
+  --sidebar-ring: #FF5722;
 }
 
 .dark {
@@ -161,6 +161,14 @@
     @apply bg-background text-foreground;
     overflow-x: hidden;
     touch-action: manipulation;
+  }
+
+  /* Prevent iOS auto-zoom on numeric inputs in the factory */
+  input[type="number"], 
+  input[type="text"], 
+  select, 
+  textarea {
+    font-size: 16px !important;
   }
 }
 

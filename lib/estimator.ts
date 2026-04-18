@@ -90,6 +90,7 @@ export interface EstimateState {
   finishingRatePerM:   number          // flat ₹/m for calendering/heat-setting
   // ── Yarn shortage — applied to combined warp+weft total ──────────────────
   yarnShortagePct:     number          // single shortage % applied after summing all yarn costs
+  warpCrimpPct:        number          // warp take-up % for accurate beam capacity calculation
   // ── Overhead V2: itemized breakdown ─────────────────────────────────────
   overheadItems:       OverheadItem[]  // list of monthly fixed cost line items
   monthlyOutputM:      number          // estimated metres produced per month (denominator)
@@ -403,8 +404,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const totalProductionCostPerM = directCostPerM + overheadPerM
 
   // ── Beam Capacity Preview ───────────────────────────────────────────────
-  // Approximate metres a full beam tape produces (tape_length for warp direction)
-  const estimatedBeamCapacityM = estimate.tapeLengthM
+  // Approximate metres a full beam produces (tape_length reduced by take-up)
+  const estimatedBeamCapacityM = estimate.tapeLengthM * (1 - (estimate.warpCrimpPct || 0) / 100)
 
   // ── Order Quote (only when quantity is set) ─────────────────────────────
   const orderQuote = estimate.orderQuantityM && estimate.orderQuantityM > 0
@@ -491,6 +492,7 @@ export function makeDefaultEstimateState(): EstimateState {
     processingRatePerM: 0,
     finishingRatePerM:  0,
     yarnShortagePct:    0,  // combined shortage applied to warp+weft total
+    warpCrimpPct:       5.0, // default 5% take-up
     overheadItems:      DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
     monthlyOutputM:     0,
     overheadOverridePerM: null,

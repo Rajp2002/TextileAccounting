@@ -17,7 +17,7 @@ import { CalendarDays, Wifi, WifiOff } from 'lucide-react'
 
 export function DashboardClient({ initialData, orgId }: { initialData: DashboardData, orgId: string }) {
   const [data, setData] = useState(initialData)
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'reconnecting' | 'error' | 'offline' | 'historical'>('connecting')
   const [selectedDate, setSelectedDate] = useState<string>(getSuratTodayString())
   const supabase = createClient()
   const channelRef = useRef<any>(null)
@@ -46,8 +46,14 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
     const isToday = selectedDate === getSuratTodayString()
     
     if (!isToday) {
-      setConnectionStatus('error')
+      setConnectionStatus('historical')
       return
+    }
+
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      setConnectionStatus('offline')
+    } else {
+      setConnectionStatus('connecting')
     }
 
     const channelName = `org-${orgId || 'no-org'}-production-logs`
@@ -61,21 +67,41 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
       .subscribe((status: string) => {
         console.log(`[Dashboard] Realtime status for ${channelName}:`, status)
         if (status === 'SUBSCRIBED') {
-          setConnectionStatus('connected')
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          setConnectionStatus('error')
-        } else {
-          setConnectionStatus('connecting')
+          setConnectionStatus((prev) => {
+            if (prev === 'reconnecting' || prev === 'error' || prev === 'offline') {
+              handleRealtimeUpdate()
+            }
+            return 'connected'
+          })
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          setConnectionStatus(typeof window !== 'undefined' && !navigator.onLine ? 'offline' : 'reconnecting')
         }
       })
 
     channelRef.current = channel
+
+    const handleOnline = () => {
+      setConnectionStatus('reconnecting')
+      handleRealtimeUpdate()
+    }
+    const handleOffline = () => {
+      setConnectionStatus('offline')
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline)
+      window.addEventListener('offline', handleOffline)
+    }
 
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current)
       }
       if (debounceTimer.current) clearTimeout(debounceTimer.current)
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline)
+        window.removeEventListener('offline', handleOffline)
+      }
     }
   }, [supabase, handleRealtimeUpdate, orgId, selectedDate])
 
@@ -107,7 +133,7 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
   const isToday = selectedDate === getSuratTodayString()
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 pb-24 md:pb-0">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -119,9 +145,10 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
 
         {/* Date + connection status */}
         <div className="flex items-center gap-3">
-          {isToday && connectionStatus !== 'error' && (
+          {isToday && connectionStatus !== 'historical' && (
             <div className={`flex items-center gap-1.5 text-xs font-medium transition-colors duration-300 ${
               connectionStatus === 'connected' ? 'text-emerald-600 dark:text-emerald-400' : 
+              connectionStatus === 'offline' || connectionStatus === 'error' ? 'text-destructive' : 
               'text-muted-foreground'
             }`}>
               {connectionStatus === 'connected' && (
@@ -129,6 +156,15 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
               )}
               {connectionStatus === 'connecting' && (
                 <><span className="inline-block animate-pulse">●</span> {t('dashboard.connecting')}</>
+              )}
+              {connectionStatus === 'reconnecting' && (
+                <><Wifi className="h-3.5 w-3.5 animate-pulse opacity-70" /> <span className="hidden sm:inline">{t('dashboard.reconnecting')}</span></>
+              )}
+              {connectionStatus === 'offline' && (
+                <><WifiOff className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Offline</span></>
+              )}
+              {connectionStatus === 'error' && (
+                <><WifiOff className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Connection Error</span></>
               )}
             </div>
           )}

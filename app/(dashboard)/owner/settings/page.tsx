@@ -24,6 +24,7 @@ import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
 import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
 import { updateOrganizationName } from '@/app/(dashboard)/owner/actions'
+import { SupervisorFloatManager } from '@/components/settings/supervisor-float-manager'
 
 export default function SettingsPage() {
     const { t } = useTranslation()
@@ -293,11 +294,12 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
             </Card>
-
             <AccessCodeGenerator />
 
             {/* WhatsApp Daily Brief opt-in */}
             <WhatsAppOptIn />
+
+            <SupervisorFloatManager />
 
             <Card className="shadow-sm border-gray-200">
                 <CardHeader>

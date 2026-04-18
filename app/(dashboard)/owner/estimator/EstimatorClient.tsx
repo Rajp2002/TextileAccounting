@@ -132,6 +132,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                         ? tpl.weft_rows.map((r: WeftRow) => ({ ...r, id: nanoid() }))
                         : state.weftRows,
                     tapeLengthM:      Number(tpl.tape_length_m ?? state.tapeLengthM),
+                    warpCrimpPct:     tpl.warp_crimp_pct != null ? Number(tpl.warp_crimp_pct) : state.warpCrimpPct,
                     perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
                     yarnShortagePct:  Number(tpl.yarn_shortage_pct ?? state.yarnShortagePct),
                     overheadOverridePerM: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? Number(tpl.overhead_override_per_m) : state.overheadOverridePerM,
@@ -157,6 +158,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                     shortagePct: 3,
                 }],
                 tapeLengthM:      Number(tpl.tape_length_m ?? state.tapeLengthM),
+                warpCrimpPct:     tpl.warp_crimp_pct != null ? Number(tpl.warp_crimp_pct) : state.warpCrimpPct,
                 perPickCostPaisa: Number(tpl.per_pick_cost_paise ?? state.perPickCostPaisa),
                 overheadOverridePerM: tpl.overhead_override_per_m !== undefined && tpl.overhead_override_per_m !== null ? Number(tpl.overhead_override_per_m) : state.overheadOverridePerM,
             }
@@ -256,8 +258,8 @@ function NumField({
     unit?: string; step?: number; min?: number; hint?: string
 }) {
     return (
-        <div className="space-y-1.5">
-            <Label className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">{label}</Label>
+        <div className="space-y-1.5 min-w-0">
+            <Label className="block text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold text-slate-500 truncate">{label}</Label>
             <div className="relative group">
                 <Input
                     type="number"
@@ -265,15 +267,15 @@ function NumField({
                     min={min}
                     value={value}
                     onChange={e => onChange(Number(e.target.value))}
-                    className="h-10 text-sm font-mono font-bold text-center pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300"
+                    className="h-9 sm:h-10 text-xs sm:text-sm font-mono font-bold text-center pr-7 sm:pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300"
                 />
                 {unit && (
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">
+                    <span className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 text-[9px] sm:text-[10px] text-slate-400 font-bold pointer-events-none">
                         {unit}
                     </span>
                 )}
             </div>
-            {hint && <p className="text-[10px] text-slate-400 font-medium leading-none">{hint}</p>}
+            {hint && <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight">{hint}</p>}
         </div>
     )
 }
@@ -309,12 +311,12 @@ function RowCard({
     return (
         <div className={`rounded-xl border ${c.border} ${c.bg} p-3.5 space-y-3.5 relative overflow-hidden group`}>
             {/* Component label */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                     <span className={`text-[10px] uppercase tracking-widest font-black ${c.text}`}>
                         {title} {index + 1}
                     </span>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-white border-slate-200 text-slate-500 font-mono">
+                    <Badge variant="outline" className="text-[9px] sm:text-[10px] px-1.5 py-0 h-4 bg-white border-slate-200 text-slate-500 font-mono">
                         {kgPer100m.toFixed(3)} kg/100m
                     </Badge>
                 </div>
@@ -472,6 +474,7 @@ export default function EstimatorClient({
             warpRows:         state.warpRows,
             weftRows:         state.weftRows,
             tapeLengthM:      state.tapeLengthM,
+            warpCrimpPct:     state.warpCrimpPct,
             perPickCostPaisa: state.perPickCostPaisa,
             yarnShortagePct:  state.yarnShortagePct,
             overheadOverridePerM: state.overheadOverridePerM,
@@ -598,32 +601,32 @@ export default function EstimatorClient({
         <div className="space-y-6 pb-20">
 
             {/* ── STICKY HUD ───────────────────────────────────────── */}
-            <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-border/50 shadow-sm -mt-6 pt-6 pb-4 px-4 mx-[-24px] sm:mx-[-32px] md:mx-[-40px]">
-                <div className="max-w-4xl mx-auto space-y-4">
+            <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-border/50 shadow-sm -mt-6 pt-4 sm:pt-6 pb-3 sm:pb-4 px-4 mx-[-24px] sm:mx-[-32px] md:mx-[-40px]">
+                <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4">
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4">
                         {/* Production Cost */}
                         <div className="min-w-0">
-                            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">{t('estimator.hud.prod_cost')}</p>
-                            <p className="text-2xl font-black font-mono text-slate-900 leading-none">
+                            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">{t('estimator.hud.prod_cost')}</p>
+                            <p className="text-xl sm:text-2xl font-black font-mono text-slate-900 leading-none">
                                 ₹{totals.totalProductionCostPerM.toFixed(2)}
                             </p>
                         </div>
 
                         {hasOrderQty && orderQuote && (
                             <>
-                                <div className="h-8 w-px bg-slate-200 shrink-0 hidden sm:block" />
+                                <div className="h-6 sm:h-8 w-px bg-slate-200 shrink-0 hidden sm:block" />
                                 {/* Quote Price */}
                                 <div className="min-w-0">
-                                    <p className="text-[10px] uppercase tracking-wider text-brand-accent font-black">{t('estimator.hud.quote_per_m')}</p>
-                                    <p className="text-3xl font-black font-mono text-brand-accent leading-none">
+                                    <p className="text-[10px] uppercase tracking-wider text-brand-accent font-black mb-0.5">{t('estimator.hud.quote_per_m')}</p>
+                                    <p className="text-xl sm:text-3xl font-black font-mono text-brand-accent leading-none">
                                         ₹{orderQuote.quotePricePerM.toFixed(2)}
                                     </p>
                                 </div>
                                 <div className="h-8 w-px bg-slate-200 shrink-0 hidden md:block" />
                                 {/* Total Value */}
                                 <div className="min-w-0 flex-1 hidden md:block text-right">
-                                    <p className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold">{t('estimator.hud.total_order')}</p>
+                                    <p className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold mb-0.5">{t('estimator.hud.total_order')}</p>
                                     <p className="text-xl font-black font-mono text-slate-900 leading-none">
                                         ₹{orderQuote.totalOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                     </p>
@@ -632,31 +635,31 @@ export default function EstimatorClient({
                         )}
 
                         {/* Actions */}
-                        <div className="flex gap-2 ml-auto shrink-0 self-center">
+                        <div className="flex gap-2 ml-auto shrink-0 self-center w-full sm:w-auto mt-1 sm:mt-0 pt-2 sm:pt-0 border-t border-slate-100 sm:border-0 order-last sm:order-none justify-end">
                             <Button
                                 size="sm"
-                                className="h-9 px-4 bg-brand-accent hover:bg-brand-accent/90 text-white font-bold text-xs gap-2 shadow-lg shadow-brand-accent/15"
+                                className="flex-1 sm:flex-none h-9 px-3 sm:px-4 bg-brand-accent hover:bg-brand-accent/90 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-brand-accent/15"
                                 onClick={() => setShowConvert(true)}
                             >
-                                <Package className="h-3.5 w-3.5" /> {t('estimator.hud.order_btn')}
+                                <Package className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{t('estimator.hud.order_btn')}</span>
                             </Button>
                             <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-9 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-2 font-bold"
+                                className="flex-1 sm:flex-none h-9 px-3 sm:px-4 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 sm:gap-2 font-bold"
                                 onClick={() => setShowSaveTemplate(true)}
                             >
-                                <BookmarkPlus className="h-3.5 w-3.5" /> {t('estimator.hud.save_template_btn')}
+                                <BookmarkPlus className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{t('estimator.hud.save_template_btn')}</span>
                             </Button>
                         </div>
                     </div>
 
                     {/* HUD Row 2: Margin slider */}
                     {hasOrderQty && orderQuote && (
-                        <div className="flex items-center gap-4 bg-orange-50/50 p-2.5 rounded-xl border border-orange-100">
-                            <div className="shrink-0">
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t('estimator.hud.margin')}</p>
-                                <p className="text-sm font-black text-brand-accent leading-none">{state.profitPct.toFixed(1)}%</p>
+                        <div className="flex items-center gap-2 sm:gap-4 bg-orange-50/50 p-2 sm:p-2.5 rounded-xl border border-orange-100">
+                            <div className="shrink-0 w-16 sm:w-auto">
+                                <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t('estimator.hud.margin')}</p>
+                                <p className="text-sm font-black text-brand-accent leading-none mt-0.5">{state.profitPct.toFixed(1)}%</p>
                             </div>
                             <input
                                 type="range"
@@ -665,9 +668,9 @@ export default function EstimatorClient({
                                 onChange={e => dispatch({ type: 'SET', field: 'profitPct', value: Number(e.target.value) })}
                                 className="flex-1 h-2 rounded-full bg-slate-200 appearance-none cursor-pointer accent-brand-accent"
                             />
-                            <div className="shrink-0 text-right">
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t('estimator.hud.net_profit')}</p>
-                                <p className="text-sm font-black text-emerald-600 leading-none">
+                            <div className="shrink-0 text-right w-20 sm:w-auto">
+                                <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t('estimator.hud.net_profit')}</p>
+                                <p className="text-[13px] sm:text-sm font-black text-emerald-600 leading-none mt-0.5">
                                     ₹{orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
@@ -675,7 +678,7 @@ export default function EstimatorClient({
                     )}
 
                     {/* HUD Row 3: Pills */}
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar pt-1">
+                    <div className="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pt-0.5">
                         <CostPill label="🧶 Warp"           value={totals.warpCostPerM}    type="warp" />
                         <CostPill label="🧵 Weft"           value={totals.weftCostPerM}    type="weft" />
                         <CostPill label="⚙️ Weave"          value={totals.weaveCostPerM}   type="weave" />
@@ -824,7 +827,10 @@ export default function EstimatorClient({
                             <Plus className="h-4 w-4" /> {t('estimator.warp.add_blend')}
                         </Button>
                         <div className="pt-4 flex items-center justify-between border-t border-slate-100">
-                           <div className="w-32"><NumField label={t('estimator.warp.tape_len')} value={state.tapeLengthM} onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v })} unit="m" /></div>
+                           <div className="flex gap-4 items-start">
+                               <div className="w-32"><NumField label={t('estimator.warp.tape_len')} value={state.tapeLengthM} onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v })} unit="m" /></div>
+                               <div className="w-32"><NumField label={t('estimator.warp.crimp_pct')} value={state.warpCrimpPct} onChange={v => dispatch({ type: 'SET', field: 'warpCrimpPct', value: v })} unit="%" step={0.5} hint={t('estimator.warp.crimp_hint')} /></div>
+                           </div>
                            <div className="text-right">
                                <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">{t('estimator.warp.beam_capacity')}</p>
                                <p className="text-lg font-black font-mono text-indigo-600 leading-none">≈ {totals.estimatedBeamCapacityM.toFixed(0)} m</p>
@@ -1035,7 +1041,7 @@ export default function EstimatorClient({
                                                 className="flex-1 h-8 text-xs font-semibold border-0 bg-transparent focus:bg-white focus:border-rose-200 focus:ring-1 focus:ring-rose-200/50 transition-all px-2"
                                                 placeholder={t('estimator.overhead.item_placeholder')}
                                             />
-                                            <div className="relative shrink-0 w-36">
+                                            <div className="relative shrink-0 w-28 sm:w-36">
                                                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
                                                 <Input
                                                     type="number"
@@ -1043,7 +1049,7 @@ export default function EstimatorClient({
                                                     step={500}
                                                     value={item.monthlyAmount}
                                                     onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: Number(e.target.value) })}
-                                                    className="h-8 text-xs font-mono font-bold text-right pr-10 pl-6 border-rose-100 focus:border-rose-300 bg-white"
+                                                    className="h-8 text-[11px] sm:text-xs font-mono font-bold text-right pr-9 sm:pr-10 pl-5 sm:pl-6 border-rose-100 focus:border-rose-300 bg-white"
                                                 />
                                                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">/mo</span>
                                             </div>
@@ -1085,7 +1091,7 @@ export default function EstimatorClient({
                                                     <p className="text-[11px] font-bold text-slate-700 truncate">{item.label}</p>
                                                     <p className="text-[9px] text-violet-500 font-semibold uppercase tracking-wider">Fixed Salary</p>
                                                 </div>
-                                                <div className="relative shrink-0 w-36">
+                                                <div className="relative shrink-0 w-28 sm:w-36">
                                                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
                                                     <Input
                                                         type="number"
@@ -1093,7 +1099,7 @@ export default function EstimatorClient({
                                                         step={500}
                                                         value={item.monthlyAmount}
                                                         onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: Number(e.target.value) })}
-                                                        className="h-8 text-xs font-mono font-bold text-right pr-10 pl-6 border-violet-100 focus:border-violet-300 bg-white"
+                                                        className="h-8 text-[11px] sm:text-xs font-mono font-bold text-right pr-9 sm:pr-10 pl-5 sm:pl-6 border-violet-100 focus:border-violet-300 bg-white"
                                                     />
                                                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">/mo</span>
                                                 </div>
