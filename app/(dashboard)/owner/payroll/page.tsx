@@ -1165,14 +1165,15 @@ export default function PayrollPage() {
 
     // ── Toggle paid with Optimistic UI ──────────────────────────────────────
     const mutation = useMutation({
-        mutationFn: async ({ workerType, workerId, currentPaid, targetMonth, isFinal }: {
+        mutationFn: async ({ workerType, workerId, currentPaid, targetMonth, isFinal, manualDeductionOverride }: {
             workerType: 'meter' | 'fixed',
             workerId: number,
             currentPaid: boolean,
             targetMonth: string,
-            isFinal: boolean
+            isFinal: boolean,
+            manualDeductionOverride?: number | null
         }) => {
-            return await toggleWorkerPaid(workerType, workerId, targetMonth, currentPaid, isFinal)
+            return await toggleWorkerPaid(workerType, workerId, targetMonth, currentPaid, isFinal, manualDeductionOverride)
         },
         onMutate: async (variables) => {
             const orgId = userProfile?.org_id
