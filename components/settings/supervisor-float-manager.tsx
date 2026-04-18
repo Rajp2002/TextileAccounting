@@ -40,7 +40,7 @@ export function SupervisorFloatManager() {
 
             // For each supervisor, get their balance
             const supervisorsWithBalances = await Promise.all(
-                (profiles || []).map(async (p) => {
+                (profiles || []).map(async (p: { id: string; full_name: string | null; phone: string | null }) => {
                     const balance = await getSupervisorBalance(p.id)
                     return { ...p, balance }
                 })
