@@ -36,6 +36,7 @@ import {
     copyPreviousShiftAction,
     bulkLogProduction,
     updateMachineStatus,
+    updateMachineBreakdown,
 } from '../actions'
 import {
     Sheet,
