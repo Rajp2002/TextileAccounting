@@ -153,38 +153,55 @@ BEGIN
     v_budget := v_actual_deduction;
 
     -- ─── STEP 4: PERSIST SETTLEMENT RECORD ───
-    INSERT INTO payroll_settlements (
-        org_id, worker_type, meter_worker_id, fixed_worker_id, 
-        cycle_start_date, month,
-        gross_pay, advance_deducted, net_payout, 
-        employer_pf, employer_esic,
-        is_final_settlement, compliance_flag
-    )
-    VALUES (
-        p_org_id, p_worker_type, 
-        CASE WHEN p_worker_type = 'meter' THEN p_worker_id ELSE NULL END,
-        CASE WHEN p_worker_type = 'fixed' THEN p_worker_id ELSE NULL END,
-        p_cycle_start, TO_CHAR(p_cycle_start, 'YYYY-MM'),
-        p_gross_amount, v_actual_deduction, 
-        v_true_adjusted_gross - v_actual_deduction - v_employee_pf - v_employee_esic,
-        v_employer_pf, v_employer_esic,
-        p_is_final_settlement, (v_actual_deduction > v_max_deduction_cap AND NOT p_is_final_settlement)
-    )
-    ON CONFLICT (org_id, meter_worker_id, month) WHERE meter_worker_id IS NOT NULL DO UPDATE SET
-        gross_pay = EXCLUDED.gross_pay,
-        advance_deducted = EXCLUDED.advance_deducted,
-        net_payout = EXCLUDED.net_payout,
-        employer_pf = EXCLUDED.employer_pf,
-        employer_esic = EXCLUDED.employer_esic,
-        settled_at = now()
-    ON CONFLICT (org_id, fixed_worker_id, month) WHERE fixed_worker_id IS NOT NULL DO UPDATE SET
-        gross_pay = EXCLUDED.gross_pay,
-        advance_deducted = EXCLUDED.advance_deducted,
-        net_payout = EXCLUDED.net_payout,
-        employer_pf = EXCLUDED.employer_pf,
-        employer_esic = EXCLUDED.employer_esic,
-        settled_at = now()
-    RETURNING id INTO v_settlement_id;
+    IF p_worker_type = 'meter' THEN
+        INSERT INTO payroll_settlements (
+            org_id, worker_type, meter_worker_id, fixed_worker_id, 
+            cycle_start_date, month,
+            gross_pay, advance_deducted, net_payout, 
+            employer_pf, employer_esic,
+            is_final_settlement, compliance_flag
+        )
+        VALUES (
+            p_org_id, p_worker_type, p_worker_id, NULL,
+            p_cycle_start, TO_CHAR(p_cycle_start, 'YYYY-MM'),
+            p_gross_amount, v_actual_deduction, 
+            v_true_adjusted_gross - v_actual_deduction - v_employee_pf - v_employee_esic,
+            v_employer_pf, v_employer_esic,
+            p_is_final_settlement, (v_actual_deduction > v_max_deduction_cap AND NOT p_is_final_settlement)
+        )
+        ON CONFLICT (org_id, meter_worker_id, month) WHERE meter_worker_id IS NOT NULL DO UPDATE SET
+            gross_pay = EXCLUDED.gross_pay,
+            advance_deducted = EXCLUDED.advance_deducted,
+            net_payout = EXCLUDED.net_payout,
+            employer_pf = EXCLUDED.employer_pf,
+            employer_esic = EXCLUDED.employer_esic,
+            settled_at = now()
+        RETURNING id INTO v_settlement_id;
+    ELSE
+        INSERT INTO payroll_settlements (
+            org_id, worker_type, meter_worker_id, fixed_worker_id, 
+            cycle_start_date, month,
+            gross_pay, advance_deducted, net_payout, 
+            employer_pf, employer_esic,
+            is_final_settlement, compliance_flag
+        )
+        VALUES (
+            p_org_id, p_worker_type, NULL, p_worker_id,
+            p_cycle_start, TO_CHAR(p_cycle_start, 'YYYY-MM'),
+            p_gross_amount, v_actual_deduction, 
+            v_true_adjusted_gross - v_actual_deduction - v_employee_pf - v_employee_esic,
+            v_employer_pf, v_employer_esic,
+            p_is_final_settlement, (v_actual_deduction > v_max_deduction_cap AND NOT p_is_final_settlement)
+        )
+        ON CONFLICT (org_id, fixed_worker_id, month) WHERE fixed_worker_id IS NOT NULL DO UPDATE SET
+            gross_pay = EXCLUDED.gross_pay,
+            advance_deducted = EXCLUDED.advance_deducted,
+            net_payout = EXCLUDED.net_payout,
+            employer_pf = EXCLUDED.employer_pf,
+            employer_esic = EXCLUDED.employer_esic,
+            settled_at = now()
+        RETURNING id INTO v_settlement_id;
+    END IF;
 
     -- ─── STEP 5: DEDUCT ADVANCES & BUILD LIST ───
     FOR v_advance IN
