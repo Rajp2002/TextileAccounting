@@ -360,28 +360,7 @@ export function ensureOverheadIntegrity(items: any[]): OverheadItem[] {
   }))
 }
 
-/**
- * Resolves a monthly overhead amount based on category metadata.
- */
-export function resolveOverheadItemAmount(
-  item: OverheadItem,
-  loomCount: number
-): number {
-  if (!item.isLocked || !item.meta) return item.monthlyAmount
 
-  const meta = item.meta
-  if (meta.type === 'electricity' && meta.mode === 'per_loom') {
-    return (meta.unitsPerLoomPerMonth || 0) * loomCount * (meta.ratePerUnit || 0)
-  }
-
-  if (meta.type === 'depreciation') {
-    const totalValue = loomCount * (meta.avgCostPerLoom || 0)
-    const annualDepr = totalValue / (meta.usefulLifeYears || 10)
-    return annualDepr / 12
-  }
-
-  return item.monthlyAmount
-}
 
 export function calcOverheadCostPerMeter(
   overheadItems: OverheadItem[],
