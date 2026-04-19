@@ -1662,12 +1662,7 @@ export default function EstimatorClient({
                         </div>
                     </CardContent>
                 </Card>
-                                                : 'border-slate-200 bg-white focus:border-slate-300'
-                                        }`}
-                                    />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹/m</span>
-                                </div>
-                            </div>
+
 
                             {/* Live Summary */}
                             <div className="flex items-center justify-between bg-rose-50/70 border border-rose-100 rounded-xl px-4 py-3">
