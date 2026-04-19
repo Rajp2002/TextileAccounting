@@ -44,6 +44,7 @@ import {
     DEFAULT_WARP_ROW,
     DEFAULT_WEFT_ROW,
     DEFAULT_OVERHEAD_ITEMS,
+    ensureOverheadIntegrity,
     type EstimateState,
     type WarpRow,
     type WeftRow,
@@ -111,7 +112,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 warpingRatePerKg:   Number(profile.warping_rate_per_kg ?? 2),
                 sizingRatePerKg:    Number(profile.sizing_rate_per_kg  ?? 1.5),
                 windingRatePerKg:   Number(profile.winding_rate_per_kg ?? 0),
-                overheadItems:      savedItems ?? state.overheadItems,
+                overheadItems:      ensureOverheadIntegrity(savedItems ?? state.overheadItems),
                 monthlyOutputM:     Number(profile.monthly_output_m ?? 10000),
                 overheadOverridePerM: profile.overhead_override_per_m != null ? Number(profile.overhead_override_per_m) : null,
                 overheadPct:        0,
@@ -135,7 +136,13 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 isPreset:      false,
                 isLocked:      false,
             }))
-            return { ...state, overheadItems: [...manualItems, ...workerItems] }
+            return { 
+                ...state, 
+                overheadItems: [
+                    ...state.overheadItems.filter(i => i.source !== 'fixed_worker_derived'), 
+                    ...ensureOverheadIntegrity(workerItems)
+                ] 
+            }
         }
         case 'APPLY_TEMPLATE': {
             const tpl = action.template
@@ -428,18 +435,20 @@ export default function EstimatorClient({
         }
         // Apply overhead items from profile if saved, otherwise merge fixed workers
         if (Array.isArray(initialProfile.overhead_items) && initialProfile.overhead_items.length > 0) {
-            next = { ...next, overheadItems: initialProfile.overhead_items }
+            next = { ...next, overheadItems: ensureOverheadIntegrity(initialProfile.overhead_items) }
         } else if (initialWorkers && initialWorkers.length > 0) {
-            const fixedItems: OverheadItem[] = initialWorkers.map(w => ({
-                id:            String(w.id),
+            const fixedItems = initialWorkers.map(w => ({
+                id:            `fw-${w.id}`,
                 label:         `${w.name} (${w.role})`,
-                monthlyAmount: w.monthly_salary,
+                monthlyAmount: Number(w.monthly_salary),
                 source:        'fixed_worker_derived' as const,
-                category:      'custom',
+                workerId:      w.id,
+                category:      'custom' as const,
                 isPreset:      false,
                 isLocked:      false,
             }))
-            next = { ...next, overheadItems: [...DEFAULT_OVERHEAD_ITEMS.map(i => ({ ...i, id: nanoid() })), ...fixedItems] }
+            // Re-ensure integrity even for freshly mapped items to be absolutely safe
+            next = { ...next, overheadItems: [...ensureOverheadIntegrity(DEFAULT_OVERHEAD_ITEMS.map(i => ({ ...i, id: nanoid() }))), ...ensureOverheadIntegrity(fixedItems)] }
         }
         return next
     // eslint-disable-next-line react-hooks/exhaustive-deps

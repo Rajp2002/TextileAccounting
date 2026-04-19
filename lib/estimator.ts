@@ -87,7 +87,7 @@ export interface ElectricityMeta {
 
 export interface DepreciationMeta {
   type: 'depreciation'
-  loomCount: number
+  loomCount?: number
   avgCostPerLoom: number
   usefulLifeYears: number
 }
@@ -340,12 +340,55 @@ export function calcWindingCostPerMeter(
  * @param monthlyOutputM  - estimated metres produced per month
  * @returns { overheadPerM, totalMonthly }
  */
+/**
+ * Defensively ensures an array of overhead items satisfies the full OverheadItem type.
+ * Populates missing fields (category, isPreset, isLocked) with safe defaults.
+ * Essential for loading legacy data from DB or templates.
+ */
+export function ensureOverheadIntegrity(items: any[]): OverheadItem[] {
+  if (!Array.isArray(items)) return []
+  return items.map(item => ({
+    id:            item.id || nanoid(),
+    label:         item.label || 'Unnamed Item',
+    monthlyAmount: Number(item.monthlyAmount || 0),
+    category:      item.category || 'custom',
+    isPreset:      item.isPreset ?? false,
+    isLocked:      item.isLocked ?? false,
+    source:        item.source || 'manual',
+    workerId:      item.workerId || undefined,
+    meta:          item.meta || undefined
+  }))
+}
+
+/**
+ * Resolves a monthly overhead amount based on category metadata.
+ */
+export function resolveOverheadItemAmount(
+  item: OverheadItem,
+  loomCount: number
+): number {
+  if (!item.isLocked || !item.meta) return item.monthlyAmount
+
+  const meta = item.meta
+  if (meta.type === 'electricity' && meta.mode === 'per_loom') {
+    return (meta.unitsPerLoomPerMonth || 0) * loomCount * (meta.ratePerUnit || 0)
+  }
+
+  if (meta.type === 'depreciation') {
+    const totalValue = loomCount * (meta.avgCostPerLoom || 0)
+    const annualDepr = totalValue / (meta.usefulLifeYears || 10)
+    return annualDepr / 12
+  }
+
+  return item.monthlyAmount
+}
+
 export function calcOverheadCostPerMeter(
   overheadItems: OverheadItem[],
   monthlyOutputM: number,
   loomCount: number
 ): { overheadPerM: number; totalMonthly: number; resolvedItems: OverheadItem[] } {
-  const resolvedItems = (overheadItems || []).map(item => ({
+  const resolvedItems = ensureOverheadIntegrity(overheadItems).map(item => ({
     ...item,
     monthlyAmount: resolveOverheadItemAmount(item, loomCount)
   }))
