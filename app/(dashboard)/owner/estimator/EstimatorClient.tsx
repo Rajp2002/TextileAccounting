@@ -213,7 +213,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 ...state,
                 overheadItems: [
                     ...state.overheadItems,
-                    { id: nanoid(), label: 'New Item', monthlyAmount: 0, source: 'manual' as const },
+                    { id: nanoid(), label: 'New Item', monthlyAmount: 0, source: 'manual' as const, category: 'custom', isPreset: false, isLocked: false },
                 ],
             }
         case 'UPDATE_OVERHEAD_ITEM':
