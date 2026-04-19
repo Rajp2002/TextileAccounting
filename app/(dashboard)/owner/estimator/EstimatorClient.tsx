@@ -92,7 +92,8 @@ type Action =
     | { type: 'REMOVE_WEFT_ROW'; id: string }
     | { type: 'ENABLE_SECTION'; section: keyof FactorySections }
     | { type: 'ADD_OVERHEAD_ITEM' }
-    | { type: 'UPDATE_OVERHEAD_ITEM'; id: string; field: 'label' | 'monthlyAmount'; value: any }
+    | { type: 'UPDATE_OVERHEAD_ITEM'; id: string; field: 'label' | 'monthlyAmount' | 'isLocked'; value: any }
+    | { type: 'UPDATE_OVERHEAD_ITEM_META'; id: string; meta: any }
     | { type: 'REMOVE_OVERHEAD_ITEM'; id: string }
     | { type: 'RESTORE_DRAFT'; draftState: EstimateState }
 
