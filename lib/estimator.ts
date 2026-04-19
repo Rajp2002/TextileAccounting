@@ -585,10 +585,10 @@ export const DEFAULT_FACTORY_SECTIONS: FactorySections = {
 
 /** Default overhead items — shown before fixed workers are loaded from DB */
 export const DEFAULT_OVERHEAD_ITEMS: Omit<OverheadItem, 'id'>[] = [
-  { label: 'Rent / Lease',         monthlyAmount: 0, source: 'manual' },
-  { label: 'Electricity',           monthlyAmount: 0, source: 'manual' },
-  { label: 'Water & Maintenance',   monthlyAmount: 0,  source: 'manual' },
-  { label: 'Factory Consumables',   monthlyAmount: 0,  source: 'manual' },
+  { label: 'Rent / Lease',         monthlyAmount: 0, source: 'manual', category: 'rent', isPreset: true, isLocked: false },
+  { label: 'Electricity',           monthlyAmount: 0, source: 'manual', category: 'electricity', isPreset: true, isLocked: false },
+  { label: 'Water & Maintenance',   monthlyAmount: 0,  source: 'manual', category: 'water', isPreset: true, isLocked: false },
+  { label: 'Factory Consumables',   monthlyAmount: 0,  source: 'manual', category: 'custom', isPreset: true, isLocked: false },
 ]
 
 export function makeDefaultEstimateState(): EstimateState {

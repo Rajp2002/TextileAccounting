@@ -430,11 +430,14 @@ export default function EstimatorClient({
         if (Array.isArray(initialProfile.overhead_items) && initialProfile.overhead_items.length > 0) {
             next = { ...next, overheadItems: initialProfile.overhead_items }
         } else if (initialWorkers && initialWorkers.length > 0) {
-            const fixedItems = initialWorkers.map(w => ({
+            const fixedItems: OverheadItem[] = initialWorkers.map(w => ({
                 id:            String(w.id),
                 label:         `${w.name} (${w.role})`,
                 monthlyAmount: w.monthly_salary,
                 source:        'fixed_worker_derived' as const,
+                category:      'custom',
+                isPreset:      false,
+                isLocked:      false,
             }))
             next = { ...next, overheadItems: [...DEFAULT_OVERHEAD_ITEMS.map(i => ({ ...i, id: nanoid() })), ...fixedItems] }
         }
