@@ -130,6 +130,9 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 monthlyAmount: Number(w.monthly_salary),
                 source:        'fixed_worker_derived' as const,
                 workerId:      w.id,
+                category:      'custom',
+                isPreset:      false,
+                isLocked:      false,
             }))
             return { ...state, overheadItems: [...manualItems, ...workerItems] }
         }
