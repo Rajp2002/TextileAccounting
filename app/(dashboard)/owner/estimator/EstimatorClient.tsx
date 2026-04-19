@@ -1446,7 +1446,7 @@ export default function EstimatorClient({
                                                     <div className="flex items-center gap-2">
                                                         <input 
                                                             type="checkbox" 
-                                                            checked={item.meta?.mode === 'per_loom'} 
+                                                            checked={(item.meta as ElectricityMeta)?.mode === 'per_loom'} 
                                                             onChange={e => dispatch({
                                                                 type: 'UPDATE_OVERHEAD_ITEM',
                                                                 id: item.id,
