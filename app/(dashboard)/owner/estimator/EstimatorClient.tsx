@@ -1574,27 +1574,27 @@ export default function EstimatorClient({
                                 </div>
 
                                 {/* Overhead Summary Block */}
-                                <div className="shrink-0 sm:w-48 bg-slate-900 rounded-xl p-4 text-white space-y-4">
+                                <div className="shrink-0 sm:w-48 bg-orange-50/50 rounded-xl p-4 border-2 border-orange-100 space-y-4 shadow-sm">
                                     <div className="space-y-1">
-                                        <p className="text-[9px] uppercase font-black text-slate-400 tracking-wider">Total Monthly Cost</p>
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-sm font-bold text-brand-accent/70">₹</span>
-                                            <span className="text-2xl font-black font-mono text-brand-accent tracking-tighter">
+                                        <p className="text-[9px] uppercase font-black text-orange-600/70 tracking-wider">Total Monthly Cost</p>
+                                        <div className="flex items-baseline gap-1 text-orange-600">
+                                            <span className="text-sm font-bold opacity-70">₹</span>
+                                            <span className="text-2xl font-black font-mono tracking-tighter">
                                                 {totals.overheadTotalMonthly.toLocaleString('en-IN')}
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="space-y-2 border-t border-white/5 pt-3">
+                                    <div className="space-y-2 border-t border-orange-200/50 pt-3">
                                         <div className="flex justify-between items-baseline">
-                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">100% Capacity Cost</span>
-                                            <div className="flex items-baseline gap-0.5 text-emerald-400">
+                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">100% Capacity Cost</span>
+                                            <div className="flex items-baseline gap-0.5 text-emerald-600">
                                                 <span className="text-[8px] font-bold">₹</span>
                                                 <span className="text-[10px] font-mono font-bold">{totals.overheadPerMAtCapacity.toFixed(2)}/m</span>
                                             </div>
                                         </div>
                                         <div className="flex justify-between items-baseline">
-                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Your Actual Cost</span>
-                                            <div className="flex items-baseline gap-0.5 text-rose-400">
+                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">Your Actual Cost</span>
+                                            <div className="flex items-baseline gap-0.5 text-rose-600">
                                                 <span className="text-[8px] font-bold">₹</span>
                                                 <span className="text-[11px] font-mono font-black">{totals.overheadPerM.toFixed(2)}/m</span>
                                             </div>
