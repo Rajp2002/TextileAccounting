@@ -49,6 +49,8 @@ import {
     type WarpRow,
     type WeftRow,
     type OverheadItem,
+    type ElectricityMeta,
+    type DepreciationMeta,
     type FactorySections,
     type EstimatorV3Totals,
     type ScenarioResult,
@@ -769,9 +771,9 @@ export default function EstimatorClient({
     const isZeroConfig = state.overheadItems.filter(i => i.isPreset).every(i => (i.monthlyAmount || 0) === 0)
     const electricityItem = state.overheadItems.find(i => i.category === 'electricity')
     const hasElectricityLeak = electricityItem && (
-        (electricityItem.isLocked && (
-            (electricityItem.meta?.unitsPerLoomPerMonth || 0) === 0 || 
-            (electricityItem.meta?.ratePerUnit || 0) === 0
+        (electricityItem.isLocked && electricityItem.meta?.type === 'electricity' && (
+            (electricityItem.meta.unitsPerLoomPerMonth || 0) === 0 || 
+            (electricityItem.meta.ratePerUnit || 0) === 0
         )) ||
         (!electricityItem.isLocked && (electricityItem.monthlyAmount || 0) === 0)
     )
@@ -1461,7 +1463,7 @@ export default function EstimatorClient({
                                                                 <span className="text-[8px] uppercase font-black text-slate-400">Units/Loom</span>
                                                                 <Input 
                                                                     type="number" 
-                                                                    value={item.meta?.unitsPerLoomPerMonth ?? 0} 
+                                                                    value={(item.meta as ElectricityMeta)?.unitsPerLoomPerMonth ?? 0} 
                                                                     onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { unitsPerLoomPerMonth: Number(e.target.value), type: 'electricity', mode: 'per_loom' } })}
                                                                     className="h-6 text-[10px] font-mono font-bold px-1.5"
                                                                 />
@@ -1470,7 +1472,7 @@ export default function EstimatorClient({
                                                                 <span className="text-[8px] uppercase font-black text-slate-400">Rate/Unit</span>
                                                                 <Input 
                                                                     type="number" 
-                                                                    value={item.meta?.ratePerUnit ?? 0} 
+                                                                    value={(item.meta as ElectricityMeta)?.ratePerUnit ?? 0} 
                                                                     onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { ratePerUnit: Number(e.target.value), type: 'electricity', mode: 'per_loom' } })}
                                                                     className="h-6 text-[10px] font-mono font-bold px-1.5"
                                                                 />
@@ -1488,7 +1490,7 @@ export default function EstimatorClient({
                                                             <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">₹</span>
                                                             <Input 
                                                                 type="number" 
-                                                                value={item.meta?.avgCostPerLoom ?? 1000000} 
+                                                                value={(item.meta as DepreciationMeta)?.avgCostPerLoom ?? 1000000} 
                                                                 onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { avgCostPerLoom: Number(e.target.value), type: 'depreciation' } })}
                                                                 className="h-7 text-[10px] font-mono font-bold pl-4 pr-1.5"
                                                             />
@@ -1498,7 +1500,7 @@ export default function EstimatorClient({
                                                         <span className="text-[8px] uppercase font-black text-slate-400">Lifespan (Years)</span>
                                                         <Input 
                                                             type="number" 
-                                                            value={item.meta?.usefulLifeYears ?? 10} 
+                                                            value={(item.meta as DepreciationMeta)?.usefulLifeYears ?? 10} 
                                                             onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { usefulLifeYears: Number(e.target.value), type: 'depreciation' } })}
                                                             className="h-7 text-[10px] font-mono font-bold px-2"
                                                         />
