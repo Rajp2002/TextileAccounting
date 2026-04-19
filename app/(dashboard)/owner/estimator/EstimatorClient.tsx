@@ -304,7 +304,7 @@ function NumField({
                         const val = e.target.value === '' ? null : Number(e.target.value)
                         onChange(val)
                     }}
-                    className="h-9 sm:h-10 text-xs sm:text-sm font-mono font-bold text-center pr-12 sm:pr-14 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full"
+                    className="h-9 sm:h-10 text-xs sm:text-sm font-mono font-black text-center pr-12 sm:pr-14 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full text-orange-600"
                 />
                 {unit && (
                     <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-[9px] sm:text-[10px] text-slate-400 font-bold pointer-events-none">
@@ -1357,7 +1357,7 @@ export default function EstimatorClient({
                                     label="Loom Count" 
                                     value={state.loomCount} 
                                     onChange={v => dispatch({ type: 'SET', field: 'loomCount', value: v ?? 0 })} 
-                                    unit="rooms" 
+                                    unit="looms" 
                                 />
                                 <NumField 
                                     label="Avg Daily Output" 
@@ -1578,8 +1578,8 @@ export default function EstimatorClient({
                                     <div className="space-y-1">
                                         <p className="text-[9px] uppercase font-black text-slate-400 tracking-wider">Total Monthly Cost</p>
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-sm font-bold text-slate-500">₹</span>
-                                            <span className="text-2xl font-black font-mono text-white tracking-tighter">
+                                            <span className="text-sm font-bold text-brand-accent/70">₹</span>
+                                            <span className="text-2xl font-black font-mono text-brand-accent tracking-tighter">
                                                 {totals.overheadTotalMonthly.toLocaleString('en-IN')}
                                             </span>
                                         </div>
