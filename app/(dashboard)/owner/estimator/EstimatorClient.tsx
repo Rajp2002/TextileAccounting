@@ -1660,9 +1660,6 @@ export default function EstimatorClient({
                                 )}
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
-
 
                             {/* Live Summary */}
                             <div className="flex items-center justify-between bg-rose-50/70 border border-rose-100 rounded-xl px-4 py-3">
