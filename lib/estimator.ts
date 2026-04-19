@@ -64,15 +64,50 @@ export interface FactorySections {
   transport:  boolean   // factory delivers rather than buyer collecting
 }
 
+export type OverheadCategory =
+  | 'rent'
+  | 'electricity'
+  | 'spares_repairs'
+  | 'oil_lubricants'
+  | 'drawing_denting'
+  | 'bank_interest'
+  | 'depreciation'
+  | 'water'
+  | 'security'
+  | 'admin'
+  | 'custom'
+
+/** Helper metadata for specialized overhead categories */
+export interface ElectricityMeta {
+  type: 'electricity'
+  mode: 'manual' | 'per_loom'
+  unitsPerLoomPerMonth?: number
+  ratePerUnit?: number
+}
+
+export interface DepreciationMeta {
+  type: 'depreciation'
+  loomCount: number
+  avgCostPerLoom: number
+  usefulLifeYears: number
+}
+
+export type OverheadItemMeta = ElectricityMeta | DepreciationMeta
+
 /**
  * A single overhead line item — represents one monthly fixed cost.
- * source='fixed_worker_derived' items are pre-populated from the fixed_workers table
- * but remain fully editable by the user.
+ * category: enables specialized resolvers (electricity, depreciation)
+ * isPreset: true for standard Surat factory cost items
+ * isLocked: true when the monthlyAmount is auto-computed from meta
  */
 export interface OverheadItem {
   id:           string
+  category:     OverheadCategory
   label:        string        // e.g. "Rent", "Electricity", "Raju (Master)"
   monthlyAmount: number       // ₹ per month
+  isPreset:     boolean
+  isLocked:     boolean
+  meta?:        OverheadItemMeta
   source:       'manual' | 'fixed_worker_derived'
   workerId?:    number        // fixed_workers.id — present only for derived items
 }
@@ -95,6 +130,15 @@ export interface EstimateState {
   overheadItems:       OverheadItem[]  // list of monthly fixed cost line items
   monthlyOutputM:      number          // estimated metres produced per month (denominator)
   overheadOverridePerM: number | null  // when set, bypasses the itemized calc entirely
+  // ── Factory Capacity Configuration ──────────────────────────────────────
+  loomCount:           number          // total active looms in factory
+  avgOutputPerLoomPerDay: number       // e.g. 50m for waterjets, 25m for rapier
+  monthlyWorkingDays:  number          // default 26
+  outputSuggestion?: {
+    avg30Days: number
+    avg90Days: number
+    lastUpdated: string
+  }
   // ── kept for backward-compat serialisation (computed, never user-edited) ─
   overheadPct:         number          // effective overhead % — derived from items/denominator
   // ────────────────────────────────────────────────────────────────────────
@@ -148,6 +192,13 @@ export interface EstimatorV3Totals {
   overheadPerM:            number
   overheadTotalMonthly:    number   // sum of all overhead item monthly amounts
   effectiveOverheadPct:    number   // overheadPerM / directCostPerM × 100 (display only)
+  resolvedItems:           OverheadItem[] // overhead items after resolving meta formulas
+  // ── Capacity Dynamics ───────────────────────────────────────────────────
+  overheadPerMAtCapacity:  number   // overhead if factory ran at 100% capacity
+  ratedCapacityM:          number   // max metres factory CAN produce (looms × output × days)
+  capacityUtilisationPct:  number   // monthlyOutputM / ratedCapacityM × 100
+  costOfIdleCapacityMonthly: number // RUPEE loss due to underutilisation
+  // ────────────────────────────────────────────────────────────────────────
   totalProductionCostPerM: number
   totalWarpKgPer100m:      number   // used for warping formula + display
   totalAllYarnKgPer100m:   number   // used for winding formula + quality weight display
@@ -291,11 +342,16 @@ export function calcWindingCostPerMeter(
  */
 export function calcOverheadCostPerMeter(
   overheadItems: OverheadItem[],
-  monthlyOutputM: number
-): { overheadPerM: number; totalMonthly: number } {
-  const totalMonthly = overheadItems.reduce((sum, item) => sum + (item.monthlyAmount || 0), 0)
+  monthlyOutputM: number,
+  loomCount: number
+): { overheadPerM: number; totalMonthly: number; resolvedItems: OverheadItem[] } {
+  const resolvedItems = (overheadItems || []).map(item => ({
+    ...item,
+    monthlyAmount: resolveOverheadItemAmount(item, loomCount)
+  }))
+  const totalMonthly = resolvedItems.reduce((sum, item) => sum + (item.monthlyAmount || 0), 0)
   const overheadPerM = monthlyOutputM > 0 ? totalMonthly / monthlyOutputM : 0
-  return { overheadPerM, totalMonthly }
+  return { overheadPerM, totalMonthly, resolvedItems }
 }
 
 /**
@@ -330,6 +386,31 @@ export function calcOrderQuote(params: {
  * Master aggregation function — called once per render via useMemo.
  * All layers derive from EstimateState; zero server round-trips.
  */
+/**
+ * Resolves a monthly overhead amount based on category metadata.
+ * Handles derived logic for Electricity (per-loom) and Depreciation.
+ * Returns the final ₹/month amount.
+ */
+export function resolveOverheadItemAmount(
+  item: OverheadItem,
+  loomCount: number
+): number {
+  if (!item.isLocked || !item.meta) return item.monthlyAmount
+
+  const meta = item.meta
+  if (meta.type === 'electricity' && meta.mode === 'per_loom') {
+    return (meta.unitsPerLoomPerMonth || 0) * loomCount * (meta.ratePerUnit || 0)
+  }
+
+  if (meta.type === 'depreciation') {
+    const totalValue = loomCount * (meta.avgCostPerLoom || 0)
+    const annualDepr = totalValue / (meta.usefulLifeYears || 10)
+    return annualDepr / 12
+  }
+
+  return item.monthlyAmount
+}
+
 export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const globalShortage = estimate.yarnShortagePct ?? 0
 
@@ -401,9 +482,14 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     warpingAndSizingPerM + windingPerM + processingPerM + finishingPerM
 
   // ── Layer 8: Overhead (sum of monthly fixed costs ÷ monthly output) ────
-  const { overheadPerM: calculatedOverheadPerM, totalMonthly: overheadTotalMonthly } = calcOverheadCostPerMeter(
+  const { 
+    overheadPerM: calculatedOverheadPerM, 
+    totalMonthly: overheadTotalMonthly,
+    resolvedItems
+  } = calcOverheadCostPerMeter(
     estimate.overheadItems,
-    estimate.monthlyOutputM
+    estimate.monthlyOutputM,
+    estimate.loomCount
   )
   // Direct override takes precedence when set and positive
   const overheadPerM = (estimate.overheadOverridePerM != null && estimate.overheadOverridePerM > 0)
@@ -411,6 +497,15 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     : calculatedOverheadPerM
   // Effective % for display + backward-compat snapshot in saved quotes
   const effectiveOverheadPct = directCostPerM > 0 ? (overheadPerM / directCostPerM) * 100 : 0
+
+  // ── Capacity Dynamics ─────────────────────────────────────
+  const workingDays = estimate.monthlyWorkingDays || 26
+  const ratedCapacityM = (estimate.loomCount || 0) * (estimate.avgOutputPerLoomPerDay || 0) * workingDays
+  const overheadPerMAtCapacity = ratedCapacityM > 0 ? (overheadTotalMonthly / ratedCapacityM) : 0
+  const capacityUtilisationPct = ratedCapacityM > 0 ? (estimate.monthlyOutputM / ratedCapacityM) * 100 : 0
+  
+  // Cost of Idle Capacity: Actual Overhead Paid - Overhead recovered if run at capacity
+  const costOfIdleCapacityMonthly = Math.max(0, overheadTotalMonthly * (1 - (capacityUtilisationPct / 100)))
 
   const totalProductionCostPerM = directCostPerM + overheadPerM
 
@@ -446,11 +541,16 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     overheadPerM,
     overheadTotalMonthly,
     effectiveOverheadPct,
+    overheadPerMAtCapacity,
+    ratedCapacityM,
+    capacityUtilisationPct,
+    costOfIdleCapacityMonthly,
     totalProductionCostPerM,
     totalWarpKgPer100m,
     totalAllYarnKgPer100m,
     estimatedBeamCapacityM,
     orderQuote,
+    resolvedItems,
   }
 }
 
@@ -507,6 +607,9 @@ export function makeDefaultEstimateState(): EstimateState {
     overheadItems:      DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
     monthlyOutputM:     0,
     overheadOverridePerM: null,
+    loomCount:          0,
+    avgOutputPerLoomPerDay: 50,
+    monthlyWorkingDays:  26,
     overheadPct:        0,   // will be computed — kept for compat
     commissionPct:      0,
     transportPerM:      0,

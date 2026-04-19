@@ -32,6 +32,9 @@ export async function getFactoryCostProfile() {
                 overhead_pct:            8.00,
                 default_commission_pct:  2.00,
                 default_transport_per_m: 0,
+                loom_count:              0,
+                monthly_working_days:    26,
+                avg_output_per_loom_per_day: 50,
                 enabled_sections: {
                     winding:    false,
                     processing: false,
@@ -87,6 +90,9 @@ export async function upsertFactoryCostProfile(data: {
     overhead_items?:         OverheadItem[]
     monthly_output_m?:       number
     overhead_override_per_m?: number | null
+    loom_count?:             number
+    monthly_working_days?:   number
+    avg_output_per_loom_per_day?: number
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -429,33 +435,51 @@ export async function getLastQuoteForParty(partyName: string): Promise<{
  */
 export async function getMonthlyOutputSuggestion(): Promise<{
     data?: {
-        last30DaysTotal: number
-        activeDays:      number
-        suggestedMonthly: number
+        avg30Days: number
+        avg90Days: number
+        lastUpdated: string
     }
     error?: string
 }> {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const since = thirtyDaysAgo.toISOString().split('T')[0]
+    const now = new Date()
+    const ninetyDaysAgo = new Date()
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+    const since90 = ninetyDaysAgo.toISOString().split('T')[0]
 
     const { data, error } = await supabase
         .from('production_logs')
         .select('meters, date')
         .eq('org_id', profile.org_id)
-        .gte('date', since)
+        .gte('date', since90)
 
     if (error) return { error: error.message }
-    if (!data || data.length === 0) return { data: { last30DaysTotal: 0, activeDays: 0, suggestedMonthly: 0 } }
+    if (!data || data.length === 0) {
+        return { data: { avg30Days: 0, avg90Days: 0, lastUpdated: now.toISOString() } }
+    }
 
-    const totalMeters  = data.reduce((s, r) => s + Number(r.meters ?? 0), 0)
-    const uniqueDays   = new Set(data.map(r => r.date)).size
-    // Scale to a full 30-day month
-    const suggestedMonthly = uniqueDays > 0 ? Math.round((totalMeters / uniqueDays) * 30) : 0
-    return { data: { last30DaysTotal: Math.round(totalMeters), activeDays: uniqueDays, suggestedMonthly } }
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    const since30 = thirtyDaysAgo.toISOString().split('T')[0]
+
+    const logs30 = data.filter(r => r.date >= since30)
+    const total30 = logs30.reduce((s, r) => s + Number(r.meters ?? 0), 0)
+    const days30  = new Set(logs30.map(r => r.date)).size
+    const avg30Days = days30 > 0 ? Math.round((total30 / days30) * 26) : 0
+
+    const total90 = data.reduce((s, r) => s + Number(r.meters ?? 0), 0)
+    const days90  = new Set(data.map(r => r.date)).size
+    const avg90Days = days90 > 0 ? Math.round((total90 / days90) * 26) : 0
+
+    return { 
+        data: { 
+            avg30Days, 
+            avg90Days, 
+            lastUpdated: now.toISOString() 
+        } 
+    }
 }
 
 // ─── Quote History ────────────────────────────────────────────────────────────

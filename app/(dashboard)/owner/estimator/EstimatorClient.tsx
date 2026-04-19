@@ -30,10 +30,12 @@ import {
     Search,
     X,
     AlertTriangle,
-    Zap,
-    FlaskConical,
     RotateCcw,
+    Lock,
+    AlertCircle,
+    Zap,
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
 import {
     calcFullTotals,
@@ -62,6 +64,7 @@ import {
     renameTemplate,
     getLastQuoteForParty,
     getMonthlyOutputSuggestion,
+    upsertFactoryCostProfile,
 } from './actions'
 import { useAutosave } from '@/hooks/useAutosave'
 import { Textarea } from '@/components/ui/textarea'
@@ -215,6 +218,13 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 ...state,
                 overheadItems: state.overheadItems.map(item =>
                     item.id === action.id ? { ...item, [action.field]: action.value } : item
+                ),
+            }
+        case 'UPDATE_OVERHEAD_ITEM_META':
+            return {
+                ...state,
+                overheadItems: state.overheadItems.map(item =>
+                    item.id === action.id ? { ...item, meta: { ...item.meta, ...action.meta } } : item
                 ),
             }
         case 'REMOVE_OVERHEAD_ITEM':
@@ -408,6 +418,9 @@ export default function EstimatorClient({
             monthlyOutputM:    Number(initialProfile.monthly_output_m     ?? base.monthlyOutputM),
             overheadOverridePerM: initialProfile.overhead_override_per_m !== undefined && initialProfile.overhead_override_per_m !== null
                 ? Number(initialProfile.overhead_override_per_m) : base.overheadOverridePerM,
+            loomCount:         Number(initialProfile.loom_count           ?? base.loomCount),
+            monthlyWorkingDays: Number(initialProfile.monthly_working_days ?? base.monthlyWorkingDays),
+            avgOutputPerLoomPerDay: Number(initialProfile.avg_output_per_loom_per_day ?? base.avgOutputPerLoomPerDay),
         }
         // Apply overhead items from profile if saved, otherwise merge fixed workers
         if (Array.isArray(initialProfile.overhead_items) && initialProfile.overhead_items.length > 0) {
@@ -431,6 +444,8 @@ export default function EstimatorClient({
     const [converting, setConverting] = useState(false)
     const [savingTemplate, setSavingTemplate] = useState(false)
     const [templates, setTemplates] = useState<any[]>(initialTemplates ?? [])
+    const [outputSuggestion, setOutputSuggestion] = useState<EstimateState['outputSuggestion'] | null>(null)
+    const [isSuggestingOutput, setIsSuggestingOutput] = useState(false)
 
     // Loom wage per meter input — bidirectional with perPickCostPaisa
     const [wagePerMInput, setWagePerMInput] = useState<string>('')
@@ -553,12 +568,7 @@ export default function EstimatorClient({
             if (res.error) {
                 toast.error('Failed to get suggestion')
             } else if (res.data) {
-                if (res.data.suggestedMonthly > 0) {
-                    dispatch({ type: 'SET', field: 'monthlyOutputM', value: res.data.suggestedMonthly })
-                    toast.success(`Suggested ${res.data.suggestedMonthly.toLocaleString()}m based on last 30 days`)
-                } else {
-                    toast.info('Not enough production data to formulate a suggestion yet.')
-                }
+                setOutputSuggestion(res.data)
             }
         } catch (e) {
             toast.error('Error fetching suggestion')
@@ -573,6 +583,36 @@ export default function EstimatorClient({
         setQualityLabel(tpl.name)
         toast.success(`${t('estimator.toast.applied_template')} ${tpl.name}`)
     }, [t])
+
+    const handleSaveProfile = async () => {
+        setSaving(true)
+        try {
+            const res = await upsertFactoryCostProfile({
+                warping_rate_per_kg:     state.warpingRatePerKg,
+                sizing_rate_per_kg:      state.sizingRatePerKg,
+                winding_rate_per_kg:     state.windingRatePerKg,
+                overhead_pct:            state.overheadPct,
+                default_commission_pct:  state.commissionPct,
+                default_transport_per_m: state.transportPerM,
+                enabled_sections:        state.enabledSections,
+                overhead_items:          state.overheadItems,
+                monthly_output_m:        state.monthlyOutputM,
+                loom_count:              state.loomCount,
+                monthly_working_days:    state.monthlyWorkingDays,
+                avg_output_per_loom_per_day: state.avgOutputPerLoomPerDay,
+            })
+
+            if (res.success) {
+                toast.success('Factory baseline updated successfully!')
+            } else {
+                toast.error(res.error || 'Failed to save profile')
+            }
+        } catch (e) {
+            toast.error('Error saving profile')
+        } finally {
+            setSaving(false)
+        }
+    }
 
     const handleSaveTemplate = async () => {
         if (!templateName.trim()) return toast.error(t('estimator.toast.save_template_name_error'))
@@ -709,6 +749,17 @@ export default function EstimatorClient({
 
     const { orderQuote } = totals
     const hasOrderQty    = !!(state.orderQuantityM && state.orderQuantityM > 0)
+
+    // Validation: Pilot Safety Rails
+    const isZeroConfig = state.overheadItems.filter(i => i.isPreset).every(i => (i.monthlyAmount || 0) === 0)
+    const electricityItem = state.overheadItems.find(i => i.category === 'electricity')
+    const hasElectricityLeak = electricityItem && (
+        (electricityItem.isLocked && (
+            (electricityItem.meta?.unitsPerLoomPerMonth || 0) === 0 || 
+            (electricityItem.meta?.ratePerUnit || 0) === 0
+        )) ||
+        (!electricityItem.isLocked && (electricityItem.monthlyAmount || 0) === 0)
+    )
 
     return (
         <div className="space-y-6 pb-20">
@@ -1259,145 +1310,305 @@ export default function EstimatorClient({
                                     ₹{totals.overheadPerM.toFixed(2)}/m
                                 </span>
                                 <span className="text-[10px] font-bold text-slate-400 bg-white/60 px-2 py-0.5 rounded-md border border-slate-200">
-                                    {totals.effectiveOverheadPct.toFixed(1)}% {t('estimator.overhead.effective_pct')}
+                                    {totals.capacityUtilisationPct.toFixed(1)}% Capacity
                                 </span>
                             </div>
                         }
                     />
-                    <CardContent className="p-5 space-y-5">
-
-                        {/* Facility & Running Costs */}
-                        <div className="space-y-2">
-                            <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">{t('estimator.overhead.facility_costs')}</p>
-                            <div className="space-y-2">
-                                {state.overheadItems
-                                    .filter(item => item.source === 'manual')
-                                    .map(item => (
-                                        <div key={item.id} className="flex items-center gap-2 bg-rose-50/40 border border-rose-100 rounded-xl px-3 py-2">
-                                            <Input
-                                                value={item.label}
-                                                onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'label', value: e.target.value })}
-                                                className="flex-1 h-8 text-xs font-semibold border-0 bg-transparent focus:bg-white focus:border-rose-200 focus:ring-1 focus:ring-rose-200/50 transition-all px-2"
-                                                placeholder={t('estimator.overhead.item_placeholder')}
-                                            />
-                                            <div className="relative shrink-0 w-28 sm:w-36">
-                                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
-                                                <Input
-                                                    type="number"
-                                                    min={0}
-                                                    step={500}
-                                                    value={item.monthlyAmount}
-                                                    onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: Number(e.target.value) })}
-                                                    className="h-8 text-[11px] sm:text-xs font-mono font-bold text-right pr-9 sm:pr-10 pl-5 sm:pl-6 border-rose-100 focus:border-rose-300 bg-white"
-                                                />
-                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">/mo</span>
-                                            </div>
-                                            <button
-                                                onClick={() => dispatch({ type: 'REMOVE_OVERHEAD_ITEM', id: item.id })}
-                                                className="text-slate-300 hover:text-red-500 transition-colors shrink-0"
-                                            >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
-                                    ))
-                                }
+                    <CardContent className="p-5 space-y-6">
+                        
+                        {/* A. Factory Capacity Section */}
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-4">
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                                <div className="flex items-center gap-2">
+                                    <Zap className="h-3.5 w-3.5 text-brand-accent" />
+                                    <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Factory Capacity Configuration</h4>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 text-[9px] font-bold text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 px-2"
+                                    onClick={handleSaveProfile}
+                                    disabled={saving}
+                                >
+                                    {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
+                                    Update Baseline
+                                </Button>
                             </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full border-dashed border-rose-200 text-[10px] font-bold text-rose-500 hover:bg-rose-50 hover:border-rose-300 transition-all gap-1.5 h-8 uppercase tracking-widest"
-                                onClick={() => dispatch({ type: 'ADD_OVERHEAD_ITEM' })}
-                            >
-                                <Plus className="h-3 w-3" /> {t('estimator.overhead.add_cost_item')}
-                            </Button>
+                            <div className="grid grid-cols-3 gap-4">
+                                <NumField 
+                                    label="Loom Count" 
+                                    value={state.loomCount} 
+                                    onChange={v => dispatch({ type: 'SET', field: 'loomCount', value: v ?? 0 })} 
+                                    unit="rooms" 
+                                />
+                                <NumField 
+                                    label="Avg Daily Output" 
+                                    value={state.avgOutputPerLoomPerDay} 
+                                    onChange={v => dispatch({ type: 'SET', field: 'avgOutputPerLoomPerDay', value: v ?? 0 })} 
+                                    unit="m/day" 
+                                />
+                                <NumField 
+                                    label="Working Days" 
+                                    value={state.monthlyWorkingDays} 
+                                    onChange={v => dispatch({ type: 'SET', field: 'monthlyWorkingDays', value: v ?? 0 })} 
+                                    unit="days" 
+                                    hint="Standard 26-day month"
+                                />
+                            </div>
+                            {state.loomCount > 0 && state.avgOutputPerLoomPerDay > 0 && (
+                                <div className="flex items-center justify-between pt-1 border-t border-slate-200/50">
+                                    <span className="text-[10px] font-bold text-slate-400">Monthly Rated Capacity:</span>
+                                    <span className="text-xs font-mono font-bold text-slate-600">{totals.ratedCapacityM.toLocaleString()} metres</span>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Fixed Salary Workers — DB derived */}
-                        {state.overheadItems.filter(i => i.source === 'fixed_worker_derived').length > 0 && (
+                        {/* B. Itemized Overhead Rows */}
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between mb-1">
+                                <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">Monthly Fixed Costs</p>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 text-[9px] font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                                    onClick={() => dispatch({ type: 'ADD_OVERHEAD_ITEM' })}
+                                >
+                                    <Plus className="h-3 w-3 mr-1" /> New Item
+                                </Button>
+                            </div>
+                            
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">{t('estimator.overhead.fixed_salary_workers')}</p>
-                                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-violet-50 border-violet-100 text-violet-600 font-bold">
-                                        {t('estimator.overhead.pulled_from_registry')}
-                                    </Badge>
-                                </div>
-                                <div className="space-y-2">
-                                    {state.overheadItems
-                                        .filter(item => item.source === 'fixed_worker_derived')
-                                        .map(item => (
-                                            <div key={item.id} className="flex items-center gap-2 bg-violet-50/40 border border-violet-100 rounded-xl px-3 py-2">
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-[11px] font-bold text-slate-700 truncate">{item.label}</p>
-                                                    <p className="text-[9px] text-violet-500 font-semibold uppercase tracking-wider">Fixed Salary</p>
+                                {totals.resolvedItems.map(item => {
+                                    const isPreset = item.isPreset
+                                    const isLocked = item.isLocked
+                                    const isElectricity = item.category === 'electricity'
+                                    const isDepreciation = item.category === 'depreciation'
+                                    
+                                    return (
+                                        <div key={item.id} className={`group relative flex flex-col gap-2 rounded-xl border p-3 transition-colors ${
+                                            isLocked ? 'bg-indigo-50/30 border-indigo-100' : 'bg-white border-slate-200'
+                                        }`}>
+                                            <div className="flex items-center gap-3">
+                                                {/* Label / Preset Indicator */}
+                                                <div className="flex-1 flex items-center gap-2">
+                                                    {isLocked && <Lock className="h-3 w-3 text-indigo-400 shrink-0" />}
+                                                    <Input
+                                                        value={item.label}
+                                                        disabled={isPreset}
+                                                        onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'label', value: e.target.value })}
+                                                        className={`h-7 text-xs font-bold border-0 bg-transparent p-0 focus:ring-0 ${isPreset ? 'text-slate-700' : 'text-slate-500'}`}
+                                                    />
                                                 </div>
-                                                <div className="relative shrink-0 w-28 sm:w-36">
+
+                                                {/* Amount Display/Input */}
+                                                <div className="relative shrink-0 w-32">
                                                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
                                                     <Input
                                                         type="number"
-                                                        min={0}
-                                                        step={500}
                                                         value={item.monthlyAmount}
+                                                        disabled={isLocked}
                                                         onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: Number(e.target.value) })}
-                                                        className="h-8 text-[11px] sm:text-xs font-mono font-bold text-right pr-9 sm:pr-10 pl-5 sm:pl-6 border-violet-100 focus:border-violet-300 bg-white"
+                                                        className={`h-8 text-[11px] font-mono font-bold text-right pr-9 pl-6 transition-all ${
+                                                            isLocked ? 'bg-indigo-50/50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200'
+                                                        }`}
                                                     />
                                                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">/mo</span>
                                                 </div>
-                                                <button
-                                                    onClick={() => dispatch({ type: 'REMOVE_OVERHEAD_ITEM', id: item.id })}
-                                                    className="text-slate-300 hover:text-red-500 transition-colors shrink-0"
-                                                    title="Exclude from overhead"
+
+                                                {!isPreset && (
+                                                    <button onClick={() => dispatch({ type: 'REMOVE_OVERHEAD_ITEM', id: item.id })} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Specialized Config Panels */}
+                                            {isElectricity && item.meta && (
+                                                <div className="grid grid-cols-3 gap-2 mt-1 pt-2 border-t border-indigo-100/50">
+                                                    <div className="flex items-center gap-2">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={item.meta?.mode === 'per_loom'} 
+                                                            onChange={e => dispatch({
+                                                                type: 'UPDATE_OVERHEAD_ITEM',
+                                                                id: item.id,
+                                                                field: 'isLocked',
+                                                                value: e.target.checked
+                                                            })}
+                                                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-3 w-3"
+                                                        />
+                                                        <span className="text-[9.5px] font-bold text-slate-500">Per Loom Helper</span>
+                                                    </div>
+                                                    {item.isLocked && (
+                                                        <>
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <span className="text-[8px] uppercase font-black text-slate-400">Units/Loom</span>
+                                                                <Input 
+                                                                    type="number" 
+                                                                    value={item.meta?.unitsPerLoomPerMonth ?? 0} 
+                                                                    onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { unitsPerLoomPerMonth: Number(e.target.value), type: 'electricity', mode: 'per_loom' } })}
+                                                                    className="h-6 text-[10px] font-mono font-bold px-1.5"
+                                                                />
+                                                            </div>
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <span className="text-[8px] uppercase font-black text-slate-400">Rate/Unit</span>
+                                                                <Input 
+                                                                    type="number" 
+                                                                    value={item.meta?.ratePerUnit ?? 0} 
+                                                                    onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { ratePerUnit: Number(e.target.value), type: 'electricity', mode: 'per_loom' } })}
+                                                                    className="h-6 text-[10px] font-mono font-bold px-1.5"
+                                                                />
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {isDepreciation && item.meta && (
+                                                <div className="grid grid-cols-2 gap-3 mt-1 pt-2 border-t border-indigo-100/50">
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-[8px] uppercase font-black text-slate-400">Machine Value (avg/loom)</span>
+                                                        <div className="relative">
+                                                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">₹</span>
+                                                            <Input 
+                                                                type="number" 
+                                                                value={item.meta?.avgCostPerLoom ?? 1000000} 
+                                                                onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { avgCostPerLoom: Number(e.target.value), type: 'depreciation' } })}
+                                                                className="h-7 text-[10px] font-mono font-bold pl-4 pr-1.5"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-[8px] uppercase font-black text-slate-400">Lifespan (Years)</span>
+                                                        <Input 
+                                                            type="number" 
+                                                            value={item.meta?.usefulLifeYears ?? 10} 
+                                                            onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM_META', id: item.id, meta: { usefulLifeYears: Number(e.target.value), type: 'depreciation' } })}
+                                                            className="h-7 text-[10px] font-mono font-bold px-2"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        {/* C. Denominator & Summary Block */}
+                        <div className="pt-4 border-t border-slate-100 space-y-4">
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                {/* Monthly Output & Suggestions */}
+                                <div className="flex-1 space-y-3">
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-[10px] uppercase font-black text-slate-500">Monthly Output (Actual/Target)</Label>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                onClick={handleAutoSuggestOutput}
+                                                disabled={isSuggestingOutput}
+                                                className="h-5 px-2 text-[10px] font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                                            >
+                                                {isSuggestingOutput ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                                                Suggest
+                                            </Button>
+                                        </div>
+                                        <div className="relative">
+                                            <Input
+                                                type="number"
+                                                value={state.monthlyOutputM}
+                                                onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: Number(e.target.value) })}
+                                                className="h-10 text-sm font-mono font-bold text-center pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm"
+                                            />
+                                            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">m</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Output Suggestion Panel */}
+                                    {outputSuggestion && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: -10 }} 
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 space-y-2"
+                                        >
+                                            <p className="text-[9.5px] font-bold text-indigo-700 flex items-center gap-1.5">
+                                                <History className="h-3 w-3" /> Historical Output Scaling (to 26 days)
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <button 
+                                                    onClick={() => { dispatch({ type: 'SET', field: 'monthlyOutputM', value: outputSuggestion.avg30Days }); setOutputSuggestion(null); }}
+                                                    className="bg-white border border-indigo-100 rounded-lg p-2 text-left hover:border-indigo-300 transition-all group"
                                                 >
-                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                    <p className="text-[8px] uppercase font-black text-slate-400">Last 30 Days</p>
+                                                    <p className="text-xs font-mono font-bold text-indigo-600 group-hover:text-indigo-700">{outputSuggestion.avg30Days.toLocaleString()}m</p>
+                                                </button>
+                                                <button 
+                                                    onClick={() => { dispatch({ type: 'SET', field: 'monthlyOutputM', value: outputSuggestion.avg90Days }); setOutputSuggestion(null); }}
+                                                    className="bg-white border border-indigo-100 rounded-lg p-2 text-left hover:border-indigo-300 transition-all group"
+                                                >
+                                                    <p className="text-[8px] uppercase font-black text-slate-400">Last 90 Days</p>
+                                                    <p className="text-xs font-mono font-bold text-indigo-600 group-hover:text-indigo-700">{outputSuggestion.avg90Days.toLocaleString()}m</p>
                                                 </button>
                                             </div>
-                                        ))
-                                    }
+                                        </motion.div>
+                                    )}
                                 </div>
-                                <p className="text-[10px] text-violet-400 italic font-medium px-1">
-                                    {t('estimator.overhead.pre_filled_note')}
-                                </p>
-                            </div>
-                        )}
 
-                        {/* Monthly Output Denominator + Summary */}
-                        <div className="pt-4 border-t border-rose-100 space-y-3">
-                            <div className="flex items-end gap-4">
-                                <div className="flex-1 space-y-1.5">
-                                    <div className="flex items-center justify-between">
-                                        <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">{t('estimator.overhead.monthly_output')}</Label>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            onClick={handleAutoSuggestOutput}
-                                            disabled={isSuggestingOutput}
-                                            className="h-5 px-2 text-[10px] font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                                        >
-                                            {isSuggestingOutput ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
-                                            Auto-suggest
-                                        </Button>
+                                {/* Overhead Summary Block */}
+                                <div className="shrink-0 sm:w-48 bg-slate-900 rounded-xl p-4 text-white space-y-4">
+                                    <div className="space-y-0.5">
+                                        <p className="text-[9px] uppercase font-black text-slate-400">Total Monthly Cost</p>
+                                        <p className="text-xl font-black font-mono text-white">₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}</p>
                                     </div>
-                                    <div className="relative">
-                                        <Input
-                                            type="number"
-                                            min={1}
-                                            step={500}
-                                            value={state.monthlyOutputM}
-                                            onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: Number(e.target.value) })}
-                                            className="h-10 text-sm font-mono font-bold text-center pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm"
-                                        />
-                                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">m</span>
+                                    <div className="space-y-1.5 border-t border-white/10 pt-3">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] text-slate-400 font-bold">100% Capacity Cost:</span>
+                                            <span className="text-[9px] font-mono font-bold text-emerald-400">₹{totals.overheadPerMAtCapacity.toFixed(2)}/m</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] text-slate-400 font-bold">Your Actual Cost:</span>
+                                            <span className="text-[10px] font-mono font-black text-rose-400">₹{totals.overheadPerM.toFixed(2)}/m</span>
+                                        </div>
                                     </div>
-                                    <p className="text-[10px] text-slate-400 font-medium">{t('estimator.overhead.output_hint')}</p>
-                                </div>
-                                <div className="shrink-0 text-right pb-7">
-                                    <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">{t('estimator.overhead.total_monthly')}</p>
-                                    <p className="text-lg font-black font-mono text-rose-600 leading-none">
-                                        ₹{totals.overheadTotalMonthly.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                                    </p>
                                 </div>
                             </div>
 
-                            {/* Direct Override Input */}
+                            {/* Validation Banners (Pilot Safety Rails) */}
+                            <div className="space-y-2">
+                                {isZeroConfig && (
+                                    <div className="flex items-center gap-3 rounded-xl border border-rose-100 bg-rose-50/50 p-3">
+                                        <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0" />
+                                        <div>
+                                            <p className="text-[11px] font-black text-rose-700">⚠️ Overhead Configuration Missing</p>
+                                            <p className="text-[9.5px] font-bold text-rose-600/80 leading-tight">All factory overhead presets are currently at ₹0. Your estimates will be significantly inaccurate until you provide your monthly fixed costs.</p>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {hasElectricityLeak && (
+                                    <div className="flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50/50 p-3">
+                                        <Zap className="h-4 w-4 text-amber-500 shrink-0" />
+                                        <div>
+                                            <p className="text-[11px] font-black text-amber-700">⚠️ Electricity Helper Inactive</p>
+                                            <p className="text-[9.5px] font-bold text-amber-600/80 leading-tight">The electricity calculator is enabled but missing units or rate data. Power costs are currently not being recovered.</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {totals.costOfIdleCapacityMonthly > 500 && (
+                                    <div className="flex items-center gap-3 rounded-xl border border-rose-100 bg-rose-50/50 p-3">
+                                        <AlertCircle className="h-4 w-4 text-rose-500 shrink-0" />
+                                        <div>
+                                            <p className="text-[11px] font-black text-rose-700">Cost of Idle Capacity: ₹{totals.costOfIdleCapacityMonthly.toLocaleString('en-IN')}/mo</p>
+                                            <p className="text-[9.5px] font-bold text-rose-600/80 leading-tight">Your factory is running at {totals.capacityUtilisationPct.toFixed(1)}% capacity. You are effectively losing money on unrecovered fixed costs.</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Direct Override Input & Safety Rail */}
                             <div className={`rounded-xl border-2 transition-all ${
                                 state.overheadOverridePerM != null && state.overheadOverridePerM > 0
                                     ? 'border-amber-400 bg-amber-50/60'
@@ -1405,21 +1616,15 @@ export default function EstimatorClient({
                             } px-4 py-3 space-y-2`}>
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-[10px] uppercase tracking-widest font-black text-slate-600">
-                                            {t('estimator.overhead.direct_override_title')}
-                                        </p>
-                                        <p className="text-[10px] text-slate-400 font-medium">
-                                            {state.overheadOverridePerM != null && state.overheadOverridePerM > 0
-                                                ? t('estimator.overhead.override_active_note')
-                                                : t('estimator.overhead.override_bypass_note')}
-                                        </p>
+                                        <p className="text-[10px] uppercase tracking-widest font-black text-slate-600">Direct Overhead Override (₹/m)</p>
+                                        <p className="text-[9.5px] text-slate-400 font-medium">Use this to force a specific overhead rate, e.g. from historical data</p>
                                     </div>
                                     {state.overheadOverridePerM != null && state.overheadOverridePerM > 0 && (
                                         <button
                                             onClick={() => dispatch({ type: 'SET', field: 'overheadOverridePerM', value: null })}
                                             className="text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg px-2 py-1 transition-all"
                                         >
-                                            {t('estimator.overhead.clear')}
+                                            Clear
                                         </button>
                                     )}
                                 </div>
@@ -1438,6 +1643,25 @@ export default function EstimatorClient({
                                         className={`h-10 text-sm font-mono font-bold pl-8 pr-14 transition-all ${
                                             state.overheadOverridePerM != null && state.overheadOverridePerM > 0
                                                 ? 'border-amber-400 bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-300/50'
+                                                : 'border-slate-300 bg-white/50'
+                                        }`}
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">PER METRE</span>
+                                </div>
+
+                                {state.overheadOverridePerM != null && state.overheadOverridePerM < totals.overheadPerM && (
+                                    <div className="flex items-center gap-2 pt-1">
+                                        <AlertTriangle className="h-3 w-3 text-amber-600" />
+                                        <p className="text-[10px] font-bold text-amber-700">
+                                            Safety Alert: Override (₹{state.overheadOverridePerM}) is LOWER than actual computed cost (₹{totals.overheadPerM.toFixed(2)}).
+                                            This order will NOT recover ₹{(totals.overheadPerM - state.overheadOverridePerM).toFixed(2)} in overhead per metre.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
                                                 : 'border-slate-200 bg-white focus:border-slate-300'
                                         }`}
                                     />
