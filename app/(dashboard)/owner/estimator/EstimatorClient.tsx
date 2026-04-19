@@ -304,10 +304,10 @@ function NumField({
                         const val = e.target.value === '' ? null : Number(e.target.value)
                         onChange(val)
                     }}
-                    className="h-9 sm:h-10 text-xs sm:text-sm font-mono font-bold text-center pr-7 sm:pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="h-9 sm:h-10 text-xs sm:text-sm font-mono font-bold text-center pr-12 sm:pr-14 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full"
                 />
                 {unit && (
-                    <span className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 text-[9px] sm:text-[10px] text-slate-400 font-bold pointer-events-none">
+                    <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-[9px] sm:text-[10px] text-slate-400 font-bold pointer-events-none">
                         {unit}
                     </span>
                 )}
@@ -1253,7 +1253,7 @@ export default function EstimatorClient({
                                                         }
                                                     }}
                                                     onBlur={() => setWagePerMInput('')}
-                                                    className="h-11 text-sm font-mono font-bold text-center pl-8 pr-12 bg-white border-amber-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    className="h-11 text-sm font-mono font-bold text-center pl-8 pr-14 bg-white border-amber-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full"
                                                 />
                                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/m</span>
                                             </div>
@@ -1274,7 +1274,7 @@ export default function EstimatorClient({
                                                         dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v })
                                                         setWagePerMInput('')
                                                     }}
-                                                    className="h-11 text-sm font-mono font-bold text-center pr-14 bg-white border-slate-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    className="h-11 text-sm font-mono font-bold text-center pr-16 bg-white border-slate-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full"
                                                 />
                                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/pick</span>
                                             </div>
@@ -1339,7 +1339,7 @@ export default function EstimatorClient({
                             <div className="flex items-center justify-between gap-2 mb-1">
                                 <div className="flex items-center gap-2">
                                     <Zap className="h-3.5 w-3.5 text-brand-accent" />
-                                    <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Factory Capacity Configuration</h4>
+                                    <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider leading-none">Factory Capacity Configuration</h4>
                                 </div>
                                 <Button
                                     variant="ghost"
@@ -1426,7 +1426,7 @@ export default function EstimatorClient({
                                                         value={item.monthlyAmount}
                                                         disabled={isLocked}
                                                         onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: Number(e.target.value) })}
-                                                        className={`h-8 text-[11px] font-mono font-bold text-right pr-9 pl-6 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                                                        className={`h-8 text-[11px] font-mono font-bold text-right pr-9 pl-6 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full ${
                                                             isLocked ? 'bg-indigo-50/50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200'
                                                         }`}
                                                     />
@@ -1668,13 +1668,13 @@ export default function EstimatorClient({
                                             const v = e.target.value
                                             dispatch({ type: 'SET', field: 'overheadOverridePerM', value: v === '' ? null : Number(v) })
                                         }}
-                                        className={`h-10 text-sm font-mono font-bold pl-8 pr-14 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                                        className={`h-10 text-sm font-mono font-bold pl-10 pr-20 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full ${
                                             state.overheadOverridePerM != null && state.overheadOverridePerM > 0
                                                 ? 'border-amber-400 bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-300/50'
                                                 : 'border-slate-300 bg-white/50'
                                         }`}
                                     />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">PER METRE</span>
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">PER METRE</span>
                                 </div>
 
                                 {state.overheadOverridePerM != null && state.overheadOverridePerM < totals.overheadPerM && (
