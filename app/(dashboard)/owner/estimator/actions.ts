@@ -314,6 +314,7 @@ export async function convertQuoteToOrder(data: {
     quality_label:       string
     warp_instruction?:   string
     weft_instruction?:   string
+    notes?:              string
     total_target_meters: number
     deadline:            string
     estimate?:           EstimateState
@@ -365,6 +366,7 @@ export async function convertQuoteToOrder(data: {
             status:               'active',
             // Weaver wage rate snapshot from quote — supervisors see this on shift setup
             worker_rate_per_m:    orderWorkerRatePerM ?? null,
+            notes:                data.notes ?? '',
         })
         .select('id')
         .single()
@@ -383,4 +385,117 @@ export async function convertQuoteToOrder(data: {
     revalidatePath('/owner/orders')
     revalidatePath('/owner/analytics')
     return { success: true, orderId: order?.id }
+}
+
+// ─── Party Rate Memory ────────────────────────────────────────────────────────
+
+/**
+ * Returns the most recent quote for a given party name.
+ * Used to surface "You last quoted X ₹Y/m for Quality Z on Date" in the estimator.
+ * Only fires when partyName is 3+ chars (enforced by the caller).
+ */
+export async function getLastQuoteForParty(partyName: string): Promise<{
+    data?: {
+        quality_label:        string
+        quote_price_per_meter: number
+        landed_cost_per_meter: number
+        created_at:            string
+        order_id:              string | null
+    }
+    error?: string
+}> {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('estimator_quotes')
+        .select('quality_label, quote_price_per_meter, landed_cost_per_meter, created_at, order_id')
+        .eq('org_id', profile.org_id)
+        .ilike('party_name', partyName.trim())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+    if (error) return { error: error.message }
+    if (!data) return {}
+    return { data }
+}
+
+// ─── Monthly Output Suggestion ────────────────────────────────────────────────
+
+/**
+ * Suggests a monthly output value by summing production_logs metres
+ * over the last 30 days, divided by the number of active production days.
+ */
+export async function getMonthlyOutputSuggestion(): Promise<{
+    data?: {
+        last30DaysTotal: number
+        activeDays:      number
+        suggestedMonthly: number
+    }
+    error?: string
+}> {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    const since = thirtyDaysAgo.toISOString().split('T')[0]
+
+    const { data, error } = await supabase
+        .from('production_logs')
+        .select('meters, date')
+        .eq('org_id', profile.org_id)
+        .gte('date', since)
+
+    if (error) return { error: error.message }
+    if (!data || data.length === 0) return { data: { last30DaysTotal: 0, activeDays: 0, suggestedMonthly: 0 } }
+
+    const totalMeters  = data.reduce((s, r) => s + Number(r.meters ?? 0), 0)
+    const uniqueDays   = new Set(data.map(r => r.date)).size
+    // Scale to a full 30-day month
+    const suggestedMonthly = uniqueDays > 0 ? Math.round((totalMeters / uniqueDays) * 30) : 0
+    return { data: { last30DaysTotal: Math.round(totalMeters), activeDays: uniqueDays, suggestedMonthly } }
+}
+
+// ─── Quote History ────────────────────────────────────────────────────────────
+
+export async function getEstimatorQuotes(filters?: { status?: string }) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    let query = supabase
+        .from('estimator_quotes')
+        .select(`
+            *,
+            orders ( id, status, order_number )
+        `)
+        .eq('org_id', profile.org_id)
+        .order('created_at', { ascending: false })
+
+    if (filters?.status) {
+        query = query.eq('status', filters.status)
+    }
+
+    const { data, error } = await query
+    if (error) return { error: error.message }
+    return { data }
+}
+
+export async function updateQuoteStatus(id: string, status: 'draft' | 'sent' | 'accepted' | 'rejected') {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('estimator_quotes')
+        .update({ status })
+        .eq('id', id)
+        .eq('org_id', profile.org_id)
+        .select()
+        .single()
+
+    if (error) return { error: error.message }
+    
+    revalidatePath('/owner/quotes')
+    return { success: true, data }
 }

@@ -39,7 +39,7 @@ export interface WarpRow {
   beamEnds: number      // ends for THIS row only — discrete per component
   yarnRate: number      // ₹/kg market rate for this yarn
   gstPct: number        // GST % on this specific yarn (different materials = different brackets)
-  shortagePct: number   // shortage/wastage % for this component
+  shortagePct: number | null // shortage/wastage % for this component (null = global fallback, 0 = intentional zero)
 }
 
 /** One weft component (fabrics can have multi-pick weft blends) */
@@ -52,7 +52,7 @@ export interface WeftRow {
   calcDenier: number    // effective weft yarn denier
   yarnRate: number      // ₹/kg
   gstPct: number
-  shortagePct: number
+  shortagePct: number | null
 }
 
 /** Which optional cost sections apply to this factory/estimate */
@@ -107,14 +107,18 @@ export interface EstimateState {
 
 /** Warp row after formula has been applied */
 export interface WarpRowResult extends WarpRow {
-  kgPer100m:   number   // raw yarn kg per 100m of fabric
-  costPer100m: number   // ₹ per 100m (GST + shortage inclusive)
+  kgPer100m:        number   // raw yarn kg per 100m of fabric
+  costPer100m:      number   // ₹ per 100m (GST + shortage inclusive)
+  shortagePctUsed:  number   // effective shortage % applied (row-level or global fallback)
+  shortageCostPer100m: number // rupee contribution of shortage for this row
 }
 
 /** Weft row after formula has been applied */
 export interface WeftRowResult extends WeftRow {
-  kgPer100m:   number
-  costPer100m: number
+  kgPer100m:        number
+  costPer100m:      number
+  shortagePctUsed:  number
+  shortageCostPer100m: number
 }
 
 /** Output of calcOrderQuote when order quantity is known */
@@ -130,11 +134,11 @@ export interface OrderQuote {
 export interface EstimatorV3Totals {
   warpRows:                WarpRowResult[]
   weftRows:                WeftRowResult[]
-  warpCostPerM:            number   // includes combined shortage allocation
-  weftCostPerM:            number   // includes combined shortage allocation
-  yarnBaseWarpPerM:        number   // raw warp cost before combined shortage
-  yarnBaseWeftPerM:        number   // raw weft cost before combined shortage
-  yarnShortageCostPerM:    number   // the rupee value added by combined shortage
+  warpCostPerM:            number   // includes per-row shortage
+  weftCostPerM:            number   // includes per-row shortage
+  yarnBaseWarpPerM:        number   // raw warp cost before shortage (GST included)
+  yarnBaseWeftPerM:        number   // raw weft cost before shortage (GST included)
+  yarnShortageCostPerM:    number   // Σ of per-row shortage contributions across all rows
   weaveCostPerM:           number
   warpingAndSizingPerM:    number
   windingPerM:             number
@@ -327,41 +331,48 @@ export function calcOrderQuote(params: {
  * All layers derive from EstimateState; zero server round-trips.
  */
 export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
-  // ── Layer 1: Warp Yarn (base cost — no per-row shortage) ────────────────
-  // costPer100m here = kg × rate × GST only (shortage=0 for individual rows)
-  // Combined shortage is applied below on the warp+weft total.
+  const globalShortage = estimate.yarnShortagePct ?? 0
+
+  // ── Layer 1: Warp Yarn (per-row shortage applied) ───────────────────────
+  // Each row uses its own shortagePct; falls back to the global yarnShortagePct
+  // when the row's value is 0. This handles filament (~1-2%) vs spun (~3-5%)
+  // vs selvedge (higher) correctly.
   const warpRows: WarpRowResult[] = estimate.warpRows.map(r => {
-    const kgPer100m   = calcWarpYarnKg(r.beamEnds, r.calcDenier)
-    const costPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, 0)
-    return { ...r, kgPer100m, costPer100m }
+    const kgPer100m       = calcWarpYarnKg(r.beamEnds, r.calcDenier)
+    const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage
+    const costPer100m     = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, shortagePctUsed)
+    // Shortage contribution = cost with shortage − cost without shortage
+    const baseCostPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, 0)
+    const shortageCostPer100m = costPer100m - baseCostPer100m
+    return { ...r, kgPer100m, costPer100m, shortagePctUsed, shortageCostPer100m }
   })
 
-  // ── Layer 2: Weft Yarn (base cost — no per-row shortage) ────────────────
+  // ── Layer 2: Weft Yarn (per-row shortage applied) ───────────────────────
   const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
-    const kgPer100m   = calcWeftYarnKg(r.picks, r.reedSpace, r.calcDenier)
-    const costPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, 0)
-    return { ...r, kgPer100m, costPer100m }
+    const kgPer100m       = calcWeftYarnKg(r.picks, r.reedSpace, r.calcDenier)
+    const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage
+    const costPer100m     = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, shortagePctUsed)
+    const baseCostPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, 0)
+    const shortageCostPer100m = costPer100m - baseCostPer100m
+    return { ...r, kgPer100m, costPer100m, shortagePctUsed, shortageCostPer100m }
   })
 
   const totalWarpKgPer100m    = warpRows.reduce((s, r) => s + r.kgPer100m, 0)
   const totalWeftKgPer100m    = weftRows.reduce((s, r) => s + r.kgPer100m, 0)
   const totalAllYarnKgPer100m = totalWarpKgPer100m + totalWeftKgPer100m
 
-  // Base yarn costs per metre (pre-shortage)
-  const yarnBaseWarpPerM = warpRows.reduce((s, r) => s + r.costPer100m, 0) / 100
-  const yarnBaseWeftPerM = weftRows.reduce((s, r) => s + r.costPer100m, 0) / 100
-  const yarnBaseTotalPerM = yarnBaseWarpPerM + yarnBaseWeftPerM
+  // Per-row costs already include shortage — sum directly
+  const warpCostPerM = warpRows.reduce((s, r) => s + r.costPer100m, 0) / 100
+  const weftCostPerM = weftRows.reduce((s, r) => s + r.costPer100m, 0) / 100
 
-  // ── Combined Yarn Shortage ───────────────────────────────────────────────
-  // Applied on the combined warp+weft subtotal (matches traditional manual calc).
-  // e.g. 10% shortage on ₹27.00 combined = ₹2.70 added, split pro-rata.
-  const shortageFactor    = (estimate.yarnShortagePct ?? 0) / 100
-  const yarnShortageCostPerM = yarnBaseTotalPerM * shortageFactor
+  // Base costs (pre-shortage) for display
+  const yarnBaseWarpPerM = warpRows.reduce((s, r) => s + calcYarnCost(r.kgPer100m, r.yarnRate, r.gstPct, 0), 0) / 100
+  const yarnBaseWeftPerM = weftRows.reduce((s, r) => s + calcYarnCost(r.kgPer100m, r.yarnRate, r.gstPct, 0), 0) / 100
 
-  // Distribute shortage back to warp/weft proportionally for display
-  const warpShare  = yarnBaseTotalPerM > 0 ? yarnBaseWarpPerM / yarnBaseTotalPerM : 0
-  const warpCostPerM = yarnBaseWarpPerM  + yarnShortageCostPerM * warpShare
-  const weftCostPerM = yarnBaseWeftPerM  + yarnShortageCostPerM * (1 - warpShare)
+  // Total shortage cost across all rows: Σ(per-row shortage contributions)
+  const yarnShortageCostPerM =
+    warpRows.reduce((s, r) => s + r.shortageCostPer100m, 0) / 100 +
+    weftRows.reduce((s, r) => s + r.shortageCostPer100m, 0) / 100
 
   // ── Layer 3: Weave Cost ─────────────────────────────────────────────────
   // Use the total picks from all weft rows (sum of PPI)
@@ -452,7 +463,7 @@ export const DEFAULT_WARP_ROW: Omit<WarpRow, 'id'> = {
   beamEnds:    0,
   yarnRate:    0,
   gstPct:      0,
-  shortagePct: 0,
+  shortagePct: null,
 }
 
 export const DEFAULT_WEFT_ROW: Omit<WeftRow, 'id'> = {
@@ -461,7 +472,7 @@ export const DEFAULT_WEFT_ROW: Omit<WeftRow, 'id'> = {
   calcDenier:  0,
   yarnRate:    0,
   gstPct:      0,
-  shortagePct: 0,
+  shortagePct: null,
 }
 
 export const DEFAULT_FACTORY_SECTIONS: FactorySections = {
@@ -491,7 +502,7 @@ export function makeDefaultEstimateState(): EstimateState {
     windingRatePerKg:   0,
     processingRatePerM: 0,
     finishingRatePerM:  0,
-    yarnShortagePct:    0,  // combined shortage applied to warp+weft total
+    yarnShortagePct:    0,  // default shortage — applied per-row when row's shortagePct is 0
     warpCrimpPct:       5.0, // default 5% take-up
     overheadItems:      DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
     monthlyOutputM:     0,
@@ -503,4 +514,127 @@ export function makeDefaultEstimateState(): EstimateState {
     orderQuantityM:     null,
     enabledSections:    { ...DEFAULT_FACTORY_SECTIONS },
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCENARIO / STRESS TEST ENGINE
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ScenarioResult {
+  id:           string    // unique key for React rendering
+  label:        string    // e.g. "Yarn +10%"
+  description:  string    // short explanation of what changed
+  totalProductionCostPerM: number
+  quotePricePerM:          number | null  // null when no order qty
+  costDelta:               number         // vs baseline production cost
+  costDeltaPct:            number         // % change vs baseline
+  profitDelta:             number | null  // vs baseline profit (null when no order qty)
+}
+
+/**
+ * Run 4 pricing risk scenarios against the current estimate baseline.
+ * All computation is client-side — no server round-trips needed.
+ *
+ * Scenarios:
+ *   1. Yarn +10%       — all warp/weft yarn rates increase 10%
+ *   2. Output -15%     — factory monthly output drops 15% → overhead rises
+ *   3. Break-even      — what margin % gives exactly ₹0 profit
+ *   4. Custom target   — given a specific quote price, what's the resulting margin
+ */
+export function runScenarios(
+  baseline: EstimateState,
+  baselineTotals: EstimatorV3Totals,
+  customTargetPrice?: number
+): ScenarioResult[] {
+  const results: ScenarioResult[] = []
+
+  // ── 1. Yarn +10% ────────────────────────────────────────────────────────
+  const yarnUpState: EstimateState = {
+    ...baseline,
+    warpRows: baseline.warpRows.map(r => ({ ...r, yarnRate: r.yarnRate * 1.10 })),
+    weftRows: baseline.weftRows.map(r => ({ ...r, yarnRate: r.yarnRate * 1.10 })),
+  }
+  const yarnUpTotals = calcFullTotals(yarnUpState)
+  results.push({
+    id:          'yarn-up-10',
+    label:       'Yarn +10%',
+    description: 'All yarn rates increase by 10%',
+    totalProductionCostPerM: yarnUpTotals.totalProductionCostPerM,
+    quotePricePerM: yarnUpTotals.orderQuote?.quotePricePerM ?? null,
+    costDelta:   yarnUpTotals.totalProductionCostPerM - baselineTotals.totalProductionCostPerM,
+    costDeltaPct: baselineTotals.totalProductionCostPerM > 0
+      ? ((yarnUpTotals.totalProductionCostPerM - baselineTotals.totalProductionCostPerM) / baselineTotals.totalProductionCostPerM) * 100
+      : 0,
+    profitDelta: yarnUpTotals.orderQuote && baselineTotals.orderQuote
+      ? yarnUpTotals.orderQuote.grossProfitRupees - baselineTotals.orderQuote.grossProfitRupees
+      : null,
+  })
+
+  // ── 2. Output -15% ──────────────────────────────────────────────────────
+  const outputDownState: EstimateState = {
+    ...baseline,
+    monthlyOutputM: Math.max(1, baseline.monthlyOutputM * 0.85),
+  }
+  const outputDownTotals = calcFullTotals(outputDownState)
+  results.push({
+    id:          'output-down-15',
+    label:       'Output -15%',
+    description: 'Monthly output drops 15% — overhead per metre rises',
+    totalProductionCostPerM: outputDownTotals.totalProductionCostPerM,
+    quotePricePerM: outputDownTotals.orderQuote?.quotePricePerM ?? null,
+    costDelta:   outputDownTotals.totalProductionCostPerM - baselineTotals.totalProductionCostPerM,
+    costDeltaPct: baselineTotals.totalProductionCostPerM > 0
+      ? ((outputDownTotals.totalProductionCostPerM - baselineTotals.totalProductionCostPerM) / baselineTotals.totalProductionCostPerM) * 100
+      : 0,
+    profitDelta: outputDownTotals.orderQuote && baselineTotals.orderQuote
+      ? outputDownTotals.orderQuote.grossProfitRupees - baselineTotals.orderQuote.grossProfitRupees
+      : null,
+  })
+
+  // ── 3. Break-even margin ────────────────────────────────────────────────
+  // Find the margin % where gross profit is exactly ₹0 → quotePricePerM = landedCostPerM
+  // That means profit margin = 0%. The landed cost IS the break-even price.
+  if (baselineTotals.orderQuote) {
+    const breakEvenState: EstimateState = { ...baseline, profitPct: 0 }
+    const breakEvenTotals = calcFullTotals(breakEvenState)
+    results.push({
+      id:          'break-even',
+      label:       'Break-even',
+      description: 'Margin set to 0% — landed cost = quote price',
+      totalProductionCostPerM: breakEvenTotals.totalProductionCostPerM,
+      quotePricePerM: breakEvenTotals.orderQuote?.quotePricePerM ?? null,
+      costDelta:   0, // production cost doesn't change
+      costDeltaPct: 0,
+      profitDelta: baselineTotals.orderQuote
+        ? -baselineTotals.orderQuote.grossProfitRupees
+        : null,
+    })
+  }
+
+  // ── 4. Custom target price ──────────────────────────────────────────────
+  // Owner enters a price the party demanded — what's the resulting margin?
+  if (customTargetPrice != null && customTargetPrice > 0 && baselineTotals.orderQuote) {
+    const landedCost = baselineTotals.orderQuote.landedCostPerM
+    const impliedMarginPct = landedCost > 0
+      ? ((customTargetPrice - landedCost) / landedCost) * 100
+      : 0
+    const orderQty   = baseline.orderQuantityM ?? 0
+    const totalValue = customTargetPrice * orderQty
+    const totalCost  = landedCost * orderQty
+    const grossProfit = totalValue - totalCost
+    results.push({
+      id:          'custom-target',
+      label:       `Target ₹${customTargetPrice.toFixed(2)}/m`,
+      description: `If party forces ₹${customTargetPrice.toFixed(2)}/m — margin = ${impliedMarginPct.toFixed(1)}%`,
+      totalProductionCostPerM: baselineTotals.totalProductionCostPerM,
+      quotePricePerM: customTargetPrice,
+      costDelta:   0,
+      costDeltaPct: 0,
+      profitDelta: baselineTotals.orderQuote
+        ? grossProfit - baselineTotals.orderQuote.grossProfitRupees
+        : null,
+    })
+  }
+
+  return results
 }

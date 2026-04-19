@@ -14,7 +14,7 @@ export const gu = {
     "payroll": "પેરોલ (Payroll)",
     "advances": "એડવાન્સ (Advances)",
     "estimator": "એસ્ટીમેટર (Estimator)",
-
+    "quotes": "કોટ્સ (Quotes)",
     "billing": "બિલિંગ (Billing)",
     "system health": "સિસ્ટમ હેલ્થ",
   },
