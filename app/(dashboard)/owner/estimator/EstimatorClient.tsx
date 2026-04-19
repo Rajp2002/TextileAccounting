@@ -304,7 +304,7 @@ function NumField({
                         const val = e.target.value === '' ? null : Number(e.target.value)
                         onChange(val)
                     }}
-                    className="h-9 sm:h-10 text-xs sm:text-sm font-mono font-bold text-center pr-7 sm:pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300"
+                    className="h-9 sm:h-10 text-xs sm:text-sm font-mono font-bold text-center pr-7 sm:pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 {unit && (
                     <span className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 text-[9px] sm:text-[10px] text-slate-400 font-bold pointer-events-none">
@@ -1253,7 +1253,7 @@ export default function EstimatorClient({
                                                         }
                                                     }}
                                                     onBlur={() => setWagePerMInput('')}
-                                                    className="h-11 text-sm font-mono font-bold text-center pl-8 pr-12 bg-white border-amber-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm"
+                                                    className="h-11 text-sm font-mono font-bold text-center pl-8 pr-12 bg-white border-amber-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 />
                                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/m</span>
                                             </div>
@@ -1274,7 +1274,7 @@ export default function EstimatorClient({
                                                         dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v })
                                                         setWagePerMInput('')
                                                     }}
-                                                    className="h-11 text-sm font-mono font-bold text-center pr-14 bg-white border-slate-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm group-hover:border-slate-300"
+                                                    className="h-11 text-sm font-mono font-bold text-center pr-14 bg-white border-slate-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 />
                                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/pick</span>
                                             </div>
@@ -1426,7 +1426,7 @@ export default function EstimatorClient({
                                                         value={item.monthlyAmount}
                                                         disabled={isLocked}
                                                         onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: Number(e.target.value) })}
-                                                        className={`h-8 text-[11px] font-mono font-bold text-right pr-9 pl-6 transition-all ${
+                                                        className={`h-8 text-[11px] font-mono font-bold text-right pr-9 pl-6 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                                                             isLocked ? 'bg-indigo-50/50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200'
                                                         }`}
                                                     />
@@ -1537,7 +1537,7 @@ export default function EstimatorClient({
                                                 type="number"
                                                 value={state.monthlyOutputM}
                                                 onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: Number(e.target.value) })}
-                                                className="h-10 text-sm font-mono font-bold text-center pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm"
+                                                className="h-10 text-sm font-mono font-bold text-center pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
                                             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">m</span>
                                         </div>
@@ -1575,18 +1575,29 @@ export default function EstimatorClient({
 
                                 {/* Overhead Summary Block */}
                                 <div className="shrink-0 sm:w-48 bg-slate-900 rounded-xl p-4 text-white space-y-4">
-                                    <div className="space-y-0.5">
-                                        <p className="text-[9px] uppercase font-black text-slate-400">Total Monthly Cost</p>
-                                        <p className="text-xl font-black font-mono text-white">₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}</p>
-                                    </div>
-                                    <div className="space-y-1.5 border-t border-white/10 pt-3">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[9px] text-slate-400 font-bold">100% Capacity Cost:</span>
-                                            <span className="text-[9px] font-mono font-bold text-emerald-400">₹{totals.overheadPerMAtCapacity.toFixed(2)}/m</span>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] uppercase font-black text-slate-400 tracking-wider">Total Monthly Cost</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-sm font-bold text-slate-500">₹</span>
+                                            <span className="text-2xl font-black font-mono text-white tracking-tighter">
+                                                {totals.overheadTotalMonthly.toLocaleString('en-IN')}
+                                            </span>
                                         </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-[9px] text-slate-400 font-bold">Your Actual Cost:</span>
-                                            <span className="text-[10px] font-mono font-black text-rose-400">₹{totals.overheadPerM.toFixed(2)}/m</span>
+                                    </div>
+                                    <div className="space-y-2 border-t border-white/5 pt-3">
+                                        <div className="flex justify-between items-baseline">
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">100% Capacity Cost</span>
+                                            <div className="flex items-baseline gap-0.5 text-emerald-400">
+                                                <span className="text-[8px] font-bold">₹</span>
+                                                <span className="text-[10px] font-mono font-bold">{totals.overheadPerMAtCapacity.toFixed(2)}/m</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between items-baseline">
+                                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Your Actual Cost</span>
+                                            <div className="flex items-baseline gap-0.5 text-rose-400">
+                                                <span className="text-[8px] font-bold">₹</span>
+                                                <span className="text-[11px] font-mono font-black">{totals.overheadPerM.toFixed(2)}/m</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1657,7 +1668,7 @@ export default function EstimatorClient({
                                             const v = e.target.value
                                             dispatch({ type: 'SET', field: 'overheadOverridePerM', value: v === '' ? null : Number(v) })
                                         }}
-                                        className={`h-10 text-sm font-mono font-bold pl-8 pr-14 transition-all ${
+                                        className={`h-10 text-sm font-mono font-bold pl-8 pr-14 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                                             state.overheadOverridePerM != null && state.overheadOverridePerM > 0
                                                 ? 'border-amber-400 bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-300/50'
                                                 : 'border-slate-300 bg-white/50'
