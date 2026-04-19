@@ -13,29 +13,31 @@ import {
     Save,
     Package,
     Loader2,
-    Calendar,
     Sparkles,
-    FlaskConical,
     BookmarkPlus,
-    ArrowRight,
     Layers,
     Plus,
     Trash2,
     Gauge,
-    Wind,
     Palette,
     ChevronDown,
     ChevronUp,
     Scissors,
     Coins,
     Banknote,
-    Truck,
     CheckCircle2,
     History,
+    Search,
+    X,
+    AlertTriangle,
+    Zap,
+    FlaskConical,
+    RotateCcw,
 } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import {
     calcFullTotals,
+    runScenarios,
     makeDefaultEstimateState,
     DEFAULT_WARP_ROW,
     DEFAULT_WEFT_ROW,
@@ -46,6 +48,7 @@ import {
     type OverheadItem,
     type FactorySections,
     type EstimatorV3Totals,
+    type ScenarioResult,
 } from '@/lib/estimator'
 import {
     getFactoryCostProfile,
@@ -57,7 +60,11 @@ import {
     deleteTemplate,
     updateTemplateRates,
     renameTemplate,
+    getLastQuoteForParty,
+    getMonthlyOutputSuggestion,
 } from './actions'
+import { useAutosave } from '@/hooks/useAutosave'
+import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { format, addDays } from 'date-fns'
 import {
@@ -84,6 +91,7 @@ type Action =
     | { type: 'ADD_OVERHEAD_ITEM' }
     | { type: 'UPDATE_OVERHEAD_ITEM'; id: string; field: 'label' | 'monthlyAmount'; value: any }
     | { type: 'REMOVE_OVERHEAD_ITEM'; id: string }
+    | { type: 'RESTORE_DRAFT'; draftState: EstimateState }
 
 function estimateReducer(state: EstimateState, action: Action): EstimateState {
     switch (action.type) {
@@ -146,7 +154,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                     beamEnds:    Number(tpl.beam_ends ?? 3200),
                     yarnRate:    Number(tpl.default_yarn_rate ?? 107),
                     gstPct:      5,
-                    shortagePct: 5,
+                    shortagePct: null,
                 }],
                 weftRows: [{
                     id:          nanoid(),
@@ -155,7 +163,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                     calcDenier:  Number(tpl.weft_denier ?? 75),
                     yarnRate:    Number(tpl.default_yarn_rate ?? 107),
                     gstPct:      5,
-                    shortagePct: 3,
+                    shortagePct: null,
                 }],
                 tapeLengthM:      Number(tpl.tape_length_m ?? state.tapeLengthM),
                 warpCrimpPct:     tpl.warp_crimp_pct != null ? Number(tpl.warp_crimp_pct) : state.warpCrimpPct,
@@ -214,6 +222,8 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 ...state,
                 overheadItems: state.overheadItems.filter(item => item.id !== action.id),
             }
+        case 'RESTORE_DRAFT':
+            return action.draftState
         default:
             return state
     }
@@ -252,10 +262,11 @@ function SectionHeader({ title, icon: Icon, accent = 'indigo', badgeContent }: {
 }
 
 function NumField({
-    label, value, onChange, unit, step = 1, min = 0, hint,
+    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning,
 }: {
-    label: string; value: number; onChange: (v: number) => void
-    unit?: string; step?: number; min?: number; hint?: string
+    label: string; value: number | null; onChange: (v: number | null) => void
+    unit?: string; step?: number; min?: number; hint?: string; warning?: string
+    onDismissWarning?: () => void
 }) {
     return (
         <div className="space-y-1.5 min-w-0">
@@ -265,8 +276,11 @@ function NumField({
                     type="number"
                     step={step}
                     min={min}
-                    value={value}
-                    onChange={e => onChange(Number(e.target.value))}
+                    value={value ?? ''}
+                    onChange={e => {
+                        const val = e.target.value === '' ? null : Number(e.target.value)
+                        onChange(val)
+                    }}
                     className="h-9 sm:h-10 text-xs sm:text-sm font-mono font-bold text-center pr-7 sm:pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300"
                 />
                 {unit && (
@@ -275,7 +289,24 @@ function NumField({
                     </span>
                 )}
             </div>
-            {hint && <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight">{hint}</p>}
+            {warning ? (
+                <div className="flex flex-col gap-0.5 mt-1">
+                    <div className="flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
+                        <p className="text-[9.5px] font-bold text-amber-600 truncate">{warning}</p>
+                    </div>
+                    {onDismissWarning && (
+                        <button 
+                            onClick={onDismissWarning}
+                            className="text-[8px] text-slate-400 hover:text-slate-600 underline text-left pl-4"
+                        >
+                            Dismiss
+                        </button>
+                    )}
+                </div>
+            ) : hint ? (
+                <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight mt-1">{hint}</p>
+            ) : null}
         </div>
     )
 }
@@ -395,7 +426,7 @@ export default function EstimatorClient({
     }, []) // Run once — initialProfile is stable
 
     const [state, dispatch] = useReducer(estimateReducer, initialState)
-    const [loading,   setLoading]   = useState(false) // No loading needed — data comes from server
+    const [loading,   setLoading]   = useState(false)
     const [saving,    setSaving]    = useState(false)
     const [converting, setConverting] = useState(false)
     const [savingTemplate, setSavingTemplate] = useState(false)
@@ -410,6 +441,7 @@ export default function EstimatorClient({
     const [weftInstruction, setWeftInstruction] = useState('')
     const [targetMeters,    setTargetMeters]    = useState(1000)
     const [deadline,        setDeadline]        = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
+    const [orderNotes,      setOrderNotes]      = useState('')
 
     const [showSaveTemplate, setShowSaveTemplate] = useState(false)
     const [showConvert,      setShowConvert]      = useState(false)
@@ -422,11 +454,35 @@ export default function EstimatorClient({
     const [editingWeftRates, setEditingWeftRates] = useState<{ id: string; yarnRate: number }[]>([])
     const [savingRates,      setSavingRates]      = useState(false)
     const [deletingTpl,      setDeletingTpl]      = useState<string | null>(null)
+    const [isSuggestingOutput, setIsSuggestingOutput] = useState(false)
+    const [appliedTemplate,   setAppliedTemplate]   = useState<any>(null)
+    const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([])
 
+    // Template search
+    const [templateSearch,   setTemplateSearch]   = useState('')
 
-    // Fallback fetch: only runs if no initial data was server-provided (direct navigation without RSC wrapper)
+    // Scenario panel
+    const [showScenarios,      setShowScenarios]      = useState(false)
+    const [customTargetPrice,  setCustomTargetPrice]  = useState<string>('')
+
+    // Party rate memory — debounced with 800ms + 3-char min
+    const [partyHint, setPartyHint] = useState<{
+        quality_label: string; quote_price_per_meter: number; created_at: string
+    } | null>(null)
+    const partyLookupTimerRef = useState<ReturnType<typeof setTimeout> | null>(null)
+
+    // Autosave — scoped per user (orgId-userId) so multi-user on same device is safe
+    const orgId  = initialProfile?.factory_id ?? ''
+    const userId = typeof window !== 'undefined'
+        ? (() => { try { return localStorage.getItem('loomi-uid') ?? '' } catch { return '' } })()
+        : ''
+    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft } = useAutosave({
+        orgId, userId, debounceMs: 2000,
+    })
+
+    // Fallback fetch: only runs if no initial data was server-provided
     useEffect(() => {
-        if (initialProfile !== undefined) return // Server already gave us data — skip
+        if (initialProfile !== undefined) return
         async function load() {
             setLoading(true)
             const [pRes, tRes, wRes] = await Promise.all([
@@ -458,10 +514,62 @@ export default function EstimatorClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+    // Autosave: persist on every state change (debounced)
+    useEffect(() => {
+        if (!orgId) return
+        saveDraft({ state, partyName, qualityLabel, warpInstruction, weftInstruction })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state, partyName, qualityLabel, warpInstruction, weftInstruction])
+
+    // Party rate memory — debounced 800ms, 3-char minimum
+    useEffect(() => {
+        if (partyLookupTimerRef[0]) clearTimeout(partyLookupTimerRef[0])
+        if (partyName.trim().length < 3) { setPartyHint(null); return }
+        const timer = setTimeout(async () => {
+            const res = await getLastQuoteForParty(partyName.trim())
+            if (res.data) setPartyHint(res.data)
+            else setPartyHint(null)
+        }, 800)
+        partyLookupTimerRef[0] = timer
+        return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [partyName])
+
     const totals: EstimatorV3Totals = useMemo(() => calcFullTotals(state), [state])
+    const scenarios = useMemo(() =>
+        runScenarios(state, totals, customTargetPrice ? Number(customTargetPrice) : undefined),
+    [state, totals, customTargetPrice])
+
+    const filteredTemplates = useMemo(() =>
+        templateSearch.trim()
+            ? templates.filter(t => t.name.toLowerCase().includes(templateSearch.toLowerCase()))
+            : templates,
+    [templates, templateSearch])
+
+    const handleAutoSuggestOutput = async () => {
+        setIsSuggestingOutput(true)
+        try {
+            const res = await getMonthlyOutputSuggestion()
+            if (res.error) {
+                toast.error('Failed to get suggestion')
+            } else if (res.data) {
+                if (res.data.suggestedMonthly > 0) {
+                    dispatch({ type: 'SET', field: 'monthlyOutputM', value: res.data.suggestedMonthly })
+                    toast.success(`Suggested ${res.data.suggestedMonthly.toLocaleString()}m based on last 30 days`)
+                } else {
+                    toast.info('Not enough production data to formulate a suggestion yet.')
+                }
+            }
+        } catch (e) {
+            toast.error('Error fetching suggestion')
+        } finally {
+            setIsSuggestingOutput(false)
+        }
+    }
 
     const applyTemplate = useCallback((tpl: any) => {
         dispatch({ type: 'APPLY_TEMPLATE', template: tpl })
+        setAppliedTemplate(tpl)
         setQualityLabel(tpl.name)
         toast.success(`${t('estimator.toast.applied_template')} ${tpl.name}`)
     }, [t])
@@ -485,6 +593,7 @@ export default function EstimatorClient({
             if (tRes.data) setTemplates(tRes.data)
             setShowSaveTemplate(false)
             setTemplateName('')
+            clearDraft()
             toast.success(t('estimator.toast.saved_template'))
         } else {
             toast.error(res.error ?? 'Failed to save template')
@@ -538,6 +647,7 @@ export default function EstimatorClient({
             type: 'APPLY_TEMPLATE',
             template: { ...editRatesTpl, name: editingTplName.trim(), warp_rows: updatedWarp, weft_rows: updatedWeft }
         })
+        setAppliedTemplate({ ...editRatesTpl, name: editingTplName.trim(), warp_rows: updatedWarp, weft_rows: updatedWeft })
         setQualityLabel(editingTplName.trim())
         setEditRatesTpl(null)
         toast.success(t('estimator.toast.updated_applied'))
@@ -547,6 +657,7 @@ export default function EstimatorClient({
     const handleApplyCurrentRates = () => {
         if (!editRatesTpl) return
         dispatch({ type: 'APPLY_TEMPLATE', template: editRatesTpl })
+        setAppliedTemplate(editRatesTpl)
         setQualityLabel(editRatesTpl.name)
         setEditRatesTpl(null)
         toast.success(`${t('estimator.toast.applied_as_is')} ${editRatesTpl.name}`)
@@ -562,7 +673,7 @@ export default function EstimatorClient({
     }
 
     const handleConvertToOrder = async () => {
-        if (!partyName.trim())   return toast.error(t('estimator.toast.party_required'))
+        if (!partyName.trim())    return toast.error(t('estimator.toast.party_required'))
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         setConverting(true)
         const res = await convertQuoteToOrder({
@@ -570,6 +681,7 @@ export default function EstimatorClient({
             quality_label:       qualityLabel.trim(),
             warp_instruction:    warpInstruction.trim() || undefined,
             weft_instruction:    weftInstruction.trim() || undefined,
+            notes:               orderNotes.trim() || undefined,
             total_target_meters: targetMeters,
             deadline,
             estimate:            state,
@@ -579,6 +691,7 @@ export default function EstimatorClient({
         setConverting(false)
         if (res.success) {
             setShowConvert(false)
+            clearDraft()
             toast.success(t('estimator.toast.converted_success'))
             router.push('/owner/orders')
         } else {
@@ -599,6 +712,37 @@ export default function EstimatorClient({
 
     return (
         <div className="space-y-6 pb-20">
+
+            {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
+            {hasDraft && draft && (
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                        <RotateCcw className="h-4 w-4 text-amber-600 shrink-0" />
+                        <p className="text-sm text-amber-800 flex-1">
+                            <span className="font-bold">Unsaved draft</span> from{' '}
+                            {new Date(draft.savedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                            {draft.partyName && <span className="text-amber-600"> · {draft.partyName}</span>}
+                        </p>
+                        <button
+                            onClick={() => {
+                                const d = restoreDraft()
+                                if (!d) return
+                                dispatch({ type: 'RESTORE_DRAFT', draftState: d.state })
+                                setPartyName(d.partyName)
+                                setQualityLabel(d.qualityLabel)
+                                setWarpInstruction(d.warpInstruction)
+                                setWeftInstruction(d.weftInstruction)
+                                toast.success('Draft restored')
+                            }}
+                            className="text-xs font-bold text-amber-700 hover:text-amber-900 underline underline-offset-2 shrink-0"
+                        >Restore</button>
+                        <button
+                            onClick={dismissDraft}
+                            className="ml-1 text-amber-500 hover:text-amber-700"
+                        ><X className="h-4 w-4" /></button>
+                    </div>
+                </div>
+            )}
 
             {/* ── STICKY HUD ───────────────────────────────────────── */}
             <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-border/50 shadow-sm -mt-6 pt-4 sm:pt-6 pb-3 sm:pb-4 px-4 mx-[-24px] sm:mx-[-32px] md:mx-[-40px]">
@@ -677,6 +821,23 @@ export default function EstimatorClient({
                         </div>
                     )}
 
+                    {/* HUD Row 2b: Contribution Margin Floor (visible when order qty set) */}
+                    {hasOrderQty && (
+                        <div className="flex items-center gap-4 px-1">
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Break-even (full)</span>
+                                <span className="text-[11px] font-black font-mono text-slate-600">₹{totals.totalProductionCostPerM.toFixed(2)}/m</span>
+                            </div>
+                            <span className="text-slate-300">·</span>
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Direct-only floor</span>
+                                <span className="text-[11px] font-black font-mono text-emerald-600" title="Minimum price to cover variable costs only (yarn + weave + warping)">
+                                    ₹{totals.directCostPerM.toFixed(2)}/m
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
                     {/* HUD Row 3: Pills */}
                     <div className="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pt-0.5">
                         <CostPill label="🧶 Warp"           value={totals.warpCostPerM}    type="warp" />
@@ -702,8 +863,34 @@ export default function EstimatorClient({
                             <p className="text-[11px] uppercase tracking-widest text-slate-500 font-bold">{t('estimator.templates.label')}</p>
                             <span className="ml-auto text-[10px] text-slate-400 font-medium">{t('estimator.templates.hint')}</span>
                         </div>
+                        {/* Search — only shown when there are more than 5 templates */}
+                        {templates.length > 5 && (
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    value={templateSearch}
+                                    onChange={e => setTemplateSearch(e.target.value)}
+                                    placeholder={`Search ${templates.length} templates…`}
+                                    className="w-full pl-8 pr-8 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent"
+                                />
+                                {templateSearch && (
+                                    <button
+                                        onClick={() => setTemplateSearch('')}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                )}
+                                {templateSearch && (
+                                    <p className="text-[10px] text-slate-400 mt-1">
+                                        {filteredTemplates.length} of {templates.length} templates
+                                    </p>
+                                )}
+                            </div>
+                        )}
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                            {templates.map(tpl => (
+                            {filteredTemplates.map(tpl => (
                                 <div key={tpl.id} className="relative shrink-0 group flex items-center">
                                     <button
                                         onClick={() => applyTemplate(tpl)}
@@ -740,6 +927,9 @@ export default function EstimatorClient({
                                     </div>
                                 </div>
                             ))}
+                            {filteredTemplates.length === 0 && templateSearch && (
+                                <p className="text-xs text-slate-400 italic py-2">No templates match "{templateSearch}"</p>
+                            )}
                         </div>
                     </div>
                 )}
@@ -757,7 +947,17 @@ export default function EstimatorClient({
                                     placeholder="Sundaram Textiles"
                                     className="font-bold border-slate-200 h-11"
                                 />
+                                {partyHint && (
+                                    <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                                        <span className="text-blue-500">💡</span>
+                                        Last quote:{' '}
+                                        <span className="font-bold text-slate-700">₹{partyHint.quote_price_per_meter.toFixed(2)}/m</span>
+                                        {' '}for <span className="font-medium">{partyHint.quality_label}</span>
+                                        {' '}· {new Date(partyHint.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                    </p>
+                                )}
                             </div>
+
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.quality_label')}</Label>
                                 <Input
@@ -800,6 +1000,38 @@ export default function EstimatorClient({
                         badgeContent={<div className="text-[11px] font-mono font-bold text-indigo-700 bg-white/60 px-2 py-0.5 rounded-md border border-indigo-100">₹{totals.warpCostPerM.toFixed(2)}/m</div>}
                     />
                     <CardContent className="p-5 space-y-4">
+                        {/* Global Defaults Block */}
+                        <div className="flex gap-4 p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl mb-6">
+                            <div className="flex-1 space-y-1">
+                                <Label className="text-[10px] uppercase font-bold text-indigo-700">Warp Crimp (Take-up)</Label>
+                                <div className="flex gap-2 items-center">
+                                    <Input
+                                        type="number"
+                                        value={state.warpCrimpPct}
+                                        onChange={e => dispatch({ type: 'SET', field: 'warpCrimpPct', value: Number(e.target.value) })}
+                                        className="w-20 h-8 font-mono text-xs bg-white"
+                                        step={0.5}
+                                    />
+                                    <span className="text-[10px] font-bold text-slate-500">%</span>
+                                </div>
+                                <p className="text-[9px] text-slate-400 leading-tight">Beam shrink relative to tape length</p>
+                            </div>
+                            <div className="flex-1 space-y-1 border-l border-indigo-100 pl-4">
+                                <Label className="text-[10px] uppercase font-bold text-indigo-700">Default Yarn Waste</Label>
+                                <div className="flex gap-2 items-center">
+                                    <Input
+                                        type="number"
+                                        value={state.yarnShortagePct}
+                                        onChange={e => dispatch({ type: 'SET', field: 'yarnShortagePct', value: Number(e.target.value) })}
+                                        className="w-20 h-8 font-mono text-xs bg-white"
+                                        step={0.5}
+                                    />
+                                    <span className="text-[10px] font-bold text-slate-500">%</span>
+                                </div>
+                                <p className="text-[9px] text-slate-400 leading-tight">Fallback waste % if row is 0%</p>
+                            </div>
+                        </div>
+
                         <div className="space-y-4">
                             {state.warpRows.map((row, i) => (
                                 <RowCard
@@ -814,7 +1046,25 @@ export default function EstimatorClient({
                                 >
                                     <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calcDenier', value: v })} unit="D" step={0.5} />
                                     <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v })} />
-                                    <NumField label={t('estimator.field_labels.rate_kg')} value={row.yarnRate} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: v })} step={1} />
+                                    <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`or ${state.yarnShortagePct}% default`} warning={row.shortagePct !== null && (row.shortagePct > 15 || (row.shortagePct === 0 && state.yarnShortagePct > 15)) ? 'High waste %' : undefined} />
+                                    {(() => {
+                                        const templateRate = appliedTemplate?.warp_rows?.[i]?.yarnRate ?? null
+                                        const isUnusuallyLow = templateRate !== null
+                                            ? row.yarnRate < templateRate * 0.6
+                                            : row.yarnRate > 0 && row.yarnRate < 50
+                                        const warningId = `warp-${row.id}-rate`
+                                        const isDismissed = dismissedWarnings.includes(warningId)
+                                        return (
+                                            <NumField 
+                                                label={t('estimator.field_labels.rate_kg')} 
+                                                value={row.yarnRate} 
+                                                onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: v })} 
+                                                step={1} 
+                                                warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
+                                                onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
+                                            />
+                                        )
+                                    })()}
                                     <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'gstPct', value: v })} step={0.5} />
                                 </RowCard>
                             ))}
@@ -829,7 +1079,6 @@ export default function EstimatorClient({
                         <div className="pt-4 flex items-center justify-between border-t border-slate-100">
                            <div className="flex gap-4 items-start">
                                <div className="w-32"><NumField label={t('estimator.warp.tape_len')} value={state.tapeLengthM} onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v })} unit="m" /></div>
-                               <div className="w-32"><NumField label={t('estimator.warp.crimp_pct')} value={state.warpCrimpPct} onChange={v => dispatch({ type: 'SET', field: 'warpCrimpPct', value: v })} unit="%" step={0.5} hint={t('estimator.warp.crimp_hint')} /></div>
                            </div>
                            <div className="text-right">
                                <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">{t('estimator.warp.beam_capacity')}</p>
@@ -863,7 +1112,24 @@ export default function EstimatorClient({
                                     <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v })} />
                                     <NumField label={t('estimator.field_labels.cloth_width')} value={row.reedSpace} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })} unit="cm" hint={t('estimator.weft.cloth_width_hint')} />
                                     <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v })} unit="D" step={0.5} />
-                                    <NumField label={t('estimator.field_labels.rate_kg')} value={row.yarnRate} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v })} />
+                                    <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`or ${state.yarnShortagePct}% default`} warning={row.shortagePct !== null && (row.shortagePct > 15 || (row.shortagePct === 0 && state.yarnShortagePct > 15)) ? 'High waste %' : undefined} />
+                                    {(() => {
+                                        const templateRate = appliedTemplate?.weft_rows?.[i]?.yarnRate ?? null
+                                        const isUnusuallyLow = templateRate !== null
+                                            ? row.yarnRate < templateRate * 0.6
+                                            : row.yarnRate > 0 && row.yarnRate < 50
+                                        const warningId = `weft-${row.id}-rate`
+                                        const isDismissed = dismissedWarnings.includes(warningId)
+                                        return (
+                                            <NumField 
+                                                label={t('estimator.field_labels.rate_kg')} 
+                                                value={row.yarnRate} 
+                                                onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v })} 
+                                                warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
+                                                onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
+                                            />
+                                        )
+                                    })()}
                                     <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v })} step={0.5} />
                                 </RowCard>
                             ))}
@@ -964,33 +1230,6 @@ export default function EstimatorClient({
                             )
                         })()}
 
-                        {/* Combined Yarn Shortage */}
-                        <div className="pt-1 border-t border-amber-100">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                                <NumField
-                                    label={t('estimator.weave.shortage_title')}
-                                    value={state.yarnShortagePct}
-                                    onChange={v => dispatch({ type: 'SET', field: 'yarnShortagePct', value: v })}
-                                    unit="%"
-                                    step={0.5}
-                                    hint={t('estimator.weave.shortage_hint')}
-                                />
-                                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                                    <div className="flex justify-between text-[11px] text-slate-500 font-medium">
-                                        <span>{t('estimator.weave.base_yarn')}</span>
-                                        <span className="font-mono font-bold text-slate-700">₹{(totals.yarnBaseWarpPerM + totals.yarnBaseWeftPerM).toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[11px] text-amber-600 font-medium">
-                                        <span>+ {state.yarnShortagePct}% {t('estimator.weave.shortage_row')}</span>
-                                        <span className="font-mono font-bold">+₹{totals.yarnShortageCostPerM.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[11px] font-black border-t border-slate-200 pt-1.5 text-slate-800">
-                                        <span>{t('estimator.weave.total_yarn')}</span>
-                                        <span className="font-mono">₹{(totals.warpCostPerM + totals.weftCostPerM).toFixed(2)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </CardContent>
                 </Card>
 
@@ -1124,7 +1363,19 @@ export default function EstimatorClient({
                         <div className="pt-4 border-t border-rose-100 space-y-3">
                             <div className="flex items-end gap-4">
                                 <div className="flex-1 space-y-1.5">
-                                    <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">{t('estimator.overhead.monthly_output')}</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-[10px] uppercase tracking-wider font-black text-slate-500">{t('estimator.overhead.monthly_output')}</Label>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            onClick={handleAutoSuggestOutput}
+                                            disabled={isSuggestingOutput}
+                                            className="h-5 px-2 text-[10px] font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                                        >
+                                            {isSuggestingOutput ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                                            Auto-suggest
+                                        </Button>
+                                    </div>
                                     <div className="relative">
                                         <Input
                                             type="number"
@@ -1263,6 +1514,73 @@ export default function EstimatorClient({
                     </CardContent>
                 </Card>
             </div>
+
+            {/* ── SCENARIO ANALYSIS (STRESS TESTS) ───────────────────────── */}
+            {hasOrderQty && totals.orderQuote && (
+                <div className="max-w-4xl mx-auto space-y-2">
+                    <button
+                        onClick={() => setShowScenarios(!showScenarios)}
+                        className="flex items-center gap-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:border-indigo-200 transition-colors"
+                    >
+                        <Zap className="h-4 w-4 text-indigo-500" />
+                        <span className="text-sm font-bold text-slate-700">Scenario Analysis (Stress Tests)</span>
+                        <Badge variant="outline" className="ml-2 bg-indigo-50 text-indigo-700 border-indigo-200">{scenarios.length} scenarios</Badge>
+                        {showScenarios ? <ChevronUp className="h-4 w-4 text-slate-400 ml-auto" /> : <ChevronDown className="h-4 w-4 text-slate-400 ml-auto" />}
+                    </button>
+                    
+                    {showScenarios && (
+                        <Card className="border-indigo-100 shadow-sm overflow-hidden bg-indigo-50/20">
+                            <CardContent className="p-4 space-y-4">
+                                <div className="space-y-3">
+                                    {scenarios.map(scen => (
+                                        <div key={scen.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white border border-slate-100 rounded-lg shadow-sm gap-2">
+                                            <div className="space-y-0.5">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-bold text-slate-800">{scen.label}</span>
+                                                    {scen.costDeltaPct !== 0 && (
+                                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${scen.costDeltaPct > 0 ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                            {scen.costDeltaPct > 0 ? '+' : ''}{scen.costDeltaPct.toFixed(1)}% cost
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] text-slate-500">{scen.description}</p>
+                                            </div>
+                                            <div className="flex gap-4 sm:text-right shrink-0">
+                                                <div>
+                                                    <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-0.5">Prod Cost</p>
+                                                    <p className="text-sm font-mono font-bold text-slate-700">₹{scen.totalProductionCostPerM.toFixed(2)}/m</p>
+                                                </div>
+                                                {scen.profitDelta !== null && (
+                                                    <div>
+                                                        <p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-0.5">Profit Impact</p>
+                                                        <p className={`text-sm font-mono font-bold ${scen.profitDelta < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                                            {scen.profitDelta > 0 ? '+' : ''}{scen.profitDelta < 0 ? '-' : ''}₹{Math.abs(scen.profitDelta).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex items-center gap-3 pt-3 border-t border-indigo-100">
+                                    <Label className="text-xs font-bold text-indigo-700 whitespace-nowrap">Test Custom Price:</Label>
+                                    <div className="relative flex-1 max-w-[150px]">
+                                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">₹</span>
+                                        <Input 
+                                            type="number"
+                                            value={customTargetPrice}
+                                            onChange={e => setCustomTargetPrice(e.target.value)}
+                                            placeholder="e.g. 21.50"
+                                            className="h-8 pl-6 pr-2 text-xs font-mono font-bold border-indigo-200"
+                                        />
+                                    </div>
+                                    <span className="text-[10px] text-indigo-400">Owner sets price, we show resulting margin</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            )}
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}
 
@@ -1471,6 +1789,20 @@ export default function EstimatorClient({
                                         </div>
                                     )
                                 })()}
+                                {/* Target Beams — Calculated */}
+                                {totals.estimatedBeamCapacityM > 0 && targetMeters > 0 && (
+                                    <div className="flex justify-between items-center border-t border-indigo-100 pt-2 mt-1">
+                                        <span className="text-xs text-indigo-700 font-semibold flex items-center gap-1">
+                                            🎯 Beams Required
+                                        </span>
+                                        <span className="font-mono font-bold text-sm text-indigo-700">
+                                            {Math.ceil(targetMeters / totals.estimatedBeamCapacityM)} beams
+                                            <span className="text-slate-400 font-normal text-[10px] ml-1">
+                                                (≈ {totals.estimatedBeamCapacityM.toFixed(0)}m/beam)
+                                            </span>
+                                        </span>
+                                    </div>
+                                )}
                                 {!totals.orderQuote && (
                                     <p className="text-[11px] text-slate-400 italic">{t('estimator.convert_dialog.set_qty_hint')}</p>
                                 )}
@@ -1494,6 +1826,15 @@ export default function EstimatorClient({
                                 <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.convert_dialog.deadline')}</Label>
                                 <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} />
                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                             <Label className="text-[10px] uppercase font-black text-slate-500">Special Instructions / Notes</Label>
+                             <Textarea
+                                 value={orderNotes}
+                                 onChange={e => setOrderNotes(e.target.value)}
+                                 placeholder="e.g. Needs extra sizing, early delivery for first 2 beams..."
+                                 className="resize-none h-16 text-xs"
+                             />
                         </div>
                         <p className="text-[11px] text-slate-500 text-center px-4 leading-relaxed">
                             {t('estimator.convert_dialog.order_ready_note_prefix')} <span className="text-indigo-600 font-bold">{t('estimator.convert_dialog.order_ready_note_section')}</span> {t('estimator.convert_dialog.order_ready_note_suffix')}
