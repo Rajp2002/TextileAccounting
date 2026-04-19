@@ -469,7 +469,6 @@ export default function EstimatorClient({
     const [editingWeftRates, setEditingWeftRates] = useState<{ id: string; yarnRate: number }[]>([])
     const [savingRates,      setSavingRates]      = useState(false)
     const [deletingTpl,      setDeletingTpl]      = useState<string | null>(null)
-    const [isSuggestingOutput, setIsSuggestingOutput] = useState(false)
     const [appliedTemplate,   setAppliedTemplate]   = useState<any>(null)
     const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([])
 
