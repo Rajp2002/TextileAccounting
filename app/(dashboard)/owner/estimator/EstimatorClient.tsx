@@ -1676,10 +1676,8 @@ export default function EstimatorClient({
                                     <p className="text-[9px] text-slate-400 mt-0.5">{t('estimator.overhead.of_direct_cost')} ₹{totals.directCostPerM.toFixed(2)}/m</p>
                                 </div>
                             </div>
-                        </div>
-
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
 
 
 
