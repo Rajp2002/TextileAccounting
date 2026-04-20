@@ -462,7 +462,7 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
     const baseKg          = calcWeftYarnKg(r.picks, r.reedSpace, r.calcDenier)
     const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage;
-    const totalShortagePct = shortagePctUsed; // Weft usually has 0% crimp, only waste
+    const totalShortagePct = warpCrimpPct + shortagePctUsed; // Weft now carries the full loom-wide shortage burden
 
     // Ensure weft contributes to total winding weight with the same '1.1 multiplier' safety net
     const kgPer100m       = baseKg * (1 + totalShortagePct / 100);
