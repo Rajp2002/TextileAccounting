@@ -436,33 +436,41 @@ export function resolveOverheadItemAmount(
 
 export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const globalShortage = estimate.yarnShortagePct ?? 0
-  // Warp crimp (take-up): for every 1m of finished cloth, the loom consumes
-  // (1 + crimpPct/100) metres of warp yarn. E.g. 6% crimp → 1.06x yarn used.
-  // This is independent of waste — waste is loss, crimp is geometric consumption.
-  const warpCrimpMultiplier = 1 + (estimate.warpCrimpPct || 0) / 100
+  const warpCrimpPct = estimate.warpCrimpPct || 0;
 
-  // ── Layer 1: Warp Yarn (per-row shortage + crimp applied) ──────────────
-  // Each row uses its own shortagePct; falls back to the global yarnShortagePct
-  // when the row's value is null. This handles filament (~1-2%) vs spun (~3-5%)
-  // vs selvedge (higher) correctly.
-  // kgPer100m is scaled by warpCrimpMultiplier because more yarn length is consumed.
+  // ── Layer 1: Warp Yarn (Additive shortage applied) ──────────────
+  // Each row uses its own shortagePct; falls back to the global yarnShortagePct.
+  // We use additive logic: Total Shortage = Crimp % + Waste %.
+  // The cost directly multiples base kg * total shortage.
   const warpRows: WarpRowResult[] = estimate.warpRows.map(r => {
-    const kgPer100m       = calcWarpYarnKg(r.beamEnds, r.calcDenier) * warpCrimpMultiplier
-    const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage
-    const costPer100m     = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, shortagePctUsed)
-    // Shortage contribution = cost with shortage − cost without shortage
-    const baseCostPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, 0)
-    const shortageCostPer100m = costPer100m - baseCostPer100m
+    const baseKg          = calcWarpYarnKg(r.beamEnds, r.calcDenier);
+    const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage;
+    const totalShortagePct = warpCrimpPct + shortagePctUsed;
+    
+    // To match Surat manual paper calculations exactly (where a '1.1 multiplier' applies equally to sizing cost)
+    // Both crimp and waste contribute to the gross weight sent to Sizing and Warping.
+    const kgPer100m       = baseKg * (1 + totalShortagePct / 100);
+
+    const costPer100m     = calcYarnCost(baseKg, r.yarnRate, r.gstPct, totalShortagePct);
+    const baseCostPer100m = calcYarnCost(baseKg, r.yarnRate, r.gstPct, 0);
+    const shortageCostPer100m = costPer100m - baseCostPer100m;
+    
     return { ...r, kgPer100m, costPer100m, shortagePctUsed, shortageCostPer100m }
   })
 
-  // ── Layer 2: Weft Yarn (per-row shortage applied) ───────────────────────
+  // ── Layer 2: Weft Yarn (Additive shortage applied) ───────────────────────
   const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
-    const kgPer100m       = calcWeftYarnKg(r.picks, r.reedSpace, r.calcDenier)
-    const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage
-    const costPer100m     = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, shortagePctUsed)
-    const baseCostPer100m = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, 0)
-    const shortageCostPer100m = costPer100m - baseCostPer100m
+    const baseKg          = calcWeftYarnKg(r.picks, r.reedSpace, r.calcDenier)
+    const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage;
+    const totalShortagePct = shortagePctUsed; // Weft usually has 0% crimp, only waste
+
+    // Ensure weft contributes to total winding weight with the same '1.1 multiplier' safety net
+    const kgPer100m       = baseKg * (1 + totalShortagePct / 100);
+
+    const costPer100m     = calcYarnCost(baseKg, r.yarnRate, r.gstPct, totalShortagePct);
+    const baseCostPer100m = calcYarnCost(baseKg, r.yarnRate, r.gstPct, 0);
+    const shortageCostPer100m = costPer100m - baseCostPer100m;
+    
     return { ...r, kgPer100m, costPer100m, shortagePctUsed, shortageCostPer100m }
   })
 

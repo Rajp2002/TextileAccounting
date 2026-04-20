@@ -118,7 +118,8 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 monthlyOutputM:     Number(profile.monthly_output_m ?? 10000),
                 overheadOverridePerM: profile.overhead_override_per_m != null ? Number(profile.overhead_override_per_m) : null,
                 overheadPct:        0,
-                yarnShortagePct:    Number(profile.yarn_shortage_pct ?? 10),
+                yarnShortagePct:    profile.yarn_shortage_pct != null ? Number(profile.yarn_shortage_pct) : state.yarnShortagePct,
+                warpCrimpPct:       profile.warp_crimp_pct != null ? Number(profile.warp_crimp_pct) : state.warpCrimpPct,
                 commissionPct:      Number(profile.default_commission_pct  ?? 2),
                 transportPerM:      Number(profile.default_transport_per_m ?? 0),
                 enabledSections:    { ...sections },
@@ -434,6 +435,8 @@ export default function EstimatorClient({
             loomCount:         Number(initialProfile.loom_count           ?? base.loomCount),
             monthlyWorkingDays: Number(initialProfile.monthly_working_days ?? base.monthlyWorkingDays),
             avgOutputPerLoomPerDay: Number(initialProfile.avg_output_per_loom_per_day ?? base.avgOutputPerLoomPerDay),
+            yarnShortagePct:   initialProfile.yarn_shortage_pct != null ? Number(initialProfile.yarn_shortage_pct) : base.yarnShortagePct,
+            warpCrimpPct:      initialProfile.warp_crimp_pct != null ? Number(initialProfile.warp_crimp_pct) : base.warpCrimpPct,
         }
         // Apply overhead items from profile if saved, otherwise merge fixed workers
         if (Array.isArray(initialProfile.overhead_items) && initialProfile.overhead_items.length > 0) {
@@ -617,6 +620,8 @@ export default function EstimatorClient({
                 loom_count:              state.loomCount,
                 monthly_working_days:    state.monthlyWorkingDays,
                 avg_output_per_loom_per_day: state.avgOutputPerLoomPerDay,
+                yarn_shortage_pct:       state.yarnShortagePct,
+                warp_crimp_pct:          state.warpCrimpPct,
             })
 
             if (res.success) {
@@ -1069,34 +1074,46 @@ export default function EstimatorClient({
                     />
                     <CardContent className="p-5 space-y-4">
                         {/* Global Defaults Block */}
-                        <div className="flex gap-4 p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl mb-6">
-                            <div className="flex-1 space-y-1">
-                                <Label className="text-[10px] uppercase font-bold text-indigo-700">Warp Crimp (Take-up)</Label>
-                                <div className="flex gap-2 items-center">
-                                    <Input
-                                        type="number"
-                                        value={state.warpCrimpPct}
-                                        onChange={e => dispatch({ type: 'SET', field: 'warpCrimpPct', value: Number(e.target.value) })}
-                                        className="w-20 h-8 font-mono text-xs bg-white"
-                                        step={0.5}
-                                    />
-                                    <span className="text-[10px] font-bold text-slate-500">%</span>
+                        <div className="border border-indigo-100 rounded-xl mb-6 bg-indigo-50/30 overflow-hidden">
+                            <div className="flex gap-4 p-3 border-b border-indigo-100/50">
+                                <div className="flex-1 space-y-1">
+                                    <Label className="text-[10px] uppercase font-bold text-indigo-700">Warp Crimp (Take-up)</Label>
+                                    <div className="flex gap-2 items-center">
+                                        <Input
+                                            type="number"
+                                            value={state.warpCrimpPct}
+                                            onChange={e => dispatch({ type: 'SET', field: 'warpCrimpPct', value: Number(e.target.value) })}
+                                            className="w-20 h-8 font-mono text-xs bg-white"
+                                            step={0.5}
+                                        />
+                                        <span className="text-[10px] font-bold text-slate-500">%</span>
+                                    </div>
+                                    <p className="text-[9px] text-slate-400 leading-tight">Beam shrink relative to tape length</p>
                                 </div>
-                                <p className="text-[9px] text-slate-400 leading-tight">Beam shrink relative to tape length</p>
+                                <div className="flex-1 space-y-1 border-l border-indigo-100 pl-4">
+                                    <Label className="text-[10px] uppercase font-bold text-indigo-700">Default Yarn Waste</Label>
+                                    <div className="flex gap-2 items-center">
+                                        <Input
+                                            type="number"
+                                            value={state.yarnShortagePct}
+                                            onChange={e => dispatch({ type: 'SET', field: 'yarnShortagePct', value: Number(e.target.value) })}
+                                            className="w-20 h-8 font-mono text-xs bg-white"
+                                            step={0.5}
+                                        />
+                                        <span className="text-[10px] font-bold text-slate-500">%</span>
+                                    </div>
+                                    <p className="text-[9px] text-slate-400 leading-tight">Fallback waste % if row is 0%</p>
+                                </div>
                             </div>
-                            <div className="flex-1 space-y-1 border-l border-indigo-100 pl-4">
-                                <Label className="text-[10px] uppercase font-bold text-indigo-700">Default Yarn Waste</Label>
-                                <div className="flex gap-2 items-center">
-                                    <Input
-                                        type="number"
-                                        value={state.yarnShortagePct}
-                                        onChange={e => dispatch({ type: 'SET', field: 'yarnShortagePct', value: Number(e.target.value) })}
-                                        className="w-20 h-8 font-mono text-xs bg-white"
-                                        step={0.5}
-                                    />
-                                    <span className="text-[10px] font-bold text-slate-500">%</span>
+                            <div className="bg-indigo-50/80 px-4 py-2 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                    <Calculator className="h-3.5 w-3.5 text-indigo-500" />
+                                    <span className="text-[10px] font-bold text-indigo-800 uppercase tracking-wider">Effective Total Shortage</span>
                                 </div>
-                                <p className="text-[9px] text-slate-400 leading-tight">Fallback waste % if row is 0%</p>
+                                <span className="text-[11px] font-mono font-black text-indigo-700 flex items-center gap-2">
+                                    <span>{state.warpCrimpPct || 0}% + {state.yarnShortagePct || 0}% =</span>
+                                    <span className="text-sm bg-white px-2 py-0.5 rounded border border-indigo-200">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}%</span>
+                                </span>
                             </div>
                         </div>
 

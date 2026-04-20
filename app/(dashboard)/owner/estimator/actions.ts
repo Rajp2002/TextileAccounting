@@ -93,6 +93,8 @@ export async function upsertFactoryCostProfile(data: {
     loom_count?:             number
     monthly_working_days?:   number
     avg_output_per_loom_per_day?: number
+    yarn_shortage_pct?:      number
+    warp_crimp_pct?:         number
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -157,8 +159,8 @@ export async function saveAsFabricTemplate(data: {
             weft_rows:           data.weftRows,
             per_pick_cost_paise: data.perPickCostPaisa,
             tape_length_m:       data.tapeLengthM,
-            warp_crimp_pct:      data.warpCrimpPct ?? 5.0,
-            yarn_shortage_pct:   data.yarnShortagePct ?? 10,
+            warp_crimp_pct:      data.warpCrimpPct ?? 0,
+            yarn_shortage_pct:   data.yarnShortagePct ?? 0,
             overhead_override_per_m: data.overheadOverridePerM ?? null,
             // Legacy display fields — cast to integer to satisfy old column types
             yarn_denier:         Math.round(firstWarp?.calcDenier ?? 75),
@@ -278,7 +280,7 @@ export async function saveEstimatorQuoteV3(params: {
             weft_rows:            estimate.weftRows,
             per_pick_cost_paise:  estimate.perPickCostPaisa,
             tape_length_m:        estimate.tapeLengthM,
-            warp_crimp_pct:       estimate.warpCrimpPct ?? 5.0,
+            warp_crimp_pct:       estimate.warpCrimpPct ?? 0,
             warping_rate_per_kg:  estimate.warpingRatePerKg,
             sizing_rate_per_kg:   estimate.sizingRatePerKg,
             winding_rate_per_kg:  estimate.windingRatePerKg,
