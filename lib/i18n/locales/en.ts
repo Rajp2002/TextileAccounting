@@ -626,7 +626,7 @@ export const en = {
       title: "Warp Yarn Composition",
       layer: "Warp Layer",
       add_blend: "Add Blend Component",
-      tape_len: "Tape Len",
+      tape_len: "Tape Length",
       beam_capacity: "Beam Capacity",
       crimp_pct: "Warp Crimp %",
       crimp_hint: "% taken up during weave"
