@@ -1236,6 +1236,23 @@ export default function EstimatorClient({
                         badgeContent={<div className="text-[11px] font-mono font-bold text-emerald-700 bg-white/60 px-2 py-0.5 rounded-md border border-emerald-100">₹{totals.weftCostPerM.toFixed(2)}/m</div>}
                     />
                     <CardContent className="p-5 space-y-4">
+                        {/* Global Defaults Sync Readout */}
+                        <div className="border border-emerald-100 rounded-xl mb-6 bg-emerald-50/30 overflow-hidden">
+                            <div className="bg-emerald-50/80 px-4 py-2 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                    <Calculator className="h-3.5 w-3.5 text-emerald-500" />
+                                    <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Effective Total Shortage</span>
+                                </div>
+                                <span className="text-[11px] font-mono font-black text-emerald-700 flex items-center gap-2">
+                                    <span>{state.warpCrimpPct || 0}% + {state.yarnShortagePct || 0}% =</span>
+                                    <span className="text-sm bg-white px-2 py-0.5 rounded border border-emerald-200">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}%</span>
+                                </span>
+                            </div>
+                            <div className="px-4 py-1.5 bg-white/50 border-t border-emerald-100/50">
+                                <p className="text-[9px] text-slate-400 font-medium leading-tight italic">Synced with Warp Crimp to ensure loom-wide shortage parity</p>
+                            </div>
+                        </div>
+
                         <div className="space-y-4">
                             {state.weftRows.map((row, i) => (
                                 <RowCard
