@@ -6,7 +6,8 @@
  * only math engine in this file.
  *
  * COST STACK (per metre of finished fabric):
- *   Layer 1: Warp yarn     = Σ (beamEnds × calcDenier × rate × GST × shortage)
+ *   Layer 1: Warp yarn     = Σ (beamEnds × calcDenier × (1 + warpCrimpPct/100) × rate × GST × shortage)
+ *             ↑ warpCrimpPct accounts for yarn take-up: 6% crimp → 1.06m yarn per 1m cloth
  *   Layer 2: Weft yarn     = Σ (picks × reedSpace × calcDenier × rate × GST × shortage)
  *   Layer 3: Weave cost    = picks(PPI) × perPickCostPaisa
  *   Layer 4: Warping+Sizing= totalWarpKg × (warpingRate + sizingRate) / 100
@@ -435,13 +436,18 @@ export function resolveOverheadItemAmount(
 
 export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const globalShortage = estimate.yarnShortagePct ?? 0
+  // Warp crimp (take-up): for every 1m of finished cloth, the loom consumes
+  // (1 + crimpPct/100) metres of warp yarn. E.g. 6% crimp → 1.06x yarn used.
+  // This is independent of waste — waste is loss, crimp is geometric consumption.
+  const warpCrimpMultiplier = 1 + (estimate.warpCrimpPct || 0) / 100
 
-  // ── Layer 1: Warp Yarn (per-row shortage applied) ───────────────────────
+  // ── Layer 1: Warp Yarn (per-row shortage + crimp applied) ──────────────
   // Each row uses its own shortagePct; falls back to the global yarnShortagePct
-  // when the row's value is 0. This handles filament (~1-2%) vs spun (~3-5%)
+  // when the row's value is null. This handles filament (~1-2%) vs spun (~3-5%)
   // vs selvedge (higher) correctly.
+  // kgPer100m is scaled by warpCrimpMultiplier because more yarn length is consumed.
   const warpRows: WarpRowResult[] = estimate.warpRows.map(r => {
-    const kgPer100m       = calcWarpYarnKg(r.beamEnds, r.calcDenier)
+    const kgPer100m       = calcWarpYarnKg(r.beamEnds, r.calcDenier) * warpCrimpMultiplier
     const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage
     const costPer100m     = calcYarnCost(kgPer100m, r.yarnRate, r.gstPct, shortagePctUsed)
     // Shortage contribution = cost with shortage − cost without shortage

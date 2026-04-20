@@ -1144,15 +1144,69 @@ export default function EstimatorClient({
                         >
                             <Plus className="h-4 w-4" /> {t('estimator.warp.add_blend')}
                         </Button>
-                        <div className="pt-4 flex items-center justify-between border-t border-slate-100">
-                           <div className="flex gap-4 items-start">
-                               <div className="w-32"><NumField label={t('estimator.warp.tape_len')} value={state.tapeLengthM} onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v ?? 0 })} unit="m" /></div>
-                           </div>
-                           <div className="text-right">
-                               <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">{t('estimator.warp.beam_capacity')}</p>
-                               <p className="text-lg font-black font-mono text-indigo-600 leading-none">≈ {totals.estimatedBeamCapacityM.toFixed(0)} m</p>
-                           </div>
-                        </div>
+                        {/* Tape Length + Beam Capacity + Beams Needed */}
+                        {(() => {
+                            const beamM = totals.estimatedBeamCapacityM
+                            const orderQty = state.orderQuantityM ?? (targetMeters > 0 ? targetMeters : null)
+                            const beamsNeeded = (beamM > 0 && orderQty && orderQty > 0)
+                                ? Math.ceil(orderQty / beamM)
+                                : null
+                            return (
+                                <div className="pt-4 border-t border-slate-100 space-y-3">
+                                    {/* Row 1: Tape Length input + Cloth/Beam display */}
+                                    <div className="flex items-end justify-between gap-4">
+                                        <div className="w-40">
+                                            <NumField
+                                                label={t('estimator.warp.tape_len')}
+                                                value={state.tapeLengthM}
+                                                onChange={v => dispatch({ type: 'SET', field: 'tapeLengthM', value: v ?? 0 })}
+                                                unit="m"
+                                            />
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">{t('estimator.warp.beam_capacity')}</p>
+                                            <p className="text-lg font-black font-mono text-indigo-600 leading-none">
+                                                {beamM > 0 ? `≈ ${beamM.toFixed(0)} m` : '— m'}
+                                            </p>
+                                            <p className="text-[9px] text-slate-400 mt-0.5">cloth per beam</p>
+                                        </div>
+                                    </div>
+                                    {/* Row 2: Beams Needed pill (only when tape length is set) */}
+                                    {beamM > 0 && (
+                                        <div className="flex items-center justify-between gap-3 bg-indigo-50/60 border border-indigo-100 rounded-xl px-4 py-2.5">
+                                            <div className="flex items-center gap-2">
+                                                <Layers className="h-4 w-4 text-indigo-500 shrink-0" />
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-black text-indigo-600 tracking-wider">Beams Needed</p>
+                                                    {beamsNeeded !== null ? (
+                                                        <p className="text-[9px] text-slate-500 font-medium">
+                                                            for {(orderQty!).toLocaleString('en-IN')} m order
+                                                            {state.orderQuantityM ? '' : ' (from simulation qty)'}
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-[9px] text-slate-400 font-medium">
+                                                            set an order qty to see count
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                                {beamsNeeded !== null ? (
+                                                    <>
+                                                        <p className="text-2xl font-black font-mono text-indigo-700 leading-none">{beamsNeeded}</p>
+                                                        <p className="text-[9px] text-slate-500 font-bold mt-0.5">
+                                                            beams × {beamM.toFixed(0)} m
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <p className="text-xl font-black font-mono text-slate-300 leading-none">—</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })()}
                     </CardContent>
                 </Card>
 
