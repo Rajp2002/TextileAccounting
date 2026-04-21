@@ -106,6 +106,7 @@ type Action =
     | { type: 'UPDATE_OVERHEAD_ITEM_META'; id: string; meta: any }
     | { type: 'REMOVE_OVERHEAD_ITEM'; id: string }
     | { type: 'RESTORE_DRAFT'; draftState: EstimateState }
+    | { type: 'RESET'; data: { profile: any; sections: FactorySections; workers: any[] } }
 
 function estimateReducer(state: EstimateState, action: Action): EstimateState {
     switch (action.type) {
@@ -253,6 +254,46 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 ...state,
                 overheadItems: state.overheadItems.filter(item => item.id !== action.id),
             }
+        case 'RESET': {
+            const { profile, sections, workers } = action.data
+            const base = makeDefaultEstimateState()
+            
+            // Create the profile-synced default state (same logic as initialState useMemo)
+            let next = {
+                ...base,
+                warpingRatePerKg:  Number(profile.warping_rate_per_kg  ?? base.warpingRatePerKg),
+                sizingRatePerKg:   Number(profile.sizing_rate_per_kg   ?? base.sizingRatePerKg),
+                windingRatePerKg:  Number(profile.winding_rate_per_kg  ?? base.windingRatePerKg),
+                overheadPct:       Number(profile.overhead_pct         ?? base.overheadPct),
+                commissionPct:     Number(profile.default_commission_pct ?? base.commissionPct),
+                transportPerM:     Number(profile.default_transport_per_m ?? base.transportPerM),
+                enabledSections:   sections,
+                monthlyOutputM:    Number(profile.monthly_output_m     ?? base.monthlyOutputM),
+                overheadOverridePerM: profile.overhead_override_per_m != null ? Number(profile.overhead_override_per_m) : base.overheadOverridePerM,
+                loomCount:         Number(profile.loom_count           ?? base.loomCount),
+                monthlyWorkingDays: Number(profile.monthly_working_days ?? base.monthlyWorkingDays),
+                avgOutputPerLoomPerDay: Number(profile.avg_output_per_loom_per_day ?? base.avgOutputPerLoomPerDay),
+                yarnShortagePct:   profile.yarn_shortage_pct != null ? Number(profile.yarn_shortage_pct) : base.yarnShortagePct,
+                warpCrimpPct:      profile.warp_crimp_pct != null ? Number(profile.warp_crimp_pct) : base.warpCrimpPct,
+            }
+
+            if (Array.isArray(profile.overhead_items) && profile.overhead_items.length > 0) {
+                next = { ...next, overheadItems: ensureOverheadIntegrity(profile.overhead_items) }
+            } else if (workers && workers.length > 0) {
+                const fixedItems = workers.map((w: any) => ({
+                    id:            `fw-${w.id}`,
+                    label:         `${w.name} (${w.role})`,
+                    monthlyAmount: Number(w.monthly_salary),
+                    source:        'fixed_worker_derived' as const,
+                    workerId:      w.id,
+                    category:      'custom' as const,
+                    isPreset:      false,
+                    isLocked:      false,
+                }))
+                next = { ...next, overheadItems: ensureOverheadIntegrity(fixedItems) }
+            }
+            return next
+        }
         case 'RESTORE_DRAFT':
             return action.draftState
         default:
@@ -696,6 +737,26 @@ export default function EstimatorClient({
         }
     }
 
+    const handleResetEstimator = () => {
+        if (window.confirm('Reset estimator to standard profile defaults? All unsaved changes will be lost.')) {
+            dispatch({ 
+                type: 'RESET', 
+                data: { 
+                    profile: initialProfile, 
+                    sections: initialProfile?.enabled_sections ?? DEFAULT_FACTORY_SECTIONS,
+                    workers: initialWorkers || []
+                } 
+            })
+            setAppliedTemplate(null)
+            setQualityLabel('')
+            setPartyName('')
+            setTargetMeters(0)
+            setCustomTargetPrice('')
+            clearDraft()
+            toast.success('Estimator reset to profile defaults')
+        }
+    }
+
     /** Open the "update rates" sheet for a template. */
     const openEditRates = useCallback((tpl: any) => {
         const warpRows: WarpRow[] = tpl.warp_rows ?? []
@@ -930,6 +991,15 @@ export default function EstimatorClient({
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setAppliedTemplate(null)}
+                                        className="h-9 px-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors ml-1"
+                                        title="Detach template (Switch back to 'Save as New')"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
                                 </div>
                             ) : (
                                 <Button
@@ -1039,6 +1109,15 @@ export default function EstimatorClient({
                             </div>
                         )}
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                             <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleResetEstimator}
+                                className="shrink-0 rounded-xl px-3 h-[38px] border-dashed border-slate-300 text-slate-400 hover:text-brand-accent hover:border-brand-accent hover:bg-brand-accent/5 transition-all gap-1.5 font-bold"
+                             >
+                                <RotateCcw className="h-3.5 w-3.5" />
+                                {t('estimator.templates.reset_btn') || 'Reset'}
+                             </Button>
                             {filteredTemplates.map(tpl => (
                                 <div key={tpl.id} className="relative shrink-0 group flex items-center">
                                     <button
