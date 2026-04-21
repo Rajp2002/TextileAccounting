@@ -25,7 +25,9 @@ import {
 } from "@/components/ui/select"
 import { Button } from '@/components/ui/button'
 import { getAuditSummary } from '@/lib/audit-summaries'
-import { Info } from 'lucide-react'
+import { Info, History, ArrowRight } from 'lucide-react'
+import AuditActivityItem from './AuditActivityItem'
+import { cn } from '@/lib/utils'
 
 const PAGE_SIZE = 20
 
@@ -244,22 +246,22 @@ export default function AuditTable() {
     return (
         <div className="space-y-4">
             {/* ── Filters ── */}
-            <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm mb-6">
-                <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-col gap-4 p-5 bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.05)] mb-8 top-4 z-20 sticky">
+                <div className="flex flex-wrap items-center gap-6">
                     {/* ── Search Input ── */}
-                    <div className="flex-1 min-w-[280px] relative group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+                    <div className="flex-1 min-w-[300px] relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-primary transition-all" />
                         <input
                             type="text"
-                            placeholder="Search by ID or Name (Worker, Order, User)..."
+                            placeholder="Search by ID, Name, or Action..."
                             value={searchTerm}
                             onChange={(e) => { setSearchTerm(e.target.value); setPage(0) }}
-                            className="w-full h-9 pl-9 pr-4 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                            className="w-full h-11 pl-11 pr-4 rounded-2xl border border-gray-100 bg-white/50 text-sm focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 transition-all font-medium"
                         />
                         {searchTerm && (
                             <button
                                 onClick={() => { setSearchTerm(''); setPage(0) }}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-rose-500 transition-colors"
                             >
                                 <X className="h-4 w-4" />
                             </button>
@@ -267,21 +269,25 @@ export default function AuditTable() {
                     </div>
 
                     {/* ── Actor Filter ── */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-1.5 px-1">
                             <Users className="h-3 w-3" /> Actor
                         </span>
                         <Select value={actorId} onValueChange={(val) => { setActorId(val); setPage(0) }}>
-                            <SelectTrigger className="w-[160px] h-9 text-sm bg-white rounded-lg shadow-sm">
+                            <SelectTrigger className="w-[180px] h-11 text-sm bg-white/80 rounded-2xl border-white shadow-sm hover:shadow-md transition-all">
                                 <SelectValue placeholder="All Users" />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Users</SelectItem>
-                                {actors?.map((actor: { id: string; full_name: string; role: string }) => (
+                            <SelectContent className="rounded-2xl border-white/50 shadow-2xl backdrop-blur-lg">
+                                <SelectItem value="all">
+                                   <div className="flex items-center gap-2 font-bold text-gray-400">
+                                      <Users className="h-3.5 w-3.5" /> All Users
+                                   </div>
+                                </SelectItem>
+                                {actors?.map((actor: any) => (
                                     <SelectItem key={actor.id} value={actor.id}>
-                                        <div className="flex flex-col">
-                                            <span className="font-medium text-xs">{actor.full_name}</span>
-                                            <span className="text-[10px] text-gray-400 capitalize">{actor.role}</span>
+                                        <div className="flex flex-col py-0.5">
+                                            <span className="font-bold text-[13px]">{actor.full_name}</span>
+                                            <span className="text-[10px] text-gray-400 uppercase font-black tracking-tight">{actor.role}</span>
                                         </div>
                                     </SelectItem>
                                 ))}
@@ -293,35 +299,35 @@ export default function AuditTable() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 text-xs text-gray-500 hover:text-rose-600 hover:bg-rose-50 ml-auto gap-1.5"
+                            className="h-10 px-4 rounded-2xl text-xs font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 ml-auto gap-2 transition-all"
                             onClick={clearAllFilters}
                         >
-                            <X className="h-3.5 w-3.5" />
-                            Clear
+                            <X className="h-4 w-4" />
+                            Reset Filters
                         </Button>
                     )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-6 pt-1 border-t border-gray-200/50">
+                <div className="flex flex-wrap items-center gap-8 pt-4 border-t border-gray-100/50">
                     {/* ── Category Filter ── */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                            <Filter className="h-3 w-3" /> Category
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-1.5 px-1">
+                            <Filter className="h-3 w-3" /> Type
                         </span>
                         <Select value={categoryFilter} onValueChange={handleCategoryChange}>
-                            <SelectTrigger className="w-[160px] h-9 text-sm bg-white rounded-lg shadow-sm border-gray-200">
-                                <SelectValue placeholder="All Categories" />
+                            <SelectTrigger className="w-[180px] h-11 text-sm bg-white/80 rounded-2xl border-white shadow-sm hover:shadow-md transition-all">
+                                <SelectValue placeholder="All Activity" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="rounded-2xl border-white/50 shadow-2xl backdrop-blur-lg">
                                 <SelectItem value="all">
-                                    <span className="flex items-center gap-2">All Categories</span>
+                                    <span className="flex items-center gap-2 font-bold text-gray-400">All Activity</span>
                                 </SelectItem>
                                 {Object.entries(CATEGORIES).map(([key, cat]) => {
                                     const Icon = cat.icon
                                     return (
                                         <SelectItem key={key} value={key}>
-                                            <span className={`flex items-center gap-2 ${cat.color}`}>
-                                                <Icon className="h-3.5 w-3.5" />
+                                            <span className={`flex items-center gap-2 font-bold ${cat.color}`}>
+                                                <Icon className="h-4 w-4" />
                                                 {cat.label}
                                             </span>
                                         </SelectItem>
@@ -332,207 +338,136 @@ export default function AuditTable() {
                     </div>
 
                     {/* ── Action Filter ── */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-1.5 px-1">
                             <Tags className="h-3 w-3" /> Action
                         </span>
                         <Select value={actionFilter} onValueChange={handleActionChange}>
-                            <SelectTrigger className="w-[120px] h-9 text-sm bg-white rounded-lg shadow-sm border-gray-200">
+                            <SelectTrigger className="w-[140px] h-11 text-sm bg-white/80 rounded-2xl border-white shadow-sm hover:shadow-md transition-all">
                                 <SelectValue placeholder="All Actions" />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Actions</SelectItem>
-                                <SelectItem value="INSERT"><span className="text-emerald-700 font-medium">Insert</span></SelectItem>
-                                <SelectItem value="UPDATE"><span className="text-amber-700 font-medium">Update</span></SelectItem>
-                                <SelectItem value="DELETE"><span className="text-rose-700 font-medium">Delete</span></SelectItem>
+                            <SelectContent className="rounded-2xl border-white/50 shadow-2xl backdrop-blur-lg">
+                                <SelectItem value="all"><span className="font-bold text-gray-400">No Filter</span></SelectItem>
+                                <SelectItem value="INSERT"><span className="text-emerald-600 font-black">Created</span></SelectItem>
+                                <SelectItem value="UPDATE"><span className="text-amber-600 font-black">Modified</span></SelectItem>
+                                <SelectItem value="DELETE"><span className="text-rose-600 font-black">Removed</span></SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     {/* ── Date Range ── */}
-                    <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1 whitespace-nowrap">
-                            <CalendarDays className="h-3 w-3" /> Date Range
+                    <div className="flex items-center gap-4 ml-auto">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-1.5 px-1">
+                            <CalendarDays className="h-3 w-3" /> Time Range
                         </span>
-                        <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-sm">
+                        <div className="flex items-center gap-2 bg-white/80 p-1.5 rounded-2xl border-white shadow-sm hover:shadow-md transition-all">
                             <input
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => handleDateChange(e, 'start')}
                                 max={endDate || new Date().toISOString().split('T')[0]}
-                                className="h-7 bg-transparent text-xs text-gray-700 focus:outline-none"
+                                className="h-8 bg-transparent text-xs font-bold text-gray-600 focus:outline-none px-2 cursor-pointer"
                                 title="Start Date"
                             />
-                            <span className="text-gray-300">→</span>
+                            <ArrowRight className="h-3 w-3 text-gray-300" />
                             <input
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => handleDateChange(e, 'end')}
                                 min={startDate}
                                 max={new Date().toISOString().split('T')[0]}
-                                className="h-7 bg-transparent text-xs text-gray-700 focus:outline-none"
+                                className="h-8 bg-transparent text-xs font-bold text-gray-600 focus:outline-none px-2 cursor-pointer"
                                 title="End Date"
                             />
-                            {(startDate || endDate) && (
-                                <button
-                                    onClick={() => { setStartDate(''); setEndDate(''); setPage(0) }}
-                                    className="ml-1 text-gray-300 hover:text-rose-500"
-                                >
-                                    <X className="h-3 w-3" />
-                                </button>
-                            )}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* ── Table ── */}
-            <div className="rounded-md border border-gray-200 shadow-sm overflow-hidden bg-white">
-                <Table>
-                    <TableHeader className="bg-gray-50/50">
-                        <TableRow>
-                            <TableHead className="w-[170px]">Timestamp</TableHead>
-                            <TableHead className="w-[90px]">Action</TableHead>
-                            <TableHead className="w-[220px]">Summary (TLDR)</TableHead>
-                            <TableHead className="w-[130px]">Category</TableHead>
-                            <TableHead className="w-[150px]">Entity</TableHead>
-                            <TableHead className="w-[160px]">Actor</TableHead>
-                            <TableHead className="w-[80px]">Auth</TableHead>
-                            <TableHead>Changes</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {isLoading ? (
-                            <TableRow>
-                                <TableCell colSpan={7} className="h-48 text-center">
-                                    <div className="flex flex-col items-center justify-center text-gray-500 gap-2">
-                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                                        <p className="text-sm">Loading audit logs...</p>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ) : isError ? (
-                            <TableRow>
-                                <TableCell colSpan={7} className="h-48 text-center text-red-500 bg-red-50/30">
-                                    <div className="flex flex-col items-center justify-center gap-2">
-                                        <p className="font-semibold">Failed to load audit logs</p>
-                                        <p className="text-xs text-red-400">Please check your permissions or try refreshing the page.</p>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ) : data?.items?.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={7} className="h-48 text-center text-gray-500">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Factory className="h-8 w-8 text-gray-300" />
-                                        <p className="text-sm">No audit logs found for the selected filters.</p>
-                                        {hasActiveFilters && (
-                                            <button
-                                                className="text-xs text-indigo-600 hover:underline"
-                                                onClick={clearAllFilters}
-                                            >
-                                                Clear filters to see all entries
-                                            </button>
-                                        )}
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            data?.items?.map((log: any) => (
-                                <TableRow key={log.id} className="text-sm border-gray-100 hover:bg-gray-50/50">
-                                    <TableCell className="align-top whitespace-nowrap text-gray-600 text-xs py-3">
-                                        {format(new Date(log.changed_at), "dd MMM yyyy")}
-                                        <div className="text-gray-400 text-[11px]">{format(new Date(log.changed_at), "HH:mm:ss")}</div>
-                                    </TableCell>
-                                    <TableCell className="align-top py-3">
-                                        <ActionBadge action={log.action} />
-                                    </TableCell>
-                                    <TableCell className="align-top py-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)] flex-shrink-0" />
-                                            <span className="font-bold text-gray-900 text-[13px] tracking-tight leading-tight">
-                                                {getAuditSummary(log)}
-                                            </span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="align-top py-3">
-                                        <CategoryBadge tableName={log.table_name} />
-                                    </TableCell>
-                                    <TableCell className="align-top py-3">
-                                        <div className="flex flex-col">
-                                            <span className="font-semibold text-gray-900 text-xs">
-                                                {TABLE_LABELS[log.table_name] ?? log.table_name}
-                                            </span>
-                                            <span className="text-[11px] text-gray-400 truncate max-w-[130px] font-mono" title={log.record_id}>
-                                                #{String(log.record_id).slice(0, 8)}
-                                            </span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="align-top py-3">
-                                        <div className="flex flex-col">
-                                            <span className="font-medium text-gray-800 text-xs">
-                                                {/* @ts-ignore */}
-                                                {log.profiles?.full_name || <span className="text-gray-400 italic">Unknown</span>}
-                                            </span>
-                                            {/* @ts-ignore */}
-                                            {log.profiles?.role && (
-                                                <span className="text-[11px] text-gray-500 capitalize">
-                                                    {/* @ts-ignore */}
-                                                    {log.profiles.role}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="align-top py-3">
-                                        {log.is_access_code_used ? (
-                                            <Badge variant="outline" className="text-[10px] font-bold border-primary/20 bg-primary/5 text-primary gap-1 whitespace-nowrap">
-                                                <span className="text-[12px]">🛡️</span> Auth
-                                            </Badge>
-                                        ) : (
-                                            <span className="text-[11px] text-gray-300">—</span>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="align-top py-3">
-                                        <AuditDiff oldData={log.old_data} newData={log.new_data} />
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+            {/* ── Activity Feed ── */}
+            <div className="relative">
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center py-32 space-y-4 bg-white/50 rounded-3xl border border-gray-100 backdrop-blur-sm shadow-inner overflow-hidden relative">
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
+                        <div className="relative">
+                            <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                            <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse rounded-full" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-500 animate-pulse tracking-wide">Retrieving Audit Logs...</p>
+                    </div>
+                ) : isError ? (
+                    <div className="p-8 text-center bg-rose-50 rounded-3xl border border-rose-100 shadow-sm animate-in zoom-in-95 duration-300">
+                        <p className="text-rose-600 font-bold">Failed to load audit logs.</p>
+                        <Button variant="outline" className="mt-4 border-rose-200 text-rose-700 hover:bg-rose-100" onClick={() => window.location.reload()}>Retry</Button>
+                    </div>
+                ) : data?.items?.length === 0 ? (
+                    <div className="p-20 text-center bg-white rounded-3xl border border-gray-100 border-dashed animate-in fade-in duration-500 shadow-inner">
+                        <div className="mx-auto w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                           <History className="h-8 w-8 text-gray-300" />
+                        </div>
+                        <p className="text-gray-500 font-medium">No audit entries found for the selected filters.</p>
+                        <Button variant="link" className="text-primary mt-2" onClick={clearAllFilters}>Reset all filters</Button>
+                    </div>
+                ) : (
+                    <div className="space-y-4 pb-10">
+                        <div className="flex items-center justify-between px-2 mb-6">
+                           <div className="flex items-center gap-3">
+                              <h2 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                                 System Activity
+                              </h2>
+                              <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-none font-bold text-[10px] px-2 py-0.5 rounded-full">
+                                 {data.count} TOTAL
+                              </Badge>
+                           </div>
+                           <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold uppercase tracking-widest">
+                              Showing {page * PAGE_SIZE + 1} - {Math.min((page + 1) * PAGE_SIZE, data.count || 0)}
+                           </div>
+                        </div>
 
-            {/* ── Summary + Pagination ── */}
-            {data && (
-                <div className="flex items-center justify-between px-1">
-                    <p className="text-xs text-gray-400">
-                        {data.count
-                            ? `Showing ${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, data.count)} of ${data.count} entries`
-                            : 'No entries'}
-                    </p>
-                    {data.count && data.count > PAGE_SIZE ? (
-                        <div className="flex gap-2">
+                        <div className="pl-2 pr-2">
+                           {data.items.map((log: any, idx: number) => (
+                               <AuditActivityItem 
+                                 key={log.id} 
+                                 log={log} 
+                                 isLast={idx === data.items.length - 1} 
+                               />
+                           ))}
+                        </div>
+
+                        {/* ── Premium Pagination ── */}
+                        <div className="flex items-center justify-between gap-4 mt-12 bg-white/50 backdrop-blur-md p-4 rounded-3xl border border-gray-100 shadow-sm">
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setPage(p => Math.max(0, p - 1))}
                                 disabled={page === 0}
-                                className="h-8 text-xs"
+                                className="h-10 px-6 rounded-2xl font-bold bg-white border-gray-200 hover:bg-gray-50 disabled:opacity-30 transition-all text-xs shadow-sm hover:shadow-md"
                             >
-                                ← Previous
+                                Previous
                             </Button>
-                            <span className="flex items-center text-xs text-gray-500 px-2">
-                                Page {page + 1} of {Math.ceil(data.count / PAGE_SIZE)}
-                            </span>
+                            
+                            <div className="hidden sm:flex items-center gap-2">
+                               {Array.from({ length: Math.min(5, Math.ceil((data.count || 0) / PAGE_SIZE)) }).map((_, i) => (
+                                     <button
+                                        key={i}
+                                        onClick={() => setPage(i)}
+                                        className={cn(
+                                          "h-9 w-9 rounded-xl text-xs font-black transition-all",
+                                          page === i 
+                                            ? "bg-primary text-white shadow-lg shadow-primary/25 scale-110" 
+                                            : "text-gray-400 hover:text-gray-900 hover:bg-white hover:shadow-sm"
+                                        )}
+                                     >
+                                        {i + 1}
+                                     </button>
+                               ))}
+                               {Math.ceil((data.count || 0) / PAGE_SIZE) > 5 && <span className="text-gray-300 font-bold">•••</span>}
+                            </div>
+
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setPage(p => p + 1)}
-                                disabled={(page + 1) * PAGE_SIZE >= data.count}
-                                className="h-8 text-xs"
-                            >
-                                Next →
-                            </Button>
                         </div>
                     ) : null}
                 </div>
