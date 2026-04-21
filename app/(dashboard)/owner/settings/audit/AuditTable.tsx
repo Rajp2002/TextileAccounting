@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Users, Factory, Package, Shield, Calculator, Tags, CalendarDays, X } from 'lucide-react'
+import { Loader2, Users, Factory, Package, Shield, Calculator, Tags, CalendarDays, X, Search, Filter } from 'lucide-react'
 import AuditDiff from '@/components/ui/audit-diff'
 import {
     Select,
@@ -24,6 +24,8 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Button } from '@/components/ui/button'
+import { getAuditSummary } from '@/lib/audit-summaries'
+import { Info } from 'lucide-react'
 
 const PAGE_SIZE = 20
 
@@ -117,10 +119,11 @@ function getCategoryForTable(tableName: string): CategoryKey | null {
 
 const ActionBadge = ({ action }: { action: string }) => {
     switch (action) {
-        case 'INSERT': return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 font-semibold text-[11px]">INSERT</Badge>
-        case 'UPDATE': return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 font-semibold text-[11px]">UPDATE</Badge>
-        case 'DELETE': return <Badge className="bg-red-100 text-red-800 hover:bg-red-100 font-semibold text-[11px]">DELETE</Badge>
-        default: return <Badge className="text-[11px]">{action}</Badge>
+        case 'INSERT': return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200/50 hover:bg-emerald-100 font-bold text-[10px] px-1.5 shadow-sm">INSERT</Badge>
+        case 'UPDATE': return <Badge className="bg-amber-50 text-amber-700 border-amber-200/50 hover:bg-amber-100 font-bold text-[10px] px-1.5 shadow-sm">UPDATE</Badge>
+        case 'DELETE': return <Badge className="bg-rose-50 text-rose-700 border-rose-200/50 hover:bg-rose-100 font-bold text-[10px] px-1.5 shadow-sm">DELETE</Badge>
+        default: if (action.includes('.')) return <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200/50 font-bold text-[10px] px-1.5 shadow-sm uppercase">{action.split('.').pop()}</Badge>
+                 return <Badge className="text-[10px] px-1.5 shadow-sm">{action}</Badge>
     }
 }
 
@@ -146,10 +149,28 @@ export default function AuditTable() {
     const [page, setPage] = useState(0)
     const [actionFilter, setActionFilter] = useState<string>('all')
     const [categoryFilter, setCategoryFilter] = useState<string>('all')
-    const [dateFilter, setDateFilter] = useState<string>('') // 'YYYY-MM-DD'
+    const [actorId, setActorId] = useState<string>('all')
+    const [searchTerm, setSearchTerm] = useState<string>('')
+    const [startDate, setStartDate] = useState<string>('') // 'YYYY-MM-DD'
+    const [endDate, setEndDate] = useState<string>('') // 'YYYY-MM-DD'
+
+    // ── Fetch Actors (Profiles) ──
+    const { data: actors } = useQuery({
+        queryKey: ['auditActors', userProfile?.org_id],
+        enabled: !!userProfile?.org_id,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id, full_name, role')
+                .eq('org_id', userProfile!.org_id)
+                .order('full_name')
+            if (error) throw error
+            return data
+        }
+    })
 
     const { data, isLoading, isError } = useQuery({
-        queryKey: ['auditLogs', userProfile?.org_id, page, actionFilter, categoryFilter, dateFilter],
+        queryKey: ['auditLogs', userProfile?.org_id, page, actionFilter, categoryFilter, actorId, searchTerm, startDate, endDate],
         enabled: !!userProfile?.org_id,
         queryFn: async () => {
             let query = supabase
@@ -168,15 +189,22 @@ export default function AuditTable() {
                     query = query.in('table_name', tables)
                 }
             }
-            if (dateFilter) {
-                // Filter the full calendar day in ISO (UTC) — the DB stores UTC timestamps
-                const dayStart = new Date(dateFilter)
-                dayStart.setHours(0, 0, 0, 0)
-                const dayEnd = new Date(dateFilter)
-                dayEnd.setHours(23, 59, 59, 999)
-                query = query
-                    .gte('changed_at', dayStart.toISOString())
-                    .lte('changed_at', dayEnd.toISOString())
+            if (actorId !== 'all') {
+                query = query.eq('changed_by', actorId)
+            }
+            if (searchTerm) {
+                // Smart Search: record_id OR name OR party_name OR full_name in JSON
+                query = query.or(`record_id.ilike.%${searchTerm}%,new_data->>name.ilike.%${searchTerm}%,new_data->>party_name.ilike.%${searchTerm}%,new_data->>full_name.ilike.%${searchTerm}%`)
+            }
+            if (startDate) {
+                const start = new Date(startDate)
+                start.setHours(0, 0, 0, 0)
+                query = query.gte('changed_at', start.toISOString())
+            }
+            if (endDate) {
+                const end = new Date(endDate)
+                end.setHours(23, 59, 59, 999)
+                query = query.lte('changed_at', end.toISOString())
             }
 
             const { data, error, count } = await query
@@ -195,106 +223,167 @@ export default function AuditTable() {
         setPage(0)
     }
 
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setDateFilter(e.target.value)
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'start' | 'end') => {
+        if (type === 'start') setStartDate(e.target.value)
+        else setEndDate(e.target.value)
         setPage(0)
     }
 
     const clearAllFilters = () => {
         setCategoryFilter('all')
         setActionFilter('all')
-        setDateFilter('')
+        setActorId('all')
+        setSearchTerm('')
+        setStartDate('')
+        setEndDate('')
         setPage(0)
     }
 
-    const hasActiveFilters = categoryFilter !== 'all' || actionFilter !== 'all' || dateFilter !== ''
+    const hasActiveFilters = categoryFilter !== 'all' || actionFilter !== 'all' || actorId !== 'all' || searchTerm !== '' || startDate !== '' || endDate !== ''
 
     return (
         <div className="space-y-4">
             {/* ── Filters ── */}
-            <div className="flex flex-wrap items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 mb-6">
-                {/* ── Category Filter ── */}
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Category</span>
-                    <Select value={categoryFilter} onValueChange={handleCategoryChange}>
-                        <SelectTrigger className="w-[180px] h-8 text-sm bg-white">
-                            <SelectValue placeholder="All Categories" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">
-                                <span className="flex items-center gap-2">All Categories</span>
-                            </SelectItem>
-                            {Object.entries(CATEGORIES).map(([key, cat]) => {
-                                const Icon = cat.icon
-                                return (
-                                    <SelectItem key={key} value={key}>
-                                        <span className={`flex items-center gap-2 ${cat.color}`}>
-                                            <Icon className="h-3.5 w-3.5" />
-                                            {cat.label}
-                                        </span>
-                                    </SelectItem>
-                                )
-                            })}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="h-4 w-px bg-gray-300 hidden sm:block" />
-
-                {/* ── Action Filter ── */}
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Action</span>
-                    <Select value={actionFilter} onValueChange={handleActionChange}>
-                        <SelectTrigger className="w-[130px] h-8 text-sm bg-white">
-                            <SelectValue placeholder="All Actions" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Actions</SelectItem>
-                            <SelectItem value="INSERT"><span className="text-emerald-700 font-medium">Insert</span></SelectItem>
-                            <SelectItem value="UPDATE"><span className="text-amber-700 font-medium">Update</span></SelectItem>
-                            <SelectItem value="DELETE"><span className="text-red-700 font-medium">Delete</span></SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="h-4 w-px bg-gray-300 hidden sm:block" />
-
-                {/* ── Date Filter ── */}
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
-                        <CalendarDays className="h-3.5 w-3.5" />
-                        Date
-                    </span>
-                    <div className="relative flex items-center">
+            <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm mb-6">
+                <div className="flex flex-wrap items-center gap-4">
+                    {/* ── Search Input ── */}
+                    <div className="flex-1 min-w-[280px] relative group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-primary transition-colors" />
                         <input
-                            type="date"
-                            value={dateFilter}
-                            onChange={handleDateChange}
-                            max={new Date().toISOString().split('T')[0]}
-                            className="h-8 rounded-md border border-input bg-white px-2 pr-7 text-sm text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0 transition-colors"
+                            type="text"
+                            placeholder="Search by ID or Name (Worker, Order, User)..."
+                            value={searchTerm}
+                            onChange={(e) => { setSearchTerm(e.target.value); setPage(0) }}
+                            className="w-full h-9 pl-9 pr-4 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                         />
-                        {dateFilter && (
+                        {searchTerm && (
                             <button
-                                onClick={() => { setDateFilter(''); setPage(0) }}
-                                className="absolute right-1.5 text-gray-400 hover:text-gray-700 transition-colors"
-                                title="Clear date"
+                                onClick={() => { setSearchTerm(''); setPage(0) }}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                             >
-                                <X className="h-3.5 w-3.5" />
+                                <X className="h-4 w-4" />
                             </button>
                         )}
                     </div>
+
+                    {/* ── Actor Filter ── */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                            <Users className="h-3 w-3" /> Actor
+                        </span>
+                        <Select value={actorId} onValueChange={(val) => { setActorId(val); setPage(0) }}>
+                            <SelectTrigger className="w-[160px] h-9 text-sm bg-white rounded-lg shadow-sm">
+                                <SelectValue placeholder="All Users" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Users</SelectItem>
+                                {actors?.map(actor => (
+                                    <SelectItem key={actor.id} value={actor.id}>
+                                        <div className="flex flex-col">
+                                            <span className="font-medium text-xs">{actor.full_name}</span>
+                                            <span className="text-[10px] text-gray-400 capitalize">{actor.role}</span>
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {hasActiveFilters && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs text-gray-500 hover:text-rose-600 hover:bg-rose-50 ml-auto gap-1.5"
+                            onClick={clearAllFilters}
+                        >
+                            <X className="h-3.5 w-3.5" />
+                            Clear
+                        </Button>
+                    )}
                 </div>
 
-                {hasActiveFilters && (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 text-xs text-gray-500 hover:text-gray-900 ml-auto"
-                        onClick={clearAllFilters}
-                    >
-                        Clear filters
-                    </Button>
-                )}
+                <div className="flex flex-wrap items-center gap-6 pt-1 border-t border-gray-200/50">
+                    {/* ── Category Filter ── */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                            <Filter className="h-3 w-3" /> Category
+                        </span>
+                        <Select value={categoryFilter} onValueChange={handleCategoryChange}>
+                            <SelectTrigger className="w-[160px] h-9 text-sm bg-white rounded-lg shadow-sm border-gray-200">
+                                <SelectValue placeholder="All Categories" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">
+                                    <span className="flex items-center gap-2">All Categories</span>
+                                </SelectItem>
+                                {Object.entries(CATEGORIES).map(([key, cat]) => {
+                                    const Icon = cat.icon
+                                    return (
+                                        <SelectItem key={key} value={key}>
+                                            <span className={`flex items-center gap-2 ${cat.color}`}>
+                                                <Icon className="h-3.5 w-3.5" />
+                                                {cat.label}
+                                            </span>
+                                        </SelectItem>
+                                    )
+                                })}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* ── Action Filter ── */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                            <Tags className="h-3 w-3" /> Action
+                        </span>
+                        <Select value={actionFilter} onValueChange={handleActionChange}>
+                            <SelectTrigger className="w-[120px] h-9 text-sm bg-white rounded-lg shadow-sm border-gray-200">
+                                <SelectValue placeholder="All Actions" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Actions</SelectItem>
+                                <SelectItem value="INSERT"><span className="text-emerald-700 font-medium">Insert</span></SelectItem>
+                                <SelectItem value="UPDATE"><span className="text-amber-700 font-medium">Update</span></SelectItem>
+                                <SelectItem value="DELETE"><span className="text-rose-700 font-medium">Delete</span></SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* ── Date Range ── */}
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1 whitespace-nowrap">
+                            <CalendarDays className="h-3 w-3" /> Date Range
+                        </span>
+                        <div className="flex items-center gap-2 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-sm">
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => handleDateChange(e, 'start')}
+                                max={endDate || new Date().toISOString().split('T')[0]}
+                                className="h-7 bg-transparent text-xs text-gray-700 focus:outline-none"
+                                title="Start Date"
+                            />
+                            <span className="text-gray-300">→</span>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => handleDateChange(e, 'end')}
+                                min={startDate}
+                                max={new Date().toISOString().split('T')[0]}
+                                className="h-7 bg-transparent text-xs text-gray-700 focus:outline-none"
+                                title="End Date"
+                            />
+                            {(startDate || endDate) && (
+                                <button
+                                    onClick={() => { setStartDate(''); setEndDate(''); setPage(0) }}
+                                    className="ml-1 text-gray-300 hover:text-rose-500"
+                                >
+                                    <X className="h-3 w-3" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* ── Table ── */}
@@ -304,10 +393,11 @@ export default function AuditTable() {
                         <TableRow>
                             <TableHead className="w-[170px]">Timestamp</TableHead>
                             <TableHead className="w-[90px]">Action</TableHead>
-                            <TableHead className="w-[160px]">Category</TableHead>
+                            <TableHead className="w-[220px]">Summary (TLDR)</TableHead>
+                            <TableHead className="w-[130px]">Category</TableHead>
                             <TableHead className="w-[150px]">Entity</TableHead>
-                            <TableHead className="w-[170px]">Actor</TableHead>
-                            <TableHead className="w-[90px]">Auth</TableHead>
+                            <TableHead className="w-[160px]">Actor</TableHead>
+                            <TableHead className="w-[80px]">Auth</TableHead>
                             <TableHead>Changes</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -356,6 +446,14 @@ export default function AuditTable() {
                                     </TableCell>
                                     <TableCell className="align-top py-3">
                                         <ActionBadge action={log.action} />
+                                    </TableCell>
+                                    <TableCell className="align-top py-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)] flex-shrink-0" />
+                                            <span className="font-bold text-gray-900 text-[13px] tracking-tight leading-tight">
+                                                {getAuditSummary(log)}
+                                            </span>
+                                        </div>
                                     </TableCell>
                                     <TableCell className="align-top py-3">
                                         <CategoryBadge tableName={log.table_name} />
