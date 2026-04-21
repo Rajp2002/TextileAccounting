@@ -70,7 +70,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
             <nav className="flex-1 py-4 px-3 space-y-4 overflow-y-auto">
                 <div className="space-y-1">
                     <div className="px-3 mb-2">
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Main Pivot</p>
+                        <p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70 font-extrabold">Main Pivot</p>
                     </div>
                     {primaryNavItems.map((item) => {
                         const Icon = item.icon
@@ -98,7 +98,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
 
                 <div className="space-y-1">
                     <div className="px-3 mb-2">
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Management</p>
+                        <p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70 font-extrabold">Management</p>
                     </div>
                     {secondaryNavItems.map((item) => {
                         const Icon = item.icon
@@ -125,7 +125,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
 
                 <div className="space-y-1">
                     <div className="px-3 mb-2 mt-4">
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">System</p>
+                        <p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70 font-extrabold">System</p>
                     </div>
                     {systemItems.map((item) => {
                         const Icon = item.icon
