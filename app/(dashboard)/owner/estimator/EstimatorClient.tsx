@@ -44,6 +44,7 @@ import {
     DEFAULT_WARP_ROW,
     DEFAULT_WEFT_ROW,
     DEFAULT_OVERHEAD_ITEMS,
+    DEFAULT_FACTORY_SECTIONS,
     ensureOverheadIntegrity,
     type EstimateState,
     type WarpRow,
