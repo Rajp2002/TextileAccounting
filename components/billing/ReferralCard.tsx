@@ -3,14 +3,13 @@
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Copy, Gift, CheckCircle2, Calendar, Share2, Building2, Clock } from 'lucide-react'
+import { Copy, Gift, CheckCircle2, Share2 } from 'lucide-react'
 
 export function ReferralCard({ stats }: { stats: any }) {
     const [copied, setCopied] = useState(false)
 
     if (!stats || !stats.code) {
-        return null // Will implement a "generate code" CTA if needed, but the server action ensures one exists now
+        return null
     }
 
     const copyToClipboard = async () => {
@@ -29,163 +28,117 @@ export function ReferralCard({ stats }: { stats: any }) {
     }
 
     return (
-        <Card className="shadow-sm border-emerald-200 overflow-hidden bg-white mt-8">
-            <div className="h-1 w-full bg-gradient-to-r from-emerald-400 to-emerald-600" />
-            <CardHeader className="bg-emerald-50/50 pb-4 border-b border-emerald-100">
-                <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
-                    <div className="flex items-center gap-2">
+        <Card className="shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-emerald-100 overflow-hidden bg-white">
+            <CardHeader className="bg-gradient-to-br from-emerald-50/80 to-transparent pb-4 border-b border-emerald-50">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
                         <Gift className="h-5 w-5 text-emerald-600" />
-                        <div>
-                            <CardTitle className="text-emerald-900">Refer & Earn</CardTitle>
-                            <p className="text-xs text-emerald-700 mt-1">
-                                Get 10% off your monthly bill for 3 months per paid referral. No cap!
-                            </p>
-                        </div>
+                    </div>
+                    <div>
+                        <CardTitle className="text-emerald-900 text-lg">Refer & Earn</CardTitle>
+                        <p className="text-xs text-emerald-700/70 mt-0.5">
+                            Get 10% off your monthly bill per paid referral.
+                        </p>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="pt-6 space-y-6">
+            <CardContent className="p-5 space-y-6 text-emerald-950">
                 
-                {/* Link Section */}
-                <div className="space-y-2">
-                    <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Your Referral Code</label>
-                    <div className="flex gap-2">
-                        <Input 
-                            readOnly 
-                            value={stats.code} 
-                            className="bg-gray-50 text-gray-600 font-mono text-sm border-gray-200 cursor-copy focus-visible:ring-emerald-500 uppercase font-bold text-center pl-2"
-                            onClick={(e) => (e.target as HTMLInputElement).select()}
-                        />
-                        <Button 
-                            variant="secondary" 
-                            className="shrink-0 bg-white border border-gray-200 hover:bg-gray-50"
-                            onClick={copyToClipboard}
-                        >
-                            {copied ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-gray-600" />}
-                        </Button>
-                        <Button 
-                            variant="default"
-                            className="shrink-0 bg-[#25D366] hover:bg-[#20bd5a] text-white"
-                            onClick={shareWhatsApp}
-                        >
-                            <Share2 className="h-4 w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">Share</span>
-                        </Button>
+                {/* Stats Grid - more compact and informative */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl border border-emerald-100/50 bg-emerald-50/30 p-3.5 flex flex-col justify-center">
+                        <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-1">Total Referrals</p>
+                        <div className="flex items-baseline gap-1.5">
+                            <span className="text-2xl font-black text-emerald-900 leading-none">{stats.total || 0}</span>
+                            <span className="text-xs text-emerald-600/70 font-medium">{stats.converted || 0} converted</span>
+                        </div>
+                    </div>
+                    <div className="rounded-2xl bg-emerald-600 p-3.5 flex flex-col justify-center shadow-lg shadow-emerald-200">
+                        <p className="text-[10px] text-emerald-100 font-bold uppercase tracking-wider mb-1">Current Reward</p>
+                        <div className="flex items-baseline gap-0.5">
+                            <span className="text-2xl font-black text-white leading-none">{stats.currentDiscountPct || 0}%</span>
+                            <span className="text-xs text-emerald-100 font-medium">OFF</span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-center">
-                        <p className="text-xs text-gray-500 font-medium">Referred</p>
-                        <p className="text-xl font-bold text-gray-900">{stats.total}</p>
-                    </div>
-                    <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-center">
-                        <p className="text-xs text-emerald-600 font-medium">Converted</p>
-                        <p className="text-xl font-bold text-emerald-900">{stats.converted}</p>
-                    </div>
-                    <div className="rounded-lg border border-emerald-100 bg-emerald-500 text-white p-3 text-center shadow-inner">
-                        <p className="text-xs font-medium text-emerald-100">Current Discount</p>
-                        <p className="text-xl font-bold">{stats.currentDiscountPct}%</p>
-                    </div>
-                </div>
-
-                {/* Discount Progress Bar */}
-                <div className="pt-2">
-                    <div className="flex justify-between items-end mb-2">
-                        <div>
-                            <p className="text-sm font-semibold text-gray-800">Journey to 100% Free</p>
-                            <p className="text-xs text-gray-500">Every successful referral adds 10%</p>
-                        </div>
-                        <div className="font-bold text-emerald-600 text-lg">
-                            {stats.currentDiscountPct}%<span className="text-sm font-medium text-emerald-400">/100%</span>
+                {/* Journey to 100% Free - Simplified progress */}
+                <div className="relative pt-1">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-emerald-900/80 uppercase tracking-tighter">Journey to 100% Free</span>
+                        <div className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                            {stats.currentDiscountPct || 0}% / 100%
                         </div>
                     </div>
-                    <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                    <div className="h-3 w-full bg-emerald-50 rounded-full p-0.5 overflow-hidden">
                         <div 
-                            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-1000 ease-out relative"
-                            style={{ width: `${Math.min(100, stats.currentDiscountPct)}%` }}
+                            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-1000 ease-out relative shadow-sm"
+                            style={{ width: `${Math.min(100, stats.currentDiscountPct || 0)}%` }}
                         >
-                            {/* Animated sheen effect */}
-                            <div className="absolute top-0 left-0 w-full h-full bg-white/20 animate-pulse"></div>
+                            <div className="absolute inset-0 bg-white/20 animate-pulse" />
                         </div>
                     </div>
                 </div>
 
-                {/* Active & Upcoming Windows List */}
+                {/* Code & Share - Compact grouping */}
+                <div className="space-y-3 pt-1">
+                    <div className="relative group">
+                        <label className="absolute -top-2 left-3 px-1.5 bg-white text-[9px] font-black text-emerald-600 uppercase tracking-widest z-10">
+                            Your Unique Code
+                        </label>
+                        <div className="flex gap-1.5 p-1.5 rounded-2xl border border-emerald-100 bg-emerald-50/20 group-focus-within:border-emerald-300 transition-colors">
+                            <input 
+                                readOnly 
+                                value={stats.code} 
+                                className="flex-1 bg-transparent text-emerald-900 font-black text-sm tracking-[0.2em] outline-none pl-3 uppercase"
+                                onClick={(e) => (e.target as HTMLInputElement).select()}
+                            />
+                            <div className="flex items-center gap-1">
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    className="h-9 w-9 rounded-xl hover:bg-emerald-100 text-emerald-600 shrink-0"
+                                    onClick={copyToClipboard}
+                                >
+                                    {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4 opacity-70" />}
+                                </Button>
+                                <Button 
+                                    onClick={shareWhatsApp}
+                                    className="h-9 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-sm shrink-0 font-bold text-xs"
+                                >
+                                    <Share2 className="h-3.5 w-3.5 mr-1.5" />
+                                    Share
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Active & Upcoming Windows - more compact */}
                 {stats.activeWindows && stats.activeWindows.length > 0 && (
-                    <div className="pt-4 border-t border-gray-100">
-                        <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3">
-                            Active & Upcoming Discounts ({stats.activeWindows.length})
-                        </p>
+                    <div className="pt-2 border-t border-emerald-50">
+                        <p className="text-[10px] font-black text-emerald-900/40 uppercase tracking-widest mb-3">Active Schedule</p>
                         <div className="space-y-2">
-                            {stats.activeWindows.map((w: any, i: number) => {
+                            {stats.activeWindows.slice(0, 3).map((w: any, i: number) => {
                                 const isFuture = new Date(w.valid_from) > new Date()
-                                const startDate = new Date(w.valid_from).toLocaleDateString('en-IN', {
-                                    month: 'short',
-                                    day: 'numeric'
-                                })
                                 const expiryDate = new Date(w.valid_until).toLocaleDateString('en-IN', {
                                     month: 'short',
                                     year: 'numeric'
                                 })
                                 return (
-                                    <div key={i} className="flex items-center justify-between bg-gray-50 rounded-md px-3 py-2 border border-gray-100 text-sm">
+                                    <div key={i} className="flex items-center justify-between bg-emerald-50/50 rounded-xl px-3 py-2 border border-emerald-100/50 text-[11px]">
                                         <div className="flex items-center gap-2">
-                                            <CheckCircle2 className={`h-4 w-4 ${isFuture ? 'text-amber-500' : 'text-emerald-500'}`} />
-                                            <span className="text-gray-700 font-medium">
-                                                10% Discount {isFuture && <span className="text-[10px] text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-full ml-1">Starts {startDate}</span>}
-                                            </span>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${isFuture ? 'bg-amber-400' : 'bg-emerald-500 shadow-[0_0_8px_#10b981]'}`} />
+                                            <span className="text-emerald-900 font-bold">10% Off</span>
+                                            {isFuture && <span className="text-[9px] text-amber-600 font-black uppercase ml-1">Pending</span>}
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                                            <Calendar className="h-3.5 w-3.5" />
-                                            Valid till {expiryDate}
-                                        </div>
+                                        <div className="text-emerald-700/60 font-medium">Till {expiryDate}</div>
                                     </div>
                                 )
                             })}
                         </div>
                     </div>
                 )}
-
-                {/* Referral History List */}
-                {stats.history && stats.history.length > 0 && (
-                    <div className="pt-4 border-t border-gray-100">
-                        <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3">
-                            Referral History ({stats.history.length})
-                        </p>
-                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                            {stats.history.map((h: any, i: number) => {
-                                const dateStr = new Date(h.date).toLocaleDateString('en-IN', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric'
-                                })
-                                const isConverted = h.status === 'converted'
-                                return (
-                                    <div key={i} className="flex items-center justify-between bg-white rounded-md px-3 py-2 border border-gray-100 text-sm">
-                                        <div className="flex items-center gap-2">
-                                            <Building2 className="h-4 w-4 text-gray-400" />
-                                            <span className="text-gray-700 font-medium truncate max-w-[120px] sm:max-w-[180px]" title={h.factoryName}>
-                                                {h.factoryName}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${isConverted ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                                                {h.status}
-                                            </span>
-                                            <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                                                <Clock className="h-3 w-3" />
-                                                {dateStr}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </div>
-                )}
-
             </CardContent>
         </Card>
     )
