@@ -2107,7 +2107,7 @@ export default function EstimatorClient({
                             <Input
                                 value={editingTplName}
                                 onChange={e => setEditingTplName(e.target.value)}
-                                className="font-bold border-slate-200"
+                                className="font-bold border-slate-200 focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 rounded-xl h-11 transition-all"
                             />
                         </div>
                         <p className="text-xs text-slate-500 leading-relaxed">
@@ -2119,13 +2119,13 @@ export default function EstimatorClient({
                             <div className="space-y-2">
                                 <p className="text-[10px] uppercase tracking-widest font-black text-indigo-600">{t('estimator.edit_template_dialog.warp_rates')}</p>
                                 {(editRatesTpl?.warp_rows ?? []).map((row: WarpRow, i: number) => (
-                                    <div key={row.id} className="flex items-center gap-3 bg-indigo-50/50 border border-indigo-100 rounded-xl px-3 py-2.5">
+                                    <div key={row.id} className="flex items-center gap-4 bg-indigo-50/50 border border-indigo-100/50 rounded-2xl px-4 py-3 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50">
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[11px] font-bold text-slate-700">{row.label ?? `Warp ${i + 1}`}</p>
-                                            <p className="text-[10px] text-slate-400 font-mono">{row.calcDenier}D · {row.beamEnds} ends · {row.gstPct}% GST</p>
+                                            <p className="text-[12px] font-bold text-slate-700 tracking-tight">{row.label ?? `Warp ${i + 1}`}</p>
+                                            <p className="text-[10px] text-slate-500 font-medium font-mono">{row.calcDenier}D · {row.beamEnds} ends · {row.gstPct}% GST</p>
                                         </div>
-                                        <div className="relative shrink-0 w-32">
-                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
+                                        <div className="relative shrink-0 w-36">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-bold pointer-events-none">₹</span>
                                             <Input
                                                 type="number"
                                                 min={0}
@@ -2134,9 +2134,9 @@ export default function EstimatorClient({
                                                 onChange={e => setEditingWarpRates(prev =>
                                                     prev.map(x => x.id === row.id ? { ...x, yarnRate: Number(e.target.value) } : x)
                                                 )}
-                                                className="h-8 text-xs font-mono font-bold text-right pr-10 pl-6 border-indigo-100 focus:border-indigo-300 bg-white"
+                                                className="h-10 text-sm font-mono font-black text-right pr-12 pl-8 border-indigo-100 focus:border-indigo-300 bg-white rounded-xl shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
-                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">/kg</span>
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/kg</span>
                                         </div>
                                     </div>
                                 ))}
@@ -2148,13 +2148,13 @@ export default function EstimatorClient({
                             <div className="space-y-2">
                                 <p className="text-[10px] uppercase tracking-widest font-black text-emerald-600">{t('estimator.edit_template_dialog.weft_rates')}</p>
                                 {(editRatesTpl?.weft_rows ?? []).map((row: WeftRow, i: number) => (
-                                    <div key={row.id} className="flex items-center gap-3 bg-emerald-50/50 border border-emerald-100 rounded-xl px-3 py-2.5">
+                                    <div key={row.id} className="flex items-center gap-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl px-4 py-3 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50">
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[11px] font-bold text-slate-700">{row.label ?? `Weft ${i + 1}`}</p>
-                                            <p className="text-[10px] text-slate-400 font-mono">{row.calcDenier}D · {row.picks} PPI · {row.gstPct}% GST</p>
+                                            <p className="text-[12px] font-bold text-slate-700 tracking-tight">{row.label ?? `Weft ${i + 1}`}</p>
+                                            <p className="text-[10px] text-slate-500 font-medium font-mono">{row.calcDenier}D · {row.picks} PPI · {row.gstPct}% GST</p>
                                         </div>
-                                        <div className="relative shrink-0 w-32">
-                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
+                                        <div className="relative shrink-0 w-36">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-bold pointer-events-none">₹</span>
                                             <Input
                                                 type="number"
                                                 min={0}
@@ -2163,9 +2163,9 @@ export default function EstimatorClient({
                                                 onChange={e => setEditingWeftRates(prev =>
                                                     prev.map(x => x.id === row.id ? { ...x, yarnRate: Number(e.target.value) } : x)
                                                 )}
-                                                className="h-8 text-xs font-mono font-bold text-right pr-10 pl-6 border-emerald-100 focus:border-emerald-300 bg-white"
+                                                className="h-10 text-sm font-mono font-black text-right pr-12 pl-8 border-emerald-100 focus:border-emerald-300 bg-white rounded-xl shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
-                                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">/kg</span>
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/kg</span>
                                         </div>
                                     </div>
                                 ))}
@@ -2173,7 +2173,7 @@ export default function EstimatorClient({
                         )}
 
                         {/* Delete zone */}
-                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2">
                             <button
                                 onClick={() => {
                                     if (editRatesTpl && window.confirm(t('estimator.edit_template_dialog.delete_confirm').replace('{name}', editRatesTpl.name))) {
@@ -2182,21 +2182,32 @@ export default function EstimatorClient({
                                     }
                                 }}
                                 disabled={deletingTpl === editRatesTpl?.id}
-                                className="text-[11px] font-bold text-red-400 hover:text-red-600 transition-colors flex items-center gap-1"
+                                className="text-[11px] font-bold text-red-500 hover:text-red-700 transition-colors flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-red-50"
                             >
-                                    <Trash2 className="h-3 w-3" />
-                                    {t('estimator.edit_template_dialog.delete_button')}
-                                </button>
-                                <p className="text-[10px] text-slate-400">{t('estimator.edit_template_dialog.delete_note')}</p>
+                                <Trash2 className="h-3.5 w-3.5" />
+                                {t('estimator.edit_template_dialog.delete_button')}
+                            </button>
+                            <p className="text-[10px] text-slate-400 font-medium">{t('estimator.edit_template_dialog.delete_note')}</p>
                         </div>
                     </div>
-                    <DialogFooter className="flex-col sm:flex-row gap-2">
-                        <Button variant="ghost" size="sm" onClick={handleApplyCurrentRates} className="text-slate-500">
+                    <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-2">
+                        <Button
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={handleApplyCurrentRates} 
+                            className="text-slate-500 font-bold hover:bg-slate-50 rounded-xl"
+                        >
                             {t('estimator.edit_template_dialog.apply_as_is')}
                         </Button>
-                        <Button className="bg-brand-accent text-white" onClick={handleSaveRatesAndApply} disabled={savingRates}>
-                            {savingRates ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                            {t('estimator.edit_template_dialog.save_apply')}
+                        <Button 
+                            className="bg-brand-accent text-white font-black rounded-xl h-12 sm:h-11 shadow-lg shadow-brand-accent/20 hover:shadow-xl hover:shadow-brand-accent/30 transition-all flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[180px]" 
+                            onClick={handleSaveRatesAndApply} 
+                            disabled={savingRates}
+                        >
+                            {savingRates ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
+                            <span className="text-sm">
+                                {t('estimator.edit_template_dialog.save_apply')}
+                            </span>
                         </Button>
                     </DialogFooter>
                 </DialogContent>

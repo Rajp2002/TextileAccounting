@@ -713,10 +713,11 @@ export const en = {
       structure_note_suffix: "apply it to the estimator.",
       warp_rates: "Warp Yarn Rates",
       weft_rates: "Weft Yarn Rates",
-      delete_template_btn: "Delete template",
+      delete_button: "Delete template",
+      delete_note: "· This action is permanent",
       structure_preserved: "Structure preserved · only rates change",
       apply_as_is: "Apply as-is",
-      save_rates_apply: "Save Rates & Apply"
+      save_apply: "Save Rates & Apply"
     },
     convert_dialog: {
       title: "Convert to Production Order",
