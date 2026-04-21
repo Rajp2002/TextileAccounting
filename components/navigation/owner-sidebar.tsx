@@ -85,7 +85,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                                     "flex items-center gap-3 px-3 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
                                     isActive
                                         ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(from_var(--primary)_l_c_h_/_0.3)]"
-                                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                                        : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
                                 )}
                             >
                                 <Icon className="h-[18px] w-[18px]" />
@@ -222,7 +222,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                             href={item.href}
                             className={cn(
                                 "flex flex-col items-center justify-center py-1 px-1 w-full relative h-full transition-all duration-300",
-                                isActive ? "text-primary scale-110" : "text-muted-foreground"
+                                isActive ? "text-primary scale-110" : "text-primary opacity-80"
                             )}
                         >
                             <div className={cn(
@@ -233,7 +233,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                             </div>
                             <span className={cn(
                                 "text-[10px] font-bold leading-none tracking-tight",
-                                isActive ? "opacity-100" : "opacity-70"
+                                isActive ? "opacity-100" : "opacity-80"
                             )}>
                                 {t(`nav.${item.translationKey}`) || item.name}
                             </span>
@@ -247,12 +247,12 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                 {/* More button to trigger the sheet */}
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="flex flex-col items-center justify-center py-1 px-1 w-full relative h-full text-muted-foreground"
+                    className="flex flex-col items-center justify-center py-1 px-1 w-full relative h-full text-primary opacity-80"
                 >
                     <div className="py-1.5 px-4 rounded-xl mb-1 hover:bg-black/5 transition-all">
                         <Menu className="h-5 w-5" />
                     </div>
-                    <span className="text-[10px] font-bold leading-none tracking-tight opacity-70">{t('common.menu')}</span>
+                    <span className="text-[10px] font-bold leading-none tracking-tight opacity-80">{t('common.menu')}</span>
                 </button>
             </div>
         </>

@@ -742,11 +742,12 @@ function SettlementDialog({
         setAddingAdjustment(true)
         const { error } = await supabase.from('payroll_adjustments').insert({
             org_id: (worker as any).org_id,
-            worker_id: worker.id,
+            [workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id']: worker.id,
+            worker_type: workerType,
             category_id: adjCategoryId,
             amount: parseFloat(adjAmount),
             description: adjDesc,
-            payroll_cycle: selectedMonth // simplified: should be cycle start
+            cycle_start_date: selectedMonth // simplified: should be cycle start
         })
         setAddingAdjustment(false)
         if (error) toast.error('Failed to add adjustment')
@@ -794,10 +795,10 @@ function SettlementDialog({
                     {/* Adjustment Section */}
                     <div className="space-y-3">
                         <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Quick Adjustments (Inam / Kapaat)</h4>
-                        <div className="bg-gray-50 rounded-xl p-3 border border-dashed border-gray-300 space-y-3">
+                        <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-200 border-dashed space-y-4">
                             <div className="flex gap-2">
                                 <Select value={adjCategoryId} onValueChange={setAdjCategoryId}>
-                                    <SelectTrigger className="h-9 text-xs bg-white">
+                                    <SelectTrigger className="h-10 text-xs bg-white border-gray-200">
                                         <SelectValue placeholder="Category" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -811,17 +812,17 @@ function SettlementDialog({
                                 <Input 
                                     placeholder="Amount" 
                                     type="number" 
-                                    className="h-9 w-24 text-xs bg-white" 
+                                    className="h-10 w-28 text-xs bg-white border-gray-200" 
                                     value={adjAmount}
                                     onChange={e => setAdjAmount(e.target.value)}
                                 />
-                                <Button size="sm" className="h-9 px-3" onClick={handleAddAdjustment} disabled={addingAdjustment}>
-                                    {addingAdjustment ? <Loader2 className="h-3 w-3 animate-spin"/> : <Check className="h-4 w-4"/>}
+                                <Button size="sm" className="h-10 px-4 bg-indigo-600 hover:bg-indigo-700" onClick={handleAddAdjustment} disabled={addingAdjustment}>
+                                    {addingAdjustment ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-5 w-5"/>}
                                 </Button>
                             </div>
                             <Input 
                                 placeholder="Description (Optional)" 
-                                className="h-8 text-[11px] bg-white"
+                                className="h-9 text-[11px] bg-white border-gray-200"
                                 value={adjDesc}
                                 onChange={e => setAdjDesc(e.target.value)}
                             />
@@ -835,10 +836,10 @@ function SettlementDialog({
                                 <Label className="text-sm font-black text-gray-700">Advance Recovery</Label>
                                 <p className="text-[10px] text-gray-500 italic">Recommended: ₹{formatINR(autoDeduction)} (of ₹{formatINR(totalAdvances)} total debt)</p>
                             </div>
-                            <div className="relative w-32">
-                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-bold">₹</span>
+                            <div className="relative w-40">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₹</span>
                                 <Input 
-                                    className="pl-6 h-10 font-black text-indigo-600 text-right" 
+                                    className="pl-8 h-11 font-black text-indigo-700 text-right text-lg border-gray-200 bg-white" 
                                     placeholder={autoDeduction.toString()}
                                     value={manualDeduction}
                                     onChange={e => setManualDeduction(e.target.value)}
@@ -846,13 +847,13 @@ function SettlementDialog({
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-2 bg-red-50 p-3 rounded-lg border border-red-100">
-                            <Checkbox id="final" checked={isFinal} onCheckedChange={(c) => setIsFinal(!!c)} />
+                        <div className="flex items-start space-x-3 bg-red-50/50 p-4 rounded-xl border border-red-100">
+                            <Checkbox id="final" checked={isFinal} onCheckedChange={(c) => setIsFinal(!!c)} className="mt-1" />
                             <div className="grid gap-1.5 leading-none">
                                 <label htmlFor="final" className="text-xs font-black text-red-700 uppercase leading-none cursor-pointer">
                                     Mark as Final Settlement
                                 </label>
-                                <p className="text-[9px] text-red-500 font-medium">
+                                <p className="text-[10px] text-red-500 font-medium leading-relaxed opacity-80">
                                     This clears 100% of remaining debt and marks worker as inactive.
                                 </p>
                             </div>
@@ -862,14 +863,16 @@ function SettlementDialog({
 
                 <div className="bg-gray-50 p-6 border-t border-gray-200 space-y-4">
                     <div className="flex justify-between items-end">
-                        <div className="space-y-0.5">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Confirmed Payout</span>
-                            <div className="text-3xl font-black text-green-600 tracking-tighter">
+                        <div className="space-y-1">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Confirmed Payout</span>
+                            <div className="text-4xl font-black text-green-600 tracking-tighter">
                                 {formatINR(netPayout)}
                             </div>
                         </div>
-                        <div className="flex flex-col items-end gap-1">
-                            <span className="text-[10px] font-bold text-amber-600">Debt to Carry: {formatINR(totalAdvances - activeDeduction)}</span>
+                        <div className="flex flex-col items-end gap-1 mb-1">
+                            <span className="text-[11px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                                Debt to Carry: {formatINR(totalAdvances - activeDeduction)}
+                            </span>
                         </div>
                     </div>
 
@@ -881,11 +884,11 @@ function SettlementDialog({
                     </div>
 
                     <div className="flex gap-3">
-                        <Button variant="outline" className="flex-1 h-12 font-bold" onClick={() => onOpenChange(false)}>
+                        <Button variant="outline" className="flex-1 h-12 font-bold border-gray-300 hover:bg-gray-100 transition-colors" onClick={() => onOpenChange(false)}>
                             Cancel
                         </Button>
                         <Button 
-                            className="flex-[2] h-12 bg-indigo-600 hover:bg-indigo-700 font-black uppercase tracking-widest shadow-xl shadow-indigo-200 disabled:bg-gray-300" 
+                            className="flex-[2] h-12 bg-indigo-600 hover:bg-indigo-700 font-black uppercase tracking-widest shadow-lg shadow-indigo-100 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all" 
                             disabled={!confirmed || isMutating || netPayout < 0}
                             onClick={() => onSettle({ isFinal, manualDeduction: manualDeduction ? parseFloat(manualDeduction) : null })}
                         >
