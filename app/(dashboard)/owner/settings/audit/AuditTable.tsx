@@ -277,7 +277,7 @@ export default function AuditTable() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Users</SelectItem>
-                                {actors?.map(actor => (
+                                {actors?.map((actor: { id: string; full_name: string; role: string }) => (
                                     <SelectItem key={actor.id} value={actor.id}>
                                         <div className="flex flex-col">
                                             <span className="font-medium text-xs">{actor.full_name}</span>
