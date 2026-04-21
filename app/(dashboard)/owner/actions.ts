@@ -97,7 +97,7 @@ export async function updateMachineAssignment(
     shift: 'day' | 'night',
     isExisting: boolean
 ) {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     const machineParsed = safeParse(UuidSchema, machineId)
@@ -883,5 +883,25 @@ export async function getOrCreateReferralCodeAction() {
     const { getOrCreateReferralCode } = await import('@/lib/referral');
     if (!profile.org_id) throw new Error('Organization not found');
     return await getOrCreateReferralCode(profile.org_id);
+}
+
+export async function assignMachineOrder(machineId: string, orderId: string | null) {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const { error } = await supabase
+        .from('machines')
+        .update({ current_order_id: orderId })
+        .eq('id', machineId)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to assign machine order:', error)
+        return { error: 'Failed to assign order. Please try again.' }
+    }
+
+    revalidatePath('/owner/machines')
+    revalidatePath('/owner/analytics')
+    return { success: true }
 }
 
