@@ -57,7 +57,9 @@ import {
     renameMachine,
     toggleMachineStatus as toggleMachineStatusAction,
     updateMachineAssignment,
+    assignMachineOrder,
 } from '@/app/(dashboard)/owner/actions'
+import { getActiveOrders } from '@/app/(dashboard)/owner/orders/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
@@ -189,18 +191,27 @@ export function MachineManagement({
         }
     })
 
-    // Fetch Assignments
-    const { data: assignments, isLoading: assignmentsLoading } = useQuery({
-        queryKey: ['machine_assignments', orgId],
+    // Fetch Active Orders (Owner only)
+    const { data: activeOrders } = useQuery({
+        queryKey: ['active_orders', orgId],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('machine_assignments')
-                .select('*')
-                .eq('org_id', orgId)
-            if (error) throw error
-            return data as Assignment[]
-        }
+            const res = await getActiveOrders()
+            if ('error' in res) throw new Error(res.error)
+            return res.data
+        },
+        enabled: !!orgId && (userProfile?.role === 'owner' || userProfile?.role === 'supervisor')
     })
+
+    const handleOrderLink = async (machineId: string, orderId: string | null) => {
+        try {
+            const res = await assignMachineOrder(machineId, orderId)
+            if (res.error) throw new Error(res.error)
+            toast.success(t('machines.order_assigned') || 'Order linked to machine')
+            queryClient.invalidateQueries({ queryKey: ['machines'] })
+        } catch (error: any) {
+            toast.error(error.message || t('machines.order_assign_failed'))
+        }
+    }
 
 
     const handleAddMachine = async () => {
@@ -510,36 +521,78 @@ export function MachineManagement({
 
                                 {/* Order & Quality Section */}
                                 <div className="flex-1 space-y-4">
-                                    <div className={cn(
-                                        "p-3 rounded-xl border transition-colors",
-                                        machine.current_order_id 
-                                            ? "bg-teal-50/30 border-teal-100" 
-                                            : "bg-slate-50 border-slate-100"
-                                    )}>
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Active Requirement</span>
-                                            {machine.current_order_id && (
-                                                <Badge variant="outline" className="text-[10px] bg-white text-teal-700 border-teal-200">
-                                                    ₹{activeRate ?? '—'}/m
-                                                </Badge>
-                                            )}
-                                        </div>
-                                        {machine.current_order_id ? (
-                                            <div className="flex items-center gap-2">
-                                                <div className="p-1.5 bg-white rounded-lg border border-teal-100">
-                                                    <Tag className="h-3.5 w-3.5 text-teal-500" />
+                                    <Popover>
+                                        <PopoverTrigger asChild disabled={userProfile?.role !== 'owner' && userProfile?.role !== 'supervisor'}>
+                                            <div className={cn(
+                                                "p-3 rounded-xl border transition-all",
+                                                machine.current_order_id 
+                                                    ? "bg-teal-50/30 border-teal-100" 
+                                                    : "bg-slate-50 border-slate-100",
+                                                (userProfile?.role === 'owner' || userProfile?.role === 'supervisor') && "cursor-pointer hover:border-teal-300 hover:bg-teal-50/50"
+                                            )}>
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Active Requirement</span>
+                                                    {machine.current_order_id && (
+                                                        <Badge variant="outline" className="text-[10px] bg-white text-teal-700 border-teal-200">
+                                                            ₹{activeRate ?? '—'}/m
+                                                        </Badge>
+                                                    )}
                                                 </div>
-                                                <span className="text-sm font-semibold text-slate-800 truncate">
-                                                    {activeQualityName || "Custom Order"}
-                                                </span>
+                                                {machine.current_order_id ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="p-1.5 bg-white rounded-lg border border-teal-100">
+                                                            <Tag className="h-3.5 w-3.5 text-teal-500" />
+                                                        </div>
+                                                        <span className="text-sm font-semibold text-slate-800 truncate">
+                                                            {activeQualityName || "Custom Order"}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 text-slate-400 italic">
+                                                        <AlertCircle className="h-3.5 w-3.5" />
+                                                        <span className="text-xs">No active order</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        ) : (
-                                            <div className="flex items-center gap-2 text-slate-400 italic">
-                                                <AlertCircle className="h-3.5 w-3.5" />
-                                                <span className="text-xs">No active order</span>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[280px] p-0" align="start">
+                                            <div className="max-h-[300px] overflow-auto p-1">
+                                                <div className="px-2 py-1.5 text-[10px] font-bold text-slate-400 uppercase border-b mb-1 flex justify-between items-center">
+                                                    Assign New Order
+                                                    {machine.current_order_id && (
+                                                        <button 
+                                                            onClick={() => handleOrderLink(machine.id, null)}
+                                                            className="text-red-500 hover:text-red-600 font-bold"
+                                                        >
+                                                            Unlink
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {activeOrders?.map((order: any) => (
+                                                    <button
+                                                        key={order.id}
+                                                        type="button"
+                                                        className={cn(
+                                                            "w-full text-left px-3 py-2.5 text-sm rounded-lg transition-colors hover:bg-slate-100 space-y-0.5",
+                                                            machine.current_order_id === order.id && "bg-teal-50 text-teal-700 font-medium border border-teal-100"
+                                                        )}
+                                                        onClick={() => {
+                                                            handleOrderLink(machine.id, order.id)
+                                                        }}
+                                                    >
+                                                        <div className="font-bold truncate">{order.quality_label || 'Unnamed Order'}</div>
+                                                        <div className="text-[10px] opacity-70 truncate">{order.party_name}</div>
+                                                    </button>
+                                                ))}
+                                                {activeOrders?.length === 0 && (
+                                                    <div className="p-4 text-center text-xs text-slate-500 italic">
+                                                        No active orders found.<br/>
+                                                        Create one in the Orders tab.
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
+                                        </PopoverContent>
+                                    </Popover>
 
                                     {/* Shift Assignments */}
                                     <div className="grid grid-cols-2 gap-3">
