@@ -705,10 +705,11 @@ export const hi = {
       structure_note_suffix: "एस्टीमेटर में लागू होगा।",
       warp_rates: "ताना सूत रेट्स",
       weft_rates: "बाना सूत रेट्स",
-      delete_template_btn: "टेम्पलेट हटाएं",
+      delete_button: "टेम्पलेट हटाएं",
+      delete_note: "· यह क्रिया स्थायी है",
       structure_preserved: "संरचना सुरक्षित · केवल रेट्स बदलते हैं",
       apply_as_is: "जैसा है वैसे ही लागू करें",
-      save_rates_apply: "रेट्स सेव करें और लागू करें"
+      save_apply: "રેટ્સ સેવ કરો અને લાગુ કરો"
     },
     convert_dialog: {
       title: "प्रोडक्शन ऑर्डर में बदलें",

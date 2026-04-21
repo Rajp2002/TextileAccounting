@@ -703,10 +703,11 @@ export const gu = {
       structure_note_suffix: "એસ્ટીમેટરમાં લાગુ થશે.",
       warp_rates: "તાણો સૂત રેટ્સ",
       weft_rates: "ભરણ સૂત રેટ્સ",
-      delete_template_btn: "ટેમ્પલેટ ડિલીટ કરો",
+      delete_button: "ટેમ્પલેટ ડિલીટ કરો",
+      delete_note: "· આ કાયમી છે",
       structure_preserved: "સ્ટ્રક્ચર સુરક્ષિત · ફક્ત રેટ્સ બદલાય",
       apply_as_is: "જેવું છે તેવું લાગુ કરો",
-      save_rates_apply: "રેટ્સ સેવ કરો અને લાગુ કરો"
+      save_apply: "રેટ્સ સેવ કરો અને લાગુ કરો"
     },
     convert_dialog: {
       title: "પ્રોડક્શન ઓર્ડરમાં બદલો",
