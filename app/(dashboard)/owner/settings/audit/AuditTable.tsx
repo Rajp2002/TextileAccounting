@@ -468,10 +468,16 @@ export default function AuditTable() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setPage(p => p + 1)}
+                                disabled={(page + 1) * PAGE_SIZE >= (data.count || 0)}
+                                className="h-10 px-6 rounded-2xl font-bold bg-white border-gray-200 hover:bg-gray-50 disabled:opacity-30 transition-all text-xs shadow-sm hover:shadow-md flex items-center gap-2"
+                            >
+                                Next
+                                <ArrowRight className="h-3.5 w-3.5" />
+                            </Button>
                         </div>
-                    ) : null}
-                </div>
-            )}
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
