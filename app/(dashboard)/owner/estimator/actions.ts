@@ -212,6 +212,57 @@ export async function updateTemplateRates(data: {
     return { success: true }
 }
 
+/**
+ * Full update of a fabric template (recipe + charges + shortages).
+ * Used when the user "saves" an active template after making modifications.
+ */
+export async function updateFabricTemplate(data: {
+    id:               string
+    name:             string
+    warpRows:         WarpRow[]
+    weftRows:         WeftRow[]
+    tapeLengthM:      number
+    warpCrimpPct?:    number
+    perPickCostPaisa: number
+    yarnShortagePct?: number
+    overheadOverridePerM?: number | null
+}) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const firstWarp = data.warpRows[0]
+    const firstWeft = data.weftRows[0]
+
+    const { error } = await supabase
+        .from('estimator_templates')
+        .update({
+            name:                data.name,
+            warp_rows:           data.warpRows,
+            weft_rows:           data.weftRows,
+            per_pick_cost_paise: data.perPickCostPaisa,
+            tape_length_m:       data.tapeLengthM,
+            warp_crimp_pct:      data.warpCrimpPct ?? 0,
+            yarn_shortage_pct:   data.yarnShortagePct ?? 0,
+            overhead_override_per_m: data.overheadOverridePerM ?? null,
+            // Legacy sync
+            yarn_denier:         Math.round(firstWarp?.calcDenier ?? 75),
+            calculated_yarn_denier: firstWarp?.calcDenier ?? 75,
+            beam_ends:           firstWarp?.beamEnds ?? 3200,
+            ppi:                 Math.round(firstWeft?.picks ?? 68),
+            reed_space:          firstWeft?.reedSpace ?? 62,
+            weft_denier:         firstWeft?.calcDenier ?? 75,
+            default_yarn_rate:   firstWarp?.yarnRate ?? 107,
+        })
+        .eq('id', data.id)
+        .eq('org_id', profile.org_id)
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/owner/estimator')
+    return { success: true }
+}
+
+
 /** Rename a template (owner can fix typos without recreating). */
 export async function renameTemplate(id: string, name: string) {
     const { profile } = await requireRole(['owner'])

@@ -64,11 +64,18 @@ import {
     getFixedWorkersForOverhead,
     deleteTemplate,
     updateTemplateRates,
+    updateFabricTemplate,
     renameTemplate,
     getLastQuoteForParty,
     getMonthlyOutputSuggestion,
     upsertFactoryCostProfile,
 } from './actions'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useAutosave } from '@/hooks/useAutosave'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
@@ -662,6 +669,33 @@ export default function EstimatorClient({
         }
     }
 
+    const handleUpdateTemplate = async () => {
+        if (!appliedTemplate) return
+        setSavingTemplate(true)
+        const updatedName = qualityLabel.trim() || appliedTemplate.name
+        const res = await updateFabricTemplate({
+            id:               appliedTemplate.id,
+            name:             updatedName,
+            warpRows:         state.warpRows,
+            weftRows:         state.weftRows,
+            tapeLengthM:      state.tapeLengthM,
+            warpCrimpPct:     state.warpCrimpPct,
+            perPickCostPaisa: state.perPickCostPaisa,
+            yarnShortagePct:  state.yarnShortagePct,
+            overheadOverridePerM: state.overheadOverridePerM,
+        })
+        setSavingTemplate(false)
+        
+        if (res.success) {
+            const tRes = await getEstimatorTemplates()
+            if (tRes.data) setTemplates(tRes.data)
+            setAppliedTemplate({ ...appliedTemplate, name: updatedName })
+            toast.success(`Updated '${updatedName}' successfully!`)
+        } else {
+            toast.error(res.error ?? 'Failed to update template')
+        }
+    }
+
     /** Open the "update rates" sheet for a template. */
     const openEditRates = useCallback((tpl: any) => {
         const warpRows: WarpRow[] = tpl.warp_rows ?? []
@@ -860,14 +894,56 @@ export default function EstimatorClient({
                             >
                                 <Package className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{t('estimator.hud.order_btn')}</span>
                             </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1 sm:flex-none h-9 px-3 sm:px-4 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 sm:gap-2 font-bold"
-                                onClick={() => setShowSaveTemplate(true)}
-                            >
-                                <BookmarkPlus className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{t('estimator.hud.save_template_btn')}</span>
-                            </Button>
+
+                            {appliedTemplate ? (
+                                <div className="flex">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-9 px-3 sm:px-4 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 sm:gap-2 font-bold rounded-r-none border-r-0"
+                                        onClick={handleUpdateTemplate}
+                                        disabled={savingTemplate}
+                                    >
+                                        {savingTemplate ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5 text-brand-accent shrink-0" />}
+                                        <span className="truncate">Update {appliedTemplate.name}</span>
+                                    </Button>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-9 px-1.5 border-slate-200 text-slate-600 hover:bg-slate-50 rounded-l-none border-l-[1px]"
+                                            >
+                                                <ChevronDown className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-48">
+                                            <DropdownMenuItem 
+                                                className="text-xs font-bold gap-2 cursor-pointer"
+                                                onClick={() => {
+                                                    setTemplateName(qualityLabel.trim() || appliedTemplate.name)
+                                                    setShowSaveTemplate(true)
+                                                }}
+                                            >
+                                                <BookmarkPlus className="h-3.5 w-3.5 text-slate-400" />
+                                                Save as New...
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            ) : (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-1 sm:flex-none h-9 px-3 sm:px-4 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 sm:gap-2 font-bold"
+                                    onClick={() => {
+                                        setTemplateName(qualityLabel.trim())
+                                        setShowSaveTemplate(true)
+                                    }}
+                                >
+                                    <BookmarkPlus className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{t('estimator.hud.save_template_btn')}</span>
+                                </Button>
+                            )}
                         </div>
                     </div>
 
