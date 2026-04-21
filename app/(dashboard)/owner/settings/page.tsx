@@ -134,6 +134,7 @@ export default function SettingsPage() {
 
     const isLoading = profileLoading || orgLoading
 
+    if (isLoading) {
         return (
             <div className="space-y-6 max-w-6xl pb-10 animate-pulse">
                 <div className="space-y-2">
@@ -159,6 +160,7 @@ export default function SettingsPage() {
                 </div>
             </div>
         )
+    }
 
     if (!userProfile) return null
 
