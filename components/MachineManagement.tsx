@@ -23,7 +23,33 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { toast } from 'sonner'
-import { Loader2, Plus, Trash2, KeyRound, Pencil, Power, Tag } from 'lucide-react'
+import { 
+    Loader2, 
+    Plus, 
+    Trash2, 
+    KeyRound, 
+    Pencil, 
+    Power, 
+    Tag, 
+    Sun, 
+    Moon, 
+    CheckCircle2, 
+    AlertCircle,
+    Activity,
+    MoreVertical
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { deleteMachineWithCode, requestAccessCode } from '@/app/(dashboard)/supervisor/actions'
 import {
@@ -384,7 +410,7 @@ export function MachineManagement({
                 )}
             </CardHeader>
             <CardContent>
-                <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
                     {machines?.map(machine => {
                         const dayAssignment = assignments?.find(a => a.machine_id === machine.id && a.shift === 'day')
                         const nightAssignment = assignments?.find(a => a.machine_id === machine.id && a.shift === 'night')
@@ -397,136 +423,223 @@ export function MachineManagement({
                         const activeRate = machine.orders?.worker_rate_per_m
                         const activeQualityName = machine.orders?.quality_label
 
+                        const dayWorkerName = workers?.find(w => w.id === dayAssignment?.worker_id)?.name
+                        const nightWorkerName = workers?.find(w => w.id === nightAssignment?.worker_id)?.name
+
                         return (
                             <div
                                 key={machine.id}
                                 className={cn(
-                                    "p-4 border rounded-lg space-y-4 group transition-opacity",
-                                    isInactive ? "bg-gray-100/60 opacity-60" : "bg-gray-50/50"
+                                    "relative flex flex-col justify-between p-5 border rounded-2xl transition-all duration-300 group",
+                                    isInactive 
+                                        ? "bg-gray-100/40 border-gray-200 grayscale opacity-70" 
+                                        : "bg-white border-slate-200 hover:border-teal-500/50 hover:shadow-xl hover:shadow-teal-500/5"
                                 )}
                             >
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <div className="font-semibold text-lg">{machine.name}</div>
-
-                                        {/* Dynamic Rate Badge — derived from active order */}
-                                        {machine.current_order_id ? (
-                                            <div className="text-sm text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 flex items-center gap-1">
-                                                <Tag className="h-3 w-3" />
-                                                ₹{activeRate ?? '—'}/m
-                                                {activeQualityName && (
-                                                    <span className="text-teal-500 font-normal text-xs">
-                                                        ({activeQualityName})
+                                {/* Header: Machine ID & Status */}
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
+                                            isEffectivelyActive ? "bg-teal-50 text-teal-600" : "bg-slate-50 text-slate-400"
+                                        )}>
+                                            <Activity className={cn("h-5 w-5", isEffectivelyActive && "animate-pulse")} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-slate-900">{machine.name}</h3>
+                                            <div className="flex items-center gap-1.5">
+                                                {isEffectivelyActive ? (
+                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-teal-600 uppercase tracking-wider">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+                                                        {t('machines.active_status')}
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                                                        {t('machines.inactive')}
                                                     </span>
                                                 )}
                                             </div>
-                                        ) : (
-                                            <div className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 flex items-center gap-1">
-                                                <Tag className="h-3 w-3" />
-                                                No active order
-                                            </div>
-                                        )}
-
-                                        {/* Status Badge */}
-                                        <span className={cn(
-                                            "text-xs px-2 py-0.5 rounded-full font-medium transition-colors",
-                                            isEffectivelyActive
-                                                ? "bg-green-100 text-green-700"
-                                                : "bg-gray-100 text-gray-500"
-                                        )} title={!hasAssignments && !isInactive ? "No workers assigned" : ""}>
-                                            {isEffectivelyActive ? t('machines.active_status') : t('machines.inactive')}
-                                        </span>
+                                        </div>
                                     </div>
 
-                                    <div className="flex items-center gap-1.5">
-                                        {/* Rename Button */}
-                                        {canRenameMachines && (
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-gray-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-                                                onClick={() => {
-                                                    setMachineToRename(machine)
-                                                    setRenameValue(machine.name)
-                                                }}
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                        )}
-
-                                        {/* Activate / Deactivate Toggle */}
-                                        {canRenameMachines && (
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className={cn(
-                                                    "h-8 w-8 md:opacity-0 md:group-hover:opacity-100 transition-opacity",
-                                                    isInactive ? "text-green-600" : "text-amber-600"
+                                    {/* Quick Actions Dropdown */}
+                                    <div className="flex items-center">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-40">
+                                                {canRenameMachines && (
+                                                    <>
+                                                        <DropdownMenuItem onClick={() => toggleMachineStatus(machine)}>
+                                                            <Power className={cn("h-4 w-4 mr-2", isInactive ? "text-teal-600" : "text-amber-600")} />
+                                                            {isInactive? t('machines.activate') : t('machines.deactivate')}
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => {
+                                                            setMachineToRename(machine)
+                                                            setRenameValue(machine.name)
+                                                        }}>
+                                                            <Pencil className="h-4 w-4 mr-2" />
+                                                            {t('machines.rename_machine')}
+                                                        </DropdownMenuItem>
+                                                    </>
                                                 )}
-                                                onClick={() => toggleMachineStatus(machine)}
-                                                title={isInactive ? t('machines.activate') : t('machines.deactivate')}
-                                            >
-                                                <Power className="h-4 w-4" />
-                                            </Button>
-                                        )}
-
-                                        {canDeleteMachines && (
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-                                                onClick={() => {
-                                                    if (userProfile?.role === 'owner') {
-                                                        confirmDelete(machine.id)
-                                                    } else {
-                                                        setMachineToDelete(machine.id)
-                                                        setAccessCode('')
-                                                    }
-                                                }}
-                                                disabled={deleting}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        )}
+                                                {canDeleteMachines && (
+                                                    <DropdownMenuItem 
+                                                        className="text-red-600 focus:text-red-600"
+                                                        onClick={() => {
+                                                            if (userProfile?.role === 'owner') {
+                                                                confirmDelete(machine.id)
+                                                            } else {
+                                                                setMachineToDelete(machine.id)
+                                                                setAccessCode('')
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Trash2 className="h-4 w-4 mr-2" />
+                                                        {t('common.delete')}
+                                                    </DropdownMenuItem>
+                                                )}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground uppercase">{t('machines.day_shift_hours')}</Label>
-                                        <Select
-                                            value={dayAssignment?.worker_id.toString()}
-                                            onValueChange={(val) => handleAssignment(machine.id, val, 'day')}
-                                        >
-                                            <SelectTrigger className="bg-white">
-                                                <SelectValue placeholder={t('machines.assign_worker')} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {workers?.map(w => (
-                                                    <SelectItem key={w.id} value={w.id.toString()}>
-                                                        {tl(w.name)}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                {/* Order & Quality Section */}
+                                <div className="flex-1 space-y-4">
+                                    <div className={cn(
+                                        "p-3 rounded-xl border transition-colors",
+                                        machine.current_order_id 
+                                            ? "bg-teal-50/30 border-teal-100" 
+                                            : "bg-slate-50 border-slate-100"
+                                    )}>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Active Requirement</span>
+                                            {machine.current_order_id && (
+                                                <Badge variant="outline" className="text-[10px] bg-white text-teal-700 border-teal-200">
+                                                    ₹{activeRate ?? '—'}/m
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        {machine.current_order_id ? (
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 bg-white rounded-lg border border-teal-100">
+                                                    <Tag className="h-3.5 w-3.5 text-teal-500" />
+                                                </div>
+                                                <span className="text-sm font-semibold text-slate-800 truncate">
+                                                    {activeQualityName || "Custom Order"}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2 text-slate-400 italic">
+                                                <AlertCircle className="h-3.5 w-3.5" />
+                                                <span className="text-xs">No active order</span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground uppercase">{t('machines.night_shift_hours')}</Label>
-                                        <Select
-                                            value={nightAssignment?.worker_id.toString()}
-                                            onValueChange={(val) => handleAssignment(machine.id, val, 'night')}
-                                        >
-                                            <SelectTrigger className="bg-white">
-                                                <SelectValue placeholder={t('machines.assign_worker')} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {workers?.map(w => (
-                                                    <SelectItem key={w.id} value={w.id.toString()}>
-                                                        {tl(w.name)}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+
+                                    {/* Shift Assignments */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {/* Day Shift */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                                                <Sun className="h-3 w-3 text-amber-500" />
+                                                Day
+                                            </div>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className={cn(
+                                                            "w-full justify-start text-left font-normal h-9 px-3 rounded-xl border-dashed hover:border-solid transition-all",
+                                                            dayAssignment ? "text-slate-900 border-slate-200 bg-white" : "text-slate-400 border-slate-200 bg-slate-50/50"
+                                                        )}
+                                                    >
+                                                        <span className="truncate text-xs">
+                                                            {dayWorkerName ? tl(dayWorkerName) : t('machines.assign_worker')}
+                                                        </span>
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-[200px] p-0" align="start">
+                                                    <div className="max-h-[240px] overflow-auto p-1">
+                                                        <div className="px-2 py-1.5 text-[10px] font-bold text-slate-400 uppercase border-b mb-1">
+                                                            Select Day Worker
+                                                        </div>
+                                                        {workers?.map(w => (
+                                                            <button
+                                                                key={w.id}
+                                                                type="button"
+                                                                className={cn(
+                                                                    "w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-slate-100",
+                                                                    dayAssignment?.worker_id === w.id && "bg-teal-50 text-teal-700 font-medium"
+                                                                )}
+                                                                onClick={() => {
+                                                                    handleAssignment(machine.id, w.id.toString(), 'day')
+                                                                }}
+                                                            >
+                                                                {tl(w.name)}
+                                                            </button>
+                                                        ))}
+                                                        {workers?.length === 0 && (
+                                                            <div className="p-3 text-center text-xs text-slate-500">No workers available</div>
+                                                        )}
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                        </div>
+
+                                        {/* Night Shift */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                                                <Moon className="h-3 w-3 text-indigo-500" />
+                                                Night
+                                            </div>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className={cn(
+                                                            "w-full justify-start text-left font-normal h-9 px-3 rounded-xl border-dashed hover:border-solid transition-all",
+                                                            nightAssignment ? "text-slate-900 border-slate-200 bg-white" : "text-slate-400 border-slate-200 bg-slate-50/50"
+                                                        )}
+                                                    >
+                                                        <span className="truncate text-xs">
+                                                            {nightWorkerName ? tl(nightWorkerName) : t('machines.assign_worker')}
+                                                        </span>
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-[200px] p-0" align="start">
+                                                    <div className="max-h-[240px] overflow-auto p-1">
+                                                        <div className="px-2 py-1.5 text-[10px] font-bold text-slate-400 uppercase border-b mb-1">
+                                                            Select Night Worker
+                                                        </div>
+                                                        {workers?.map(w => (
+                                                            <button
+                                                                key={w.id}
+                                                                type="button"
+                                                                className={cn(
+                                                                    "w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-slate-100",
+                                                                    nightAssignment?.worker_id === w.id && "bg-teal-50 text-teal-700 font-medium"
+                                                                )}
+                                                                onClick={() => {
+                                                                    handleAssignment(machine.id, w.id.toString(), 'night')
+                                                                }}
+                                                            >
+                                                                {tl(w.name)}
+                                                            </button>
+                                                        ))}
+                                                        {workers?.length === 0 && (
+                                                            <div className="p-3 text-center text-xs text-slate-500">No workers available</div>
+                                                        )}
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
