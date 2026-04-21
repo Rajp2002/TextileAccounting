@@ -202,6 +202,18 @@ export function MachineManagement({
         enabled: !!orgId && (userProfile?.role === 'owner' || userProfile?.role === 'supervisor')
     })
 
+    const { data: assignments, isLoading: assignmentsLoading } = useQuery({
+        queryKey: ['machine_assignments', orgId],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('machine_assignments')
+                .select('*')
+                .eq('org_id', orgId)
+            if (error) throw error
+            return data as Assignment[]
+        }
+    })
+
     const handleOrderLink = async (machineId: string, orderId: string | null) => {
         try {
             const res = await assignMachineOrder(machineId, orderId)
