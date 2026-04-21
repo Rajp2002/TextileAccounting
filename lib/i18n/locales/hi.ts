@@ -605,7 +605,9 @@ export const hi = {
       hint: "लागू करने के लिए टैप करें · रेट्स बदलने के लिए लॉन्ग-प्रेस करें",
       edit_rates_title: "सूत रेट्स अपडेट करें",
       delete_template: "टेम्पलेट हटाएं",
-      structure_preserved: "संरचना सुरक्षित · केवल रेट्स बदलते हैं"
+      structure_preserved: "संरचना सुरक्षित · केवल रेट्स बदलते हैं",
+      reset_btn: "रिसेट",
+      save_btn: "सेव"
     },
     order_basics: {
       title: "ऑर्डर और फैब्रिक लेबल",

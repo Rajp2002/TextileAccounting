@@ -603,7 +603,9 @@ export const gu = {
       hint: "લાગુ કરવા ટેપ કરો · રેટ્સ બદલવા લૉન્ગ-પ્રેસ કરો",
       edit_rates_title: "સૂત રેટ્સ અપડેટ કરો",
       delete_template: "ટેમ્પલેટ ડિલીટ કરો",
-      structure_preserved: "સ્ટ્રક્ચર સુરક્ષિત · ફક્ત રેટ્સ બદલાય છે"
+      structure_preserved: "સ્ટ્રક્ચર સુરક્ષિત · ફક્ત રેટ્સ બદલાય છે",
+      reset_btn: "રિસેટ",
+      save_btn: "સેવ"
     },
     order_basics: {
       title: "ઓર્ડર અને ફેબ્રિક લેબલ",

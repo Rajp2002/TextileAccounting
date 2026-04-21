@@ -613,7 +613,9 @@ export const en = {
       hint: "Tap to apply · Long-press to edit rates",
       edit_rates_title: "Update yarn rates",
       delete_template: "Delete template",
-      structure_preserved: "Structure preserved · only rates change"
+      structure_preserved: "Structure preserved · only rates change",
+      reset_btn: "Reset",
+      save_btn: "Save"
     },
     order_basics: {
       title: "Order & Fabric Label",
