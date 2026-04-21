@@ -66,11 +66,16 @@ export default function SettingsPage() {
                 .eq('id', userProfile!.org_id)
                 .single()
             if (error) throw error
-            // Initialize local name state once data is loaded
-            if (data?.name) setFactoryName(data.name)
             return data
         }
     })
+
+    // Sync local state when organization data is loaded
+    useEffect(() => {
+        if (org?.name) {
+            setFactoryName(org.name)
+        }
+    }, [org?.name])
 
     // Update factory name mutation
     const updateNameMutation = useMutation({
