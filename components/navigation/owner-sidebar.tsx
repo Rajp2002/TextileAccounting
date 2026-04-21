@@ -113,7 +113,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                                     "flex items-center gap-3 px-3 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
                                     isActive
                                         ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(from_var(--primary)_l_c_h_/_0.3)]"
-                                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                                        : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
                                 )}
                             >
                                 <Icon className="h-[18px] w-[18px]" />
@@ -142,7 +142,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                                     "flex items-center gap-3 px-3 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
                                     isActive
                                         ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(from_var(--primary)_l_c_h_/_0.3)]"
-                                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                                        : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
                                 )}
                             >
                                 <Icon className="h-[18px] w-[18px]" />
