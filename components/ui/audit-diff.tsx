@@ -53,6 +53,15 @@ function formatValue(key: string, value: any) {
     return `#${value}`
   }
 
+  // Handle Objects/Arrays - Fix `[object Object]` bug
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value).substring(0, 30) + '...'
+    } catch {
+      return '{...}'
+    }
+  }
+
   return strVal
 }
 
@@ -109,12 +118,12 @@ function AuditDiff({ oldData, newData }: AuditDiffProps) {
             </span>
           )}
           {change.type === 'changed' && (
-            <div className="flex items-center gap-2">
-              <span className="text-red-600 line-through bg-red-50 border border-red-100 px-1.5 py-0.5 rounded opacity-70">
+            <div className="flex flex-wrap items-center gap-1.5 overflow-hidden">
+              <span className="text-rose-600 bg-rose-50/50 border border-rose-100/50 px-1.5 py-0.5 rounded text-[10px] line-through decoration-rose-300">
                 {formatValue(change.key, change.oldVal)}
               </span>
-              <span className="text-gray-400 font-sans">→</span>
-              <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-medium">
+              <span className="text-gray-300 font-sans mx-0.5">→</span>
+              <span className="text-emerald-700 bg-emerald-50/50 border border-emerald-100/50 px-1.5 py-0.5 rounded font-bold text-[10px]">
                 {formatValue(change.key, change.newVal)}
               </span>
             </div>
