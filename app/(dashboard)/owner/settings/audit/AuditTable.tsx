@@ -416,16 +416,16 @@ export default function AuditTable() {
                                  System Activity
                               </h2>
                               <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-none font-bold text-[10px] px-2 py-0.5 rounded-full">
-                                 {data.count} TOTAL
+                                 {data?.count} TOTAL
                               </Badge>
                            </div>
                            <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold uppercase tracking-widest">
-                              Showing {page * PAGE_SIZE + 1} - {Math.min((page + 1) * PAGE_SIZE, data.count || 0)}
+                              Showing {page * PAGE_SIZE + 1} - {Math.min((page + 1) * PAGE_SIZE, data?.count || 0)}
                            </div>
                         </div>
 
                         <div className="pl-2 pr-2">
-                           {data.items.map((log: any, idx: number) => (
+                           {data?.items.map((log: any, idx: number) => (
                                <AuditActivityItem 
                                  key={log.id} 
                                  log={log} 
@@ -447,7 +447,7 @@ export default function AuditTable() {
                             </Button>
                             
                             <div className="hidden sm:flex items-center gap-2">
-                               {Array.from({ length: Math.min(5, Math.ceil((data.count || 0) / PAGE_SIZE)) }).map((_, i) => (
+                               {Array.from({ length: Math.min(5, Math.ceil((data?.count || 0) / PAGE_SIZE)) }).map((_, i) => (
                                      <button
                                         key={i}
                                         onClick={() => setPage(i)}
@@ -461,14 +461,14 @@ export default function AuditTable() {
                                         {i + 1}
                                      </button>
                                ))}
-                               {Math.ceil((data.count || 0) / PAGE_SIZE) > 5 && <span className="text-gray-300 font-bold">•••</span>}
+                               {Math.ceil((data?.count || 0) / PAGE_SIZE) > 5 && <span className="text-gray-300 font-bold">•••</span>}
                             </div>
 
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setPage(p => p + 1)}
-                                disabled={(page + 1) * PAGE_SIZE >= (data.count || 0)}
+                                disabled={(page + 1) * PAGE_SIZE >= (data?.count || 0)}
                                 className="h-10 px-6 rounded-2xl font-bold bg-white border-gray-200 hover:bg-gray-50 disabled:opacity-30 transition-all text-xs shadow-sm hover:shadow-md flex items-center gap-2"
                             >
                                 Next
