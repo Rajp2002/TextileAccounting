@@ -988,8 +988,8 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
             {/* Header */}
             <div className="flex items-start justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-white tracking-tight">{t('orders_page.title')}</h1>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">{t('orders_page.title')}</h1>
+                    <p className="text-sm font-medium text-slate-500 mt-1">
                         {activeOrders.length + pendingOrders.length} {t('orders_page.active_summary')} · {completedOrders.length} {t('orders_page.completed_summary')}
                     </p>
                 </div>
@@ -997,9 +997,9 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                     <a href="/owner/estimator">
                         <Button
                             variant="outline"
-                            className="border-slate-700 text-slate-300 hover:bg-slate-800 font-bold gap-2 hidden sm:flex"
+                            className="border-slate-200 text-slate-600 hover:bg-slate-50 font-bold gap-2 hidden sm:flex"
                         >
-                            <Calculator className="h-4 w-4 text-indigo-400" />
+                            <Calculator className="h-4 w-4 text-indigo-500" />
                             {t('orders_page.estimator_btn')}
                         </Button>
                     </a>
