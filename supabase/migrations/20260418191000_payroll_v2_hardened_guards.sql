@@ -184,7 +184,10 @@ BEGIN
     UPDATE payroll_adjustments
     SET settlement_id = v_settlement_id
     WHERE org_id = p_org_id
-      AND worker_id = p_worker_id
+      AND CASE 
+            WHEN p_worker_type = 'meter' THEN meter_worker_id = p_worker_id
+            ELSE fixed_worker_id = p_worker_id
+          END
       AND status = 'pending'
       AND settlement_id IS NULL; -- only unassigned ones
 

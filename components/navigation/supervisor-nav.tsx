@@ -85,7 +85,7 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
                                     "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
                                     isActive
                                         ? "bg-primary text-primary-foreground shadow-[0_4px_14px_0_rgba(255,87,34,0.3)]"
-                                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                                        : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
                                 )}
                             >
                                 <Icon className="h-[18px] w-[18px]" />
@@ -112,7 +112,7 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
                                     "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
                                     isActive
                                         ? "bg-primary text-primary-foreground shadow-[0_4px_14px_0_oklch(0.65_0.20_40/0.3)]"
-                                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                                        : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
                                 )}
                             >
                                 <Icon className="h-4 w-4" />
@@ -225,7 +225,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                             className={cn(
                                 "flex flex-col items-center justify-center min-w-0 w-full relative",
                                 "py-1 px-0.5 transition-all duration-300",
-                                isActive ? "text-primary" : "text-muted-foreground"
+                                isActive ? "text-primary" : "text-primary opacity-80"
                             )}
                         >
                             {/* Active scale is applied to the icon pill only to avoid
@@ -244,7 +244,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                             </div>
                             <span className={cn(
                                 "text-[10px] landscape:text-[9px] font-bold leading-none tracking-tight truncate max-w-full px-0.5",
-                                isActive ? "opacity-100" : "opacity-70"
+                                isActive ? "opacity-100" : "opacity-80"
                             )}>
                                 {t(`nav.${item.translationKey}`) || item.name}
                             </span>
@@ -260,13 +260,13 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                     onClick={() => setIsOpen(true)}
                     className={cn(
                         "flex flex-col items-center justify-center min-w-0 w-full relative",
-                        "py-1 px-0.5 text-muted-foreground"
+                        "py-1 px-0.5 text-primary opacity-80"
                     )}
                 >
                     <div className="py-1 px-3 landscape:py-0.5 landscape:px-2 rounded-xl mb-0.5 hover:bg-black/5 transition-all">
                         <Menu className="h-5 w-5 landscape:h-4 landscape:w-4" />
                     </div>
-                    <span className="text-[10px] landscape:text-[9px] font-bold leading-none tracking-tight opacity-70">
+                    <span className="text-[10px] landscape:text-[9px] font-bold leading-none tracking-tight opacity-80">
                         {t("common.menu")}
                     </span>
                 </button>
