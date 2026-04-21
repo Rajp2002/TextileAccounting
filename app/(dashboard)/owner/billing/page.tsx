@@ -482,16 +482,6 @@ export default async function BillingPage() {
                     </Card>
                 </div>
             </div>
-            
-            <style jsx global>{`
-                @keyframes spin-slow {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-                .animate-spin-slow {
-                    animation: spin-slow 8s linear infinite;
-                }
-            `}</style>
         </div>
     )
 }
