@@ -957,46 +957,23 @@ export default function EstimatorClient({
                             </Button>
 
                             {appliedTemplate ? (
-                                <div className="flex">
+                                <div className="flex items-center">
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-9 px-3 sm:px-4 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 sm:gap-2 font-bold rounded-r-none border-r-0"
+                                        className="h-9 px-3 sm:px-4 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 sm:gap-2 font-bold"
                                         onClick={handleUpdateTemplate}
                                         disabled={savingTemplate}
                                     >
                                         {savingTemplate ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5 text-brand-accent shrink-0" />}
                                         <span className="truncate">Update {appliedTemplate.name}</span>
                                     </Button>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-9 px-1.5 border-slate-200 text-slate-600 hover:bg-slate-50 rounded-l-none border-l-[1px]"
-                                            >
-                                                <ChevronDown className="h-3.5 w-3.5" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-48">
-                                            <DropdownMenuItem 
-                                                className="text-xs font-bold gap-2 cursor-pointer"
-                                                onClick={() => {
-                                                    setTemplateName(qualityLabel.trim() || appliedTemplate.name)
-                                                    setShowSaveTemplate(true)
-                                                }}
-                                            >
-                                                <BookmarkPlus className="h-3.5 w-3.5 text-slate-400" />
-                                                Save as New...
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => setAppliedTemplate(null)}
                                         className="h-9 px-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors ml-1"
-                                        title="Detach template (Switch back to 'Save as New')"
+                                        title="Detach template (Go back to 'Save' mode)"
                                     >
                                         <X className="h-4 w-4" />
                                     </Button>
@@ -1117,6 +1094,19 @@ export default function EstimatorClient({
                              >
                                 <RotateCcw className="h-3.5 w-3.5" />
                                 {t('estimator.templates.reset_btn') || 'Reset'}
+                             </Button>
+
+                             <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setTemplateName(qualityLabel.trim() || appliedTemplate?.name || '')
+                                    setShowSaveTemplate(true)
+                                }}
+                                className="shrink-0 rounded-xl px-4 h-[38px] border-indigo-200 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-100/50 hover:border-indigo-300 transition-all gap-1.5 font-bold shadow-sm"
+                             >
+                                <Plus className="h-3.5 w-3.5" />
+                                {t('estimator.templates.save_btn') || 'Save'}
                              </Button>
                             {filteredTemplates.map(tpl => (
                                 <div key={tpl.id} className="relative shrink-0 group flex items-center">
