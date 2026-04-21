@@ -5,10 +5,10 @@ import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { TrialButton } from '@/components/billing/TrialButton'
 import { AutoRenewToggle } from '@/components/billing/AutoRenewToggle'
 import { ReferralCard } from '@/components/billing/ReferralCard'
-import { getReferralStatsAction, getOrCreateReferralCodeAction } from '../actions'
+import { getReferralStatsAction } from '../actions'
 import {
     CheckCircle2, AlertCircle, Clock, XCircle,
-    ShieldCheck, ReceiptText, Star, Zap, Timer, Lock, RefreshCw,
+    ShieldCheck, ReceiptText, Star, Zap, Timer, Lock, RefreshCw, ArrowRight,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
@@ -88,91 +88,100 @@ function trialProgressPct(currentEnd: string | null): number {
 
 function StatusBadge({ status }: { status: string }) {
     const config: Record<string, { label: string; icon: any; classes: string }> = {
-        active:        { label: 'Active',          icon: CheckCircle2, classes: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-        authenticated: { label: 'Activating',      icon: Clock,        classes: 'bg-blue-100 text-blue-800 border-blue-200' },
-        created:       { label: 'Pending Payment', icon: Clock,        classes: 'bg-amber-100 text-amber-800 border-amber-200' },
-        halted:        { label: 'Payment Failed',  icon: AlertCircle,  classes: 'bg-red-100 text-red-800 border-red-200' },
-        cancelled:     { label: 'Cancelled',       icon: XCircle,      classes: 'bg-gray-100 text-gray-700 border-gray-200' },
-        completed:     { label: 'Completed',       icon: CheckCircle2, classes: 'bg-gray-100 text-gray-700 border-gray-200' },
+        active:        { label: 'Active',          icon: CheckCircle2, classes: 'bg-emerald-50 text-emerald-700 border-emerald-100 ring-2 ring-emerald-500/10' },
+        authenticated: { label: 'Activating',      icon: Clock,        classes: 'bg-blue-50 text-blue-700 border-blue-100 ring-2 ring-blue-500/10' },
+        created:       { label: 'Pending Payment', icon: Clock,        classes: 'bg-amber-50 text-amber-700 border-amber-100 ring-2 ring-amber-500/10' },
+        halted:        { label: 'Payment Failed',  icon: AlertCircle,  classes: 'bg-red-50 text-red-700 border-red-100 ring-2 ring-red-500/10' },
+        cancelled:     { label: 'Cancelled',       icon: XCircle,      classes: 'bg-gray-50 text-gray-700 border-gray-100 ring-2 ring-gray-500/10' },
+        completed:     { label: 'Completed',       icon: CheckCircle2, classes: 'bg-gray-50 text-gray-700 border-gray-100 ring-2 ring-gray-500/10' },
     }
     const cfg = config[status] ?? config.cancelled
     const Icon = cfg.icon
     return (
-        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${cfg.classes}`}>
+        <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full border shadow-sm transition-all hover:scale-105 ${cfg.classes}`}>
             <Icon className="h-3.5 w-3.5" />
             {cfg.label}
         </span>
     )
 }
 
-// ─── Plan Cards — shared between blocked + trial states ───────────────────────
-
 function PlanCards({ label }: { label: string }) {
     return (
-        <div className="space-y-4">
-            <div>
-                <h2 className="text-lg font-semibold text-gray-900">{label}</h2>
-                <p className="text-sm text-gray-500">All prices include 18% GST. Cancel anytime.</p>
+        <div className="space-y-6">
+            <div className="border-l-4 border-amber-500 pl-4 py-1">
+                <h2 className="text-xl font-black text-gray-900 tracking-tight">{label}</h2>
+                <p className="text-sm text-gray-500 font-medium">All prices include 18% GST. Cancel anytime.</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {PLANS.map((plan) => {
                     const Icon = plan.icon
                     return (
                         <div
                             key={plan.tier}
-                            className={`relative rounded-2xl border p-6 flex flex-col gap-5 ${
+                            className={`group relative rounded-3xl border p-8 flex flex-col gap-6 transition-all duration-300 hover:shadow-2xl hover:translate-y-[-4px] ${
                                 plan.highlight
-                                    ? 'border-amber-400 bg-amber-50/40 shadow-md shadow-amber-100'
-                                    : 'border-gray-200 bg-white shadow-sm'
+                                    ? 'border-amber-400 bg-gradient-to-br from-amber-50/80 to-white shadow-xl shadow-amber-500/5'
+                                    : 'border-gray-100 bg-white shadow-sm hover:border-amber-200'
                             }`}
                         >
                             {plan.highlight && (
-                                <span className="absolute -top-3 right-4 bg-amber-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                                    Most Popular
+                                <span className="absolute -top-3 right-6 bg-amber-500 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-[0.1em] shadow-lg shadow-amber-500/20">
+                                    Recommended
                                 </span>
                             )}
-                            <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Icon className={`h-5 w-5 ${plan.highlight ? 'text-amber-500 fill-amber-400' : 'text-amber-600'}`} />
-                                    <h3 className="font-bold text-gray-900 text-lg">{plan.name}</h3>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${plan.highlight ? 'bg-amber-100 text-amber-600' : 'bg-gray-50 text-gray-400 group-hover:bg-amber-50 group-hover:text-amber-500'}`}>
+                                        <Icon className="h-6 w-6" />
+                                    </div>
+                                    <h3 className="font-black text-gray-900 text-xl tracking-tight">{plan.name}</h3>
                                 </div>
-                                <div className="flex items-end gap-1">
-                                    <span className="text-3xl font-extrabold text-gray-900">{plan.total}</span>
-                                    <span className="text-gray-500 text-sm mb-1">/month</span>
+                                <div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-4xl font-black text-gray-900 tracking-tighter">{plan.total}</span>
+                                        <span className="text-gray-400 font-bold text-sm">/month</span>
+                                    </div>
+                                    <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                                        {plan.basePrice} + {plan.gst} GST (18%)
+                                    </p>
                                 </div>
-                                <p className="text-xs text-gray-400 mt-0.5">
-                                    {plan.basePrice} + {plan.gst} GST (18%)
-                                </p>
                             </div>
-                            <ul className="space-y-2 flex-1">
+                            <ul className="space-y-3 flex-1 overflow-visible">
                                 {plan.features.map((f) => (
-                                    <li key={f} className="flex items-start gap-2 text-sm text-gray-700">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                                    <li key={f} className="flex items-start gap-3 text-sm text-gray-600 font-medium leading-tight">
+                                        <div className="w-5 h-5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-emerald-100 transition-colors">
+                                            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                        </div>
                                         {f}
                                     </li>
                                 ))}
                             </ul>
-                            {plan.planIdEnv ? (
-                                <SubscribeButton
-                                    planId={plan.planIdEnv}
-                                    tierName={plan.name}
-                                    displayAmount={`${plan.total}/mo`}
-                                />
-                            ) : (
-                                <p className="text-xs text-center text-gray-400">Coming soon</p>
-                            )}
+                            <div className="pt-2">
+                                {plan.planIdEnv ? (
+                                    <SubscribeButton
+                                        planId={plan.planIdEnv}
+                                        tierName={plan.name}
+                                        displayAmount={`${plan.total}/mo`}
+                                    />
+                                ) : (
+                                    <div className="w-full h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-xs font-bold text-gray-400 border border-dashed border-gray-200 uppercase tracking-widest">
+                                        Coming Soon
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )
                 })}
             </div>
-            <p className="text-xs text-gray-400 text-center">
-                Payments secured by Razorpay. Auto-renews monthly.
-            </p>
+            <div className="flex items-center justify-center gap-2 p-4 rounded-2xl bg-gray-50/50 border border-gray-100 border-dashed">
+                <ShieldCheck className="h-4 w-4 text-gray-400" />
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">
+                    Payments secured by Razorpay · Data encrypted per DPDP Act 2023
+                </p>
+            </div>
         </div>
     )
 }
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function BillingPage() {
     const { profile } = await requireRole(['owner'])
@@ -181,13 +190,12 @@ export default async function BillingPage() {
     const supabase = await createClient()
     const { tier, subscription } = await getSubscriptionDetail(profile.org_id)
 
-    // Fetch recent payments
     const { data: payments } = await supabase
         .from('subscription_payments')
         .select('*')
         .eq('org_id', profile.org_id)
         .order('created_at', { ascending: false })
-        .limit(12)
+        .limit(10)
 
     const activePlanDef = subscription?.plan_tier
         ? PLANS.find(p => p.tier === subscription.plan_tier)
@@ -195,310 +203,295 @@ export default async function BillingPage() {
 
     const referralStats = await getReferralStatsAction()
 
-    // ── BLOCKED STATE (no subscription or expired) ───────────────────────────
-    if (tier === 'none') {
-        // Check if they have a Razorpay subscription being processed (authenticated but current_end not set yet)
-        const isActivating = subscription?.status === 'authenticated' || 
-                             (subscription?.status === 'created' && subscription.razorpay_subscription_id)
+    const isActivating = subscription?.status === 'authenticated' || 
+                         (subscription?.status === 'created' && subscription.razorpay_subscription_id)
 
-        return (
-            <div className="space-y-8 max-w-3xl pb-10">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Billing & Subscription</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Choose a plan to unlock Loomi</p>
-                </div>
-
-                {/* Status banner */}
-                {isActivating ? (
-                    // Payment done, waiting for webhook / first billing cycle
-                    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 flex items-start gap-4">
-                        <Clock className="h-6 w-6 text-blue-500 shrink-0 mt-0.5" />
-                        <div>
-                            <p className="font-semibold text-blue-900">Your subscription is activating</p>
-                            <p className="text-sm text-blue-700 mt-1">
-                                Payment received — your {subscription?.plan_tier === 'premium' ? 'Premium' : 'Base'} subscription is being set up. This usually takes a few seconds. Refresh the page to check.
-                            </p>
-                        </div>
-                    </div>
-                ) : subscription ? (
-                    // Had a subscription, now expired
-                    <div className="rounded-2xl border border-red-200 bg-red-50 p-5 flex items-start gap-4">
-                        <Lock className="h-6 w-6 text-red-500 shrink-0 mt-0.5" />
-                        <div>
-                            <p className="font-semibold text-red-900">Your access has expired</p>
-                            <p className="text-sm text-red-700 mt-1">
-                                {subscription.plan_tier === 'trial'
-                                    ? 'Your 7-day free trial has ended. Subscribe to continue using Loomi.'
-                                    : 'Your subscription is no longer active. Renew to restore access.'}
-                            </p>
-                        </div>
-                    </div>
-                ) : (
-                    // Brand new account — no subscription ever
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 flex items-start gap-4">
-                        <ShieldCheck className="h-6 w-6 text-amber-500 shrink-0 mt-0.5" />
-                        <div>
-                            <p className="font-semibold text-amber-900">No active plan</p>
-                            <p className="text-sm text-amber-700 mt-1">
-                                Start a free 7-day trial or subscribe to a plan to unlock Loomi.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Trial CTA — only for brand-new accounts with no prior subscription */}
-                {!subscription && (
-                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div>
-                            <p className="font-semibold text-emerald-900 flex items-center gap-2">
-                                <Timer className="h-4 w-4" />
-                                Start your 7-day free trial
-                            </p>
-                            <p className="text-sm text-emerald-700 mt-1">
-                                Full Premium access. No credit card required.
-                            </p>
-                        </div>
-                        <TrialButton />
-                    </div>
-                )}
-
-                {!isActivating && <PlanCards label={subscription ? 'Renew your subscription' : 'Choose a subscription plan'} />}
-                
-                <ReferralCard stats={referralStats} />
-            </div>
-        )
-    }
-
-    // ── TRIAL STATE ───────────────────────────────────────────────────────────
-    if (tier === 'trial') {
-        const daysLeft = trialDaysLeft(subscription?.current_end ?? null)
-        const progressPct = trialProgressPct(subscription?.current_end ?? null)
-        const endDate = formatDate(subscription?.current_end ?? null)
-
-        return (
-            <div className="space-y-8 max-w-3xl pb-10">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Billing & Subscription</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Manage your Loomi subscription</p>
-                </div>
-
-                {/* Trial countdown card */}
-                <Card className="shadow-sm border-amber-200 overflow-hidden">
-                    <div className="h-1 w-full bg-gradient-to-r from-amber-300 to-amber-500" />
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Timer className="h-5 w-5 text-amber-600" />
-                                <CardTitle>Free Trial — Premium Access</CardTitle>
-                            </div>
-                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border bg-amber-100 text-amber-800 border-amber-200">
-                                <Clock className="h-3.5 w-3.5" />
-                                {daysLeft === 0 ? 'Expires today' : `${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left`}
-                            </span>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="space-y-5">
-                        {/* Visual trial end date */}
-                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                            <p className="text-sm font-medium text-amber-900 flex items-center gap-2">
-                                <Clock className="h-4 w-4 shrink-0" />
-                                Your trial ends on{' '}
-                                <strong>{endDate}</strong>
-                            </p>
-                            <p className="text-xs text-amber-700 mt-1">
-                                After this date, you'll need an active subscription to continue.
-                            </p>
-                        </div>
-
-                        {/* Progress bar */}
-                        <div>
-                            <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-                                <span>Trial started</span>
-                                <span>{progressPct}% used</span>
-                            </div>
-                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full transition-all"
-                                    style={{ width: `${progressPct}%` }}
-                                />
-                            </div>
-                            <div className="flex justify-between text-xs text-gray-400 mt-1.5">
-                                <span>Day 1</span>
-                                <span>Day 7</span>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                            <ShieldCheck className="h-4 w-4 shrink-0" />
-                            You have full Premium access during your trial. Subscribe below to keep it after {formatShortDate(subscription?.current_end ?? null)}.
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <PlanCards label="Subscribe before your trial ends" />
-
-                <ReferralCard stats={referralStats} />
-            </div>
-        )
-    }
-
-    // ── ACTIVE SUBSCRIPTION STATE (base or premium) ───────────────────────────
+    // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
-        <div className="space-y-8 max-w-3xl pb-10">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Billing & Subscription</h1>
-                <p className="text-sm text-gray-500 mt-0.5">Manage your Loomi monthly subscription</p>
+        <div className="space-y-10 max-w-6xl pb-20">
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
+                <div className="space-y-1">
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tight">Billing & Subscription</h1>
+                    <p className="text-base text-gray-500 font-medium">Manage your Loomi factory operations plan</p>
+                </div>
+                {tier !== 'none' && <StatusBadge status={subscription?.status ?? 'active'} />}
             </div>
 
-            {/* Current Plan Summary */}
-            <Card className="shadow-sm border-gray-200 overflow-hidden">
-                <div className="h-1 w-full bg-gradient-to-r from-amber-400 to-amber-600" />
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            {tier === 'premium'
-                                ? <Star className="h-5 w-5 text-amber-500 fill-amber-400" />
-                                : <Zap className="h-5 w-5 text-amber-600" />
-                            }
-                            <CardTitle>Loomi {activePlanDef?.name ?? tier.charAt(0).toUpperCase() + tier.slice(1)} Plan</CardTitle>
-                        </div>
-                        <StatusBadge status={subscription?.status ?? 'active'} />
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-                            <p className="text-xs text-gray-500 font-medium">Monthly</p>
-                            <p className="text-lg font-bold text-gray-900">{activePlanDef?.total ?? '—'}</p>
-                            <p className="text-[11px] text-gray-400">{activePlanDef?.basePrice} + 18% GST</p>
-                        </div>
-                        {subscription?.current_end && (
-                            <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-                                <p className="text-xs text-gray-500 font-medium">Next renewal</p>
-                                <p className="text-sm font-semibold text-gray-900">{formatShortDate(subscription.current_end)}</p>
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* Left/Main Column - Context Sensitive */}
+                <div className="lg:col-span-8 space-y-8">
+                    
+                    {/* 1. STATE-SPECIFIC HERO CARD */}
+                    {tier === 'none' ? (
+                        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-600 via-blue-600 to-indigo-700 p-8 md:p-12 text-white shadow-2xl shadow-indigo-500/20">
+                            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                                <Zap className="w-64 h-64 rotate-12" />
                             </div>
-                        )}
-                        {subscription?.paid_count != null && (
-                            <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-                                <p className="text-xs text-gray-500 font-medium">Months paid</p>
-                                <p className="text-sm font-semibold text-gray-900">
-                                    {subscription.paid_count} / {subscription.total_count ?? 12}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                        <ShieldCheck className="h-4 w-4 shrink-0" />
-                        Subscription active — auto-renews via your registered payment method.
-                    </div>
-
-                    {/* Auto-renewal status */}
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                            <RefreshCw className={`h-4 w-4 shrink-0 ${
-                                subscription?.cancel_at_cycle_end ? 'text-amber-500' : 'text-emerald-500'
-                            }`} />
-                            <div>
-                                <p className="text-xs font-medium text-gray-700">
-                                    Auto-renewal:{' '}
-                                    <span className={subscription?.cancel_at_cycle_end ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
-                                        {subscription?.cancel_at_cycle_end ? 'Off' : 'On'}
-                                    </span>
-                                </p>
-                                {subscription?.cancel_at_cycle_end && subscription.current_end && (
-                                    <p className="text-[11px] text-amber-600 mt-0.5">
-                                        Expires {formatShortDate(subscription.current_end)} — subscribe again to continue.
-                                    </p>
+                            <div className="relative z-10 space-y-6 max-w-lg">
+                                {isActivating ? (
+                                    <>
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-400/20 border border-blue-400/30 text-xs font-black uppercase tracking-widest">
+                                            <Clock className="w-3 h-3 animate-spin" /> Activating access
+                                        </div>
+                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Your factory is coming online.</h2>
+                                        <p className="text-indigo-100 text-lg font-medium">
+                                            We've received your payment. Your <strong>{subscription?.plan_tier?.toUpperCase()}</strong> subscription is being configured. Refresh in a few seconds.
+                                        </p>
+                                    </>
+                                ) : subscription ? (
+                                    <>
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-400/20 border border-red-400/30 text-xs font-black uppercase tracking-widest text-red-100">
+                                            <Lock className="w-3 h-3" /> Access Suspended
+                                        </div>
+                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Subscription expired.</h2>
+                                        <p className="text-indigo-100 text-lg font-medium">
+                                            Your account access has been paused. Renew your plan to continue managing orders and production records.
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-400/20 border border-indigo-400/30 text-xs font-black uppercase tracking-widest">
+                                            <Star className="w-3 h-3 text-amber-400 fill-amber-400" /> Limited Access
+                                        </div>
+                                        <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Unlock loom management.</h2>
+                                        <p className="text-indigo-100 text-lg font-medium">
+                                            Choose a plan to start tracking production, automated payroll, and daily WhatsApp briefs.
+                                        </p>
+                                        {!subscription && (
+                                            <div className="pt-4">
+                                                <TrialButton className="bg-white text-indigo-600 hover:bg-gray-100 shadow-xl shadow-indigo-900/40" />
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
-                        {!subscription?.cancel_at_cycle_end && subscription?.razorpay_subscription_id && (
-                            <AutoRenewToggle
-                                currentEnd={subscription.current_end}
-                                subscriptionTier={activePlanDef?.name}
-                            />
-                        )}
-                    </div>
-
-                    {/* Upgrade nudge for base plan users */}
-                    {tier === 'base' && (
-                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
-                            <p className="text-sm font-semibold text-amber-900 flex items-center gap-2">
-                                <Star className="h-4 w-4 text-amber-500" />
-                                Upgrade to Premium for full access
-                            </p>
-                            <p className="text-xs text-amber-700">
-                                Your Base plan includes the Estimator. Upgrade to unlock production tracking, payroll, WhatsApp briefs, analytics, and more.
-                            </p>
-                            {process.env.RAZORPAY_PLAN_ID_PREMIUM && (
-                                <SubscribeButton
-                                    planId={process.env.RAZORPAY_PLAN_ID_PREMIUM}
-                                    tierName="Premium"
-                                    displayAmount="₹5,900/mo"
-                                />
-                            )}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            <ReferralCard stats={referralStats} />
-
-            {/* Payment History */}
-            {payments && payments.length > 0 && (
-                <Card className="shadow-sm border-gray-200">
-                    <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <ReceiptText className="h-5 w-5 text-gray-600" />
-                            <CardTitle>Payment History</CardTitle>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="divide-y divide-gray-100">
-                            {payments.map((p: any) => (
-                                <div key={p.id} className="flex items-center justify-between py-3 gap-3">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
-                                            p.status === 'captured'
-                                                ? 'bg-emerald-100 text-emerald-700'
-                                                : 'bg-red-100 text-red-700'
-                                        }`}>
-                                            {p.status === 'captured'
-                                                ? <CheckCircle2 className="h-4 w-4" />
-                                                : <XCircle className="h-4 w-4" />
-                                            }
+                    ) : tier === 'trial' ? (
+                        <Card className="rounded-[2.5rem] border-amber-200 bg-gradient-to-br from-amber-50 to-white shadow-xl shadow-amber-500/5 overflow-hidden">
+                            <div className="h-2 w-full bg-gradient-to-r from-amber-400 to-amber-600" />
+                            <CardContent className="p-8 md:p-10 space-y-8">
+                                <div className="flex flex-col md:flex-row justify-between gap-6">
+                                    <div className="space-y-2">
+                                        <div className="inline-flex items-center gap-2 text-xs font-black text-amber-700 bg-amber-200/40 px-3 py-1 rounded-full uppercase tracking-wider">
+                                            <Timer className="w-3.5 h-3.5" />
+                                            Free Trial Active
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium text-gray-900">
-                                                {p.status === 'captured' ? 'Payment captured' : 'Payment failed'}
-                                            </p>
-                                            <p className="text-xs text-gray-400">
-                                                {formatShortDate(p.created_at)}
-                                                {p.method && ` · ${p.method.toUpperCase()}`}
-                                            </p>
+                                        <h2 className="text-3xl font-black tracking-tight text-gray-900">Experience Loomi Premium</h2>
+                                        <p className="text-gray-500 font-medium text-lg">Full access until {formatDate(subscription?.current_end ?? null)}</p>
+                                    </div>
+                                    <div className="flex flex-col items-center md:items-end p-4 rounded-3xl bg-white shadow-sm border border-amber-100 min-w-[200px]">
+                                        <p className="text-xs text-amber-600 font-black uppercase tracking-widest mb-1">Time Remaining</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-5xl font-black text-amber-700 leading-none">{trialDaysLeft(subscription?.current_end ?? null)}</span>
+                                            <span className="text-xl font-bold text-amber-600">DAYS</span>
                                         </div>
                                     </div>
-                                    <p className={`text-sm font-bold shrink-0 ${
-                                        p.status === 'captured' ? 'text-gray-900' : 'text-red-600'
-                                    }`}>
-                                        {formatAmount(p.amount_paise)}
-                                    </p>
                                 </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
 
-            {/* Test mode notice */}
-            {process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith('rzp_test_') && (
-                <div className="rounded-lg border border-dashed border-amber-300 bg-amber-50/50 px-4 py-3">
-                    <p className="text-xs text-amber-700 font-medium">
-                        🧪 Test mode — card <span className="font-mono">4111 1111 1111 1111</span>, any future expiry, CVV <span className="font-mono">123</span>.
-                    </p>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between text-xs font-black text-gray-400 uppercase tracking-widest">
+                                        <span>Trial Started</span>
+                                        <span>{trialProgressPct(subscription?.current_end ?? null)}% Elapsed</span>
+                                    </div>
+                                    <div className="h-4 bg-gray-100 rounded-full p-1 border shadow-inner">
+                                        <div className="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full transition-all duration-1000" style={{ width: `${trialProgressPct(subscription?.current_end ?? null)}%` }}>
+                                            <div className="h-full w-full bg-white/20 animate-pulse rounded-full" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-200/50 flex items-start gap-4">
+                                    <ShieldCheck className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-sm font-bold text-amber-900">Full Access Unlocked</p>
+                                        <p className="text-sm text-amber-700/80 leading-relaxed">
+                                            You are enjoying full Premium features. To prevent service disruption after the trial ends, you can subscribe to a plan below today. You won't be charged until your trial expires.
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        /* PREMIUM/BASE ACTIVE STATE INFO */
+                        <Card className="rounded-[2.5rem] border-gray-100 shadow-xl shadow-gray-200/30 overflow-hidden bg-white">
+                            <div className="h-2 w-full bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600" />
+                            <CardContent className="p-8 md:p-10 space-y-10">
+                                <div className="flex flex-col md:flex-row justify-between gap-10">
+                                    <div className="space-y-6">
+                                        <div className="scale-110 origin-left">
+                                            <StatusBadge status={subscription?.status ?? 'active'} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <h2 className="text-4xl font-black tracking-tight text-gray-900 flex items-center gap-3">
+                                                {tier === 'premium' ? <Star className="w-8 h-8 text-amber-500 fill-amber-400" /> : <Zap className="w-8 h-8 text-amber-500" />}
+                                                Loomi {activePlanDef?.name}
+                                            </h2>
+                                            <p className="text-lg text-gray-500 font-medium">Your subscription is active and in good standing.</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-4 pt-2">
+                                            <div className="px-5 py-3 rounded-2xl bg-gray-50 border border-gray-100 shadow-sm flex flex-col justify-center">
+                                                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-1">Monthly Billing</p>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-2xl font-black text-gray-900">{activePlanDef?.total}</span>
+                                                    <span className="text-[10px] text-gray-400 font-bold">INCL GST</span>
+                                                </div>
+                                            </div>
+                                            {subscription?.current_end && (
+                                                <div className="px-5 py-3 rounded-2xl bg-orange-50 border border-orange-100 shadow-sm flex flex-col justify-center">
+                                                    <p className="text-[10px] text-orange-600 font-black uppercase tracking-widest mb-1">Renews On</p>
+                                                    <div className="flex items-baseline gap-1">
+                                                        <span className="text-2xl font-black text-orange-900 tracking-tighter">{formatShortDate(subscription.current_end)}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-center justify-center p-8 rounded-[2rem] bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-2xl shadow-gray-400/20 min-w-[220px]">
+                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-4">Loyalty Streak</p>
+                                        <div className="text-6xl font-black tracking-tighter mb-1 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent">
+                                            {subscription?.paid_count || 1}
+                                        </div>
+                                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Months Paid</p>
+                                        <div className="w-full h-1.5 bg-gray-700/50 rounded-full mt-6 overflow-hidden">
+                                            <div className="h-full bg-amber-500 rounded-full" style={{ width: `${((subscription?.paid_count || 1) % 12) / 12 * 100}%` }} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-3xl bg-emerald-50/50 border border-emerald-100">
+                                    <div className="w-12 h-12 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-200 shrink-0">
+                                        <RefreshCw className={`h-6 w-6 text-white ${subscription?.cancel_at_cycle_end ? '' : 'animate-spin-slow'}`} />
+                                    </div>
+                                    <div className="flex-1 text-center md:text-left space-y-1">
+                                        <p className="text-sm font-black text-emerald-900 uppercase tracking-tight">Auto-Renewal: {subscription?.cancel_at_cycle_end ? 'Inactive' : 'Active'}</p>
+                                        <p className="text-xs text-emerald-700/70 font-medium leading-relaxed">
+                                            {subscription?.cancel_at_cycle_end 
+                                                ? `Your plan will stop on ${formatShortDate(subscription.current_end)}. Actions are limited after expiry.`
+                                                : "Loomi will automatically charge your registered card each month to keep operations smooth."
+                                            }
+                                        </p>
+                                    </div>
+                                    {!subscription?.cancel_at_cycle_end && subscription?.razorpay_subscription_id && (
+                                        <AutoRenewToggle
+                                            currentEnd={subscription.current_end}
+                                            subscriptionTier={activePlanDef?.name}
+                                        />
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* 2. PLAN CARDS SECTION (If not premium or if base) */}
+                    {(tier !== 'premium' && !isActivating) && (
+                        <div className="pt-4">
+                            <PlanCards label={tier === 'base' ? 'Upgrade to Premium' : 'Select your Loomi Plan'} />
+                        </div>
+                    )}
+
+                    {/* 3. PAYMENT HISTORY - CLEAN & COMPACT */}
+                    {payments && payments.length > 0 && (
+                        <div className="space-y-6 pt-6">
+                            <div className="flex items-center gap-2 border-l-4 border-gray-400 pl-4 py-1">
+                                <ReceiptText className="h-5 w-5 text-gray-500" />
+                                <h3 className="text-xl font-black text-gray-900 tracking-tight">Recent Invoices</h3>
+                            </div>
+                            <div className="rounded-[2rem] border border-gray-100 bg-white shadow-sm overflow-hidden">
+                                <div className="divide-y divide-gray-50">
+                                    {payments.map((p: any) => (
+                                        <div key={p.id} className="group flex items-center justify-between p-5 hover:bg-gray-50 transition-colors">
+                                            <div className="flex items-center gap-5">
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${
+                                                    p.status === 'captured'
+                                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                        : 'bg-red-50 text-red-600 border-red-100'
+                                                }`}>
+                                                    {p.status === 'captured' ? <CheckCircle2 className="h-6 w-6" /> : <XCircle className="h-6 w-6" />}
+                                                </div>
+                                                <div className="space-y-0.5">
+                                                    <p className="text-sm font-black text-gray-900 uppercase tracking-tight">
+                                                        Monthly Subscription {p.status !== 'captured' && '— Failed'}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold uppercase tracking-widest">
+                                                        <span>{formatShortDate(p.created_at)}</span>
+                                                        <span className="text-gray-200">/</span>
+                                                        <span className="flex items-center gap-1">
+                                                            <ReceiptText className="h-3 w-3" />
+                                                            {p.razorpay_payment_id?.slice(-8) || p.id.slice(-8)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className={`text-lg font-black tracking-tight ${p.status === 'captured' ? 'text-gray-900' : 'text-red-600'}`}>
+                                                    {formatAmount(p.amount_paise)}
+                                                </p>
+                                                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{p.method || 'UNSPECIFIED'}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            )}
+
+                {/* Right/Side Column */}
+                <div className="lg:col-span-4 space-y-8">
+                    
+                    {/* REFERRAL CARD */}
+                    <ReferralCard stats={referralStats} />
+
+                    {/* QUICK LINKS / HELP */}
+                    <Card className="rounded-[2.5rem] border-gray-100/50 bg-gray-50/50 shadow-sm p-6 space-y-6">
+                        <div className="flex items-center gap-2">
+                             <div className="w-8 h-8 rounded-xl bg-gray-200/50 flex items-center justify-center">
+                                <ShieldCheck className="h-4 w-4 text-gray-600" />
+                             </div>
+                             <p className="text-xs font-black text-gray-900 uppercase tracking-widest">Billing Support</p>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-gray-100 text-sm font-bold text-gray-700 hover:border-gray-300 transition-all cursor-pointer group">
+                                <span className="flex items-center gap-2">
+                                    <ReceiptText className="w-4 h-4 text-gray-400" />
+                                    Download Invoices
+                                </span>
+                                <ArrowRight className="w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-all" />
+                            </div>
+                            <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-gray-100 text-sm font-bold text-gray-700 hover:border-gray-300 transition-all cursor-pointer group">
+                                <span className="flex items-center gap-2">
+                                    <RefreshCw className="w-4 h-4 text-gray-400" />
+                                    Update Payment Method
+                                </span>
+                                <ArrowRight className="w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-all" />
+                            </div>
+                        </div>
+                        
+                        {/* Test mode notice */}
+                        {process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID?.startsWith('rzp_test_') && (
+                            <div className="rounded-2xl border border-dashed border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-3">
+                                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wider leading-relaxed">
+                                    🧪 Test Mode Active: Use card 4111-1111-1111-1111 for trial and test payments.
+                                </p>
+                            </div>
+                        )}
+                    </Card>
+                </div>
+            </div>
+            
+            <style jsx global>{`
+                @keyframes spin-slow {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .animate-spin-slow {
+                    animation: spin-slow 8s linear infinite;
+                }
+            `}</style>
         </div>
     )
 }
