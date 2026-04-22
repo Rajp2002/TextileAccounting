@@ -99,6 +99,7 @@ export const hi = {
     handover_complete: "पाली हैंडोवर सफल। कारीगर हटाया गया।",
     handover_failed: "हैंडोवर विफल",
     enter_code: "6-अंकों का कोड दर्ज़ करें",
+    meters: "mtrs",
   },
   assignments: {
     title: "कारीगरों का कार्य आवंटन",

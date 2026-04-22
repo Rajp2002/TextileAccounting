@@ -163,7 +163,7 @@ When a supervisor taps "Start Beam" on a machine:
 6. To delete: clicks "Delete" → prompted for access code → code sent to WhatsApp → enters code → machine removed
 
 ### UX Workflow — Supervisor View
-1. Supervisor navigates to `/supervisor/machines` (or `/supervisor/assignments`)
+1. Supervisor navigates to `/supervisor/machines` (or the Unified Dashboard)
 2. Sees all **active** machines with their current beam and order
 3. Taps "Start Beam" on a machine → picks from available batch list → confirms (modal if re-assignment) → beam linked
 4. Taps worker assignment slot → picks worker from list of active workers for this shift

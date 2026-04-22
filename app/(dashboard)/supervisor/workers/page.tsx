@@ -63,26 +63,9 @@ export default function SupervisorWorkersPage() {
         }
     })
 
-    // Fetch Fixed / Salaried Workers
-    const { data: fixedWorkers, isLoading: fixedLoading } = useQuery({
-        queryKey: ['fixed_workers', userProfile?.org_id],
-        enabled: !!userProfile?.org_id,
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('fixed_workers')
-                .select('*')
-                .eq('org_id', userProfile!.org_id)
-                .order('role')
-                .order('name')
-            if (error) throw error
-            return data
-        }
-    })
-
     const handleWorkerAdded = () => {
-        // Invalidate both lists so the new worker appears immediately
+        // Invalidate meter list
         queryClient.invalidateQueries({ queryKey: ['workers', userProfile?.org_id] })
-        queryClient.invalidateQueries({ queryKey: ['fixed_workers', userProfile?.org_id] })
     }
 
     const confirmDelete = async (id: number) => {
@@ -123,8 +106,8 @@ export default function SupervisorWorkersPage() {
             
             toast.success(t('workers.status_updated'))
             queryClient.invalidateQueries({ queryKey: [table === 'workers' ? 'workers' : 'fixed_workers', userProfile?.org_id] })
-        } catch {
-            toast.error(t('workers.status_update_failed'))
+        } catch (error: any) {
+            toast.error(error.message || t('workers.status_update_failed'))
         }
     }
 
@@ -140,97 +123,35 @@ export default function SupervisorWorkersPage() {
                 />
             </div>
 
-            {/* ── Workers Tabs ── */}
-            <Tabs defaultValue="meter" className="w-full">
-                <TabsList className="w-full">
-                    <TabsTrigger value="meter" className="flex-1">
-                        {t('workers.meter_workers')}
-                        {workers && workers.length > 0 && (
-                            <span className="ml-1.5 text-xs text-muted-foreground">({workers.length})</span>
-                        )}
-                    </TabsTrigger>
-                    <TabsTrigger value="fixed" className="flex-1">
-                        {t('workers.fixed_staff')}
-                        {fixedWorkers && fixedWorkers.length > 0 && (
-                            <span className="ml-1.5 text-xs text-muted-foreground">({fixedWorkers.length})</span>
-                        )}
-                    </TabsTrigger>
-                </TabsList>
-
-                {/* ── Meter Workers Tab ── */}
-                <TabsContent value="meter" className="mt-4">
-                    {workersLoading ? (
-                        <div className="flex justify-center p-8">
-                            <Loader2 className="animate-spin text-gray-400" />
-                        </div>
-                    ) : (
-                        <div className="divide-y border rounded-lg">
-                            {workers?.map((worker: any) => (
-                                <div key={worker.id} className="py-3 px-4 flex justify-between items-center group">
-                                    <div className="flex items-center gap-3">
-                                        <span className="font-medium text-gray-700">{tl(worker.name)}</span>
-                                        {worker.pf_esi_eligible && (
-                                            <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
-                                                ESI/PF ✓
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        {/* Active Toggle */}
-                                        <div className="flex items-center gap-2">
-                                            <span className={cn(
-                                                "text-xs",
-                                                worker.is_active ? "text-green-600" : "text-gray-400"
-                                            )}>
-                                                {worker.is_active ? t('workers.active') : t('workers.inactive')}
-                                            </span>
-                                            <Switch
-                                                checked={worker.is_active}
-                                                onCheckedChange={() => toggleWorkerActiveStatus(worker.id, worker.is_active, 'workers')}
-                                            />
-                                        </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={() => confirmDelete(worker.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
-                            {workers?.length === 0 && (
-                                <p className="text-center text-gray-500 py-8">{t('workers.no_meter_workers')}</p>
-                            )}
-                        </div>
+            {/* ── Meter Workers List ── */}
+            <div className="mt-4">
+                <div className="flex items-center gap-2 mb-4">
+                    <h2 className="text-lg font-semibold text-gray-700">{t('workers.meter_workers')}</h2>
+                    {workers && workers.length > 0 && (
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">
+                            {workers.length}
+                        </span>
                     )}
-                </TabsContent>
+                </div>
 
-                {/* ── Fixed Staff Tab ── */}
-                <TabsContent value="fixed" className="mt-4">
-                    {fixedLoading ? (
-                        <div className="flex justify-center p-8">
-                            <Loader2 className="animate-spin text-gray-400" />
-                        </div>
-                    ) : (
-                        <div className="divide-y border rounded-lg">
-                            {fixedWorkers?.map((worker: any) => (
-                                <div key={worker.id} className="py-3 px-4 flex justify-between items-center">
-                                    <div className="flex items-center gap-3">
-                                        <span className={cn(
-                                            'text-xs px-2 py-0.5 rounded-full font-medium',
-                                            ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700'
-                                        )}>
-                                            {t(`workers.roles.${worker.role}`) || worker.role}
+                {workersLoading ? (
+                    <div className="flex justify-center p-8">
+                        <Loader2 className="animate-spin text-gray-400" />
+                    </div>
+                ) : (
+                    <div className="divide-y border rounded-lg">
+                        {workers?.map((worker: any) => (
+                            <div key={worker.id} className="py-3 px-4 flex justify-between items-center group">
+                                <div className="flex items-center gap-3">
+                                    <span className="font-medium text-gray-700">{tl(worker.name)}</span>
+                                    {worker.pf_esi_eligible && (
+                                        <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
+                                            ESI/PF ✓
                                         </span>
-                                        <span className="font-medium text-gray-700">{tl(worker.name)}</span>
-                                        {worker.pf_esi_eligible && (
-                                            <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
-                                                ESI/PF ✓
-                                            </span>
-                                        )}
-                                    </div>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    {/* Active Toggle */}
                                     <div className="flex items-center gap-2">
                                         <span className={cn(
                                             "text-xs",
@@ -240,18 +161,26 @@ export default function SupervisorWorkersPage() {
                                         </span>
                                         <Switch
                                             checked={worker.is_active}
-                                            onCheckedChange={() => toggleWorkerActiveStatus(worker.id, worker.is_active, 'fixed_workers')}
+                                            onCheckedChange={() => toggleWorkerActiveStatus(worker.id, worker.is_active, 'workers')}
                                         />
                                     </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => confirmDelete(worker.id)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
                                 </div>
-                            ))}
-                            {fixedWorkers?.length === 0 && (
-                                <p className="text-center text-gray-500 py-8">{t('workers.no_fixed_staff')}</p>
-                            )}
-                        </div>
-                    )}
-                </TabsContent>
-            </Tabs>
+                            </div>
+                        ))}
+                        {workers?.length === 0 && (
+                            <p className="text-center text-gray-500 py-8">{t('workers.no_meter_workers')}</p>
+                        )}
+                    </div>
+                )}
+            </div>
 
             {/* Access Code Modal (SEC-004) */}
             <Dialog open={workerToDelete !== null} onOpenChange={(open) => !open && setWorkerToDelete(null)}>

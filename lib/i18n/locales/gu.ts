@@ -97,6 +97,7 @@ export const gu = {
     handover_complete: "પાળી હેન્ડોવર સફળ. કારીગર હટાવાયો.",
     handover_failed: "હેન્ડોવર નિષ્ફળ",
     enter_code: "6-અંકોનો કોડ દાખલ કરો",
+    meters: "mtrs",
   },
   assignments: {
     title: "કારીગરોની કામગીરી",

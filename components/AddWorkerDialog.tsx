@@ -29,6 +29,7 @@ import * as z from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import * as Sentry from '@sentry/nextjs'
 import { useTranslation } from '@/lib/i18n/context'
+import { useUserProfile } from '@/hooks/use-user-profile'
 
 const FIXED_ROLES = [
     { value: 'master', defaultSalary: 30000 },
@@ -92,6 +93,9 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
     const supabase = createClient()
     const queryClient = useQueryClient()
     const { t } = useTranslation()
+    const { data: userProfile } = useUserProfile()
+
+    const isSupervisor = userProfile?.role === 'supervisor'
 
     const {
         register,
@@ -229,50 +233,52 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
 
                     <div className="grid gap-4 py-4">
                         {/* Worker Type Toggle */}
-                        <div className="grid gap-2">
-                            <Label>{t('workers.worker_type')}</Label>
-                            <div className="flex rounded-lg border overflow-hidden">
-                                <button
-                                    type="button"
-                                    className={cn(
-                                        'flex-1 py-2.5 text-sm font-medium transition-colors',
-                                        workerType === 'meter'
-                                            ? 'bg-gray-900 text-white'
-                                            : 'bg-white text-gray-600 hover:bg-gray-50'
-                                    )}
-                                    onClick={() => setValue('workerType', 'meter')}
-                                >
-                                    {t('workers.meterWorkerType')}
-                                </button>
-                                <button
-                                    type="button"
-                                    className={cn(
-                                        'flex-1 py-2.5 text-sm font-medium transition-colors border-l',
-                                        workerType === 'fixed'
-                                            ? 'bg-gray-900 text-white'
-                                            : 'bg-white text-gray-600 hover:bg-gray-50'
-                                    )}
-                                    onClick={() => {
-                                        setValue('workerType', 'fixed')
-                                        // Initialize required fields to avoid validation errors immediately
-                                        setValue('role', '')
-                                        setValue('customRole', '')
-                                        setValue('salary', 0)
-                                        setValue('pf_esi_eligible', false)
-                                        setValue('esi_number', '')
-                                        setValue('pf_number', '')
-                                    }}
-                                >
-                                    {t('workers.fixedSalaryType')}
-                                </button>
+                        {!isSupervisor && (
+                            <div className="grid gap-2">
+                                <Label>{t('workers.worker_type')}</Label>
+                                <div className="flex rounded-lg border overflow-hidden">
+                                    <button
+                                        type="button"
+                                        className={cn(
+                                            'flex-1 py-2.5 text-sm font-medium transition-colors',
+                                            workerType === 'meter'
+                                                ? 'bg-gray-900 text-white'
+                                                : 'bg-white text-gray-600 hover:bg-gray-50'
+                                        )}
+                                        onClick={() => setValue('workerType', 'meter')}
+                                    >
+                                        {t('workers.meterWorkerType')}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={cn(
+                                            'flex-1 py-2.5 text-sm font-medium transition-colors border-l',
+                                            workerType === 'fixed'
+                                                ? 'bg-gray-900 text-white'
+                                                : 'bg-white text-gray-600 hover:bg-gray-50'
+                                        )}
+                                        onClick={() => {
+                                            setValue('workerType', 'fixed')
+                                            // Initialize required fields to avoid validation errors immediately
+                                            setValue('role', '')
+                                            setValue('customRole', '')
+                                            setValue('salary', 0)
+                                            setValue('pf_esi_eligible', false)
+                                            setValue('esi_number', '')
+                                            setValue('pf_number', '')
+                                        }}
+                                    >
+                                        {t('workers.fixedSalaryType')}
+                                    </button>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    {workerType === 'meter'
+                                        ? t('workers.paid_per_meter')
+                                        : t('workers.paid_fixed')
+                                    }
+                                </p>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                                {workerType === 'meter'
-                                    ? t('workers.paid_per_meter')
-                                    : t('workers.paid_fixed')
-                                }
-                            </p>
-                        </div>
+                        )}
 
                         {/* Name */}
                         <div className="grid gap-2">

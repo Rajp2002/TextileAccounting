@@ -541,7 +541,7 @@ export async function addFixedWorker(data: {
     esi_number?: string | null
     pf_number?: string | null
 }) {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
     
     const { data: inserted, error } = await supabase
@@ -567,6 +567,10 @@ export async function toggleWorkerActive(workerId: number, currentActive: boolea
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
+    if (table === 'fixed_workers' && profile.role !== 'owner') {
+        return { error: 'Unauthorized: Supervisors cannot manage fixed staff status.' }
+    }
+
     const parsed = safeParse(PositiveIntSchema, workerId)
     if ('error' in parsed) return { error: parsed.error }
 
@@ -574,7 +578,7 @@ export async function toggleWorkerActive(workerId: number, currentActive: boolea
         .from(table)
         .update({ is_active: !currentActive })
         .eq('id', parsed.data)
-        .eq('org_id', profile.org_id)
+        .eq('org_id', profile.role === 'owner' ? profile.org_id : profile.org_id) // profile.org_id is same, just being explicit if needed but it's fine
 
     if (error) {
         console.error('Failed to update worker status:', error)
@@ -623,7 +627,6 @@ export async function assignWorker(
         return { error: 'Failed to assign worker. Please try again.' }
     }
 
-    revalidatePath('/supervisor/assignments')
     return { success: true }
 }
 
@@ -762,7 +765,6 @@ export async function upsertShiftAssignment(data: {
         return { error: error.message }
     }
 
-    revalidatePath('/supervisor/assignments')
     return { success: true }
 }
 
@@ -790,7 +792,6 @@ export async function copyPreviousShiftAction(
         return { error: error.message }
     }
 
-    revalidatePath('/supervisor/assignments')
     return { success: true, copied: data as number }
 }
 
@@ -813,7 +814,7 @@ export async function bulkLogProduction(entries: {
     if (entries.length === 0) return { success: true }
 
     const logs = entries
-        .filter((e) => e.meters > 0)
+        .filter((e) => e.meters > 0 && e.order_id)
         .map((e) => ({
             org_id: profile.org_id,
             machine_id: e.machine_id,
