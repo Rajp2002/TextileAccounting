@@ -14,10 +14,11 @@ import {
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import LogoutButton from "@/components/auth/logout-button"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { useTranslation } from "@/lib/i18n/context"
+import { DownloadCloud } from "lucide-react"
 
 // ─── Nav item definitions ────────────────────────────────────────────────────
 
@@ -140,8 +141,31 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
 
 export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarProps) {
     const [isOpen, setIsOpen] = useState(false)
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+    const [isStandalone, setIsStandalone] = useState(false)
     const pathname = usePathname()
     const { t } = useTranslation()
+
+    useEffect(() => {
+        // Check if app is in standalone mode
+        if (typeof window !== 'undefined') {
+            setIsStandalone(window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone)
+        }
+
+        const handler = (e: any) => {
+            e.preventDefault()
+            setDeferredPrompt(e)
+        }
+        window.addEventListener('beforeinstallprompt', handler)
+        return () => window.removeEventListener('beforeinstallprompt', handler)
+    }, [])
+
+    const handleInstall = async () => {
+        if (!deferredPrompt) return
+        deferredPrompt.prompt()
+        const { outcome } = await deferredPrompt.userChoice
+        if (outcome === 'accepted') setDeferredPrompt(null)
+    }
 
     return (
         <>
@@ -155,20 +179,32 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
              * pt-safe: pushes content below the Dynamic Island / status-bar notch
              * on iOS standalone PWA mode and Android cutout displays.
              */}
-            <header className="md:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 py-2 pt-safe">
-                <div className="flex items-center">
-                    <div className="relative h-10 w-28 shrink-0">
+            <header className="md:hidden sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 py-2 pt-safe shadow-sm">
+                <div className="flex items-center gap-2">
+                    <div className="relative h-8 w-24 shrink-0 transition-transform active:scale-95">
                         <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" priority />
                     </div>
                 </div>
 
-                <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-full">
-                            <Menu className="h-5 w-5" />
-                            <span className="sr-only">Open navigation</span>
+                <div className="flex items-center gap-1">
+                    {!isStandalone && deferredPrompt && (
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={handleInstall}
+                            className="h-8 gap-1.5 text-[10px] font-black uppercase text-primary bg-primary/5 hover:bg-primary/10 rounded-full border border-primary/20 px-3"
+                        >
+                            <DownloadCloud className="h-3 w-3" />
+                            Install App
                         </Button>
-                    </SheetTrigger>
+                    )}
+                    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors">
+                                <Menu className="h-5 w-5" />
+                                <span className="sr-only">Open navigation</span>
+                            </Button>
+                        </SheetTrigger>
                     {/*
                      * Sheet width: min(280px, 85vw)
                      * — 280 px on normal phones
@@ -208,11 +244,11 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
              */}
             <div className={cn(
                 "md:hidden fixed bottom-0 left-0 right-0 z-50",
-                "bg-background/80 backdrop-blur-lg border-t border-border",
+                "bg-background/90 backdrop-blur-xl border-t border-border",
                 "flex justify-around items-stretch",
                 "pb-safe pt-2 pl-safe pr-safe",
-                "shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)]",
-                "min-h-[64px] landscape:min-h-[52px]"
+                "shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.1)]",
+                "min-h-[64px] landscape:min-h-[52px] select-none"
             )}>
                 {bottomNavItems.map((item) => {
                     const Icon = item.icon
