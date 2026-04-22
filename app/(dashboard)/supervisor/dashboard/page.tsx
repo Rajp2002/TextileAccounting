@@ -49,6 +49,7 @@ import {
     SheetDescription,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n/context'
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
@@ -113,6 +114,7 @@ function MachineUnifiedRow({
     isSyncing,
     isSaved,
 }: MachineUnifiedRowProps) {
+    const { t } = useTranslation()
     const workerId = assignment?.worker_id?.toString() ?? ''
     const orderId = assignment?.order_id ?? ''
     const status = (machine.machine_status || 'idle') as 'running' | 'idle' | 'maintenance'
@@ -412,6 +414,7 @@ function MachineDetailSheet({
 // ─── MAIN DASHBOARD ──────────────────────────────────────────────────────────────
 
 export default function UnifiedDashboard() {
+    const { t } = useTranslation()
     const [date, setDate] = useState(getTodayString())
     const [shift, setShift] = useState<'day' | 'night'>(getCurrentShift())
     const [loading, setLoading] = useState(true)
