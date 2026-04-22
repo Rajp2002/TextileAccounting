@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -147,7 +147,9 @@ function MachineUnifiedRow({
                     {isSyncing ? (
                         <Loader2 className="h-2.5 w-2.5 animate-spin text-primary mt-1" />
                     ) : isSaved ? (
-                        <Check className="h-2.5 w-2.5 text-emerald-500 mt-1" />
+                        <div className="bg-emerald-500 rounded-full p-0.5 mt-1 animate-in zoom-in duration-300">
+                             <Check className="h-2 w-2 text-white stroke-[4px]" />
+                        </div>
                     ) : (
                         <div className={cn(
                             "w-1.5 h-1.5 rounded-full mt-1.5",
@@ -158,9 +160,9 @@ function MachineUnifiedRow({
             </button>
 
             {/* Assignments Section */}
-            <div className="flex-1 min-w-0 p-3 flex flex-col justify-center gap-1.5">
+            <div className="flex-1 min-w-0 p-3 flex flex-col justify-center gap-1">
                 {/* Worker Dropdown */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
                     <Users className="h-3 w-3 text-muted-foreground shrink-0" />
                     <Select 
                         value={workerId} 
@@ -178,13 +180,13 @@ function MachineUnifiedRow({
                 </div>
 
                 {/* Order Dropdown */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
                     <Package className="h-3 w-3 text-muted-foreground shrink-0" />
                     <Select 
                         value={orderId} 
                         onValueChange={(val) => onAssignmentChange(machine.id, workerId ? parseInt(workerId) : null, val)}
                     >
-                        <SelectTrigger className="h-6 border-none bg-transparent p-0 text-[11px] text-muted-foreground shadow-none focus:ring-0 truncate max-w-full">
+                        <SelectTrigger className="h-5 border-none bg-transparent p-0 text-[10px] text-muted-foreground shadow-none focus:ring-0 truncate max-w-full leading-tight">
                             <SelectValue placeholder={t('production.link_order')} />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
@@ -201,7 +203,7 @@ function MachineUnifiedRow({
 
             {/* Production Input (The Quick Log) */}
             <div className={cn(
-                "w-28 shrink-0 flex items-center justify-center p-2 border-l border-border",
+                "w-24 xs:w-28 shrink-0 flex items-center justify-center p-2 border-l border-border",
                 !workerId && "opacity-30 pointer-events-none"
             )}>
                 <div className="relative w-full">
@@ -211,14 +213,14 @@ function MachineUnifiedRow({
                     )}>
                         <Input
                             type="number"
-                            inputMode="numeric"
+                            inputMode="decimal"
                             pattern="[0-9]*"
                             placeholder="0"
                             value={metersValue || ''}
                             onChange={(e) => onMetersChange(Number(e.target.value))}
-                            className="h-10 flex-1 border-none bg-transparent text-lg font-black text-center font-mono focus-visible:ring-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none pl-2"
+                            className="h-9 xs:h-10 flex-1 border-none bg-transparent text-base xs:text-lg font-black text-center font-mono focus-visible:ring-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none pl-1"
                         />
-                        <div className="flex flex-col border-l border-border bg-muted/30 w-6 items-center justify-center opacity-40 group-focus-within/input:opacity-100 transition-opacity">
+                        <div className="hidden xs:flex flex-col border-l border-border bg-muted/30 w-6 items-center justify-center opacity-40 group-focus-within/input:opacity-100 transition-opacity">
                              <ChevronUp className="h-3 w-3" />
                              <ChevronDown className="h-3 w-3" />
                         </div>
@@ -435,6 +437,52 @@ export default function UnifiedDashboard() {
     // Detail Sheet state
     const [selectedMachine, setSelectedMachine] = useState<any | null>(null)
 
+    // ─── Pull to Refresh Logic ────────────────────────────────────────────────
+    const [pullDistance, setPullDistance] = useState(0)
+    const [isRefreshing, setIsRefreshing] = useState(false)
+    const touchStartRef = useRef<number | null>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (typeof window !== 'undefined' && window.scrollY === 0) {
+            touchStartRef.current = e.touches[0].clientY
+        }
+    }
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (touchStartRef.current !== null && !isRefreshing) {
+            const currentY = e.touches[0].clientY
+            const distance = currentY - touchStartRef.current
+            
+            if (distance > 0) {
+                // Resistance logic for the pull
+                const pull = Math.min(distance * 0.4, 80)
+                setPullDistance(pull)
+                
+                // If we've pulled enough, we can prevent default scrolling
+                if (pull > 20) {
+                    // Note: We can't actually preventDefault in passive listeners, 
+                    // but visual feedback is enough for this implementation.
+                }
+            }
+        }
+    }
+
+    const handleTouchEnd = async () => {
+        if (pullDistance > 60 && !isRefreshing) {
+            setIsRefreshing(true)
+            setPullDistance(40) // Keep visible while loading
+            await fetchData()
+            setTimeout(() => {
+                setIsRefreshing(false)
+                setPullDistance(0)
+            }, 600)
+        } else {
+            setPullDistance(0)
+        }
+        touchStartRef.current = null
+    }
+
     // Load meter entries from localStorage for offline recovery
     useEffect(() => {
         const cached = localStorage.getItem(`meters_${date}_${shift}`)
@@ -585,19 +633,36 @@ export default function UnifiedDashboard() {
     const loggedMetersCount = Object.keys(meters).length
 
     return (
-        <div className="flex flex-col min-h-[90vh] pb-32">
+        <div 
+            ref={containerRef}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            className="flex flex-col min-h-[90vh] pb-32 select-none"
+        >
+            {/* Pull to Refresh Indicator */}
+            <div 
+                className="ptr-indicator overflow-hidden transition-[height] duration-200"
+                style={{ height: `${pullDistance}px`, opacity: pullDistance / 60 }}
+            >
+                <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest">
+                    <Loader2 className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+                    {isRefreshing ? 'Updating...' : 'Pull to Refresh'}
+                </div>
+            </div>
+
             {/* Header - Sticky with safe padding */}
-            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border px-4 py-4 pt-safe">
-                <div className="max-w-3xl mx-auto space-y-4">
+            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border px-4 py-4 pt-safe shadow-sm">
+                <div className="max-w-6xl mx-auto space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-xl font-black text-foreground tracking-tight">Shift Dashboard</h1>
                             <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="secondary" className="text-[10px] font-bold h-5">
+                                <Badge variant="secondary" className="text-[10px] font-bold h-5 bg-muted/50 border-none">
                                     {assignedCount}/{machines.length} Assigned
                                 </Badge>
                                 {loggedMetersCount > 0 && (
-                                    <Badge className="bg-primary text-white text-[10px] font-bold h-5 border-none">
+                                    <Badge className="bg-primary text-white text-[10px] font-bold h-5 border-none shadow-sm animate-in fade-in zoom-in duration-300">
                                         {loggedMetersCount} Meter Entries
                                     </Badge>
                                 )}
@@ -606,7 +671,7 @@ export default function UnifiedDashboard() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-10 border-border text-xs font-black gap-2 shadow-sm"
+                            className="h-10 border-border text-xs font-black gap-2 shadow-sm rounded-xl px-4 hover:bg-muted/50"
                             onClick={handleCopyPrevious}
                             disabled={copying || assignments.length > 0}
                         >
@@ -620,14 +685,14 @@ export default function UnifiedDashboard() {
                             type="date"
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
-                            className="flex-1 h-12 bg-muted/30 border-border text-sm font-bold rounded-xl"
+                            className="flex-1 h-12 bg-muted/30 border-border text-sm font-bold rounded-xl focus:ring-primary/20"
                         />
-                        <div className="flex p-1 bg-muted/40 rounded-xl border border-border">
+                        <div className="flex p-1 bg-muted/40 rounded-xl border border-border shrink-0">
                             <button
                                 onClick={() => setShift('day')}
                                 className={cn(
                                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all",
-                                    shift === 'day' ? "bg-white text-primary shadow-sm" : "text-muted-foreground opacity-60"
+                                    shift === 'day' ? "bg-white text-primary shadow-sm" : "text-muted-foreground opacity-60 hover:opacity-100"
                                 )}
                             >
                                 <Sun className="h-3.5 w-3.5" /> DAY
@@ -636,7 +701,7 @@ export default function UnifiedDashboard() {
                                 onClick={() => setShift('night')}
                                 className={cn(
                                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all",
-                                    shift === 'night' ? "bg-white text-indigo-600 shadow-sm" : "text-muted-foreground opacity-60"
+                                    shift === 'night' ? "bg-white text-indigo-600 shadow-sm" : "text-muted-foreground opacity-60 hover:opacity-100"
                                 )}
                             >
                                 <Moon className="h-3.5 w-3.5" /> NIGHT
@@ -646,8 +711,9 @@ export default function UnifiedDashboard() {
                 </div>
             </div>
 
-            {/* Machine List */}
-            <div className="px-4 py-6 max-w-3xl mx-auto w-full space-y-4">
+            {/* Machine List - Responsive Grid */}
+            <div className="px-4 py-6 max-w-6xl mx-auto w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-3">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -679,10 +745,11 @@ export default function UnifiedDashboard() {
                         )
                     })
                 )}
+                </div>
             </div>
 
             {/* Floating Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 md:left-[260px] p-4 md:p-6 bg-background/80 backdrop-blur-lg border-t border-border flex justify-center z-40 pb-[calc(88px+env(safe-area-inset-bottom,0px))] md:pb-6">
+            <div className="fixed bottom-0 left-0 right-0 md:left-[260px] p-4 md:p-6 bg-background/80 backdrop-blur-lg border-t border-border flex justify-center z-40 pb-floating-button">
                 <Button
                     className="w-full max-w-lg h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-[0_12px_24px_-8px_#FF572280] gap-3"
                     onClick={handleBulkSubmit}

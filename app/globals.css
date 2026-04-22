@@ -51,6 +51,8 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   --color-brand-accent: var(--brand-accent);
+  --breakpoint-xs: 340px;
+  --breakpoint-folding: 280px;
 }
 
 :root {
@@ -191,12 +193,42 @@
     padding-right: env(safe-area-inset-right, 0px);
   }
 
-  @keyframes spin-slow {
+    @keyframes spin-slow {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
   }
   .animate-spin-slow {
     animation: spin-slow 8s linear infinite;
+  }
+
+  /* Pull to Refresh Indicator */
+  .ptr-indicator {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.2s ease, opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--background);
+    width: 100%;
+  }
+
+  /* Specific padding for floating buttons above the mobile bottom nav */
+  .pb-floating-button {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+  
+  @media (min-width: 768px) {
+    .pb-floating-button {
+      padding-bottom: 1.5rem;
+    }
+  }
+
+  /* Ultra-high density text for small screens */
+  .text-tiny {
+    font-size: 0.625rem;
+    line-height: 0.75rem;
+    letter-spacing: -0.01em;
   }
 }
 
