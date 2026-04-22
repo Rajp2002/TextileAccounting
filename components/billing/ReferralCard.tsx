@@ -81,32 +81,33 @@ export function ReferralCard({ stats }: { stats: any }) {
                 </div>
 
                 {/* Code & Share - Compact grouping */}
-                <div className="space-y-3 pt-1">
+                <div className="space-y-4 pt-2">
                     <div className="relative group">
-                        <label className="absolute -top-2 left-3 px-1.5 bg-white text-[9px] font-black text-emerald-600 uppercase tracking-widest z-10">
+                        <label className="absolute -top-2.5 left-4 px-2 bg-white text-[10px] font-black text-emerald-600 uppercase tracking-widest z-10">
                             Your Unique Code
                         </label>
-                        <div className="flex gap-1.5 p-1.5 rounded-2xl border border-emerald-100 bg-emerald-50/20 group-focus-within:border-emerald-300 transition-colors">
+                        <div className="flex items-center gap-2 p-1.5 rounded-2xl border border-emerald-100 bg-emerald-50/20 group-focus-within:border-emerald-400 transition-all shadow-sm">
                             <input 
                                 readOnly 
                                 value={stats.code} 
-                                className="flex-1 bg-transparent text-emerald-900 font-black text-sm tracking-[0.2em] outline-none pl-3 uppercase"
+                                className="flex-1 min-w-0 bg-transparent text-emerald-900 font-black text-sm tracking-[0.25em] outline-none pl-3 uppercase h-10"
                                 onClick={(e) => (e.target as HTMLInputElement).select()}
                             />
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5 shrink-0 px-1">
                                 <Button 
                                     variant="ghost" 
                                     size="icon"
-                                    className="h-9 w-9 rounded-xl hover:bg-emerald-100 text-emerald-600 shrink-0"
+                                    className="h-10 w-10 rounded-xl hover:bg-emerald-100/50 text-emerald-600 transition-colors"
                                     onClick={copyToClipboard}
+                                    title="Copy Code"
                                 >
-                                    {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4 opacity-70" />}
+                                    {copied ? <CheckCircle2 className="h-4.5 w-4.5" /> : <Copy className="h-4.5 w-4.5 opacity-60" />}
                                 </Button>
                                 <Button 
                                     onClick={shareWhatsApp}
-                                    className="h-9 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-sm shrink-0 font-bold text-xs"
+                                    className="h-10 px-5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-md shadow-emerald-500/10 shrink-0 font-black text-[11px] uppercase tracking-wider flex items-center gap-2"
                                 >
-                                    <Share2 className="h-3.5 w-3.5 mr-1.5" />
+                                    <Share2 className="h-4 w-4" />
                                     Share
                                 </Button>
                             </div>
