@@ -487,48 +487,50 @@ export function MachineManagement({
                                     </div>
 
                                     {/* Quick Actions Dropdown */}
-                                    <div className="flex items-center">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-40">
-                                                {canRenameMachines && (
-                                                    <>
-                                                        <DropdownMenuItem onClick={() => toggleMachineStatus(machine)}>
-                                                            <Power className={cn("h-4 w-4 mr-2", isInactive ? "text-teal-600" : "text-amber-600")} />
-                                                            {isInactive? t('machines.activate') : t('machines.deactivate')}
+                                    {(canRenameMachines || canDeleteMachines) && (
+                                        <div className="flex items-center">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="w-40">
+                                                    {canRenameMachines && (
+                                                        <>
+                                                            <DropdownMenuItem onClick={() => toggleMachineStatus(machine)}>
+                                                                <Power className={cn("h-4 w-4 mr-2", isInactive ? "text-teal-600" : "text-amber-600")} />
+                                                                {isInactive? t('machines.activate') : t('machines.deactivate')}
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => {
+                                                                setMachineToRename(machine)
+                                                                setRenameValue(machine.name)
+                                                            }}>
+                                                                <Pencil className="h-4 w-4 mr-2" />
+                                                                {t('machines.rename_machine')}
+                                                            </DropdownMenuItem>
+                                                        </>
+                                                    )}
+                                                    {canDeleteMachines && (
+                                                        <DropdownMenuItem 
+                                                            className="text-red-600 focus:text-red-600"
+                                                            onClick={() => {
+                                                                if (userProfile?.role === 'owner') {
+                                                                    confirmDelete(machine.id)
+                                                                } else {
+                                                                    setMachineToDelete(machine.id)
+                                                                    setAccessCode('')
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Trash2 className="h-4 w-4 mr-2" />
+                                                            {t('common.delete')}
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => {
-                                                            setMachineToRename(machine)
-                                                            setRenameValue(machine.name)
-                                                        }}>
-                                                            <Pencil className="h-4 w-4 mr-2" />
-                                                            {t('machines.rename_machine')}
-                                                        </DropdownMenuItem>
-                                                    </>
-                                                )}
-                                                {canDeleteMachines && (
-                                                    <DropdownMenuItem 
-                                                        className="text-red-600 focus:text-red-600"
-                                                        onClick={() => {
-                                                            if (userProfile?.role === 'owner') {
-                                                                confirmDelete(machine.id)
-                                                            } else {
-                                                                setMachineToDelete(machine.id)
-                                                                setAccessCode('')
-                                                            }
-                                                        }}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 mr-2" />
-                                                        {t('common.delete')}
-                                                    </DropdownMenuItem>
-                                                )}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </div>
+                                                    )}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Order & Quality Section */}

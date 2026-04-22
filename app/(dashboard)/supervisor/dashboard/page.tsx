@@ -203,13 +203,13 @@ function MachineUnifiedRow({
 
             {/* Production Input (The Quick Log) */}
             <div className={cn(
-                "w-24 xs:w-28 shrink-0 flex items-center justify-center p-2 border-l border-border",
+                "w-24 xs:w-28 shrink-0 flex items-center justify-center p-2 pb-3.5 border-l border-border",
                 !workerId && "opacity-30 pointer-events-none"
             )}>
                 <div className="relative w-full">
                     <div className={cn(
-                        "flex items-center bg-background/50 border-2 rounded-xl overflow-hidden transition-all group/input",
-                        metersValue > 0 ? "border-primary/50 shadow-sm shadow-primary/5" : "border-border"
+                        "flex items-center bg-background/50 border-2 rounded-full overflow-hidden transition-all group/input",
+                        metersValue > 0 ? "border-primary/50 shadow-lg shadow-primary/10" : "border-border"
                     )}>
                         <Input
                             type="number"
@@ -225,7 +225,7 @@ function MachineUnifiedRow({
                              <ChevronDown className="h-3 w-3" />
                         </div>
                     </div>
-                    <span className="absolute -bottom-1.5 right-1 text-[8px] font-black text-primary/60 uppercase tracking-tighter">
+                    <span className="absolute -bottom-1.5 right-2 text-[8px] font-black text-primary/80 uppercase tracking-tighter bg-card px-1 rounded-sm">
                         {t('production.meters')}
                     </span>
                 </div>
@@ -638,7 +638,7 @@ export default function UnifiedDashboard() {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="flex flex-col min-h-[90vh] pb-32 select-none"
+            className="flex flex-col min-h-[90vh] pb-32 select-none bg-grid-pattern"
         >
             {/* Pull to Refresh Indicator */}
             <div 
