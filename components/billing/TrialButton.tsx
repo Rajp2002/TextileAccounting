@@ -5,12 +5,15 @@ import { Button } from '@/components/ui/button'
 import { Loader2, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { cn } from '@/lib/utils'
+
 interface TrialButtonProps {
     onSuccess?: (trialEnd: string) => void
     compact?: boolean
+    className?: string
 }
 
-export function TrialButton({ onSuccess, compact }: TrialButtonProps) {
+export function TrialButton({ onSuccess, compact, className }: TrialButtonProps) {
     const [loading, setLoading] = useState(false)
 
     async function handleStartTrial() {
@@ -62,7 +65,7 @@ export function TrialButton({ onSuccess, compact }: TrialButtonProps) {
                 onClick={handleStartTrial}
                 disabled={loading}
                 size="sm"
-                className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                className={cn("gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white", className)}
             >
                 {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
                 {loading ? 'Starting...' : 'Start Free Trial'}
@@ -77,7 +80,7 @@ export function TrialButton({ onSuccess, compact }: TrialButtonProps) {
             onClick={handleStartTrial}
             disabled={loading}
             size="lg"
-            className="w-full sm:w-auto gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200/60 transition-all"
+            className={cn("w-full sm:w-auto gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-200/60 transition-all", className)}
         >
             {loading ? (
                 <>
