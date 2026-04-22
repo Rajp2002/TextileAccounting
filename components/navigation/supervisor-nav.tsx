@@ -222,7 +222,8 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                             onLinkClick={() => setIsOpen(false)}
                         />
                     </SheetContent>
-                </Sheet>
+                    </Sheet>
+                </div>
             </header>
 
             {/*
