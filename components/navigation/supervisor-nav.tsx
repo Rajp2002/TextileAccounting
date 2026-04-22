@@ -28,7 +28,6 @@ const primaryNavItems = [
 ]
 
 const secondaryNavItems = [
-    { name: "Shift Setup",    href: "/supervisor/assignments", icon: ClipboardCheck, translationKey: "assignments" },
     { name: "Machines", href: "/supervisor/machines", icon: Settings, translationKey: "machines" },
 ]
 

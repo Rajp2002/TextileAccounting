@@ -1988,7 +1988,7 @@ Occasionally
 
 ---
 
-## PART N: Shift Assignments (`/supervisor/assignments`)
+## PART N: Shift Assignments (via Unified Dashboard)
 
 Shift assignments are the foundation of accurate production attribution. Before any meters are logged, the supervisor must define: which worker operates which machine, for which order, at what rate — for this specific date and shift.
 
@@ -2058,7 +2058,7 @@ DO UPDATE SET worker_id, order_id, rate_per_m, created_by
 The unique constraint `(org_id, date, shift, machine_id)` ensures each machine has exactly one assignment per shift — no duplicates. Saving a new assignment for an already-assigned machine replaces the old one cleanly.
 
 **Revalidation**
-`/supervisor/assignments` — the page refreshes to show the saved state.
+`/supervisor/dashboard` — the page refreshes to show the saved state.
 
 **Value Derived**
 - Every meter logged later on this machine will be attributed to this worker, order, and rate — automatically

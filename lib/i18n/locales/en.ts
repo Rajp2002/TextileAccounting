@@ -101,6 +101,7 @@ export const en = {
     mark_consumed: "Mark Consumed",
     unconsume: "Un-consume Beam",
     unconsume_success: "Beam reverted to active status.",
+    meters: "mtrs",
   },
   assignments: {
     title: "Worker Assignments",

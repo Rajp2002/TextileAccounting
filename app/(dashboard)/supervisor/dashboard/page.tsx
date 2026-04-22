@@ -18,6 +18,8 @@ import {
     AlertCircle,
     Settings,
     ChevronRight,
+    ChevronUp,
+    ChevronDown,
     MessageSquare,
     AlertTriangle,
 } from 'lucide-react'
@@ -127,22 +129,27 @@ function MachineUnifiedRow({
             <button 
                 onClick={() => onStatusClick(machine)}
                 className={cn(
-                    "w-12 shrink-0 flex flex-col items-center justify-center gap-1.5 border-r border-border hover:bg-muted/30 transition-colors",
+                    "w-12 shrink-0 flex flex-col items-center justify-center gap-1.5 border-r border-border hover:bg-muted/30 transition-colors relative",
                     status === 'running' ? "bg-emerald-50/50" : status === 'maintenance' ? "bg-amber-50/50" : "bg-muted/10",
                     isSyncing && "animate-pulse"
                 )}
             >
+                {/* Left Status Bar */}
+                <div className={cn(
+                    "absolute left-0 top-0 bottom-0 w-1",
+                    status === 'running' ? "bg-emerald-500" : status === 'maintenance' ? "bg-amber-500" : "bg-slate-300"
+                )} />
+
                 <div className="flex flex-col items-center">
                     <p className="text-[10px] font-black tracking-tighter text-foreground leading-none">{machine.name.replace('Machine ', 'M-')}</p>
                     {isSyncing ? (
-                        <Loader2 className="h-2 w-2 animate-spin text-primary mt-1" />
+                        <Loader2 className="h-2.5 w-2.5 animate-spin text-primary mt-1" />
                     ) : isSaved ? (
-                        <Check className="h-2 w-2 text-emerald-500 mt-1" />
+                        <Check className="h-2.5 w-2.5 text-emerald-500 mt-1" />
                     ) : (
                         <div className={cn(
-                            "w-2 h-2 rounded-full mt-1",
-                            status === 'running' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : 
-                            status === 'maintenance' ? "bg-amber-500" : "bg-muted-foreground/30"
+                            "w-1.5 h-1.5 rounded-full mt-1.5",
+                            status === 'running' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : status === 'maintenance' ? "bg-amber-500" : "bg-slate-300"
                         )} />
                     )}
                 </div>
@@ -158,7 +165,7 @@ function MachineUnifiedRow({
                         onValueChange={(val) => onAssignmentChange(machine.id, parseInt(val), orderId || null)}
                     >
                         <SelectTrigger className="h-7 border-none bg-transparent p-0 text-sm font-bold shadow-none focus:ring-0 truncate max-w-full">
-                            <SelectValue placeholder="No Worker" />
+                            <SelectValue placeholder={t('production.no_worker')} />
                         </SelectTrigger>
                         <SelectContent>
                             {workers.map((w) => (
@@ -176,7 +183,7 @@ function MachineUnifiedRow({
                         onValueChange={(val) => onAssignmentChange(machine.id, workerId ? parseInt(workerId) : null, val)}
                     >
                         <SelectTrigger className="h-6 border-none bg-transparent p-0 text-[11px] text-muted-foreground shadow-none focus:ring-0 truncate max-w-full">
-                            <SelectValue placeholder="Assign Order" />
+                            <SelectValue placeholder={t('production.link_order')} />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
                             {orders.map((o) => (
@@ -192,20 +199,31 @@ function MachineUnifiedRow({
 
             {/* Production Input (The Quick Log) */}
             <div className={cn(
-                "w-24 shrink-0 flex items-center justify-center p-2 border-l border-border",
+                "w-28 shrink-0 flex items-center justify-center p-2 border-l border-border",
                 !workerId && "opacity-30 pointer-events-none"
             )}>
-                <div className="relative group w-full">
-                    <Input
-                        type="number"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        placeholder="0"
-                        value={metersValue || ''}
-                        onChange={(e) => onMetersChange(Number(e.target.value))}
-                        className="h-12 w-full text-xl font-black text-center font-mono bg-background/50 border-border focus:border-primary focus:ring-primary/20 p-1"
-                    />
-                    <span className="absolute right-1 bottom-1 text-[8px] font-bold text-muted-foreground uppercase opacity-0 group-focus-within:opacity-100 transition-opacity">mtrs</span>
+                <div className="relative w-full">
+                    <div className={cn(
+                        "flex items-center bg-background/50 border-2 rounded-xl overflow-hidden transition-all group/input",
+                        metersValue > 0 ? "border-primary/50 shadow-sm shadow-primary/5" : "border-border"
+                    )}>
+                        <Input
+                            type="number"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder="0"
+                            value={metersValue || ''}
+                            onChange={(e) => onMetersChange(Number(e.target.value))}
+                            className="h-10 flex-1 border-none bg-transparent text-lg font-black text-center font-mono focus-visible:ring-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none pl-2"
+                        />
+                        <div className="flex flex-col border-l border-border bg-muted/30 w-6 items-center justify-center opacity-40 group-focus-within/input:opacity-100 transition-opacity">
+                             <ChevronUp className="h-3 w-3" />
+                             <ChevronDown className="h-3 w-3" />
+                        </div>
+                    </div>
+                    <span className="absolute -bottom-1.5 right-1 text-[8px] font-black text-primary/60 uppercase tracking-tighter">
+                        {t('production.meters')}
+                    </span>
                 </div>
             </div>
             
@@ -527,10 +545,10 @@ export default function UnifiedDashboard() {
                     rate_per_m: assignment?.rate_per_m,
                 }
             })
-            .filter((e) => e.worker_id && e.meters > 0)
+            .filter((e) => e.worker_id && e.order_id && e.meters > 0)
 
         if (entries.length === 0) {
-            toast.error('No meters entered for any assigned worker')
+            toast.error('No valid production entries found. Ensure both a worker and an order are assigned to each machine.')
             return
         }
 
