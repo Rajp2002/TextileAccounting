@@ -19,6 +19,7 @@ import {
     Package,
     CreditCard,
     FileText,
+    Truck,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -36,6 +37,7 @@ const primaryNavItems = [
 
 const secondaryNavItems = [
     { name: "Workers", href: "/owner/fixed-workers", icon: Users, translationKey: "workers" },
+    { name: "Dispatches", href: "/owner/dispatches", icon: Truck, translationKey: "dispatches" },
     { name: "Advances", href: "/owner/advances", icon: HandCoins, translationKey: "advances" },
     { name: "Machines", href: "/owner/machines", icon: Server, translationKey: "machines" },
     { name: "Quotes", href: "/owner/quotes", icon: FileText, translationKey: "quotes" },
