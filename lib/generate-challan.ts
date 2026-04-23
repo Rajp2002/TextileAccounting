@@ -16,7 +16,7 @@ export interface ChallanData {
     tracking_token:   string      // 12-char token for the QR URL
 }
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://loomi.app'
+const APP_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 /**
  * Generate and auto-download a Delivery Challan PDF with an embedded QR code.
