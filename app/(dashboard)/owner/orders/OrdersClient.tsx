@@ -390,11 +390,15 @@ function DispatchSection({
     }, [orderId, loadDispatches])
 
     const handleOpenShare = async () => {
-        if (trackingToken) { setShowShareModal(true); return }
+        if (trackingToken && trackingUrl) { setShowShareModal(true); return }
         const res = await getTrackingToken(orderId)
         if ('error' in res) { toast.error(res.error); return }
-        setTrackingToken(res.tracking_token)
-        setTrackingUrl(res.tracking_url)
+        
+        const token = (res as any).tracking_token
+        const url = `${window.location.origin}/track/${token}`
+        
+        setTrackingToken(token)
+        setTrackingUrl(url)
         setShowShareModal(true)
     }
 

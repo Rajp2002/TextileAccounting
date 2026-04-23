@@ -807,16 +807,17 @@ export async function bulkLogProduction(entries: {
     shift: 'day' | 'night'
     date: string
     rate_per_m?: number
-}[]) {
+}[], accessCode?: string) {
     const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
+    const orgId = profile.org_id
 
     if (entries.length === 0) return { success: true }
 
     const logs = entries
         .filter((e) => e.meters > 0 && e.order_id)
         .map((e) => ({
-            org_id: profile.org_id,
+            org_id: orgId,
             machine_id: e.machine_id,
             worker_id: e.worker_id,
             order_id: e.order_id,
@@ -829,6 +830,55 @@ export async function bulkLogProduction(entries: {
 
     if (logs.length === 0) return { success: true, logged: 0 }
 
+    // ── Guard: check for existing logs for the same machine, date, and shift ──
+    const machineIds = [...new Set(logs.map((l) => l.machine_id))]
+    const logDate = logs[0].date
+    const logShift = logs[0].shift
+
+    const { data: existingLogs } = await supabase
+        .from('production_logs')
+        .select('machine_id')
+        .eq('org_id', orgId)
+        .eq('date', logDate)
+        .eq('shift', logShift)
+        .in('machine_id', machineIds)
+
+    if (existingLogs && existingLogs.length > 0) {
+        if (!accessCode) {
+            return {
+                error: 'DUPLICATE_LOG_DETECTED',
+                message: 'Production logs already exist for some machines on this shift. This requires an owner access code to overwrite.',
+                duplicateMachines: existingLogs.map((l) => l.machine_id),
+            }
+        }
+
+        // Validate the access code
+        let isCodeValid = false
+        try {
+            isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
+        } catch (e: any) {
+            return { error: e.message }
+        }
+
+        if (!isCodeValid) return { error: 'Invalid or expired access code' }
+
+        // If code is valid, delete existing logs for these machines/date/shift before inserting new ones
+        // We use the service client because supervisors don't have DELETE permission on production_logs
+        const serviceClient = getServiceClient()
+        const { error: deleteError } = await serviceClient
+            .from('production_logs')
+            .delete()
+            .eq('org_id', orgId)
+            .eq('date', logDate)
+            .eq('shift', logShift)
+            .in('machine_id', machineIds)
+
+        if (deleteError) {
+            console.error('bulkLogProduction – delete error:', deleteError)
+            return { error: 'Failed to clear old logs. Please try again.' }
+        }
+    }
+
     // ── Guard: production date must not be before the order's start date ──
     const orderIds = [...new Set(logs.map((l) => l.order_id).filter(Boolean))] as string[]
     if (orderIds.length > 0) {
@@ -836,7 +886,7 @@ export async function bulkLogProduction(entries: {
             .from('orders')
             .select('id, created_at')
             .in('id', orderIds)
-            .eq('org_id', profile.org_id)
+            .eq('org_id', orgId)
 
         if (ordersError) {
             console.error('bulkLogProduction – order lookup error:', ordersError)

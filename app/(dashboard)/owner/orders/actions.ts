@@ -5,7 +5,6 @@ import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import crypto from 'crypto'
 import { checkAccessCodeRateLimit, checkAccessCodeLockout, recordAccessCodeFailure, resetAccessCodeFailures } from '@/lib/rate-limit'
-import { getBaseUrl } from '@/lib/utils'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -486,7 +485,7 @@ export async function createDispatch(
  * Get the tracking token for an order — for the Share Modal.
  * Returns only the token and the full tracking URL.
  */
-export async function getTrackingToken(orderId: string): Promise<{ tracking_token: string; tracking_url: string } | { error: string }> {
+export async function getTrackingToken(orderId: string): Promise<{ tracking_token: string } | { error: string }> {
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
@@ -499,9 +498,7 @@ export async function getTrackingToken(orderId: string): Promise<{ tracking_toke
 
     if (error || !data) return { error: 'Order not found' }
 
-    const appUrl = getBaseUrl()
     return {
         tracking_token: data.tracking_token,
-        tracking_url: `${appUrl}/track/${data.tracking_token}`,
     }
 }
