@@ -784,7 +784,7 @@ export default function UnifiedDashboard() {
             <div className="fixed bottom-0 left-0 right-0 md:left-[260px] p-4 md:p-6 bg-background/80 backdrop-blur-lg border-t border-border flex justify-center z-40 pb-floating-button">
                 <Button
                     className="w-full max-w-lg h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-[0_12px_24px_-8px_#FF572280] gap-3"
-                    onClick={handleBulkSubmit}
+                    onClick={() => handleBulkSubmit()}
                     disabled={submitting || loggedMetersCount === 0}
                 >
                     {submitting ? (
