@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode'
+import { getBaseUrl } from './utils'
 
 /**
  * Data required to generate a Delivery Challan PDF.
@@ -16,7 +17,7 @@ export interface ChallanData {
     tracking_token:   string      // 12-char token for the QR URL
 }
 
-const APP_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+const APP_URL = getBaseUrl()
 
 /**
  * Generate and auto-download a Delivery Challan PDF with an embedded QR code.

@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import crypto from 'crypto'
 import { checkAccessCodeRateLimit, checkAccessCodeLockout, recordAccessCodeFailure, resetAccessCodeFailures } from '@/lib/rate-limit'
+import { getBaseUrl } from '@/lib/utils'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -498,7 +499,7 @@ export async function getTrackingToken(orderId: string): Promise<{ tracking_toke
 
     if (error || !data) return { error: 'Order not found' }
 
-    const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+    const appUrl = getBaseUrl()
     return {
         tracking_token: data.tracking_token,
         tracking_url: `${appUrl}/track/${data.tracking_token}`,
