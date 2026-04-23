@@ -4,6 +4,9 @@
 -- helper RPCs, and a public read-only tracking function.
 -- ============================================================
 
+-- Ensure pgcrypto is available for token generation
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+
 -- ============================================================
 -- 1. EXTEND ORDERS — Add tracking_token + party_phone
 -- ============================================================
@@ -17,7 +20,7 @@ ALTER TABLE orders
 -- 12+ chars from base64 of sha256(random + id + now) — non-guessable
 UPDATE orders
 SET tracking_token = REPLACE(REPLACE(
-  LEFT(encode(digest(random()::text || id::text || NOW()::text, 'sha256'), 'base64'), 12),
+  LEFT(encode(extensions.digest(random()::text || id::text || NOW()::text, 'sha256'), 'base64'), 12),
   '+', 'a'), '/', 'b')
 WHERE tracking_token IS NULL;
 
