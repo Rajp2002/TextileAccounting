@@ -7,6 +7,7 @@ export const en = {
     "attendance": "Attendance",
     "dashboard": "Dashboard",
     "orders": "Orders",
+    "dispatches": "Dispatches",
     "settings": "Settings",
     "audit trail": "Audit Trail",
     "quality": "Quality Form",

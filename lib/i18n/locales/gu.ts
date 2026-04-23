@@ -7,6 +7,7 @@ export const gu = {
     "attendance": "હાજરી (Attendance)",
     "dashboard": "ડેશબોર્ડ",
     "orders": "ઑર્ડર",
+    "dispatches": "ડિસ્પેચ",
     "settings": "સેટિંગ્સ",
     "audit trail": "ઓડિટ ટ્રેલ",
     "quality": "ક્વોલિટી ફોર્મ",

@@ -502,3 +502,35 @@ export async function getTrackingToken(orderId: string): Promise<{ tracking_toke
         tracking_token: data.tracking_token,
     }
 }
+
+/**
+ * Fetch all dispatches across all orders for the org.
+ */
+export async function getAllDispatches() {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('dispatches')
+        .select(`
+            id,
+            dispatch_number,
+            qty_meters_sent,
+            qty_meters_received,
+            status,
+            dispatched_at,
+            received_at,
+            notes,
+            orders!inner (
+                id,
+                party_name,
+                quality_label,
+                tracking_token
+            )
+        `)
+        .eq('org_id', profile.org_id)
+        .order('dispatched_at', { ascending: false })
+
+    if (error) return { error: error.message }
+    return { data: (data ?? []) as any[] }
+}
