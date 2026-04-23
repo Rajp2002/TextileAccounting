@@ -22,6 +22,7 @@ import {
     ChevronDown,
     MessageSquare,
     AlertTriangle,
+    KeyRound,
 } from 'lucide-react'
 import {
     Select,
@@ -39,6 +40,7 @@ import {
     bulkLogProduction,
     updateMachineStatus,
     updateMachineBreakdown,
+    requestAccessCode,
 } from '../actions'
 import {
     Sheet,
@@ -48,6 +50,14 @@ import {
     SheetFooter,
     SheetDescription,
 } from '@/components/ui/sheet'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 
@@ -437,6 +447,11 @@ export default function UnifiedDashboard() {
     // Detail Sheet state
     const [selectedMachine, setSelectedMachine] = useState<any | null>(null)
 
+    // Duplicate Guard State
+    const [showDuplicateDialog, setShowDuplicateDialog] = useState(false)
+    const [duplicateAccessCode, setDuplicateAccessCode] = useState('')
+    const [requestingCode, setRequestingCode] = useState(false)
+
     // ─── Pull to Refresh Logic ────────────────────────────────────────────────
     const [pullDistance, setPullDistance] = useState(0)
     const [isRefreshing, setIsRefreshing] = useState(false)
@@ -578,7 +593,7 @@ export default function UnifiedDashboard() {
         }
     }
 
-    const handleBulkSubmit = async () => {
+    const handleBulkSubmit = async (code: string = '') => {
         const assignedMachines = machines.filter((m) =>
             assignments.some((a) => a.machine_id === m.id && a.worker_id)
         )
@@ -604,15 +619,32 @@ export default function UnifiedDashboard() {
         }
 
         setSubmitting(true)
-        const res = await bulkLogProduction(entries)
+        const res = await bulkLogProduction(entries, code)
         setSubmitting(false)
 
         if (res.success) {
             toast.success(`✅ Production Logged! (${res.logged} machines)`)
             setMeters({}) // Reset inputs after success
             localStorage.removeItem(`meters_${date}_${shift}`) // Clear cache
+            setShowDuplicateDialog(false)
+            setDuplicateAccessCode('')
+        } else if (res.error === 'DUPLICATE_LOG_DETECTED') {
+            setShowDuplicateDialog(true)
         } else {
             toast.error(res.error)
+        }
+    }
+
+    const handleRequestCode = async () => {
+        setRequestingCode(true)
+        try {
+            const result = await requestAccessCode()
+            if (result.error) throw new Error(result.error)
+            toast.success(t('auth.code_requested_success') || 'Request sent to owner via WhatsApp')
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to request code')
+        } finally {
+            setRequestingCode(false)
         }
     }
 
@@ -788,6 +820,52 @@ export default function UnifiedDashboard() {
                     })()}
                 </SheetContent>
             </Sheet>
+
+            {/* Duplicate Log Warning Dialog */}
+            <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+                <DialogContent className="rounded-3xl max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-amber-600">
+                            <AlertTriangle className="h-5 w-5" /> Existing Logs Found
+                        </DialogTitle>
+                        <DialogDescription>
+                            Some machines already have production logs for this shift. Overwriting them requires an owner's access code.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Access Code</Label>
+                            <Input
+                                placeholder="ENTER 6-DIGIT CODE"
+                                value={duplicateAccessCode}
+                                onChange={(e) => setDuplicateAccessCode(e.target.value.toUpperCase())}
+                                className="h-12 text-center font-mono text-xl tracking-[0.5em] font-black rounded-xl border-2"
+                                maxLength={6}
+                            />
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-primary font-bold gap-2 hover:bg-primary/5 h-10"
+                            onClick={handleRequestCode}
+                            disabled={requestingCode}
+                        >
+                            {requestingCode ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+                            Request Code from Owner
+                        </Button>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            className="w-full h-12 bg-primary hover:bg-primary/90 font-black rounded-xl"
+                            disabled={duplicateAccessCode.length < 6 || submitting}
+                            onClick={() => handleBulkSubmit(duplicateAccessCode)}
+                        >
+                            {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                            AUTHORIZE & OVERWRITE
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
