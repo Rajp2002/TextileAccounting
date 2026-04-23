@@ -498,7 +498,7 @@ export async function getTrackingToken(orderId: string): Promise<{ tracking_toke
 
     if (error || !data) return { error: 'Order not found' }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://loomi.app'
+    const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
     return {
         tracking_token: data.tracking_token,
         tracking_url: `${appUrl}/track/${data.tracking_token}`,
