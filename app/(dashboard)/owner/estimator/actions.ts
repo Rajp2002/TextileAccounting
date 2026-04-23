@@ -4,7 +4,16 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import type { EstimateState, FactorySections, WarpRow, WeftRow, OverheadItem } from '@/lib/estimator'
-import { nanoid } from 'nanoid'
+import crypto from 'crypto'
+
+/**
+ * Generates a 12-character URL-safe tracking token for orders.
+ * Uses Node.js crypto (built-in, no ESM issues) — 9 random bytes → base64url → 12 chars.
+ * e.g. 'aB3xK9mPqR2w' — non-guessable, safe for WhatsApp without line-wrapping.
+ */
+function generateTrackingToken(): string {
+    return crypto.randomBytes(9).toString('base64url').slice(0, 12)
+}
 
 // ─── Factory Cost Profile ─────────────────────────────────────────────────────
 
@@ -426,8 +435,10 @@ export async function convertQuoteToOrder(data: {
             // Weaver wage rate snapshot from quote — supervisors see this on shift setup
             worker_rate_per_m:    orderWorkerRatePerM ?? null,
             notes:                data.notes ?? '',
+            // Dispatch Bridge: unique 12-char tracking token for the Trader portal
+            tracking_token:       generateTrackingToken(),
         })
-        .select('id')
+        .select('id, tracking_token')
         .single()
 
     if (error) return { error: error.message }

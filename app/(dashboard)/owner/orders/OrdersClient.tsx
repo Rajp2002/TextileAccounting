@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useTransition } from 'react'
 import { useTranslation } from '@/lib/i18n/context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,6 +29,10 @@ import {
     KeyRound,
     Lock,
     RefreshCw,
+    Send,
+    QrCode,
+    Copy,
+    Truck,
 } from 'lucide-react'
 import {
     Sheet,
@@ -61,9 +65,15 @@ import {
     assignMachinesToOrder,
     updateOrderDetails,
     requestAccessCodeAsOwner,
+    getDispatchesForOrder,
+    createDispatch,
+    getTrackingToken,
+    type DispatchRow,
+    type DispatchSummary,
 } from './actions'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { QRCodeSVG } from 'qrcode.react'
 
 // ─── Utility helpers ─────────────────────────────────────────────────────────
 
@@ -268,6 +278,443 @@ function QuoteCostBreakdown({ quote, targetMeters }: { quote: any; targetMeters:
                 )}
             </div>
         </div>
+    )
+}
+
+// ─── Dispatch Bridge Components ──────────────────────────────────────────────
+
+/**
+ * Single dispatch card for the Weaver's internal Order Detail drawer.
+ * Shows sent/received meters, status badge, and a re-print Challan button.
+ */
+function DispatchItemRow({
+    dispatch,
+    onReprint,
+}: {
+    dispatch: DispatchRow
+    onReprint: (d: DispatchRow) => void
+}) {
+    const isDelivered = dispatch.status === 'delivered'
+    const isInTransit = dispatch.status === 'in_transit'
+
+    return (
+        <div className={cn(
+            'border rounded-xl p-3 space-y-2 transition-all',
+            isDelivered ? 'bg-emerald-50 border-emerald-200' :
+            isInTransit ? 'bg-amber-50/60 border-amber-200' :
+            'bg-slate-50 border-slate-200'
+        )}>
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                    {isDelivered
+                        ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                        : <Truck className="h-4 w-4 text-amber-600 shrink-0" />}
+                    <div>
+                        <p className="text-sm font-black text-slate-900">
+                            Batch #{dispatch.dispatch_number}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-mono">
+                            {format(new Date(dispatch.dispatched_at), 'dd MMM yyyy')}
+                        </p>
+                    </div>
+                </div>
+                <div className="text-right shrink-0">
+                    <p className="text-xs font-bold font-mono text-slate-900">
+                        {Number(dispatch.qty_meters_sent).toFixed(2)} m sent
+                    </p>
+                    {isDelivered && dispatch.qty_meters_received !== null && (
+                        <p className="text-[11px] font-mono text-emerald-700 font-semibold">
+                            {Number(dispatch.qty_meters_received).toFixed(2)} m received
+                        </p>
+                    )}
+                    {isInTransit && (
+                        <p className="text-[10px] text-amber-600 font-semibold">In Transit</p>
+                    )}
+                </div>
+            </div>
+            <button
+                onClick={() => onReprint(dispatch)}
+                className="text-[10px] text-slate-400 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+            >
+                <QrCode className="h-3 w-3" /> Re-print Challan
+            </button>
+        </div>
+    )
+}
+
+/**
+ * Dispatch section panel — shown inside the Order Detail drawer.
+ * Shows the dispatch list, shortage row, and Create Dispatch + Share buttons.
+ */
+function DispatchSection({
+    orderId,
+    isCompleted,
+    onReprintChallan,
+}: {
+    orderId: string
+    isCompleted: boolean
+    onReprintChallan: (dispatch: DispatchRow, trackingToken: string, partyName: string, orgName: string, totalTarget: number) => void
+}) {
+    const [summary, setSummary] = useState<DispatchSummary | null>(null)
+    const [loadingDispatches, setLoadingDispatches] = useState(true)
+    const [showCreateModal, setShowCreateModal] = useState(false)
+    const [showShareModal, setShowShareModal] = useState(false)
+    const [trackingToken, setTrackingToken] = useState<string | null>(null)
+    const [trackingUrl, setTrackingUrl] = useState<string | null>(null)
+
+    const loadDispatches = useCallback(async () => {
+        const res = await getDispatchesForOrder(orderId)
+        if (!('error' in res)) {
+            setSummary(res)
+        }
+        setLoadingDispatches(false)
+    }, [orderId])
+
+    useEffect(() => { loadDispatches() }, [loadDispatches])
+
+    // Realtime subscription — refreshes when Trader confirms receipt
+    useEffect(() => {
+        const supabase = createClient()
+        const channel = supabase
+            .channel(`dispatches:order:${orderId}`)
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'dispatches',
+                filter: `order_id=eq.${orderId}`,
+            }, () => {
+                loadDispatches()
+            })
+            .subscribe()
+        return () => { supabase.removeChannel(channel) }
+    }, [orderId, loadDispatches])
+
+    const handleOpenShare = async () => {
+        if (trackingToken) { setShowShareModal(true); return }
+        const res = await getTrackingToken(orderId)
+        if ('error' in res) { toast.error(res.error); return }
+        setTrackingToken(res.tracking_token)
+        setTrackingUrl(res.tracking_url)
+        setShowShareModal(true)
+    }
+
+    const handleDispatchCreated = async (newDispatch: DispatchRow, token: string, partyName: string, orgName: string) => {
+        await loadDispatches()
+        setShowCreateModal(false)
+        // Trigger Challan PDF (client-side)
+        if (summary) {
+            onReprintChallan(newDispatch, token, partyName, orgName, summary.meters_produced + summary.remaining_to_dispatch)
+        }
+    }
+
+    if (loadingDispatches) {
+        return (
+            <div className="flex items-center gap-2 py-4 text-slate-400">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-xs">Loading dispatches…</span>
+            </div>
+        )
+    }
+
+    const hasShortage = summary && summary.shortage_meters > 0.01
+
+    return (
+        <div className="space-y-3">
+            {/* Action buttons */}
+            {!isCompleted && (
+                <div className="flex gap-2">
+                    <Button
+                        size="sm"
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 text-xs"
+                        onClick={() => setShowCreateModal(true)}
+                        disabled={(summary?.remaining_to_dispatch ?? 0) <= 0}
+                    >
+                        <Send className="h-3.5 w-3.5" />
+                        Dispatch Batch
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-slate-200 text-slate-700 hover:bg-slate-50 font-bold gap-2 text-xs"
+                        onClick={handleOpenShare}
+                    >
+                        <QrCode className="h-3.5 w-3.5" />
+                        Share Link
+                    </Button>
+                </div>
+            )}
+
+            {/* Remaining to dispatch hint */}
+            {!isCompleted && summary && (
+                <p className="text-[10px] text-slate-500 font-mono">
+                    {summary.remaining_to_dispatch.toFixed(2)} m available to dispatch
+                    {summary.meters_produced > 0 ? ` · ${summary.meters_produced.toFixed(2)} m produced` : ''}
+                </p>
+            )}
+
+            {/* Share button for completed orders */}
+            {isCompleted && (
+                <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 font-bold gap-2 text-xs"
+                    onClick={handleOpenShare}
+                >
+                    <QrCode className="h-3.5 w-3.5" />
+                    Share Tracking Link
+                </Button>
+            )}
+
+            {/* Dispatch list */}
+            {summary && summary.dispatches.length > 0 ? (
+                <div className="space-y-2">
+                    {summary.dispatches.map(d => (
+                        <DispatchItemRow
+                            key={d.id}
+                            dispatch={d}
+                            onReprint={(dispatch) => {
+                                if (trackingToken) {
+                                    onReprintChallan(dispatch, trackingToken, '', '', 0)
+                                } else {
+                                    getTrackingToken(orderId).then(res => {
+                                        if (!('error' in res)) {
+                                            setTrackingToken(res.tracking_token)
+                                            onReprintChallan(dispatch, res.tracking_token, '', '', 0)
+                                        }
+                                    })
+                                }
+                            }}
+                        />
+                    ))}
+
+                    {/* Shortage row — Weaver only, never on public portal */}
+                    {hasShortage && (
+                        <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2.5">
+                            <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+                            <div className="min-w-0">
+                                <p className="text-xs font-black text-rose-700">
+                                    Shortage: {summary.shortage_meters.toFixed(2)} m
+                                </p>
+                                <p className="text-[10px] text-rose-500">
+                                    Sent {summary.total_sent.toFixed(2)} m · Received {summary.total_received.toFixed(2)} m
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Summary row */}
+                    <div className="flex justify-between text-[10px] font-mono text-slate-500 px-1 pt-1 border-t border-slate-100">
+                        <span>Total sent: {summary.total_sent.toFixed(2)} m</span>
+                        {summary.total_received > 0 && (
+                            <span className="text-emerald-600">Received: {summary.total_received.toFixed(2)} m</span>
+                        )}
+                    </div>
+                </div>
+            ) : (
+                <div className="border border-dashed border-slate-300 rounded-xl p-5 text-center">
+                    <Truck className="h-6 w-6 text-slate-400 mx-auto mb-2" />
+                    <p className="text-xs text-slate-500 font-medium">No dispatches yet</p>
+                    {!isCompleted && (summary?.remaining_to_dispatch ?? 0) > 0 && (
+                        <p className="text-[10px] text-slate-400 mt-1">
+                            {summary?.remaining_to_dispatch.toFixed(2)} m ready to dispatch
+                        </p>
+                    )}
+                </div>
+            )}
+
+            {/* Create Dispatch Modal */}
+            {showCreateModal && summary && (
+                <CreateDispatchModal
+                    orderId={orderId}
+                    remainingToDispatch={summary.remaining_to_dispatch}
+                    onClose={() => setShowCreateModal(false)}
+                    onCreated={handleDispatchCreated}
+                />
+            )}
+
+            {/* Share Modal */}
+            {showShareModal && trackingUrl && (
+                <ShareTrackingModal
+                    trackingUrl={trackingUrl}
+                    trackingToken={trackingToken ?? ''}
+                    onClose={() => setShowShareModal(false)}
+                />
+            )}
+        </div>
+    )
+}
+
+/**
+ * Modal for creating a new dispatch batch.
+ */
+function CreateDispatchModal({
+    orderId,
+    remainingToDispatch,
+    onClose,
+    onCreated,
+}: {
+    orderId: string
+    remainingToDispatch: number
+    onClose: () => void
+    onCreated: (dispatch: DispatchRow, trackingToken: string, partyName: string, orgName: string) => void
+}) {
+    const [qty, setQty] = useState(remainingToDispatch > 0 ? String(remainingToDispatch.toFixed(2)) : '')
+    const [notes, setNotes] = useState('')
+    const [pending, startTransition] = useTransition()
+
+    const handleSubmit = () => {
+        const qtyNum = parseFloat(qty)
+        if (isNaN(qtyNum) || qtyNum <= 0) {
+            toast.error('Enter a valid dispatch quantity')
+            return
+        }
+        if (qtyNum > remainingToDispatch + 0.01) {
+            toast.error(`Only ${remainingToDispatch.toFixed(2)} m available to dispatch`)
+            return
+        }
+        startTransition(async () => {
+            const res = await createDispatch(orderId, qtyNum, notes || undefined)
+            if ('error' in res) {
+                toast.error(res.error)
+            } else {
+                toast.success(`Dispatch #${res.dispatch_number} created — downloading Challan…`)
+                onCreated(res.dispatch, res.tracking_token, res.party_name, res.org_name)
+            }
+        })
+    }
+
+    return (
+        <Dialog open onOpenChange={(v) => !v && onClose()}>
+            <DialogContent className="max-w-sm">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Send className="h-5 w-5 text-indigo-600" /> Create Dispatch Batch
+                    </DialogTitle>
+                    <DialogDescription>
+                        Log a new batch of fabric sent to the Trader.
+                        A Challan PDF with a tracking QR code will auto-download.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                    <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-700">
+                            Meters to Dispatch
+                            <span className="text-slate-400 font-normal ml-1">
+                                (max {remainingToDispatch.toFixed(2)} m)
+                            </span>
+                        </Label>
+                        <Input
+                            type="number"
+                            value={qty}
+                            onChange={e => setQty(e.target.value)}
+                            placeholder="0.00"
+                            min="0.01"
+                            max={remainingToDispatch}
+                            step="0.01"
+                            className="font-mono text-slate-900 border-slate-200"
+                            autoFocus
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-700">
+                            Notes / Reference
+                            <span className="text-slate-400 font-normal ml-1">(optional)</span>
+                        </Label>
+                        <Input
+                            value={notes}
+                            onChange={e => setNotes(e.target.value)}
+                            placeholder="Challan #, truck number, etc."
+                            className="text-slate-900 border-slate-200"
+                        />
+                    </div>
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2 text-[11px] text-indigo-700">
+                        📄 A Delivery Challan PDF with a scannable QR code will download automatically after creating this dispatch.
+                    </div>
+                </div>
+                <DialogFooter className="gap-2">
+                    <Button variant="outline" onClick={onClose} disabled={pending}>Cancel</Button>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={pending || !qty || parseFloat(qty) <= 0}
+                        className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2"
+                    >
+                        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        {pending ? 'Creating…' : 'Create & Download Challan'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+/**
+ * Share Modal — QR Code + Copy Link for WhatsApp sharing.
+ */
+function ShareTrackingModal({
+    trackingUrl,
+    trackingToken,
+    onClose,
+}: {
+    trackingUrl: string
+    trackingToken: string
+    onClose: () => void
+}) {
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(trackingUrl)
+            toast.success('Link copied — paste into WhatsApp!')
+        } catch {
+            toast.error('Copy failed — please copy the URL manually')
+        }
+    }
+
+    return (
+        <Dialog open onOpenChange={(v) => !v && onClose()}>
+            <DialogContent className="max-w-sm">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <QrCode className="h-5 w-5 text-indigo-600" /> Share Tracking Link
+                    </DialogTitle>
+                    <DialogDescription>
+                        Print this QR on the Challan, or paste the link into WhatsApp.
+                        No login required for your Trader.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-5 py-2">
+                    {/* QR Code */}
+                    <div className="flex justify-center">
+                        <div className="p-4 bg-white border-2 border-slate-200 rounded-2xl shadow-sm">
+                            <QRCodeSVG
+                                value={trackingUrl}
+                                size={200}
+                                fgColor="#1A5C38"
+                                bgColor="#FFFFFF"
+                                level="M"
+                            />
+                        </div>
+                    </div>
+
+                    {/* URL Display */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Tracking URL</p>
+                        <p className="text-xs font-mono text-slate-700 break-all leading-relaxed">{trackingUrl}</p>
+                    </div>
+
+                    {/* Copy button */}
+                    <Button
+                        onClick={handleCopy}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold gap-2"
+                    >
+                        <Copy className="h-4 w-4" />
+                        Copy link for WhatsApp
+                    </Button>
+
+                    <p className="text-[10px] text-center text-slate-400">
+                        Your Trader can scan the QR or open the link — no app or login needed.
+                    </p>
+                </div>
+            </DialogContent>
+        </Dialog>
     )
 }
 
@@ -663,6 +1110,34 @@ function OrderDetailDrawer({
                                         </div>
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Dispatch Bridge Section */}
+                            <div className="space-y-2">
+                                <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1.5">
+                                    <Truck className="h-3 w-3" /> Dispatches
+                                </p>
+                                <DispatchSection
+                                    orderId={order.order_id}
+                                    isCompleted={isCompleted}
+                                    onReprintChallan={async (dispatch, trackingToken, partyName, orgName, totalTarget) => {
+                                        try {
+                                            const { generateChallan } = await import('@/lib/generate-challan')
+                                            await generateChallan({
+                                                org_name: orgName || order.party_name || 'Factory',
+                                                party_name: partyName || order.party_name,
+                                                dispatch_number: dispatch.dispatch_number,
+                                                qty_meters_sent: Number(dispatch.qty_meters_sent),
+                                                total_target_meters: totalTarget || Number(order.total_target_meters || 0),
+                                                notes: dispatch.notes,
+                                                dispatched_at: dispatch.dispatched_at,
+                                                tracking_token: trackingToken,
+                                            })
+                                        } catch (e) {
+                                            toast.error('Failed to generate Challan PDF')
+                                        }
+                                    }}
+                                />
                             </div>
 
                             {/* Machine Assignment */}

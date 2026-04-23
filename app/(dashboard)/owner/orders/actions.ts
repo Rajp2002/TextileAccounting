@@ -316,3 +316,191 @@ export async function assignMachinesToOrder(orderId: string, machineIds: string[
     revalidatePath('/owner/orders')
     return { success: true }
 }
+
+// ─── Dispatch Bridge ──────────────────────────────────────────────────────────
+
+export interface DispatchRow {
+    id: string
+    dispatch_number: number
+    qty_meters_sent: number
+    qty_meters_received: number | null
+    status: 'in_transit' | 'delivered' | 'disputed'
+    notes: string | null
+    dispatched_at: string
+    received_at: string | null
+}
+
+export interface DispatchSummary {
+    dispatches: DispatchRow[]
+    total_sent: number
+    total_received: number
+    shortage_meters: number
+    meters_produced: number
+    remaining_to_dispatch: number
+}
+
+/**
+ * Fetch all dispatches for an order + shortage summary.
+ * Authenticated — for the Weaver's internal Order Detail drawer.
+ */
+export async function getDispatchesForOrder(orderId: string): Promise<DispatchSummary | { error: string }> {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    // Verify the order belongs to this org
+    const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select('id, total_target_meters')
+        .eq('id', orderId)
+        .eq('org_id', profile.org_id)
+        .single()
+
+    if (orderError || !order) return { error: 'Order not found' }
+
+    // Fetch dispatches
+    const { data: dispatches, error: dispatchError } = await supabase
+        .from('dispatches')
+        .select('id, dispatch_number, qty_meters_sent, qty_meters_received, status, notes, dispatched_at, received_at')
+        .eq('order_id', orderId)
+        .eq('org_id', profile.org_id)
+        .order('dispatch_number', { ascending: true })
+
+    if (dispatchError) return { error: dispatchError.message }
+
+    // Fetch meters produced from production_logs
+    const { data: prodData } = await supabase
+        .from('production_logs')
+        .select('meters')
+        .eq('order_id', orderId)
+
+    const metersProduced = (prodData ?? []).reduce((sum, row) => sum + Number(row.meters ?? 0), 0)
+
+    // Compute summary
+    const rows = (dispatches ?? []) as DispatchRow[]
+    const totalSent = rows.reduce((s, d) => s + Number(d.qty_meters_sent), 0)
+    const totalReceived = rows
+        .filter(d => d.status === 'delivered')
+        .reduce((s, d) => s + Number(d.qty_meters_received ?? 0), 0)
+    const shortageMters = totalSent - totalReceived
+    const remainingToDispatch = Math.max(0, metersProduced - totalSent)
+
+    return {
+        dispatches: rows,
+        total_sent: totalSent,
+        total_received: totalReceived,
+        shortage_meters: shortageMters,
+        meters_produced: metersProduced,
+        remaining_to_dispatch: remainingToDispatch,
+    }
+}
+
+/**
+ * Create a new dispatch entry for an order.
+ * Atomically assigns the next dispatch number via RPC.
+ * Returns the created dispatch + tracking_token for Challan PDF generation.
+ */
+export async function createDispatch(
+    orderId: string,
+    qtyMetersSent: number,
+    notes?: string
+): Promise<{ dispatch: DispatchRow; tracking_token: string; party_name: string; org_name: string; dispatch_number: number } | { error: string }> {
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    // Verify order belongs to org and fetch tracking token + party name
+    const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select('id, tracking_token, party_name, status, total_target_meters, org_id')
+        .eq('id', orderId)
+        .eq('org_id', profile.org_id)
+        .single()
+
+    if (orderError || !order) return { error: 'Order not found' }
+    if (order.status !== 'active') return { error: 'Cannot dispatch from a completed or cancelled order' }
+
+    // Fetch org name for the challan header
+    const { data: org } = await supabase
+        .from('organizations')
+        .select('name')
+        .eq('id', profile.org_id)
+        .single()
+
+    // Validate dispatch quantity against remaining meters
+    const { data: prodData } = await supabase
+        .from('production_logs')
+        .select('meters')
+        .eq('order_id', orderId)
+
+    const metersProduced = (prodData ?? []).reduce((s, r) => s + Number(r.meters ?? 0), 0)
+
+    const { data: existingDispatches } = await supabase
+        .from('dispatches')
+        .select('qty_meters_sent')
+        .eq('order_id', orderId)
+
+    const totalSent = (existingDispatches ?? []).reduce((s, d) => s + Number(d.qty_meters_sent), 0)
+    const remainingToDispatch = metersProduced - totalSent
+
+    if (qtyMetersSent <= 0) return { error: 'Dispatch quantity must be greater than zero' }
+    if (qtyMetersSent > remainingToDispatch + 0.01) {
+        return { error: `Cannot dispatch ${qtyMetersSent.toFixed(2)} m — only ${remainingToDispatch.toFixed(2)} m available to dispatch` }
+    }
+
+    // Atomically get next dispatch number
+    const { data: nextNumData, error: rpcError } = await supabase
+        .rpc('next_dispatch_number', { p_order_id: orderId })
+
+    if (rpcError || nextNumData === null) return { error: 'Failed to assign dispatch number' }
+    const dispatchNumber = nextNumData as number
+
+    // Insert dispatch
+    const { data: dispatch, error: insertError } = await supabase
+        .from('dispatches')
+        .insert({
+            org_id:          profile.org_id,
+            order_id:        orderId,
+            dispatch_number: dispatchNumber,
+            qty_meters_sent: qtyMetersSent,
+            status:          'in_transit',
+            notes:           notes ?? null,
+            dispatched_at:   new Date().toISOString(),
+            created_by:      user.id,
+        })
+        .select('id, dispatch_number, qty_meters_sent, qty_meters_received, status, notes, dispatched_at, received_at')
+        .single()
+
+    if (insertError || !dispatch) return { error: insertError?.message ?? 'Failed to create dispatch' }
+
+    revalidatePath('/owner/orders')
+    return {
+        dispatch: dispatch as DispatchRow,
+        tracking_token: order.tracking_token,
+        party_name: order.party_name,
+        org_name: org?.name ?? 'Factory',
+        dispatch_number: dispatchNumber,
+    }
+}
+
+/**
+ * Get the tracking token for an order — for the Share Modal.
+ * Returns only the token and the full tracking URL.
+ */
+export async function getTrackingToken(orderId: string): Promise<{ tracking_token: string; tracking_url: string } | { error: string }> {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('orders')
+        .select('tracking_token')
+        .eq('id', orderId)
+        .eq('org_id', profile.org_id)
+        .single()
+
+    if (error || !data) return { error: 'Order not found' }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://loomi.app'
+    return {
+        tracking_token: data.tracking_token,
+        tracking_url: `${appUrl}/track/${data.tracking_token}`,
+    }
+}

@@ -61,7 +61,9 @@ function isPublicRoute(pathname: string): boolean {
         pathname.startsWith('/terms') ||
         pathname.startsWith('/refund-policy') ||
         // Webhooks authenticate via HMAC signature inside the route — no cookie auth needed
-        pathname.startsWith('/api/webhooks/')
+        pathname.startsWith('/api/webhooks/') ||
+        // Public Trader tracking portal — zero-login by design
+        pathname.startsWith('/track')
     )
 }
 
