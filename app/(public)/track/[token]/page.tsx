@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
     }
 }
 
-// ─── Page (Server Component — SSR for fast mobile loads) ──────────────────────
+import { createClient } from '@/lib/supabase/server'
 
 export default async function TrackingPage({ params }: { params: Promise<{ token: string }> }) {
     const { token } = await params
@@ -50,10 +50,16 @@ export default async function TrackingPage({ params }: { params: Promise<{ token
         notFound()
     }
 
+    // Check if the current visitor is an internal team member (Owner/Supervisor)
+    // to enable "Preview Mode" and disable actions like "Confirm Receipt"
+    const authSupabase = await createClient()
+    const { data: { session } } = await authSupabase.auth.getSession()
+    const isInternalUser = !!session
+
     // Fetch tracking data via the SECURITY DEFINER RPC
     // Uses service_role client — bypasses RLS, returns only safe fields
-    const supabase = createAdminClient()
-    const { data: trackingData, error } = await supabase
+    const adminSupabase = createAdminClient()
+    const { data: trackingData, error } = await adminSupabase
         .rpc('get_order_tracking_data', { p_token: token })
 
     if (error) {
@@ -71,6 +77,7 @@ export default async function TrackingPage({ params }: { params: Promise<{ token
         <TrackingPortal
             data={data}
             trackingToken={token}
+            isPreview={isInternalUser}
         />
     )
 }
