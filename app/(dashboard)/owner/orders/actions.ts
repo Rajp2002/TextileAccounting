@@ -505,6 +505,7 @@ export async function getTrackingToken(orderId: string): Promise<{ tracking_toke
 
 /**
  * Fetch all dispatches across all orders for the org.
+ * Includes order total_target_meters and status for grouped progress view.
  */
 export async function getAllDispatches() {
     const { profile } = await requireRole(['owner', 'supervisor'])
@@ -525,7 +526,9 @@ export async function getAllDispatches() {
                 id,
                 party_name,
                 quality_label,
-                tracking_token
+                tracking_token,
+                total_target_meters,
+                status
             )
         `)
         .eq('org_id', profile.org_id)
