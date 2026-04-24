@@ -285,13 +285,17 @@ function OrderGroupCard({
                                     variant="ghost"
                                     size="sm"
                                     className="h-9 font-bold text-primary hover:bg-primary/5 rounded-xl text-xs shrink-0"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        window.open(`/track/${group.trackingToken}`, '_blank')
-                                    }}
+                                    asChild
                                 >
-                                    <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                                    Track Portal
+                                    <a 
+                                        href={`/track/${group.trackingToken}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                                        Track Portal
+                                    </a>
                                 </Button>
                                 <div className={cn(
                                     "p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 transition-transform duration-300",
