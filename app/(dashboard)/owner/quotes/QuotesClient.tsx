@@ -130,12 +130,12 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                             <CardContent className="p-5 flex flex-col h-full">
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="space-y-1 w-full min-w-0 pr-2">
-                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-none truncate">
+                                        <h3 className="text-lg font-black text-slate-900 truncate tracking-tight">
                                             {quote.party_name}
-                                        </p>
-                                        <h3 className="font-bold text-slate-900 truncate">
-                                            {quote.quality_label}
                                         </h3>
+                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-none truncate">
+                                            {quote.quality_label}
+                                        </p>
                                     </div>
                                     <Badge variant="outline" className={`${STATUS_CONFIG[quote.status as keyof typeof STATUS_CONFIG]?.color} capitalize font-bold`}>
                                         {quote.status}
@@ -144,7 +144,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                 
                                 <div className="grid grid-cols-2 gap-4 mb-4">
                                     <div>
-                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Quote</p>
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Quoted Cost</p>
                                         <p className="text-base font-black font-mono text-indigo-600">₹{Number(quote.quote_price_per_meter).toFixed(2)}/m</p>
                                     </div>
                                     <div>
@@ -154,12 +154,12 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Cost</p>
-                                        <p className="text-xs font-bold font-mono text-slate-600">₹{Number(quote.landed_cost_per_meter).toFixed(2)}/m</p>
+                                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Production Cost</p>
+                                        <p className="text-xs font-bold font-mono text-slate-600 mt-0.5">₹{Number(quote.landed_cost_per_meter).toFixed(2)}/m</p>
                                     </div>
                                     <div>
                                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Date</p>
-                                        <p className="text-xs font-bold text-slate-600">{format(new Date(quote.created_at), 'MMM d, yyyy')}</p>
+                                        <p className="text-xs font-bold text-slate-600 mt-0.5">{format(new Date(quote.created_at), 'MMM d, yyyy')}</p>
                                     </div>
                                 </div>
 

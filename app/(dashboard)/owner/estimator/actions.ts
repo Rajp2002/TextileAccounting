@@ -392,9 +392,14 @@ export async function convertQuoteToOrder(data: {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    // 1. Save quote snapshot if estimate data is present
+    // 1. Save quote snapshot whenever estimate data is present
+    // Note: quote_price_per_m may be 0 when no order qty is set, but we still save
+    // so it appears in Quote History. Use totalProductionCostPerM as minimum fallback.
     let quoteId: string | undefined
-    if (data.estimate && data.quote_price_per_m) {
+    if (data.estimate) {
+        const effectiveQuotePrice = (data.quote_price_per_m && data.quote_price_per_m > 0)
+            ? data.quote_price_per_m
+            : (data.totalProductionCostPerM ?? 0)
         const quoteRes = await saveEstimatorQuoteV3({
             partyName:               data.party_name,
             qualityLabel:            data.quality_label,
@@ -402,13 +407,15 @@ export async function convertQuoteToOrder(data: {
             weftInstruction:         data.weft_instruction,
             estimate:                data.estimate,
             totalProductionCostPerM: data.totalProductionCostPerM ?? 0,
-            quotePricePerM:          data.quote_price_per_m,
+            quotePricePerM:          effectiveQuotePrice,
         })
         if (quoteRes.error) {
             console.error('Failed to save estimator quote:', quoteRes.error)
-            return { error: 'Failed to save linked quote: ' + quoteRes.error }
+            // Don't block order creation if quote save fails — log and continue
+            console.warn('Continuing with order creation despite quote save failure')
+        } else if (quoteRes.quoteId) {
+            quoteId = quoteRes.quoteId
         }
-        if (quoteRes.quoteId) quoteId = quoteRes.quoteId
     }
 
     // 2. Compute worker rate from estimate (if present) — same formula as saveEstimatorQuoteV3
@@ -454,6 +461,7 @@ export async function convertQuoteToOrder(data: {
 
     revalidatePath('/owner/orders')
     revalidatePath('/owner/analytics')
+    revalidatePath('/owner/quotes')
     return { success: true, orderId: order?.id }
 }
 
