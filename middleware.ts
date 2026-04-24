@@ -181,8 +181,8 @@ export async function updateSession(request: NextRequest) {
 
     // ── Route Guards ───────────────────────────────────────────────────────
 
-    // 1. Authenticated user hitting public/auth pages → redirect to their home
-    if (user && isPublicRoute(pathname) && pathname !== '/auth/callback') {
+    // 1. Authenticated user hitting auth pages or landing → redirect to their home
+    if (user && (isAuthRoute(pathname) || pathname === '/') && pathname !== '/auth/callback') {
         const token = request.cookies.get('sb-' + process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID + '-auth-token')
         
         let jwt: Record<string, any> = {}
