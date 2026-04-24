@@ -290,7 +290,7 @@ export default function TrackingPortal({
                             {data.party_name}&apos;s Order
                         </p>
                         <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, margin: 0 }}>
-                            Tracked by Loomi
+                            Tracked by Weavly
                         </p>
                     </div>
                 </div>
@@ -475,7 +475,7 @@ export default function TrackingPortal({
                     }}>
                         <span style={{ fontSize: 14 }}>🧵</span>
                         <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>
-                            Powered by <span style={{ color: '#1A5C38' }}>Loomi</span>
+                            Powered by <span style={{ color: '#1A5C38' }}>Weavly</span>
                         </span>
                     </div>
                     <p style={{ fontSize: 10, color: '#cbd5e1', marginTop: 8 }}>

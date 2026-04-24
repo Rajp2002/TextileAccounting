@@ -15,9 +15,9 @@ export async function getOrCreateReferralCode(orgId: string): Promise<string> {
         return existingCode.code;
     }
 
-    // Generate new code: LOOMI-{WORD}{4-hex-chars}
+    // Generate new code: WEAVLY-{WORD}{4-hex-chars}
     const randomHex = crypto.randomBytes(2).toString('hex').toUpperCase();
-    const prefixStr = 'LOOMI'; 
+    const prefixStr = 'WEAVLY'; 
     let code = `${prefixStr}-${randomHex}`;
 
     // Retry loop for uniqueness

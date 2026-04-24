@@ -10,7 +10,7 @@
 CREATE TABLE public.referral_codes (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id      uuid NOT NULL UNIQUE REFERENCES public.organizations(id) ON DELETE CASCADE,
-  code        text NOT NULL UNIQUE,            -- e.g. "LOOMI-RAJ42"
+  code        text NOT NULL UNIQUE,            -- e.g. "WEAVLY-RAJ42"
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 

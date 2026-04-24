@@ -558,7 +558,7 @@ export default function EstimatorClient({
     // Autosave — scoped per user (orgId-userId) so multi-user on same device is safe
     const orgId  = initialProfile?.factory_id ?? ''
     const userId = typeof window !== 'undefined'
-        ? (() => { try { return localStorage.getItem('loomi-uid') ?? '' } catch { return '' } })()
+        ? (() => { try { return localStorage.getItem('weavly-uid') ?? '' } catch { return '' } })()
         : ''
     const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft } = useAutosave({
         orgId, userId, debounceMs: 2000,

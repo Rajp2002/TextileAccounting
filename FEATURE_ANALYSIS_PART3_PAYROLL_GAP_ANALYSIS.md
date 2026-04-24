@@ -1,4 +1,4 @@
-# Loomi — Comprehensive Feature Analysis: Payroll & Advances (With Gap Analysis)
+# Weavly — Comprehensive Feature Analysis: Payroll & Advances (With Gap Analysis)
 
 > **Context**: This document provides an exhaustive breakdown of the Payroll & Advances (Upaad) module. It deeply analyzes the current technical implementation and then compares it against the real-world expectations and operational realities of the target user: **a Surat-based weaving factory owner**.
 
@@ -14,7 +14,7 @@ Advances represent micro-loans or early wage withdrawals given to workers.
 - **Instant WhatsApp Receipts**: Every new advance triggers an Interakt template message sent to the worker's WhatsApp in their preferred language (Hindi/Gujarati/English), enhancing transparency.
 
 ### 1.2 The Payroll Engine & Calculation Rules
-Loomi operates on a "Snapshot & Settle" paradigm to protect historical accuracy.
+Weavly operates on a "Snapshot & Settle" paradigm to protect historical accuracy.
 
 - **Immutability via Snapshots**: Piece-rate gross pay is computed strictly off the `worker_rate_snapshot` embedded in every individual `production_logs` row. Changes to quality rates today never alter historical ledger entries.
 - **Fixed Workers**: Gross pay is dynamically pro-rated based on `attendance` (days present / total days in cycle) multiplied by their `monthly_salary`.
@@ -45,7 +45,7 @@ Mistakes happen (e.g., missing production logs).
 
 ## 2. Target User Alignment & Gap Analysis
 
-When comparing the current Loomi implementation against the unpolished realities of a typical Indian weaving factory owner, several gaps emerge — ranging from missing workflows to rigid automations. 
+When comparing the current Weavly implementation against the unpolished realities of a typical Indian weaving factory owner, several gaps emerge — ranging from missing workflows to rigid automations. 
 
 ### 🛑 Critical Gap 1: Inability to Manually Control the Deduction Cap
 **The Expectation**: While the 50% legal cap is legally correct, Indian labor dynamics are relationship-based. During festival months (like Diwali), an owner might *choose* to deduct 0% of the advance to let the worker take full cash home. Or, a worker might voluntarily ask to pay back 70% of their gross to clear debt faster.
@@ -56,17 +56,17 @@ When comparing the current Loomi implementation against the unpolished realities
 **The Expectation**: Besides advances, owners frequently deal with:
 - **Kapaat (Fines/Deductions)**: Penalties for damages, machine neglect, or excessive yarn wastage.
 - **Inam/Bhatta (Bonuses)**: Festival bonuses, production milestone rewards, or over-production stipends.
-**Current State**: Completely missing. Loomi only calculates "Meters × Snapshot = Gross" and deducts "Advances".
+**Current State**: Completely missing. Weavly only calculates "Meters × Snapshot = Gross" and deducts "Advances".
 **The Gap**: If an owner wants to dock ₹500 for a broken beam, or add a ₹1000 Diwali bonus, there is natively no way to achieve this. You cannot add a negative advance (`amount > 0` DB constraint blocks this).
 
 ### 🛑 Critical Gap 3: Missing Statutory PF/ESIC Deductions
 **The Expectation**: Provident Fund (12% employee + 12% employer contribution) and Employee State Insurance (ESIC) are mandatory compliance deductions for registered factories above specific worker count thresholds.
 **Current State**: The payroll engine completely ignores PF/ESIC calculations.
-**The Gap**: For a factory with 30+ workers, this represents a severe legal and financial exposure. Even if deferred to a later version, the absence of this compliance layer restricts Loomi's viability for larger, fully above-board mills.
+**The Gap**: For a factory with 30+ workers, this represents a severe legal and financial exposure. Even if deferred to a later version, the absence of this compliance layer restricts Weavly's viability for larger, fully above-board mills.
 
 ### ⚠️ Moderate-to-High Gap 4: Ledger Itemization on Payslips
 **The Expectation**: The WhatsApp payslip is the primary artifact a worker shows their family, uses to dispute deductions, or carries home. Itemization is an absolute requirement to build trust.
-**Current State**: Loomi aggregates deductions, displaying only "Advances Deducted: ₹2,100" without breaking down the dates/reasons.
+**Current State**: Weavly aggregates deductions, displaying only "Advances Deducted: ₹2,100" without breaking down the dates/reasons.
 **The Gap**: The trust-building premise of the WhatsApp receipt partially collapses if the payslip doesn't explicitly state *"Advance from Oct 3rd: ₹800, Advance from Oct 12th: ₹700, Advance from Oct 19th: ₹600"*. Without this, the owner will still face arguments and have to manually pull up the app to prove the math.
 
 ### ⚠️ Moderate Gap 5: Mid-Cycle Partial Payouts

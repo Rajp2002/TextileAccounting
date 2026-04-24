@@ -56,7 +56,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
         }
         
         try {
-            const draftKey = `loomi-estimator-draft-${orgId}-${userId}`
+            const draftKey = `weavly-estimator-draft-${orgId}-${userId}`
             const newDraft = {
                 state: quote.snapshot_data,
                 partyName: quote.party_name || '',

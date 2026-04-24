@@ -81,7 +81,7 @@
 
 ### 2.3 Supervisor Header & Navigation
 - [ ] Login as Supervisor. Verify the **sticky header** shows:
-  - Factory name (or "Loomi" fallback)
+  - Factory name (or "Weavly" fallback)
   - "Supervisor" badge in uppercase teal text
   - Language switcher dropdown
   - Logout button

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 /**
  * PWA Session Guard
  *
- * Problem: When a user swipes the Loomi PWA away from iOS multitasking, the
+ * Problem: When a user swipes the Weavly PWA away from iOS multitasking, the
  * next cold open would previously wait 6-7 seconds (3 sequential server
  * round-trips: middleware auth check → layout requireRole → DB org lookup)
  * before showing anything — manifesting as a black screen then white screen.
@@ -24,7 +24,7 @@ import { useRouter } from 'next/navigation'
  * a fast static page with zero auth overhead.
  */
 
-const SESSION_KEY = 'loomi_pwa_session_alive'
+const SESSION_KEY = 'weavly_pwa_session_alive'
 
 export function usePwaSessionGuard() {
     const router = useRouter()

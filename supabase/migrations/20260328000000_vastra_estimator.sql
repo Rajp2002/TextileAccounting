@@ -1,5 +1,5 @@
 -- ============================================================
--- MIGRATION: Loomi Estimator (Surat Logic)
+-- MIGRATION: Weavly Estimator (Surat Logic)
 -- ============================================================
 
 -- 1. ESTIMATOR SETTINGS: Factory-wide defaults

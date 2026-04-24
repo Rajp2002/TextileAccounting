@@ -125,7 +125,7 @@ export default function SettingsPage() {
             const url = URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
-            a.download = `loomi-data-export-${new Date().toISOString().split('T')[0]}.json`
+            a.download = `weavly-data-export-${new Date().toISOString().split('T')[0]}.json`
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)
@@ -417,7 +417,7 @@ export default function SettingsPage() {
                         <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4 space-y-2">
                             <div className="space-y-1">
                                 <p className="text-sm font-semibold text-gray-900">Grievance Officer</p>
-                                <p className="text-sm text-gray-600">Loomi Support Team · <a href="mailto:privacy@loomi.app" className="text-emerald-700 font-medium">privacy@loomi.app</a></p>
+                                <p className="text-sm text-gray-600">Weavly Support Team · <a href="mailto:privacy@weavly.app" className="text-emerald-700 font-medium">privacy@weavly.app</a></p>
                             </div>
                             <p className="text-xs text-gray-500">Complaints will be acknowledged within 24 hours.</p>
                         </div>

@@ -76,9 +76,9 @@ export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, cl
             const rzp = new window.Razorpay({
                 key: keyId,
                 subscription_id: subscriptionId,
-                name: 'Loomi',
+                name: 'Weavly',
                 description: `${tierName} Plan — ${autoRenew ? 'Monthly, auto-renews' : 'Monthly, no auto-renewal'}`,
-                image: '/images/LoomiLogo.png',
+                image: '/images/WeavlyLogo.png',
                 handler: function (response: {
                     razorpay_payment_id: string
                     razorpay_subscription_id: string

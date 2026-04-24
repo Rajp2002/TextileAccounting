@@ -1,4 +1,4 @@
-# Loomi — In-Depth Project Overview
+# Weavly — In-Depth Project Overview
 
 > **For new team members.** This document is your complete guide to understanding what we're building, why it matters, and exactly how every feature works. Read this top-to-bottom before your first commit.
 
@@ -14,7 +14,7 @@ Small-to-mid-sized textile mills in India bleed money in ways that are almost im
 - **Advance (Upaad) Chaos** — Workers frequently take cash advances. Without centralized tracking, owners lose money to unrecovered advances.
 - **Zero Real-Time Visibility** — Nothing stops a supervisor from retroactively inflating production unless the owner is physically present.
 
-**Loomi is a profit-saving platform built around a strict "Estimator-First" workflow.** Every feature exists to ensure that every meter produced is mathematically profitable from the moment it is quoted.
+**Weavly is a profit-saving platform built around a strict "Estimator-First" workflow.** Every feature exists to ensure that every meter produced is mathematically profitable from the moment it is quoted.
 
 ---
 
@@ -37,7 +37,7 @@ To prevent server-client drift (e.g., UTC vs. IST), all date/time logic is centr
 
 ## 3. The Core Loop: Estimator to Production
 
-Loomi operates on a mandatory estimation-first architecture designed to protect factory margins by ensuring no production starts without a precise costing blueprint.
+Weavly operates on a mandatory estimation-first architecture designed to protect factory margins by ensuring no production starts without a precise costing blueprint.
 
 ### 3.1 Frictionless Onboarding
 The onboarding flow is optimized for immediate value delivery:

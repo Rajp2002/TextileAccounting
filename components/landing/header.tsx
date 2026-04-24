@@ -29,7 +29,7 @@ export default function LandingHeader() {
                     <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                     <Link href="/" className="flex items-center group">
                             <div className="relative h-16 w-40 sm:h-20 sm:w-56 group-hover:opacity-80 transition-opacity duration-200">
-                                <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain object-left" priority />
+                                <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain object-left" priority />
                             </div>
                         </Link>
 

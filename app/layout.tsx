@@ -23,12 +23,12 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "Loomi — Textile Production Management",
+  title: "Weavly — Textile Production Management",
   description: "B2B SaaS PWA for Indian textile manufacturers. Track production, manage workers, and automate daily briefs.",
   // Apple PWA meta tags
   appleWebApp: {
     capable: true,
-    title: "Loomi",
+    title: "Weavly",
     // 'black-translucent' lets content extend behind the status bar
     statusBarStyle: "black-translucent",
   },

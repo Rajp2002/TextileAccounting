@@ -1,6 +1,6 @@
-# Loomi — Complete User Workflows & Actions
+# Weavly — Complete User Workflows & Actions
 
-> A comprehensive reference of all workflows, actions, and server interactions available to each user role in the Loomi platform. Organized by role and feature area.
+> A comprehensive reference of all workflows, actions, and server interactions available to each user role in the Weavly platform. Organized by role and feature area.
 
 ## Table of Contents
 1. [Owner — Dashboard & Estimator](#part-a-owner-analytics-dashboard)
@@ -141,7 +141,7 @@ Salary changes are time-sensitive. When a pay revision happens mid-month, the ow
 
 ---
 
-## PART B: Loomi Estimator (`/owner/estimator`)
+## PART B: Weavly Estimator (`/owner/estimator`)
 
 The Estimator is the **mandatory gateway** for all production. No new order can exist without a quote. It calculates the precise landed cost per meter using Surat-standard textile formulas and allows a one-click "Publish to Production Floor."
 
@@ -298,7 +298,7 @@ Owner can rename a template (fix a typo or update the label when rates change si
 Once a quote is finalized (owner is satisfied with the cost/margin), one click converts it into a live order that immediately appears on the production dashboard and is available for machine assignment.
 
 **Why It Exists**
-This is the only way to create an order in Loomi. It enforces that every order has a costed blueprint, preventing blind production.
+This is the only way to create an order in Weavly. It enforces that every order has a costed blueprint, preventing blind production.
 
 **Inputs Required**
 - `Party Name`: Who the order is for
@@ -1184,7 +1184,7 @@ Owner only.
 
 ## PART H: Payroll Settlement Engine (`/owner/payroll`)
 
-The payroll module is the financial backbone of Loomi. It calculates each worker's gross earnings from immutable production log snapshots, deducts outstanding advances under Indian labour law, and produces locked settlement records with optional WhatsApp payslip delivery.
+The payroll module is the financial backbone of Weavly. It calculates each worker's gross earnings from immutable production log snapshots, deducts outstanding advances under Indian labour law, and produces locked settlement records with optional WhatsApp payslip delivery.
 
 **Core Principle**: Payroll is calculated from `worker_rate_snapshot` values frozen at the time of each production log entry — never from live quality rates. This means rate changes never retroactively affect past earnings.
 
@@ -1236,7 +1236,7 @@ Monthly payroll calculation across dozens of workers with different rates, parti
 Owner marks a worker as paid for the selected month. The server atomically calculates gross pay, applies advance deductions (with legal cap), produces a net payout figure, creates an immutable settlement record, and optionally dispatches a WhatsApp payslip.
 
 **Why It Exists**
-Settlement is the critical moment where wages become a legal obligation. Loomi makes it atomic (single DB transaction), legally compliant (50% cap), and fully auditable.
+Settlement is the critical moment where wages become a legal obligation. Weavly makes it atomic (single DB transaction), legally compliant (50% cap), and fully auditable.
 
 **Who Can Perform**
 Owner only.
@@ -1374,7 +1374,7 @@ Owner taps "Send Payslip" on a settled card → calls `send-payslip` Edge Functi
 
 ## PART I: Advance (Upaad) Management (`/owner/advances`)
 
-Advances are cash payments made to workers before their payroll cycle. Loomi tracks every advance, deducts them at settlement time, and notifies workers via WhatsApp.
+Advances are cash payments made to workers before their payroll cycle. Weavly tracks every advance, deducts them at settlement time, and notifies workers via WhatsApp.
 
 ---
 
@@ -1569,7 +1569,7 @@ All production_logs.date and attendance.date filtered within this range
 
 ## PART K: Access Code System
 
-The Access Code is Loomi's **digital approval mechanism** — a single-use, time-limited, out-of-band authorization token. Any consequential action (deletion, backdating, overrides) requires a code. It functions as a second factor: the supervisor can only proceed if the owner is aware and has approved.
+The Access Code is Weavly's **digital approval mechanism** — a single-use, time-limited, out-of-band authorization token. Any consequential action (deletion, backdating, overrides) requires a code. It functions as a second factor: the supervisor can only proceed if the owner is aware and has approved.
 
 ---
 
@@ -1601,7 +1601,7 @@ None.
 3. Expiry: NOW() + 15 minutes → stored in organizations.access_code_expires_at
 
 4. Fire-and-forget: calls send-access-code Edge Function
-   → Owner's WhatsApp receives: "Your Loomi access code is: A3F9C2.
+   → Owner's WhatsApp receives: "Your Weavly access code is: A3F9C2.
       Valid for 15 minutes."
 
 5. Returns { success: true, code } → code displayed in plaintext on screen
@@ -1626,7 +1626,7 @@ None.
 ### Workflow K-2: Request an Access Code (Supervisor Initiates)
 
 **What It Does**
-Supervisor requests a code from within the app. Loomi generates a code and sends it directly to the owner's WhatsApp with the supervisor's name, so the owner knows who is requesting and why before deciding to share the code.
+Supervisor requests a code from within the app. Weavly generates a code and sends it directly to the owner's WhatsApp with the supervisor's name, so the owner knows who is requesting and why before deciding to share the code.
 
 **Why It Exists**
 In most factories, the supervisor is on the floor and the owner may be at home or in a meeting. The supervisor cannot call to ask for a code without context — the WhatsApp message provides that context automatically.
@@ -1842,7 +1842,7 @@ Owner reads only their own org's logs. Service role (Edge Functions) writes all 
 
 ## PART M: Audit Trail (`/owner/settings/audit`)
 
-The Audit Trail is the **immutable record of everything that has ever happened** in the factory's Loomi instance — who changed what, when, and whether an access code was used.
+The Audit Trail is the **immutable record of everything that has ever happened** in the factory's Weavly instance — who changed what, when, and whether an access code was used.
 
 ---
 
@@ -1965,7 +1965,7 @@ Navigates through the audit log 20 entries at a time.
 
 ## Overview: The Supervisor's Daily Rhythm
 
-A supervisor's day in Loomi follows a predictable loop:
+A supervisor's day in Weavly follows a predictable loop:
 
 ```
 Morning (Shift Start)
@@ -2559,5 +2559,5 @@ The machine slot is now empty — ready for the next shift's supervisor to assig
 
 ---
 
-*This completes the 6-part Loomi User Workflows & Actions documentation series.*
+*This completes the 6-part Weavly User Workflows & Actions documentation series.*
 

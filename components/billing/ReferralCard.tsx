@@ -23,7 +23,7 @@ export function ReferralCard({ stats }: { stats: any }) {
     }
 
     const shareWhatsApp = () => {
-        const text = `Join Loomi using my referral code %2a${stats.code}%2a to manage your textile factory!`
+        const text = `Join Weavly using my referral code %2a${stats.code}%2a to manage your textile factory!`
         window.open(`https://wa.me/?text=${text}`, '_blank')
     }
 

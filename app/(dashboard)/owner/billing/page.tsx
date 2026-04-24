@@ -24,7 +24,7 @@ const PLANS = [
         gst: '₹360',
         total: '₹2,360',
         features: [
-            'Loomi Estimator',
+            'Weavly Estimator',
             'Basic order cost calculations',
             'Single owner account',
         ],
@@ -213,7 +213,7 @@ export default async function BillingPage() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
                 <div className="space-y-1">
                     <h1 className="text-4xl font-black text-gray-900 tracking-tight">Billing & Subscription</h1>
-                    <p className="text-base text-gray-500 font-medium">Manage your Loomi factory operations plan</p>
+                    <p className="text-base text-gray-500 font-medium">Manage your Weavly factory operations plan</p>
                 </div>
                 {tier !== 'none' && <StatusBadge status={subscription?.status ?? 'active'} />}
             </div>
@@ -279,7 +279,7 @@ export default async function BillingPage() {
                                             <Timer className="w-3.5 h-3.5" />
                                             Free Trial Active
                                         </div>
-                                        <h2 className="text-3xl font-black tracking-tight text-gray-900">Experience Loomi Premium</h2>
+                                        <h2 className="text-3xl font-black tracking-tight text-gray-900">Experience Weavly Premium</h2>
                                         <p className="text-gray-500 font-medium text-lg">Full access until {formatDate(subscription?.current_end ?? null)}</p>
                                     </div>
                                     <div className="flex flex-col items-center md:items-end p-4 rounded-3xl bg-white shadow-sm border border-amber-100 min-w-[200px]">
@@ -327,7 +327,7 @@ export default async function BillingPage() {
                                         <div className="space-y-1">
                                             <h2 className="text-4xl font-black tracking-tight text-gray-900 flex items-center gap-3">
                                                 {tier === 'premium' ? <Star className="w-8 h-8 text-amber-500 fill-amber-400" /> : <Zap className="w-8 h-8 text-amber-500" />}
-                                                Loomi {activePlanDef?.name}
+                                                Weavly {activePlanDef?.name}
                                             </h2>
                                             <p className="text-lg text-gray-500 font-medium">Your subscription is active and in good standing.</p>
                                         </div>
@@ -370,7 +370,7 @@ export default async function BillingPage() {
                                         <p className="text-xs text-emerald-700/70 font-medium leading-relaxed">
                                             {subscription?.cancel_at_cycle_end 
                                                 ? `Your plan will stop on ${formatShortDate(subscription.current_end)}. Actions are limited after expiry.`
-                                                : "Loomi will automatically charge your registered card each month to keep operations smooth."
+                                                : "Weavly will automatically charge your registered card each month to keep operations smooth."
                                             }
                                         </p>
                                     </div>
@@ -388,7 +388,7 @@ export default async function BillingPage() {
                     {/* 2. PLAN CARDS SECTION (If not premium or if base) */}
                     {(tier !== 'premium' && !isActivating) && (
                         <div className="pt-4">
-                            <PlanCards label={tier === 'base' ? 'Upgrade to Premium' : 'Select your Loomi Plan'} />
+                            <PlanCards label={tier === 'base' ? 'Upgrade to Premium' : 'Select your Weavly Plan'} />
                         </div>
                     )}
 
