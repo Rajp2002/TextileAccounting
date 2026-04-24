@@ -203,41 +203,50 @@ export default function AttendancePage() {
 
     return (
         <div className="space-y-4 pb-28 max-w-2xl mx-auto">
-            <Card className="shadow-sm">
-                <CardHeader>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-2">
+            <div className="bg-white/50 backdrop-blur-md p-4 rounded-3xl border border-white/20 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
                             <CalendarDays className="h-5 w-5 text-indigo-600" />
-                            <CardTitle>{t('attendance.title')}</CardTitle>
                         </div>
-                        <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto">
-                            <Button variant="outline" size="sm" onClick={setToday} className="h-8 px-2 text-xs shrink-0 flex-1 sm:flex-none">
-                                <RotateCcw className="h-3 w-3 mr-1" />
-                                {t('attendance.today')}
-                            </Button>
-                            <Input
-                                type="date"
-                                value={selectedDate}
-                                max={new Date().toISOString().split('T')[0]} // Prevent future dates
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                className="h-8 text-sm flex-1 sm:w-[150px]"
-                            />
+                        <div>
+                            <h1 className="text-xl font-black text-foreground tracking-tight">{t('attendance.title')}</h1>
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mt-0.5">Fixed Salary Staff</p>
                         </div>
                     </div>
-                </CardHeader>
-            </Card>
+                    <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto">
+                        <Button variant="outline" size="sm" onClick={setToday} className="h-10 px-4 text-[10px] font-black uppercase shrink-0 flex-1 sm:flex-none rounded-xl bg-white/80 hover:bg-white shadow-sm border-border active:scale-95 transition-all">
+                            <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                            {t('attendance.today')}
+                        </Button>
+                        <Input
+                            type="date"
+                            value={selectedDate}
+                            max={new Date().toISOString().split('T')[0]} // Prevent future dates
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="h-10 text-sm font-bold flex-1 sm:w-[150px] rounded-xl bg-white/80 shadow-sm border-border"
+                        />
+                    </div>
+                </div>
+            </div>
 
-            <Card>
-                <CardContent className="py-4">
-                    <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500">{t('attendance.present')}</span>
-                        <span className="text-lg font-bold">
-                            <span className="text-green-700">{presentCount}</span>
-                            <span className="text-gray-400"> / {totalCount}</span>
-                        </span>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="bg-card border border-border shadow-sm rounded-2xl p-4 overflow-hidden relative">
+                <div className="flex justify-between items-center relative z-10">
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t('attendance.present')}</span>
+                    <span className="text-xl font-black tracking-tight">
+                        <span className="text-emerald-600">{presentCount}</span>
+                        <span className="text-muted-foreground/30 mx-1">/</span>
+                        <span className="text-slate-400">{totalCount}</span>
+                    </span>
+                </div>
+                {/* Visual Progress Bar */}
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
+                    <div 
+                        className="h-full bg-emerald-500 transition-all duration-500 ease-out" 
+                        style={{ width: `${totalCount > 0 ? (presentCount / totalCount) * 100 : 0}%` }}
+                    />
+                </div>
+            </div>
 
             {/* Show unlock banner if there are saved entries and not unlocked */}
             {attendanceRecords && attendanceRecords.length > 0 && !unlocked && (
@@ -253,69 +262,65 @@ export default function AttendancePage() {
             )}
 
             {attendanceLoading ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-4" />
-                    <p className="text-gray-500 font-medium text-sm">{t('attendance.loading')}</p>
+                <div className="flex flex-col items-center justify-center py-20 gap-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t('attendance.loading')}</p>
                 </div>
             ) : !dailyWorkers || dailyWorkers.length === 0 ? (
-                <Card>
-                    <CardContent className="py-12 text-center">
-                        <p className="font-medium text-gray-500">{t('attendance.no_workers')}</p>
-                    </CardContent>
-                </Card>
+                <div className="py-16 text-center bg-muted/20 border-2 border-dashed border-border rounded-3xl">
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t('attendance.no_workers')}</p>
+                </div>
             ) : (
-                <Card>
-                    <CardContent className="py-2">
-                        <div className="divide-y">
-                            {dailyWorkers.map(worker => {
-                                const isPresent = localAttendance[worker.id] ?? true
-                                const dailyRate = worker.monthly_salary / 30
+                <div className="bg-card border border-border shadow-sm rounded-3xl overflow-hidden">
+                    <div className="divide-y divide-border">
+                        {dailyWorkers.map(worker => {
+                            const isPresent = localAttendance[worker.id] ?? true
+                            const dailyRate = worker.monthly_salary / 30
 
-                                return (
-                                    <div
-                                        key={worker.id}
-                                        className={cn(
-                                            'flex justify-between items-center py-4 px-3 min-h-[56px] rounded-lg cursor-pointer transition-colors',
-                                            isPresent ? 'hover:bg-green-50/50' : 'hover:bg-red-50/50 opacity-60'
-                                        )}
-                                        onClick={() => toggleAttendance(worker.id, worker.name)}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={cn(
-                                                'w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm',
-                                                isPresent ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'
-                                            )}>
-                                                {isPresent ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
-                                            </div>
-                                            <div>
-                                                <span className={cn('font-medium', !isPresent && 'line-through text-gray-400')}>
-                                                    {tl(worker.name)}
-                                                </span>
-                                                <div className="text-xs text-gray-400">
-                                                    {formatINR(dailyRate)}{t('attendance.per_day')}
-                                                </div>
+                            return (
+                                <div
+                                    key={worker.id}
+                                    className={cn(
+                                        'flex justify-between items-center py-4 px-4 min-h-[64px] cursor-pointer transition-all active:bg-muted/10',
+                                        isPresent ? 'hover:bg-emerald-50/30' : 'hover:bg-red-50/30 opacity-60'
+                                    )}
+                                    onClick={() => toggleAttendance(worker.id, worker.name)}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm border-2',
+                                            isPresent ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-red-50 border-red-100 text-red-500'
+                                        )}>
+                                            {isPresent ? <Check className="h-6 w-6 stroke-[3px] animate-in zoom-in duration-300" /> : <X className="h-6 w-6 stroke-[3px] animate-in zoom-in duration-300" />}
+                                        </div>
+                                        <div>
+                                            <span className={cn('font-black text-foreground tracking-tight block', !isPresent && 'line-through text-muted-foreground/50')}>
+                                                {tl(worker.name)}
+                                            </span>
+                                            <div className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mt-0.5">
+                                                {formatINR(dailyRate)} {t('attendance.per_day')}
                                             </div>
                                         </div>
-                                        <span className={cn(
-                                            'text-xs font-semibold px-2.5 py-1 rounded-full',
-                                            isPresent ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'
-                                        )}>
-                                            {isPresent ? t('attendance.present') : t('attendance.absent')}
-                                        </span>
                                     </div>
-                                )
-                            })}
-                        </div>
-                    </CardContent>
-                </Card>
+                                    <span className={cn(
+                                        'text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border transition-colors',
+                                        isPresent ? 'bg-emerald-100 border-emerald-200 text-emerald-700' : 'bg-red-100 border-red-200 text-red-600'
+                                    )}>
+                                        {isPresent ? t('attendance.present') : t('attendance.absent')}
+                                    </span>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
             )}
 
-            <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] flex justify-center z-40 pb-floating-button">
+            <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-background/40 backdrop-blur-xl border-t border-border flex justify-center z-40 pb-floating-button">
                 <div className="w-full max-w-2xl md:flex md:justify-end md:px-0">
                     <Button
                         onClick={prepareSaveFlow}
                         disabled={saving || totalCount === 0}
-                        className="w-full md:w-[240px] h-[52px] text-lg font-bold shadow-md bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition-all"
+                        className="w-full md:w-[240px] h-14 text-lg font-black shadow-[0_12px_24px_-8px_#0D948880] bg-teal-600 hover:bg-teal-700 text-white rounded-2xl transition-all active:scale-[0.98]"
                     >
                         {saving ? t('attendance.saving') : t('attendance.save')}
                     </Button>

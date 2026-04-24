@@ -114,9 +114,12 @@ export default function SupervisorWorkersPage() {
     if (!userProfile) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-gray-400" /></div>
 
     return (
-        <div className="p-4 space-y-6 max-w-4xl mx-auto">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">{t('workers.manage_workers')}</h1>
+        <div className="p-4 space-y-6 max-w-4xl mx-auto pb-32">
+            <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-4 bg-white/50 backdrop-blur-md p-4 rounded-3xl border border-white/20 shadow-sm">
+                <div>
+                    <h1 className="text-2xl font-black text-foreground tracking-tight">{t('workers.manage_workers')}</h1>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">Personnel Directory</p>
+                </div>
                 <AddWorkerDialog
                     orgId={userProfile.org_id}
                     onWorkerAdded={handleWorkerAdded}
@@ -135,48 +138,71 @@ export default function SupervisorWorkersPage() {
                 </div>
 
                 {workersLoading ? (
-                    <div className="flex justify-center p-8">
-                        <Loader2 className="animate-spin text-gray-400" />
+                    <div className="flex flex-col items-center justify-center p-20 gap-3">
+                        <Loader2 className="animate-spin text-primary h-8 w-8" />
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Syncing Personnel...</p>
                     </div>
                 ) : (
-                    <div className="divide-y border rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {workers?.map((worker: any) => (
-                            <div key={worker.id} className="py-3 px-4 flex justify-between items-center group">
-                                <div className="flex items-center gap-3">
-                                    <span className="font-medium text-gray-700">{tl(worker.name)}</span>
-                                    {worker.pf_esi_eligible && (
-                                        <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
-                                            ESI/PF ✓
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    {/* Active Toggle */}
-                                    <div className="flex items-center gap-2">
-                                        <span className={cn(
-                                            "text-xs",
-                                            worker.is_active ? "text-green-600" : "text-gray-400"
+                            <div key={worker.id} className="relative bg-card border border-border shadow-sm rounded-2xl overflow-hidden group hover:shadow-md transition-all duration-300">
+                                <div className="p-4 flex justify-between items-center">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shadow-inner",
+                                            ROLE_COLORS[worker.role || 'master'] || 'bg-muted text-muted-foreground'
                                         )}>
-                                            {worker.is_active ? t('workers.active') : t('workers.inactive')}
-                                        </span>
-                                        <Switch
-                                            checked={worker.is_active}
-                                            onCheckedChange={() => toggleWorkerActiveStatus(worker.id, worker.is_active, 'workers')}
-                                        />
+                                            {worker.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="font-extrabold text-foreground tracking-tight">{tl(worker.name)}</span>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className={cn(
+                                                    "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md",
+                                                    ROLE_COLORS[worker.role || 'master'] || 'bg-muted text-muted-foreground'
+                                                )}>
+                                                    {worker.role || 'Worker'}
+                                                </span>
+                                                {worker.pf_esi_eligible && (
+                                                    <span className="text-[9px] font-black bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded-md border border-teal-100 uppercase tracking-widest">
+                                                        ESI/PF
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={() => confirmDelete(worker.id)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                    <div className="flex items-center gap-4">
+                                        {/* Active Toggle */}
+                                        <div className="flex flex-col items-end gap-1">
+                                            <span className={cn(
+                                                "text-[9px] font-black uppercase tracking-tighter",
+                                                worker.is_active ? "text-emerald-600" : "text-slate-400"
+                                            )}>
+                                                {worker.is_active ? t('workers.active') : t('workers.inactive')}
+                                            </span>
+                                            <Switch
+                                                checked={worker.is_active}
+                                                onCheckedChange={() => toggleWorkerActiveStatus(worker.id, worker.is_active, 'workers')}
+                                                className="scale-90 data-[state=checked]:bg-emerald-500"
+                                            />
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-9 w-9 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-90"
+                                            onClick={() => confirmDelete(worker.id)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
                         {workers?.length === 0 && (
-                            <p className="text-center text-gray-500 py-8">{t('workers.no_meter_workers')}</p>
+                            <div className="col-span-full py-16 bg-muted/20 border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center gap-2">
+                                <Users className="h-10 w-10 text-muted-foreground/30" />
+                                <p className="text-muted-foreground text-xs font-black uppercase tracking-widest">{t('workers.no_meter_workers')}</p>
+                            </div>
                         )}
                     </div>
                 )}

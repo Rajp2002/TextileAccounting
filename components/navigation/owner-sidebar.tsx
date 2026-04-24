@@ -213,7 +213,13 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
             </header>
 
             {/* Mobile Bottom Navigation Form Factor */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border flex justify-around items-center z-50 px-2 pb-safe pt-[calc(0.5rem+env(safe-area-inset-top,0px))] shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)] min-h-[68px]">
+            <div className={cn(
+                "md:hidden fixed bottom-0 left-0 right-0 z-50",
+                "bg-background/80 backdrop-blur-lg border-t border-border",
+                "flex justify-around items-center px-2 pb-safe pt-2 pl-safe pr-safe",
+                "shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)]",
+                "min-h-[68px] select-none"
+            )}>
                 {primaryNavItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
@@ -223,7 +229,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                             key={item.name}
                             href={item.href}
                             className={cn(
-                                "flex flex-col items-center justify-center py-1 px-1 w-full relative h-full transition-all duration-300",
+                                "flex flex-col items-center justify-center py-1 px-1 min-w-0 w-full relative transition-all duration-300",
                                 isActive ? "text-primary scale-110" : "text-primary opacity-80"
                             )}
                         >
@@ -234,7 +240,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                                 <Icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
                             </div>
                             <span className={cn(
-                                "text-[10px] font-bold leading-none tracking-tight",
+                                "text-[10px] font-bold leading-none tracking-tight truncate max-w-full px-0.5",
                                 isActive ? "opacity-100" : "opacity-80"
                             )}>
                                 {t(`nav.${item.translationKey}`) || item.name}
@@ -249,7 +255,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                 {/* More button to trigger the sheet */}
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="flex flex-col items-center justify-center py-1 px-1 w-full relative h-full text-primary opacity-80"
+                    className="flex flex-col items-center justify-center py-1 px-1 min-w-0 w-full relative text-primary opacity-80"
                 >
                     <div className="py-1.5 px-4 rounded-xl mb-1 hover:bg-black/5 transition-all">
                         <Menu className="h-5 w-5" />

@@ -343,7 +343,7 @@ function NumField({
 }) {
     return (
         <div className="space-y-1.5 min-w-0">
-            <Label className="block text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold text-slate-500 truncate">{label}</Label>
+            <Label className="block text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold text-slate-500 whitespace-nowrap overflow-visible">{label}</Label>
             <div className="relative group">
                 <Input
                     type="number"
@@ -354,7 +354,7 @@ function NumField({
                         const val = e.target.value === '' ? null : Number(e.target.value)
                         onChange(val)
                     }}
-                    className="h-9 sm:h-10 text-xs sm:text-sm font-mono font-black text-center pr-12 sm:pr-14 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full text-orange-600"
+                    className="h-9 sm:h-10 text-xs sm:text-sm font-mono font-black text-center pr-10 sm:pr-14 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full text-orange-600"
                 />
                 {unit && (
                     <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-[9px] sm:text-[10px] text-slate-400 font-bold pointer-events-none">
@@ -1586,7 +1586,7 @@ export default function EstimatorClient({
                                     Update Baseline
                                 </Button>
                             </div>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                                 <NumField 
                                     label="Loom Count" 
                                     value={state.loomCount} 
@@ -1676,7 +1676,7 @@ export default function EstimatorClient({
 
                                             {/* Specialized Config Panels */}
                                             {isElectricity && item.meta && (
-                                                <div className="grid grid-cols-3 gap-2 mt-1 pt-2 border-t border-indigo-100/50">
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1 pt-2 border-t border-indigo-100/50">
                                                     <div className="flex items-center gap-2">
                                                         <input 
                                                             type="checkbox" 

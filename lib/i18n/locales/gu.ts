@@ -804,7 +804,7 @@ export const gu = {
     estimator_btn: "એસ્ટીમેટર (Estimator)",
     no_orders_yet: "હજી કોઈ ઑર્ડર નથી",
     create_or_estimator: "ઑર્ડર જાતે બનાવો, અથવા એસ્ટીમેટર (Estimator) વડે ઑર્ડર બનાવો",
-    go_to_estimator: "એસ્ટીમેટર પર જાઓ (Estimator)",
+    go_to_estimator: "એસ્ટીમેટર પર જાઓ",
     pending_setup: "સેટઅપ બાકી (Pending Setup)",
     in_production: "ઉત્પાદનમાં (In Production)",
     completed_col: "પૂર્ણ (Completed)",
