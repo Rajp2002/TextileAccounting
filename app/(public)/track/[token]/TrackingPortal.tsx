@@ -28,11 +28,13 @@ function DispatchCard({
     dispatch,
     trackingToken,
     orderCompleted,
+    isPreview,
     onConfirmed,
 }: {
     dispatch: TrackingDispatch
     trackingToken: string
     orderCompleted: boolean
+    isPreview?: boolean
     onConfirmed: (id: string, qty: number) => void
 }) {
     const [expanded, setExpanded] = useState(false)
@@ -46,6 +48,7 @@ function DispatchCard({
     const canConfirm  = isInTransit && !orderCompleted
 
     const handleConfirm = () => {
+        if (isPreview) return
         const qty = parseFloat(qtyInput)
         if (isNaN(qty) || qty < 0) {
             setLocalError('Enter a valid quantity')
@@ -109,17 +112,17 @@ function DispatchCard({
                 <>
                     {!expanded ? (
                         <button
-                            onClick={() => setExpanded(true)}
+                            onClick={() => !isPreview && setExpanded(true)}
                             style={{
                                 width: '100%',
                                 padding: '10px 0',
-                                background: '#f0fdf4',
-                                border: '1.5px solid #86efac',
+                                background: isPreview ? '#f8fafc' : '#f0fdf4',
+                                border: `1.5px solid ${isPreview ? '#e2e8f0' : '#86efac'}`,
                                 borderRadius: 10,
-                                color: '#16a34a',
+                                color: isPreview ? '#94a3b8' : '#16a34a',
                                 fontWeight: 700,
                                 fontSize: 14,
-                                cursor: 'pointer',
+                                cursor: isPreview ? 'default' : 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -127,7 +130,7 @@ function DispatchCard({
                                 transition: 'background 0.15s',
                             }}
                         >
-                            ▼ Confirm Receipt
+                            {isPreview ? '✓ Trader will confirm receipt' : '▼ Confirm Receipt'}
                         </button>
                     ) : (
                         <div style={{
@@ -237,9 +240,11 @@ function StatusBadge({ status }: { status: string }) {
 export default function TrackingPortal({
     data: initialData,
     trackingToken,
+    isPreview = false,
 }: {
     data: TrackingData
     trackingToken: string
+    isPreview?: boolean
 }) {
     // Local state for optimistic updates after Trader confirms receipt
     const [data, setData] = useState<TrackingData>(initialData)
@@ -269,6 +274,20 @@ export default function TrackingPortal({
             background: 'linear-gradient(135deg, #f0fdf4 0%, #f8fafc 50%, #fafaf5 100%)',
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         }}>
+            {/* ── Preview Mode Banner ───────────────────────────────────────── */}
+            {isPreview && (
+                <div style={{
+                    background: '#fef3c7',
+                    borderBottom: '1px solid #fde68a',
+                    padding: '8px 20px',
+                    textAlign: 'center',
+                }}>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: '#92400e', margin: 0 }}>
+                        👁️ Preview Mode: Viewing as Weaver. Interactive elements are disabled.
+                    </p>
+                </div>
+            )}
+
             {/* ── Top Navigation Bar ────────────────────────────────────────── */}
             <div style={{
                 background: '#1A5C38',
@@ -456,6 +475,7 @@ export default function TrackingPortal({
                                 dispatch={dispatch}
                                 trackingToken={trackingToken}
                                 orderCompleted={orderCompleted}
+                                isPreview={isPreview}
                                 onConfirmed={handleConfirmed}
                             />
                         ))}
