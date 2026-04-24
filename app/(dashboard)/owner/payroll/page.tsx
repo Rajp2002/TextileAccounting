@@ -768,18 +768,18 @@ function SettlementDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-none shadow-2xl">
-                <div className="bg-indigo-600 p-6 text-white">
-                    <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-                        <HandCoins className="h-6 w-6" />
-                        Settlement: {tl(worker.name)}
+            <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[96dvh] sm:max-h-[90vh]">
+                <div className="bg-indigo-600 p-4 sm:p-6 text-white shrink-0 relative">
+                    <DialogTitle className="text-lg sm:text-xl font-black uppercase tracking-tight flex items-center gap-3 pr-8">
+                        <HandCoins className="h-5 w-5 sm:h-6 sm:w-6" />
+                        <span className="truncate">{tl(worker.name)}</span>
                     </DialogTitle>
-                    <DialogDescription className="text-indigo-100 mt-1 font-medium italic opacity-90">
+                    <DialogDescription className="text-indigo-100 mt-1 text-xs sm:text-sm font-medium italic opacity-90">
                         Finalizing payroll for {monthLabel(selectedMonth)} cycle
                     </DialogDescription>
                 </div>
 
-                <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                <div className="p-4 sm:p-6 space-y-5 sm:space-y-6 overflow-y-auto flex-1">
                     {/* Statutory Preview Alert */}
                     <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
                         <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
@@ -793,12 +793,12 @@ function SettlementDialog({
                     </div>
 
                     {/* Adjustment Section */}
-                    <div className="space-y-3">
+                    <div className="space-y-2.5 sm:space-y-3">
                         <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Quick Adjustments (Inam / Kapaat)</h4>
-                        <div className="bg-gray-50/50 rounded-xl p-4 border border-gray-200 border-dashed space-y-4">
+                        <div className="bg-gray-50/50 rounded-xl p-3 sm:p-4 border border-gray-200 border-dashed space-y-3 sm:space-y-4">
                             <div className="flex gap-2">
                                 <Select value={adjCategoryId} onValueChange={setAdjCategoryId}>
-                                    <SelectTrigger className="h-10 text-xs bg-white border-gray-200">
+                                    <SelectTrigger className="h-9 sm:h-10 text-xs bg-white border-gray-200">
                                         <SelectValue placeholder="Category" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -812,17 +812,17 @@ function SettlementDialog({
                                 <Input 
                                     placeholder="Amount" 
                                     type="number" 
-                                    className="h-10 w-28 text-xs bg-white border-gray-200" 
+                                    className="h-9 sm:h-10 w-24 sm:w-28 text-xs bg-white border-gray-200" 
                                     value={adjAmount}
                                     onChange={e => setAdjAmount(e.target.value)}
                                 />
-                                <Button size="sm" className="h-10 px-4 bg-indigo-600 hover:bg-indigo-700" onClick={handleAddAdjustment} disabled={addingAdjustment}>
+                                <Button size="sm" className="h-9 sm:h-10 px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700" onClick={handleAddAdjustment} disabled={addingAdjustment}>
                                     {addingAdjustment ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-5 w-5"/>}
                                 </Button>
                             </div>
                             <Input 
                                 placeholder="Description (Optional)" 
-                                className="h-9 text-[11px] bg-white border-gray-200"
+                                className="h-8 sm:h-9 text-[10px] sm:text-[11px] bg-white border-gray-200"
                                 value={adjDesc}
                                 onChange={e => setAdjDesc(e.target.value)}
                             />
@@ -861,38 +861,38 @@ function SettlementDialog({
                     </div>
                 </div>
 
-                <div className="bg-gray-50 p-6 border-t border-gray-200 space-y-4">
+                <div className="bg-gray-50 p-4 sm:p-6 border-t border-gray-200 space-y-3 sm:space-y-4 shrink-0">
                     <div className="flex justify-between items-end">
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Confirmed Payout</span>
-                            <div className="text-4xl font-black text-green-600 tracking-tighter">
+                        <div className="space-y-0.5 sm:space-y-1">
+                            <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest block">Confirmed Payout</span>
+                            <div className="text-3xl sm:text-4xl font-black text-green-600 tracking-tighter leading-none">
                                 {formatINR(netPayout)}
                             </div>
                         </div>
-                        <div className="flex flex-col items-end gap-1 mb-1">
-                            <span className="text-[11px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-                                Debt to Carry: {formatINR(totalAdvances - activeDeduction)}
+                        <div className="flex flex-col items-end gap-1 mb-0.5 sm:mb-1">
+                            <span className="text-[10px] sm:text-[11px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                                Debt: {formatINR(totalAdvances - activeDeduction)}
                             </span>
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 pt-2">
+                    <div className="flex items-center space-x-2 pt-1 sm:pt-2">
                         <Checkbox id="confirm" checked={confirmed} onCheckedChange={(c) => setConfirmed(!!c)} />
-                        <label htmlFor="confirm" className="text-xs font-bold text-gray-600 cursor-pointer select-none">
-                            I verify that the above calculations are correct.
+                        <label htmlFor="confirm" className="text-[11px] sm:text-xs font-bold text-gray-600 cursor-pointer select-none">
+                            I verify calculations are correct
                         </label>
                     </div>
 
-                    <div className="flex gap-3">
-                        <Button variant="outline" className="flex-1 h-12 font-bold border-gray-300 hover:bg-gray-100 transition-colors" onClick={() => onOpenChange(false)}>
+                    <div className="flex gap-2 sm:gap-3">
+                        <Button variant="outline" className="flex-1 h-10 sm:h-12 text-xs sm:text-sm font-bold border-gray-300 hover:bg-gray-100 transition-colors" onClick={() => onOpenChange(false)}>
                             Cancel
                         </Button>
                         <Button 
-                            className="flex-[2] h-12 bg-indigo-600 hover:bg-indigo-700 font-black uppercase tracking-widest shadow-lg shadow-indigo-100 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all" 
+                            className="flex-[2] h-10 sm:h-12 text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 font-black uppercase tracking-widest shadow-lg shadow-indigo-100 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all" 
                             disabled={!confirmed || isMutating || netPayout < 0}
                             onClick={() => onSettle({ isFinal, manualDeduction: manualDeduction ? parseFloat(manualDeduction) : null })}
                         >
-                            {isMutating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Confirm & Settle'}
+                            {isMutating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Confirm'}
                         </Button>
                     </div>
                 </div>

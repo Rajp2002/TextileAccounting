@@ -1504,15 +1504,15 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                                 {t('orders_page.create_or_estimator')}
                             </p>
                         </div>
-                        <div className="flex items-center justify-center gap-3">
-                            <a href="/owner/estimator">
-                                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-2">
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 px-4">
+                            <a href="/owner/estimator" className="w-full sm:w-auto">
+                                <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-2">
                                     <Plus className="h-4 w-4" />
                                     {t('orders_page.new_order')}
                                 </Button>
                             </a>
-                            <a href="/owner/estimator">
-                                <Button variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50 font-bold gap-2">
+                            <a href="/owner/estimator" className="w-full sm:w-auto">
+                                <Button variant="outline" className="w-full sm:w-auto border-slate-200 text-slate-600 hover:bg-slate-50 font-bold gap-2">
                                     <Calculator className="h-4 w-4 text-primary" />
                                     {t('orders_page.go_to_estimator')}
                                 </Button>

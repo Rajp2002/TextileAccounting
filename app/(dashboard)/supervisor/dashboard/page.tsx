@@ -141,44 +141,52 @@ function MachineUnifiedRow({
             <button 
                 onClick={() => onStatusClick(machine)}
                 className={cn(
-                    "w-12 shrink-0 flex flex-col items-center justify-center gap-1.5 border-r border-border hover:bg-muted/30 transition-colors relative",
-                    status === 'running' ? "bg-emerald-50/50" : status === 'maintenance' ? "bg-amber-50/50" : "bg-muted/10",
+                    "w-14 xs:w-16 shrink-0 flex flex-col items-center justify-center gap-1.5 border-r border-border hover:bg-muted/30 transition-all relative",
+                    status === 'running' ? "bg-emerald-50/40" : status === 'maintenance' ? "bg-amber-50/40" : "bg-muted/10",
                     isSyncing && "animate-pulse"
                 )}
             >
                 {/* Left Status Bar */}
                 <div className={cn(
-                    "absolute left-0 top-0 bottom-0 w-1",
-                    status === 'running' ? "bg-emerald-500" : status === 'maintenance' ? "bg-amber-500" : "bg-slate-300"
+                    "absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full",
+                    status === 'running' ? "bg-emerald-500 shadow-[2px_0_10px_rgba(16,185,129,0.3)]" : 
+                    status === 'maintenance' ? "bg-amber-500 shadow-[2px_0_10px_rgba(245,158,11,0.3)]" : 
+                    "bg-slate-300"
                 )} />
 
-                <div className="flex flex-col items-center">
-                    <p className="text-[10px] font-black tracking-tighter text-foreground leading-none">{machine.name.replace('Machine ', 'M-')}</p>
+                <div className="flex flex-col items-center px-1">
+                    <p className="text-[10px] xs:text-xs font-black tracking-tight text-foreground/80 leading-none mb-1">
+                        {machine.name.replace('Machine ', 'M-')}
+                    </p>
                     {isSyncing ? (
-                        <Loader2 className="h-2.5 w-2.5 animate-spin text-primary mt-1" />
+                        <Loader2 className="h-3 w-3 animate-spin text-primary" />
                     ) : isSaved ? (
-                        <div className="bg-emerald-500 rounded-full p-0.5 mt-1 animate-in zoom-in duration-300">
-                             <Check className="h-2 w-2 text-white stroke-[4px]" />
+                        <div className="bg-emerald-500 rounded-full p-0.5 animate-in zoom-in duration-300 shadow-sm">
+                             <Check className="h-2.5 w-2.5 text-white stroke-[4px]" />
                         </div>
                     ) : (
                         <div className={cn(
-                            "w-1.5 h-1.5 rounded-full mt-1.5",
-                            status === 'running' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : status === 'maintenance' ? "bg-amber-500" : "bg-slate-300"
+                            "w-2 h-2 rounded-full",
+                            status === 'running' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : 
+                            status === 'maintenance' ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : 
+                            "bg-slate-300"
                         )} />
                     )}
                 </div>
             </button>
 
             {/* Assignments Section */}
-            <div className="flex-1 min-w-0 p-3 flex flex-col justify-center gap-1">
+            <div className="flex-1 min-w-0 p-3 py-4 flex flex-col justify-center gap-2">
                 {/* Worker Dropdown */}
-                <div className="flex items-center gap-1.5 min-w-0">
-                    <Users className="h-3 w-3 text-muted-foreground shrink-0" />
+                <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-6 h-6 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                        <Users className="h-3.5 w-3.5 text-primary/70" />
+                    </div>
                     <Select 
                         value={workerId} 
                         onValueChange={(val) => onAssignmentChange(machine.id, parseInt(val), orderId || null)}
                     >
-                        <SelectTrigger className="h-7 border-none bg-transparent p-0 text-sm font-bold shadow-none focus:ring-0 truncate max-w-full">
+                        <SelectTrigger className="h-auto border-none bg-transparent p-0 text-[13px] font-extrabold shadow-none focus:ring-0 truncate max-w-full hover:text-primary transition-colors">
                             <SelectValue placeholder={t('production.no_worker')} />
                         </SelectTrigger>
                         <SelectContent>
@@ -190,13 +198,15 @@ function MachineUnifiedRow({
                 </div>
 
                 {/* Order Dropdown */}
-                <div className="flex items-center gap-1.5 min-w-0">
-                    <Package className="h-3 w-3 text-muted-foreground shrink-0" />
+                <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                        <Package className="h-3.5 w-3.5 text-muted-foreground/70" />
+                    </div>
                     <Select 
                         value={orderId} 
                         onValueChange={(val) => onAssignmentChange(machine.id, workerId ? parseInt(workerId) : null, val)}
                     >
-                        <SelectTrigger className="h-5 border-none bg-transparent p-0 text-[10px] text-muted-foreground shadow-none focus:ring-0 truncate max-w-full leading-tight">
+                        <SelectTrigger className="h-auto border-none bg-transparent p-0 text-[11px] font-bold text-muted-foreground shadow-none focus:ring-0 truncate max-w-full leading-tight hover:text-foreground transition-colors">
                             <SelectValue placeholder={t('production.link_order')} />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
@@ -213,13 +223,13 @@ function MachineUnifiedRow({
 
             {/* Production Input (The Quick Log) */}
             <div className={cn(
-                "w-24 xs:w-28 shrink-0 flex items-center justify-center p-2 pb-3.5 border-l border-border",
-                !workerId && "opacity-30 pointer-events-none"
+                "w-28 xs:w-32 shrink-0 flex items-center justify-center p-3 pb-5 border-l border-border bg-muted/5",
+                !workerId && "opacity-30 grayscale pointer-events-none"
             )}>
                 <div className="relative w-full">
                     <div className={cn(
-                        "flex items-center bg-background/50 border-2 rounded-full overflow-hidden transition-all group/input",
-                        metersValue > 0 ? "border-primary/50 shadow-lg shadow-primary/10" : "border-border"
+                        "flex items-center bg-background border-2 rounded-2xl overflow-hidden transition-all duration-300 group/input",
+                        metersValue > 0 ? "border-primary shadow-[0_8px_20px_-6px_rgba(255,87,34,0.25)] ring-4 ring-primary/5" : "border-border shadow-sm"
                     )}>
                         <Input
                             type="number"
@@ -228,16 +238,14 @@ function MachineUnifiedRow({
                             placeholder="0"
                             value={metersValue || ''}
                             onChange={(e) => onMetersChange(Number(e.target.value))}
-                            className="h-9 xs:h-10 flex-1 border-none bg-transparent text-base xs:text-lg font-black text-center font-mono focus-visible:ring-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none pl-1"
+                            className="h-10 xs:h-12 flex-1 border-none bg-transparent text-lg xs:text-xl font-black text-center font-mono focus-visible:ring-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
-                        <div className="hidden xs:flex flex-col border-l border-border bg-muted/30 w-6 items-center justify-center opacity-40 group-focus-within/input:opacity-100 transition-opacity">
-                             <ChevronUp className="h-3 w-3" />
-                             <ChevronDown className="h-3 w-3" />
-                        </div>
                     </div>
-                    <span className="absolute -bottom-1.5 right-2 text-[8px] font-black text-primary/80 uppercase tracking-tighter bg-card px-1 rounded-sm">
-                        {t('production.meters')}
-                    </span>
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-card border border-border px-2 py-0.5 rounded-full shadow-sm">
+                        <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">
+                            {t('production.meters')}
+                        </span>
+                    </div>
                 </div>
             </div>
             
@@ -703,7 +711,7 @@ export default function UnifiedDashboard() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-10 border-border text-xs font-black gap-2 shadow-sm rounded-xl px-4 hover:bg-muted/50"
+                            className="h-10 border-border bg-white text-[10px] font-black gap-2 shadow-sm rounded-xl px-4 hover:bg-muted/50 hover:text-primary transition-all active:scale-95"
                             onClick={handleCopyPrevious}
                             disabled={copying || assignments.length > 0}
                         >
@@ -719,24 +727,24 @@ export default function UnifiedDashboard() {
                             onChange={(e) => setDate(e.target.value)}
                             className="flex-1 h-12 bg-muted/30 border-border text-sm font-bold rounded-xl focus:ring-primary/20"
                         />
-                        <div className="flex p-1 bg-muted/40 rounded-xl border border-border shrink-0">
+                        <div className="flex p-1 bg-muted/40 rounded-2xl border border-border shrink-0 backdrop-blur-sm">
                             <button
                                 onClick={() => setShift('day')}
                                 className={cn(
-                                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all",
-                                    shift === 'day' ? "bg-white text-primary shadow-sm" : "text-muted-foreground opacity-60 hover:opacity-100"
+                                    "flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black transition-all duration-300",
+                                    shift === 'day' ? "bg-white text-orange-500 shadow-md ring-1 ring-black/5" : "text-muted-foreground opacity-60 hover:opacity-100"
                                 )}
                             >
-                                <Sun className="h-3.5 w-3.5" /> DAY
+                                <Sun className={cn("h-4 w-4", shift === 'day' && "animate-pulse")} /> DAY
                             </button>
                             <button
                                 onClick={() => setShift('night')}
                                 className={cn(
-                                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all",
-                                    shift === 'night' ? "bg-white text-indigo-600 shadow-sm" : "text-muted-foreground opacity-60 hover:opacity-100"
+                                    "flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black transition-all duration-300",
+                                    shift === 'night' ? "bg-[#1A1A1B] text-indigo-400 shadow-md ring-1 ring-white/5" : "text-muted-foreground opacity-60 hover:opacity-100"
                                 )}
                             >
-                                <Moon className="h-3.5 w-3.5" /> NIGHT
+                                <Moon className={cn("h-4 w-4", shift === 'night' && "animate-pulse")} /> NIGHT
                             </button>
                         </div>
                     </div>
@@ -780,10 +788,9 @@ export default function UnifiedDashboard() {
                 </div>
             </div>
 
-            {/* Floating Action Bar */}
-            <div className="fixed bottom-0 left-0 right-0 md:left-[260px] p-4 md:p-6 bg-background/80 backdrop-blur-lg border-t border-border flex justify-center z-40 pb-floating-button">
+            <div className="fixed bottom-0 left-0 right-0 md:left-[260px] p-4 md:p-6 bg-background/40 backdrop-blur-xl border-t border-border flex justify-center z-40 pb-floating-button">
                 <Button
-                    className="w-full max-w-lg h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-[0_12px_24px_-8px_#FF572280] gap-3"
+                    className="w-full max-w-lg h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-[0_12px_24px_-8px_#FF572280] gap-3 active:scale-[0.98] transition-all"
                     onClick={() => handleBulkSubmit()}
                     disabled={submitting || loggedMetersCount === 0}
                 >

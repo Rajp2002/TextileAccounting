@@ -816,7 +816,7 @@ export const en = {
     estimator_btn: "Estimator (Estimator)",
     no_orders_yet: "No orders yet",
     create_or_estimator: "Create an order manually, or use the Estimator to generate a costed order",
-    go_to_estimator: "Go to Estimator (Estimator)",
+    go_to_estimator: "Go to Estimator",
     pending_setup: "Pending Setup",
     in_production: "In Production",
     completed_col: "Completed",
