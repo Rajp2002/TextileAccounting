@@ -50,7 +50,7 @@ export default function LandingFooter() {
                         <div className="col-span-1 md:col-span-1 flex flex-col items-center md:items-start text-center md:text-left">
                             <Link href="/">
                                 <div className="relative h-14 w-36 mb-4 hover:opacity-80 transition-opacity">
-                                    <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain object-center md:object-left" />
+                                    <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain object-center md:object-left" />
                                 </div>
                             </Link>
                             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs cursor-default">
@@ -141,7 +141,7 @@ export default function LandingFooter() {
                     {/* Bottom border + Copyright */}
                     <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
                         <p className="text-gray-400 text-sm">
-                            &copy; {new Date().getFullYear()} Loomi. All rights reserved.
+                            &copy; {new Date().getFullYear()} Weavly. All rights reserved.
                         </p>
                         <div className="flex items-center gap-6 text-sm text-gray-500">
                             <span>Built securely for the Indian textile industry.</span>

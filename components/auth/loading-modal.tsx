@@ -27,8 +27,8 @@ export default function LoadingModal({ isOpen, message = 'Loading...' }: Loading
                     >
                         <div className="relative h-16 w-32 mb-4">
                             <Image
-                                src="/images/LoomiLogo.png"
-                                alt="Loomi Logo"
+                                src="/images/WeavlyLogo.png"
+                                alt="Weavly Logo"
                                 fill
                                 className="object-contain animate-pulse"
                             />

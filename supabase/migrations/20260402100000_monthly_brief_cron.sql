@@ -6,7 +6,7 @@
 -- months (February is the shortest at 28 days).
 --
 -- Calls the monthly-brief Supabase Edge Function via http_post.
--- Auth uses service_role key (same pattern as loomi-daily-brief).
+-- Auth uses service_role key (same pattern as weavly-daily-brief).
 --
 -- PREREQUISITES:
 --   Requires 'supabase_url' and 'service_role_key' in whatsapp_settings table.
@@ -18,14 +18,14 @@ CREATE EXTENSION IF NOT EXISTS pg_net  WITH SCHEMA extensions;
 -- Remove if already exists (idempotent)
 DO $$
 BEGIN
-    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'loomi-monthly-brief') THEN
-        PERFORM cron.unschedule('loomi-monthly-brief');
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'weavly-monthly-brief') THEN
+        PERFORM cron.unschedule('weavly-monthly-brief');
     END IF;
 END;
 $$;
 
 SELECT cron.schedule(
-    'loomi-monthly-brief',   -- job name
+    'weavly-monthly-brief',   -- job name
     '0 18 28 * *',            -- 18:00 UTC on the 28th of every month = 23:30 IST
     $$
     SELECT net.http_post(

@@ -6,7 +6,7 @@
 --   org_subscriptions:  per-org subscription lifecycle state
 --   subscription_payments: payment history per org
 --
--- Uses org_id (not factory_id) — this is Loomi's actual tenant key.
+-- Uses org_id (not factory_id) — this is Weavly's actual tenant key.
 -- RLS: owners see their own org's data via profiles.org_id + role = 'owner'
 -- Webhook handler uses service_role (createAdminClient) — bypasses RLS.
 -- ============================================================

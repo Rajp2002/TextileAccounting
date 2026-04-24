@@ -89,7 +89,7 @@ export async function issueReferralRefund(orgId: string, paymentId: string, amou
                 const refund = await rzp.payments.refund(paymentId, {
                     amount: refundAmountPaise,
                     notes: {
-                        reason: `Loomi referral discount: ${totalDiscountPct}% (${windows.length} referrals)`
+                        reason: `Weavly referral discount: ${totalDiscountPct}% (${windows.length} referrals)`
                     }
                 });
                 

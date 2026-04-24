@@ -276,7 +276,7 @@ function SignupForm() {
                     <Input
                         id="referralCode"
                         type="text"
-                        placeholder="e.g. LOOMI-XXXX"
+                        placeholder="e.g. WEAVLY-XXXX"
                         value={referralCode}
                         onChange={(e) => setReferralCode(e.target.value)}
                         className="h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all uppercase"

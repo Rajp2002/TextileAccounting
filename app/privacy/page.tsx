@@ -3,8 +3,8 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 import LandingFooter from "@/components/landing/footer"
 export const metadata: Metadata = {
-    title: 'Privacy Policy — Loomi',
-    description: 'Learn how Loomi collects, uses, and protects your personal data in compliance with India\'s Digital Personal Data Protection Act (DPDP Act) 2023.',
+    title: 'Privacy Policy — Weavly',
+    description: 'Learn how Weavly collects, uses, and protects your personal data in compliance with India\'s Digital Personal Data Protection Act (DPDP Act) 2023.',
 }
 
 export default function PrivacyPolicyPage() {
@@ -18,7 +18,7 @@ export default function PrivacyPolicyPage() {
                 <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
                         <div className="relative h-12 w-32">
-                            <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" />
+                            <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain" />
                         </div>
                     </Link>
                     <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -47,7 +47,7 @@ export default function PrivacyPolicyPage() {
                     <article className="px-8 py-10 sm:px-12 sm:py-12 prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-amber-600 hover:prose-a:text-amber-700 prose-a:underline-offset-4 prose-a:decoration-amber-200 hover:prose-a:decoration-amber-600 transition-all font-medium">
 
                         <p className="lead text-lg text-gray-600 dark:text-gray-400 mb-8">
-                        Loomi (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting the personal data of our users. This Privacy Policy explains how we collect, use, store, and protect your information when you use the Loomi platform. This policy is drafted in compliance with India&apos;s <strong>Digital Personal Data Protection Act (DPDP Act) 2023</strong>, the <strong>Information Technology Act 2000</strong>, and the <strong>IT (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>.
+                        Weavly (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is committed to protecting the personal data of our users. This Privacy Policy explains how we collect, use, store, and protect your information when you use the Weavly platform. This policy is drafted in compliance with India&apos;s <strong>Digital Personal Data Protection Act (DPDP Act) 2023</strong>, the <strong>Information Technology Act 2000</strong>, and the <strong>IT (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>.
                     </p>
 
                     <h2>1. Data We Collect</h2>
@@ -109,16 +109,16 @@ export default function PrivacyPolicyPage() {
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 not-prose my-6">
                         <p className="text-sm font-semibold text-blue-900 mb-2">Role Under the DPDP Act 2023</p>
                         <p className="text-sm text-blue-800">
-                            For the purposes of the Digital Personal Data Protection Act 2023, the <strong>Factory Owner (Subscriber) acts as the Data Fiduciary</strong>, determining the purpose and means of processing worker data. <strong>Loomi acts solely as a Data Processor</strong>, processing data on behalf of the Factory Owner.
+                            For the purposes of the Digital Personal Data Protection Act 2023, the <strong>Factory Owner (Subscriber) acts as the Data Fiduciary</strong>, determining the purpose and means of processing worker data. <strong>Weavly acts solely as a Data Processor</strong>, processing data on behalf of the Factory Owner.
                         </p>
                         <p className="text-sm text-blue-800 mt-3">
-                            It is the strict responsibility of the Factory Owner to obtain lawful consent from their workers before entering their personal data into the Loomi platform.
+                            It is the strict responsibility of the Factory Owner to obtain lawful consent from their workers before entering their personal data into the Weavly platform.
                         </p>
                     </div>
 
                     <h2>3. Consent</h2>
                     <p>
-                        By creating an account on Loomi, you provide explicit consent for the collection and processing of your data for the purposes described above. You may withdraw consent at any time by contacting us (see Section 11). Withdrawal of consent may result in the inability to use certain features of the platform.
+                        By creating an account on Weavly, you provide explicit consent for the collection and processing of your data for the purposes described above. You may withdraw consent at any time by contacting us (see Section 11). Withdrawal of consent may result in the inability to use certain features of the platform.
                     </p>
                     <p>
                         For the WhatsApp Daily Briefs feature, separate feature-level consent is obtained within the application.
@@ -171,20 +171,20 @@ export default function PrivacyPolicyPage() {
 
                     <h2>9. Children&apos;s Data</h2>
                     <p>
-                        Loomi does not knowingly collect or process data of individuals under the age of 18. All workers added to the platform must be confirmed as being 18 years of age or older by the person creating the worker record. If we become aware that data of a minor has been collected, we will promptly delete such data.
+                        Weavly does not knowingly collect or process data of individuals under the age of 18. All workers added to the platform must be confirmed as being 18 years of age or older by the person creating the worker record. If we become aware that data of a minor has been collected, we will promptly delete such data.
                     </p>
 
                     <h2>10. Local Storage &amp; Offline Data</h2>
                     <p>
-                        The Loomi Progressive Web App (PWA) uses <strong>IndexedDB</strong> to store production entries locally on your device when an internet connection is unavailable. This data is automatically synced to our servers upon reconnection and removed from local storage after sync. The app also uses a <strong>Service Worker</strong> for offline caching of application assets. No cookies are used for tracking purposes.
+                        The Weavly Progressive Web App (PWA) uses <strong>IndexedDB</strong> to store production entries locally on your device when an internet connection is unavailable. This data is automatically synced to our servers upon reconnection and removed from local storage after sync. The app also uses a <strong>Service Worker</strong> for offline caching of application assets. No cookies are used for tracking purposes.
                     </p>
 
                     <h2>11. Contact &amp; Grievance Officer</h2>
                     <p>For questions, data requests, or complaints regarding your personal data, contact:</p>
                     <div className="bg-gray-50 rounded-xl p-6 not-prose text-sm text-gray-700 space-y-1 my-4">
                         <p className="font-semibold text-gray-900">Grievance Officer</p>
-                        <p>Loomi</p>
-                        <p>Email: <a href="mailto:privacy@loomi.app" className="text-amber-700 hover:underline">privacy@loomi.app</a></p>
+                        <p>Weavly</p>
+                        <p>Email: <a href="mailto:privacy@weavly.app" className="text-amber-700 hover:underline">privacy@weavly.app</a></p>
                         <p className="text-xs text-gray-500 mt-2">Complaints will be acknowledged within 24 hours and resolved within 15 days as per IT Intermediary Guidelines 2021.</p>
                     </div>
 

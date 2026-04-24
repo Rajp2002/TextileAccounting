@@ -11,7 +11,7 @@ import {
   makeCallbackData,
 } from "../_shared/whatsapp.ts";
 
-const TEMPLATE_NAME = "loomi_advance_receipt";
+const TEMPLATE_NAME = "weavly_advance_receipt";
 
 Deno.serve(async (req) => {
   try {

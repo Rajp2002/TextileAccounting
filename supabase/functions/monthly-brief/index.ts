@@ -13,7 +13,7 @@ import {
     formatInr,
 } from "../_shared/whatsapp.ts"
 
-const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') ?? 'https://loomi.app'
+const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') ?? 'https://weavly.app'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
@@ -21,7 +21,7 @@ const corsHeaders = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-const TEMPLATE_NAME = 'loomi_monthly_brief'
+const TEMPLATE_NAME = 'weavly_monthly_brief'
 
 // ─── Main Handler ──────────────────────────────────────────────
 

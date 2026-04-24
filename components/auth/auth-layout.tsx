@@ -37,7 +37,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                                 transition={{ delay: 0.2, duration: 0.5 }}
                                 className="relative h-full w-full"
                             >
-                                <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain transition-transform group-hover:scale-105 duration-500" priority />
+                                <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain transition-transform group-hover:scale-105 duration-500" priority />
                             </motion.div>
                         </div>
 
@@ -77,7 +77,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                     className="mt-8 text-center"
                 >
                     <p className="text-xs text-gray-400 dark:text-gray-500 font-medium tracking-wide">
-                        Loomi &copy; {getSuratDate().getFullYear()} &bull; Built for India
+                        Weavly &copy; {getSuratDate().getFullYear()} &bull; Built for India
                     </p>
                 </motion.div>
             </motion.div>

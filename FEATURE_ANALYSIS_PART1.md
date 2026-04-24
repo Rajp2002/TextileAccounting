@@ -1,4 +1,4 @@
-# Loomi — Comprehensive Feature Analysis (Part 1 of 2)
+# Weavly — Comprehensive Feature Analysis (Part 1 of 2)
 
 > **Coverage**: Owner Dashboard & Analytics · Machine Management · Lean Beam Tracking · Orders
 >
@@ -184,7 +184,7 @@ When a supervisor taps "Start Beam" on a machine:
 ## Feature 3: Lean Beam Tracking (Floor-Native)
 
 ### What It Does
-Loomi uses a streamlined **Beam Tracking** system integrated directly into the factory floor. Supervisors manage yarn supply inline while logging production, ensuring real-time yield tracking without a complex separate inventory module.
+Weavly uses a streamlined **Beam Tracking** system integrated directly into the factory floor. Supervisors manage yarn supply inline while logging production, ensuring real-time yield tracking without a complex separate inventory module.
 
 ### Who Uses It
 - **Supervisor**: Primary user. Adds new beams as they arrive on the floor and links them to machines.
@@ -221,7 +221,7 @@ The system calculates real-time yield:
 
 ## Feature 4: Orders Management (`/owner/analytics` + order actions)
 
-Orders represent customer commitments derived from profitable quotes. Every order in Loomi must originate from the Estimator to ensure mathematical profit protection. The orders system tracks production progress in real-time, calculates pace/forecast, and allows machine assignment directly from the dashboard.
+Orders represent customer commitments derived from profitable quotes. Every order in Weavly must originate from the Estimator to ensure mathematical profit protection. The orders system tracks production progress in real-time, calculates pace/forecast, and allows machine assignment directly from the dashboard.
 
 ### Who Uses It
 - **Owner**: Management — publishes quotes to orders from the Estimator, edits deadlines, deletes orders, assigns machines
@@ -315,7 +315,7 @@ Each order card renders:
 ## Feature 5: Worker Management (`/supervisor/workers` + `/owner/analytics`)
 
 ### What It Does
-Loomi manages two types of workers:
+Weavly manages two types of workers:
 - **Piece-rate (Meter) Workers** — paid per meter woven; the vast majority of the factory floor
 - **Fixed (Salaried) Workers** — managers, security, admin; paid a monthly salary regardless of production
 

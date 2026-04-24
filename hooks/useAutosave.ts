@@ -34,7 +34,7 @@ interface UseAutosaveReturn {
 }
 
 function getStorageKey(orgId: string, userId: string): string {
-  return `loomi-estimator-draft-${orgId}-${userId}`
+  return `weavly-estimator-draft-${orgId}-${userId}`
 }
 
 /**

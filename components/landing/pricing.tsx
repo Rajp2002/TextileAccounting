@@ -30,7 +30,7 @@ const tiers = [
         priceSuffix: '/month',
         description: 'Perfect for factories that primarily use the cost estimator.',
         features: [
-            'Loomi Estimator',
+            'Weavly Estimator',
             'Basic order cost calculations',
             'Single owner account',
         ],

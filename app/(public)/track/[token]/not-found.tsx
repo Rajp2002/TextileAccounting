@@ -11,7 +11,7 @@ export default function NotFound() {
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             textAlign: 'center',
         }}>
-            {/* Loomi brand bar */}
+            {/* Weavly brand bar */}
             <div style={{
                 position: 'fixed',
                 top: 0, left: 0, right: 0,
@@ -42,7 +42,7 @@ export default function NotFound() {
                 maxWidth: 300,
             }}>
                 <p style={{ fontSize: 12, color: '#15803d', fontWeight: 700, margin: '0 0 4px' }}>
-                    🧵 Powered by Loomi
+                    🧵 Powered by Weavly
                 </p>
                 <p style={{ fontSize: 11, color: '#4ade80', margin: 0 }}>
                     Real-time fabric order tracking

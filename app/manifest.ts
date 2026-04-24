@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'Loomi — Production Management',
-        short_name: 'Loomi',
+        name: 'Weavly — Production Management',
+        short_name: 'Weavly',
         description: 'Track production, manage workers, and automate daily briefs.',
         // Start directly at /login so cold PWA opens skip the middleware
         // auth-check → redirect chain (saves 3+ sequential server round-trips).

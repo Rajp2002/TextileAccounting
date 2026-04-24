@@ -31,11 +31,11 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
     const { data } = await supabase.rpc('get_order_tracking_data', { p_token: token })
 
     if (!data) {
-        return { title: 'Order Not Found · Loomi' }
+        return { title: 'Order Not Found · Weavly' }
     }
 
     return {
-        title: `${data.party_name}'s Order · Loomi Tracking`,
+        title: `${data.party_name}'s Order · Weavly Tracking`,
         description: `Track fabric order for ${data.party_name} — ${data.meters_produced} of ${data.total_target_meters} metres produced.`,
     }
 }

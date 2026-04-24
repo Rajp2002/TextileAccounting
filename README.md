@@ -1,6 +1,6 @@
-# Loomi — The Estimator-First Textile OS
+# Weavly — The Estimator-First Textile OS
 
-Loomi is a professional profit-protection platform designed for the Surat textile ecosystem. It enforces mathematical discipline by ensuring every production order is quoted for profitability before it hits the factory floor.
+Weavly is a professional profit-protection platform designed for the Surat textile ecosystem. It enforces mathematical discipline by ensuring every production order is quoted for profitability before it hits the factory floor.
 
 ## Core Proposition: Profit Protection
 - **Estimator-First Workflow**: No orders without a blueprint.

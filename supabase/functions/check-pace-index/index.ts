@@ -1,7 +1,7 @@
 // ─── check-pace-index ─────────────────────────────────────────────────────────
 // Scheduled by pg_cron every 6 hours (0 */6 * * *).
 // Scans ALL active orders across ALL orgs that have pace_index < 1.0
-// and fires the loomi_deadline_risk WhatsApp alert with a 24-hour cooldown.
+// and fires the weavly_deadline_risk WhatsApp alert with a 24-hour cooldown.
 //
 // This is a companion to send-daily-brief's inline deadline check —
 // it fills the gaps between the nightly brief (20:00 IST) so that
@@ -14,7 +14,7 @@ import {
   makeCallbackData,
 } from "../_shared/whatsapp.ts";
 
-const TEMPLATE_NAME = "loomi_deadline_risk";
+const TEMPLATE_NAME = "weavly_deadline_risk";
 
 Deno.serve(async (req) => {
   // Only service_role (pg_cron) may call this.

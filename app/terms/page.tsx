@@ -3,8 +3,8 @@ import Image from 'next/image'
 import type { Metadata } from 'next'
 import LandingFooter from "@/components/landing/footer"
 export const metadata: Metadata = {
-    title: 'Terms of Service — Loomi',
-    description: 'Terms and conditions governing your use of the Loomi textile production management platform.',
+    title: 'Terms of Service — Weavly',
+    description: 'Terms and conditions governing your use of the Weavly textile production management platform.',
 }
 
 export default function TermsOfServicePage() {
@@ -18,7 +18,7 @@ export default function TermsOfServicePage() {
                 <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
                         <div className="relative h-12 w-32">
-                            <Image src="/images/LoomiLogo.png" alt="Loomi Logo" fill className="object-contain" />
+                            <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain" />
                         </div>
                     </Link>
                     <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -47,12 +47,12 @@ export default function TermsOfServicePage() {
                     <article className="px-8 py-10 sm:px-12 sm:py-12 prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-a:text-amber-600 hover:prose-a:text-amber-700 prose-a:underline-offset-4 prose-a:decoration-amber-200 hover:prose-a:decoration-amber-600 transition-all font-medium">
 
                         <p className="lead text-lg text-gray-600 dark:text-gray-400 mb-8">
-                        These Terms of Service (&quot;Terms&quot;) govern your use of the Loomi platform (&quot;Service&quot;), operated by Loomi (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;). By creating an account or using the Service, you agree to be bound by these Terms. If you do not agree, do not use the Service.
+                        These Terms of Service (&quot;Terms&quot;) govern your use of the Weavly platform (&quot;Service&quot;), operated by Weavly (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;). By creating an account or using the Service, you agree to be bound by these Terms. If you do not agree, do not use the Service.
                     </p>
 
                     <h2>1. Service Description</h2>
                     <p>
-                        Loomi is a multi-tenant Software-as-a-Service (SaaS) platform designed for textile mills and weaving factories. The Service provides:
+                        Weavly is a multi-tenant Software-as-a-Service (SaaS) platform designed for textile mills and weaving factories. The Service provides:
                     </p>
                     <ul>
                         <li>Daily production logging and shift management</li>
@@ -143,10 +143,10 @@ export default function TermsOfServicePage() {
                     <div className="bg-red-50 border border-red-200 rounded-xl p-5 not-prose my-6 flex flex-col gap-3">
                         <p className="text-sm font-semibold text-red-900">Important Legal Disclaimer regarding OSHWC, ESI, EPF, and Minimum Wages</p>
                         <p className="text-sm text-red-800">
-                            Loomi provides software tools to assist with factory management and calculation. However, <strong>Loomi is NOT a legal, HR, or compliance advisor.</strong> You, as the factory owner, are solely responsible for ensuring that your factory complies with all applicable local, state, and central labor laws, including but not limited to the Occupational Safety, Health and Working Conditions Code (OSHWC), the Employees' Provident Funds and Miscellaneous Provisions Act, the Employees' State Insurance Act, and the Code on Wages.
+                            Weavly provides software tools to assist with factory management and calculation. However, <strong>Weavly is NOT a legal, HR, or compliance advisor.</strong> You, as the factory owner, are solely responsible for ensuring that your factory complies with all applicable local, state, and central labor laws, including but not limited to the Occupational Safety, Health and Working Conditions Code (OSHWC), the Employees' Provident Funds and Miscellaneous Provisions Act, the Employees' State Insurance Act, and the Code on Wages.
                         </p>
                         <p className="text-sm text-red-800">
-                            <strong>We accept zero liability</strong> for any statutory fines, penalties, labor disputes, unpaid wages, or compensation claims resulting from data entered into Loomi, algorithmic output, or your use (or misuse) of the platform. The platform's fields for ESI and PF tracking are provided for your administrative convenience only and do not guarantee legal compliance.
+                            <strong>We accept zero liability</strong> for any statutory fines, penalties, labor disputes, unpaid wages, or compensation claims resulting from data entered into Weavly, algorithmic output, or your use (or misuse) of the platform. The platform's fields for ESI and PF tracking are provided for your administrative convenience only and do not guarantee legal compliance.
                         </p>
                     </div>
 
@@ -157,7 +157,7 @@ export default function TermsOfServicePage() {
                             The Yarn-to-Fabric Yield Engine provides <strong>estimated</strong> efficiency variances and monetary loss calculations based on data you provide (batch weights, target yields, production logs, and sale prices). These calculations are mathematical estimates and may be subject to inaccuracies arising from measurement errors, data entry errors, or incorrect configuration of quality parameters.
                         </p>
                         <p className="text-sm text-amber-800 mt-3">
-                            <strong>Yield analytics should not be used as the sole basis for employment decisions, accusations of theft or misconduct, or legal proceedings.</strong> Loomi is not liable for any decisions made based on yield analytics outputs. Users are responsible for independently verifying analytical findings before taking action.
+                            <strong>Yield analytics should not be used as the sole basis for employment decisions, accusations of theft or misconduct, or legal proceedings.</strong> Weavly is not liable for any decisions made based on yield analytics outputs. Users are responsible for independently verifying analytical findings before taking action.
                         </p>
                     </div>
 
@@ -172,7 +172,7 @@ export default function TermsOfServicePage() {
 
                     <h2>9. Intellectual Property</h2>
                     <p>
-                        The Loomi platform, including its source code, design, user interface, brand name, logo, and documentation, is the exclusive intellectual property of Loomi. You are granted a limited, non-exclusive, non-transferable license to access and use the Service for the duration of your subscription.
+                        The Weavly platform, including its source code, design, user interface, brand name, logo, and documentation, is the exclusive intellectual property of Weavly. You are granted a limited, non-exclusive, non-transferable license to access and use the Service for the duration of your subscription.
                     </p>
 
                     <h2>10. Termination</h2>
@@ -187,7 +187,7 @@ export default function TermsOfServicePage() {
 
                     <h2>11. Indemnification</h2>
                     <p>
-                        You agree to indemnify, defend, and hold harmless Loomi, its officers, employees, and agents from any claims, damages, losses, fines, or expenses arising from:
+                        You agree to indemnify, defend, and hold harmless Weavly, its officers, employees, and agents from any claims, damages, losses, fines, or expenses arising from:
                     </p>
                     <ul>
                         <li>Your use or misuse of the Service.</li>
@@ -219,8 +219,8 @@ export default function TermsOfServicePage() {
                     <h2>15. Contact</h2>
                     <p>For questions about these Terms, contact:</p>
                     <div className="bg-gray-50 rounded-xl p-6 not-prose text-sm text-gray-700 space-y-1 my-4">
-                        <p className="font-semibold text-gray-900">Loomi Legal</p>
-                        <p>Email: <a href="mailto:legal@loomi.app" className="text-amber-700 hover:underline">legal@loomi.app</a></p>
+                        <p className="font-semibold text-gray-900">Weavly Legal</p>
+                        <p>Email: <a href="mailto:legal@weavly.app" className="text-amber-700 hover:underline">legal@weavly.app</a></p>
                     </div>
                     </article>
                 </div>

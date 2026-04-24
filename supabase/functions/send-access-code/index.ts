@@ -5,8 +5,8 @@
 //   Framed as a "Floor Reference" to avoid Meta's "OTP/Access Code" auto-rejection flags.
 //   Includes the code explicitly so owners can forward it to supervisors.
 //
-// Template: loomi_floor_approval (UTILITY, English, 3 variables)
-//   Body: "Loomi — {{1}}\n\nFloor Reference: *{{2}}*\n\nThis approval is valid until {{3}}. Please forward this to your supervisor for field entry."
+// Template: weavly_floor_approval (UTILITY, English, 3 variables)
+//   Body: "Weavly — {{1}}\n\nFloor Reference: *{{2}}*\n\nThis approval is valid until {{3}}. Please forward this to your supervisor for field entry."
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
@@ -16,7 +16,7 @@ import {
 } from "../_shared/whatsapp.ts";
 
 // Changed name to clear old rejection history and match "Approval" context
-const TEMPLATE_NAME = "loomi_floor_approval";
+const TEMPLATE_NAME = "weavly_floor_approval";
 
 Deno.serve(async (req) => {
   try {

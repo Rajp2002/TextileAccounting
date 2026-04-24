@@ -10,7 +10,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     const userFullName = profile.full_name
 
     // Fetch factory name for the sidebar
-    let factoryName = 'Loomi'
+    let factoryName = 'Weavly'
     if (userOrgId) {
         const supabase = await createClient()
         const { data: org } = await supabase

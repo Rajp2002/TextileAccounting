@@ -1,4 +1,4 @@
-# Loomi — Comprehensive Feature Analysis (Part 2 of 2)
+# Weavly — Comprehensive Feature Analysis (Part 2 of 2)
 
 > **Coverage**: Production Logging · Payroll & Advances · Access Code Guard · Audit Trail · Estimator · WhatsApp Pipeline · i18n & Transliteration
 >
@@ -439,10 +439,10 @@ Owner can filter the audit log by:
 
 ---
 
-## Feature 12: Loomi Estimator (`/owner/estimator`)
+## Feature 12: Weavly Estimator (`/owner/estimator`)
 
 ### What It Does
-The Loomi Estimator is the central gateway to the entire platform. It serves as a professional pre-production profit-guard, ensuring that every customer commitment is mathematically sound. The Owner inputs technical specs, yarn costs, and overheads; the estimator computes the landed cost per meter and allows for a one-click "Publish" to the live production floor.
+The Weavly Estimator is the central gateway to the entire platform. It serves as a professional pre-production profit-guard, ensuring that every customer commitment is mathematically sound. The Owner inputs technical specs, yarn costs, and overheads; the estimator computes the landed cost per meter and allows for a one-click "Publish" to the live production floor.
 
 ### Who Uses It
 **Owner only.** Used before accepting a new party order to determine minimum viable price.
@@ -587,7 +587,7 @@ A complete push notification system delivering factory intelligence, financial d
 #### 2. `send-access-code`
 - **Trigger**: `generateAccessCode()` or `requestAccessCode()` server action (fire-and-forget)
 - **Payload**: `{ org_id, code, expires_at, requested_by? }`
-- **Message**: "Your Loomi access code is: [CODE]. Valid for 15 minutes. Requested by: [Supervisor Name]"
+- **Message**: "Your Weavly access code is: [CODE]. Valid for 15 minutes. Requested by: [Supervisor Name]"
 - **Recipient**: Owner
 
 #### 3. `send-payslip`
@@ -647,7 +647,7 @@ Every outbound message creates a row in `whatsapp_delivery_log`:
 ```sql
 -- Stored in migration 20260401030000_pg_cron_schedule.sql
 SELECT cron.schedule(
-  'loomi-daily-brief',
+  'weavly-daily-brief',
   '30 14 * * *',   -- 14:30 UTC = 20:00 IST
   $$ SELECT net.http_post(
        url := supabase_url || '/functions/v1/send-daily-brief',
@@ -672,7 +672,7 @@ No external scheduler — the database drives its own notifications.
 ## Feature 14: i18n & Transliteration
 
 ### What It Does
-Loomi is fully multilingual (English, Hindi, Gujarati) with phonetic transliteration for worker names — ensuring that workers see their own names correctly in their native script without requiring manual dual entry.
+Weavly is fully multilingual (English, Hindi, Gujarati) with phonetic transliteration for worker names — ensuring that workers see their own names correctly in their native script without requiring manual dual entry.
 
 ### i18n System
 

@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
 
 // Restrict CORS: these functions are called by the server cron, not the browser.
 // Only allowing our own site origin prevents stray browser calls.
-const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') ?? 'https://loomi.app'
+const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') ?? 'https://weavly.app'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
