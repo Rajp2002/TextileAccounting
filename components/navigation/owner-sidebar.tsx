@@ -64,7 +64,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
             {/* Factory branding */}
             <div className="px-4 py-4 border-b border-sidebar-border flex items-center justify-center">
                 <div className="relative h-20 w-36 shrink-0">
-                    <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain" priority />
+                    <Image src="/images/WeavlyLogoDark.png" alt="Weavly Logo" fill className="object-contain" priority />
                 </div>
             </div>
 
@@ -185,7 +185,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
             <header className="md:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 py-2">
                 <div className="flex items-center">
                     <div className="relative h-10 w-28 shrink-0">
-                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain" priority />
+                        <Image src="/images/WeavlyLogoDark.png" alt="Weavly Logo" fill className="object-contain" priority />
                     </div>
                 </div>
 
