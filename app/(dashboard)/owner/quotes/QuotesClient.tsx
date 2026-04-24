@@ -189,7 +189,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                     </div>
                                     {quote.orders && (
                                         <Badge variant="outline" className="bg-emerald-50 border-emerald-200 text-emerald-700">
-                                            Order #{quote.orders.order_number || quote.orders.id.split('-')[0]}
+                                            Order #{quote.orders.id.split('-')[0]}
                                             {quote.orders.status === 'completed' && <CheckCircle2 className="h-3 w-3 ml-1" />}
                                         </Badge>
                                     )}
