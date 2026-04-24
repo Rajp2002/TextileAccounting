@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { AddWorkerDialog } from '@/components/AddWorkerDialog'
-import { Loader2, Trash2, KeyRound } from 'lucide-react'
+import { Loader2, Trash2, KeyRound, Users } from 'lucide-react'
 import {
     Dialog,
     DialogContent,
