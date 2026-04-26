@@ -405,6 +405,8 @@ export async function signIn(input: { email: string; password: string }) {
         redirect('/owner/analytics')
     } else if (userRole === 'supervisor') {
         redirect('/supervisor/production')
+    } else if (userRole === 'admin') {
+        redirect('/admin')
     } else {
         // Role still absent after DB fallback — profile genuinely missing
         return { error: 'Account setup incomplete. Please contact support.' }

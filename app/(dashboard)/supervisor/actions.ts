@@ -150,13 +150,16 @@ export async function savePastAttendance(
     }
 
     // 3. Upsert records — org_id is server-derived
+    const headerList = await headers()
+    const clientIp = headerList.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+
     const upsertData = parsed.data.records.map(record => ({
         org_id: orgId,
         fixed_worker_id: record.fixed_worker_id,
         date: parsed.data.date,
         present: record.present,
         marked_by: user.id,
-        client_ip: headers().get('x-forwarded-for')?.split(',')[0] || 'unknown'
+        client_ip: clientIp
     }))
 
     // Set audit actor before service-role DML
@@ -816,6 +819,9 @@ export async function bulkLogProduction(entries: {
 
     if (entries.length === 0) return { success: true }
 
+    const headerList = await headers()
+    const clientIp = headerList.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+
     const logs = entries
         .filter((e) => e.meters > 0 && e.order_id)
         .map((e) => ({
@@ -828,7 +834,7 @@ export async function bulkLogProduction(entries: {
             date: e.date,
             worker_rate_snapshot: e.rate_per_m ?? 1.5,
             created_by: user.id,
-            client_ip: headers().get('x-forwarded-for')?.split(',')[0] || 'unknown'
+            client_ip: clientIp
         }))
 
     if (logs.length === 0) return { success: true, logged: 0 }

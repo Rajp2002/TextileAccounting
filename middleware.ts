@@ -217,6 +217,8 @@ export async function updateSession(request: NextRequest) {
             return NextResponse.redirect(new URL('/owner/analytics', request.url))
         } else if (role === 'supervisor') {
             return NextResponse.redirect(new URL('/supervisor/production', request.url))
+        } else if (role === 'admin') {
+            return NextResponse.redirect(new URL('/admin', request.url))
         }
         // Role unknown → let them through to the public page (edge case)
         
