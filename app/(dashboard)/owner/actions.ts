@@ -357,11 +357,11 @@ export async function validateAndRotateAccessCode(orgId: string, inputCode: stri
  * Delete a fixed/salaried worker. Only owners can do this.
  * Requires a one-time access code. orgId is derived server-side.
  */
-export async function deleteFixedWorkerWithCode(workerId: number, accessCode: string) {
+export async function deleteFixedWorkerWithCode(workerId: number, accessCode: string, erasePII: boolean = false) {
     const { profile } = await requireRole(['owner'])
     const orgId = profile.org_id
 
-    // Validate inputs before DB interaction
+    // Validate inputs
     const workerParsed = safeParse(PositiveIntSchema, workerId)
     if ('error' in workerParsed) return { error: workerParsed.error }
 
@@ -370,6 +370,7 @@ export async function deleteFixedWorkerWithCode(workerId: number, accessCode: st
 
     const supabase = await createServerClient()
 
+    // ... (access code validation) ...
     const { data: org, error: orgError } = await supabase
         .from('organizations')
         .select('access_code_hash, access_code_expires_at')
@@ -387,6 +388,11 @@ export async function deleteFixedWorkerWithCode(workerId: number, accessCode: st
         .from('organizations')
         .update({ access_code_hash: null, access_code_expires_at: null })
         .eq('id', orgId)
+
+    if (erasePII) {
+        // DPDP 2026: Anonymize instead of delete
+        return await eraseWorkerPII(workerParsed.data, 'fixed')
+    }
 
     const { error } = await supabase
         .from('fixed_workers')
@@ -399,6 +405,7 @@ export async function deleteFixedWorkerWithCode(workerId: number, accessCode: st
         return { error: 'Failed to delete worker. Please try again.' }
     }
 
+    revalidatePath('/owner/fixed-workers')
     return { success: true }
 }
 
@@ -406,7 +413,7 @@ export async function deleteFixedWorkerWithCode(workerId: number, accessCode: st
  * Delete a piece-rate (meter) worker. Only owners can do this.
  * Requires a one-time access code. orgId is derived server-side.
  */
-export async function deleteMeterWorkerWithCode(workerId: number, accessCode: string) {
+export async function deleteMeterWorkerWithCode(workerId: number, accessCode: string, erasePII: boolean = false) {
     const { profile } = await requireRole(['owner'])
     const orgId = profile.org_id
 
@@ -436,6 +443,11 @@ export async function deleteMeterWorkerWithCode(workerId: number, accessCode: st
         .update({ access_code_hash: null, access_code_expires_at: null })
         .eq('id', orgId)
 
+    if (erasePII) {
+        // DPDP 2026: Anonymize instead of delete
+        return await eraseWorkerPII(workerParsed.data, 'meter')
+    }
+
     const { error } = await supabase
         .from('workers')
         .delete()
@@ -447,6 +459,7 @@ export async function deleteMeterWorkerWithCode(workerId: number, accessCode: st
         return { error: 'Failed to delete worker. Please try again.' }
     }
 
+    revalidatePath('/owner/workers')
     return { success: true }
 }
 

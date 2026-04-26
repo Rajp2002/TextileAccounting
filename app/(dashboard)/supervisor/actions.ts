@@ -4,6 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import crypto from 'crypto'
 import {
     SavePastAttendanceSchema,
@@ -154,7 +155,8 @@ export async function savePastAttendance(
         fixed_worker_id: record.fixed_worker_id,
         date: parsed.data.date,
         present: record.present,
-        marked_by: user.id
+        marked_by: user.id,
+        client_ip: headers().get('x-forwarded-for')?.split(',')[0] || 'unknown'
     }))
 
     // Set audit actor before service-role DML
@@ -826,6 +828,7 @@ export async function bulkLogProduction(entries: {
             date: e.date,
             worker_rate_snapshot: e.rate_per_m ?? 1.5,
             created_by: user.id,
+            client_ip: headers().get('x-forwarded-for')?.split(',')[0] || 'unknown'
         }))
 
     if (logs.length === 0) return { success: true, logged: 0 }
