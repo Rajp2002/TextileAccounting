@@ -46,7 +46,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
 
     const handleFastPathFinish = async () => {
         await onComplete({
-            overhead_override_per_m: overheadPerM,
+            overheadOverridePerM: overheadPerM,
             isConfigured: true
         })
     }
@@ -69,7 +69,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
             avgOutputPerLoomPerDay: avgOutput,
             overheadItems: ensureOverheadIntegrity(items),
             monthlyOutputM: monthlyOutput,
-            overhead_override_per_m: null,
+            overheadOverridePerM: null,
             isConfigured: true
         })
     }
