@@ -5,10 +5,9 @@
 -- 1. Refine notice_registry for multi-language support
 ALTER TABLE notice_registry DROP CONSTRAINT IF EXISTS notice_registry_version_string_key;
 
-ALTER TABLE notice_registry 
-    ADD COLUMN IF NOT EXISTS language_code TEXT NOT NULL DEFAULT 'en',
-    RENAME COLUMN content_text TO body_text,
-    RENAME COLUMN translation_text TO english_transcript;
+ALTER TABLE notice_registry ADD COLUMN IF NOT EXISTS language_code TEXT NOT NULL DEFAULT 'en';
+ALTER TABLE notice_registry RENAME COLUMN content_text TO body_text;
+ALTER TABLE notice_registry RENAME COLUMN translation_text TO english_transcript;
 
 -- Ensure version + language is unique
 ALTER TABLE notice_registry 

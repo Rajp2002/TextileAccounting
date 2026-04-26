@@ -8,6 +8,24 @@ import { Loader2, Globe, FileText, CheckCircle2, MessageCircle, Clock, Volume2 }
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { format } from 'date-fns'
 
+interface Notice {
+    id: string
+    version_string: string
+    language_code: string
+    is_active: boolean
+    notice_type: string
+    body_text: string
+    content_audio_url?: string
+    created_at: string
+}
+
+interface LanguageRequest {
+    id: string
+    language_code: string
+    worker_name_hint?: string
+    requested_at: string
+}
+
 export default function ComplianceRegistry() {
     const supabase = createClient()
     const { data: userProfile } = useUserProfile()
@@ -62,7 +80,7 @@ export default function ComplianceRegistry() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {notices?.map((notice) => (
+                    {notices?.map((notice: Notice) => (
                         <Card key={notice.id} className="shadow-sm border-gray-100 hover:shadow-md transition-all overflow-hidden">
                             <CardHeader className="pb-3 bg-gray-50/50">
                                 <div className="flex items-center justify-between">
@@ -131,7 +149,7 @@ export default function ComplianceRegistry() {
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {requests?.map((req) => (
+                                {requests?.map((req: LanguageRequest) => (
                                     <div key={req.id} className="bg-white p-3 rounded-xl border border-orange-100 shadow-sm flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-xs uppercase">
