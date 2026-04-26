@@ -51,6 +51,7 @@ export async function getFactoryCostProfile() {
                     commission: true,
                     transport:  false,
                 },
+                is_configured: false,
             })
             .select()
             .single()
@@ -104,6 +105,7 @@ export async function upsertFactoryCostProfile(data: {
     avg_output_per_loom_per_day?: number
     yarn_shortage_pct?:      number
     warp_crimp_pct?:         number
+    is_configured?:          boolean
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()

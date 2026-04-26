@@ -207,6 +207,8 @@ export const en = {
         at_risk: "At Risk",
         finished: "Finished",
         active: "Active",
+        waiting_for_logs: "Waiting for logs",
+        tracking_starts: "tracking starts after first log",
         link_title: "Link Machines",
         link_desc: "Select which machines are working on",
         switching: "Switching Order",

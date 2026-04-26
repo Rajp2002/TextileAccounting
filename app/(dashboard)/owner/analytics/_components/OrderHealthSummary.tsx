@@ -8,7 +8,8 @@ import { useTranslation } from '@/lib/i18n/context'
 
 // ─── Pace classification ─────────────────────────────────────────────────────
 
-function classifyOrder(order: Order): 'on-track' | 'at-risk' | 'critical' {
+function classifyOrder(order: Order): 'on-track' | 'at-risk' | 'critical' | 'no-data' {
+  if (order.meters_produced === 0) return 'no-data'
   if (order.days_remaining <= 0)   return 'critical'
   if (order.pace_index >= 1.0)     return 'on-track'
   if (order.pace_index >= 0.8)     return 'at-risk'
@@ -39,6 +40,12 @@ function OrderRow({ order, index }: { order: Order; index: number }) {
       label: order.days_remaining <= 0 ? t('analytics.orders.card.overdue') : t('analytics.orders.card.at_risk'),
       track: 'bg-red-500',
       trackBg: 'bg-red-500/10',
+    },
+    'no-data': {
+      icon: <Package className="h-3.5 w-3.5 text-slate-400 shrink-0" />,
+      label: t('analytics.orders.card.waiting_for_logs'),
+      track: 'bg-slate-300',
+      trackBg: 'bg-slate-300/10',
     },
   }[status]
 
@@ -74,7 +81,12 @@ export function OrderHealthSummary({ orders }: { orders: Order[] | null }) {
   const empty = !orders || orders.length === 0
 
   const counts = !empty ? orders.reduce(
-    (acc, o) => { acc[classifyOrder(o)]++; return acc },
+    (acc, o) => { 
+      const s = classifyOrder(o)
+      const key = s === 'no-data' ? 'on-track' : s
+      acc[key]++
+      return acc 
+    },
     { 'on-track': 0, 'at-risk': 0, 'critical': 0 } as Record<string, number>
   ) : null
 

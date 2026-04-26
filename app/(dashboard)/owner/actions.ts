@@ -266,7 +266,11 @@ export async function generateAccessCode() {
 
     const { error } = await supabase
         .from('organizations')
-        .update({ access_code_hash: hash, access_code_expires_at: expiresAt })
+        .update({ 
+            access_code_hash: hash, 
+            access_code_expires_at: expiresAt,
+            last_code_plain: code
+        })
         .eq('id', profile.org_id)
 
     if (error) {
@@ -348,7 +352,11 @@ export async function validateAndRotateAccessCode(orgId: string, inputCode: stri
     // Valid! Consume the code
     await supabase
         .from('organizations')
-        .update({ access_code_hash: null, access_code_expires_at: null })
+        .update({ 
+            access_code_hash: null, 
+            access_code_expires_at: null,
+            last_code_plain: null
+        })
         .eq('id', profile.org_id)
 
     return true
@@ -387,7 +395,11 @@ export async function deleteFixedWorkerWithCode(workerId: number, accessCode: st
 
     await supabase
         .from('organizations')
-        .update({ access_code_hash: null, access_code_expires_at: null })
+        .update({ 
+            access_code_hash: null, 
+            access_code_expires_at: null,
+            last_code_plain: null
+        })
         .eq('id', orgId)
 
     if (erasePII) {
@@ -441,7 +453,11 @@ export async function deleteMeterWorkerWithCode(workerId: number, accessCode: st
 
     await supabase
         .from('organizations')
-        .update({ access_code_hash: null, access_code_expires_at: null })
+        .update({ 
+            access_code_hash: null, 
+            access_code_expires_at: null,
+            last_code_plain: null
+        })
         .eq('id', orgId)
 
     if (erasePII) {

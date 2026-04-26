@@ -85,6 +85,7 @@ import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import { useRouter } from 'next/navigation'
+import FactoryCostWizard from './FactoryCostWizard'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -132,6 +133,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 commissionPct:      Number(profile.default_commission_pct  ?? 2),
                 transportPerM:      Number(profile.default_transport_per_m ?? 0),
                 enabledSections:    { ...sections },
+                isConfigured:       profile.is_configured ?? false,
             }
         }
         case 'MERGE_FIXED_WORKERS': {
@@ -276,6 +278,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 avgOutputPerLoomPerDay: Number(profile.avg_output_per_loom_per_day ?? base.avgOutputPerLoomPerDay),
                 yarnShortagePct:   profile.yarn_shortage_pct != null ? Number(profile.yarn_shortage_pct) : base.yarnShortagePct,
                 warpCrimpPct:      profile.warp_crimp_pct != null ? Number(profile.warp_crimp_pct) : base.warpCrimpPct,
+                isConfigured:      profile.is_configured ?? false,
             }
 
             if (Array.isArray(profile.overhead_items) && profile.overhead_items.length > 0) {
@@ -486,6 +489,7 @@ export default function EstimatorClient({
             avgOutputPerLoomPerDay: Number(initialProfile.avg_output_per_loom_per_day ?? base.avgOutputPerLoomPerDay),
             yarnShortagePct:   initialProfile.yarn_shortage_pct != null ? Number(initialProfile.yarn_shortage_pct) : base.yarnShortagePct,
             warpCrimpPct:      initialProfile.warp_crimp_pct != null ? Number(initialProfile.warp_crimp_pct) : base.warpCrimpPct,
+            isConfigured:      initialProfile.is_configured ?? false,
         }
         // Apply overhead items from profile if saved, otherwise merge fixed workers
         if (Array.isArray(initialProfile.overhead_items) && initialProfile.overhead_items.length > 0) {
@@ -674,6 +678,7 @@ export default function EstimatorClient({
             })
 
             if (res.success) {
+                dispatch({ type: 'SET', field: 'isConfigured', value: true })
                 toast.success('Factory baseline updated successfully!')
             } else {
                 toast.error(res.error || 'Failed to save profile')
@@ -880,7 +885,48 @@ export default function EstimatorClient({
     )
 
     return (
-        <div className="space-y-6 pb-20">
+        <div className="space-y-6 pb-20 relative">
+            {!state.isConfigured && (
+                <FactoryCostWizard 
+                    initialState={state}
+                    saving={saving}
+                    onComplete={async (data) => {
+                        setSaving(true)
+                        // Map camelCase EstimateState keys to snake_case DB keys
+                        const res = await upsertFactoryCostProfile({
+                            warping_rate_per_kg:     state.warpingRatePerKg,
+                            sizing_rate_per_kg:      state.sizingRatePerKg,
+                            winding_rate_per_kg:     state.windingRatePerKg,
+                            overhead_pct:            state.overheadPct,
+                            default_commission_pct:  state.commissionPct,
+                            default_transport_per_m: state.transportPerM,
+                            enabled_sections:        state.enabledSections,
+                            yarn_shortage_pct:       state.yarnShortagePct,
+                            warp_crimp_pct:          state.warpCrimpPct,
+                            // Overridden by wizard data
+                            overhead_items:          data.overheadItems ?? state.overheadItems,
+                            monthly_output_m:        data.monthlyOutputM ?? state.monthlyOutputM,
+                            overhead_override_per_m: data.overhead_override_per_m !== undefined ? data.overhead_override_per_m : state.overheadOverridePerM,
+                            loom_count:              data.loomCount ?? state.loomCount,
+                            monthly_working_days:    data.monthlyWorkingDays ?? state.monthlyWorkingDays,
+                            avg_output_per_loom_per_day: data.avgOutputPerLoomPerDay ?? state.avgOutputPerLoomPerDay,
+                            is_configured:           true,
+                        })
+                        if (res.success) {
+                            // Update local state and close wizard
+                            Object.entries(data).forEach(([key, val]) => {
+                                const stateKey = key === 'overhead_override_per_m' ? 'overheadOverridePerM' : key;
+                                dispatch({ type: 'SET', field: stateKey as any, value: val })
+                            })
+                            dispatch({ type: 'SET', field: 'isConfigured', value: true })
+                            toast.success('Factory baseline configured successfully!')
+                        } else {
+                            toast.error(res.error || 'Failed to save configuration')
+                        }
+                        setSaving(false)
+                    }}
+                />
+            )}
 
             {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
             {hasDraft && draft && (

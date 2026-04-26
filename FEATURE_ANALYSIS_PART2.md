@@ -2,7 +2,7 @@
 
 > **Coverage**: Production Logging · Payroll & Advances · Access Code Guard · Audit Trail · Estimator · WhatsApp Pipeline · i18n & Transliteration
 >
-> **Part 1 covers**: Owner Dashboard · Machine Management · Lean Beam Tracking · Orders · Worker Management
+> **Part 1 covers**: Owner Dashboard · Machine Management · Orders · Worker Management
 
 ---
 
@@ -28,8 +28,7 @@ Production Logging is the central data-entry point that feeds everything else in
 ```
 Supervisor taps "Save"
   → Server Action fires
-    → Fetches yarn_batches.quality_id for the machine's current batch
-      → Fetches qualities.default_worker_rate_per_m for that quality
+    → Fetches orders.worker_rate for the machine's current order
         → Inserts production_logs with worker_rate_snapshot = that rate
 ```
 **This rate is frozen forever on this row.** Future quality edits do not touch historical snapshots.
@@ -60,7 +59,6 @@ INSERT INTO production_logs (
   org_id,           -- from JWT
   machine_id,
   worker_id,
-  yarn_batch_id,    -- from machine's current batch
   current_order_id, -- from machine's current order
   meters,
   date,             -- Surat today string (YYYY-MM-DD)
@@ -91,7 +89,7 @@ Every INSERT and UPDATE on `production_logs` fires a PostgreSQL trigger that wri
 
 ### UX Workflow
 1. Supervisor opens `/supervisor/production`
-2. Sees a list of active machines with their current beam and assigned worker (auto-loaded for current shift)
+2. Sees a list of active machines with their current order and assigned worker (auto-loaded for current shift)
 3. Types meters into the input field for each machine
 4. Taps "Save Entry" — entry is written, rate snapshot captured, Realtime fires
 5. The saved entry becomes a read-only row below the input form with meters + rate displayed
@@ -101,7 +99,6 @@ Every INSERT and UPDATE on `production_logs` fires a PostgreSQL trigger that wri
 | Feature | How |
 |---|---|
 | **Machine Management** | Machine + worker assignment determines who/what is logged |
-| **Inventory** | `yarn_batch_id` links log to batch; meters accumulate toward actual yield |
 | **Orders** | `current_order_id` links log to order; meters count toward order progress |
 | **Owner Dashboard** | Real-time via Supabase Realtime WebSocket |
 | **Payroll** | `worker_rate_snapshot` on every log is the source of payroll gross pay |
@@ -329,7 +326,6 @@ Every protected server action calls this internal helper:
 | Delete a piece-rate worker | Supervisor | `deleteWorkerWithCode()` |
 | Delete a fixed worker | Owner | `deleteFixedWorkerWithCode()` |
 | Backdate attendance | Supervisor/Owner | `savePastAttendance()` |
-| Un-consume a yarn batch | Supervisor/Owner | `unconsumeBatchWithCode()` |
 | Edit a locked production log | Supervisor | `verifyAccessCode()` + log edit |
 
 ### Security Properties
@@ -377,8 +373,6 @@ PostgreSQL triggers on these tables fire on `INSERT`, `UPDATE`, and `DELETE`:
 - `fixed_workers`
 - `machines`
 - `production_logs`
-- `yarn_batches`
-- `qualities`
 - `payroll_settlements`
 - `attendance`
 
@@ -409,7 +403,7 @@ The UI parses `old_data` and `new_data` to show:
 
 ### Filtering & Navigation
 Owner can filter the audit log by:
-- **Event Category**: Production, Inventory, Workers, Machines, Payroll
+- **Event Category**: Production, Workers, Machines, Payroll
 - **Date Range**: From/To date picker
 - **Access Code Events**: Toggle to show only actions that required owner approval
 
@@ -417,7 +411,6 @@ Owner can filter the audit log by:
 | Category | Colour | Tables Covered |
 |---|---|---|
 | Production | Blue | `production_logs` |
-| Inventory | Green | `yarn_batches`, `qualities` |
 | Workers | Purple | `workers`, `fixed_workers` |
 | Machines | Orange | `machines` |
 | Payroll | Gold | `payroll_settlements` |
@@ -536,24 +529,18 @@ Owner drags the margin % slider (0–60%) and sees:
 
 Displayed as a comparison table so the owner understands pricing risk.
 
-### Convert to Order Flow
-When the quote is finalized:
-1. Owner clicks "Convert to Order"
-2. System auto-creates a new **Quality** record with:
-   - Name from the estimator's fabric spec
-   - Target yield derived from GSM + denier
-   - Sale price from the estimated final landed cost
-   - Worker rate from the job-work charges
-3. Opens the Order creation form pre-filled with:
-   - `quality_id` = newly created quality
-   - Party name (if entered in estimator)
-   - Target meters = order quantity from estimator
-4. Owner confirms → Order goes live on the dashboard
+### Quote Lifecycle & Conversion Flow
+Estimates are not immediately converted to orders. They enter a managed quote lifecycle:
+1. **Draft/Sent**: Owner saves the estimate as a `Draft` or marks it as `Sent` to the client. The quote is persisted in `estimator_quotes` and visible in the Quotes Dashboard.
+2. **Accepted/Rejected**: Once client feedback is received, the owner transitions the quote to `Accepted` or `Rejected`.
+3. **Convert to Order**: Only an `Accepted` quote can be converted.
+   - System auto-creates a new **Quality** record with the estimated fabric specs.
+   - Pre-fills the Order creation form with the quality, target meters, and party name.
+   - Owner confirms → Order goes live on the dashboard, permanently linked to the original quote snapshot.
 
 ### Connections to Other Features
 | Feature | How |
 |---|---|
-| **Inventory** | Creates a new Quality definition on "Convert to Order" |
 | **Orders** | Convert flow creates a live Production Order |
 | **Owner Dashboard** | Converted order immediately appears on analytics dashboard |
 
@@ -601,13 +588,6 @@ A complete push notification system delivering factory intelligence, financial d
 - **Message**: "Advance of ₹X received on [Date]. Reason: [Reason]."
 - **Recipient**: Worker (in their `whatsapp_language`)
 
-#### 5. `send-yield-alert`
-- **Trigger**: `closeYarnBatch()` server action when efficiency variance < −5%
-- **Payload**: `{ org_id, batch_id }`
-- **Message**: Batch name · Quality · Efficiency % · Estimated loss ₹
-- **Cooldown**: Keyed on `batch_id` — fires once per batch close (no repeat spam)
-- **Recipient**: Owner
-
 #### 6. `send-deadline-alert`
 - **Trigger**: Automated check when Pace Index < threshold for an order
 - **Message**: Order name · Party · Deadline · Current pace vs required pace
@@ -640,7 +620,6 @@ Every outbound message creates a row in `whatsapp_delivery_log`:
 ### Cooldown System
 `whatsapp_cooldowns` table prevents alert spam:
 - Composite PK: `(org_id, alert_type, ref_id)` — deduplication is a single upsert
-- `yield_alert`: ref_id = batch_id; fires once per batch close
 - `deadline_risk`: ref_id = order_id; 24h TTL checked in Edge Function
 
 ### The pg_cron Daily Brief (SQL-Native Trigger)
@@ -662,7 +641,6 @@ No external scheduler — the database drives its own notifications.
 | Feature | How |
 |---|---|
 | **Access Code Guard** | `send-access-code` triggered by both owner and supervisor code flows |
-| **Inventory** | `send-yield-alert` triggered on batch close with leakage |
 | **Orders** | `send-deadline-alert` triggered on Pace Index risk |
 | **Payroll** | `send-payslip` and `send-advance-receipt` triggered by payroll actions |
 | **Owner Settings** | Opt-in managed via `saveWhatsAppPreferences()` |
@@ -724,6 +702,22 @@ Each worker has `whatsapp_language: 'en' | 'hi' | 'gu'` stored on their record. 
 
 ---
 
+## Feature 15: Admin & Compliance Dashboard (DPDP 2026)
+
+### What It Does
+Provides global oversight for system administrators to enforce upcoming Indian legal frameworks, specifically the Digital Personal Data Protection Act 2026 and standard Grievance Redressal mechanisms.
+
+### Who Uses It
+**Admin only.** A highly restricted role with platform-wide visibility but isolated from daily factory ops.
+
+### DPDP Notice Registry
+Admins draft, version, and publish legally binding data usage notices. All workers and factory owners within the system are subject to the active published notices, ensuring compliance with data consent requirements.
+
+### Grievance Redressal
+A centralized ticketing system where any user can file an operational or data privacy grievance. Admins oversee the resolution pipeline and maintain an immutable audit trail of the redressal process.
+
+---
+
 ## Cross-Feature Dependency Map
 
 ```mermaid
@@ -736,11 +730,6 @@ graph TD
 
     Machines      --> ProductionLog
     Machines      --> Orders
-    Machines      --> Inventory
-
-    Inventory     --> ProductionLog
-    Inventory     --> Estimator
-    Inventory     --> WhatsApp
 
     Orders        --> ProductionLog
     Orders        --> Dashboard
@@ -758,12 +747,13 @@ graph TD
     AccessCode    --> Machines
     AccessCode    --> Workers
     AccessCode    --> Attendance
-    AccessCode    --> Inventory
 
     Estimator     --> Orders
-    Estimator     --> Inventory
 
     i18n          --> Workers
     i18n          --> WhatsApp
     i18n          --> Navigation
+    
+    Admin         --> DPDPNotices
+    Admin         --> GrievanceRedressal
 ```

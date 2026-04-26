@@ -27,6 +27,11 @@
  */
 
 import { nanoid } from 'nanoid'
+import Decimal from 'decimal.js'
+
+// Configure Decimal for financial calculations — matches lib/finance.ts
+// 20-digit precision is hardened for textile manufacturing land-cost analysis
+Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP })
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -148,6 +153,7 @@ export interface EstimateState {
   profitPct:           number          // desired profit margin %
   orderQuantityM:      number | null   // null = order module not yet activated
   enabledSections:     FactorySections
+  isConfigured:        boolean
 }
 
 /** Warp row after formula has been applied */
@@ -224,7 +230,11 @@ export interface EstimatorV3Totals {
  * @returns kg per 100m
  */
 export function calcWarpYarnKg(beamEnds: number, calcDenier: number): number {
-  return (beamEnds * calcDenier * 100) / 9_000_000
+  return new Decimal(beamEnds)
+    .times(calcDenier)
+    .times(100)
+    .div(9_000_000)
+    .toNumber()
 }
 
 /**
@@ -248,7 +258,12 @@ export function calcWarpYarnKg(beamEnds: number, calcDenier: number): number {
  * @returns kg per 100m
  */
 export function calcWeftYarnKg(picks: number, clothWidth: number, calcDenier: number): number {
-  return (picks * clothWidth * calcDenier * 100) / 9_000_000
+  return new Decimal(picks)
+    .times(clothWidth)
+    .times(calcDenier)
+    .times(100)
+    .div(9_000_000)
+    .toNumber()
 }
 
 /**
@@ -270,8 +285,11 @@ export function calcYarnCost(
   gstPct: number,
   shortagePct: number
 ): number {
-  const rateWithGst = yarnRate * (1 + gstPct / 100)
-  return kgPer100m * rateWithGst * (1 + shortagePct / 100)
+  const rateWithGst = new Decimal(yarnRate).times(new Decimal(1).plus(new Decimal(gstPct).div(100)))
+  return new Decimal(kgPer100m)
+    .times(rateWithGst)
+    .times(new Decimal(1).plus(new Decimal(shortagePct).div(100)))
+    .toNumber()
 }
 
 /**
@@ -288,7 +306,7 @@ export function calcYarnCost(
  * @returns ₹ per metre
  */
 export function calcWeaveCostPerMeter(picks: number, perPickCostPaisa: number): number {
-  return picks * perPickCostPaisa
+  return new Decimal(picks).times(perPickCostPaisa).toNumber()
 }
 
 /**
@@ -308,7 +326,10 @@ export function calcWarpingCostPerMeter(
   warpingRatePerKg: number,
   sizingRatePerKg: number
 ): number {
-  return (totalWarpKgPer100m * (warpingRatePerKg + sizingRatePerKg)) / 100
+  return new Decimal(totalWarpKgPer100m)
+    .times(new Decimal(warpingRatePerKg).plus(sizingRatePerKg))
+    .div(100)
+    .toNumber()
 }
 
 /**
@@ -325,7 +346,10 @@ export function calcWindingCostPerMeter(
   totalAllYarnKgPer100m: number,
   windingRatePerKg: number
 ): number {
-  return (totalAllYarnKgPer100m * windingRatePerKg) / 100
+  return new Decimal(totalAllYarnKgPer100m)
+    .times(windingRatePerKg)
+    .div(100)
+    .toNumber()
 }
 
 /**
@@ -372,9 +396,13 @@ export function calcOverheadCostPerMeter(
     ...item,
     monthlyAmount: resolveOverheadItemAmount(item, loomCount)
   }))
-  const totalMonthly = resolvedItems.reduce((sum, item) => sum + (item.monthlyAmount || 0), 0)
-  const overheadPerM = monthlyOutputM > 0 ? totalMonthly / monthlyOutputM : 0
-  return { overheadPerM, totalMonthly, resolvedItems }
+  const totalMonthly = resolvedItems.reduce((sum, item) => sum.plus(item.monthlyAmount || 0), new Decimal(0))
+  const overheadPerM = monthlyOutputM > 0 ? totalMonthly.div(monthlyOutputM) : new Decimal(0)
+  return { 
+    overheadPerM: overheadPerM.toNumber(), 
+    totalMonthly: totalMonthly.toNumber(), 
+    resolvedItems 
+  }
 }
 
 /**
@@ -395,14 +423,20 @@ export function calcOrderQuote(params: {
 }): OrderQuote {
   const { totalProductionCostPerM, orderQuantityM, commissionPct, transportPerM, profitMarginPct } = params
 
-  const landedCostPerM   = totalProductionCostPerM * (1 + commissionPct / 100) + transportPerM
-  const quotePricePerM   = landedCostPerM * (1 + profitMarginPct / 100)
-  const totalOrderValue  = quotePricePerM * orderQuantityM
-  const totalCost        = landedCostPerM * orderQuantityM
-  const grossProfitRupees = totalOrderValue - totalCost
-  const actualMarginPct  = totalOrderValue > 0 ? (grossProfitRupees / totalOrderValue) * 100 : 0
+  const landedCostPerM   = new Decimal(totalProductionCostPerM).times(new Decimal(1).plus(new Decimal(commissionPct).div(100))).plus(transportPerM)
+  const quotePricePerM   = landedCostPerM.times(new Decimal(1).plus(new Decimal(profitMarginPct).div(100)))
+  const totalOrderValue  = quotePricePerM.times(orderQuantityM)
+  const totalCost        = landedCostPerM.times(orderQuantityM)
+  const grossProfitRupees = totalOrderValue.minus(totalCost)
+  const actualMarginPct  = totalOrderValue.gt(0) ? grossProfitRupees.div(totalOrderValue).times(100) : new Decimal(0)
 
-  return { landedCostPerM, quotePricePerM, totalOrderValue, grossProfitRupees, actualMarginPct }
+  return { 
+    landedCostPerM: landedCostPerM.toNumber(), 
+    quotePricePerM: quotePricePerM.toNumber(), 
+    totalOrderValue: totalOrderValue.toNumber(), 
+    grossProfitRupees: grossProfitRupees.toNumber(), 
+    actualMarginPct: actualMarginPct.toNumber() 
+  }
 }
 
 /**
@@ -422,13 +456,16 @@ export function resolveOverheadItemAmount(
 
   const meta = item.meta
   if (meta.type === 'electricity' && meta.mode === 'per_loom') {
-    return (meta.unitsPerLoomPerMonth || 0) * loomCount * (meta.ratePerUnit || 0)
+    return new Decimal(meta.unitsPerLoomPerMonth || 0)
+      .times(loomCount)
+      .times(meta.ratePerUnit || 0)
+      .toNumber()
   }
 
   if (meta.type === 'depreciation') {
-    const totalValue = loomCount * (meta.avgCostPerLoom || 0)
-    const annualDepr = totalValue / (meta.usefulLifeYears || 10)
-    return annualDepr / 12
+    const totalValue = new Decimal(loomCount).times(meta.avgCostPerLoom || 0)
+    const annualDepr = totalValue.div(meta.usefulLifeYears || 10)
+    return annualDepr.div(12).toNumber()
   }
 
   return item.monthlyAmount
@@ -445,15 +482,15 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const warpRows: WarpRowResult[] = estimate.warpRows.map(r => {
     const baseKg          = calcWarpYarnKg(r.beamEnds, r.calcDenier);
     const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage;
-    const totalShortagePct = warpCrimpPct + shortagePctUsed;
+    const totalShortagePct = new Decimal(warpCrimpPct).plus(shortagePctUsed);
     
     // To match Surat manual paper calculations exactly (where a '1.1 multiplier' applies equally to sizing cost)
     // Both crimp and waste contribute to the gross weight sent to Sizing and Warping.
-    const kgPer100m       = baseKg * (1 + totalShortagePct / 100);
+    const kgPer100m       = new Decimal(baseKg).times(new Decimal(1).plus(totalShortagePct.div(100))).toNumber();
 
-    const costPer100m     = calcYarnCost(baseKg, r.yarnRate, r.gstPct, totalShortagePct);
+    const costPer100m     = calcYarnCost(baseKg, r.yarnRate, r.gstPct, totalShortagePct.toNumber());
     const baseCostPer100m = calcYarnCost(baseKg, r.yarnRate, r.gstPct, 0);
-    const shortageCostPer100m = costPer100m - baseCostPer100m;
+    const shortageCostPer100m = new Decimal(costPer100m).minus(baseCostPer100m).toNumber();
     
     return { ...r, kgPer100m, costPer100m, shortagePctUsed, shortageCostPer100m }
   })
@@ -462,60 +499,60 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
     const baseKg          = calcWeftYarnKg(r.picks, r.reedSpace, r.calcDenier)
     const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage;
-    const totalShortagePct = warpCrimpPct + shortagePctUsed; // Weft now carries the full loom-wide shortage burden
+    const totalShortagePct = new Decimal(warpCrimpPct).plus(shortagePctUsed); // Weft now carries the full loom-wide shortage burden
 
     // Ensure weft contributes to total winding weight with the same '1.1 multiplier' safety net
-    const kgPer100m       = baseKg * (1 + totalShortagePct / 100);
+    const kgPer100m       = new Decimal(baseKg).times(new Decimal(1).plus(totalShortagePct.div(100))).toNumber();
 
-    const costPer100m     = calcYarnCost(baseKg, r.yarnRate, r.gstPct, totalShortagePct);
+    const costPer100m     = calcYarnCost(baseKg, r.yarnRate, r.gstPct, totalShortagePct.toNumber());
     const baseCostPer100m = calcYarnCost(baseKg, r.yarnRate, r.gstPct, 0);
-    const shortageCostPer100m = costPer100m - baseCostPer100m;
+    const shortageCostPer100m = new Decimal(costPer100m).minus(baseCostPer100m).toNumber();
     
     return { ...r, kgPer100m, costPer100m, shortagePctUsed, shortageCostPer100m }
   })
 
-  const totalWarpKgPer100m    = warpRows.reduce((s, r) => s + r.kgPer100m, 0)
-  const totalWeftKgPer100m    = weftRows.reduce((s, r) => s + r.kgPer100m, 0)
-  const totalAllYarnKgPer100m = totalWarpKgPer100m + totalWeftKgPer100m
+  const totalWarpKgPer100m    = warpRows.reduce((s, r) => s.plus(r.kgPer100m), new Decimal(0))
+  const totalWeftKgPer100m    = weftRows.reduce((s, r) => s.plus(r.kgPer100m), new Decimal(0))
+  const totalAllYarnKgPer100m = totalWarpKgPer100m.plus(totalWeftKgPer100m)
 
   // Per-row costs already include shortage — sum directly
-  const warpCostPerM = warpRows.reduce((s, r) => s + r.costPer100m, 0) / 100
-  const weftCostPerM = weftRows.reduce((s, r) => s + r.costPer100m, 0) / 100
+  const warpCostPerM = warpRows.reduce((s, r) => s.plus(r.costPer100m), new Decimal(0)).div(100)
+  const weftCostPerM = weftRows.reduce((s, r) => s.plus(r.costPer100m), new Decimal(0)).div(100)
 
   // Base costs (pre-shortage) for display
-  const yarnBaseWarpPerM = warpRows.reduce((s, r) => s + calcYarnCost(r.kgPer100m, r.yarnRate, r.gstPct, 0), 0) / 100
-  const yarnBaseWeftPerM = weftRows.reduce((s, r) => s + calcYarnCost(r.kgPer100m, r.yarnRate, r.gstPct, 0), 0) / 100
+  const yarnBaseWarpPerM = warpRows.reduce((s, r) => s.plus(calcYarnCost(r.kgPer100m, r.yarnRate, r.gstPct, 0)), new Decimal(0)).div(100)
+  const yarnBaseWeftPerM = weftRows.reduce((s, r) => s.plus(calcYarnCost(r.kgPer100m, r.yarnRate, r.gstPct, 0)), new Decimal(0)).div(100)
 
   // Total shortage cost across all rows: Σ(per-row shortage contributions)
   const yarnShortageCostPerM =
-    warpRows.reduce((s, r) => s + r.shortageCostPer100m, 0) / 100 +
-    weftRows.reduce((s, r) => s + r.shortageCostPer100m, 0) / 100
+    warpRows.reduce((s, r) => s.plus(r.shortageCostPer100m), new Decimal(0)).div(100).plus(
+    weftRows.reduce((s, r) => s.plus(r.shortageCostPer100m), new Decimal(0)).div(100))
 
   // ── Layer 3: Weave Cost ─────────────────────────────────────────────────
   // Use the total picks from all weft rows (sum of PPI)
-  const totalPicks   = estimate.weftRows.reduce((s, r) => s + r.picks, 0)
-  const weaveCostPerM = calcWeaveCostPerMeter(totalPicks, estimate.perPickCostPaisa)
+  const totalPicks = estimate.weftRows.reduce((s, r) => s.plus(r.picks), new Decimal(0)).toNumber()
+  const weaveCostPerM = new Decimal(calcWeaveCostPerMeter(totalPicks, estimate.perPickCostPaisa))
 
   // ── Layer 4: Warping + Sizing ───────────────────────────────────────────
-  const warpingAndSizingPerM = calcWarpingCostPerMeter(
-    totalWarpKgPer100m,
+  const warpingAndSizingPerM = new Decimal(calcWarpingCostPerMeter(
+    totalWarpKgPer100m.toNumber(),
     estimate.warpingRatePerKg,
     estimate.sizingRatePerKg
-  )
+  ))
 
   // ── Layer 5: Winding (optional) ─────────────────────────────────────────
   const windingPerM = estimate.enabledSections.winding
-    ? calcWindingCostPerMeter(totalAllYarnKgPer100m, estimate.windingRatePerKg)
-    : 0
+    ? new Decimal(calcWindingCostPerMeter(totalAllYarnKgPer100m.toNumber(), estimate.windingRatePerKg))
+    : new Decimal(0)
 
   // ── Layer 6+7: Processing + Finishing (optional) ────────────────────────
-  const processingPerM = estimate.enabledSections.processing ? estimate.processingRatePerM : 0
-  const finishingPerM  = estimate.enabledSections.finishing  ? estimate.finishingRatePerM  : 0
+  const processingPerM = estimate.enabledSections.processing ? new Decimal(estimate.processingRatePerM) : new Decimal(0)
+  const finishingPerM  = estimate.enabledSections.finishing  ? new Decimal(estimate.finishingRatePerM)  : new Decimal(0)
 
   // ── Direct Cost (sum of all layers above) ───────────────────────────────
   const directCostPerM =
-    warpCostPerM + weftCostPerM + weaveCostPerM +
-    warpingAndSizingPerM + windingPerM + processingPerM + finishingPerM
+    warpCostPerM.plus(weftCostPerM).plus(weaveCostPerM).plus(
+    warpingAndSizingPerM).plus(windingPerM).plus(processingPerM).plus(finishingPerM)
 
   // ── Layer 8: Overhead (sum of monthly fixed costs ÷ monthly output) ────
   const { 
@@ -529,30 +566,30 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   )
   // Direct override takes precedence when set and positive
   const overheadPerM = (estimate.overheadOverridePerM != null && estimate.overheadOverridePerM > 0)
-    ? estimate.overheadOverridePerM
-    : calculatedOverheadPerM
+    ? new Decimal(estimate.overheadOverridePerM)
+    : new Decimal(calculatedOverheadPerM)
   // Effective % for display + backward-compat snapshot in saved quotes
-  const effectiveOverheadPct = directCostPerM > 0 ? (overheadPerM / directCostPerM) * 100 : 0
+  const effectiveOverheadPct = directCostPerM.gt(0) ? overheadPerM.div(directCostPerM).times(100) : new Decimal(0)
 
   // ── Capacity Dynamics ─────────────────────────────────────
   const workingDays = estimate.monthlyWorkingDays || 26
-  const ratedCapacityM = (estimate.loomCount || 0) * (estimate.avgOutputPerLoomPerDay || 0) * workingDays
-  const overheadPerMAtCapacity = ratedCapacityM > 0 ? (overheadTotalMonthly / ratedCapacityM) : 0
-  const capacityUtilisationPct = ratedCapacityM > 0 ? (estimate.monthlyOutputM / ratedCapacityM) * 100 : 0
+  const ratedCapacityM = new Decimal(estimate.loomCount || 0).times(estimate.avgOutputPerLoomPerDay || 0).times(workingDays)
+  const overheadPerMAtCapacity = ratedCapacityM.gt(0) ? new Decimal(overheadTotalMonthly).div(ratedCapacityM) : new Decimal(0)
+  const capacityUtilisationPct = ratedCapacityM.gt(0) ? new Decimal(estimate.monthlyOutputM).div(ratedCapacityM).times(100) : new Decimal(0)
   
   // Cost of Idle Capacity: Actual Overhead Paid - Overhead recovered if run at capacity
-  const costOfIdleCapacityMonthly = Math.max(0, overheadTotalMonthly * (1 - (capacityUtilisationPct / 100)))
+  const costOfIdleCapacityMonthly = Decimal.max(0, new Decimal(overheadTotalMonthly).times(new Decimal(1).minus(capacityUtilisationPct.div(100))))
 
-  const totalProductionCostPerM = directCostPerM + overheadPerM
+  const totalProductionCostPerM = directCostPerM.plus(overheadPerM)
 
   // ── Beam Capacity Preview ───────────────────────────────────────────────
   // Approximate metres a full beam produces (tape_length reduced by take-up)
-  const estimatedBeamCapacityM = estimate.tapeLengthM * (1 - (estimate.warpCrimpPct || 0) / 100)
+  const estimatedBeamCapacityM = new Decimal(estimate.tapeLengthM).times(new Decimal(1).minus(new Decimal(estimate.warpCrimpPct || 0).div(100))).toNumber()
 
   // ── Order Quote (only when quantity is set) ─────────────────────────────
   const orderQuote = estimate.orderQuantityM && estimate.orderQuantityM > 0
     ? calcOrderQuote({
-        totalProductionCostPerM,
+        totalProductionCostPerM: totalProductionCostPerM.toNumber(),
         orderQuantityM:  estimate.orderQuantityM,
         commissionPct:   estimate.enabledSections.commission ? estimate.commissionPct : 0,
         transportPerM:   estimate.enabledSections.transport  ? estimate.transportPerM  : 0,
@@ -563,27 +600,27 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   return {
     warpRows,
     weftRows,
-    warpCostPerM,
-    weftCostPerM,
-    yarnBaseWarpPerM,
-    yarnBaseWeftPerM,
-    yarnShortageCostPerM,
-    weaveCostPerM,
-    warpingAndSizingPerM,
-    windingPerM,
-    processingPerM,
-    finishingPerM,
-    directCostPerM,
-    overheadPerM,
+    warpCostPerM:            warpCostPerM.toNumber(),
+    weftCostPerM:            weftCostPerM.toNumber(),
+    yarnBaseWarpPerM:        yarnBaseWarpPerM.toNumber(),
+    yarnBaseWeftPerM:        yarnBaseWeftPerM.toNumber(),
+    yarnShortageCostPerM:    yarnShortageCostPerM.toNumber(),
+    weaveCostPerM:           weaveCostPerM.toNumber(),
+    warpingAndSizingPerM:    warpingAndSizingPerM.toNumber(),
+    windingPerM:             windingPerM.toNumber(),
+    processingPerM:          processingPerM.toNumber(),
+    finishingPerM:           finishingPerM.toNumber(),
+    directCostPerM:          directCostPerM.toNumber(),
+    overheadPerM:            overheadPerM.toNumber(),
     overheadTotalMonthly,
-    effectiveOverheadPct,
-    overheadPerMAtCapacity,
-    ratedCapacityM,
-    capacityUtilisationPct,
-    costOfIdleCapacityMonthly,
-    totalProductionCostPerM,
-    totalWarpKgPer100m,
-    totalAllYarnKgPer100m,
+    effectiveOverheadPct:    effectiveOverheadPct.toNumber(),
+    overheadPerMAtCapacity:  overheadPerMAtCapacity.toNumber(),
+    ratedCapacityM:          ratedCapacityM.toNumber(),
+    capacityUtilisationPct:  capacityUtilisationPct.toNumber(),
+    costOfIdleCapacityMonthly: costOfIdleCapacityMonthly.toNumber(),
+    totalProductionCostPerM: totalProductionCostPerM.toNumber(),
+    totalWarpKgPer100m:      totalWarpKgPer100m.toNumber(),
+    totalAllYarnKgPer100m:   totalAllYarnKgPer100m.toNumber(),
     estimatedBeamCapacityM,
     orderQuote,
     resolvedItems,
@@ -652,6 +689,7 @@ export function makeDefaultEstimateState(): EstimateState {
     profitPct:          0,
     orderQuantityM:     null,
     enabledSections:    { ...DEFAULT_FACTORY_SECTIONS },
+    isConfigured:       false,
   }
 }
 
@@ -690,43 +728,45 @@ export function runScenarios(
   // ── 1. Yarn +10% ────────────────────────────────────────────────────────
   const yarnUpState: EstimateState = {
     ...baseline,
-    warpRows: baseline.warpRows.map(r => ({ ...r, yarnRate: r.yarnRate * 1.10 })),
-    weftRows: baseline.weftRows.map(r => ({ ...r, yarnRate: r.yarnRate * 1.10 })),
+    warpRows: baseline.warpRows.map(r => ({ ...r, yarnRate: new Decimal(r.yarnRate).times(1.10).toNumber() })),
+    weftRows: baseline.weftRows.map(r => ({ ...r, yarnRate: new Decimal(r.yarnRate).times(1.10).toNumber() })),
   }
   const yarnUpTotals = calcFullTotals(yarnUpState)
+  const yarnUpCostDelta = new Decimal(yarnUpTotals.totalProductionCostPerM).minus(baselineTotals.totalProductionCostPerM)
   results.push({
     id:          'yarn-up-10',
     label:       'Yarn +10%',
     description: 'All yarn rates increase by 10%',
     totalProductionCostPerM: yarnUpTotals.totalProductionCostPerM,
     quotePricePerM: yarnUpTotals.orderQuote?.quotePricePerM ?? null,
-    costDelta:   yarnUpTotals.totalProductionCostPerM - baselineTotals.totalProductionCostPerM,
+    costDelta:   yarnUpCostDelta.toNumber(),
     costDeltaPct: baselineTotals.totalProductionCostPerM > 0
-      ? ((yarnUpTotals.totalProductionCostPerM - baselineTotals.totalProductionCostPerM) / baselineTotals.totalProductionCostPerM) * 100
+      ? yarnUpCostDelta.div(baselineTotals.totalProductionCostPerM).times(100).toNumber()
       : 0,
     profitDelta: yarnUpTotals.orderQuote && baselineTotals.orderQuote
-      ? yarnUpTotals.orderQuote.grossProfitRupees - baselineTotals.orderQuote.grossProfitRupees
+      ? new Decimal(yarnUpTotals.orderQuote.grossProfitRupees).minus(baselineTotals.orderQuote.grossProfitRupees).toNumber()
       : null,
   })
 
   // ── 2. Output -15% ──────────────────────────────────────────────────────
   const outputDownState: EstimateState = {
     ...baseline,
-    monthlyOutputM: Math.max(1, baseline.monthlyOutputM * 0.85),
+    monthlyOutputM: Math.max(1, new Decimal(baseline.monthlyOutputM).times(0.85).toNumber()),
   }
   const outputDownTotals = calcFullTotals(outputDownState)
+  const outputDownCostDelta = new Decimal(outputDownTotals.totalProductionCostPerM).minus(baselineTotals.totalProductionCostPerM)
   results.push({
     id:          'output-down-15',
     label:       'Output -15%',
     description: 'Monthly output drops 15% — overhead per metre rises',
     totalProductionCostPerM: outputDownTotals.totalProductionCostPerM,
     quotePricePerM: outputDownTotals.orderQuote?.quotePricePerM ?? null,
-    costDelta:   outputDownTotals.totalProductionCostPerM - baselineTotals.totalProductionCostPerM,
+    costDelta:   outputDownCostDelta.toNumber(),
     costDeltaPct: baselineTotals.totalProductionCostPerM > 0
-      ? ((outputDownTotals.totalProductionCostPerM - baselineTotals.totalProductionCostPerM) / baselineTotals.totalProductionCostPerM) * 100
+      ? outputDownCostDelta.div(baselineTotals.totalProductionCostPerM).times(100).toNumber()
       : 0,
     profitDelta: outputDownTotals.orderQuote && baselineTotals.orderQuote
-      ? outputDownTotals.orderQuote.grossProfitRupees - baselineTotals.orderQuote.grossProfitRupees
+      ? new Decimal(outputDownTotals.orderQuote.grossProfitRupees).minus(baselineTotals.orderQuote.grossProfitRupees).toNumber()
       : null,
   })
 
@@ -745,7 +785,7 @@ export function runScenarios(
       costDelta:   0, // production cost doesn't change
       costDeltaPct: 0,
       profitDelta: baselineTotals.orderQuote
-        ? -baselineTotals.orderQuote.grossProfitRupees
+        ? new Decimal(0).minus(baselineTotals.orderQuote.grossProfitRupees).toNumber()
         : null,
     })
   }
@@ -753,14 +793,15 @@ export function runScenarios(
   // ── 4. Custom target price ──────────────────────────────────────────────
   // Owner enters a price the party demanded — what's the resulting margin?
   if (customTargetPrice != null && customTargetPrice > 0 && baselineTotals.orderQuote) {
-    const landedCost = baselineTotals.orderQuote.landedCostPerM
-    const impliedMarginPct = landedCost > 0
-      ? ((customTargetPrice - landedCost) / landedCost) * 100
-      : 0
-    const orderQty   = baseline.orderQuantityM ?? 0
-    const totalValue = customTargetPrice * orderQty
-    const totalCost  = landedCost * orderQty
-    const grossProfit = totalValue - totalCost
+    const landedCost = new Decimal(baselineTotals.orderQuote.landedCostPerM)
+    const targetPrice = new Decimal(customTargetPrice)
+    const impliedMarginPct = landedCost.gt(0)
+      ? targetPrice.minus(landedCost).div(landedCost).times(100)
+      : new Decimal(0)
+    const orderQty   = new Decimal(baseline.orderQuantityM ?? 0)
+    const totalValue = targetPrice.times(orderQty)
+    const totalCost  = landedCost.times(orderQty)
+    const grossProfit = totalValue.minus(totalCost)
     results.push({
       id:          'custom-target',
       label:       `Target ₹${customTargetPrice.toFixed(2)}/m`,
@@ -770,7 +811,7 @@ export function runScenarios(
       costDelta:   0,
       costDeltaPct: 0,
       profitDelta: baselineTotals.orderQuote
-        ? grossProfit - baselineTotals.orderQuote.grossProfitRupees
+        ? grossProfit.minus(baselineTotals.orderQuote.grossProfitRupees).toNumber()
         : null,
     })
   }

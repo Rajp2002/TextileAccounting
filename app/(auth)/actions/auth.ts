@@ -477,6 +477,7 @@ export async function regenerateJoinCode() {
 export async function getOnboardingStatus(): Promise<{
     hasMachine: boolean
     hasWorker: boolean
+    hasPayrollConfig: boolean
     hasPlan: boolean
     isComplete: boolean
 }> {
@@ -502,9 +503,10 @@ export async function getOnboardingStatus(): Promise<{
     // If we still have no org_id after the DB fallback, the account is truly broken
     if (!orgId) redirect('/login')
 
-    const [machines, workers, subscription] = await Promise.all([
+    const [machines, workers, payrollConfig, subscription] = await Promise.all([
         supabase.from('machines').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
         supabase.from('workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
+        supabase.from('payroll_configs').select('org_id').eq('org_id', orgId).maybeSingle(),
         supabase.from('org_subscriptions')
             .select('status, plan_tier, current_end')
             .eq('org_id', orgId)
@@ -516,6 +518,7 @@ export async function getOnboardingStatus(): Promise<{
 
     const hasMachine = (machines.count ?? 0) > 0
     const hasWorker  = (workers.count  ?? 0) > 0
+    const hasPayrollConfig = !!payrollConfig.data
 
     // Check if subscription is valid (not expired)
     let hasPlan = false
@@ -528,7 +531,7 @@ export async function getOnboardingStatus(): Promise<{
         }
     }
 
-    const isComplete = hasMachine && hasWorker && hasPlan
+    const isComplete = hasMachine && hasWorker && hasPayrollConfig && hasPlan
 
     if (isComplete) {
         // Flip the flag so future middleware checks use JWT cache, not DB.
@@ -539,7 +542,7 @@ export async function getOnboardingStatus(): Promise<{
             .eq('id', orgId)
     }
 
-    return { hasMachine, hasWorker, hasPlan, isComplete }
+    return { hasMachine, hasWorker, hasPayrollConfig, hasPlan, isComplete }
 }
 
 /**

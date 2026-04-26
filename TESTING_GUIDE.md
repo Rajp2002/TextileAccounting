@@ -70,7 +70,7 @@
 - [ ] On a desktop-width screen, verify the **left sidebar** is visible with:
   - Factory name at the top
   - Owner's name displayed
-  - Navigation links: Dashboard, Machines, Fixed Workers, Payroll, Advances, Inventory, System Health, Settings
+  - Navigation links: Dashboard, Machines, Fixed Workers, Payroll, Advances, System Health, Settings
 - [ ] Click each navigation link. Verify the correct page loads.
 - [ ] Verify the active page is visually highlighted in the sidebar.
 
@@ -85,7 +85,7 @@
   - "Supervisor" badge in uppercase teal text
   - Language switcher dropdown
   - Logout button
-- [ ] Verify the **tab navigation bar** below the header has: Production, Assignments, Workers, Machines, Attendance.
+- [ ] Verify the **tab navigation bar** below the header has: Dashboard, Workers, Attendance.
 - [ ] Click each tab. Verify the correct page loads.
 - [ ] On mobile, verify a **hamburger menu** appears with navigation options.
 
@@ -169,10 +169,10 @@
 
 ---
 
-## 5. Worker Assignments (Supervisor)
+## 5. Worker Assignments (Supervisor Dashboard)
 
 ### 5.1 Shift Toggle
-- [ ] Navigate to the **Assignments** page as Supervisor.
+- [ ] Navigate to the **Supervisor Dashboard** as Supervisor.
 - [ ] Verify the **Day Shift / Night Shift** toggle is visible.
 - [ ] Select "Day Shift" and assign workers to machines.
 - [ ] Switch to "Night Shift". Verify the assignments are **independent** (either empty or different workers).
@@ -234,13 +234,6 @@
 ### 6.8 Single-Use Code Verification
 - [ ] Try using the **same code again** to unlock another action.
 - [ ] Verify the code is rejected as **spent/expired** ("Invalid or expired code" or similar).
-
-### 6.9 Machine Setup Requirements (Beam / Order Linking)
-- [ ] If the production page shows **"Setup Required"** badges:
-  - Verify the three setup indicators: Worker Assigned ✓, Beam Loaded ✓/✗, Order Linked ✓/✗.
-  - Click **"Start Beam"** — verify the beam selector dialog opens with active yarn batches from inventory.
-  - Click **"Link Order"** — verify the order selector dialog opens with active orders.
-  - Verify production input is disabled until all setup steps are completed.
 
 ---
 
@@ -353,11 +346,7 @@
 - [ ] Verify all KPIs, worker breakdowns, and staff panels update to reflect that date's data.
 - [ ] Verify future dates are disabled/blocked.
 
-### 9.9 Efficiency & Leakage Alerts
-- [ ] If inventory batches are active, verify the **Efficiency** section shows variance data.
-- [ ] If any batch has high leakage (> 5% negative variance), verify the **"Leakage Alerts"** section appears with the batch flagged as "High Leakage."
 
----
 
 ## 10. Monthly Payroll Settlement
 
@@ -449,34 +438,7 @@
 
 ---
 
-## 12. Lean Beam Tracking (Supervisor Floor)
-
-### 12.1 Add New Beam / Quality
-- [ ] Login as Supervisor. Navigate to **Production Entry** (`/supervisor/production`).
-- [ ] Click **"Add Beam"** in the header.
-- [ ] Verify the "Add New Beam" dialog appears.
-- [ ] Enter:
-  - **Beam Name**: "Test-Beam-101"
-  - **Quality**: Select an existing quality (e.g., "60g Georgette")
-  - **Initial Weight**: "150.00" kg
-- [ ] Click **"Confirm"**. Verify success toast and that the beam is now available for linking.
-
-### 12.2 Link Beam to Machine (Start Beam)
-- [ ] Find an active machine card with no "Active Beam".
-- [ ] Click **"Start Beam"**.
-- [ ] Select "Test-Beam-101" from the dropdown.
-- [ ] Click **"Link"**. Verify the machine card now shows the beam badge.
-
-### 12.3 Beam Consumption & Yield Audit
-- [ ] On a machine with an active beam, click the **"Mark Consumed"** button.
-- [ ] Enter **Leftover Weight**: "2.00" kg.
-- [ ] Click **"Mark Consumed"**.
-- [ ] **Audit Check**: Login as Owner. Verify the **Audit Log** shows the "Batch Consumed" event with actual yield calculations.
-- [ ] **Data Check**: Verify the `Actual Yield` matches `Meters / (150.00 - 2.00)`.
-
----
-
-## 13. Settings (Owner)
+## 12. Settings (Owner)
 
 ### 13.1 Page Load
 - [ ] Navigate to **Settings**. Verify three sections: Factory Information, Access Code Generator, Personal Information.
@@ -502,7 +464,7 @@
 
 ---
 
-## 14. Access Code System — Cross-Cutting Verification
+## 13. Access Code System — Cross-Cutting Verification
 
 This section tests that the access code system works consistently across all protected actions.
 
@@ -527,9 +489,9 @@ This section tests that the access code system works consistently across all pro
 
 ---
 
-## 15. Internationalization (i18n) — Language Switching
+## 14. Internationalization (i18n) — Language Switching
 
-### 15.1 Supervisor Dashboard — Language Switcher
+### 14.1 Supervisor Dashboard — Language Switcher
 - [ ] On the Supervisor header, locate the **language switcher** dropdown.
 - [ ] Verify the available languages (e.g., English, हिन्दी / Hindi, ગુજરાતી / Gujarati).
 
@@ -565,15 +527,14 @@ For **each page** listed below, switch through all languages and check: no raw k
 | Owner → Fixed Workers | [ ] | [ ] | [ ] |
 | Owner → Payroll | [ ] | [ ] | [ ] |
 | Owner → Advances | [ ] | [ ] | [ ] |
-| Owner → Inventory | [ ] | [ ] | [ ] |
 | Owner → System Health | [ ] | [ ] | [ ] |
 | Owner → Settings | [ ] | [ ] | [ ] |
 
 ---
 
-## 16. PWA (Progressive Web App) Testing
+## 15. PWA (Progressive Web App) Testing
 
-### 16.1 Install Prompt
+### 15.1 Install Prompt
 - [ ] On Chrome desktop, verify the **install app** icon appears in the address bar (or the browser prompts to install).
 - [ ] On mobile Chrome/Safari, verify "Add to Home Screen" is available.
 
@@ -592,30 +553,28 @@ For **each page** listed below, switch through all languages and check: no raw k
 
 ---
 
-## 17. Data Isolation & Security (Cross-Tenant)
+## 16. Data Isolation & Security (Cross-Tenant)
 
-### 17.1 Organization Fence (RLS) — Setup
+### 16.1 Organization Fence (RLS) — Setup
 - [ ] Create a **second Owner account** with a new organization (e.g., "Test Factory B").
 - [ ] As this second Owner, add a machine named **"Secret Loom B"** and a worker named **"Ghost Worker B"**.
 
-### 17.2 Cross-Org Invisibility
+### 16.2 Cross-Org Invisibility
 - [ ] Log into the **first Owner account**.
 - [ ] Navigate to Machines → Verify "Secret Loom B" is **NOT visible**.
 - [ ] Navigate to Dashboard → Verify "Ghost Worker B" is **NOT visible**.
 - [ ] Navigate to Payroll → Verify no data from Organization B appears.
-- [ ] Navigate to Inventory → Verify no qualities or batches from Organization B appear.
 - [ ] Navigate to Advances → Verify the worker list does not include Organization B workers.
 
-### 17.3 Role-Based Route Protection
+### 16.3 Role-Based Route Protection
 - [ ] As a **Supervisor**, try navigating directly (via URL bar) to:
   - `/owner/analytics` → Verify redirect to `/supervisor/production`.
   - `/owner/settings` → Verify redirect.
   - `/owner/payroll` → Verify redirect.
   - `/owner/advances` → Verify redirect.
-  - `/owner/inventory` → Verify redirect.
 - [ ] As an **Owner**, try navigating to supervisor pages → They should load (since owners have access to supervisor features per the layout code).
 
-### 17.4 Unauthenticated Access
+### 16.4 Unauthenticated Access
 - [ ] Log out completely. Try navigating directly to:
   - `/owner/analytics` → Verify redirect to `/login`.
   - `/supervisor/production` → Verify redirect to `/login`.
@@ -623,9 +582,9 @@ For **each page** listed below, switch through all languages and check: no raw k
 
 ---
 
-## 18. System Health (Owner)
+## 17. System Health (Owner)
 
-### 18.1 Page Load
+### 17.1 Page Load
 - [ ] Navigate to **System Health**. Verify the page shows a table of daily brief logs (last 30 entries).
 - [ ] If no logs exist, verify the empty state: "No job logs found" with guidance about cron jobs.
 
@@ -643,9 +602,9 @@ For **each page** listed below, switch through all languages and check: no raw k
 
 ---
 
-## 19. UI/UX Quality Checks
+## 18. UI/UX Quality Checks
 
-### 19.1 Responsive Design
+### 18.1 Responsive Design
 - [ ] Test each page at three breakpoints:
   - **Mobile** (375px): Verify nav collapses, cards stack vertically, no horizontal overflow.
   - **Tablet** (768px): Verify layout adapts with appropriate grid changes.
@@ -662,11 +621,9 @@ For **each page** listed below, switch through all languages and check: no raw k
   - No production logs → "No production logs"
   - No payroll data → "No production logged this month"
   - No advances → "No advances recorded"
-  - No batches → "No Yarn Batches"
-  - No qualities → "No Qualities Defined"
   - No system logs → "No job logs found"
 
-### 19.4 Error Handling
+### 18.4 Error Handling
 - [ ] Turn off the API (stop the dev server or block Supabase requests via DevTools). Verify:
   - Error toasts appear for failed operations (not unhandled exceptions or white screens).
   - The app degrades gracefully.
@@ -682,9 +639,9 @@ For **each page** listed below, switch through all languages and check: no raw k
 
 ---
 
-## 20. Edge Cases & Boundary Conditions
+## 19. Edge Cases & Boundary Conditions
 
-### 20.1 Zero-Production Day
+### 19.1 Zero-Production Day
 - [ ] Navigate to the Owner Dashboard for a date with **no production logged**.
 - [ ] Verify KPI cards show ₹0 / 0 meters gracefully (not "NaN" or blank).
 
@@ -716,6 +673,40 @@ For **each page** listed below, switch through all languages and check: no raw k
 
 ---
 
+## 20. Admin & Compliance Dashboard
+### 20.1 Admin Role & Access
+- [ ] Log in with an Admin account.
+- [ ] Verify the admin is redirected to `/admin`.
+- [ ] Try to access `/owner/analytics` or `/supervisor/production`. Verify redirect to `/admin`.
+- [ ] Log in as Owner/Supervisor. Try to access `/admin`. Verify redirect to login or dashboard.
+
+### 21.2 DPDP Notice Registry
+- [ ] Navigate to DPDP Notices in the Admin Dashboard.
+- [ ] Create a new data privacy notice. Verify it saves and is marked as active.
+- [ ] Log in as a regular user (Owner). Verify the active notice is visible in the settings/privacy section.
+
+### 21.3 Grievance Redressal
+- [ ] As an Owner, submit a grievance ticket.
+- [ ] As an Admin, verify the ticket appears in the Grievance Redressal queue.
+- [ ] Add a resolution to the ticket as Admin and close it.
+- [ ] As Owner, verify the ticket shows the resolution and closed status.
+
+---
+
+## 21. Dispatch Management
+### 21.1 Create Dispatch Batch
+- [ ] As Owner, go to Orders. Select an active order.
+- [ ] Click "Manage Dispatches". Create a new batch with a specific meter amount.
+- [ ] Verify the batch is created and linked to the order.
+
+### 22.2 QR Code & Tracking Link
+- [ ] Verify the Dispatch Batch generates a secure tracking token.
+- [ ] Click the "Share" or "Tracking Link" button. Verify it resolves to the `/track/[token]` public portal.
+- [ ] Scan/Click the QR code. Verify it opens the correct tracking page.
+- [ ] Open the tracking link in an incognito window. Verify it loads without requiring authentication.
+
+---
+
 ## Test Results Summary
 
 | Section | Pass | Fail | Partial | Notes |
@@ -731,15 +722,16 @@ For **each page** listed below, switch through all languages and check: no raw k
 | 9. Owner Dashboard & Analytics | | | | |
 | 10. Monthly Payroll Settlement | | | | |
 | 11. Advances (Upaad) | | | | |
-| 12. Inventory — Yarn & Qualities | | | | |
-| 13. Settings | | | | |
-| 14. Access Code System | | | | |
-| 15. Internationalization (i18n) | | | | |
-| 16. PWA Testing | | | | |
-| 17. Data Isolation & Security | | | | |
-| 18. System Health | | | | |
-| 19. UI/UX Quality Checks | | | | |
-| 20. Edge Cases | | | | |
+| 12. Settings | | | | |
+| 13. Access Code System | | | | |
+| 14. Internationalization (i18n) | | | | |
+| 15. PWA Testing | | | | |
+| 16. Data Isolation & Security | | | | |
+| 17. System Health | | | | |
+| 18. UI/UX Quality Checks | | | | |
+| 19. Edge Cases | | | | |
+| 20. Admin & Compliance Dashboard | | | | |
+| 21. Dispatch Management | | | | |
 
 **Tester Name:** ____________________
 **Date Tested:** ____________________

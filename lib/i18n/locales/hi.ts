@@ -205,6 +205,8 @@ export const hi = {
         at_risk: "खतरे में (At Risk)",
         finished: "पूरा हुआ (Finished)",
         active: "सक्रिय (Active)",
+        waiting_for_logs: "लॉग की प्रतीक्षा है",
+        tracking_starts: "पहली प्रविष्टि के बाद ट्रैकिंग शुरू होगी",
         link_title: "मशीनें लिंक करें",
         link_desc: "चुनें कि कौन सी मशीनें इस ऑर्डर पर काम कर रही हैं",
         switching: "ऑर्डर बदल रहा है",

@@ -203,6 +203,8 @@ export const gu = {
         at_risk: "જોખમમાં (At Risk)",
         finished: "પૂર્ણ (Finished)",
         active: "એક્ટિવ (Active)",
+        waiting_for_logs: "લોગની રાહ જોવાય છે",
+        tracking_starts: "પહેલી એન્ટ્રી પછી ટ્રેકિંગ શરૂ થશે",
         link_title: "મશીનો લિંક કરો",
         link_desc: "પસંદ કરો કે આ ઓર્ડર પર કયા મશીનો કામ કરી રહ્યા છે",
         switching: "ઓર્ડર બદલે છે",
