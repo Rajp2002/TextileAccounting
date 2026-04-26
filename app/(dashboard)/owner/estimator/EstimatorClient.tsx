@@ -906,7 +906,7 @@ export default function EstimatorClient({
                             // Overridden by wizard data
                             overhead_items:          data.overheadItems ?? state.overheadItems,
                             monthly_output_m:        data.monthlyOutputM ?? state.monthlyOutputM,
-                            overhead_override_per_m: data.overhead_override_per_m !== undefined ? data.overhead_override_per_m : state.overheadOverridePerM,
+                            overhead_override_per_m: data.overheadOverridePerM !== undefined ? data.overheadOverridePerM : state.overheadOverridePerM,
                             loom_count:              data.loomCount ?? state.loomCount,
                             monthly_working_days:    data.monthlyWorkingDays ?? state.monthlyWorkingDays,
                             avg_output_per_loom_per_day: data.avgOutputPerLoomPerDay ?? state.avgOutputPerLoomPerDay,
@@ -915,8 +915,7 @@ export default function EstimatorClient({
                         if (res.success) {
                             // Update local state and close wizard
                             Object.entries(data).forEach(([key, val]) => {
-                                const stateKey = key === 'overhead_override_per_m' ? 'overheadOverridePerM' : key;
-                                dispatch({ type: 'SET', field: stateKey as any, value: val })
+                                dispatch({ type: 'SET', field: key as any, value: val })
                             })
                             dispatch({ type: 'SET', field: 'isConfigured', value: true })
                             toast.success('Factory baseline configured successfully!')
