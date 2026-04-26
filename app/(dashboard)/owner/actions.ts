@@ -17,6 +17,7 @@ import {
     UpdateOrgNameSchema,
     safeParse,
 } from '@/lib/schemas'
+import { eraseWorkerPII } from './actions/compliance'
 
 // ─── Machine Management (Server Actions) ──────────────────────────────────────
 // These run server-side so auth.uid() is always set in the audit trigger,

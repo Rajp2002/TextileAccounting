@@ -95,10 +95,27 @@ CREATE TABLE IF NOT EXISTS grievances (
     status TEXT NOT NULL CHECK (status IN ('pending', 'acknowledged', 'resolved', 'escalated')),
     acknowledged_at TIMESTAMPTZ,
     resolved_at TIMESTAMPTZ,
-    target_resolution_date DATE GENERATED ALWAYS AS ( (acknowledged_at::DATE + INTERVAL '7 days')::DATE ) STORED,
+    target_resolution_date DATE,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Trigger to maintain target_resolution_date (7-day clock)
+-- We use a trigger because generated columns with TIMESTAMPTZ -> DATE casts are non-immutable in Postgres
+CREATE OR REPLACE FUNCTION handle_grievance_target_date()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.acknowledged_at IS NOT NULL AND (OLD.acknowledged_at IS NULL OR NEW.acknowledged_at != OLD.acknowledged_at) THEN
+        NEW.target_resolution_date := (NEW.acknowledged_at AT TIME ZONE 'UTC')::DATE + 7;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER on_grievance_acknowledged
+    BEFORE INSERT OR UPDATE ON grievances
+    FOR EACH ROW
+    EXECUTE FUNCTION handle_grievance_target_date();
 
 CREATE INDEX idx_grievances_org_status ON grievances(org_id, status);
 

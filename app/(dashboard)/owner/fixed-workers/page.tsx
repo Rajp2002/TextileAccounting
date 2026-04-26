@@ -384,6 +384,8 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                                 className="font-mono uppercase tracking-widest text-lg"
                                 maxLength={6}
                             />
+                        </div>
+
                         {/* DPDP 2026 Erasure Option */}
                         <div className="pt-2 border-t border-gray-100 flex items-start gap-3 px-1">
                             <input
@@ -441,6 +443,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const [workerToDelete, setWorkerToDelete] = useState<FixedWorker | null>(null)
     const [workerDebt, setWorkerDebt] = useState<number>(0)
     const [accessCode, setAccessCode] = useState('')
+    const [erasePII, setErasePII] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const [fetchingDebt, setFetchingDebt] = useState(false)
     const [verificationOpen, setVerificationOpen] = useState(false)
@@ -820,6 +823,27 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                 className="font-mono uppercase tracking-widest text-lg"
                                 maxLength={6}
                             />
+                        </div>
+
+                        {/* DPDP 2026 Erasure Option */}
+                        <div className="pt-2 border-t border-gray-100 flex items-start gap-3 px-1">
+                            <input
+                                type="checkbox"
+                                id={`erase-pii-fixed-${workerToDelete?.id}`}
+                                checked={erasePII}
+                                onChange={(e) => setErasePII(e.target.checked)}
+                                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            />
+                            <div className="space-y-1 cursor-pointer" onClick={() => setErasePII(!erasePII)}>
+                                <Label className="text-xs font-bold text-gray-700 cursor-pointer flex items-center gap-1.5">
+                                    <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+                                    DPDP Right to Erasure
+                                </Label>
+                                <p className="text-[10px] text-gray-500 leading-snug">
+                                    Anonymize worker data instead of hard deleting. 
+                                    Preserves audit trail for compliance.
+                                </p>
+                            </div>
                         </div>
                     </div>
                     <DialogFooter>

@@ -8,7 +8,7 @@ ALTER TABLE profiles ADD CONSTRAINT profiles_role_check CHECK (role IN ('owner',
 
 -- 2. Update audit_log action check to include 'EXPORT'
 ALTER TABLE audit_log DROP CONSTRAINT IF EXISTS audit_log_action_check;
-ALTER TABLE audit_log ADD CONSTRAINT audit_log_action_check CHECK (action IN ('INSERT', 'UPDATE', 'DELETE', 'EXPORT'));
+ALTER TABLE audit_log ADD CONSTRAINT audit_log_action_check CHECK (action IN ('INSERT', 'UPDATE', 'DELETE', 'EXPORT', 'payroll.settle', 'payroll.unsettle'));
 
 -- 3. Create compliance_settings table (singleton)
 CREATE TABLE IF NOT EXISTS compliance_settings (
