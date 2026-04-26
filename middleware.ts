@@ -266,10 +266,11 @@ export async function updateSession(request: NextRequest) {
         const orgId = jwt.org_id
 
         // Missing org_id in JWT = possibly a stale JWT (race condition on new signup/join).
+        // Skip this check for 'admin' role as they are cross-tenant/global.
         let resolvedOrgId = orgId
         let resolvedOnboarding = onboardingComplete
 
-        if (!orgId && !pathname.startsWith('/onboarding')) {
+        if (!orgId && !pathname.startsWith('/onboarding') && role !== 'admin') {
             try {
                 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
                 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -308,7 +309,7 @@ export async function updateSession(request: NextRequest) {
                                 }
                                 return undefined;
                              })
-                        )
+                         )
                     }
 
                     const [profileOrgId, profileOrgOnboarding] = await Promise.all(fetches)
@@ -324,7 +325,8 @@ export async function updateSession(request: NextRequest) {
         }
 
         // If org_id is still absent after DB fallback, the session is genuinely broken
-        if (!resolvedOrgId && !pathname.startsWith('/onboarding')) {
+        // Skip for admin
+        if (!resolvedOrgId && !pathname.startsWith('/onboarding') && role !== 'admin') {
             // API routes: return JSON error instead of signing out and redirecting to HTML
             if (pathname.startsWith('/api/')) {
                 return NextResponse.json({ error: 'Session incomplete. Please sign in again.' }, { status: 403 })
@@ -342,7 +344,6 @@ export async function updateSession(request: NextRequest) {
         }
 
         // Onboarding guard: owners must complete setup before accessing ops routes
-        // NOTE: API routes must NEVER be redirected to HTML pages — they need JSON responses.
         if (
             role === 'owner' &&
             !resolvedOnboarding &&
@@ -361,15 +362,31 @@ export async function updateSession(request: NextRequest) {
             return NextResponse.redirect(new URL('/owner/analytics', request.url))
         }
 
-
         // ── Strict role boundary enforcement ──────────────────────────────
-        // Supervisor trying to access /owner/* routes
-        if (role === 'supervisor' && pathname.startsWith('/owner')) {
+        
+        // 1. Admin restricted routes - Hardened with fresh DB check
+        if (pathname.startsWith('/admin')) {
+            if (role !== 'admin') {
+                // Secondary check: verify in DB in case of stale JWT or manual cookie tampering
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single()
+                
+                if (profile?.role !== 'admin') {
+                    return NextResponse.redirect(new URL('/login', request.url))
+                }
+            }
+        }
+
+        // 2. Owner restricted routes (Admins can access for support/audit)
+        if (pathname.startsWith('/owner') && role === 'supervisor') {
             return NextResponse.redirect(new URL('/supervisor/production', request.url))
         }
 
-        // Owner trying to access /supervisor/* routes
-        if (role === 'owner' && pathname.startsWith('/supervisor')) {
+        // 3. Supervisor restricted routes (Admins can access for support/audit)
+        if (pathname.startsWith('/supervisor') && role === 'owner') {
             return NextResponse.redirect(new URL('/owner/analytics', request.url))
         }
     }

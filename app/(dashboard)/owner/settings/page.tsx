@@ -25,6 +25,7 @@ import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
 import { updateOrganizationName } from '@/app/(dashboard)/owner/actions'
 import { SupervisorFloatManager } from '@/components/settings/supervisor-float-manager'
+import { EmergencyLockdown } from '@/components/settings/EmergencyLockdown'
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -405,29 +406,7 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-gray-200 lg:col-span-1">
-                    <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <ShieldCheck className="h-5 w-5 text-emerald-600" />
-                            <CardTitle>Legal & Compliance</CardTitle>
-                        </div>
-                        <CardDescription>Grievance redressal per IT Intermediary Guidelines 2021</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4 space-y-2">
-                            <div className="space-y-1">
-                                <p className="text-sm font-semibold text-gray-900">Grievance Officer</p>
-                                <p className="text-sm text-gray-600">Weavly Support Team · <a href="mailto:privacy@weavly.app" className="text-emerald-700 font-medium">privacy@weavly.app</a></p>
-                            </div>
-                            <p className="text-xs text-gray-500">Complaints will be acknowledged within 24 hours.</p>
-                        </div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-400">
-                            <a href="/privacy" target="_blank" className="hover:underline">Privacy Policy</a>
-                            <a href="/terms" target="_blank" className="hover:underline">Terms of Service</a>
-                            <a href="/refund-policy" target="_blank" className="hover:underline">Refund Policy</a>
-                        </div>
-                    </CardContent>
-                </Card>
+                <EmergencyLockdown />
             </SettingsCategory>
         </div>
     )

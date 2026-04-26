@@ -2,12 +2,26 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
 import LandingFooter from "@/components/landing/footer"
+import { createClient } from '@/lib/supabase/server'
+
 export const metadata: Metadata = {
     title: 'Privacy Policy — Weavly',
     description: 'Learn how Weavly collects, uses, and protects your personal data in compliance with India\'s Digital Personal Data Protection Act (DPDP Act) 2023.',
 }
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage() {
+    // Fetch GRO details
+    const supabase = await createClient()
+    const { data: settings } = await supabase
+        .from('compliance_settings')
+        .select('*')
+        .single()
+
+    const gro = settings || {
+        gro_name: 'Raj Patel',
+        gro_email: 'rajpatel86420@gmail.com'
+    }
+
     return (
         <main className="min-h-screen bg-gray-50 dark:bg-zinc-950 relative selection:bg-amber-100 selection:text-amber-900 overflow-hidden">
             {/* Ambient Background Glow */}
@@ -39,7 +53,7 @@ export default function PrivacyPolicyPage() {
                             Privacy Policy
                         </h1>
                         <p className="mt-4 text-sm font-medium text-amber-700 dark:text-amber-500 tracking-wide uppercase">
-                            Last updated: March 25, 2026
+                            Last updated: April 26, 2026
                         </p>
                     </div>
 
@@ -179,13 +193,57 @@ export default function PrivacyPolicyPage() {
                         The Weavly Progressive Web App (PWA) uses <strong>IndexedDB</strong> to store production entries locally on your device when an internet connection is unavailable. This data is automatically synced to our servers upon reconnection and removed from local storage after sync. The app also uses a <strong>Service Worker</strong> for offline caching of application assets. No cookies are used for tracking purposes.
                     </p>
 
-                    <h2>11. Contact &amp; Grievance Officer</h2>
-                    <p>For questions, data requests, or complaints regarding your personal data, contact:</p>
-                    <div className="bg-gray-50 rounded-xl p-6 not-prose text-sm text-gray-700 space-y-1 my-4">
-                        <p className="font-semibold text-gray-900">Grievance Officer</p>
-                        <p>Weavly</p>
-                        <p>Email: <a href="mailto:privacy@weavly.app" className="text-amber-700 hover:underline">privacy@weavly.app</a></p>
-                        <p className="text-xs text-gray-500 mt-2">Complaints will be acknowledged within 24 hours and resolved within 15 days as per IT Intermediary Guidelines 2021.</p>
+                    <h2>11. Grievance Redressal Policy (Effective April 2026)</h2>
+                    <p>We take your privacy concerns seriously. If you have any grievances regarding your data processing, you may reach out to our designated officer.</p>
+                    
+                    <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-2xl p-6 sm:p-8 not-prose border border-gray-200 dark:border-white/10 my-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">Grievance Redressal Officer (GRO)</h3>
+                                    <p className="text-lg font-semibold text-amber-700 dark:text-amber-500">{gro.gro_name}</p>
+                                    <p className="text-gray-600 dark:text-gray-400">Weavly Compliance Dept.</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">Primary Contact</h3>
+                                    <div className="space-y-1">
+                                        <a href={`mailto:${gro.gro_email}`} className="text-lg font-medium text-gray-900 dark:text-white hover:text-amber-600 transition-colors break-all">
+                                            {gro.gro_email}
+                                        </a>
+                                        {gro.gro_phone && (
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">Phone: {gro.gro_phone}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">Statutory Timelines</h3>
+                                <ul className="space-y-2">
+                                    <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                                        <div className="h-2 w-2 rounded-full bg-amber-500" />
+                                        <span className="font-medium">Acknowledgment:</span> 12 Hours (via email)
+                                    </li>
+                                    <li className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                                        <div className="h-2 w-2 rounded-full bg-amber-500" />
+                                        <span className="font-medium">Resolution:</span> 7 Working Days
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 pt-8 border-t border-gray-200 dark:border-white/10">
+                            <h3 className="text-base font-bold text-gray-900 dark:text-white mb-3">How to File a Grievance:</h3>
+                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">
+                                Any Data Principal (Worker) or authorized representative may file a grievance regarding data inaccuracy, unauthorized processing, or consent withdrawal. Please include your <strong>Worker ID</strong> and the nature of your concern.
+                            </p>
+                        </div>
+
+                        <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-100 dark:border-amber-900/30">
+                            <h3 className="text-sm font-bold text-amber-900 dark:text-amber-100 mb-2">Resolution Proof:</h3>
+                            <p className="text-sm text-amber-800 dark:text-amber-200/80 leading-relaxed">
+                                Upon resolution, Weavly will provide a Resolution Summary. A digital copy of this communication is archived in our secure Compliance Registry for a period of 3 years to ensure auditability under the Indian Code on Wages 2019.
+                            </p>
+                        </div>
                     </div>
 
                     <h2>12. Changes to This Policy</h2>
