@@ -199,6 +199,10 @@ export const ToggleWorkerPaidSchema = z.object({
     currentPaid: z.boolean(),
 })
 
+export const PayrollConfigSchema = z.object({
+    cycleStartDay: z.number().int().min(1).max(28, 'Day must be between 1 and 28'),
+})
+
 // ─── Attendance Schemas ───────────────────────────────────────────────────────
 
 const AttendanceRecordSchema = z.object({

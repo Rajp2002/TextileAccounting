@@ -4,7 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { calculateTotalPay, calculateDailyPay } from '@/lib/finance'
-import { ToggleWorkerPaidSchema, safeParse } from '@/lib/schemas'
+import { ToggleWorkerPaidSchema, PayrollConfigSchema, safeParse } from '@/lib/schemas'
 
 export async function toggleWorkerPaid(
     workerType: 'meter' | 'fixed',
@@ -164,4 +164,28 @@ export async function toggleWorkerPaid(
             reverted_advances: (data as any)?.reverted_advances ?? 0
         }
     }
+}
+
+export async function savePayrollConfig(cycleStartDay: number) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(PayrollConfigSchema, { cycleStartDay })
+    if ('error' in parsed) return { error: parsed.error }
+
+    const { error } = await supabase
+        .from('payroll_configs')
+        .upsert({
+            org_id: profile.org_id,
+            cycle_start_day: parsed.data.cycleStartDay,
+            updated_at: new Date().toISOString()
+        })
+
+    if (error) {
+        console.error('Failed to save payroll config:', error)
+        return { error: 'Failed to save payroll settings. Please try again.' }
+    }
+
+    revalidatePath('/owner/payroll')
+    return { success: true }
 }

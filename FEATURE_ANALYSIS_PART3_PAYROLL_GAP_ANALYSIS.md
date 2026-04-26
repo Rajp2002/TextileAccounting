@@ -57,7 +57,7 @@ When comparing the current Weavly implementation against the unpolished realitie
 - **Kapaat (Fines/Deductions)**: Penalties for damages, machine neglect, or excessive yarn wastage.
 - **Inam/Bhatta (Bonuses)**: Festival bonuses, production milestone rewards, or over-production stipends.
 **Current State**: Completely missing. Weavly only calculates "Meters × Snapshot = Gross" and deducts "Advances".
-**The Gap**: If an owner wants to dock ₹500 for a broken beam, or add a ₹1000 Diwali bonus, there is natively no way to achieve this. You cannot add a negative advance (`amount > 0` DB constraint blocks this).
+**The Gap**: If an owner wants to dock ₹500 for a broken reed, or add a ₹1000 Diwali bonus, there is natively no way to achieve this. You cannot add a negative advance (`amount > 0` DB constraint blocks this).
 
 ### 🛑 Critical Gap 3: Missing Statutory PF/ESIC Deductions
 **The Expectation**: Provident Fund (12% employee + 12% employer contribution) and Employee State Insurance (ESIC) are mandatory compliance deductions for registered factories above specific worker count thresholds.
@@ -104,7 +104,7 @@ When comparing the current Weavly implementation against the unpolished realitie
 3. **Supervisor Kharchi Wallet (Funded Float)**: 
    - Building a supervisor dispersal interface is not just an RBAC change; it's a new trust surface.
    - Implement a **Funding Model**: Owners must pre-load a weekly "float" (e.g., ₹10,000) for a supervisor. The supervisor can then only disperse Kharchi up to that float's limit.
-   - Enable strict per-supervisor audit logs showing exactly who distributed Kharchi to whom, preventing petty cash leakage.
+   - Enable strict per-supervisor audit logs showing exactly who distributed Kharchi to whom, preventing petty cash discrepancies.
 
 4. **Detailed Notification Ledger**: 
    - Refactor the `send-payslip` Edge Function and the PDF generation logic to perform a `JOIN` on `worker_advances` where `settlement_id = current_settlement`. 

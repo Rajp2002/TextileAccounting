@@ -15,6 +15,7 @@ export function generateMeterPayslip(data: {
     totalPay: number
     totalAdvances: number
     netPay: number
+    itemization?: any
 }) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' })
     const pageWidth = doc.internal.pageSize.getWidth()
@@ -98,9 +99,23 @@ export function generateMeterPayslip(data: {
 
     if (data.totalAdvances > 0) {
         doc.setTextColor(180, 100, 0)
+        doc.setFont('helvetica', 'bold')
         doc.text('Advance Deduction', 20, y)
         doc.text(`-${formatINR(Math.min(data.totalAdvances, data.totalPay))}`, pageWidth - 20, y, { align: 'right' })
         y += 6
+
+        const advances = data.itemization?.advances_recovered || []
+        if (advances.length > 0) {
+            doc.setFontSize(8)
+            doc.setFont('helvetica', 'normal')
+            advances.forEach((a: any) => {
+                const date = a.date ? new Date(a.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''
+                doc.text(`• ${date ? date + ': ' : ''}${a.label || 'Upaad'}`, 25, y)
+                doc.text(`- ${formatINR(a.recovered)}`, pageWidth - 25, y, { align: 'right' })
+                y += 4
+            })
+            doc.setFontSize(10)
+        }
         doc.setTextColor(0)
     }
 
@@ -139,6 +154,7 @@ export function generateFixedPayslip(data: {
     earnedPay: number
     totalAdvances: number
     netPay: number
+    itemization?: any
 }) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' })
     const pageWidth = doc.internal.pageSize.getWidth()
@@ -218,10 +234,23 @@ export function generateFixedPayslip(data: {
 
     if (data.totalAdvances > 0) {
         doc.setTextColor(180, 100, 0)
-        doc.setFont('helvetica', 'normal')
+        doc.setFont('helvetica', 'bold')
         doc.text('Advance Deduction', 20, y)
         doc.text(`-${formatINR(Math.min(data.totalAdvances, data.earnedPay))}`, pageWidth - 20, y, { align: 'right' })
         y += 6
+
+        const advances = data.itemization?.advances_recovered || []
+        if (advances.length > 0) {
+            doc.setFontSize(8)
+            doc.setFont('helvetica', 'normal')
+            advances.forEach((a: any) => {
+                const date = a.date ? new Date(a.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''
+                doc.text(`• ${date ? date + ': ' : ''}${a.label || 'Upaad'}`, 25, y)
+                doc.text(`- ${formatINR(a.recovered)}`, pageWidth - 25, y, { align: 'right' })
+                y += 4
+            })
+            doc.setFontSize(10)
+        }
         doc.setTextColor(0)
     }
 

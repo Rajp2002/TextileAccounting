@@ -105,7 +105,12 @@ Deno.serve(async (req) => {
     if (payload.advances_recovered?.length > 0) {
       detailMessage += `*Advance Recovered:*\n`;
       payload.advances_recovered.forEach((a: any) => {
-        detailMessage += `• ${a.label || 'Upaad'}: ₹${formatInr(a.recovered)}`;
+        // Format date as "15 Apr"
+        const dateStr = a.date 
+          ? new Date(a.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) 
+          : "";
+        
+        detailMessage += `• ${dateStr ? dateStr + ': ' : ''}${a.label || 'Upaad'}: ₹${formatInr(a.recovered)}`;
         if (a.carried_forward > 0) {
           detailMessage += ` (Remaining: ₹${formatInr(a.carried_forward)})`;
         }
@@ -214,11 +219,6 @@ Deno.serve(async (req) => {
       }),
       { status: 200 },
     );
-  } catch (err) {
-    console.error("Error in send-payslip:", err);
-    return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
-  }
-});
   } catch (err) {
     console.error("Error in send-payslip:", err);
     return new Response(JSON.stringify({ error: String(err) }), { status: 500 });

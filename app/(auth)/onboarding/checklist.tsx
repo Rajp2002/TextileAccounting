@@ -8,13 +8,14 @@ import { toast } from 'sonner'
 import {
     CheckCircle2, ArrowRight, Loader2,
     Cpu, Layers, Users, Plus, Trash2, Upload,
-    ChevronDown, ChevronUp, CreditCard, Sparkles, Star, Zap,
+    ChevronDown, ChevronUp, CreditCard, Sparkles, Star, Zap, Calendar,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { addMachine, saveWorkerWhatsApp } from '@/app/(dashboard)/owner/actions'
 import { addMeterWorker } from '@/app/(dashboard)/supervisor/actions'
+import { savePayrollConfig } from '@/app/(dashboard)/owner/payroll/actions'
 import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/actions/auth'
 import { TrialButton } from '@/components/billing/TrialButton'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
@@ -24,6 +25,7 @@ import { SubscribeButton } from '@/components/billing/SubscribeButton'
 interface OnboardingStatus {
     hasMachine: boolean
     hasWorker: boolean
+    hasPayrollConfig: boolean
     hasPlan: boolean
     isComplete: boolean
 }
@@ -351,7 +353,93 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
     )
 }
 
-// ─── Plan Selection Form ──────────────────────────────────────────────────────────
+// ─── Payroll Cycle Form ────────────────────────────────────────────────────────
+
+function PayrollCycleForm({ onDone }: { onDone: () => void }) {
+    const [day, setDay] = useState<number | null>(null)
+    const [saving, setSaving] = useState(false)
+
+    const handleSave = async () => {
+        if (!day) { toast.error('Please select a start day'); return }
+        setSaving(true)
+        const res = await savePayrollConfig(day)
+        setSaving(false)
+        if (res?.error) {
+            toast.error(res.error)
+        } else {
+            toast.success('Payroll cycle configured!')
+            onDone()
+        }
+    }
+
+    return (
+        <div className="space-y-6 pt-4 border-t border-gray-100">
+            <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 flex gap-3">
+                <Calendar className="h-5 w-5 text-violet-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                    <p className="text-sm font-semibold text-violet-900">Why does this matter?</p>
+                    <p className="text-xs text-violet-700 leading-relaxed">
+                        This defines your monthly payroll period. For example, if you pick <span className="font-bold">15th</span>, 
+                        your payroll for March will run from <span className="font-bold italic">15th Feb to 14th March</span>.
+                    </p>
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                <Label className="text-xs text-gray-400 font-black uppercase tracking-widest">Select Cycle Start Day</Label>
+                <div className="grid grid-cols-7 gap-2">
+                    {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+                        <button
+                            key={d}
+                            type="button"
+                            onClick={() => setDay(d)}
+                            className={cn(
+                                "h-10 rounded-lg text-sm font-bold transition-all border",
+                                day === d 
+                                    ? "bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-100 scale-105" 
+                                    : "bg-white border-gray-200 text-gray-600 hover:border-violet-300 hover:bg-violet-50/50"
+                            )}
+                        >
+                            {d}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+                <p className="text-[10px] text-gray-400 font-medium uppercase tracking-tight text-center">Common Settings</p>
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setDay(15)}
+                        className="flex-1 py-2.5 rounded-xl border border-dashed border-violet-300 bg-violet-50/30 text-violet-700 text-xs font-bold hover:bg-violet-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Surat Style (15th)
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setDay(1)}
+                        className="flex-1 py-2.5 rounded-xl border border-dashed border-gray-300 bg-gray-50/30 text-gray-700 text-xs font-bold hover:bg-gray-50 transition-colors"
+                    >
+                        Standard (1st)
+                    </button>
+                </div>
+            </div>
+
+            <Button 
+                onClick={handleSave} 
+                disabled={saving || !day}
+                className="w-full bg-violet-600 hover:bg-violet-700 text-white h-12 font-black uppercase tracking-widest shadow-lg shadow-violet-100"
+            >
+                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : 'Save Payroll Config'}
+            </Button>
+        </div>
+    )
+}
+
+ // ─── Plan Selection Form ──────────────────────────────────────────────────────────
+ 
 
 const BASE_PLAN_ID    = process.env.NEXT_PUBLIC_RAZORPAY_PLAN_ID_BASE    ?? ''
 const PREMIUM_PLAN_ID = process.env.NEXT_PUBLIC_RAZORPAY_PLAN_ID_PREMIUM ?? ''
@@ -459,8 +547,6 @@ function PlanSelectionForm({ onDone }: { onDone: () => void }) {
     )
 }
 
-// ─── Step Card ───────────────────────────────────────────────────────────────────
-
 const STEPS = [
     {
         key: 'hasMachine' as keyof OnboardingStatus,
@@ -477,6 +563,14 @@ const STEPS = [
         description: 'Piece-rate workers tracked for production and payroll.',
         accentColor: 'emerald',
         form: WorkerForm,
+    },
+    {
+        key: 'hasPayrollConfig' as keyof OnboardingStatus,
+        icon: Calendar,
+        title: 'Set your pay cycle',
+        description: 'Define the monthly start day for payroll calculations (Standard or Surat-style).',
+        accentColor: 'violet',
+        form: PayrollCycleForm,
     },
     {
         key: 'hasPlan' as keyof OnboardingStatus,
@@ -499,8 +593,8 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
     const [refreshing, setRefreshing] = useState(false)
     const [completing, setCompleting] = useState(false)
 
-    const completedCount = [status.hasMachine, status.hasWorker, status.hasPlan].filter(Boolean).length
-    const progressPct = (completedCount / 3) * 100
+    const completedCount = [status.hasMachine, status.hasWorker, status.hasPayrollConfig, status.hasPlan].filter(Boolean).length
+    const progressPct = (completedCount / 4) * 100
 
     const refresh = async () => {
         setRefreshing(true)
@@ -525,7 +619,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
         // blank-page issue. Local state is sufficient: each form only calls
         // this after its own save succeeds, so we know that step is complete.
         const newStatus = { ...status, [key]: true }
-        newStatus.isComplete = newStatus.hasMachine && newStatus.hasWorker && newStatus.hasPlan
+        newStatus.isComplete = newStatus.hasMachine && newStatus.hasWorker && newStatus.hasPayrollConfig && newStatus.hasPlan
         setStatus(newStatus)
         if (newStatus.isComplete) {
             toast.success('All done! 🎉 Click "Go to dashboard" to continue.')
@@ -586,7 +680,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                         <Layers className="h-7 w-7 text-amber-700" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Set up your factory</h1>
-                    <p className="text-gray-500 mt-1 text-sm">Complete these 3 steps to start tracking production</p>
+                    <p className="text-gray-500 mt-1 text-sm">Complete these 4 steps to start tracking production</p>
 
                     {/* Progress */}
                     <div className="mt-5 flex items-center gap-3">
@@ -599,7 +693,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                             />
                         </div>
                         <span className="text-sm font-semibold text-gray-700 tabular-nums w-12 text-right">
-                            {completedCount}/3
+                            {completedCount}/4
                         </span>
                     </div>
                 </div>

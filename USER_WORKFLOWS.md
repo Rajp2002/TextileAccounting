@@ -5,10 +5,11 @@
 ## Table of Contents
 1. [Owner — Dashboard & Estimator](#part-a-owner-analytics-dashboard)
 2. [Owner — Orders & Machines](#part-c-order-management)
-3. [Owner — Workers & Inventory](#part-e-piece-rate-meter-worker-management)
+3. [Owner — Workers](#part-e-piece-rate-meter-worker-management)
 4. [Owner — Payroll & Advances](#part-h-payroll-settlement-engine)
 5. [Owner — Settings, Access Codes & Audit](#part-k-access-code-system)
 6. [Supervisor — All Workflows](#overview-the-supervisors-daily-rhythm)
+7. [Admin — Compliance & DPDP 2026](#part-l-admin-compliance-dashboard-admin)
 
 ---
 
@@ -39,10 +40,9 @@ None. Data is loaded automatically for Surat Today (`Asia/Kolkata` timezone).
 | Section | Content |
 |---|---|
 | **Live Orders Panel** | One card per active order: party name, quality, meters produced vs target, progress %, Pace Index, forecast date, machine assignments |
-| **KPI Strip** | Today's meters, today's piece-rate wages, pro-rated fixed payroll, avg yield efficiency — with synchronization indicators and branded icons |
+| **KPI Strip** | Today's meters, today's piece-rate wages, pro-rated fixed payroll — with synchronization indicators and branded icons |
 | **Production Trend** | High-precision scaling bar graph showing the last 7 days of production history, synchronized with today's metrics |
 | **Worker Breakdown** | Accordion: each worker's machines, meters logged per machine, rate snapshot, row total in ₹ |
-| **Yield Alert Banner** | Appears if efficiency < 95%: shows ₹ loss estimate + link to failing batch |
 
 **Real-Time Resilience**
 - **Connection Status**: UX indicators ("Syncing...", "Live") show the health of the Supabase Realtime connection.
@@ -85,7 +85,7 @@ Disputes over payroll, customer queries about output on a specific date, or perf
 Owner clicks the machine assignment block on an order card and selects which active machines should be fulfilling that order.
 
 **Why It Exists**
-Production flow changes constantly — a machine finishes a beam, a new order comes in, a machine breaks down. The owner needs to re-route production without going to a separate screen.
+Production flow changes constantly — a new order comes in, a machine breaks down. The owner needs to re-route production without going to a separate screen.
 
 **Inputs Required**
 - `Order ID`: Derived from the card being edited (no manual input)
@@ -292,69 +292,68 @@ Owner can rename a template (fix a typo or update the label when rates change si
 
 ---
 
-### Workflow B-6: Convert Quote to Live Order
+### Workflow B-6: Manage Quote Lifecycle
 
 **What It Does**
-Once a quote is finalized (owner is satisfied with the cost/margin), one click converts it into a live order that immediately appears on the production dashboard and is available for machine assignment.
+Allows the owner to manage quotes through standard lifecycle stages (`Draft` → `Sent` → `Accepted` / `Rejected`). Quotes are persisted centrally in the Quotes History dashboard.
 
 **Why It Exists**
-This is the only way to create an order in Weavly. It enforces that every order has a costed blueprint, preventing blind production.
+Not all estimates are immediately converted to orders. Owners need to track quotes that are pending customer approval and seamlessly convert them to live orders once accepted, without losing the original costing context.
+
+**How It Functions**
+1. Owner generates an estimate.
+2. Owner clicks "Save Quote" → status `Draft` or "Mark as Sent" → status `Sent`.
+3. Quote is persisted to `estimator_quotes`.
+4. From the Quotes Dashboard, owner can transition state to `Accepted` or `Rejected`.
+5. Only `Accepted` quotes can be converted into Live Orders.
+
+---
+
+### Workflow B-7: Convert Accepted Quote to Live Order
+
+**What It Does**
+Once a quote is `Accepted` (owner is satisfied and customer confirmed), it is converted into a live order that immediately appears on the production dashboard.
 
 **Inputs Required**
 - `Party Name`: Who the order is for
-- `Quality Label`: Free-text fabric name (e.g. "60g Georgette")
-- `Warp Instruction`: Free-text for supervisors (e.g. "50/48 + 70/36")
+- `Quality Label`: Free-text fabric name
+- `Warp Instruction`: Free-text for supervisors
 - `Weft Instruction`: Free-text for supervisors
 - `Total Target Meters`: Order quantity
 - `Deadline`: Target completion date
-- Current estimate state (costs are snapshot-captured automatically)
 
 **Action Triggered**
 `convertQuoteToOrder(data)` (owner/estimator/actions.ts)
 
 **How It Functions**
-1. Owner clicks "Convert to Order."
+1. Owner clicks "Convert to Order" on an `Accepted` quote.
 2. Server action fires:
-   a. `saveEstimatorQuoteV3()` — saves full cost recipe snapshot to `estimator_quotes`.
-   b. Computes `workerRatePerM = Σ(picks) × perPickCostPaisa` — this becomes the wages rate for shift assignments.
-   c. Inserts into `orders` table with `status: 'active'`, `start_date: today`, and the computed `worker_rate_per_m`.
-   d. Links the quote to the order via `estimator_quotes.order_id`.
-3. Revalidates `/owner/orders` and `/owner/analytics` — order appears on dashboard instantly.
-
-**Data Written**
-```
-orders:
-  org_id, party_name, quality_label, warp_instruction, weft_instruction,
-  total_target_meters, start_date (today), deadline, status: 'active',
-  worker_rate_per_m (from quote calculation)
-
-estimator_quotes (snapshot):
-  Full warp_rows/weft_rows recipe, all cost parameters,
-  landed_cost_per_meter, quote_price_per_meter, intended_margin_percent,
-  order_id (linked back)
-```
+   a. Computes `workerRatePerM = Σ(picks) × perPickCostPaisa`.
+   b. Inserts into `orders` table with `status: 'active'`, `start_date: today`, and computed `worker_rate_per_m`.
+   c. Updates the existing `estimator_quotes` record with `order_id` link.
+3. Revalidates `/owner/orders` and `/owner/analytics`.
 
 **Value Derived**
-- Every live order has an immutable cost snapshot — actual vs. estimated comparison is always possible
-- The `worker_rate_per_m` flows to shift assignments so supervisors always see the correct weaver rate
-- Zero manual order entry — all data flows from the estimate
+- Every live order has an immutable cost snapshot.
+- The `worker_rate_per_m` flows to shift assignments.
+- Zero manual order entry — all data flows from the estimate.
 
 ---
 
-### Workflow B-7: Load Surat Quality Templates
+### Workflow B-7: Load Surat Estimator Templates
 
 **What It Does**
-First-time setup shortcut — owner clicks "Load Surat Templates" to instantly populate the quality library with 5 standard Surat fabric qualities (60g Georgette, Japan Satin, Cotton 40s, Micro Crepe, Dani Georgette).
+First-time setup shortcut — owner clicks "Load Surat Templates" to instantly populate the Estimator with 5 standard Surat fabric templates (60g Georgette, Japan Satin, Cotton 40s, Micro Crepe, Dani Georgette).
 
 **Inputs Required**
 None.
 
 **Action Triggered**
-`loadSuratQualityTemplates()` (owner/actions.ts)
+`loadSuratEstimatorTemplates()` (owner/actions.ts)
 
 **Value Derived**
 - Removes setup friction for new factories already producing standard Surat fabrics
-- Pre-populated target yields and sale prices that reflect market standards
+- Pre-populated fabric architectures that reflect market standards
 
 ---
 
@@ -541,6 +540,23 @@ A machine can only be on one order at a time (`current_order_id` is a single FK)
 
 ---
 
+### Workflow C-7: Dispatch Management (Batching & Tracking)
+
+**What It Does**
+Owner can group completed production into dispatches linked directly to the parent order. Generates secure, public-facing tracking portals for clients.
+
+**Why It Exists**
+Connects production output to actual delivery. Clients need real-time tracking of their batches without having full platform access. Strict RLS ensures isolation of tenant dispatch data.
+
+**How It Functions**
+1. Owner opens Dispatch Management for a specific order.
+2. Creates a Dispatch Batch (e.g., "Batch 1 - 2000m").
+3. System generates a secure `tracking_token`.
+4. A public portal (`/track/[token]`) is instantiated, and a QR code is generated.
+5. Clients scan the QR code to track the status.
+
+---
+
 ## PART D: Machine Fleet Management (`/owner/machines`)
 
 The Owner has full administrative control over the machine fleet — the atomic units of the factory floor. Every action triggers an audit trail entry.
@@ -699,7 +715,7 @@ While supervisors typically handle shift assignments, the owner may need to set 
 ### Workflow D-6: View Machine Fleet Summary
 
 **What It Does**
-Owner sees all machines with their current status, assigned beam, current order, and workers per shift — a complete operational snapshot of the entire fleet.
+Owner sees all machines with their current status, current order, and workers per shift — a complete operational snapshot of the entire fleet.
 
 **Inputs Required**
 None.
@@ -710,14 +726,13 @@ None.
 |---|---|
 | Machine Name | `machines.name` |
 | Status Badge | `machines.status` (active/inactive) |
-| Current Beam | Active `yarn_batch` with `current_machine_id = this machine` |
 | Current Order | Order linked via `machines.current_order_id` |
 | Day Shift Worker | `machine_assignments WHERE shift = 'day'` |
 | Night Shift Worker | `machine_assignments WHERE shift = 'night'` |
 
 **Value Derived**
 - Instant overview of which machine is producing what, for which order, with which workers
-- Spot idle machines (no beam, no order, no worker) that need to be activated
+- Spot idle machines (no order, no worker) that need to be activated
 
 ---
 
@@ -986,201 +1001,7 @@ Owner only (unlike piece-rate worker deletion which is supervisor-initiated).
 
 ---
 
-## PART G: Quality Library Management
 
-A **Quality** is a fabric specification that defines the economic parameters for a batch of yarn and associated production. Qualities link the Estimator output to the inventory/beam system.
-
----
-
-### Workflow G-1: Add a Quality Definition
-
-**What It Does**
-Owner manually creates a quality record defining the fabric's target yield, sale price, and default worker rate per meter.
-
-**Why It Exists**
-Qualities are the bridge between the costing engine and the production floor. Every yarn batch and production log references a quality to determine yield expectations and wage rates.
-
-**Who Can Perform**
-Owner only.
-
-**Inputs Required**
-
-| Field | Type | Notes |
-|---|---|---|
-| `Name` | Text | e.g., "60g Georgette", "Japan Satin" |
-| `Target Yield` | Decimal | Expected meters per kg of yarn |
-| `Avg Sale Price per Meter (₹)` | Decimal | Used for yield loss ₹ estimation |
-| `Default Worker Rate per Meter (₹)` | Decimal | Base wage rate if not overridden by order |
-
-**Action Triggered**
-`addQuality(data)` (owner/actions.ts)
-
-**Validation**
-`QualitySchema` (Zod): all fields required, numeric fields must be positive.
-
-**Value Derived**
-- Provides the yield target that the Yield Alert system measures actual production against
-- Default worker rate applies to yarn batches if no order-specific rate is set
-
----
-
-### Workflow G-2: Edit a Quality Definition
-
-**What It Does**
-Owner updates a quality's parameters — typically when the fabric spec changes or market sale prices shift.
-
-**Important Behaviour**
-Editing `default_worker_rate_per_m` only affects **future** production logs. All existing production logs have their rate frozen in `worker_rate_snapshot` at time of entry — past wages are never retroactively recalculated.
-
-**Action Triggered**
-`updateQuality(id, data)` (owner/actions.ts)
-
-**Validation**
-Same `QualitySchema` as add. UUID validation on quality ID.
-
----
-
-### Workflow G-3: Delete a Quality Definition
-
-**What It Does**
-Owner removes a quality definition that is no longer in use.
-
-**Guard Condition**
-Server first checks if any `yarn_batches` with `status = 'active'` reference this quality. If yes, deletion is **blocked** with the error: *"Quality in use by active batches."*
-
-If active batches reference it, the owner must first close/consume those batches, then delete the quality.
-
-**Action Triggered**
-`deleteQuality(id)` (owner/actions.ts)
-
-**FK Handling**
-If consumed (historical) batches or past production logs reference the quality, the server returns a descriptive FK error: *"Cannot delete quality because it is referenced by past production records or consumed batches."* In this case, the quality should be left in place (historical data integrity).
-
----
-
-### Workflow G-4: Add Yarn Beam (Batch)
-
-**What It Does**
-Registers a new yarn beam (also called a batch) that has arrived on the factory floor and is ready to be loaded onto a loom.
-
-**Who Can Perform**
-Owner or Supervisor (typically done by Supervisor at floor level).
-
-**Inputs Required**
-
-| Field | Type | Notes |
-|---|---|---|
-| `Name` | Text | Unique beam identifier (e.g., "Beam A-24", "Batch 05") |
-| `Quality ID` | UUID | Which fabric quality this yarn produces — from dropdown |
-| `Total Weight (kg)` | Decimal | Required for yield audit math |
-
-**Action Triggered**
-`addYarnBatch(data)` (owner/actions.ts — shared with supervisor)
-
-**How It Functions**
-`INSERT INTO yarn_batches (name, quality_id, total_weight_kg, org_id, status: 'active')`
-
-**Downstream Effects**
-- Batch appears in the supervisor's "Start Beam" picker (available to link to a machine)
-- Batch is in `Unlinked` state until a supervisor calls `startBeam()`
-
-**Value Derived**
-- Creates the unit of inventory that all production is measured against
-- Enables the yield audit: actual meters ÷ yarn consumed vs. target yield from the quality definition
-
----
-
-### Workflow G-5: Close / Consume a Yarn Beam
-
-**What It Does**
-Marks a yarn beam as fully consumed when the loom has finished weaving it. Records the leftover yarn weight to calculate actual yield.
-
-**Who Can Perform**
-Owner or Supervisor.
-
-**Inputs Required**
-- `Batch ID`: From the machine's active beam panel
-- `Leftover Weight (kg)`: How much yarn was left when the beam was removed (default: 0)
-
-**Action Triggered**
-`closeYarnBatch(batchId, leftoverWeightKg)` (owner/actions.ts)
-
-**How It Functions**
-1. Supervisor taps "Mark Consumed" on a machine's active beam.
-2. Optional: enters leftover weight in kg.
-3. Server: `UPDATE yarn_batches SET status = 'consumed', current_machine_id = null, leftover_weight_kg = X WHERE id = batchId AND org_id = profile.org_id`.
-4. Machine is now free of this beam — supervisor can attach the next beam.
-
-**Yield Calculation (Automated)**
-```
-Net Yarn Used = total_weight_kg - leftover_weight_kg
-Total Meters Produced = SUM(production_logs.meters WHERE yarn_batch_id = this batch)
-Actual Yield = Total Meters / Net Yarn Used
-
-Target Yield = qualities.target_yield (from the batch's quality)
-
-Variance = Actual Yield - Target Yield
-```
-
-If variance < −5%, a leakage alert is flagged in the audit system.
-
-**Value Derived**
-- Closes the loop on yarn consumption — every kg of yarn is accounted for
-- Generates the yield efficiency metric used in loss estimates on the dashboard
-
----
-
-### Workflow G-6: Un-Consume a Yarn Beam (Requires Access Code)
-
-**What It Does**
-Restores a consumed beam back to `active` status. Used when a batch was closed prematurely or by error.
-
-**Who Can Perform**
-Supervisor or Owner — but **always requires an access code**.
-
-**Inputs Required**
-- `Batch ID`: From consumed batches list
-- `Access Code`: From owner
-
-**Action Triggered**
-`unconsumeBatchWithCode(batchId, accessCode)` (supervisor/actions.ts)
-
-**How It Functions**
-1. Access code is validated and consumed.
-2. Service role client used (bypasses RLS for status update).
-3. `UPDATE yarn_batches SET status = 'active', audit_status = 'pending', leakage_alert = false WHERE id = batchId AND org_id = profile.org_id`.
-4. Beam reappears in the active pool, ready for supervisor to re-link to a machine.
-
-**Value Derived**
-- Corrects premature batch closes without needing to create a new batch record
-- Access code protection prevents casual reversal — all un-consumptions are owner-approved and audited
-
----
-
-### Workflow G-7: Settle Batch Audit
-
-**What It Does**
-Owner reviews a flagged yield leakage alert on a consumed batch and either settles it (acknowledges and closes the flag) or dismisses it (rejects the alert as a data anomaly).
-
-**Who Can Perform**
-Owner only.
-
-**Inputs Required**
-- `Batch ID`: From inventory audit list
-- `Decision`: `settled` or `dismissed`
-
-**Action Triggered**
-`settleBatchAudit(batchId, status)` (owner/actions.ts) → calls `settle_batch_audit` PostgreSQL RPC
-
-**Value Derived**
-- Creates a formal owner sign-off on inventory discrepancies
-- Dismissed alerts distinguish known anomalies from actual losses
-- Audit log records the owner's decision for compliance
-
----
-
-
----
 
 ## PART H: Payroll Settlement Engine (`/owner/payroll`)
 
@@ -1781,7 +1602,7 @@ Owner only.
 ### Workflow L-1: Set Up Owner WhatsApp Opt-In
 
 **What It Does**
-Owner registers their WhatsApp number and opts in to receive automated daily briefs, access codes, pace alerts, and yield alerts.
+Owner registers their WhatsApp number and opts in to receive automated daily briefs, access codes, and pace alerts.
 
 **Why It Exists**
 The entire WhatsApp notification pipeline is gated on a consent opt-in. Without this, no automated messages are sent to the owner — privacy by default.
@@ -1802,7 +1623,6 @@ After opting in, the owner begins receiving:
 - Daily production brief at 20:00 IST (via `pg_cron` → `send-daily-brief`)
 - Access codes on demand (via `generateAccessCode` / `requestAccessCode`)
 - Pace alerts when orders fall behind (via `send-deadline-alert`)
-- Yield alerts on batch closure with leakage (via `send-yield-alert`)
 - Monthly summary (via `monthly-brief`)
 
 **Value Derived**
@@ -1824,7 +1644,7 @@ Payslips and advance receipts are legal financial documents. The owner needs to 
 | Field | Details |
 |---|---|
 | `recipient_phone` | Which number the message went to |
-| `notification_type` | `daily_brief`, `payslip`, `advance_receipt`, `access_code`, `deadline_alert`, `yield_alert` |
+| `notification_type` | `daily_brief`, `payslip`, `advance_receipt`, `access_code`, `deadline_alert` |
 | `template_name` | Interakt template ID used |
 | `status` | `sent` / `delivered` / `read` / `failed` |
 | `sent_at` | Timestamp |
@@ -1863,7 +1683,7 @@ Owner only. Supervisors have no access to the audit trail.
 |---|---|
 | Timestamp | Date + time (IST display, UTC stored) |
 | Action | `INSERT` / `UPDATE` / `DELETE` (colour-coded badge) |
-| Category | `HR & Payroll` / `Production & Orders` / `Inventory & Qualities` / `Settings & Profiles` / `Estimator & Quotes` |
+| Category | `HR & Payroll` / `Production & Orders` / `Settings & Profiles` / `Estimator & Quotes` |
 | Entity | Human-readable table name + truncated record ID |
 | Actor | User's full name + role (owner/supervisor) |
 | Auth | 🛡️ badge if an access code was consumed for this action |
@@ -1875,7 +1695,6 @@ Owner only. Supervisors have no access to the audit trail.
 |---|---|
 | HR & Payroll | `attendance`, `workers`, `fixed_workers`, `payroll_settlements`, `worker_advances`, `payroll_configs` |
 | Production & Orders | `production_logs`, `machines`, `machine_assignments`, `orders` |
-| Inventory | `yarn_batches`, `qualities` |
 | Settings | `profiles` |
 | Estimator | `factory_cost_profile`, `estimator_templates`, `estimator_quotes` |
 
@@ -1895,7 +1714,7 @@ Owner applies filters to narrow the audit log to specific categories, action typ
 
 | Filter | Values | How It Works |
 |---|---|---|
-| Category | All / HR & Payroll / Production & Orders / Inventory / Settings / Estimator | Filters `table_name IN (category's tables)` |
+| Category | All / HR & Payroll / Production & Orders / Settings / Estimator | Filters `table_name IN (category's tables)` |
 | Action | All / INSERT / UPDATE / DELETE | Filters `action = value` |
 | Date | Calendar date picker (up to today) | Filters `changed_at BETWEEN day_start AND day_end` |
 | Clear All | Resets all filters | Returns to full log |
@@ -1970,7 +1789,6 @@ A supervisor's day in Weavly follows a predictable loop:
 ```
 Morning (Shift Start)
   → Set up shift assignments (who operates which machine, for which order, at what rate)
-  → Link yarn beams to machines if new beams are loaded
   → Link orders to machines if order routing changed
 
 During the Day
@@ -1978,11 +1796,8 @@ During the Day
 
 End of Shift
   → Log meters produced on each machine (bulk production entry)
-  → Perform shift handover (clear worker from machine slots)
-  → If beam is exhausted → mark it consumed
-
-Occasionally
-  → Add new workers as the team grows
+  → Take meter readings from machines for all workers in the current shift
+  → Enter production logs into the system (Bulk Entry)
   → Handle access-code actions (delete machine/worker with owner approval)
 ```
 
@@ -2110,7 +1925,7 @@ Production logging is the most critical daily action in the system. This is wher
 ### Workflow O-1: View Today's Production Entry Screen
 
 **What It Does**
-Loads the production entry interface showing all active machines with their current assigned worker (from today's shift assignment), current beam, current order, and any meters already logged for this shift.
+Loads the production entry interface showing all active machines with their current assigned worker (from today's shift assignment), current order, and any meters already logged for this shift.
 
 **Inputs Required**
 None — all data auto-loaded from today's shift assignments and active machine state.
@@ -2122,7 +1937,6 @@ None — all data auto-loaded from today's shift assignments and active machine 
 | Machine Name | `machines.name` |
 | Worker Name | `shift_assignments.worker_id` → `workers.name` |
 | Current Order | `shift_assignments.order_id` → `orders.quality_label + party_name` |
-| Current Beam | `yarn_batches WHERE current_machine_id = this machine` |
 | Rate per Meter | `shift_assignments.rate_per_m` |
 | Already Logged | `SUM(production_logs.meters)` for this machine, today, this shift |
 | Meter Input | Number field for new entry |
@@ -2381,51 +2195,11 @@ Supervisor or Owner.
 
 ## PART R: Machine Management (`/supervisor/machines`)
 
-The supervisor's machine view is a **floor-level operational interface** — not the administrative fleet panel (that's the owner's view). Focus is on linking beams and orders, and managing shift assignments.
+The supervisor's machine view is a **floor-level operational interface** — not the administrative fleet panel (that's the owner's view). Focus is on linking orders, and managing shift assignments.
 
 ---
 
-### Workflow R-1: Start a Beam on a Machine ("Load Beam")
 
-**What It Does**
-Supervisor links an active (unloaded) yarn beam to a specific machine, marking it as the active source of yarn for that loom. All subsequent production logs on that machine will be attributed to this beam for yield tracking.
-
-**Why It Exists**
-The beam assignment determines which quality's yield is being tracked, and provides the `quality_id` chain that sets the yield target. Without this, production logs cannot be matched to inventory.
-
-**Inputs Required**
-- `Batch ID`: Selected from the list of active (unlinked) beams
-- `Machine ID`: From the machine card
-
-**Action Triggered**
-`startBeam(batchId, machineId)` (supervisor/actions.ts)
-
-**How It Functions**
-```
-1. Validate both UUIDs (batchId, machineId)
-
-2. Fetch batch data to get: quality_id + qualities.default_worker_rate_per_m
-
-3. Service role client used (audit actor set via set_actor_for_audit)
-
-4. Safety unlink: any OTHER batch currently on this machine → current_machine_id = null
-   (ensures one beam per machine at all times)
-
-5. Link the new batch: UPDATE yarn_batches SET current_machine_id = machineId
-   WHERE id = batchId AND org_id = profile.org_id
-```
-
-**Re-Assignment Confirmation**
-If the selected batch is already loaded on another machine (`current_machine_id ≠ null AND ≠ this machine`), the UI shows a confirmation modal:
-*"This beam is already on Machine X. Moving it here will unload it from Machine X. Proceed?"*
-
-On confirm: `startBeam()` proceeds — old machine loses the beam automatically.
-
-**Value Derived**
-- Beam→machine link is the anchor for yield audit math
-- Re-assignment protection prevents accidental routing of the wrong yarn to the wrong order
-
----
 
 ### Workflow R-2: Link an Order to a Machine (Supervisor)
 
@@ -2493,31 +2267,7 @@ The machine slot is now empty — ready for the next shift's supervisor to assig
 
 ---
 
-## PART S: Beam Lifecycle Management (Supervisor Floor View)
 
----
-
-### Workflow S-1: Mark a Beam as Consumed
-
-*(Same as Workflow G-5 — available to both Supervisor and Owner)*
-
-**Action Triggered**: `closeYarnBatch(batchId, leftoverWeightKg)` (owner/actions.ts — shared)
-
-**Inputs**: Batch ID (from machine's active beam), Leftover Weight in kg (optional, default 0)
-
-**When It Happens**: When a loom runs out of yarn on the current beam. Supervisor clicks "Mark Consumed" before loading the next beam.
-
----
-
-### Workflow S-2: Un-Consume a Batch (Requires Access Code)
-
-*(Same as Workflow G-6 — available to Supervisor with access code)*
-
-**Action Triggered**: `unconsumeBatchWithCode(batchId, accessCode)` (supervisor/actions.ts)
-
-**When It Happens**: Batch was marked consumed by mistake. Requires owner approval to restore to active state.
-
----
 
 ## Summary: Supervisor vs Owner Action Comparison
 
@@ -2544,11 +2294,6 @@ The machine slot is now empty — ready for the next shift's supervisor to assig
 | Toggle Worker Active | ✅ | ✅ |
 | Delete Piece-Rate Worker | ✅ (with code) | ❌ (supervisor-only route) |
 | Delete Fixed Worker | ❌ | ✅ (with own code) |
-| Start Beam / Link Beam | ✅ | ✅ |
-| Close / Consume Beam | ✅ | ✅ |
-| Un-Consume Beam | ✅ (with code) | ✅ (with code) |
-| Add Yarn Batch | ✅ | ✅ |
-| Manage Qualities | ❌ | ✅ |
 | Record Advance (Upaad) | ❌ | ✅ |
 | View Worker Advance Balance | ✅ (read) | ✅ |
 | Settle Payroll | ❌ | ✅ |
@@ -2559,5 +2304,43 @@ The machine slot is now empty — ready for the next shift's supervisor to assig
 
 ---
 
-*This completes the 6-part Weavly User Workflows & Actions documentation series.*
+---
+
+## PART L: Admin & Compliance Dashboard (`/admin`)
+
+The Admin Dashboard provides platform-wide oversight and tooling specifically for compliance, data privacy, and overarching system integrity, isolated from daily factory operations.
+
+---
+
+### Workflow L-1: Manage DPDP 2026 Notice Registry
+
+**What It Does**
+Admins maintain the Notice Registry outlining how user data is utilized, establishing compliance with the Digital Personal Data Protection Act 2026.
+
+**Why It Exists**
+Legal requirement. All workers and owners must have access to clear, auditable notices regarding data processing.
+
+**How It Functions**
+1. Admins log into `/admin/compliance`.
+2. Can draft, publish, and version data privacy notices.
+3. Users across all orgs are bound by the published active notices.
+
+---
+
+### Workflow L-2: Oversee Grievance Redressal Policy
+
+**What It Does**
+Admins manage and resolve reported data privacy or operational grievances submitted by users.
+
+**Why It Exists**
+Part of the mandated Grievance Redressal mechanism required for 2026 labor and data compliance.
+
+**How It Functions**
+1. Users submit grievances through their profile/settings.
+2. Admins review tickets centrally and coordinate resolutions.
+3. An immutable audit trail is maintained for each grievance resolution.
+
+---
+
+*This completes the 7-part Weavly User Workflows & Actions documentation series.*
 

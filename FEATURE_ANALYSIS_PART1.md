@@ -1,6 +1,6 @@
 # Weavly — Comprehensive Feature Analysis (Part 1 of 2)
 
-> **Coverage**: Owner Dashboard & Analytics · Machine Management · Lean Beam Tracking · Orders
+> **Coverage**: Owner Dashboard & Analytics · Machine Management · Orders
 >
 > **Part 2 covers**: Production Logging · Payroll & Advances · Access Code Guard · Audit Trail · Estimator · WhatsApp Notifications · i18n & Transliteration
 
@@ -46,13 +46,8 @@ Supervisor logs meters on /supervisor/production
 | **Today's Meters** | `SUM(production_logs.meters)` where date = Surat today |
 | **Today's Piece-rate Wages** | `SUM(meters × worker_rate_snapshot)` for today |
 | **Pro-rated Fixed Payroll** | `SUM(monthly_salary) ÷ days_in_month` for all active fixed workers |
-| **Avg Yield Efficiency** | `SUM(actual_meters) ÷ SUM(expected_meters)` × 100 across active batches |
 
-#### Yield Leakage Alert
-- If avg efficiency < 95%, a red **Loss Alert** banner appears:
-  - `Monetary Loss = (Expected m − Actual m) × avg_sale_price_per_m`
-  - Displays total ₹ estimate of profit walking out the door
-  - Clicking it navigates to Inventory for the batch-level breakdown
+
 
 #### Worker Breakdown Accordion
 - Each piece-rate worker has an expandable row showing:
@@ -73,7 +68,6 @@ Supervisor logs meters on /supervisor/production
 | Connects To | How |
 |---|---|
 | **Machine Management** | Owner assigns machines to orders directly from dashboard cards |
-| **Inventory** | Loss Alert links directly to the failing batch in Inventory |
 | **Payroll** | Today's wages on the KPI strip are a preview of what the Payroll module will settle |
 | **Orders** | Order cards display data from the `orders` table and `orders_with_progress` view |
 | **Production Logs** | Every log entry made by supervisor is reflected here in real-time |
@@ -84,13 +78,13 @@ Supervisor logs meters on /supervisor/production
 ## Feature 2: Machine Management (`/owner/machines` & `/supervisor/machines`)
 
 ### What It Does
-Machines are the atomic unit of production. This feature lets both Owners and Supervisors manage the machine fleet — creating, renaming, toggling status, assigning workers per shift, linking yarn beams and orders, and deleting machines.
+Machines are the atomic unit of production. This feature lets both Owners and Supervisors manage the machine fleet — creating, renaming, toggling status, assigning workers per shift, linking orders, and deleting machines.
 
 The **Owner view** is the administrative control panel. The **Supervisor view** is the floor-level operational interface.
 
 ### Who Uses It
 - **Owner**: Full CRUD — add, rename, deactivate, delete (with access code), assign workers, link orders
-- **Supervisor**: Read + operational actions — start beam, link order, perform shift handover, request deletion (requires owner access code)
+- **Supervisor**: Read + operational actions — link order, perform shift handover, request deletion (requires owner access code)
 
 ### Inputs & Validation
 
@@ -119,23 +113,9 @@ Each machine record tracks:
 - `name` — human label (e.g., "Machine 7")
 - `status` — `active` | `inactive`
 - `current_order_id` — FK to the order it is currently fulfilling
-- (Derived) `current_batch` — via `yarn_batches.current_machine_id`
 - `machine_assignments` — separate table: `{machine_id, worker_id, shift, org_id}`
 
-### Beam Linking (Start Beam)
-When a supervisor taps "Start Beam" on a machine:
-1. Server action `startBeam(batchId, machineId)` is called
-2. Any other batch currently on this machine has `current_machine_id` set to `null` first (safe unlink)
-3. The new batch's `current_machine_id` is set to this machine
-4. **Consequence**: All subsequent production logs for this machine are now associated to this batch and its quality's `worker_rate_snapshot`
-5. If the batch was already loaded on another machine, the supervisor sees a **confirmation modal** ("This batch is already on Machine X — proceed?") before confirming the switch
 
-### Batch Re-Assignment Confirmation Modal
-- **Trigger**: Supervisor selects a batch that already has `current_machine_id` set (not null, and not this machine)
-- **Copy**: Shows current machine name and asks for explicit confirmation
-- **On Confirm**: `startBeam()` proceeds; old machine loses the batch
-- **On Cancel**: Nothing changes
-- **Purpose**: Prevents accidental production re-routes which would corrupt yield tracking
 
 ### Worker Assignment per Shift
 - Each machine has **Day** and **Night** shift slots
@@ -156,7 +136,7 @@ When a supervisor taps "Start Beam" on a machine:
 
 ### UX Workflow — Owner View
 1. Owner navigates to `/owner/machines`
-2. Sees full fleet with status badges, current beam name, current order, assigned workers per shift
+2. Sees full fleet with status badges, current order, assigned workers per shift
 3. Clicks "+ Add Machine" → inline form → saves → machine appears instantly (optimistic)
 4. Clicks rename → inline editable field
 5. Clicks "Deactivate" → machine greys out immediately (optimistic toggle)
@@ -164,16 +144,14 @@ When a supervisor taps "Start Beam" on a machine:
 
 ### UX Workflow — Supervisor View
 1. Supervisor navigates to `/supervisor/machines` (or the Unified Dashboard)
-2. Sees all **active** machines with their current beam and order
-3. Taps "Start Beam" on a machine → picks from available batch list → confirms (modal if re-assignment) → beam linked
-4. Taps worker assignment slot → picks worker from list of active workers for this shift
-5. End of shift: taps "Handover" → clears the slot for the next shift's worker
+2. Sees all **active** machines with their current order
+3. Taps worker assignment slot → picks worker from list of active workers for this shift
+4. End of shift: taps "Handover" → clears the slot for the next shift's worker
 
 ### Connections to Other Features
 | Connects To | How |
 |---|---|
 | **Production Logging** | Machine is referenced in every log entry; must be active to appear in log UI |
-| **Inventory** | Batch is linked to machine via `current_machine_id`; determines which batch meters are counted toward |
 | **Orders** | `current_order_id` on machine determines which order the production meters are attributed to |
 | **Payroll** | Worker assignment determines which worker gets paid for logs on this machine |
 | **Access Code Guard** | Deletion requires a valid access code from the owner |
@@ -181,45 +159,7 @@ When a supervisor taps "Start Beam" on a machine:
 
 ---
 
-## Feature 3: Lean Beam Tracking (Floor-Native)
-
-### What It Does
-Weavly uses a streamlined **Beam Tracking** system integrated directly into the factory floor. Supervisors manage yarn supply inline while logging production, ensuring real-time yield tracking without a complex separate inventory module.
-
-### Who Uses It
-- **Supervisor**: Primary user. Adds new beams as they arrive on the floor and links them to machines.
-- **Owner**: Read-only oversight via the Audit Log.
-
-### Inputs (Add Beam Modal)
-Supervisors access this modal directly from the Production Entry screen.
-
-| Field | Type | Validation |
-|---|---|---|
-| `name` | Text | Unique identifier for the beam/batch |
-| `quality_id` | UUID | Must exist in org's qualities (auto-created via Estimator) |
-| `total_weight_kg` | Decimal | Required for yield audit |
-
-### The "Start Beam" Lifecycle
-1. **Unlinked State**: A beam exists in the "active" pool but is not yet assigned to a machine.
-2. **Linked State**: Supervisor calls `startBeam(batchId, machineId)`. This marks the beam as `current` on that specific loom.
-3. **Consumption**: When the beam runs out, the supervisor clicks "Mark Consumed", enters the `leftover_weight_kg`, and the beam is archived to the `consumed` state.
-
-### Yield Audit (Automated)
-The system calculates real-time yield:
-`Actual Yield = Total Meters Produced on Beam / (Total Weight - Leftover Weight)`
-- This is audited against the **Target Yield** defined in the original Estimator Quote.
-- Significant deviations are flagged in the Owner Dashboard and Audit Log.
-
-### Connections to Other Features
-| Connects To | How |
-|---|---|
-| **Machine Management** | Machines are linked to active yarn beams |
-| **Production Logging** | Logs are tagged with the active `yarn_batch_id` for yield math |
-| **Owner Dashboard** | Yield performance is tracked centrally |
-| **Estimator** | Qualities used for beams are published from the Estimator |
-| **WhatsApp** | Batch closure with leakage fires `send-yield-alert` Edge Function |
-
-## Feature 4: Orders Management (`/owner/analytics` + order actions)
+## Feature 3: Orders Management (`/owner/analytics` + order actions)
 
 Orders represent customer commitments derived from profitable quotes. Every order in Weavly must originate from the Estimator to ensure mathematical profit protection. The orders system tracks production progress in real-time, calculates pace/forecast, and allows machine assignment directly from the dashboard.
 
@@ -232,7 +172,7 @@ Orders represent customer commitments derived from profitable quotes. Every orde
 | Field | Type | Validation |
 |---|---|---|
 | `party_name` | Text | Required, non-empty |
-| `quality_id` | UUID | Must exist in org's qualities |
+| `quote_id` | UUID | Must be an accepted quote from the Estimator |
 | `total_target_meters` | Decimal | Positive number |
 | `start_date` | Date | Valid date string |
 | `deadline` | Date | Must be ≥ start_date |
@@ -300,15 +240,22 @@ Each order card renders:
 └─────────────────────────────────────────────┘
 ```
 
+### Dispatch Tracking & Batching
+Orders now integrate an advanced Dispatch Management module:
+- **Batching**: Produced meters can be segmented into distinct dispatch batches.
+- **Secure Portal**: For each batch, a cryptographically secure `tracking_token` is generated, spawning a public URL (`/track/[token]`).
+- **QR Codes**: Easily scannable QR codes are provided to simplify delivery logistics.
+- **Strict RLS Isolation**: Cross-tenant data leakage is prevented via robust Row Level Security rules, ensuring only authorized org users can see or manage their dispatches.
+
 ### Connections to Other Features
 | Connects To | How |
 |---|---|
 | **Machine Management** | Machines are assigned `current_order_id`; determines production attribution |
 | **Production Logging** | Logs reference `current_order_id`; meters accumulate toward order progress |
-| **Inventory** | Quality is shared — same `quality_id` used by order and yarn batches |
 | **Owner Dashboard** | Orders are the primary content of the analytics dashboard |
 | **WhatsApp** | Deadline risk triggers `send-deadline-alert` with cooldown protection |
 | **Estimator** | Finalized estimates can convert to orders with one click |
+| **Public Track Portal** | Dispatch batches generate tracking links to share delivery progress with clients |
 
 ---
 

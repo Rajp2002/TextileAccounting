@@ -65,17 +65,22 @@ erDiagram
     ORGANIZATIONS ||--o{ ORDERS : "fulfills"
     ORGANIZATIONS ||--o{ ESTIMATOR_QUOTES : "estimates"
     ORGANIZATIONS ||--o{ FACTORY_COST_PROFILE : "configures"
+    ORGANIZATIONS ||--o{ DISPATCHES : "dispatches"
 
     ESTIMATOR_QUOTES ||--o| ORDERS : "creates"
     
     ORDERS ||--o{ MACHINES : "currently assigned to"
     ORDERS ||--o{ PRODUCTION_LOGS : "fulfilled by"
+    ORDERS ||--o{ DISPATCHES : "ships via"
 
     MACHINES ||--o{ PRODUCTION_LOGS : "records on"
     WORKERS ||--o{ PRODUCTION_LOGS : "logs for"
 
     WORKERS ||--o{ WORKER_ADVANCES : "receives"
     PAYROLL_SETTLEMENTS ||--o{ WORKER_ADVANCES : "settles"
+
+    PROFILES ||--o{ GRIEVANCES : "files"
+    PROFILES }|--o{ DPDP_NOTICES : "acknowledges"
 
     PRODUCTION_LOGS {
         bigint id PK
@@ -92,7 +97,8 @@ erDiagram
 The most significant architectural shift is the enforcement of orders generated exclusively from the Weavly Estimator:
 - **`factory_cost_profile`**: Global factory default tracking for utilities, itemized fixed expenses, and baseline parameters.
 - **`estimator_quotes`**: Snapshot table storing fully resolved costing recipes (JSON arrays defining structural weft/warp constraints and percentage-based overheads).
-- **Convert-to-Order**: Replaces the redundant "Yarn Batch / Qualities" module. When a quote converts, the order directly maintains the wage and expected yield targets natively.
+- **Convert-to-Order**: When a quote converts, the order directly maintains the wage and expected production targets natively, ensuring a seamless transition from estimation to floor operations.
+
 
 ### 2.3 Immutable Audit Trail & Lock Strategies
 - **Worker Rate Snapshots**: `production_logs.worker_rate_snapshot` permanently locks the exact point-in-time wage. Any future rate changes applying to the order will *never* alter historical payroll math.
@@ -117,6 +123,12 @@ Standard IEEE 754 floating-point behavior is strictly forbidden for wages.
 Factories are localized bio-clocks. 
 - Uses `date-fns-tz` pegged permanently to `Asia/Kolkata`.
 - Handles the factory Day/Night shift boundaries, preventing logs written at 2AM from bleeding into the current calendar day natively. `new Date()` is banned for business logic.
+
+### 3.4 DPDP 2026 & Compliance Engine
+A globally scoped administrative overlay that ensures alignment with upcoming legal frameworks:
+- **Notice Registry**: Admins maintain version-controlled privacy notices. The engine forces users across all multi-tenant boundaries to acknowledge the latest notices.
+- **Grievance Redressal**: A unified ticketing system supporting anonymous and named grievance logging, backed by an immutable audit trail.
+- **Data Sovereignty**: Dispatches, payroll, and logs are cryptographically isolated via RLS, preventing any cross-tenant data leaks.
 
 ---
 

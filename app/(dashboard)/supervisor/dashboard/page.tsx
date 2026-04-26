@@ -224,28 +224,37 @@ function MachineUnifiedRow({
             {/* Production Input (The Quick Log) */}
             <div className={cn(
                 "w-28 xs:w-32 shrink-0 flex items-center justify-center p-3 pb-5 border-l border-border bg-muted/5",
-                !workerId && "opacity-30 grayscale pointer-events-none"
+                (!workerId || !orderId) && "opacity-50 grayscale"
             )}>
                 <div className="relative w-full">
-                    <div className={cn(
-                        "flex items-center bg-background border-2 rounded-2xl overflow-hidden transition-all duration-300 group/input",
-                        metersValue > 0 ? "border-primary shadow-[0_8px_20px_-6px_rgba(255,87,34,0.25)] ring-4 ring-primary/5" : "border-border shadow-sm"
-                    )}>
-                        <Input
-                            type="number"
-                            inputMode="decimal"
-                            pattern="[0-9]*"
-                            placeholder="0"
-                            value={metersValue || ''}
-                            onChange={(e) => onMetersChange(Number(e.target.value))}
-                            className="h-10 xs:h-12 flex-1 border-none bg-transparent text-lg xs:text-xl font-black text-center font-mono focus-visible:ring-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                    </div>
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-card border border-border px-2 py-0.5 rounded-full shadow-sm">
-                        <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">
-                            {t('production.meters')}
-                        </span>
-                    </div>
+                    {(!workerId || !orderId) ? (
+                        <div className="flex flex-col items-center justify-center h-10 xs:h-12 text-[10px] font-black text-muted-foreground/60 leading-tight text-center px-1 animate-in fade-in duration-500">
+                             {!workerId ? t('production.no_worker') : t('production.link_order')}
+                             <AlertCircle className="h-3 w-3 mt-1 opacity-40" />
+                        </div>
+                    ) : (
+                        <>
+                            <div className={cn(
+                                "flex items-center bg-background border-2 rounded-2xl overflow-hidden transition-all duration-300 group/input",
+                                metersValue > 0 ? "border-primary shadow-[0_8px_20px_-6px_rgba(255,87,34,0.25)] ring-4 ring-primary/5" : "border-border shadow-sm"
+                            )}>
+                                <Input
+                                    type="number"
+                                    inputMode="decimal"
+                                    pattern="[0-9]*"
+                                    placeholder="0"
+                                    value={metersValue || ''}
+                                    onChange={(e) => onMetersChange(Number(e.target.value))}
+                                    className="h-10 xs:h-12 flex-1 border-none bg-transparent text-lg xs:text-xl font-black text-center font-mono focus-visible:ring-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                            </div>
+                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-card border border-border px-2 py-0.5 rounded-full shadow-sm">
+                                <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">
+                                    {t('production.meters')}
+                                </span>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
             
@@ -585,8 +594,8 @@ export default function UnifiedDashboard() {
                 setSyncingState(prev => ({ ...prev, [machineId]: null }))
             }, 3000)
 
-            // Clear meters locally if worker was unassigned
-            if (!workerId) {
+            // Clear meters locally if worker or order was unassigned
+            if (!workerId || !orderId) {
                 setMeters(prev => {
                     const next = { ...prev }
                     delete next[machineId]
@@ -622,7 +631,16 @@ export default function UnifiedDashboard() {
             .filter((e) => e.worker_id && e.order_id && e.meters > 0)
 
         if (entries.length === 0) {
-            toast.error('No valid production entries found. Ensure both a worker and an order are assigned to each machine.')
+            // Check if any machines HAVE meters but were filtered out due to missing order
+            const machinesWithMetersButNoOrder = machines.filter(m => 
+                (meters[m.id] ?? 0) > 0 && !assignments.find(a => a.machine_id === m.id)?.order_id
+            )
+
+            if (machinesWithMetersButNoOrder.length > 0) {
+                toast.error(`Cannot log production for ${machinesWithMetersButNoOrder.length} machines: No order assigned.`)
+            } else {
+                toast.error('No valid production entries found. Ensure both a worker and an order are assigned to each machine.')
+            }
             return
         }
 

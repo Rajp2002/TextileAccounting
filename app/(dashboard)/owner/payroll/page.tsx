@@ -54,6 +54,7 @@ interface SettlementRecord {
     is_final_settlement: boolean
     settled_at: string
     status: 'paid' | 'pending'
+    itemization_payload?: any
 }
 
 interface WorkerBase {
@@ -337,6 +338,7 @@ function MeterWorkerRow({
                                             totalPay: worker.totalPay,
                                             totalAdvances: worker.totalAdvances,
                                             netPay: displayNet,
+                                            itemization: worker.settlement?.itemization_payload,
                                         })}
                                     >
                                         <Download className="h-3.5 w-3.5" />
@@ -611,6 +613,7 @@ function FixedWorkerRow({
                                             earnedPay: worker.earnedPay,
                                             totalAdvances: worker.totalAdvances,
                                             netPay: displayNet,
+                                            itemization: worker.settlement?.itemization_payload,
                                         })}
                                     >
                                         <Download className="h-3.5 w-3.5" />
@@ -1260,11 +1263,11 @@ export default function PayrollPage() {
         
         const { data: org } = await supabase
             .from('organizations')
-            .select('access_code')
+            .select('last_code_plain')
             .eq('id', userProfile?.org_id)
             .single()
             
-        if (org?.access_code && accessCode !== org.access_code) {
+        if (org?.last_code_plain && accessCode !== org.last_code_plain) {
         toast.error(t('payroll_ext.invalid_code'))
             return
         }

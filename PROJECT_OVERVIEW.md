@@ -27,8 +27,9 @@ Data is strictly partitioned via PostgreSQL Row Level Security (RLS).
 
 | Role | Who they are | Primary Focus | Key Permissions |
 |---|---|---|---|
-| **Owner** | Factory proprietor | Strategy & Profits | All data, yield audits, payroll settlement, access codes, analytics |
-| **Supervisor** | Floor manager | Daily Operations | Production logging, worker management, machine tracking, beam management |
+| **Owner** | Factory proprietor | Strategy & Profits | All data, payroll settlement, access codes, analytics |
+| **Admin** | System Compliance & Ops | Global Compliance | DPDP policies, Grievance redressal, platform-wide audit access |
+| **Supervisor** | Floor manager | Daily Operations | Production logging, worker management, machine tracking |
 
 ### 2.2 Standard Time Engine (Surat Standard)
 To prevent server-client drift (e.g., UTC vs. IST), all date/time logic is centralized in `lib/time.ts` (Asia/Kolkata).
@@ -42,14 +43,14 @@ Weavly operates on a mandatory estimation-first architecture designed to protect
 ### 3.1 Frictionless Onboarding
 The onboarding flow is optimized for immediate value delivery:
 1. **Join & Verify Phone**: Fast organization setup with mandatory phone verification.
-3. **Data-Driven Onboarding**: To unlock the dashboard, a factory only needs to define at least one **Machine** and one **Worker**. All production is driven by the Estimator to ensure financial discipline and accurate yield tracking.
+3. **Data-Driven Onboarding**: To unlock the dashboard, a factory only needs to define at least one **Machine** and one **Worker**. All production is driven by the Estimator to ensure financial discipline.
 
 ### 3.2 The Estimator (The Gateway)
 A professional multi-layered costing engine (`/owner/estimator`) that serves as the entry point for all organizational activity:
 - **Surat-Standard Formulas**: Accurately calculates warping, sizing, winding, processing, and finishing costs using PPI-based weave formulas.
 - **Granular Overhead**: Replaces flat overheads with itemized fixed-salary and dynamic factory expense modeling.
 - **Margin Simulation**: Real-time margin slider to protect per-meter order profit mathematically.
-- **Template Persistence**: Costing recipes (JSON arrays) can be saved, edited, and instantly recalled.
+- **Template & Quote Persistence**: Costing recipes can be saved and pushed into a strict Quote Lifecycle (Draft, Sent, Accepted, Rejected), completely replacing offline estimates. Quotes are persisted to a central Quotes History dashboard.
 
 ### 3.3 Precise Order Conversion
 Once a quote is Accepted, it translates into a **Live Order**:
@@ -62,6 +63,12 @@ Orders are then routed to the factory floor:
 - **Slide-Out Sheet Assignment**: Owners or supervisors quickly link capable Machines to active Orders. Smart warnings prevent double-assignment.
 - **Floor-Level Logging**: Supervisors log daily meters produced. The system captures the wage rate snapshot at time of entry, locking financial data forever.
 - **Immediate Feedback Loop**: Logs instantly update the active order's meter progression and "Pace Index" (actual vs. required speed).
+
+### 3.5 Dispatch & Delivery Management
+Once production completes, rolls are batched for dispatch:
+- **Batch Tracking & Grouping**: Dispatches are grouped by order to track progress (dispatched vs. remaining capacity).
+- **Public Tracking Portals**: Secure, public-facing tracking links (`/track/[token]`) and auto-generated QR codes are generated per dispatch batch.
+- **Strict RLS Data Isolation**: Data is securely partitioned per organization.
 
 ---
 
@@ -83,7 +90,7 @@ The dashboard provides an instant pulse on the factory via **Supabase Realtime**
 The system is built for the factory floor's connectivity challenges:
 - **Resilient Realtime**: Supabase WebSocket connections automatically reconnect with "Syncing..." status indicators to ensure data integrity during spotty internet.
 - **Offline-First Logging**: Supervisors can log production without a connection; data is cached and pushed the moment the device reconnects.
-- **Fast Cold-Boots**: Optimized authentication flow removes restrictive guards (like the old PwaSessionGuard) for instant access on return to the app.
+- **Fast Cold-Boots**: Optimized authentication flow for instant access on return to the app, bypassing legacy restrictive session guards.
 
 ---
 
@@ -143,7 +150,16 @@ Owners have full control over their organizational profile:
 
 ---
 
-## 9. Getting Started for Developers
+## 10. Compliance & Data Privacy (2026 Standards)
+
+Weavly rigorously complies with upcoming Indian legal frameworks:
+- **Indian Code on Wages 2019**: Advanced payroll audits and exact tracking of 50% legal cap deduction on gross pay advances.
+- **DPDP 2026 (Digital Personal Data Protection)**: Notice Registry for data usage, built-in Grievance Redressal Policy, and active breach detection logging.
+- **Admin Dashboard**: Dedicated compliance dashboard (`/admin`) for system administrators to oversee and audit DPDP adherence and privacy logs across the platform.
+
+---
+
+## 11. Getting Started for Developers
 
 1. **Environment**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `INTERAKT_API_KEY`.
 2. **Setup**: `npm install && npm run dev`.

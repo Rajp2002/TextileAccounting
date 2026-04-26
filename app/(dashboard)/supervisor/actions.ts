@@ -92,7 +92,11 @@ async function validateAndConsumeAccessCode(userId: string, orgId: string, input
     // Valid — consume the code
     await supabase
         .from('organizations')
-        .update({ access_code_hash: null, access_code_expires_at: null })
+        .update({ 
+            access_code_hash: null, 
+            access_code_expires_at: null,
+            last_code_plain: null
+        })
         .eq('id', orgId)
 
     // Set PostgreSQL session variable so the audit trigger knows 
@@ -648,10 +652,14 @@ export async function requestAccessCode() {
     const hash = crypto.createHash('sha256').update(code).digest('hex')
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes
 
-    // 2. Save hash to organizations table
+    // 2. Save hash and plain code to organizations table
     const { error } = await supabase
         .from('organizations')
-        .update({ access_code_hash: hash, access_code_expires_at: expiresAt })
+        .update({ 
+            access_code_hash: hash, 
+            access_code_expires_at: expiresAt,
+            last_code_plain: code
+        })
         .eq('id', profile.org_id)
 
     if (error) {
@@ -822,13 +830,19 @@ export async function bulkLogProduction(entries: {
     const headerList = await headers()
     const clientIp = headerList.get('x-forwarded-for')?.split(',')[0] || 'unknown'
 
+    // ── Guard: Ensure every machine with meters has an order assigned ──
+    const invalidEntry = entries.find(e => e.meters > 0 && !e.order_id)
+    if (invalidEntry) {
+        return { error: 'ORDER_MISSING', message: 'All machines with production must have an assigned order.' }
+    }
+
     const logs = entries
-        .filter((e) => e.meters > 0 && e.order_id)
+        .filter((e) => e.meters > 0) // We already know e.order_id exists from the guard above
         .map((e) => ({
             org_id: orgId,
             machine_id: e.machine_id,
             worker_id: e.worker_id,
-            order_id: e.order_id,
+            order_id: e.order_id!,
             meters: e.meters,
             shift: e.shift,
             date: e.date,

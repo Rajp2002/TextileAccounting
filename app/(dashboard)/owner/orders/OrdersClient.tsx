@@ -828,6 +828,7 @@ function OrderDetailDrawer({
     onClose: () => void
     onRefresh: () => void
 }) {
+    const { t } = useTranslation()
     const [data, setData] = useState<any>(null)
     const [loading, setLoading] = useState(false)
     const [editingDeadline, setEditingDeadline] = useState(false)
@@ -1007,7 +1008,11 @@ function OrderDetailDrawer({
                                 </div>
                                 <div className="flex items-center justify-between text-[10px] text-slate-500">
                                     <span>{progress.toFixed(1)}% complete</span>
-                                    {paceIndex !== null && (
+                                    {metersProduced === 0 ? (
+                                        <span className="text-[10px] font-medium text-slate-400">
+                                            {t('analytics.orders.card.tracking_starts')}
+                                        </span>
+                                    ) : paceIndex !== null && (
                                         <span className={`font-mono font-bold flex items-center gap-1 ${paceColor(paceIndex)}`}>
                                             ⚡ {paceIndex.toFixed(2)}× pace
                                         </span>
@@ -1251,6 +1256,7 @@ interface OrderCardProps {
 }
 
 function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
+    const { t } = useTranslation()
     const daysRemaining = differenceInDays(new Date(order.deadline), new Date())
     const { text: daysText, cls: daysCls } = daysLabel(daysRemaining)
     const progress = Number(order.progress_percent ?? 0)
@@ -1273,7 +1279,11 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
                     <p className="text-xs text-slate-500 mt-0.5 truncate">{order.party_name}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                    {paceIndex !== null && (
+                    {metersProduced === 0 ? (
+                        <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-400 font-medium whitespace-nowrap">
+                            {t('analytics.orders.card.tracking_starts')}
+                        </Badge>
+                    ) : paceIndex !== null && (
                         <Badge
                             variant="outline"
                             className={`text-[10px] border-current font-mono ${paceColor(paceIndex)}`}

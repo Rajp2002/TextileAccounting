@@ -7,6 +7,8 @@ Weavly is a professional profit-protection platform designed for the Surat texti
 - **Mathematical Precision**: PPI-based costing with itemized overheads.
 - **Auditable Floor**: Real-time production tracking linked directly to original quotes.
 - **Automated Settlement**: Indian labour law compliant payroll and advances (Upaad).
+- **Dispatch Tracking**: Secure public portals and QR codes for tracking delivery batches.
+- **2026 Compliance**: Built-in DPDP 2026 privacy compliance, grievance redressal, and dedicated Admin oversight.
 
 ## Getting Started
 
