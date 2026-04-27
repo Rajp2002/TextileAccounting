@@ -205,9 +205,18 @@ export function AdminDashboardUI({
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex flex-col">
-                                                        <span className="font-medium">{g.subject}</span>
-                                                        <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-tight">
-                                                            {g.grievance_type}
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-medium">{g.subject}</span>
+                                                            {g.sla_applies && (
+                                                                <Badge variant="outline" className="text-[9px] h-4 bg-amber-50 text-amber-700 border-amber-200 uppercase font-black px-1.5">
+                                                                    SLA
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                        <span className={`text-[10px] uppercase font-bold tracking-tight ${
+                                                            g.grievance_type === 'UNLOCK_REQUEST' ? 'text-purple-600 dark:text-purple-400' : 'text-zinc-500'
+                                                        }`}>
+                                                            {g.grievance_type.replace('_', ' ')}
                                                         </span>
                                                     </div>
                                                 </TableCell>
@@ -218,10 +227,14 @@ export function AdminDashboardUI({
                                                 </TableCell>
                                                 <TableCell>
                                                     {g.status !== 'resolved' ? (
-                                                        <div className={`flex items-center gap-2 text-sm font-bold ${daysLeft <= 2 ? 'text-red-500' : 'text-zinc-600'}`}>
-                                                            <Clock className="h-4 w-4" />
-                                                            {daysLeft} days left
-                                                        </div>
+                                                        g.sla_applies ? (
+                                                            <div className={`flex items-center gap-2 text-sm font-bold ${daysLeft <= 2 ? 'text-red-500' : 'text-zinc-600'}`}>
+                                                                <Clock className="h-4 w-4" />
+                                                                {daysLeft} days left
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-zinc-400 text-xs italic">No strict SLA</span>
+                                                        )
                                                     ) : (
                                                         <span className="text-emerald-600 text-sm font-medium">Resolved on {new Date(g.resolved_at).toLocaleDateString()}</span>
                                                     )}
@@ -300,6 +313,7 @@ export function AdminDashboardUI({
                                         <SelectContent>
                                             <SelectItem value="OPERATIONAL">Operational</SelectItem>
                                             <SelectItem value="DATA_PRIVACY">Data Privacy</SelectItem>
+                                            <SelectItem value="UNLOCK_REQUEST">Unlock Request</SelectItem>
                                             <SelectItem value="OTHER">Other</SelectItem>
                                         </SelectContent>
                                     </Select>

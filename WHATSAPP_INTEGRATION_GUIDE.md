@@ -360,6 +360,52 @@ _Weavly — {{1}}_
 
 ---
 
+### Template 7: `weavly_tenant_lockdown`
+
+| Field | Value |
+|---|---|
+| **Category** | UTILITY |
+| **Header** | (none) |
+
+**Body:**
+```
+🚨 *Urgent: Factory Access Suspended — {{1}}*
+
+A security protocol has been triggered and access to your Weavly factory floor has been isolated.
+
+*Reason:* {{2}}
+*Severity:* {{3}}
+
+Log in to Weavly to review the detection and request an unlock. State changes are currently blocked for audit protection.
+
+_Weavly Compliance_
+```
+
+**Variable Mapping:**
+| Variable | What it contains | Example |
+|---|---|---|
+| `{{1}}` | Factory name | `Patel Textiles` |
+| `{{2}}` | Reason for lockdown | `Suspicious mass production log export detected` |
+| `{{3}}` | Severity level | `High` |
+
+---
+
+## WhatsApp Template Priority (Gap Log)
+
+The following templates must be created in Interakt and approved by Meta before full platform functionality is restored.
+
+| WA-ID | Template | Priority |
+|---|---|---|
+| **WA-01** | `access_code_delivery` | High |
+| **WA-02** | `daily_brief` | Medium |
+| **WA-03** | `deadline_risk` | Medium |
+| **WA-04** | `worker_payslip_en/hi/gu` | High |
+| **WA-05** | `advance_receipt_en/hi/gu` | Medium |
+| **WA-06** | `monthly_summary` | Low |
+| **WA-07** | `weavly_tenant_lockdown` | **Highest** |
+
+---
+
 ## 5. Step 3 — Supabase Environment Variables
 
 Edge functions read secrets from Supabase's secret store. These are **never committed to Git**.

@@ -344,6 +344,43 @@ export async function recordDpaSignature(orgId: string, dpaId: string, proofUrl?
 
     if (error) throw new Error(error.message)
     revalidatePath('/admin')
+    revalidatePath('/owner/settings')
+}
+
+export async function signDpa(dpaId: string) {
+    const supabase = await createClient()
+    const userResponse = await supabase.auth.getUser()
+    const user = userResponse.data.user
+    
+    if (!user) throw new Error('Unauthorized')
+
+    // Fetch user's org_id
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('org_id, role')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile || profile.role !== 'owner') {
+        throw new Error('Only factory owners can sign DPAs.')
+    }
+
+    const { error } = await supabase
+        .from('organization_dpas')
+        .upsert({
+            org_id: profile.org_id,
+            dpa_id: dpaId,
+            status: 'signed',
+            signed_at: new Date().toISOString(),
+            signed_by: user.id,
+            updated_at: new Date().toISOString()
+        }, {
+            onConflict: 'org_id, dpa_id'
+        })
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/owner/settings')
+    revalidatePath('/admin')
 }
 
 /**
@@ -359,6 +396,21 @@ export async function lockdownTenant(orgId: string, reason: string, severity: st
     })
 
     if (error) throw new Error(error.message)
+
+    // Trigger WhatsApp Notification (Legally Required)
+    try {
+        await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-lockdown-alert`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({ org_id: orgId, reason, severity })
+        })
+    } catch (err) {
+        console.error('Failed to trigger lockdown notification:', err)
+    }
+
     revalidatePath('/admin')
     return data
 }
@@ -371,7 +423,30 @@ export async function unlockTenant(orgId: string) {
 
     if (error) throw new Error(error.message)
     revalidatePath('/admin')
+    revalidatePath('/locked')
     return data
+}
+
+export async function requestUnlock(orgId: string, reason: string) {
+    const supabase = await createClient()
+    const user = (await supabase.auth.getUser()).data.user
+    
+    if (!user) throw new Error('Unauthorized')
+
+    const { error } = await supabase
+        .from('grievances')
+        .insert({
+            org_id: orgId,
+            subject: 'TENANT UNLOCK REQUEST',
+            description: `Owner requested unlock. Reason given: ${reason}`,
+            target_entity: 'WEAVLY',
+            grievance_type: 'UNLOCK_REQUEST',
+            filed_by_role: 'owner',
+            status: 'pending'
+        })
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/locked')
 }
 
 export async function getBreachReports(orgId?: string) {
