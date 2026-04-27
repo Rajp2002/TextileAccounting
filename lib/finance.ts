@@ -118,7 +118,7 @@ export function calculateMaxDeduction(
  *
  * @param grossPay - total earned (may be string from Decimal calculation)
  * @param totalAdvances - total pending advances to deduct
- * @param maxDeductionPercent - max % of gross that can be deducted (default: 100, set to 50 for labour law compliance)
+ * @param maxDeductionPercent - max % of gross that can be deducted (default: 50 for labour law compliance)
  * @returns net payout as a string with 2 decimal places, minimum "0.00"
  */
 export function calculateNetPay(

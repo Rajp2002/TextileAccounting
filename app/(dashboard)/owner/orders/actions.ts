@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import crypto from 'crypto'
 import { checkAccessCodeRateLimit, checkAccessCodeLockout, recordAccessCodeFailure, resetAccessCodeFailures } from '@/lib/rate-limit'
+import { assignMachinesToOrderForOrg, type AssignmentResult } from '@/lib/actions/order-assignment'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,18 @@ export interface OrderSummary {
     created_at: string
     worker_rate_per_m: number | null
 }
+
+type UpdatableOrderFields = {
+    party_name?: string
+    quality_label?: string
+    warp_instruction?: string
+    weft_instruction?: string
+    notes?: string
+    total_target_meters?: number
+    deadline?: string
+}
+
+type UpdatableOrderPayload = UpdatableOrderFields & { status?: OrderStatus }
 
 // ─── Read ──────────────────────────────────────────────────────────────────────
 
@@ -139,7 +152,7 @@ async function validateOwnerAccessCode(userId: string, orgId: string, inputCode:
 // ─── Request a new access code (owner can call this too) ──────────────────────
 
 export async function requestAccessCodeAsOwner() {
-    const { user, profile } = await requireRole(['owner'])
+    const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const code = crypto.randomBytes(3).toString('hex').toUpperCase()
@@ -173,8 +186,9 @@ export async function updateOrderDetails(orderId: string, data: {
     let isCodeValid = false
     try {
         isCodeValid = await validateOwnerAccessCode(user.id, profile.org_id, accessCode)
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unable to validate access code'
+        return { error: message }
     }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
@@ -186,7 +200,7 @@ export async function updateOrderDetails(orderId: string, data: {
         .eq('org_id', profile.org_id)
         .single()
 
-    const updatePayload: any = { ...data }
+    const updatePayload: UpdatableOrderPayload = { ...data }
 
     // If target is being increased on a completed order, reactivate it
     if (
@@ -291,27 +305,12 @@ export async function getActiveMachinesList() {
 }
 
 /** Assign machines to an order */
-export async function assignMachinesToOrder(orderId: string, machineIds: string[]) {
+export async function assignMachinesToOrder(orderId: string, machineIds: string[]): Promise<AssignmentResult> {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    // Unlink all machines currently on this order
-    await supabase
-        .from('machines')
-        .update({ current_order_id: null })
-        .eq('current_order_id', orderId)
-        .eq('org_id', profile.org_id)
-
-    // Link new machines
-    if (machineIds.length > 0) {
-        const { error } = await supabase
-            .from('machines')
-            .update({ current_order_id: orderId })
-            .in('id', machineIds)
-            .eq('org_id', profile.org_id)
-
-        if (error) return { error: error.message }
-    }
+    const assignmentResult = await assignMachinesToOrderForOrg(supabase, profile.org_id, orderId, machineIds)
+    if ('error' in assignmentResult) return assignmentResult
 
     revalidatePath('/owner/orders')
     return { success: true }
@@ -337,6 +336,33 @@ export interface DispatchSummary {
     shortage_meters: number
     meters_produced: number
     remaining_to_dispatch: number
+}
+
+export interface DispatchWithOrder {
+    id: string
+    dispatch_number: number
+    qty_meters_sent: number
+    qty_meters_received: number | null
+    status: 'in_transit' | 'delivered' | 'disputed'
+    dispatched_at: string
+    received_at: string | null
+    notes: string | null
+    orders: {
+        id: string
+        party_name: string
+        quality_label: string | null
+        tracking_token: string
+        total_target_meters: number
+        status: string
+    }
+}
+
+type DispatchesResult =
+    | { data: DispatchWithOrder[]; error?: never }
+    | { data?: never; error: string }
+
+type RawDispatchWithOrder = Omit<DispatchWithOrder, 'orders'> & {
+    orders: DispatchWithOrder['orders'] | DispatchWithOrder['orders'][]
 }
 
 /**
@@ -507,7 +533,7 @@ export async function getTrackingToken(orderId: string): Promise<{ tracking_toke
  * Fetch all dispatches across all orders for the org.
  * Includes order total_target_meters and status for grouped progress view.
  */
-export async function getAllDispatches() {
+export async function getAllDispatches(): Promise<DispatchesResult> {
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
@@ -535,5 +561,12 @@ export async function getAllDispatches() {
         .order('dispatched_at', { ascending: false })
 
     if (error) return { error: error.message }
-    return { data: (data ?? []) as any[] }
+
+    const rows = (data ?? []) as unknown as RawDispatchWithOrder[]
+    return {
+        data: rows.map((row) => ({
+            ...row,
+            orders: Array.isArray(row.orders) ? row.orders[0] : row.orders,
+        })),
+    }
 }

@@ -109,6 +109,15 @@ export function getDestructiveLimiter() {
     return _destructiveLimiter
 }
 
+/**
+ * Public tracking limiter. Used by unauthenticated trader confirmation links.
+ */
+let _trackingLimiter: Ratelimit | null | undefined = undefined
+export function getTrackingLimiter() {
+    if (_trackingLimiter === undefined) _trackingLimiter = createLimiter(20, 60)
+    return _trackingLimiter
+}
+
 // ─── Core Check Function ──────────────────────────────────────────────────────
 
 /**
@@ -162,6 +171,14 @@ export async function checkAccessCodeRateLimit(userId: string): Promise<number |
     return result.success ? null : result.reset
 }
 
+/**
+ * Pre-built helper: check public tracking confirmations by IP and token.
+ */
+export async function checkTrackingRateLimit(ip: string, trackingToken: string): Promise<number | null> {
+    const result = await checkRateLimit(getTrackingLimiter, `tracking:${ip}:${trackingToken}`)
+    return result.success ? null : result.reset
+}
+
 // ─── Phase 3: Advanced Redis Controls ─────────────────────────────────────────
 
 /**
@@ -172,7 +189,7 @@ export async function checkAccessCodeLockout(userId: string): Promise<boolean> {
     if (!r) return false
     try {
         return !!(await r.get(`lockout:${userId}`))
-    } catch (err) {
+    } catch {
         return false // fail open
     }
 }
@@ -206,7 +223,7 @@ export async function resetAccessCodeFailures(userId: string): Promise<void> {
     if (!r) return
     try {
         await r.del(`code_fails:${userId}`)
-    } catch (err) {}
+    } catch {}
 }
 
 /**
@@ -231,7 +248,7 @@ export async function isUserRevoked(userId: string): Promise<boolean> {
     if (!r) return false
     try {
         return !!(await r.get(`revoked:${userId}`))
-    } catch (err) {
+    } catch {
         return false // fail open
     }
 }

@@ -146,13 +146,13 @@ describe('Finance: calculateNetPay', () => {
         expect(calculateNetPay(5000, 0)).toBe('5000.00')
     })
 
-    it('floors at ₹0 when advances exceed gross (default 100% mode)', () => {
-        // ₹5000 gross - ₹8000 advances = ₹0 (NOT negative)
-        expect(calculateNetPay(5000, 8000)).toBe('0.00')
+    it('caps deductions at 50% of gross by default', () => {
+        // ₹5000 gross, ₹8000 advances, default legal cap = 50% → ₹2500 net
+        expect(calculateNetPay(5000, 8000)).toBe('2500.00')
     })
 
-    it('handles exact match (net = ₹0)', () => {
-        expect(calculateNetPay(5000, 5000)).toBe('0.00')
+    it('caps exact-match advances at 50% by default', () => {
+        expect(calculateNetPay(5000, 5000)).toBe('2500.00')
     })
 
     it('handles string inputs', () => {
@@ -214,13 +214,13 @@ describe('Finance: calculateRemainingDebt', () => {
         expect(calculateRemainingDebt(8000, 3000)).toBe('0.00')
     })
 
-    it('returns leftover debt when advances exceed gross', () => {
-        // ₹5000 gross, ₹8000 advances = ₹3000 remaining
-        expect(calculateRemainingDebt(5000, 8000)).toBe('3000.00')
+    it('returns debt left after the default 50% deduction cap', () => {
+        // ₹5000 gross, ₹8000 advances, max deduction = ₹2500 → ₹5500 remaining
+        expect(calculateRemainingDebt(5000, 8000)).toBe('5500.00')
     })
 
-    it('returns 0 when exact match', () => {
-        expect(calculateRemainingDebt(5000, 5000)).toBe('0.00')
+    it('returns debt left after capping an exact-match advance', () => {
+        expect(calculateRemainingDebt(5000, 5000)).toBe('2500.00')
     })
 
     it('returns 0 when no advances', () => {
@@ -228,7 +228,7 @@ describe('Finance: calculateRemainingDebt', () => {
     })
 
     it('handles string inputs', () => {
-        expect(calculateRemainingDebt('5000', '7500.50')).toBe('2500.50')
+        expect(calculateRemainingDebt('5000', '7500.50')).toBe('5000.50')
     })
 })
 
@@ -253,7 +253,7 @@ describe.skipIf(!SUPABASE_URL || !SUPABASE_KEY)(
             // It verifies the schema allows duplicate entries (same worker, same day)
             // since production_logs has NO unique constraint on (worker_id, date).
 
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('production_logs')
                 .select('meters')
                 .limit(2)

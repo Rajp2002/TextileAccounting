@@ -1,6 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 
 /**
@@ -8,7 +10,8 @@ import { revalidatePath } from 'next/cache'
  */
 
 export async function getGrievances() {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('grievances')
         .select('*')
@@ -27,7 +30,8 @@ export async function logOfflineGrievance(formData: {
     grievance_type?: 'DATA_PRIVACY' | 'OPERATIONAL' | 'OTHER'
     filed_by_role?: 'worker' | 'supervisor' | 'owner' | 'admin'
 }) {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     const { error } = await supabase
         .from('grievances')
         .insert({
@@ -41,8 +45,14 @@ export async function logOfflineGrievance(formData: {
 }
 
 export async function updateGrievanceStatus(id: string, status: string, proofUrl?: string) {
-    const supabase = await createClient()
-    const updateData: any = { status, updated_at: new Date().toISOString() }
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
+    const updateData: {
+        status: string
+        updated_at: string
+        resolved_at?: string
+        resolution_proof_url?: string
+    } = { status, updated_at: new Date().toISOString() }
     
     if (status === 'resolved') {
         updateData.resolved_at = new Date().toISOString()
@@ -65,22 +75,37 @@ export async function updateGrievanceStatus(id: string, status: string, proofUrl
  */
 
 export async function generateWorkerReport(workerId: number) {
-    const supabase = await createClient()
+    const { user } = await requireRole(['admin'])
+    const supabase = createAdminClient()
     
-    // Fetch profile (Sanitized for right to access - only necessary PII)
-    const { data: worker, error: workerError } = await supabase
+    // Fetch profile (sanitized for right to access - only necessary PII).
+    const { data: meterWorker, error: meterWorkerError } = await supabase
         .from('workers')
         .select('id, name, org_id, is_active')
         .eq('id', workerId)
-        .single()
+        .maybeSingle()
 
-    if (workerError) throw new Error(workerError.message)
+    const { data: fixedWorker, error: fixedWorkerError } = meterWorker
+        ? { data: null, error: null }
+        : await supabase
+            .from('fixed_workers')
+            .select('id, name, org_id, role, monthly_salary, is_active')
+            .eq('id', workerId)
+            .maybeSingle()
 
-    // Fetch attendance (Sanitized: only date and IP for provenance)
+    if (meterWorkerError || fixedWorkerError) {
+        throw new Error((meterWorkerError || fixedWorkerError)?.message)
+    }
+
+    const worker = meterWorker ?? fixedWorker
+    if (!worker) throw new Error('Worker not found')
+    const workerType = meterWorker ? 'meter' : 'fixed'
+
+    // Attendance belongs to fixed/day workers; piece-rate workers use production logs.
     const { data: attendance } = await supabase
         .from('attendance')
         .select('date, client_ip')
-        .eq('worker_id', workerId)
+        .eq('fixed_worker_id', workerId)
         .order('date', { ascending: false })
 
     // Fetch production logs
@@ -93,12 +118,13 @@ export async function generateWorkerReport(workerId: number) {
     // Fetch advances
     const { data: advances } = await supabase
         .from('worker_advances')
-        .select('amount, reason, created_at')
-        .eq('worker_id', workerId)
+        .select('amount, description, created_at, status, deducted_at')
+        .eq(workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', workerId)
         .order('created_at', { ascending: false })
 
     const report = {
         generated_at: new Date().toISOString(),
+        worker_type: workerType,
         worker_profile: worker,
         attendance_provenance: attendance,
         production_history: production,
@@ -110,7 +136,8 @@ export async function generateWorkerReport(workerId: number) {
         p_org_id: worker.org_id,
         p_table_name: 'workers',
         p_record_id: workerId.toString(),
-        p_description: `Full Data Export for Worker: ${workerId}`
+        p_description: `Full Data Export for Worker: ${workerId}`,
+        p_actor_id: user.id
     })
 
     return report
@@ -121,7 +148,8 @@ export async function generateWorkerReport(workerId: number) {
  */
 
 export async function getNoticeRegistry() {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('notice_registry')
         .select('*')
@@ -139,17 +167,26 @@ export async function uploadNotice(data: {
     content_audio_url?: string
     content_hash: string
 }) {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     const { error } = await supabase
         .from('notice_registry')
-        .insert(data)
+        .insert({
+            version_string: data.version_string,
+            notice_type: data.notice_type,
+            body_text: data.content_text,
+            english_transcript: data.translation_text,
+            content_audio_url: data.content_audio_url,
+            content_hash: data.content_hash,
+        })
 
     if (error) throw new Error(error.message)
     revalidatePath('/admin')
 }
 
 export async function toggleNoticeStatus(id: string, isActive: boolean) {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     
     if (isActive) {
         // Deactivate all others of the same type
@@ -173,10 +210,11 @@ export async function toggleNoticeStatus(id: string, isActive: boolean) {
  */
 
 export async function exportAttendanceLogs(startDate: string, endDate: string) {
-    const supabase = await createClient()
+    const { user } = await requireRole(['admin'])
+    const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('attendance')
-        .select('worker_id, client_ip, date') // Strictly Worker ID, IP, and Date
+        .select('org_id, fixed_worker_id, client_ip, date') // PII-lite audit export
         .gte('date', startDate)
         .lte('date', endDate)
         .order('date', { ascending: false })
@@ -184,14 +222,21 @@ export async function exportAttendanceLogs(startDate: string, endDate: string) {
     if (error) throw new Error(error.message)
 
     // Log the export event
-    await supabase.rpc('log_export_event', {
-        p_org_id: (await supabase.auth.getUser()).data.user?.id, 
-        p_table_name: 'attendance',
-        p_record_id: 'SUBSIDY_EXPORT',
-        p_description: `PII-Lite IP Log Export for Gujarat DST (${startDate} to ${endDate})`
-    })
+    if (data?.[0]?.org_id) {
+        await supabase.rpc('log_export_event', {
+            p_org_id: data[0].org_id,
+            p_table_name: 'attendance',
+            p_record_id: 'SUBSIDY_EXPORT',
+            p_description: `PII-Lite IP Log Export for Gujarat DST (${startDate} to ${endDate})`,
+            p_actor_id: user.id
+        })
+    }
 
-    return data
+    return (data ?? []).map(({ fixed_worker_id, client_ip, date }) => ({
+        worker_id: fixed_worker_id,
+        client_ip,
+        date,
+    }))
 }
 
 /**
@@ -199,7 +244,8 @@ export async function exportAttendanceLogs(startDate: string, endDate: string) {
  */
 
 export async function getExportLogs() {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('audit_log')
         .select('*')
@@ -215,7 +261,8 @@ export async function getExportLogs() {
  */
 
 export async function getComplianceSettings() {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('compliance_settings')
         .select('*')
@@ -230,13 +277,14 @@ export async function updateGRODetails(data: {
     gro_email: string
     gro_phone?: string
 }) {
-    const supabase = await createClient()
+    const { user } = await requireRole(['admin'])
+    const supabase = createAdminClient()
     const { error } = await supabase
         .from('compliance_settings')
         .update({
             ...data,
             updated_at: new Date().toISOString(),
-            updated_by: (await supabase.auth.getUser()).data.user?.id
+            updated_by: user.id
         })
         .eq('id', true)
 
@@ -250,7 +298,8 @@ export async function updateGRODetails(data: {
  */
 
 export async function getDpaTemplates() {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     const { data, error } = await supabase
         .from('dpas')
         .select('*')
@@ -261,7 +310,8 @@ export async function getDpaTemplates() {
 }
 
 export async function getFactoryDpaStatus() {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     
     // Fetch all organizations with their latest DPA status and lockdown status
     const { data, error } = await supabase
@@ -290,7 +340,8 @@ export async function getFactoryDpaStatus() {
 }
 
 export async function updateDpaTemplate(id: string, data: { content_text: string, is_active: boolean }) {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     
     if (data.is_active) {
         // Deactivate all others
@@ -310,7 +361,8 @@ export async function updateDpaTemplate(id: string, data: { content_text: string
 }
 
 export async function createDpaTemplate(data: { version_string: string, content_text: string, is_active: boolean }) {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     
     if (data.is_active) {
         await supabase.from('dpas').update({ is_active: false })
@@ -325,8 +377,8 @@ export async function createDpaTemplate(data: { version_string: string, content_
 }
 
 export async function recordDpaSignature(orgId: string, dpaId: string, proofUrl?: string) {
-    const supabase = await createClient()
-    const user = (await supabase.auth.getUser()).data.user
+    const { user } = await requireRole(['admin'])
+    const supabase = createAdminClient()
 
     const { error } = await supabase
         .from('organization_dpas')
@@ -348,22 +400,8 @@ export async function recordDpaSignature(orgId: string, dpaId: string, proofUrl?
 }
 
 export async function signDpa(dpaId: string) {
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createClient()
-    const userResponse = await supabase.auth.getUser()
-    const user = userResponse.data.user
-    
-    if (!user) throw new Error('Unauthorized')
-
-    // Fetch user's org_id
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('org_id, role')
-        .eq('id', user.id)
-        .single()
-
-    if (!profile || profile.role !== 'owner') {
-        throw new Error('Only factory owners can sign DPAs.')
-    }
 
     const { error } = await supabase
         .from('organization_dpas')
@@ -388,6 +426,7 @@ export async function signDpa(dpaId: string) {
  */
 
 export async function lockdownTenant(orgId: string, reason: string, severity: string) {
+    await requireRole(['admin'])
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('lockdown_tenant', {
         p_org_id: orgId,
@@ -416,6 +455,7 @@ export async function lockdownTenant(orgId: string, reason: string, severity: st
 }
 
 export async function unlockTenant(orgId: string) {
+    await requireRole(['admin'])
     const supabase = await createClient()
     const { data, error } = await supabase.rpc('unlock_tenant', {
         p_org_id: orgId
@@ -428,10 +468,9 @@ export async function unlockTenant(orgId: string) {
 }
 
 export async function requestUnlock(orgId: string, reason: string) {
+    const { profile } = await requireRole(['owner'])
+    if (profile.org_id !== orgId) throw new Error('Unauthorized')
     const supabase = await createClient()
-    const user = (await supabase.auth.getUser()).data.user
-    
-    if (!user) throw new Error('Unauthorized')
 
     const { error } = await supabase
         .from('grievances')
@@ -450,7 +489,8 @@ export async function requestUnlock(orgId: string, reason: string) {
 }
 
 export async function getBreachReports(orgId?: string) {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     let query = supabase
         .from('breach_reports')
         .select(`
@@ -469,7 +509,8 @@ export async function getBreachReports(orgId?: string) {
 }
 
 export async function generateBreachReportTemplate(reportId: string) {
-    const supabase = await createClient()
+    await requireRole(['admin'])
+    const supabase = createAdminClient()
     
     // Fetch report data
     const { data: report, error } = await supabase
