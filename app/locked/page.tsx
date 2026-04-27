@@ -17,11 +17,11 @@ export default async function LockedPage() {
         .eq('id', user.id)
         .single()
 
-    if (!profile?.organizations?.is_locked_down) {
+    const org = Array.isArray(profile?.organizations) ? profile.organizations[0] : profile?.organizations
+
+    if (!org?.is_locked_down) {
         redirect('/')
     }
-
-    const org = profile.organizations
 
     async function handleRequestUnlock(formData: FormData) {
         'use server'
