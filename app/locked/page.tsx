@@ -17,6 +17,9 @@ export default async function LockedPage() {
         .eq('id', user.id)
         .single()
 
+    if (!profile?.org_id) redirect('/login')
+    const orgId = profile.org_id
+
     const org = Array.isArray(profile?.organizations) ? profile.organizations[0] : profile?.organizations
 
     if (!org?.is_locked_down) {
@@ -26,7 +29,7 @@ export default async function LockedPage() {
     async function handleRequestUnlock(formData: FormData) {
         'use server'
         const reason = formData.get('reason') as string
-        await requestUnlock(profile.org_id, reason)
+        await requestUnlock(orgId, reason)
     }
 
     return (
@@ -48,7 +51,7 @@ export default async function LockedPage() {
                     <div className="bg-slate-950/50 rounded-lg p-4 border border-slate-800">
                         <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Detection Reason</h4>
                         <p className="text-sm text-slate-300 leading-relaxed italic">
-                            "{org.lockdown_reason || 'Automated security trigger or pending compliance verification.'}"
+                            &ldquo;{org.lockdown_reason || 'Automated security trigger or pending compliance verification.'}&rdquo;
                         </p>
                     </div>
 
