@@ -91,7 +91,7 @@ export default async function DpaPage() {
                                 <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 p-4 rounded-lg mb-6">
                                     <p className="text-sm text-amber-800 dark:text-amber-300 flex items-start">
                                         <AlertCircle className="w-5 h-5 mr-3 shrink-0" />
-                                        By clicking "Digitally Sign Agreement", you confirm that you have read and agree to the terms of this DPA on behalf of {profile.organizations.name}. This action will be logged with your timestamp and IP address for compliance auditing.
+                                        By clicking "Digitally Sign Agreement", you confirm that you have read and agree to the terms of this DPA on behalf of {(profile?.organizations as any)?.name || 'your factory'}. This action will be logged with your timestamp and IP address for compliance auditing.
                                     </p>
                                 </div>
                             )}
