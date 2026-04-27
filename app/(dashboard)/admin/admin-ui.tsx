@@ -62,7 +62,8 @@ export function AdminDashboardUI({
     initialExportLogs, 
     initialSettings,
     initialDpaTemplates,
-    initialFactoryDpaStatus
+    initialFactoryDpaStatus,
+    initialBreachReports
 }: Props) {
     const [workerIdSearch, setWorkerIdSearch] = useState('')
     const [exportDateRange, setExportDateRange] = useState({ start: '', end: '' })
@@ -649,7 +650,7 @@ export function AdminDashboardUI({
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {initialBreachReports.map((report) => (
+                                    {initialBreachReports.map((report: any) => (
                                         <TableRow key={report.id}>
                                             <TableCell className="text-sm">{report.organizations.name}</TableCell>
                                             <TableCell><Badge variant="secondary">{report.affected_users_count} Users</Badge></TableCell>

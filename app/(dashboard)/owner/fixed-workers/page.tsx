@@ -240,7 +240,7 @@ function PieceRateTab({ orgId }: { orgId: string }) {
         setDeleting(true)
         try {
             const result = await deleteMeterWorkerWithCode(workerToDelete.id, accessCode, erasePII)
-            if (!result.success) {
+            if (!('success' in result) || !result.success) {
                 toast.error(result.error || t('auth.invalid_code'))
                 return
             }
@@ -532,7 +532,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setDeleting(true)
         try {
             const result = await deleteFixedWorkerWithCode(workerToDelete.id, accessCode, erasePII)
-            if (!result.success) {
+            if (!('success' in result) || !result.success) {
                 toast.error(result.error || t('auth.invalid_code'))
                 return
             }
