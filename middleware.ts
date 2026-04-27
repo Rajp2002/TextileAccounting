@@ -210,7 +210,6 @@ export async function updateSession(request: NextRequest) {
         const onboardingComplete = jwt.onboarding_complete
 
         if (role === 'owner') {
-            // Owner hasn't completed onboarding → send to checklist
             if (!onboardingComplete) {
                 return NextResponse.redirect(new URL('/onboarding', request.url))
             }
@@ -220,14 +219,12 @@ export async function updateSession(request: NextRequest) {
         } else if (role === 'admin') {
             return NextResponse.redirect(new URL('/admin', request.url))
         }
-        // Role unknown → let them through to the public page (edge case)
         
         return response
     }
 
     // 2. Unauthenticated user hitting protected route → /login (JSON 401 for API routes)
     if (!user && !isPublicRoute(pathname)) {
-        // API routes must get JSON errors, not HTML page redirects
         if (pathname.startsWith('/api/')) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
@@ -242,18 +239,14 @@ export async function updateSession(request: NextRequest) {
         
         let jwt: Record<string, any> = {}
         if (token) {
-             // Supabase stores cookies as JSON arrays, so parse and take the first item token
              try {
                  const parsedToken = JSON.parse(token.value);
                  if (Array.isArray(parsedToken) && parsedToken.length > 0) {
                      jwt = parseJWTClaims(parsedToken[0]);
                  }
-             } catch(e) {
-                 // Ignore parsing errors, JWT will just be empty
-             }
+             } catch(e) {}
         }
         
-        // If cookie parsing failed, rely on getting session from supabase
         if(Object.keys(jwt).length === 0){
              const { data: { session } } = await supabase.auth.getSession()
              if (session) {
@@ -267,69 +260,66 @@ export async function updateSession(request: NextRequest) {
         const onboardingComplete = jwt.onboarding_complete
         const orgId = jwt.org_id
 
-        // Missing org_id in JWT = possibly a stale JWT (race condition on new signup/join).
-        // Skip this check for 'admin' role as they are cross-tenant/global.
         let resolvedOrgId = orgId
         let resolvedOnboarding = onboardingComplete
+        let isLockedDown = false
 
         if (!orgId && !pathname.startsWith('/onboarding') && role !== 'admin') {
             try {
                 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
                 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
                 if (serviceKey && supabaseUrl) {
-                    // Parallelize DB fallback fetches using Promise.all
-                    const fetches = [
-                        fetch(
-                            `${supabaseUrl}/rest/v1/profiles?select=org_id&id=eq.${user!.id}&limit=1`,
-                            {
-                                headers: {
-                                    apikey: serviceKey,
-                                    Authorization: `Bearer ${serviceKey}`,
-                                    'Content-Type': 'application/json',
-                                },
-                            }
-                        ).then(async (res) => res.ok ? (await res.json())[0]?.org_id : undefined)
-                    ]
-                    
-                    if (role === 'owner') {
-                         fetches.push(
-                            fetch(
-                                `${supabaseUrl}/rest/v1/profiles?select=organizations(onboarding_complete)&id=eq.${user!.id}&limit=1`,
-                                {
-                                    headers: {
-                                        apikey: serviceKey,
-                                        Authorization: `Bearer ${serviceKey}`,
-                                        'Content-Type': 'application/json',
-                                    },
-                                }
-                            ).then(async (res) => {
-                                if (res.ok) {
-                                    const profile = (await res.json())[0];
-                                    if (profile?.organizations && typeof profile.organizations === 'object' && !Array.isArray(profile.organizations)) {
-                                         return profile.organizations.onboarding_complete
-                                    }
-                                }
-                                return undefined;
-                             })
-                         )
-                    }
-
-                    const [profileOrgId, profileOrgOnboarding] = await Promise.all(fetches)
-                    
-                    resolvedOrgId = profileOrgId ?? undefined
-                    if (role === 'owner' && profileOrgOnboarding !== undefined) {
-                        resolvedOnboarding = profileOrgOnboarding
+                    const profileRes = await fetch(
+                        `${supabaseUrl}/rest/v1/profiles?select=org_id&id=eq.${user!.id}&limit=1`,
+                        {
+                            headers: {
+                                apikey: serviceKey,
+                                Authorization: `Bearer ${serviceKey}`,
+                                'Content-Type': 'application/json',
+                            },
+                        }
+                    )
+                    if (profileRes.ok) {
+                        const profile = (await profileRes.json())[0]
+                        resolvedOrgId = profile?.org_id
                     }
                 }
-            } catch {
-                // DB lookup failed
-            }
+            } catch {}
+        }
+
+        if (resolvedOrgId && role !== 'admin' && !pathname.startsWith('/api/')) {
+            try {
+                const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+                if (serviceKey && supabaseUrl) {
+                    const orgRes = await fetch(
+                        `${supabaseUrl}/rest/v1/organizations?select=onboarding_complete,is_locked_down&id=eq.${resolvedOrgId}&limit=1`,
+                        {
+                            headers: {
+                                apikey: serviceKey,
+                                Authorization: `Bearer ${serviceKey}`,
+                                'Content-Type': 'application/json',
+                            },
+                        }
+                    )
+                    if (orgRes.ok) {
+                        const org = (await orgRes.json())[0]
+                        if (org) {
+                            resolvedOnboarding = org.onboarding_complete
+                            isLockedDown = org.is_locked_down
+                        }
+                    }
+                }
+            } catch {}
+        }
+
+        // 4. Lockdown guard: redirect locked tenants to /locked
+        if (isLockedDown && !pathname.startsWith('/locked') && !pathname.startsWith('/api/')) {
+            return NextResponse.redirect(new URL('/locked', request.url))
         }
 
         // If org_id is still absent after DB fallback, the session is genuinely broken
-        // Skip for admin
         if (!resolvedOrgId && !pathname.startsWith('/onboarding') && role !== 'admin') {
-            // API routes: return JSON error instead of signing out and redirecting to HTML
             if (pathname.startsWith('/api/')) {
                 return NextResponse.json({ error: 'Session incomplete. Please sign in again.' }, { status: 403 })
             }
@@ -338,14 +328,12 @@ export async function updateSession(request: NextRequest) {
             url.pathname = '/login'
             url.searchParams.set('reason', 'session_incomplete')
             const signOutRedirect = NextResponse.redirect(url)
-            // Copy cleared-session cookies from the signOut response to the redirect
             response.cookies.getAll().forEach((cookie) =>
                 signOutRedirect.cookies.set(cookie.name, cookie.value, { path: '/' })
             )
             return signOutRedirect
         }
 
-        // Onboarding guard: owners must complete setup before accessing ops routes
         if (
             role === 'owner' &&
             !resolvedOnboarding &&
@@ -359,17 +347,12 @@ export async function updateSession(request: NextRequest) {
             return NextResponse.redirect(new URL('/onboarding', request.url))
         }
 
-        // If onboarding is complete and they navigate to /onboarding → push to dashboard
         if (role === 'owner' && resolvedOnboarding && pathname === '/onboarding') {
             return NextResponse.redirect(new URL('/owner/analytics', request.url))
         }
 
-        // ── Strict role boundary enforcement ──────────────────────────────
-        
-        // 1. Admin restricted routes - Hardened with fresh DB check
         if (pathname.startsWith('/admin')) {
             if (role !== 'admin') {
-                // Secondary check: verify in DB in case of stale JWT or manual cookie tampering
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('role')
