@@ -78,7 +78,7 @@ export async function updateMachine(machineId: string, name: string, loomType?: 
 }
 
 /** @deprecated Use updateMachine instead */
-export const renameMachine = (machineId: string, name: string) => updateMachine(machineId, name)
+export const renameMachine = async (machineId: string, name: string) => updateMachine(machineId, name)
 
 
 export async function toggleMachineStatus(machineId: string, currentStatus: string) {
