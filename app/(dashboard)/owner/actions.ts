@@ -23,16 +23,19 @@ import { eraseWorkerPII } from './actions/compliance'
 // These run server-side so auth.uid() is always set in the audit trigger,
 // giving the owner a complete actor trail for every machine change.
 
-export async function addMachine(name: string) {
+export async function addMachine(name: string, loomType?: string) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const trimmedName = name.trim()
     if (!trimmedName) return { error: 'Machine name is required.' }
 
+    const insertData: Record<string, any> = { name: trimmedName, org_id: profile.org_id, status: 'active' }
+    if (loomType) insertData.loom_type = loomType
+
     const { error } = await supabase
         .from('machines')
-        .insert({ name: trimmedName, org_id: profile.org_id, status: 'active' })
+        .insert(insertData)
 
     if (error) {
         console.error('Failed to add machine:', error)
@@ -43,30 +46,40 @@ export async function addMachine(name: string) {
     return { success: true }
 }
 
-export async function renameMachine(machineId: string, newName: string) {
+
+export async function updateMachine(machineId: string, name: string, loomType?: string | null) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(UuidSchema, machineId)
     if ('error' in parsed) return { error: parsed.error }
 
-    const trimmedName = newName.trim()
+    const trimmedName = name.trim()
     if (!trimmedName) return { error: 'Machine name cannot be empty.' }
+
+    // Build update object — always update name; loom_type only when explicitly passed
+    // (undefined = caller didn't touch it; null = caller explicitly cleared it)
+    const updateData: Record<string, any> = { name: trimmedName }
+    if (loomType !== undefined) updateData.loom_type = loomType ?? null
 
     const { error } = await supabase
         .from('machines')
-        .update({ name: trimmedName })
+        .update(updateData)
         .eq('id', parsed.data)
         .eq('org_id', profile.org_id)
 
     if (error) {
-        console.error('Failed to rename machine:', error)
-        return { error: 'Failed to rename machine. Please try again.' }
+        console.error('Failed to update machine:', error)
+        return { error: 'Failed to update machine. Please try again.' }
     }
 
     revalidatePath('/owner/machines')
     return { success: true }
 }
+
+/** @deprecated Use updateMachine instead */
+export const renameMachine = (machineId: string, name: string) => updateMachine(machineId, name)
+
 
 export async function toggleMachineStatus(machineId: string, currentStatus: string) {
     const { profile } = await requireRole(['owner'])

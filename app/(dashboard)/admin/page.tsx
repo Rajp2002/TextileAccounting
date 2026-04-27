@@ -3,7 +3,10 @@ import {
     getGrievances, 
     getNoticeRegistry, 
     getExportLogs, 
-    getComplianceSettings 
+    getComplianceSettings,
+    getDpaTemplates,
+    getFactoryDpaStatus,
+    getBreachReports
 } from '@/lib/actions/compliance'
 import { AdminDashboardUI } from './admin-ui'
 
@@ -17,12 +20,18 @@ export default async function AdminDashboardPage() {
         grievances, 
         notices, 
         exportLogs, 
-        settings
+        settings,
+        dpaTemplates,
+        factoryDpaStatus,
+        breachReports
     ] = await Promise.all([
         getGrievances(),
         getNoticeRegistry(),
         getExportLogs(),
-        getComplianceSettings()
+        getComplianceSettings(),
+        getDpaTemplates(),
+        getFactoryDpaStatus(),
+        getBreachReports()
     ])
 
     return (
@@ -37,8 +46,12 @@ export default async function AdminDashboardPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
-                        Operational
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                        factoryDpaStatus.some((f: any) => f.is_locked_down) 
+                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' 
+                        : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+                    }`}>
+                        {factoryDpaStatus.some((f: any) => f.is_locked_down) ? 'Incident Active' : 'Operational'}
                     </span>
                 </div>
             </header>
@@ -48,6 +61,9 @@ export default async function AdminDashboardPage() {
                 initialNotices={notices}
                 initialExportLogs={exportLogs}
                 initialSettings={settings}
+                initialDpaTemplates={dpaTemplates}
+                initialFactoryDpaStatus={factoryDpaStatus}
+                initialBreachReports={breachReports}
             />
         </div>
     )

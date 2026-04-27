@@ -23,6 +23,9 @@ export async function logOfflineGrievance(formData: {
     worker_id?: number
     subject: string
     description: string
+    target_entity?: 'WEAVLY' | 'FACTORY_OWNER'
+    grievance_type?: 'DATA_PRIVACY' | 'OPERATIONAL' | 'OTHER'
+    filed_by_role?: 'worker' | 'supervisor' | 'owner' | 'admin'
 }) {
     const supabase = await createClient()
     const { error } = await supabase
@@ -240,4 +243,198 @@ export async function updateGRODetails(data: {
     if (error) throw new Error(error.message)
     revalidatePath('/admin')
     revalidatePath('/privacy')
+}
+
+/**
+ * DPA MANAGEMENT ACTIONS
+ */
+
+export async function getDpaTemplates() {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('dpas')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+    if (error) throw new Error(error.message)
+    return data
+}
+
+export async function getFactoryDpaStatus() {
+    const supabase = await createClient()
+    
+    // Fetch all organizations with their latest DPA status and lockdown status
+    const { data, error } = await supabase
+        .from('organizations')
+        .select(`
+            id,
+            name,
+            is_locked_down,
+            lockdown_reason,
+            lockdown_severity,
+            locked_at,
+            organization_dpas (
+                id,
+                status,
+                signed_at,
+                proof_url,
+                dpas (
+                    version_string
+                )
+            )
+        `)
+        .order('name')
+
+    if (error) throw new Error(error.message)
+    return data
+}
+
+export async function updateDpaTemplate(id: string, data: { content_text: string, is_active: boolean }) {
+    const supabase = await createClient()
+    
+    if (data.is_active) {
+        // Deactivate all others
+        await supabase.from('dpas').update({ is_active: false }).neq('id', id)
+    }
+
+    const { error } = await supabase
+        .from('dpas')
+        .update({
+            ...data,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/admin')
+}
+
+export async function createDpaTemplate(data: { version_string: string, content_text: string, is_active: boolean }) {
+    const supabase = await createClient()
+    
+    if (data.is_active) {
+        await supabase.from('dpas').update({ is_active: false })
+    }
+
+    const { error } = await supabase
+        .from('dpas')
+        .insert(data)
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/admin')
+}
+
+export async function recordDpaSignature(orgId: string, dpaId: string, proofUrl?: string) {
+    const supabase = await createClient()
+    const user = (await supabase.auth.getUser()).data.user
+
+    const { error } = await supabase
+        .from('organization_dpas')
+        .upsert({
+            org_id: orgId,
+            dpa_id: dpaId,
+            status: 'signed',
+            signed_at: new Date().toISOString(),
+            signed_by: user?.id,
+            proof_url: proofUrl,
+            updated_at: new Date().toISOString()
+        }, {
+            onConflict: 'org_id, dpa_id'
+        })
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/admin')
+}
+
+/**
+ * TENANT LOCKDOWN & BREACH ACTIONS
+ */
+
+export async function lockdownTenant(orgId: string, reason: string, severity: string) {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('lockdown_tenant', {
+        p_org_id: orgId,
+        p_reason: reason,
+        p_severity: severity
+    })
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/admin')
+    return data
+}
+
+export async function unlockTenant(orgId: string) {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('unlock_tenant', {
+        p_org_id: orgId
+    })
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/admin')
+    return data
+}
+
+export async function getBreachReports(orgId?: string) {
+    const supabase = await createClient()
+    let query = supabase
+        .from('breach_reports')
+        .select(`
+            *,
+            organizations ( name )
+        `)
+        .order('filed_at', { ascending: false })
+
+    if (orgId) {
+        query = query.eq('org_id', orgId)
+    }
+
+    const { data, error } = await query
+    if (error) throw new Error(error.message)
+    return data
+}
+
+export async function generateBreachReportTemplate(reportId: string) {
+    const supabase = await createClient()
+    
+    // Fetch report data
+    const { data: report, error } = await supabase
+        .from('breach_reports')
+        .select(`
+            *,
+            organizations ( 
+                name,
+                lockdown_reason,
+                lockdown_severity,
+                locked_at
+            )
+        `)
+        .eq('id', reportId)
+        .single()
+
+    if (error) throw new Error(error.message)
+
+    // Fetch GRO details
+    const { data: settings } = await supabase.from('compliance_settings').select('*').single()
+
+    // Generate DPDP 2026 Compliant Template
+    const template = {
+        title: "DATA BREACH NOTIFICATION (FORM DPDP-BN1)",
+        fiduciary_details: {
+            name: report.organizations.name,
+            registration_number: "PENDING_REGISTRATION", // Placeholder for actual reg number
+            contact_person: settings?.gro_name,
+            contact_email: settings?.gro_email
+        },
+        breach_details: {
+            nature_of_breach: report.description,
+            severity: report.severity,
+            date_of_detection: report.organizations.locked_at,
+            estimated_principals_affected: report.affected_users_count
+        },
+        remedial_measures: report.measures_taken || "Platform-level isolation triggered immediately upon detection to prevent further unauthorized access or data exfiltration.",
+        declaration: "I hereby declare that the information provided above is true and correct to the best of my knowledge and belief.",
+        timestamp: new Date().toISOString()
+    }
+
+    return template
 }

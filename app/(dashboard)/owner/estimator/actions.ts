@@ -151,6 +151,11 @@ export async function saveAsFabricTemplate(data: {
     perPickCostPaisa: number
     yarnShortagePct?: number
     overheadOverridePerM?: number | null
+    loomType?:        string | null
+    loomRpm?:         number | null
+    loomPowerKw?:     number | null
+    sizingMode?:      'in_house' | 'outsourced'
+    hoursPerShift?:   number
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -173,6 +178,12 @@ export async function saveAsFabricTemplate(data: {
             warp_crimp_pct:      data.warpCrimpPct ?? 0,
             yarn_shortage_pct:   data.yarnShortagePct ?? 0,
             overhead_override_per_m: data.overheadOverridePerM ?? null,
+            // Loom type + sizing mode (new)
+            loom_type:           data.loomType ?? null,
+            loom_rpm:            data.loomRpm ?? null,
+            loom_power_kw:       data.loomPowerKw ?? null,
+            sizing_mode:         data.sizingMode ?? 'in_house',
+            hours_per_shift:     data.hoursPerShift ?? 12,
             // Legacy display fields — cast to integer to satisfy old column types
             yarn_denier:         Math.round(firstWarp?.calcDenier ?? 75),
             calculated_yarn_denier: firstWarp?.calcDenier ?? 75,
@@ -237,6 +248,11 @@ export async function updateFabricTemplate(data: {
     perPickCostPaisa: number
     yarnShortagePct?: number
     overheadOverridePerM?: number | null
+    loomType?:        string | null
+    loomRpm?:         number | null
+    loomPowerKw?:     number | null
+    sizingMode?:      'in_house' | 'outsourced'
+    hoursPerShift?:   number
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -255,6 +271,12 @@ export async function updateFabricTemplate(data: {
             warp_crimp_pct:      data.warpCrimpPct ?? 0,
             yarn_shortage_pct:   data.yarnShortagePct ?? 0,
             overhead_override_per_m: data.overheadOverridePerM ?? null,
+            // Loom type + sizing mode (new)
+            loom_type:           data.loomType ?? null,
+            loom_rpm:            data.loomRpm ?? null,
+            loom_power_kw:       data.loomPowerKw ?? null,
+            sizing_mode:         data.sizingMode ?? 'in_house',
+            hours_per_shift:     data.hoursPerShift ?? 12,
             // Legacy sync
             yarn_denier:         Math.round(firstWarp?.calcDenier ?? 75),
             calculated_yarn_denier: firstWarp?.calcDenier ?? 75,
@@ -358,6 +380,12 @@ export async function saveEstimatorQuoteV3(params: {
             order_quantity_m:     estimate.orderQuantityM,
             profit_margin_pct:    estimate.profitPct,
             enabled_sections:     estimate.enabledSections,
+            // Loom type + sizing mode audit trail (Gap 2 fix)
+            loom_type:            estimate.loomType ?? null,
+            estimator_rpm:        estimate.loomRpm ?? null,
+            estimator_power_kw:   estimate.loomPowerKw ?? null,
+            hours_per_shift:      estimate.hoursPerShift,
+            sizing_mode:          estimate.sizingMode,
             // Result snapshots
             landed_cost_per_meter:    params.totalProductionCostPerM,
             quote_price_per_meter:    params.quotePricePerM,

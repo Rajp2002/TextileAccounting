@@ -9,6 +9,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { 
+    Select, 
+    SelectContent, 
+    SelectItem, 
+    SelectTrigger, 
+    SelectValue 
+} from '@/components/ui/select'
+import { 
     AlertCircle, 
     ShieldAlert, 
     FileText, 
@@ -18,7 +25,10 @@ import {
     History, 
     Settings, 
     Search,
-    Clock
+    Clock,
+    FileSignature,
+    CheckCircle2,
+    XCircle
 } from 'lucide-react'
 import { 
     logOfflineGrievance, 
@@ -26,7 +36,13 @@ import {
     generateWorkerReport, 
     toggleNoticeStatus, 
     exportAttendanceLogs,
-    updateGRODetails
+    updateGRODetails,
+    updateDpaTemplate,
+    createDpaTemplate,
+    recordDpaSignature,
+    lockdownTenant,
+    unlockTenant,
+    generateBreachReportTemplate
 } from '@/lib/actions/compliance'
 import { toast } from 'sonner'
 
@@ -35,17 +51,30 @@ interface Props {
     initialNotices: any[]
     initialExportLogs: any[]
     initialSettings: any
+    initialDpaTemplates: any[]
+    initialFactoryDpaStatus: any[]
+    initialBreachReports: any[]
 }
 
 export function AdminDashboardUI({ 
     initialGrievances, 
     initialNotices, 
     initialExportLogs, 
-    initialSettings 
+    initialSettings,
+    initialDpaTemplates,
+    initialFactoryDpaStatus
 }: Props) {
     const [workerIdSearch, setWorkerIdSearch] = useState('')
     const [exportDateRange, setExportDateRange] = useState({ start: '', end: '' })
     const [groDetails, setGroDetails] = useState(initialSettings)
+    
+    // Offline form state
+    const [offlineTarget, setOfflineTarget] = useState<'WEAVLY' | 'FACTORY_OWNER'>('FACTORY_OWNER')
+    const [offlineType, setOfflineType] = useState<'DATA_PRIVACY' | 'OPERATIONAL' | 'OTHER'>('OPERATIONAL')
+
+    // Lockdown form state
+    const [lockdownReason, setLockdownReason] = useState('')
+    const [lockdownSeverity, setLockdownSeverity] = useState<'low' | 'medium' | 'high' | 'critical'>('medium')
 
     // Helper: Calculate days left for grievance
     const getDaysLeft = (targetDate: string) => {
@@ -102,6 +131,22 @@ export function AdminDashboardUI({
         })
     }
 
+    const handleDownloadReport = async (reportId: string) => {
+        toast.promise(generateBreachReportTemplate(reportId), {
+            loading: 'Generating DPDP filing template...',
+            success: (data) => {
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `DPDP_Breach_Report_${reportId}.json`
+                a.click()
+                return 'Report generated and downloaded.'
+            },
+            error: 'Failed to generate report.'
+        })
+    }
+
     return (
         <Tabs defaultValue="grievances" className="w-full">
             <TabsList className="grid grid-cols-2 md:grid-cols-6 gap-2 bg-transparent h-auto mb-8">
@@ -113,6 +158,9 @@ export function AdminDashboardUI({
                 </TabsTrigger>
                 <TabsTrigger value="notices" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
                     <FileText className="h-4 w-4" /> Notices
+                </TabsTrigger>
+                <TabsTrigger value="dpas" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
+                    <FileSignature className="h-4 w-4" /> DPA Agreements
                 </TabsTrigger>
                 <TabsTrigger value="subsidy" className="data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-zinc-50 dark:data-[state=active]:text-zinc-900 flex items-center gap-2 py-3">
                     <Globe className="h-4 w-4" /> Gujarat Subsidy
@@ -137,7 +185,8 @@ export function AdminDashboardUI({
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Subject</TableHead>
+                                        <TableHead>Target</TableHead>
+                                        <TableHead>Subject / Type</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Resolution Clock</TableHead>
                                         <TableHead>Actions</TableHead>
@@ -148,9 +197,21 @@ export function AdminDashboardUI({
                                         const daysLeft = getDaysLeft(g.target_resolution_date)
                                         return (
                                             <TableRow key={g.id}>
-                                                <TableCell className="font-medium">{g.subject}</TableCell>
                                                 <TableCell>
-                                                    <Badge variant={g.status === 'resolved' ? 'default' : 'destructive'}>
+                                                    <Badge variant={g.target_entity === 'WEAVLY' ? 'destructive' : 'outline'} className="font-bold">
+                                                        {g.target_entity}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium">{g.subject}</span>
+                                                        <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-tight">
+                                                            {g.grievance_type}
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant={g.status === 'resolved' ? 'default' : 'secondary'}>
                                                         {g.status.toUpperCase()}
                                                     </Badge>
                                                 </TableCell>
@@ -216,6 +277,33 @@ export function AdminDashboardUI({
                             <CardDescription>Manually record grievances received via phone or in-person.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold uppercase text-zinc-500">Target Entity</label>
+                                    <Select value={offlineTarget} onValueChange={(val: any) => setOfflineTarget(val)}>
+                                        <SelectTrigger className="h-9 text-xs">
+                                            <SelectValue placeholder="Target" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="FACTORY_OWNER">Factory Owner</SelectItem>
+                                            <SelectItem value="WEAVLY">Weavly (DPDP)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-bold uppercase text-zinc-500">Grievance Type</label>
+                                    <Select value={offlineType} onValueChange={(val: any) => setOfflineType(val)}>
+                                        <SelectTrigger className="h-9 text-xs">
+                                            <SelectValue placeholder="Type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="OPERATIONAL">Operational</SelectItem>
+                                            <SelectItem value="DATA_PRIVACY">Data Privacy</SelectItem>
+                                            <SelectItem value="OTHER">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
                             <Input placeholder="Subject" id="g_subject" />
                             <Input placeholder="Worker ID (Optional)" type="number" id="g_worker_id" />
                             <textarea className="w-full min-h-[100px] p-3 rounded-md border text-sm" placeholder="Description" id="g_description" />
@@ -223,7 +311,15 @@ export function AdminDashboardUI({
                                 const subject = (document.getElementById('g_subject') as HTMLInputElement).value
                                 const worker_id = (document.getElementById('g_worker_id') as HTMLInputElement).value
                                 const description = (document.getElementById('g_description') as HTMLTextAreaElement).value
-                                await logOfflineGrievance({ org_id: 'GLOBAL', subject, description, worker_id: worker_id ? parseInt(worker_id) : undefined })
+                                await logOfflineGrievance({ 
+                                    org_id: 'GLOBAL', 
+                                    subject, 
+                                    description, 
+                                    worker_id: worker_id ? parseInt(worker_id) : undefined,
+                                    target_entity: offlineTarget,
+                                    grievance_type: offlineType,
+                                    filed_by_role: 'admin'
+                                })
                                 toast.success('Grievance logged.')
                             }}>
                                 Save Record
@@ -294,6 +390,147 @@ export function AdminDashboardUI({
                 </Card>
             </TabsContent>
 
+            {/* DPA Agreements */}
+            <TabsContent value="dpas" className="space-y-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Data Processing Agreements (DPDP 2026)</CardTitle>
+                        <CardDescription>Manage DPAs between Weavly (Processor) and Factory Owners (Fiduciaries).</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Factory / Organization</TableHead>
+                                    <TableHead>Active DPA Status</TableHead>
+                                    <TableHead>Signed Date</TableHead>
+                                    <TableHead>Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {initialFactoryDpaStatus?.map((org) => {
+                                    const activeDpa = initialDpaTemplates?.find((d: any) => d.is_active)
+                                    const orgDpa = org.organization_dpas?.find((d: any) => d.dpas?.version_string === activeDpa?.version_string)
+                                    const isSigned = orgDpa?.status === 'signed'
+
+                                    return (
+                                        <TableRow key={org.id}>
+                                            <TableCell className="font-medium">{org.name}</TableCell>
+                                            <TableCell>
+                                                {isSigned ? (
+                                                    <Badge variant="default" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                        <CheckCircle2 className="h-3 w-3 mr-1" /> Signed ({activeDpa?.version_string})
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                                        <XCircle className="h-3 w-3 mr-1" /> Pending ({activeDpa?.version_string})
+                                                    </Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-sm text-zinc-500">
+                                                {isSigned ? new Date(orgDpa.signed_at).toLocaleDateString() : '-'}
+                                            </TableCell>
+                                            <TableCell>
+                                                {!isSigned && activeDpa && (
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        onClick={async () => {
+                                                            const proofUrl = prompt('Enter proof URL (optional):')
+                                                            toast.promise(recordDpaSignature(org.id, activeDpa.id, proofUrl || undefined), {
+                                                                loading: 'Recording signature...',
+                                                                success: 'DPA marked as signed.',
+                                                                error: 'Failed to record signature.'
+                                                            })
+                                                        }}
+                                                    >
+                                                        Mark as Signed
+                                                    </Button>
+                                                )}
+                                                {isSigned && orgDpa?.proof_url && (
+                                                    <a href={orgDpa.proof_url} target="_blank" className="text-xs text-blue-600 hover:underline ml-2">
+                                                        View Proof
+                                                    </a>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>DPA Templates</CardTitle>
+                        <CardDescription>Manage the active legal text for the Data Processing Agreement.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {initialDpaTemplates?.map((template: any) => (
+                            <div key={template.id} className="p-4 border rounded-md space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <div className="font-bold">{template.version_string} {template.is_active && <Badge variant="default" className="ml-2">Active</Badge>}</div>
+                                    <Switch 
+                                        checked={template.is_active} 
+                                        onCheckedChange={(val) => {
+                                            toast.promise(updateDpaTemplate(template.id, { content_text: template.content_text, is_active: val }), {
+                                                loading: 'Updating template...',
+                                                success: 'Template updated successfully.',
+                                                error: 'Failed to update.'
+                                            })
+                                        }}
+                                    />
+                                </div>
+                                <textarea 
+                                    className="w-full min-h-[100px] p-3 rounded-md border text-sm font-mono" 
+                                    defaultValue={template.content_text}
+                                    id={`dpa-text-${template.id}`}
+                                />
+                                <Button 
+                                    variant="secondary" 
+                                    size="sm"
+                                    onClick={() => {
+                                        const text = (document.getElementById(`dpa-text-${template.id}`) as HTMLTextAreaElement).value
+                                        toast.promise(updateDpaTemplate(template.id, { content_text: text, is_active: template.is_active }), {
+                                            loading: 'Saving text...',
+                                            success: 'Text saved successfully.',
+                                            error: 'Failed to save text.'
+                                        })
+                                    }}
+                                >
+                                    Save Text Changes
+                                </Button>
+                            </div>
+                        ))}
+                        
+                        <div className="pt-4 border-t mt-4 space-y-4">
+                            <h4 className="font-semibold text-sm">Add New Version</h4>
+                            <div className="flex gap-2">
+                                <Input placeholder="e.g. v2.0" id="new-dpa-version" className="max-w-[200px]" />
+                            </div>
+                            <textarea 
+                                className="w-full min-h-[100px] p-3 rounded-md border text-sm font-mono" 
+                                placeholder="DPA Legal Text..." 
+                                id="new-dpa-text"
+                            />
+                            <Button onClick={() => {
+                                const version = (document.getElementById('new-dpa-version') as HTMLInputElement).value
+                                const text = (document.getElementById('new-dpa-text') as HTMLTextAreaElement).value
+                                if (!version || !text) return toast.error('Fill in all fields')
+                                toast.promise(createDpaTemplate({ version_string: version, content_text: text, is_active: true }), {
+                                    loading: 'Creating new version...',
+                                    success: 'New DPA template created and set as active.',
+                                    error: 'Failed to create.'
+                                })
+                            }}>
+                                Create & Activate New Version
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
             {/* D. Gujarat Subsidy Export */}
             <TabsContent value="subsidy" className="space-y-6">
                 <Card>
@@ -319,8 +556,121 @@ export function AdminDashboardUI({
                 </Card>
             </TabsContent>
 
-            {/* E. Breach Detection */}
+            {/* E. Breach Detection & Tenant Isolation */}
             <TabsContent value="breach" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Tenant Isolation Manager</CardTitle>
+                            <CardDescription>DPDP 2026: Isolate specific factory data during a suspected breach.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Factory</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {initialFactoryDpaStatus.map((org) => (
+                                        <TableRow key={org.id}>
+                                            <TableCell className="font-bold">{org.name}</TableCell>
+                                            <TableCell>
+                                                {org.is_locked_down ? (
+                                                    <Badge variant="destructive" className="animate-pulse">ISOLATED</Badge>
+                                                ) : (
+                                                    <Badge variant="outline" className="text-emerald-600 border-emerald-200">ACTIVE</Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {org.is_locked_down ? (
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="text-emerald-600"
+                                                        onClick={() => {
+                                                            if(confirm(`Restore operations for ${org.name}?`)) {
+                                                                toast.promise(unlockTenant(org.id), {
+                                                                    loading: 'Restoring operations...',
+                                                                    success: 'Tenant isolation lifted.',
+                                                                    error: 'Failed to unlock.'
+                                                                })
+                                                            }
+                                                        }}
+                                                    >
+                                                        Lift Isolation
+                                                    </Button>
+                                                ) : (
+                                                    <div className="flex gap-2">
+                                                        <Input 
+                                                            placeholder="Reason..." 
+                                                            className="h-8 text-xs max-w-[120px]" 
+                                                            id={`lock-reason-${org.id}`}
+                                                        />
+                                                        <Button 
+                                                            variant="destructive" 
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const reason = (document.getElementById(`lock-reason-${org.id}`) as HTMLInputElement).value
+                                                                if(!reason) return toast.error("Reason is required for audit trail.")
+                                                                toast.promise(lockdownTenant(org.id, reason, 'medium'), {
+                                                                    loading: 'Isolating tenant...',
+                                                                    success: 'Tenant data isolated.',
+                                                                    error: 'Failed to isolate.'
+                                                                })
+                                                            }}
+                                                        >
+                                                            Isolate
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>DPDP 2026 Breach Reports</CardTitle>
+                            <CardDescription>Auto-generated filings for the Data Protection Board.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Factory</TableHead>
+                                        <TableHead>Affected</TableHead>
+                                        <TableHead>Template</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {initialBreachReports.map((report) => (
+                                        <TableRow key={report.id}>
+                                            <TableCell className="text-sm">{report.organizations.name}</TableCell>
+                                            <TableCell><Badge variant="secondary">{report.affected_users_count} Users</Badge></TableCell>
+                                            <TableCell>
+                                                <Button variant="ghost" size="sm" onClick={() => handleDownloadReport(report.id)}>
+                                                    <Download className="h-4 w-4 mr-2" /> JSON
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    {initialBreachReports.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-center py-8 text-zinc-500 italic">No breach reports filed.</TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
+
                 <Card>
                     <CardHeader>
                         <CardTitle>Mass Export Alerts (Breach Detection)</CardTitle>

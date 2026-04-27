@@ -46,6 +46,8 @@ import {
     DEFAULT_OVERHEAD_ITEMS,
     DEFAULT_FACTORY_SECTIONS,
     ensureOverheadIntegrity,
+    LOOM_TYPE_DEFAULTS,
+    type LoomType,
     type EstimateState,
     type WarpRow,
     type WeftRow,
@@ -56,6 +58,7 @@ import {
     type EstimatorV3Totals,
     type ScenarioResult,
 } from '@/lib/estimator'
+import { LoomConfigSection } from './LoomConfigSection'
 import {
     getFactoryCostProfile,
     getEstimatorTemplates,
@@ -96,6 +99,9 @@ type Action =
     | { type: 'MERGE_FIXED_WORKERS'; workers: { id: number; name: string; role: string; monthly_salary: number }[] }
     | { type: 'APPLY_TEMPLATE'; template: any }
     | { type: 'SET'; field: keyof EstimateState; value: any }
+    | { type: 'SET_LOOM_TYPE'; loomType: LoomType | null }
+    | { type: 'SET_LOOM_RPM'; rpm: number | null }
+    | { type: 'SET_LOOM_POWER_KW'; kw: number | null }
     | { type: 'ADD_WARP_ROW' }
     | { type: 'UPDATE_WARP_ROW'; id: string; field: keyof WarpRow; value: any }
     | { type: 'REMOVE_WARP_ROW'; id: string }
@@ -160,9 +166,21 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
         }
         case 'APPLY_TEMPLATE': {
             const tpl = action.template
+            // Explicit null fallbacks for pre-loom-type templates (Gap 4)
+            // Ensures undefined template fields never corrupt existing session state.
+            const loomFields = {
+                loomType:              (tpl.loom_type ?? null) as LoomType | null,
+                loomRpm:               tpl.loom_rpm != null ? Number(tpl.loom_rpm) : null,
+                loomPowerKw:           tpl.loom_power_kw != null ? Number(tpl.loom_power_kw) : null,
+                loomRpmIsCustomised:   false,
+                loomPowerKwIsCustomised: false,
+                sizingMode:            (tpl.sizing_mode ?? 'in_house') as 'in_house' | 'outsourced',
+                hoursPerShift:         tpl.hours_per_shift != null ? Number(tpl.hours_per_shift) : state.hoursPerShift,
+            }
             if (tpl.warp_rows && tpl.warp_rows.length > 0) {
                 return {
                     ...state,
+                    ...loomFields,
                     warpRows: tpl.warp_rows.map((r: WarpRow) => ({ ...r, id: nanoid() })),
                     weftRows: tpl.weft_rows && tpl.weft_rows.length > 0
                         ? tpl.weft_rows.map((r: WeftRow) => ({ ...r, id: nanoid() }))
@@ -176,6 +194,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             }
             return {
                 ...state,
+                ...loomFields,
                 warpRows: [{
                     id:          nanoid(),
                     calcDenier:  Number(tpl.calculated_yarn_denier ?? tpl.yarn_denier ?? 75),
@@ -201,6 +220,24 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
         }
         case 'SET':
             return { ...state, [action.field]: action.value }
+        case 'SET_LOOM_TYPE': {
+            const lt = action.loomType
+            if (!lt) return { ...state, loomType: null, loomRpm: null, loomPowerKw: null, loomRpmIsCustomised: false, loomPowerKwIsCustomised: false }
+            const defaults = LOOM_TYPE_DEFAULTS[lt]
+            return {
+                ...state,
+                loomType: lt,
+                // Auto-fill from class defaults; null for 'other' so user must enter
+                loomRpm:    defaults.rpm !== null ? defaults.rpm : null,
+                loomPowerKw: defaults.powerKw !== null ? defaults.powerKw : null,
+                loomRpmIsCustomised:   false,
+                loomPowerKwIsCustomised: false,
+            }
+        }
+        case 'SET_LOOM_RPM':
+            return { ...state, loomRpm: action.rpm, loomRpmIsCustomised: true }
+        case 'SET_LOOM_POWER_KW':
+            return { ...state, loomPowerKw: action.kw, loomPowerKwIsCustomised: true }
         case 'ADD_WARP_ROW':
             return { ...state, warpRows: [...state.warpRows, { id: nanoid(), ...DEFAULT_WARP_ROW }] }
         case 'UPDATE_WARP_ROW':
@@ -702,6 +739,11 @@ export default function EstimatorClient({
             perPickCostPaisa: state.perPickCostPaisa,
             yarnShortagePct:  state.yarnShortagePct,
             overheadOverridePerM: state.overheadOverridePerM,
+            loomType:         state.loomType,
+            loomRpm:          state.loomRpm,
+            loomPowerKw:      state.loomPowerKw,
+            sizingMode:       state.sizingMode,
+            hoursPerShift:    state.hoursPerShift,
         })
         setSavingTemplate(false)
         if (res.success) {
@@ -730,6 +772,11 @@ export default function EstimatorClient({
             perPickCostPaisa: state.perPickCostPaisa,
             yarnShortagePct:  state.yarnShortagePct,
             overheadOverridePerM: state.overheadOverridePerM,
+            loomType:         state.loomType,
+            loomRpm:          state.loomRpm,
+            loomPowerKw:      state.loomPowerKw,
+            sizingMode:       state.sizingMode,
+            hoursPerShift:    state.hoursPerShift,
         })
         setSavingTemplate(false)
         
@@ -1496,6 +1543,22 @@ export default function EstimatorClient({
                     <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="amber" />
                     <CardContent className="p-5 space-y-5">
 
+                        {/* ── Loom Type Selector ── renders above Loom Wage ── */}
+                        {(() => {
+                            const totalPicks = state.weftRows.reduce((a, b) => a + b.picks, 0)
+                            return (
+                                <LoomConfigSection
+                                    state={state}
+                                    totalPicks={totalPicks}
+                                    onSetLoomType={lt => dispatch({ type: 'SET_LOOM_TYPE', loomType: lt })}
+                                    onSetLoomRpm={rpm => dispatch({ type: 'SET_LOOM_RPM', rpm })}
+                                    onSetLoomPowerKw={kw => dispatch({ type: 'SET_LOOM_POWER_KW', kw })}
+                                    onSetHoursPerShift={h => dispatch({ type: 'SET', field: 'hoursPerShift', value: h })}
+                                    onSuggestOutput={dailyM => dispatch({ type: 'SET', field: 'avgOutputPerLoomPerDay', value: dailyM })}
+                                />
+                            )
+                        })()}
+
                         {/* ── Loom Wage per Meter → auto-derives paisa/pick ── */}
                         {(() => {
                             const totalPicks = state.weftRows.reduce((a, b) => a + b.picks, 0)
@@ -1586,8 +1649,57 @@ export default function EstimatorClient({
                     <CardContent className="p-4 space-y-4">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             <NumField label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} />
-                            <NumField label={t('estimator.warping_sizing.sizing_per_kg')} value={state.sizingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v ?? 0 })} step={0.1} />
                         </div>
+
+                        {/* Sizing: in-house vs outsourced toggle (Gap fix: zero is now explicit) */}
+                        <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-3 space-y-2">
+                            <p className="text-[10px] uppercase font-black text-violet-700/80 tracking-wider">Sizing</p>
+                            <div className="flex gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <input
+                                        id="sizing-mode-in-house"
+                                        type="radio"
+                                        name="sizing-mode"
+                                        value="in_house"
+                                        checked={state.sizingMode === 'in_house'}
+                                        onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })}
+                                        className="accent-violet-600 h-3.5 w-3.5"
+                                    />
+                                    <span className="text-xs font-semibold text-slate-600 group-hover:text-slate-900">
+                                        In-house <span className="text-[10px] text-slate-400 font-normal">(already in overhead)</span>
+                                    </span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                    <input
+                                        id="sizing-mode-outsourced"
+                                        type="radio"
+                                        name="sizing-mode"
+                                        value="outsourced"
+                                        checked={state.sizingMode === 'outsourced'}
+                                        onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })}
+                                        className="accent-violet-600 h-3.5 w-3.5"
+                                    />
+                                    <span className="text-xs font-semibold text-slate-600 group-hover:text-slate-900">Outsourced</span>
+                                </label>
+                            </div>
+                            {state.sizingMode === 'outsourced' && (
+                                <div className="space-y-1.5 pt-1">
+                                    <NumField
+                                        label="Sizing Rate (₹/kg)"
+                                        value={state.sizingRatePerKg}
+                                        onChange={v => dispatch({ type: 'SET', field: 'sizingRatePerKg', value: v ?? 0 })}
+                                        step={0.5}
+                                        hint="Typical Surat outsourced sizing: ₹8–15/kg"
+                                    />
+                                </div>
+                            )}
+                            {state.sizingMode === 'in_house' && (
+                                <p className="text-[9.5px] text-slate-400 font-medium italic">
+                                    Sizing cost is ₹0 — treated as part of factory overhead above.
+                                </p>
+                            )}
+                        </div>
+
                         <div className="text-[10px] font-medium text-slate-400 italic">
                             {t('estimator.warping_sizing.applied_on')} {totals.totalWarpKgPer100m.toFixed(2)} {t('estimator.warping_sizing.warp_consumption')}
                         </div>
