@@ -55,6 +55,7 @@ import { deleteMachineWithCode, requestAccessCode } from '@/app/(dashboard)/supe
 import {
     addMachine,
     renameMachine,
+    updateMachine,
     toggleMachineStatus as toggleMachineStatusAction,
     updateMachineAssignment,
     assignMachineOrder,
@@ -77,6 +78,9 @@ interface Machine {
     name: string
     status: string
     current_order_id?: string | null
+    loom_type?: string | null
+    default_rpm?: number | null
+    default_power_kw?: number | null
     orders?: {
         worker_rate_per_m: number
         quality_label: string
@@ -119,6 +123,7 @@ export function MachineManagement({
     // Add Machine State
     const [isAddMachineOpen, setIsAddMachineOpen] = useState(false)
     const [newMachineName, setNewMachineName] = useState('')
+    const [newMachineLoomType, setNewMachineLoomType] = useState<string>('')
     const [isAddingMachine, setIsAddingMachine] = useState(false)
 
     // Delete Machine State
@@ -126,9 +131,10 @@ export function MachineManagement({
     const [accessCode, setAccessCode] = useState('')
     const [deleting, setDeleting] = useState(false)
 
-    // Rename Machine State
+    // Rename / Edit Machine State
     const [machineToRename, setMachineToRename] = useState<Machine | null>(null)
     const [renameValue, setRenameValue] = useState('')
+    const [renameLoomType, setRenameLoomType] = useState<string>('')
     const [renaming, setRenaming] = useState(false)
 
     // Request Access Code state
@@ -231,12 +237,13 @@ export function MachineManagement({
 
         setIsAddingMachine(true)
         try {
-            const result = await addMachine(newMachineName)
+            const result = await addMachine(newMachineName, newMachineLoomType || undefined)
             if (result.error) throw new Error(result.error)
             toast.success(t('machines.machine_added'))
             queryClient.invalidateQueries({ queryKey: ['machines'] })
             setIsAddMachineOpen(false)
             setNewMachineName('')
+            setNewMachineLoomType('')
         } catch (error: any) {
             toast.error(t('machines.machine_add_failed') + ': ' + error.message)
         } finally {
@@ -292,12 +299,16 @@ export function MachineManagement({
         }
     }
 
-    // ── Rename Machine ──
+    // ── Edit Machine (name + loom type) ──
     const handleRename = async () => {
         if (!machineToRename || !renameValue.trim()) return
         setRenaming(true)
         try {
-            const result = await renameMachine(machineToRename.id, renameValue.trim())
+            const result = await updateMachine(
+                machineToRename.id,
+                renameValue.trim(),
+                renameLoomType || null   // empty string → null (clears loom type)
+            )
             if (result.error) throw new Error(result.error)
             toast.success(t('machines.renamed'))
             queryClient.invalidateQueries({ queryKey: ['machines'] })
@@ -414,6 +425,25 @@ export function MachineManagement({
                                             onKeyDown={(e) => e.key === 'Enter' && handleAddMachine()}
                                         />
                                     </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="loom-type-add">Loom Type <span className="text-slate-400 font-normal text-xs">(optional)</span></Label>
+                                        <select
+                                            id="loom-type-add"
+                                            value={newMachineLoomType}
+                                            onChange={e => setNewMachineLoomType(e.target.value)}
+                                            className="w-full h-10 px-3 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                                        >
+                                            <option value="">— Select type —</option>
+                                            <option value="jacquard_electronic">Jacquard (Electronic)</option>
+                                            <option value="jacquard_mechanical">Jacquard (Mechanical)</option>
+                                            <option value="water_jet">Water Jet</option>
+                                            <option value="rapier">Rapier</option>
+                                            <option value="air_jet">Air Jet</option>
+                                            <option value="dobby">Dobby</option>
+                                            <option value="projectile">Projectile</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
                                     {/* Rate is now defined on the Quality, not the machine */}
                                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 bg-blue-50 border border-blue-100 rounded-md p-2.5">
                                         <Tag className="h-3.5 w-3.5 text-blue-500 shrink-0" />
@@ -482,6 +512,16 @@ export function MachineManagement({
                                                         {t('machines.inactive')}
                                                     </span>
                                                 )}
+                                                {machine.loom_type && (
+                                                    <span className="text-[9px] font-bold bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full border border-violet-200 uppercase tracking-wider">
+                                                        {machine.loom_type === 'jacquard_electronic' ? 'JAQ-E' :
+                                                         machine.loom_type === 'jacquard_mechanical' ? 'JAQ-M' :
+                                                         machine.loom_type === 'water_jet' ? 'WJ' :
+                                                         machine.loom_type === 'air_jet' ? 'AJ' :
+                                                         machine.loom_type === 'rapier' ? 'RAP' :
+                                                         machine.loom_type.toUpperCase().slice(0, 3)}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -505,6 +545,7 @@ export function MachineManagement({
                                                             <DropdownMenuItem onClick={() => {
                                                                 setMachineToRename(machine)
                                                                 setRenameValue(machine.name)
+                                                                setRenameLoomType(machine.loom_type ?? '')
                                                             }}>
                                                                 <Pencil className="h-4 w-4 mr-2" />
                                                                 {t('machines.rename_machine')}
@@ -725,8 +766,8 @@ export function MachineManagement({
             <Dialog open={machineToRename !== null} onOpenChange={(open) => !open && setMachineToRename(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{t('machines.rename_machine')}</DialogTitle>
-                        <DialogDescription>{t('machines.rename_desc')}</DialogDescription>
+                        <DialogTitle>Edit Machine</DialogTitle>
+                        <DialogDescription>Update the name or loom type for this machine.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -736,6 +777,30 @@ export function MachineManagement({
                                 onChange={(e) => setRenameValue(e.target.value)}
                                 placeholder={t('machines.add_machine_placeholder')}
                             />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-loom-type">Loom Type</Label>
+                            <select
+                                id="edit-loom-type"
+                                value={renameLoomType}
+                                onChange={e => setRenameLoomType(e.target.value)}
+                                className="w-full h-10 px-3 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                            >
+                                <option value="">— Not set —</option>
+                                <option value="jacquard_electronic">Jacquard (Electronic) — 250 RPM</option>
+                                <option value="jacquard_mechanical">Jacquard (Mechanical) — 130 RPM</option>
+                                <option value="water_jet">Water Jet — 700 RPM</option>
+                                <option value="rapier">Rapier — 450 RPM</option>
+                                <option value="air_jet">Air Jet — 900 RPM</option>
+                                <option value="dobby">Dobby — 500 RPM</option>
+                                <option value="projectile">Projectile — 280 RPM</option>
+                                <option value="other">Other</option>
+                            </select>
+                            {!renameLoomType && (
+                                <p className="text-[10px] text-amber-600 font-medium">
+                                    Setting the loom type enables pace index forecasting for this machine.
+                                </p>
+                            )}
                         </div>
                     </div>
                     <DialogFooter>

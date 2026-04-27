@@ -29,6 +29,37 @@
 import { nanoid } from 'nanoid'
 import Decimal from 'decimal.js'
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LOOM TYPE REGISTRY — Single source of truth for all loom class defaults
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Canonical defaults per loom type.
+ * rpm / powerKw / efficiencyPct are the starting values auto-filled when the
+ * owner selects a loom type. All three remain editable per-estimate.
+ *
+ * Reference values (Surat industry averages, verified):
+ *   Water Jet   — 600–750 RPM synthetic-only (used 700 as midpoint)
+ *   Air Jet     — up to 1,200 RPM high-speed (used 900 conservative)
+ *   Rapier      — 300–600 RPM versatile (used 450)
+ *   Jacquard E  — 200–300 RPM electronic head (used 250)
+ *   Jacquard M  — 100–150 RPM older mechanical (used 130)
+ *   Projectile  — 200–350 RPM heavy yarns (used 280)
+ *   Dobby       — 400–600 RPM limited pattern (used 500)
+ */
+export const LOOM_TYPE_DEFAULTS = {
+  water_jet:           { label: 'Water Jet',             rpm: 700, powerKw: 2.5, efficiencyPct: 85 },
+  rapier:              { label: 'Rapier',                rpm: 450, powerKw: 4.0, efficiencyPct: 82 },
+  air_jet:             { label: 'Air Jet',               rpm: 900, powerKw: 6.5, efficiencyPct: 85 },
+  jacquard_electronic: { label: 'Jacquard (Electronic)', rpm: 250, powerKw: 3.5, efficiencyPct: 78 },
+  jacquard_mechanical: { label: 'Jacquard (Mechanical)', rpm: 130, powerKw: 2.5, efficiencyPct: 75 },
+  projectile:          { label: 'Projectile',            rpm: 280, powerKw: 3.5, efficiencyPct: 82 },
+  dobby:               { label: 'Dobby',                 rpm: 500, powerKw: 3.0, efficiencyPct: 83 },
+  other:               { label: 'Other / Manual',        rpm: null, powerKw: null, efficiencyPct: null },
+} as const
+
+export type LoomType = keyof typeof LOOM_TYPE_DEFAULTS
+
 // Configure Decimal for financial calculations — matches lib/finance.ts
 // 20-digit precision is hardened for textile manufacturing land-cost analysis
 Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP })
@@ -125,7 +156,7 @@ export interface EstimateState {
   tapeLengthM:         number          // metres per beam tape (for beam capacity preview)
   perPickCostPaisa:    number          // loom charge in paise per pick (e.g. 0.16)
   warpingRatePerKg:    number          // ₹/kg charged by warping unit
-  sizingRatePerKg:     number          // ₹/kg charged by sizing unit
+  sizingRatePerKg:     number          // ₹/kg charged by sizing unit (only used when sizingMode === 'outsourced')
   windingRatePerKg:    number          // ₹/kg charged for rewinding (0 if not applicable)
   processingRatePerM:  number          // flat ₹/m for dyeing/printing
   finishingRatePerM:   number          // flat ₹/m for calendering/heat-setting
@@ -145,6 +176,15 @@ export interface EstimateState {
     avg90Days: number
     lastUpdated: string
   }
+  // ── Loom Type (Estimator-side costing input — independent of machine assignment) ─
+  loomType:              LoomType | null  // null = not yet selected
+  loomRpm:               number | null   // auto-filled from loom type; editable
+  loomPowerKw:           number | null   // auto-filled from loom type; editable
+  loomRpmIsCustomised:   boolean         // true when owner has manually overridden the default RPM
+  loomPowerKwIsCustomised: boolean       // true when owner has manually overridden the default kW
+  hoursPerShift:         number          // factory shift hours — drives daily output preview (default 12)
+  // ── Sizing Mode ─────────────────────────────────────────────────────────
+  sizingMode:            'in_house' | 'outsourced'  // explicit toggle; in_house = 0 cost
   // ── kept for backward-compat serialisation (computed, never user-edited) ─
   overheadPct:         number          // effective overhead % — derived from items/denominator
   // ────────────────────────────────────────────────────────────────────────
@@ -534,10 +574,15 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const weaveCostPerM = new Decimal(calcWeaveCostPerMeter(totalPicks, estimate.perPickCostPaisa))
 
   // ── Layer 4: Warping + Sizing ───────────────────────────────────────────
+  // sizingMode toggle: 'in_house' = sizing is already in overhead (rate = 0)
+  //                    'outsourced' = real variable cash cost, use sizingRatePerKg
+  const effectiveSizingRate = (estimate.sizingMode ?? 'in_house') === 'outsourced'
+    ? estimate.sizingRatePerKg
+    : 0
   const warpingAndSizingPerM = new Decimal(calcWarpingCostPerMeter(
     totalWarpKgPer100m.toNumber(),
     estimate.warpingRatePerKg,
-    estimate.sizingRatePerKg
+    effectiveSizingRate
   ))
 
   // ── Layer 5: Winding (optional) ─────────────────────────────────────────
@@ -683,6 +728,16 @@ export function makeDefaultEstimateState(): EstimateState {
     loomCount:          0,
     avgOutputPerLoomPerDay: 50,
     monthlyWorkingDays:  26,
+    // ── Loom Type defaults ────────────────────────────────────────────────
+    loomType:              null,   // no loom type selected = owner must choose
+    loomRpm:               null,
+    loomPowerKw:           null,
+    loomRpmIsCustomised:   false,
+    loomPowerKwIsCustomised: false,
+    hoursPerShift:         12,     // 12h default; editable for 8h single-shift factories
+    // ── Sizing Mode ───────────────────────────────────────────────────────
+    sizingMode:            'in_house', // safe default: no cost increase on existing estimates
+    // ─────────────────────────────────────────────────────────────────────
     overheadPct:        0,   // will be computed — kept for compat
     commissionPct:      0,
     transportPerM:      0,
