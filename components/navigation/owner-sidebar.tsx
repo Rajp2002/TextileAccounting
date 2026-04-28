@@ -31,30 +31,62 @@ import LogoutButton from "@/components/auth/logout-button"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { useTranslation } from "@/lib/i18n/context"
 
-const primaryNavItems = [
+const navGroups = [
+    {
+        label: "Main Pivot",
+        items: [
+            { name: "Dashboard", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
+            { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
+            { name: "Quotes", href: "/owner/quotes", icon: FileText, translationKey: "quotes" },
+        ]
+    },
+    {
+        label: "Production",
+        items: [
+            { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
+            { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs" },
+            { name: "Dispatches", href: "/owner/dispatches", icon: Truck, translationKey: "dispatches" },
+        ]
+    },
+    {
+        label: "Financials",
+        items: [
+            { name: "Ledger", href: "/owner/ledger", icon: BookOpen, translationKey: "ledger" },
+            { name: "Billing", href: "/owner/billing", icon: CreditCard, translationKey: "billing" },
+        ]
+    },
+    {
+        label: "Workforce",
+        items: [
+            { name: "Workers", href: "/owner/fixed-workers", icon: Users, translationKey: "workers" },
+            { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll" },
+            { name: "Advances", href: "/owner/advances", icon: HandCoins, translationKey: "advances" },
+        ]
+    },
+    {
+        label: "Operations",
+        items: [
+            { name: "Inventory", href: "/owner/inventory", icon: Layers, translationKey: "inventory" },
+            { name: "Stock", href: "/owner/stock", icon: ShieldAlert, translationKey: "stock" },
+            { name: "Machines", href: "/owner/machines", icon: Server, translationKey: "machines" },
+        ]
+    },
+    {
+        label: "System",
+        items: [
+            { name: "System Health", href: "/owner/system-health", icon: Activity, translationKey: "system health" },
+            { name: "Audit Trail", href: "/owner/settings/audit", icon: History, translationKey: "audit trail" },
+            { name: "Settings", href: "/owner/settings", icon: Settings, translationKey: "settings" },
+        ]
+    }
+]
+
+const bottomNavItems = [
     { name: "Dashboard", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
     { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
     { name: "Ledger", href: "/owner/ledger", icon: BookOpen, translationKey: "ledger" },
     { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
     { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll" },
-]
-
-const secondaryNavItems = [
-    { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs" },
-    { name: "Stock", href: "/owner/stock", icon: ShieldAlert, translationKey: "stock" },
-    { name: "Workers", href: "/owner/fixed-workers", icon: Users, translationKey: "workers" },
-    { name: "Dispatches", href: "/owner/dispatches", icon: Truck, translationKey: "dispatches" },
-    { name: "Inventory", href: "/owner/inventory", icon: Layers, translationKey: "inventory" },
-    { name: "Advances", href: "/owner/advances", icon: HandCoins, translationKey: "advances" },
-    { name: "Machines", href: "/owner/machines", icon: Server, translationKey: "machines" },
-    { name: "Quotes", href: "/owner/quotes", icon: FileText, translationKey: "quotes" },
-    { name: "Billing", href: "/owner/billing", icon: CreditCard, translationKey: "billing" },
-]
-
-const systemItems = [
-    { name: "System Health", href: "/owner/system-health", icon: Activity, translationKey: "system health" },
-    { name: "Audit Trail", href: "/owner/settings/audit", icon: History, translationKey: "audit trail" },
-    { name: "Settings", href: "/owner/settings", icon: Settings, translationKey: "settings" },
 ]
 
 interface OwnerSidebarProps {
@@ -82,89 +114,36 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
 
             {/* Navigation */}
             <nav className="flex-1 py-4 px-3 space-y-4 overflow-y-auto">
-                <div className="space-y-1">
-                    <div className="px-3 mb-2">
-                        <p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70 font-extrabold">Main Pivot</p>
+                {navGroups.map((group, index) => (
+                    <div key={group.label} className="space-y-1">
+                        <div className={cn("px-3 mb-2", index > 0 && "mt-4")}>
+                            <p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70 font-extrabold">{group.label}</p>
+                        </div>
+                        {group.items.map((item) => {
+                            const Icon = item.icon
+                            const isActive = item.name === 'Settings' 
+                                ? pathname === item.href 
+                                : pathname === item.href || pathname.startsWith(item.href + "/")
+
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    onClick={onLinkClick}
+                                    className={cn(
+                                        "flex items-center gap-3 px-3 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
+                                        isActive
+                                            ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(from_var(--primary)_l_c_h_/_0.3)]"
+                                            : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                                    )}
+                                >
+                                    <Icon className="h-[18px] w-[18px]" />
+                                    {t(`nav.${item.translationKey}`) || item.name}
+                                </Link>
+                            )
+                        })}
                     </div>
-                    {primaryNavItems.map((item) => {
-                        const Icon = item.icon
-                        const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
-
-                        return (
-                            <Link
-                                key={item.name}
-                                href={item.href}
-                                onClick={onLinkClick}
-                                className={cn(
-                                    "flex items-center gap-3 px-3 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
-                                    isActive
-                                        ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(from_var(--primary)_l_c_h_/_0.3)]"
-                                        : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
-                                )}
-                            >
-                                <Icon className="h-[18px] w-[18px]" />
-                                {/* Fallback to item.name since we might not have 'orders' translation yet */}
-                                {t(`nav.${item.translationKey}`) || item.name}
-                            </Link>
-                        )
-                    })}
-                </div>
-
-                <div className="space-y-1">
-                    <div className="px-3 mb-2">
-                        <p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70 font-extrabold">Management</p>
-                    </div>
-                    {secondaryNavItems.map((item) => {
-                        const Icon = item.icon
-                        const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
-
-                        return (
-                            <Link
-                                key={item.name}
-                                href={item.href}
-                                onClick={onLinkClick}
-                                className={cn(
-                                    "flex items-center gap-3 px-3 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
-                                    isActive
-                                        ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(from_var(--primary)_l_c_h_/_0.3)]"
-                                        : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
-                                )}
-                            >
-                                <Icon className="h-[18px] w-[18px]" />
-                                {t(`nav.${item.translationKey}`) || item.name}
-                            </Link>
-                        )
-                    })}
-                </div>
-
-                <div className="space-y-1">
-                    <div className="px-3 mb-2 mt-4">
-                        <p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70 font-extrabold">System</p>
-                    </div>
-                    {systemItems.map((item) => {
-                        const Icon = item.icon
-                        const isActive = item.name === 'Settings' 
-                            ? pathname === item.href 
-                            : pathname === item.href || pathname.startsWith(item.href + "/")
-
-                        return (
-                            <Link
-                                key={item.name}
-                                href={item.href}
-                                onClick={onLinkClick}
-                                className={cn(
-                                    "flex items-center gap-3 px-3 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
-                                    isActive
-                                        ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(from_var(--primary)_l_c_h_/_0.3)]"
-                                        : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
-                                )}
-                            >
-                                <Icon className="h-[18px] w-[18px]" />
-                                {t(`nav.${item.translationKey}`) || item.name}
-                            </Link>
-                        )
-                    })}
-                </div>
+                ))}
             </nav>
 
             {/* User footer */}
@@ -232,7 +211,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                 "shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)]",
                 "min-h-[68px] select-none"
             )}>
-                {primaryNavItems.map((item) => {
+                {bottomNavItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
 
