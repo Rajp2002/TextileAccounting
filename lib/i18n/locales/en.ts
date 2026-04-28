@@ -21,6 +21,7 @@ export const en = {
     "quotes": "Quotes",
     "billing": "Billing",
     "system health": "WhatsApp Health",
+    "market_runs": "Market Runs",
   },
   attendance: {
     title: "Daily Attendance",
@@ -699,7 +700,9 @@ export const en = {
     },
     simulation: {
       title: "Simulation & Quantity",
+      market_title: "Market Run & Quantity",
       quantity: "Simulation Quantity",
+      market_target: "Target Production",
       quantity_hint: "Activates HUD quotes",
       commission: "Broker Comm. %",
       transport: "Transport / m"
@@ -756,6 +759,7 @@ export const en = {
       dyeing_processing: "Dyeing/Processing",
       finishing_per_m: "Finishing / m",
       simulation_qty: "Simulation Quantity",
+      market_target: "Target Production",
       broker_comm: "Broker Comm. %",
       transport_per_m: "Transport / m"
     },

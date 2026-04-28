@@ -373,11 +373,11 @@ function SectionHeader({ title, icon: Icon, accent = 'indigo', badgeContent }: {
 }
 
 function NumField({
-    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning,
+    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder,
 }: {
     label: string; value: number | null; onChange: (v: number | null) => void
     unit?: string; step?: number; min?: number; hint?: string; warning?: string
-    onDismissWarning?: () => void
+    onDismissWarning?: () => void; placeholder?: string
 }) {
     return (
         <div className="space-y-1.5 min-w-0">
@@ -387,6 +387,7 @@ function NumField({
                     type="number"
                     step={step}
                     min={min}
+                    placeholder={placeholder}
                     value={value ?? ''}
                     onChange={e => {
                         const val = e.target.value === '' ? null : Number(e.target.value)
@@ -2176,15 +2177,16 @@ export default function EstimatorClient({
 
                 {/* 7. Simulation / Order */}
                 <Card className="border-border/60 shadow-sm overflow-hidden bg-slate-50/20">
-                    <SectionHeader title={t('estimator.simulation.title')} icon={Coins} accent="emerald" />
+                    <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="emerald" />
                     <CardContent className="p-5 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <NumField 
-                                label={t('estimator.field_labels.simulation_qty')} 
-                                value={state.orderQuantityM ?? 1000} 
-                                onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: (v !== null && v > 0) ? v : null })} 
+                                label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')} 
+                                value={state.orderQuantityM} 
+                                onChange={v => dispatch({ type: 'SET', field: 'orderQuantityM', value: v })} 
                                 unit="m" 
                                 step={100}
+                                placeholder="1000"
                                 hint={t('estimator.simulation.quantity_hint')}
                             />
                             {hasOrderQty && (
