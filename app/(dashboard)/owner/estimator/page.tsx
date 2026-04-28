@@ -1,5 +1,6 @@
 import { getFactoryCostProfile, getEstimatorTemplates, getFixedWorkersForOverhead } from './actions'
 import EstimatorClient from './EstimatorClient'
+import { Suspense } from 'react'
 
 export default async function EstimatorPage() {
     // Parallelize server-side data fetching for zero-latency initial load
@@ -10,10 +11,12 @@ export default async function EstimatorPage() {
     ])
 
     return (
-        <EstimatorClient 
-            initialProfile={profileRes.data}
-            initialTemplates={templatesRes.data}
-            initialWorkers={workersRes.data}
-        />
+        <Suspense fallback={<div className="p-20 text-center">Loading Estimator...</div>}>
+            <EstimatorClient 
+                initialProfile={profileRes.data}
+                initialTemplates={templatesRes.data}
+                initialWorkers={workersRes.data}
+            />
+        </Suspense>
     )
 }
