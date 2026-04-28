@@ -224,7 +224,7 @@ export async function createFabricPackage(input: unknown) {
 
     if (error) return { error: error.message }
 
-    revalidatePath('/owner/stock')
+    revalidatePath('/owner/inventory')
     revalidatePath('/owner/orders')
     revalidatePath('/owner/dispatches')
     return { success: true }
@@ -265,7 +265,7 @@ export async function updateFabricInspection(input: unknown) {
 
     if (error) return { error: error.message }
 
-    revalidatePath('/owner/stock')
+    revalidatePath('/owner/inventory')
     revalidatePath('/owner/orders')
     revalidatePath('/owner/dispatches')
     return { success: true }
@@ -311,7 +311,7 @@ export async function updateFabricPackageState(input: unknown) {
 
     if (error) return { error: error.message }
 
-    revalidatePath('/owner/stock')
+    revalidatePath('/owner/inventory')
     revalidatePath('/owner/orders')
     revalidatePath('/owner/dispatches')
     return { success: true }
@@ -359,7 +359,7 @@ export async function correctFabricPackageMetres(input: unknown) {
 
     if (error) return { error: error.message }
 
-    revalidatePath('/owner/stock')
+    revalidatePath('/owner/inventory')
     revalidatePath('/owner/orders')
     revalidatePath('/owner/dispatches')
     return { success: true }

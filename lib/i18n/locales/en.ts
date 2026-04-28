@@ -410,9 +410,32 @@ export const en = {
   inventory: {
     title: "Yarn & Qualities",
     subtitle: "Manage fabric qualities and active yarn batches.",
+    unifiedSubtitle: "Manage yarn, beam tracking, and grey stock from one place.",
     tabs: {
+      yarn: "Yarn",
+      beams: "Beams",
+      greyStock: "Grey Stock",
       batches: "Batches (Beams)",
       qualities: "Qualities"
+    },
+    beams: {
+      disabledTitle: "Beam tracking is turned off",
+      disabledBody: "Enable beam tracking if your factory needs to monitor beam inventory",
+      enableCta: "Enable in Settings",
+      settingsTitle: "Beam Tracking",
+      settingsHelper: "Track beam inventory for advanced production planning"
+    },
+    section: {
+      yarnEyebrow: "Yarn Inventory",
+      yarnTitle: "Yarn lots & variance",
+      yarnBody: "See where yarn money is sitting, what is still available, and how actual issue compares to estimator-linked requirements.",
+      beamEyebrow: "Beam Tracking",
+      beamTitle: "Beam cards",
+      beamBody: "Track beam cards, issue warp onto them quickly, and keep sizing references clean.",
+      activeOrders: "Active orders",
+      activeOrdersHint: "Orders available for new beam cards",
+      recentMovements: "Recent movements",
+      recentMovementsHint: "Latest yarn issues and adjustments"
     },
     batches: {
       title: "Active & Consumed Batches",

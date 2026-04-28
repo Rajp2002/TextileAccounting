@@ -21,7 +21,6 @@ import {
     Truck,
     BookOpen,
     Layers,
-    ShieldAlert,
     Store,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
@@ -67,7 +66,6 @@ const navGroups = [
         label: "Operations",
         items: [
             { name: "Inventory", href: "/owner/inventory", icon: Layers, translationKey: "inventory" },
-            { name: "Stock", href: "/owner/stock", icon: ShieldAlert, translationKey: "stock" },
             { name: "Machines", href: "/owner/machines", icon: Server, translationKey: "machines" },
         ]
     },

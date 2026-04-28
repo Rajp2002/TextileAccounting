@@ -466,7 +466,13 @@ function InspectDialog({
     )
 }
 
-export default function StockClient({ initialData }: { initialData: FabricStockBoardData }) {
+export default function StockClient({
+    initialData,
+    hideHeader = false,
+}: {
+    initialData: FabricStockBoardData
+    hideHeader?: boolean
+}) {
     const router = useRouter()
     const [query, setQuery] = useState('')
     const [stateFilter, setStateFilter] = useState<(typeof stateOrder)[number]>('all')
@@ -530,12 +536,21 @@ export default function StockClient({ initialData }: { initialData: FabricStockB
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Grey Fabric Stock</h1>
-                    <p className="mt-1 text-sm text-slate-500">
-                        See what is ready, where it is sitting, and what has already gone out by package.
-                    </p>
-                </div>
+                {!hideHeader ? (
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tight text-slate-900">Grey Fabric Stock</h1>
+                        <p className="mt-1 text-sm text-slate-500">
+                            See what is ready, where it is sitting, and what has already gone out by package.
+                        </p>
+                    </div>
+                ) : (
+                    <div>
+                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Grey Fabric Stock</h2>
+                        <p className="mt-1 text-sm text-slate-500">
+                            See what is ready, where it is sitting, and what has already gone out by package.
+                        </p>
+                    </div>
+                )}
                 <Button className="bg-indigo-600 text-white hover:bg-indigo-500" onClick={() => setCreateOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add package

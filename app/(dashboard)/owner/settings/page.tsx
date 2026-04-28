@@ -10,9 +10,10 @@ import {
     Dialog, DialogContent, DialogDescription, DialogFooter,
     DialogHeader, DialogTitle, DialogTrigger
 } from '@/components/ui/dialog'
-import { Factory, User, ShieldCheck, Download, Trash2, Loader2, AlertTriangle, Copy, RefreshCw, MessageSquare, Smartphone } from 'lucide-react'
+import { Factory, User, ShieldCheck, Download, Trash2, Loader2, AlertTriangle, Copy, RefreshCw, MessageSquare, Smartphone, Layers } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { AccessCodeGenerator } from '@/components/AccessCodeGenerator'
 import { WhatsAppOptIn } from '@/components/settings/WhatsAppOptIn'
 import { useUserProfile } from '@/hooks/use-user-profile'
@@ -23,7 +24,7 @@ import { toast } from 'sonner'
 import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
 import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
-import { updateOrganizationName } from '@/app/(dashboard)/owner/actions'
+import { setBeamTrackingEnabled, updateOrganizationName } from '@/app/(dashboard)/owner/actions'
 import { SupervisorFloatManager } from '@/components/settings/supervisor-float-manager'
 import { EmergencyLockdown } from '@/components/settings/EmergencyLockdown'
 
@@ -63,7 +64,7 @@ export default function SettingsPage() {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('organizations')
-                .select('name, join_code, join_code_expires_at')
+                .select('name, join_code, join_code_expires_at, beam_tracking_enabled')
                 .eq('id', userProfile!.org_id)
                 .single()
             if (error) throw error
@@ -114,6 +115,24 @@ export default function SettingsPage() {
         },
         onError: (err: any) => {
             toast.error(err.message || 'Failed to regenerate code')
+        }
+    })
+
+    const beamTrackingMutation = useMutation({
+        mutationFn: async (enabled: boolean) => {
+            const result = await setBeamTrackingEnabled(enabled)
+            if (result.error) throw new Error(result.error)
+            return result
+        },
+        onSuccess: (_, enabled) => {
+            queryClient.setQueryData(['organization', userProfile?.org_id], (old: any) => ({
+                ...old,
+                beam_tracking_enabled: enabled,
+            }))
+            toast.success(t('common.updated'))
+        },
+        onError: (err: any) => {
+            toast.error(err.message || 'Failed to update beam tracking')
         }
     })
 
@@ -361,6 +380,28 @@ export default function SettingsPage() {
                 <div className="lg:col-span-2 space-y-6">
                     <FactoryCostProfile />
                     <TemplateManager />
+                    <Card className="shadow-sm border-gray-200">
+                        <CardHeader>
+                            <div className="flex items-center gap-2">
+                                <Layers className="h-5 w-5 text-indigo-600" />
+                                <CardTitle>{t('inventory.beams.settingsTitle')}</CardTitle>
+                            </div>
+                            <CardDescription>{t('inventory.beams.settingsHelper')}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 p-4">
+                                <div className="space-y-1">
+                                    <p className="text-sm font-medium text-gray-900">{t('inventory.tabs.beams')}</p>
+                                    <p className="text-xs text-gray-500">{t('inventory.beams.settingsHelper')}</p>
+                                </div>
+                                <Switch
+                                    checked={!!org?.beam_tracking_enabled}
+                                    disabled={beamTrackingMutation.isPending}
+                                    onCheckedChange={(checked: boolean) => beamTrackingMutation.mutate(checked)}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </SettingsCategory>
 
@@ -411,4 +452,3 @@ export default function SettingsPage() {
         </div>
     )
 }
-

@@ -358,6 +358,25 @@ export async function updateOrganizationName(newName: string) {
     return { success: true }
 }
 
+export async function setBeamTrackingEnabled(enabled: boolean) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { error } = await supabase
+        .from('organizations')
+        .update({ beam_tracking_enabled: enabled })
+        .eq('id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to update beam tracking setting:', error)
+        return { error: 'Failed to update beam tracking setting. Please try again.' }
+    }
+
+    revalidatePath('/owner/settings')
+    revalidatePath('/owner/inventory')
+    return { success: true }
+}
+
 export async function validateAndRotateAccessCode(orgId: string, inputCode: string): Promise<boolean> {
     const { profile } = await requireRole(['owner', 'supervisor'])
 

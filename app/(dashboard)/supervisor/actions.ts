@@ -1012,7 +1012,7 @@ export async function packProductionIntoBulkPackages(entries: {
 
     if (error) return { error: error.message }
 
-    revalidatePath('/owner/stock')
+    revalidatePath('/owner/inventory')
     revalidatePath('/owner/orders')
     revalidatePath('/owner/dispatches')
     return {
