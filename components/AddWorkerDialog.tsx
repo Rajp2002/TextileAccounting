@@ -49,7 +49,7 @@ const workerSchema = z.object({
     role: z.string().optional(),
     customRole: z.string().optional(),
     salary: z.coerce.number().optional(),
-    pf_esi_eligible: z.boolean().default(false),
+    pf_esi_enrolled: z.boolean().default(false),
     esi_number: z.string().optional(),
     pf_number: z.string().optional(),
 }).superRefine((data, ctx) => {
@@ -119,7 +119,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
             role: '',
             customRole: '',
             salary: 0,
-            pf_esi_eligible: false,
+            pf_esi_enrolled: false,
             esi_number: '',
             pf_number: ''
         }
@@ -128,7 +128,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
     const workerType = watch('workerType')
     const selectedRole = watch('role')
     const watchedSalary = watch('salary')
-    const watchedPfEsiEligible = watch('pf_esi_eligible')
+    const watchedPfEsiEnrolled = watch('pf_esi_enrolled')
     const workerName = watch('name')
 
     const mutation = useMutation({
@@ -137,7 +137,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
             if (data.workerType === 'meter') {
                 result = await addMeterWorker({
                     name: data.name.trim(),
-                    pf_esi_eligible: data.pf_esi_eligible,
+                    pf_esi_enrolled: data.pf_esi_enrolled,
                     esi_number: data.esi_number?.trim() || null,
                     pf_number: data.pf_number?.trim() || null,
                 })
@@ -146,7 +146,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                     name: data.name.trim(),
                     role: data.role === 'other' ? data.customRole?.trim() || '' : data.role || '',
                     monthly_salary: data.salary as number,
-                    pf_esi_eligible: data.pf_esi_eligible,
+                    pf_esi_enrolled: data.pf_esi_enrolled,
                     esi_number: data.esi_number?.trim() || null,
                     pf_number: data.pf_number?.trim() || null,
                 })
@@ -254,7 +254,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                                             setValue('role', '')
                                             setValue('customRole', '')
                                             setValue('salary', 0)
-                                            setValue('pf_esi_eligible', false)
+                                            setValue('pf_esi_enrolled', false)
                                             setValue('esi_number', '')
                                             setValue('pf_number', '')
                                         }}
@@ -317,22 +317,23 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                         <div className="border-t border-gray-100 pt-3 mt-1">
                             <div className="flex items-center gap-2 mb-3">
                                 <Controller
-                                    name="pf_esi_eligible"
+                                    name="pf_esi_enrolled"
                                     control={control}
                                     render={({ field }) => (
-                                        <input type="checkbox" id="pf_esi_eligible" checked={field.value} onChange={(e) => field.onChange(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-teal-600 cursor-pointer" />
+                                        <input type="checkbox" id="pf_esi_enrolled" checked={field.value} onChange={(e) => field.onChange(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-teal-600 cursor-pointer" />
                                     )}
                                 />
-                                <Label htmlFor="pf_esi_eligible" className="cursor-pointer font-medium text-gray-700">Eligible for ESI / PF Benefits?</Label>
+                                <Label htmlFor="pf_esi_enrolled" className="cursor-pointer font-medium text-gray-700">{t('worker.pfEsi.label')}</Label>
                             </div>
-                            {watchedPfEsiEligible && (
+                            <p className="text-xs text-gray-500 mb-3">{t('worker.pfEsi.helper')}</p>
+                            {watchedPfEsiEnrolled && (
                                 <div className="grid grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                                     <div className="grid gap-1.5">
-                                        <Label className="text-xs">ESI Number</Label>
+                                        <Label className="text-xs">{t('worker.pfEsi.esiNumber')}</Label>
                                         <Input className="h-8 text-sm" placeholder="Optional" {...register('esi_number')} />
                                     </div>
                                     <div className="grid gap-1.5">
-                                        <Label className="text-xs">PF Number</Label>
+                                        <Label className="text-xs">{t('worker.pfEsi.pfNumber')}</Label>
                                         <Input className="h-8 text-sm" placeholder="Optional" {...register('pf_number')} />
                                     </div>
                                 </div>

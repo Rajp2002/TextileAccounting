@@ -155,6 +155,9 @@ export async function upsertFixedWorker(data: {
     role: string
     monthly_salary: number
     start_date?: string   // 'YYYY-MM-DD' — used for payroll month filtering
+    pf_esi_enrolled?: boolean
+    esi_number?: string | null
+    pf_number?: string | null
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -163,7 +166,15 @@ export async function upsertFixedWorker(data: {
     if (!name || !data.role || !data.monthly_salary) return { error: 'All fields are required.' }
 
     if (data.id) {
-        const updatePayload: Record<string, any> = { name, role: data.role, monthly_salary: data.monthly_salary }
+        const updatePayload: Record<string, any> = {
+            name,
+            role: data.role,
+            monthly_salary: data.monthly_salary,
+            pf_esi_enrolled: !!data.pf_esi_enrolled,
+            pf_esi_eligible: !!data.pf_esi_enrolled,
+            esi_number: data.esi_number?.trim() || null,
+            pf_number: data.pf_number?.trim() || null,
+        }
         if (data.start_date) updatePayload.start_date = data.start_date
         const { error } = await supabase
             .from('fixed_workers')
@@ -176,6 +187,10 @@ export async function upsertFixedWorker(data: {
             name,
             role: data.role,
             monthly_salary: data.monthly_salary,
+            pf_esi_enrolled: !!data.pf_esi_enrolled,
+            pf_esi_eligible: !!data.pf_esi_enrolled,
+            esi_number: data.esi_number?.trim() || null,
+            pf_number: data.pf_number?.trim() || null,
             org_id: profile.org_id,
         }
         // If a start_date is provided use it; otherwise DB default (CURRENT_DATE) applies
@@ -224,6 +239,9 @@ export async function updateMeterWorker(data: {
     phone?: string
     language?: 'en' | 'hi' | 'gu'
     consentGiven?: boolean
+    pf_esi_enrolled?: boolean
+    esi_number?: string | null
+    pf_number?: string | null
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -234,7 +252,13 @@ export async function updateMeterWorker(data: {
     const name = data.name.trim()
     if (!name) return { error: 'Worker name is required.' }
 
-    const updatePayload: Record<string, any> = { name }
+    const updatePayload: Record<string, any> = {
+        name,
+        pf_esi_enrolled: !!data.pf_esi_enrolled,
+        pf_esi_eligible: !!data.pf_esi_enrolled,
+        esi_number: data.esi_number?.trim() || null,
+        pf_number: data.pf_number?.trim() || null,
+    }
 
     // Only update WhatsApp fields if phone provided and consent given
     if (data.phone !== undefined) {
@@ -947,4 +971,3 @@ export async function assignMachineOrder(machineId: string, orderId: string | nu
     revalidatePath('/owner/analytics')
     return { success: true }
 }
-

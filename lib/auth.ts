@@ -2,6 +2,13 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export function getRoleHomePath(role?: string) {
+    if (role === 'owner') return '/owner/analytics'
+    if (role === 'supervisor') return '/supervisor/dashboard'
+    if (role === 'admin') return '/admin'
+    return '/login'
+}
+
 /**
  * Decodes a JWT without verification (safe — we only use it for claims
  * that Supabase Auth already validated server-side).
@@ -72,7 +79,7 @@ export async function requireRole(allowedRoles: string[]) {
     }
 
     if (!allowedRoles.includes(role)) {
-        redirect(role === 'supervisor' ? '/supervisor/production' : '/login')
+        redirect(getRoleHomePath(role))
     }
 
     return {
@@ -114,4 +121,3 @@ export async function getAuthenticatedUser() {
         supabase
     }
 }
-

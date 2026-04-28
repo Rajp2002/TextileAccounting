@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
@@ -17,7 +18,7 @@ import { createAdvance, deleteAdvance } from './actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { cn } from '@/lib/utils'
 import {
-    HandCoins, Plus, Trash2, Search, AlertCircle,
+    HandCoins, Plus, Trash2, Search,
     Clock, CheckCircle2, AlertTriangle, TrendingUp, Loader2
 } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
@@ -540,7 +541,26 @@ export default function AdvancesPage() {
                 <Card>
                     <CardContent className="py-16 text-center">
                         <HandCoins className="h-10 w-10 mx-auto text-gray-200 mb-3" />
-                        <p className="text-gray-400 font-medium">{t('payroll.advances.list.select_above')}</p>
+                        <p className="text-gray-700 font-medium">{t('emptyState.advances.title')}</p>
+                        <p className="text-sm text-gray-400 mt-1">{t('payroll.advances.list.select_above')}</p>
+                        <div className="mt-5 flex flex-wrap justify-center gap-3">
+                            <Button
+                                onClick={() => {
+                                    if (workers && workers.length > 0) {
+                                        setSelectedWorker(workers[0])
+                                        setShowAddDialog(true)
+                                    }
+                                }}
+                                disabled={!workers || workers.length === 0}
+                            >
+                                {t('emptyState.advances.cta')}
+                            </Button>
+                            {(!workers || workers.length === 0) && (
+                                <Button variant="outline" asChild>
+                                    <Link href="/owner/fixed-workers">{t('workers.add_worker')}</Link>
+                                </Button>
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
             )}

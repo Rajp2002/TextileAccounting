@@ -313,6 +313,14 @@ export const en = {
       earned_gross: "Earned Gross",
       cap_applied: "50% Cap Applied"
     },
+    payment: {
+      modeLabel: "Payment Method",
+      modeRequired: "Please select how you are paying",
+      cash: "Cash",
+      bankTransfer: "Bank Transfer",
+      upi: "UPI",
+      cheque: "Cheque"
+    },
     empty: {
       no_production: "No production logged this month",
       no_fixed: "No fixed workers found",
@@ -355,6 +363,34 @@ export const en = {
         settled_in: "Settled in",
         select_above: "Select a worker above to manage their advances"
       }
+    }
+  },
+  confirm: {
+    title: "Are you sure?",
+    proceed: "Yes, Proceed",
+    cancel: "Cancel",
+    payroll: {
+      editBonus: "This will change the bonus for this settlement.",
+      editFine: "This will change the fine for this settlement.",
+      adjustAdvance: "This will change the advance deduction for this settlement."
+    }
+  },
+  emptyState: {
+    advances: {
+      title: "No advances yet",
+      cta: "Give First Advance"
+    },
+    ledger: {
+      title: "No transactions yet",
+      cta: "Record a Payment",
+      addParty: "Add Party"
+    },
+    payroll: {
+      title: "No settlements this month",
+      cta: "Settle a Worker"
+    },
+    dispatches: {
+      noStock: "Add fabric to stock first"
     }
   },
   inventory: {
@@ -809,7 +845,15 @@ export const en = {
   worker: {
     title: "Today's workers",
     no_logs: "No production logged today",
-    rate_locked_on: "Rate locked on {date} — won't change even if you update the quality rate."
+    rate_locked_on: "Rate locked on {date} — won't change even if you update the quality rate.",
+    pfEsi: {
+      label: "PF / ESI Enrolled",
+      helper: "Enable only if this worker is registered under EPFO and ESIC",
+      enrolled: "Enrolled",
+      notEnrolled: "Not Enrolled",
+      esiNumber: "ESI Number",
+      pfNumber: "PF Number"
+    }
   },
   dashboard: {
     date: "Date",

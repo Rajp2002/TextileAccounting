@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useMemo } from 'react'
 import { format } from 'date-fns'
 import {
@@ -20,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n/context'
 import { Plus, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -395,6 +397,7 @@ function OrderGroupCard({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function DispatchesClient({ initialDispatches }: DispatchesClientProps) {
+    const { t } = useTranslation()
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<'all' | 'in_transit' | 'delivered' | 'disputed'>('all')
 
@@ -411,7 +414,7 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
             setGlobalModalStep('select_order')
         } else {
             if (res.available_packages.length === 0) {
-                toast.error('No packages are ready to dispatch for this order. Please inspect packages in Stock first.')
+                toast.error(t('emptyState.dispatches.noStock'))
                 setGlobalModalStep('select_order')
             } else {
                 setDispatchSummary(res)
@@ -613,7 +616,16 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
                             </div>
                             <div className="space-y-1">
                                 <h3 className="text-xl font-black text-foreground">No dispatches found</h3>
-                                <p className="text-muted-foreground font-medium max-w-xs mx-auto">Try adjusting your search or filters.</p>
+                                <p className="text-muted-foreground font-medium max-w-xs mx-auto">
+                                    {initialDispatches.length === 0 ? t('emptyState.dispatches.noStock') : 'Try adjusting your search or filters.'}
+                                </p>
+                                {initialDispatches.length === 0 && (
+                                    <div className="pt-3">
+                                        <Button variant="outline" asChild>
+                                            <Link href="/owner/inventory">{t('emptyState.dispatches.noStock')}</Link>
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     )}

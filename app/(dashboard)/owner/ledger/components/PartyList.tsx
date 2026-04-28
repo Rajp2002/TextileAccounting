@@ -1,9 +1,12 @@
+'use client'
+
 import { Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n/context'
 import { LedgerParty } from '../actions'
 import { partyTypeLabels, getBalanceTone, shortMoney } from '../utils'
 
@@ -26,6 +29,8 @@ export function PartyList({
     selectedPartyId,
     onSelectParty,
 }: PartyListProps) {
+    const { t } = useTranslation()
+
     return (
         <Card className="overflow-hidden border-slate-200/80 shadow-sm flex flex-col h-full">
             <CardHeader className="space-y-4 border-b bg-slate-50/70 shrink-0">
@@ -54,7 +59,7 @@ export function PartyList({
             <CardContent className="flex-1 overflow-y-auto p-3 space-y-2 max-h-[720px] xl:max-h-[800px]">
                 {parties.length === 0 ? (
                     <div className="rounded-2xl border border-dashed p-6 text-center text-sm text-slate-500">
-                        No parties yet. Add the trader or processor you sell grey fabric to.
+                        {t('emptyState.ledger.title')}
                     </div>
                 ) : (
                     parties.map(party => {

@@ -42,42 +42,20 @@ Admins use the compliance console:
 - export logs
 - factory compliance signature tracking
 
-## Current Module Map
+## Comprehensive Feature Analysis
 
-### Estimator, Quotes, and Orders
-- Estimator lives at `/owner/estimator`. Supports margin calculations up to 100%.
-- Quotes are persisted and browsable at `/owner/quotes`.
-- Orders live at `/owner/orders`.
-- Market Runs live at `/owner/market-runs`, allowing for speculative production without an external party.
-- The product follows an estimator-first design: everything starts with a fabric estimate.
+Detailed analysis of each module is available in the `docs/features/` directory:
 
-### Floor Operations
-- The main supervisor workspace is `/supervisor/dashboard`.
-- `/supervisor/production` now redirects into that unified dashboard.
-- Supervisors can assign workers and orders to machines, update machine status, copy previous shift state, and bulk-log production.
-
-### Payroll and Advances
-- Payroll lives at `/owner/payroll`.
-- Advances live at `/owner/advances`.
-- Current implementation supports:
-  - piece-rate settlements from `production_logs`
-  - fixed-worker settlements from attendance
-  - bonus and fine adjustments
-  - 50% deduction cap logic for advances
-  - PF/ESI calculations for eligible workers
-  - itemized settlement payloads used for PDF and WhatsApp messaging
-
-### Commercial and Inventory Operations
-- Party ledger: `/owner/ledger`
-- Grey fabric stock: `/owner/stock` (tracks individual rolls/bales as fabric packages)
-- Yarn and beam inventory: `/owner/inventory`
-- Dispatches and tracking: `/owner/dispatches` (physical inventory remains in stock until a dispatch record is created)
-
-### Settings and Compliance
-- Settings: `/owner/settings`
-- Audit: `/owner/settings/audit`
-- Admin compliance console: `/admin`
-- Public tracking: `/track/[token]`
+1.  [**Estimator & Quotes**](file:///Users/rajpatel/Projects/textile%20Saas/docs/features/estimator_and_quotes.md): The commercial engine for fabric costing.
+2.  [**Orders & Market Runs**](file:///Users/rajpatel/Projects/textile%20Saas/docs/features/orders_and_market_runs.md): Production lifecycle and speculative runs.
+3.  [**Floor Operations**](file:///Users/rajpatel/Projects/textile%20Saas/docs/features/floor_operations_supervisor_dashboard.md): The unified supervisor dashboard.
+4.  [**Production & Packing**](file:///Users/rajpatel/Projects/textile%20Saas/docs/features/production_and_packing.md): Converting logs into physical stock.
+5.  [**Payroll & Settlements**](file:///Users/rajpatel/Projects/textile%20Saas/docs/features/payroll_and_settlements.md): Wage logic, PF/ESI, and WhatsApp payslips.
+6.  [**Advances Management**](file:///Users/rajpatel/Projects/textile%20Saas/docs/features/advances_management.md): Worker loans and automatic recovery.
+7.  [**Party Ledger**](file:///Users/rajpatel/Projects/textile%20Saas/docs/features/party_ledger.md): Financial tracking with Traders.
+8.  [**Inventory & Stock**](file:///Users/rajpatel/Projects/textile%20Saas/docs/features/inventory_and_stock.md): Yarn, Beams, and Grey Fabric packages.
+9.  [**Dispatches & Tracking**](file:///Users/rajpatel/Projects/textile%20Saas/docs/features/dispatches_and_tracking.md): Logistics and public tracking portals.
+10. [**Compliance & Admin**](file:///Users/rajpatel/Projects/textile%20Saas/docs/features/compliance_and_admin.md): DPA, legal notices, and worker grievances.
 
 ## Technical Shape
 

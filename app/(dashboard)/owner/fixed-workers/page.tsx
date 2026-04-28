@@ -38,6 +38,7 @@ interface FixedWorker {
     monthly_salary: number
     is_active: boolean
     start_date?: string   // 'YYYY-MM-DD'
+    pf_esi_enrolled?: boolean
     pf_esi_eligible?: boolean
     esi_number?: string
     pf_number?: string
@@ -47,9 +48,12 @@ interface MeterWorker {
     id: number
     name: string
     is_active: boolean
+    pf_esi_enrolled?: boolean
     pf_esi_eligible?: boolean
     whatsapp_number?: string | null
     whatsapp_language?: string | null
+    esi_number?: string | null
+    pf_number?: string | null
 }
 
 function getRoleLabel(role: string, t: any) {
@@ -84,6 +88,10 @@ function EditMeterWorkerDialog({
         (worker.whatsapp_language as 'en' | 'hi' | 'gu') || 'en'
     )
     const [consent, setConsent] = useState(false)
+    const [pfEsiEnrolled, setPfEsiEnrolled] = useState(worker.pf_esi_enrolled ?? worker.pf_esi_eligible ?? false)
+    const [esiNumber, setEsiNumber] = useState(worker.esi_number || '')
+    const [pfNumber, setPfNumber] = useState(worker.pf_number || '')
+    const { t } = useTranslation()
 
     const mutation = useMutation({
         mutationFn: () =>
@@ -93,6 +101,9 @@ function EditMeterWorkerDialog({
                 phone: phone || undefined,
                 language: lang,
                 consentGiven: phone.length === 10 ? consent : true,
+                pf_esi_enrolled: pfEsiEnrolled,
+                esi_number: esiNumber,
+                pf_number: pfNumber,
             }),
         onSuccess: (result) => {
             if ('error' in result && result.error) {
@@ -177,6 +188,32 @@ function EditMeterWorkerDialog({
                         </div>
                     )}
                 </div>
+
+                <div className="border-t border-gray-100 pt-3 space-y-3">
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id={`meter-pf-${worker.id}`}
+                            checked={pfEsiEnrolled}
+                            onChange={(e) => setPfEsiEnrolled(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-teal-600 cursor-pointer"
+                        />
+                        <Label htmlFor={`meter-pf-${worker.id}`}>{t('worker.pfEsi.label')}</Label>
+                    </div>
+                    <p className="text-xs text-gray-500">{t('worker.pfEsi.helper')}</p>
+                    {pfEsiEnrolled && (
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <Label className="text-xs">{t('worker.pfEsi.esiNumber')}</Label>
+                                <Input value={esiNumber} onChange={(e) => setEsiNumber(e.target.value)} />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-xs">{t('worker.pfEsi.pfNumber')}</Label>
+                                <Input value={pfNumber} onChange={(e) => setPfNumber(e.target.value)} />
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <DialogFooter>
@@ -214,7 +251,7 @@ function PieceRateTab({ orgId }: { orgId: string }) {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('workers')
-                .select('id, name, is_active, pf_esi_eligible, whatsapp_number, whatsapp_language')
+                .select('id, name, is_active, pf_esi_enrolled, pf_esi_eligible, whatsapp_number, whatsapp_language, esi_number, pf_number')
                 .eq('org_id', orgId)
                 .order('name')
             if (error) throw error
@@ -313,9 +350,9 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                                         </span>
                                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                             <span className="text-xs text-orange-600 font-medium">Per metre</span>
-                                            {w.pf_esi_eligible && (
+                                            {(w.pf_esi_enrolled ?? w.pf_esi_eligible) && (
                                                 <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
-                                                    ESI/PF ✓
+                                                    {t('worker.pfEsi.enrolled')}
                                                 </span>
                                             )}
                                             {w.whatsapp_number && (
@@ -438,6 +475,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const [formRole, setFormRole] = useState('')
     const [formSalary, setFormSalary] = useState('')
     const [formStartDate, setFormStartDate] = useState(new Date().toISOString().substring(0, 10))
+    const [formPfEsiEnrolled, setFormPfEsiEnrolled] = useState(false)
+    const [formEsiNumber, setFormEsiNumber] = useState('')
+    const [formPfNumber, setFormPfNumber] = useState('')
     const [saving, setSaving] = useState(false)
 
     const [workerToDelete, setWorkerToDelete] = useState<FixedWorker | null>(null)
@@ -469,6 +509,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormRole('')
         setFormSalary('')
         setFormStartDate(new Date().toISOString().substring(0, 10))
+        setFormPfEsiEnrolled(false)
+        setFormEsiNumber('')
+        setFormPfNumber('')
         setDialogOpen(true)
     }
 
@@ -478,6 +521,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormRole(worker.role)
         setFormSalary(worker.monthly_salary.toString())
         setFormStartDate(worker.start_date || new Date().toISOString().substring(0, 10))
+        setFormPfEsiEnrolled(worker.pf_esi_enrolled ?? worker.pf_esi_eligible ?? false)
+        setFormEsiNumber(worker.esi_number || '')
+        setFormPfNumber(worker.pf_number || '')
         setDialogOpen(true)
     }
 
@@ -502,6 +548,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                 role: formRole,
                 monthly_salary: parseFloat(formSalary),
                 start_date: formStartDate,
+                pf_esi_enrolled: formPfEsiEnrolled,
+                esi_number: formEsiNumber,
+                pf_number: formPfNumber,
             })
             if (result.error) throw new Error(result.error)
             toast.success(editingWorker ? t('common.updated') : t('common.added'))
@@ -638,6 +687,31 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                     max={new Date().toISOString().substring(0, 10)}
                                 />
                             </div>
+                            <div className="space-y-3 border-t border-gray-100 pt-3">
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="fixed-pf-esi-enrolled"
+                                        checked={formPfEsiEnrolled}
+                                        onChange={(e) => setFormPfEsiEnrolled(e.target.checked)}
+                                        className="h-4 w-4 rounded border-gray-300 text-teal-600 cursor-pointer"
+                                    />
+                                    <Label htmlFor="fixed-pf-esi-enrolled">{t('worker.pfEsi.label')}</Label>
+                                </div>
+                                <p className="text-xs text-gray-500">{t('worker.pfEsi.helper')}</p>
+                                {formPfEsiEnrolled && (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">{t('worker.pfEsi.esiNumber')}</Label>
+                                            <Input value={formEsiNumber} onChange={(e) => setFormEsiNumber(e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs">{t('worker.pfEsi.pfNumber')}</Label>
+                                            <Input value={formPfNumber} onChange={(e) => setFormPfNumber(e.target.value)} />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                             <Button onClick={handleSave} disabled={saving} className="w-full">
                                 {saving ? t('fixed_page.saving') : editingWorker ? t('fixed_page.update') : t('fixed_page.add_worker')}
                             </Button>
@@ -716,9 +790,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                                                 Since {new Date(w.start_date + 'T00:00:00').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
                                                             </span>
                                                         )}
-                                                        {w.pf_esi_eligible && (
+                                                        {(w.pf_esi_enrolled ?? w.pf_esi_eligible) && (
                                                             <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
-                                                                ESI/PF ✓
+                                                                {t('worker.pfEsi.enrolled')}
                                                             </span>
                                                         )}
                                                     </div>
@@ -766,9 +840,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                                         <span className={cn('font-medium break-words block', !w.is_active && 'text-gray-400 line-through')}>
                                                             {tl(w.name)}
                                                         </span>
-                                                        {w.pf_esi_eligible && (
+                                                        {(w.pf_esi_enrolled ?? w.pf_esi_eligible) && (
                                                             <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded ml-2">
-                                                                ESI/PF ✓
+                                                                {t('worker.pfEsi.enrolled')}
                                                             </span>
                                                         )}
                                                     </div>

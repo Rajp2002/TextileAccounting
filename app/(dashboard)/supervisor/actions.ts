@@ -513,7 +513,7 @@ export async function unconsumeBatchWithCode(batchId: string, accessCode: string
 
 export async function addMeterWorker(data: {
     name: string
-    pf_esi_eligible: boolean
+    pf_esi_enrolled: boolean
     esi_number?: string | null
     pf_number?: string | null
 }) {
@@ -530,7 +530,8 @@ export async function addMeterWorker(data: {
         .insert({
             name: data.name,
             is_active: true,
-            pf_esi_eligible: data.pf_esi_eligible,
+            pf_esi_enrolled: data.pf_esi_enrolled,
+            pf_esi_eligible: data.pf_esi_enrolled,
             esi_number: data.esi_number,
             pf_number: data.pf_number,
             org_id: profile.org_id
@@ -546,7 +547,7 @@ export async function addFixedWorker(data: {
     name: string
     role: string
     monthly_salary: number
-    pf_esi_eligible: boolean
+    pf_esi_enrolled: boolean
     esi_number?: string | null
     pf_number?: string | null
 }) {
@@ -560,7 +561,8 @@ export async function addFixedWorker(data: {
             role: data.role,
             monthly_salary: data.monthly_salary,
             is_active: true,
-            pf_esi_eligible: data.pf_esi_eligible,
+            pf_esi_enrolled: data.pf_esi_enrolled,
+            pf_esi_eligible: data.pf_esi_enrolled,
             esi_number: data.esi_number,
             pf_number: data.pf_number,
             org_id: profile.org_id

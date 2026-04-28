@@ -310,6 +310,14 @@ export const hi = {
       earned_gross: "कुल कमाई (Earned)",
       cap_applied: "50% की सीमा लागू"
     },
+    payment: {
+      modeLabel: "भुगतान विधि",
+      modeRequired: "भुगतान पद्धति चुनें",
+      cash: "नकद",
+      bankTransfer: "बैंक ट्रांसफर",
+      upi: "UPI",
+      cheque: "चेक"
+    },
     empty: {
       no_production: "इस महीने कोई उत्पादन रिकॉर्ड नहीं है",
       no_fixed: "कोई तय वेतन वाला कारीगर नहीं मिला",
@@ -352,6 +360,34 @@ export const hi = {
         settled_in: "निपटारा हुआ:",
         select_above: "एडवांस मैनेज करने के लिए ऊपर से किसी कारीगर को चुनें"
       }
+    }
+  },
+  confirm: {
+    title: "क्या आप सुनिश्चित हैं?",
+    proceed: "हाँ, आगे बढ़ें",
+    cancel: "रद्द करें",
+    payroll: {
+      editBonus: "इस भुगतान का बोनस बदलेगा।",
+      editFine: "इस भुगतान का जुर्माना बदलेगा।",
+      adjustAdvance: "इस भुगतान की अग्रिम कटौती बदलेगी।"
+    }
+  },
+  emptyState: {
+    advances: {
+      title: "अभी कोई अग्रिम नहीं",
+      cta: "पहला अग्रिम दें"
+    },
+    ledger: {
+      title: "अभी कोई लेन-देन नहीं",
+      cta: "भुगतान दर्ज करें",
+      addParty: "पार्टी जोड़ें"
+    },
+    payroll: {
+      title: "इस महीने कोई भुगतान नहीं",
+      cta: "कामगार को सेटल करें"
+    },
+    dispatches: {
+      noStock: "पहले कपड़ा स्टॉक में जोड़ें"
     }
   },
   inventory: {
@@ -800,7 +836,15 @@ export const hi = {
   worker: {
     title: "आज के कारीगर",
     no_logs: "आज कोई प्रोडक्शन दर्ज नहीं",
-    rate_locked_on: "दर {date} पर लॉक हो गई है—क्वालिटी रेट बदलने पर भी यह नहीं बदलेगी।"
+    rate_locked_on: "दर {date} पर लॉक हो गई है—क्वालिटी रेट बदलने पर भी यह नहीं बदलेगी।",
+    pfEsi: {
+      label: "PF / ESI नामांकन",
+      helper: "केवल तब सक्षम करें जब यह कामगार EPFO और ESIC के तहत पंजीकृत हो",
+      enrolled: "नामांकित",
+      notEnrolled: "नामांकित नहीं",
+      esiNumber: "ESI नंबर",
+      pfNumber: "PF नंबर"
+    }
   },
   dashboard: {
     date: "तारीख",

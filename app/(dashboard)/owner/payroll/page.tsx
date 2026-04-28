@@ -6,15 +6,15 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { formatINR, sumAdvances, calculateNetPay, calculateRemainingDebt, calculateMaxDeduction } from '@/lib/finance'
+import { formatINR, calculateMaxDeduction } from '@/lib/finance'
 import {
     CheckCircle2, Circle, ChevronLeft, ChevronRight,
-    HardHat, Briefcase, AlertCircle, IndianRupee, Loader2, HandCoins, Download, AlertTriangle,
-    Search, Trash2, Send, Info, Lock, Unlock, X, Check
+    HardHat, Briefcase, AlertCircle, Loader2, HandCoins, Download, AlertTriangle,
+    Search, Send, Info, Lock, Check
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { toggleWorkerPaid } from './actions'
+import { createPayrollAdjustment, toggleWorkerPaid } from './actions'
 import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTransliterate } from '@/hooks/use-transliterate'
@@ -42,7 +42,9 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Decimal } from 'decimal.js'
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
+
+type PaymentMode = 'cash' | 'bank_transfer' | 'upi' | 'cheque'
 
 interface SettlementRecord {
     id: number
@@ -55,6 +57,7 @@ interface SettlementRecord {
     settled_at: string
     status: 'paid' | 'pending'
     itemization_payload?: any
+    payment_mode?: PaymentMode | null
 }
 
 interface WorkerBase {
@@ -62,6 +65,8 @@ interface WorkerBase {
     name: string
     whatsapp_number?: string | null
     totalAdvances: number
+    pf_esi_enrolled?: boolean
+    pf_esi_eligible?: boolean
     settlement?: SettlementRecord
 }
 
@@ -104,16 +109,85 @@ function nextMonth(ym: string) {
     return d.toISOString().substring(0, 7)
 }
 
+function isPfEsiEnrolled(worker: WorkerBase) {
+    return worker.pf_esi_enrolled ?? worker.pf_esi_eligible ?? false
+}
+
+function getStatutoryDeductions(gross: number, enrolled: boolean) {
+    if (!enrolled) {
+        return { pfEmployee: 0, esicEmployee: 0 }
+    }
+
+    const pfBasis = Math.min(gross, 15000)
+    return {
+        pfEmployee: pfBasis * 0.12,
+        esicEmployee: gross * 0.0075,
+    }
+}
+
+function getSettlementPreview(params: {
+    gross: number
+    totalAdvances: number
+    isFinal: boolean
+    enrolled: boolean
+    manualDeduction?: number | null
+}) {
+    const maxDeduction = parseFloat(calculateMaxDeduction(params.gross, params.isFinal ? 100 : 50))
+    const autoDeduction = Math.min(params.totalAdvances, maxDeduction)
+    const advanceDeducted = params.manualDeduction ?? autoDeduction
+    const { pfEmployee, esicEmployee } = getStatutoryDeductions(params.gross, params.enrolled)
+    const statutoryDeduction = pfEmployee + esicEmployee
+    const netPayout = params.gross - advanceDeducted - statutoryDeduction
+    return {
+        pfEmployee,
+        esicEmployee,
+        statutoryDeduction,
+        autoDeduction,
+        advanceDeducted,
+        netPayout,
+        remainingDebt: Math.max(params.totalAdvances - advanceDeducted, 0),
+        complianceFlag: params.totalAdvances > advanceDeducted && advanceDeducted > 0 && !params.isFinal,
+    }
+}
+
+function getPaymentModeLabel(mode: PaymentMode | null | undefined, t: (key: string) => string) {
+    if (!mode) return null
+
+    const labels: Record<PaymentMode, string> = {
+        cash: t('payroll.payment.cash'),
+        bank_transfer: t('payroll.payment.bankTransfer'),
+        upi: t('payroll.payment.upi'),
+        cheque: t('payroll.payment.cheque'),
+    }
+
+    return labels[mode]
+}
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
-function PaidBadge({ status, settledAt }: { status?: 'paid' | 'pending'; settledAt?: string }) {
+function PaidBadge({
+    status,
+    settledAt,
+    paymentMode,
+}: {
+    status?: 'paid' | 'pending'
+    settledAt?: string
+    paymentMode?: PaymentMode | null
+}) {
     const { t } = useTranslation()
     if (status === 'paid') {
         return (
-            <div className="flex items-center gap-1.5 text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                <span className="text-[10px] font-bold uppercase tracking-tight">
-                    {t('payroll.status.paid')} {settledAt ? new Date(settledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}
-                </span>
+            <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-tight">
+                        {t('payroll.status.paid')} {settledAt ? new Date(settledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}
+                    </span>
+                </div>
+                {paymentMode && (
+                    <Badge variant="outline" className="h-5 border-gray-200 bg-gray-50 px-1.5 text-[9px] font-bold text-gray-600">
+                        {getPaymentModeLabel(paymentMode, t)}
+                    </Badge>
+                )}
             </div>
         )
     }
@@ -155,15 +229,17 @@ function MeterWorkerRow({
     const isPaid = worker.settlement?.status === 'paid'
     const hasAdvances = worker.totalAdvances > 0
     
-    // Live preview — switches between 50% cap (regular) and 100% cap (final) based on checkbox
-    const previewPct = isFinalSettlement ? 100 : 50
-    const previewNet = parseFloat(calculateNetPay(worker.totalPay, worker.totalAdvances, previewPct))
-    const previewDebt = parseFloat(calculateRemainingDebt(worker.totalPay, worker.totalAdvances, previewPct))
+    const preview = getSettlementPreview({
+        gross: worker.totalPay,
+        totalAdvances: worker.totalAdvances,
+        isFinal: isFinalSettlement,
+        enrolled: isPfEsiEnrolled(worker),
+    })
     
-    const displayNet = isPaid ? worker.settlement!.net_payout : previewNet
-    const displayDeduction = isPaid ? worker.settlement!.advance_deducted : (worker.totalPay - previewNet)
-    const displayRemaining = isPaid ? worker.settlement!.carried_forward_debt : previewDebt
-    const isCapped = isPaid ? worker.settlement!.compliance_flag : (worker.totalAdvances > displayDeduction && displayDeduction > 0)
+    const displayNet = isPaid ? worker.settlement!.net_payout : preview.netPayout
+    const displayDeduction = isPaid ? worker.settlement!.advance_deducted : preview.advanceDeducted
+    const displayRemaining = isPaid ? worker.settlement!.carried_forward_debt : preview.remainingDebt
+    const isCapped = isPaid ? worker.settlement!.compliance_flag : preview.complianceFlag
 
     return (
         <div className={cn(
@@ -210,7 +286,11 @@ function MeterWorkerRow({
                             {isPaid && worker.settlement?.is_final_settlement && (
                                 <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none text-[8px] h-3.5 px-1 font-black uppercase">Final</Badge>
                             )}
-                            <PaidBadge status={worker.settlement?.status} settledAt={worker.settlement?.settled_at} />
+                            <PaidBadge
+                                status={worker.settlement?.status}
+                                settledAt={worker.settlement?.settled_at}
+                                paymentMode={worker.settlement?.payment_mode}
+                            />
                         </div>
                     </div>
                     <Button
@@ -443,15 +523,17 @@ function FixedWorkerRow({
     const isDaily = worker.role === 'daily'
     const hasAdvances = worker.totalAdvances > 0
 
-    // Live preview — switches between 50% cap (regular) and 100% cap (final) based on checkbox
-    const previewPct = isFinalSettlement ? 100 : 50
-    const previewNet = parseFloat(calculateNetPay(worker.earnedPay, worker.totalAdvances, previewPct))
-    const previewDebt = parseFloat(calculateRemainingDebt(worker.earnedPay, worker.totalAdvances, previewPct))
+    const preview = getSettlementPreview({
+        gross: worker.earnedPay,
+        totalAdvances: worker.totalAdvances,
+        isFinal: isFinalSettlement,
+        enrolled: isPfEsiEnrolled(worker),
+    })
     
-    const displayNet = isPaid ? worker.settlement!.net_payout : previewNet
-    const displayDeduction = isPaid ? worker.settlement!.advance_deducted : (worker.earnedPay - previewNet)
-    const displayRemaining = isPaid ? worker.settlement!.carried_forward_debt : previewDebt
-    const isCapped = isPaid ? worker.settlement!.compliance_flag : (worker.totalAdvances > displayDeduction && displayDeduction > 0)
+    const displayNet = isPaid ? worker.settlement!.net_payout : preview.netPayout
+    const displayDeduction = isPaid ? worker.settlement!.advance_deducted : preview.advanceDeducted
+    const displayRemaining = isPaid ? worker.settlement!.carried_forward_debt : preview.remainingDebt
+    const isCapped = isPaid ? worker.settlement!.compliance_flag : preview.complianceFlag
 
     return (
         <div className={cn(
@@ -493,7 +575,11 @@ function FixedWorkerRow({
                             {isPaid && worker.settlement?.is_final_settlement && (
                                 <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none text-[8px] h-3.5 px-1 font-black uppercase">Final</Badge>
                             )}
-                            <PaidBadge status={worker.settlement?.status} settledAt={worker.settlement?.settled_at} />
+                            <PaidBadge
+                                status={worker.settlement?.status}
+                                settledAt={worker.settlement?.settled_at}
+                                paymentMode={worker.settlement?.payment_mode}
+                            />
                         </div>
                     </div>
                     <Button
@@ -714,14 +800,13 @@ function SettlementDialog({
     worker: MeterWorkerPayroll | FixedWorkerPayroll
     workerType: 'meter' | 'fixed'
     selectedMonth: string
-    onSettle: (params: { isFinal: boolean; manualDeduction: number | null }) => void
+    onSettle: (params: { isFinal: boolean; manualDeduction: number | null; paymentMode: PaymentMode }) => void
     isMutating: boolean
     categories: { id: string; name: string; type: 'bonus' | 'fine' }[]
     cycleStartDay: number
 }) {
     const { t } = useTranslation()
     const tl = useTransliterate()
-    const supabase = createClient()
     const [isFinal, setIsFinal] = useState(false)
     const [manualDeduction, setManualDeduction] = useState<string>('')
     const [confirmed, setConfirmed] = useState(false)
@@ -729,47 +814,91 @@ function SettlementDialog({
     const [adjAmount, setAdjAmount] = useState('')
     const [adjCategoryId, setAdjCategoryId] = useState('')
     const [adjDesc, setAdjDesc] = useState('')
+    const [paymentMode, setPaymentMode] = useState<PaymentMode | ''>('')
+    const [showAdjustmentConfirm, setShowAdjustmentConfirm] = useState(false)
+    const [showAdvanceConfirm, setShowAdvanceConfirm] = useState(false)
+    const enrolled = isPfEsiEnrolled(worker)
+    const gross = (worker as MeterWorkerPayroll).totalPay || (worker as FixedWorkerPayroll).earnedPay || 0
+    const selectedCategory = categories.find((category) => category.id === adjCategoryId)
+    const manualDeductionValue = manualDeduction === '' ? null : parseFloat(manualDeduction)
+    const {
+        pfEmployee,
+        esicEmployee,
+        autoDeduction,
+        advanceDeducted,
+        netPayout,
+        remainingDebt,
+    } = getSettlementPreview({
+        gross,
+        totalAdvances: worker.totalAdvances || 0,
+        isFinal,
+        enrolled,
+        manualDeduction: manualDeductionValue,
+    })
 
-    // 1. Calculate Basis for Statutory Preview
-    const gross = (worker as any).totalPay || (worker as any).earnedPay || 0
-    const pfCeiling = 15000
-    const pfBasis = Math.min(gross, pfCeiling)
-    const pfEmployee = pfBasis * 0.12
-    const esicEmployee = gross * 0.0075
-    
-    // 2. Adjustments Preview (State-local adjustment for this session)
-    // In a real flow, the user might have added adjustments previously via a separate "Adjustment" history.
-    // For this hardened settlement, we allow adding ONE on the fly.
+    useEffect(() => {
+        if (!open) return
+        setIsFinal(false)
+        setManualDeduction('')
+        setConfirmed(false)
+        setAdjAmount('')
+        setAdjCategoryId('')
+        setAdjDesc('')
+        setPaymentMode('')
+        setShowAdjustmentConfirm(false)
+        setShowAdvanceConfirm(false)
+    }, [open, worker.id])
+
     const handleAddAdjustment = async () => {
-        if (!adjAmount || !adjCategoryId) return
+        const amount = parseFloat(adjAmount)
+        if (!amount || !adjCategoryId) return
         setAddingAdjustment(true)
-        const { error } = await supabase.from('payroll_adjustments').insert({
-            org_id: (worker as any).org_id,
-            [workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id']: worker.id,
-            worker_type: workerType,
-            category_id: adjCategoryId,
-            amount: parseFloat(adjAmount),
+        const result = await createPayrollAdjustment({
+            workerType,
+            workerId: worker.id,
+            month: selectedMonth,
+            cycleStartDay,
+            categoryId: adjCategoryId,
+            amount,
             description: adjDesc,
-            cycle_start_date: selectedMonth // simplified: should be cycle start
         })
-        setAddingAdjustment(false)
-        if (error) toast.error('Failed to add adjustment')
-        else {
+
+        if (result.error) {
+            toast.error(result.error)
+        } else {
             toast.success('Adjustment added')
             setAdjAmount('')
+            setAdjCategoryId('')
             setAdjDesc('')
-            // We'd ideally refetch here, but for prompt response we'll let the user settle
         }
+        setAddingAdjustment(false)
+        setShowAdjustmentConfirm(false)
     }
 
-    // 3. Deduction Logic
-    const maxDeduction = parseFloat(calculateMaxDeduction(gross, isFinal ? 100 : 50))
-    const totalAdvances = worker.totalAdvances || 0
-    const autoDeduction = Math.min(totalAdvances, maxDeduction)
-    const activeDeduction = manualDeduction !== '' ? parseFloat(manualDeduction) : autoDeduction
-    const netPayout = gross - activeDeduction
+    const submitSettlement = () => {
+        if (!paymentMode) {
+            toast.error(t('payroll.payment.modeRequired'))
+            return
+        }
+
+        onSettle({
+            isFinal,
+            manualDeduction: manualDeductionValue,
+            paymentMode,
+        })
+        setShowAdvanceConfirm(false)
+    }
+
+    const shouldConfirmAdvanceAdjustment =
+        manualDeductionValue !== null &&
+        Math.abs(manualDeductionValue - autoDeduction) > 0.001
+
+    const adjustmentDescription = selectedCategory?.type === 'fine'
+        ? t('confirm.payroll.editFine')
+        : t('confirm.payroll.editBonus')
 
     return (
+        <>
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[96dvh] sm:max-h-[90vh]">
                 <div className="bg-indigo-600 p-4 sm:p-6 text-white shrink-0 relative">
@@ -783,17 +912,22 @@ function SettlementDialog({
                 </div>
 
                 <div className="p-4 sm:p-6 space-y-5 sm:space-y-6 overflow-y-auto flex-1">
-                    {/* Statutory Preview Alert */}
-                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
-                        <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-                        <div className="space-y-1">
-                            <h4 className="text-xs font-black text-blue-800 uppercase tracking-wider">Statutory Deductions (Estimated)</h4>
-                            <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-[11px] text-blue-700">
-                                <span>Worker PF (12%):</span> <span className="font-bold text-right">₹{formatINR(pfEmployee)}</span>
-                                <span>Worker ESI (0.75%):</span> <span className="font-bold text-right">₹{formatINR(esicEmployee)}</span>
+                    {enrolled ? (
+                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
+                            <Info className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                                <h4 className="text-xs font-black text-blue-800 uppercase tracking-wider">Statutory Deductions (Estimated)</h4>
+                                <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-[11px] text-blue-700">
+                                    <span>Worker PF (12%):</span> <span className="font-bold text-right">{formatINR(pfEmployee)}</span>
+                                    <span>Worker ESI (0.75%):</span> <span className="font-bold text-right">{formatINR(esicEmployee)}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-[11px] text-slate-600">
+                            {t('worker.pfEsi.notEnrolled')}
+                        </div>
+                    )}
 
                     {/* Adjustment Section */}
                     <div className="space-y-2.5 sm:space-y-3">
@@ -819,7 +953,12 @@ function SettlementDialog({
                                     value={adjAmount}
                                     onChange={e => setAdjAmount(e.target.value)}
                                 />
-                                <Button size="sm" className="h-9 sm:h-10 px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700" onClick={handleAddAdjustment} disabled={addingAdjustment}>
+                                <Button
+                                    size="sm"
+                                    className="h-9 sm:h-10 px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700"
+                                    onClick={() => setShowAdjustmentConfirm(true)}
+                                    disabled={addingAdjustment || !adjAmount || !adjCategoryId}
+                                >
                                     {addingAdjustment ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-5 w-5"/>}
                                 </Button>
                             </div>
@@ -837,7 +976,7 @@ function SettlementDialog({
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
                                 <Label className="text-sm font-black text-gray-700">Advance Recovery</Label>
-                                <p className="text-[10px] text-gray-500 italic">Recommended: ₹{formatINR(autoDeduction)} (of ₹{formatINR(totalAdvances)} total debt)</p>
+                                <p className="text-[10px] text-gray-500 italic">Recommended: {formatINR(autoDeduction)} (of {formatINR(worker.totalAdvances)} total debt)</p>
                             </div>
                             <div className="relative w-40">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₹</span>
@@ -848,6 +987,24 @@ function SettlementDialog({
                                     onChange={e => setManualDeduction(e.target.value)}
                                 />
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-sm font-black text-gray-700">{t('payroll.payment.modeLabel')}</Label>
+                            <Select value={paymentMode} onValueChange={(value) => setPaymentMode(value as PaymentMode)}>
+                                <SelectTrigger className="h-11 border-gray-200 bg-white">
+                                    <SelectValue placeholder={t('payroll.payment.modeLabel')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="cash">{t('payroll.payment.cash')}</SelectItem>
+                                    <SelectItem value="bank_transfer">{t('payroll.payment.bankTransfer')}</SelectItem>
+                                    <SelectItem value="upi">{t('payroll.payment.upi')}</SelectItem>
+                                    <SelectItem value="cheque">{t('payroll.payment.cheque')}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {!paymentMode && (
+                                <p className="text-[11px] text-red-500">{t('payroll.payment.modeRequired')}</p>
+                            )}
                         </div>
 
                         <div className="flex items-start space-x-3 bg-red-50/50 p-4 rounded-xl border border-red-100">
@@ -874,7 +1031,7 @@ function SettlementDialog({
                         </div>
                         <div className="flex flex-col items-end gap-1 mb-0.5 sm:mb-1">
                             <span className="text-[10px] sm:text-[11px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-                                Debt: {formatINR(totalAdvances - activeDeduction)}
+                                Debt: {formatINR(remainingDebt)}
                             </span>
                         </div>
                     </div>
@@ -892,8 +1049,14 @@ function SettlementDialog({
                         </Button>
                         <Button 
                             className="flex-[2] h-10 sm:h-12 text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 font-black uppercase tracking-widest shadow-lg shadow-indigo-100 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all" 
-                            disabled={!confirmed || isMutating || netPayout < 0}
-                            onClick={() => onSettle({ isFinal, manualDeduction: manualDeduction ? parseFloat(manualDeduction) : null })}
+                            disabled={!confirmed || isMutating || netPayout < 0 || !paymentMode}
+                            onClick={() => {
+                                if (shouldConfirmAdvanceAdjustment) {
+                                    setShowAdvanceConfirm(true)
+                                    return
+                                }
+                                submitSettlement()
+                            }}
                         >
                             {isMutating ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Confirm'}
                         </Button>
@@ -901,6 +1064,23 @@ function SettlementDialog({
                 </div>
             </DialogContent>
         </Dialog>
+        <ConfirmActionDialog
+            open={showAdjustmentConfirm}
+            onOpenChange={setShowAdjustmentConfirm}
+            title={t('confirm.title')}
+            description={adjustmentDescription}
+            onConfirm={handleAddAdjustment}
+            isLoading={addingAdjustment}
+        />
+        <ConfirmActionDialog
+            open={showAdvanceConfirm}
+            onOpenChange={setShowAdvanceConfirm}
+            title={t('confirm.title')}
+            description={t('confirm.payroll.adjustAdvance')}
+            onConfirm={submitSettlement}
+            isLoading={isMutating}
+        />
+        </>
     )
 }
 
@@ -979,7 +1159,7 @@ export default function PayrollPage() {
                     .lte('date', monthEnd),
                 // Fetch ALL workers (active + inactive) — inactive workers who worked this month must still appear
                 supabase.from('workers')
-                    .select('id, name, whatsapp_number, is_active')
+                    .select('id, name, whatsapp_number, is_active, pf_esi_enrolled, pf_esi_eligible')
                     .eq('org_id', userProfile!.org_id),
                 supabase.from('machines')
                     .select('id, name')
@@ -1076,6 +1256,8 @@ export default function PayrollPage() {
                     id: worker.id,
                     name: worker.name,
                     whatsapp_number: worker.whatsapp_number ?? null,
+                    pf_esi_enrolled: worker.pf_esi_enrolled,
+                    pf_esi_eligible: worker.pf_esi_eligible,
                     machines: machineBreakdown,
                     totalMeters,
                     totalPay,
@@ -1158,6 +1340,8 @@ export default function PayrollPage() {
                     id: w.id,
                     name: w.name,
                     whatsapp_number: w.whatsapp_number ?? null,
+                    pf_esi_enrolled: w.pf_esi_enrolled,
+                    pf_esi_eligible: w.pf_esi_eligible,
                     role: w.role,
                     monthly_salary: w.monthly_salary,
                     daysWorked,
@@ -1171,15 +1355,25 @@ export default function PayrollPage() {
 
     // ── Toggle paid with Optimistic UI ──────────────────────────────────────
     const mutation = useMutation({
-        mutationFn: async ({ workerType, workerId, currentPaid, targetMonth, isFinal, manualDeductionOverride }: {
+        mutationFn: async ({ workerType, workerId, currentPaid, targetMonth, isFinal, manualDeductionOverride, paymentMode }: {
             workerType: 'meter' | 'fixed',
             workerId: number,
             currentPaid: boolean,
             targetMonth: string,
             isFinal: boolean,
             manualDeductionOverride?: number | null
+            paymentMode?: PaymentMode | null
         }) => {
-            return await toggleWorkerPaid(workerType, workerId, targetMonth, currentPaid, isFinal, manualDeductionOverride)
+            return await toggleWorkerPaid(
+                workerType,
+                workerId,
+                targetMonth,
+                currentPaid,
+                isFinal,
+                manualDeductionOverride,
+                null,
+                paymentMode ?? null
+            )
         },
         onMutate: async (variables) => {
             const orgId = userProfile?.org_id
@@ -1195,17 +1389,35 @@ export default function PayrollPage() {
                 if (!old) return old
                 return old.map((w: any) => {
                     if (w.id === variables.workerId) {
+                        const gross = w.totalPay || w.earnedPay || 0
+                        const enrolled = isPfEsiEnrolled(w)
+                        const preview = getSettlementPreview({
+                            gross,
+                            totalAdvances: w.totalAdvances || 0,
+                            isFinal: variables.isFinal,
+                            enrolled,
+                            manualDeduction: variables.manualDeductionOverride ?? null,
+                        })
+
                         return {
                             ...w,
                             settlement: !variables.currentPaid ? {
                                 status: 'paid',
                                 settled_at: new Date().toISOString(),
                                 is_final_settlement: variables.isFinal,
-                                gross_pay: w.totalPay || w.earnedPay || 0,
-                                net_payout: parseFloat(calculateNetPay(w.totalPay || w.earnedPay || 0, w.totalAdvances || 0, variables.isFinal ? 100 : 50)),
-                                advance_deducted: (w.totalPay || w.earnedPay || 0) - parseFloat(calculateNetPay(w.totalPay || w.earnedPay || 0, w.totalAdvances || 0, variables.isFinal ? 100 : 50)),
-                                carried_forward_debt: parseFloat(calculateRemainingDebt(w.totalPay || w.earnedPay || 0, w.totalAdvances || 0, variables.isFinal ? 100 : 50)),
-                                compliance_flag: (w.totalAdvances > 0 && !variables.isFinal)
+                                gross_pay: gross,
+                                net_payout: preview.netPayout,
+                                advance_deducted: preview.advanceDeducted,
+                                carried_forward_debt: preview.remainingDebt,
+                                compliance_flag: preview.complianceFlag,
+                                payment_mode: variables.paymentMode ?? null,
+                                itemization_payload: enrolled ? {
+                                    employee_pf: preview.pfEmployee,
+                                    employee_esic: preview.esicEmployee,
+                                    payment_mode: variables.paymentMode ?? null,
+                                } : {
+                                    payment_mode: variables.paymentMode ?? null,
+                                },
                             } : null
                         }
                     }
@@ -1480,7 +1692,21 @@ export default function PayrollPage() {
                         <Card>
                             <CardContent className="py-12 text-center">
                                 <AlertCircle className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                                <p className="text-gray-500 font-medium">{t('payroll.empty.no_production')}</p>
+                                <p className="text-gray-700 font-medium">{t('emptyState.payroll.title')}</p>
+                                <p className="text-sm text-gray-500 mt-1">{t('payroll.empty.no_production')}</p>
+                                <Button
+                                    className="mt-4"
+                                    variant="outline"
+                                    onClick={() => {
+                                        if (fixedWorkers && fixedWorkers.length > 0) {
+                                            setActiveTab('fixed')
+                                            return
+                                        }
+                                        window.location.href = '/owner/fixed-workers'
+                                    }}
+                                >
+                                    {t('emptyState.payroll.cta')}
+                                </Button>
                             </CardContent>
                         </Card>
                     ) : (
@@ -1524,7 +1750,21 @@ export default function PayrollPage() {
                         <Card>
                             <CardContent className="py-12 text-center">
                                 <AlertCircle className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                                <p className="text-gray-500 font-medium">{t('payroll.empty.no_fixed')}</p>
+                                <p className="text-gray-700 font-medium">{t('emptyState.payroll.title')}</p>
+                                <p className="text-sm text-gray-500 mt-1">{t('payroll.empty.no_fixed')}</p>
+                                <Button
+                                    className="mt-4"
+                                    variant="outline"
+                                    onClick={() => {
+                                        if (meterWorkers && meterWorkers.length > 0) {
+                                            setActiveTab('meter')
+                                            return
+                                        }
+                                        window.location.href = '/owner/fixed-workers'
+                                    }}
+                                >
+                                    {t('emptyState.payroll.cta')}
+                                </Button>
                             </CardContent>
                         </Card>
                     ) : (
@@ -1612,14 +1852,15 @@ export default function PayrollPage() {
                     categories={categories || []}
                     cycleStartDay={cycleStartDay}
                     isMutating={mutation.isPending}
-                    onSettle={({ isFinal, manualDeduction }) => {
+                    onSettle={({ isFinal, manualDeduction, paymentMode }) => {
                         mutation.mutate({ 
                             workerType: pendingSettleWorker.type, 
                             workerId: pendingSettleWorker.id, 
                             currentPaid: false, 
                             targetMonth: selectedMonth, 
                             isFinal,
-                            manualDeductionOverride: manualDeduction // new field in mutation
+                            manualDeductionOverride: manualDeduction,
+                            paymentMode,
                         })
                     }}
                 />

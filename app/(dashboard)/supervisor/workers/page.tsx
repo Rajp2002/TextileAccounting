@@ -163,9 +163,9 @@ export default function SupervisorWorkersPage() {
                                                 )}>
                                                     {worker.role || 'Worker'}
                                                 </span>
-                                                {worker.pf_esi_eligible && (
+                                                {(worker.pf_esi_enrolled ?? worker.pf_esi_eligible) && (
                                                     <span className="text-[9px] font-black bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded-md border border-teal-100 uppercase tracking-widest">
-                                                        ESI/PF
+                                                        {t('worker.pfEsi.enrolled')}
                                                     </span>
                                                 )}
                                             </div>
