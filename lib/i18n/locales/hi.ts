@@ -362,6 +362,20 @@ export const hi = {
       }
     }
   },
+  advances: {
+    exit: {
+      title: "कामगार का अग्रिम बकाया है",
+      body: "{name} पर ₹{amount} अग्रिम बकाया है। क्या करना है?",
+      finalSettle: "अंतिम भुगतान में वसूल करें",
+      writeOff: "माफ करें",
+      keepActive: "कामगार को सक्रिय रखें",
+      finalSettleWarning: "अंतिम भुगतान — 50% सीमा के बिना पूरा अग्रिम काटा जाएगा।",
+      writeOffConfirm: "₹{amount} माफ किया जाएगा। यह पूर्ववत नहीं किया जा सकता।"
+    },
+    badge: {
+      outstanding: "₹{amount} अग्रिम बकाया"
+    }
+  },
   confirm: {
     title: "क्या आप सुनिश्चित हैं?",
     proceed: "हाँ, आगे बढ़ें",

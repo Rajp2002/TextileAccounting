@@ -365,6 +365,20 @@ export const en = {
       }
     }
   },
+  advances: {
+    exit: {
+      title: "Worker has an outstanding advance",
+      body: "{name} owes ₹{amount} in advances. What would you like to do?",
+      finalSettle: "Recover in Final Settlement",
+      writeOff: "Write Off",
+      keepActive: "Keep Worker Active",
+      finalSettleWarning: "Final settlement — the full advance balance will be deducted, ignoring the 50% cap.",
+      writeOffConfirm: "This will forgive ₹{amount}. This cannot be undone."
+    },
+    badge: {
+      outstanding: "₹{amount} advance due"
+    }
+  },
   confirm: {
     title: "Are you sure?",
     proceed: "Yes, Proceed",

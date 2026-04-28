@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -43,6 +44,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
+import { setWorkerActiveStatus } from '@/app/(dashboard)/owner/actions'
 
 type PaymentMode = 'cash' | 'bank_transfer' | 'upi' | 'cheque'
 
@@ -794,6 +796,7 @@ function SettlementDialog({
     isMutating,
     categories = [],
     cycleStartDay = 1,
+    initialIsFinal = false,
 }: {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -804,6 +807,7 @@ function SettlementDialog({
     isMutating: boolean
     categories: { id: string; name: string; type: 'bonus' | 'fine' }[]
     cycleStartDay: number
+    initialIsFinal?: boolean
 }) {
     const { t } = useTranslation()
     const tl = useTransliterate()
@@ -838,7 +842,7 @@ function SettlementDialog({
 
     useEffect(() => {
         if (!open) return
-        setIsFinal(false)
+        setIsFinal(initialIsFinal)
         setManualDeduction('')
         setConfirmed(false)
         setAdjAmount('')
@@ -847,7 +851,7 @@ function SettlementDialog({
         setPaymentMode('')
         setShowAdjustmentConfirm(false)
         setShowAdvanceConfirm(false)
-    }, [open, worker.id])
+    }, [open, worker.id, initialIsFinal])
 
     const handleAddAdjustment = async () => {
         const amount = parseFloat(adjAmount)
@@ -1014,7 +1018,7 @@ function SettlementDialog({
                                     Mark as Final Settlement
                                 </label>
                                 <p className="text-[10px] text-red-500 font-medium leading-relaxed opacity-80">
-                                    This clears 100% of remaining debt and marks worker as inactive.
+                                    {t('advances.exit.finalSettleWarning')}
                                 </p>
                             </div>
                         </div>
@@ -1089,6 +1093,8 @@ export default function PayrollPage() {
     const supabase = createClient()
     const queryClient = useQueryClient()
     const { t } = useTranslation()
+    const router = useRouter()
+    const searchParams = useSearchParams()
     const [activeTab, setActiveTab] = useState<'meter' | 'fixed'>('meter')
     const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().substring(0, 7))
     const [searchTerm, setSearchTerm] = useState('')
@@ -1173,6 +1179,7 @@ export default function PayrollPage() {
                     .select('meter_worker_id, amount')
                     .eq('org_id', userProfile!.org_id)
                     .eq('status', 'pending')
+                    .is('writeoff_at', null)
                     .not('meter_worker_id', 'is', null),
                 // Fetch all orders (active + recently completed) for order label lookup
                 supabase.from('orders')
@@ -1307,6 +1314,7 @@ export default function PayrollPage() {
                     .select('fixed_worker_id, amount')
                     .eq('org_id', userProfile!.org_id)
                     .eq('status', 'pending')
+                    .is('writeoff_at', null)
                     .not('fixed_worker_id', 'is', null)
             ])
 
@@ -1440,10 +1448,25 @@ export default function PayrollPage() {
             setShowSettlementDialog(false)
             setPendingSettleWorker(null)
         },
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
             if (data?.error) {
                 toast.error(data.error)
             } else {
+                if (pendingSettleWorker?.deactivateAfterExit) {
+                    const deactivateResult = await setWorkerActiveStatus(
+                        pendingSettleWorker.type,
+                        pendingSettleWorker.id,
+                        false
+                    )
+
+                    if (deactivateResult.error) {
+                        toast.error(deactivateResult.error)
+                    } else {
+                        toast.success('Worker moved to inactive after final settlement.')
+                    }
+
+                    router.replace('/owner/payroll')
+                }
                 toast.success('✓ Payroll updated', { duration: 2000 })
             }
         }
@@ -1451,6 +1474,7 @@ export default function PayrollPage() {
 
     const [showSettlementDialog, setShowSettlementDialog] = useState(false)
     const [pendingSettleWorker, setPendingSettleWorker] = useState<any>(null)
+    const [handledExitLaunch, setHandledExitLaunch] = useState(false)
 
     const handleTogglePaid = (workerType: 'meter' | 'fixed', workerId: number, currentPaid: boolean, isFinal: boolean = false) => {
         // Find worker data to pre-fill dialog
@@ -1538,6 +1562,43 @@ export default function PayrollPage() {
             w.name.toLowerCase().includes(searchTerm.toLowerCase())
         )
     }, [fixedWorkers, searchTerm])
+
+    useEffect(() => {
+        const exitWorkerType = searchParams.get('exitWorkerType')
+        const exitWorkerId = searchParams.get('exitWorkerId')
+        const finalSettlement = searchParams.get('finalSettlement') === '1'
+        const deactivateAfterExit = searchParams.get('deactivateAfterExit') === '1'
+
+        if (!exitWorkerType || !exitWorkerId || !finalSettlement || handledExitLaunch) {
+            return
+        }
+
+        const parsedWorkerId = Number(exitWorkerId)
+        if (!Number.isFinite(parsedWorkerId)) {
+            setHandledExitLaunch(true)
+            return
+        }
+
+        const source = exitWorkerType === 'meter' ? meterWorkers : fixedWorkers
+        if (!source) return
+
+        const worker = source.find((item: MeterWorkerPayroll | FixedWorkerPayroll) => item.id === parsedWorkerId)
+        if (!worker) {
+            setHandledExitLaunch(true)
+            toast.error('Worker not found for final settlement.')
+            return
+        }
+
+        setActiveTab(exitWorkerType === 'meter' ? 'meter' : 'fixed')
+        setPendingSettleWorker({
+            ...worker,
+            type: exitWorkerType,
+            initialIsFinal: true,
+            deactivateAfterExit,
+        })
+        setShowSettlementDialog(true)
+        setHandledExitLaunch(true)
+    }, [searchParams, meterWorkers, fixedWorkers, handledExitLaunch])
 
     if (!selectedMonth) return null
 
@@ -1851,6 +1912,7 @@ export default function PayrollPage() {
                     selectedMonth={selectedMonth}
                     categories={categories || []}
                     cycleStartDay={cycleStartDay}
+                    initialIsFinal={!!pendingSettleWorker.initialIsFinal}
                     isMutating={mutation.isPending}
                     onSettle={({ isFinal, manualDeduction, paymentMode }) => {
                         mutation.mutate({ 

@@ -453,6 +453,7 @@ export async function getWorkerDebt(workerId: number, workerType: 'meter' | 'fix
         .select('amount')
         .eq('org_id', orgId)
         .eq('status', 'pending')
+        .is('writeoff_at', null)
         .eq(typeParsed.data === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', workerParsed.data)
 
     if (error) {
