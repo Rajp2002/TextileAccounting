@@ -192,10 +192,12 @@ ALTER TABLE yarn_movements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE beam_card_lots ENABLE ROW LEVEL SECURITY;
 
 -- Yarn lots
+DROP POLICY IF EXISTS "Tenant Isolation Select Yarn Lots V2" ON yarn_lots;
 CREATE POLICY "Tenant Isolation Select Yarn Lots V2" ON yarn_lots
   FOR SELECT
   USING (org_id = (auth.jwt() ->> 'org_id')::uuid);
 
+DROP POLICY IF EXISTS "Owners Manage Yarn Lots V2" ON yarn_lots;
 CREATE POLICY "Owners Manage Yarn Lots V2" ON yarn_lots
   FOR ALL
   USING (
@@ -208,10 +210,12 @@ CREATE POLICY "Owners Manage Yarn Lots V2" ON yarn_lots
   );
 
 -- Beam cards
+DROP POLICY IF EXISTS "Tenant Isolation Select Beam Cards" ON beam_cards;
 CREATE POLICY "Tenant Isolation Select Beam Cards" ON beam_cards
   FOR SELECT
   USING (org_id = (auth.jwt() ->> 'org_id')::uuid);
 
+DROP POLICY IF EXISTS "Org Members Insert Beam Cards" ON beam_cards;
 CREATE POLICY "Org Members Insert Beam Cards" ON beam_cards
   FOR INSERT
   WITH CHECK (
@@ -219,6 +223,7 @@ CREATE POLICY "Org Members Insert Beam Cards" ON beam_cards
     AND org_id = (auth.jwt() ->> 'org_id')::uuid
   );
 
+DROP POLICY IF EXISTS "Org Members Update Beam Cards" ON beam_cards;
 CREATE POLICY "Org Members Update Beam Cards" ON beam_cards
   FOR UPDATE
   USING (
@@ -226,6 +231,7 @@ CREATE POLICY "Org Members Update Beam Cards" ON beam_cards
     AND org_id = (auth.jwt() ->> 'org_id')::uuid
   );
 
+DROP POLICY IF EXISTS "Owners Delete Beam Cards" ON beam_cards;
 CREATE POLICY "Owners Delete Beam Cards" ON beam_cards
   FOR DELETE
   USING (
@@ -234,10 +240,12 @@ CREATE POLICY "Owners Delete Beam Cards" ON beam_cards
   );
 
 -- Order yarn requirements
+DROP POLICY IF EXISTS "Tenant Isolation Select Order Yarn Requirements" ON order_yarn_requirements;
 CREATE POLICY "Tenant Isolation Select Order Yarn Requirements" ON order_yarn_requirements
   FOR SELECT
   USING (org_id = (auth.jwt() ->> 'org_id')::uuid);
 
+DROP POLICY IF EXISTS "Owners Manage Order Yarn Requirements" ON order_yarn_requirements;
 CREATE POLICY "Owners Manage Order Yarn Requirements" ON order_yarn_requirements
   FOR ALL
   USING (
@@ -250,10 +258,12 @@ CREATE POLICY "Owners Manage Order Yarn Requirements" ON order_yarn_requirements
   );
 
 -- Yarn movements
+DROP POLICY IF EXISTS "Tenant Isolation Select Yarn Movements" ON yarn_movements;
 CREATE POLICY "Tenant Isolation Select Yarn Movements" ON yarn_movements
   FOR SELECT
   USING (org_id = (auth.jwt() ->> 'org_id')::uuid);
 
+DROP POLICY IF EXISTS "Org Members Insert Yarn Movements" ON yarn_movements;
 CREATE POLICY "Org Members Insert Yarn Movements" ON yarn_movements
   FOR INSERT
   WITH CHECK (
@@ -261,6 +271,7 @@ CREATE POLICY "Org Members Insert Yarn Movements" ON yarn_movements
     AND org_id = (auth.jwt() ->> 'org_id')::uuid
   );
 
+DROP POLICY IF EXISTS "Org Members Update Yarn Movements" ON yarn_movements;
 CREATE POLICY "Org Members Update Yarn Movements" ON yarn_movements
   FOR UPDATE
   USING (
@@ -268,6 +279,7 @@ CREATE POLICY "Org Members Update Yarn Movements" ON yarn_movements
     AND org_id = (auth.jwt() ->> 'org_id')::uuid
   );
 
+DROP POLICY IF EXISTS "Owners Delete Yarn Movements" ON yarn_movements;
 CREATE POLICY "Owners Delete Yarn Movements" ON yarn_movements
   FOR DELETE
   USING (
@@ -276,10 +288,12 @@ CREATE POLICY "Owners Delete Yarn Movements" ON yarn_movements
   );
 
 -- Beam card lots
+DROP POLICY IF EXISTS "Tenant Isolation Select Beam Card Lots" ON beam_card_lots;
 CREATE POLICY "Tenant Isolation Select Beam Card Lots" ON beam_card_lots
   FOR SELECT
   USING (org_id = (auth.jwt() ->> 'org_id')::uuid);
 
+DROP POLICY IF EXISTS "Org Members Insert Beam Card Lots" ON beam_card_lots;
 CREATE POLICY "Org Members Insert Beam Card Lots" ON beam_card_lots
   FOR INSERT
   WITH CHECK (
@@ -287,6 +301,7 @@ CREATE POLICY "Org Members Insert Beam Card Lots" ON beam_card_lots
     AND org_id = (auth.jwt() ->> 'org_id')::uuid
   );
 
+DROP POLICY IF EXISTS "Org Members Update Beam Card Lots" ON beam_card_lots;
 CREATE POLICY "Org Members Update Beam Card Lots" ON beam_card_lots
   FOR UPDATE
   USING (
@@ -294,6 +309,7 @@ CREATE POLICY "Org Members Update Beam Card Lots" ON beam_card_lots
     AND org_id = (auth.jwt() ->> 'org_id')::uuid
   );
 
+DROP POLICY IF EXISTS "Owners Delete Beam Card Lots" ON beam_card_lots;
 CREATE POLICY "Owners Delete Beam Card Lots" ON beam_card_lots
   FOR DELETE
   USING (
@@ -401,22 +417,27 @@ GROUP BY oyr.id, oyr.org_id, oyr.order_id, oyr.quote_id, o.party_name, o.quality
 -- 9. AUDIT TRIGGERS
 -- ============================================================
 
+DROP TRIGGER IF EXISTS audit_yarn_lots ON yarn_lots;
 CREATE TRIGGER audit_yarn_lots
   AFTER INSERT OR UPDATE OR DELETE ON yarn_lots
   FOR EACH ROW EXECUTE FUNCTION log_audit_event();
 
+DROP TRIGGER IF EXISTS audit_beam_cards ON beam_cards;
 CREATE TRIGGER audit_beam_cards
   AFTER INSERT OR UPDATE OR DELETE ON beam_cards
   FOR EACH ROW EXECUTE FUNCTION log_audit_event();
 
+DROP TRIGGER IF EXISTS audit_order_yarn_requirements ON order_yarn_requirements;
 CREATE TRIGGER audit_order_yarn_requirements
   AFTER INSERT OR UPDATE OR DELETE ON order_yarn_requirements
   FOR EACH ROW EXECUTE FUNCTION log_audit_event();
 
+DROP TRIGGER IF EXISTS audit_yarn_movements ON yarn_movements;
 CREATE TRIGGER audit_yarn_movements
   AFTER INSERT OR UPDATE OR DELETE ON yarn_movements
   FOR EACH ROW EXECUTE FUNCTION log_audit_event();
 
+DROP TRIGGER IF EXISTS audit_beam_card_lots ON beam_card_lots;
 CREATE TRIGGER audit_beam_card_lots
   AFTER INSERT OR UPDATE OR DELETE ON beam_card_lots
   FOR EACH ROW EXECUTE FUNCTION log_audit_event();
