@@ -3,7 +3,7 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { calcFullTotals, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
+import { calcFullTotals, makeDefaultEstimateState, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
 import crypto from 'crypto'
 
 /**
@@ -339,6 +339,7 @@ export async function saveEstimatorQuoteV3(params: {
     estimate:           EstimateState
     totalProductionCostPerM: number
     quotePricePerM:     number
+    status?:            'draft' | 'sent' | 'accepted' | 'rejected'
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -391,6 +392,7 @@ export async function saveEstimatorQuoteV3(params: {
             quote_price_per_meter:    params.quotePricePerM,
             intended_margin_percent:  estimate.profitPct,
             meters:                   estimate.orderQuantityM ?? 0,
+            status:                   params.status ?? 'draft',
             // Weaver wage rate snapshot — flows downstream to shift_assignments
             worker_rate_per_m:    workerRatePerM,
             // Legacy required fields with sane defaults
@@ -419,116 +421,145 @@ export async function convertQuoteToOrder(data: {
     quote_price_per_m?:  number
     totalProductionCostPerM?: number
 }) {
+    void data
+    return {
+        error: 'Direct order creation from the estimator has been retired. Save the quote, accept it, then convert it from Quote History.',
+    }
+}
+
+function hydrateEstimateStateFromQuote(quote: Record<string, unknown>, totalTargetMeters: number): EstimateState {
+    const base = makeDefaultEstimateState()
+
+    return {
+        ...base,
+        warpRows: Array.isArray(quote.warp_rows) && quote.warp_rows.length > 0 ? quote.warp_rows : base.warpRows,
+        weftRows: Array.isArray(quote.weft_rows) && quote.weft_rows.length > 0 ? quote.weft_rows : base.weftRows,
+        tapeLengthM: Number(quote.tape_length_m ?? base.tapeLengthM),
+        perPickCostPaisa: Number(quote.per_pick_cost_paise ?? base.perPickCostPaisa),
+        warpingRatePerKg: Number(quote.warping_rate_per_kg ?? base.warpingRatePerKg),
+        sizingRatePerKg: Number(quote.sizing_rate_per_kg ?? base.sizingRatePerKg),
+        windingRatePerKg: Number(quote.winding_rate_per_kg ?? base.windingRatePerKg),
+        processingRatePerM: Number(quote.processing_rate_per_m ?? base.processingRatePerM),
+        finishingRatePerM: Number(quote.finishing_rate_per_m ?? base.finishingRatePerM),
+        yarnShortagePct: Number(quote.yarn_shortage_pct ?? base.yarnShortagePct),
+        warpCrimpPct: Number(quote.warp_crimp_pct ?? base.warpCrimpPct),
+        overheadItems: Array.isArray(quote.overhead_items) ? quote.overhead_items : base.overheadItems,
+        monthlyOutputM: Number(quote.monthly_output_m ?? base.monthlyOutputM),
+        overheadOverridePerM: quote.overhead_override_per_m != null ? Number(quote.overhead_override_per_m) : base.overheadOverridePerM,
+        overheadPct: Number(quote.overhead_pct ?? base.overheadPct),
+        commissionPct: Number(quote.commission_pct ?? base.commissionPct),
+        transportPerM: Number(quote.transport_per_m ?? base.transportPerM),
+        profitPct: Number(quote.profit_margin_pct ?? quote.intended_margin_percent ?? base.profitPct),
+        orderQuantityM: totalTargetMeters > 0 ? totalTargetMeters : (Number(quote.meters ?? 0) || null),
+        enabledSections: quote.enabled_sections ?? base.enabledSections,
+        loomType: quote.loom_type ?? base.loomType,
+        loomRpm: quote.estimator_rpm != null ? Number(quote.estimator_rpm) : base.loomRpm,
+        loomPowerKw: quote.estimator_power_kw != null ? Number(quote.estimator_power_kw) : base.loomPowerKw,
+        loomRpmIsCustomised: quote.estimator_rpm != null,
+        loomPowerKwIsCustomised: quote.estimator_power_kw != null,
+        hoursPerShift: Number(quote.hours_per_shift ?? base.hoursPerShift),
+        sizingMode: quote.sizing_mode ?? base.sizingMode,
+        isConfigured: true,
+    }
+}
+
+export async function convertAcceptedQuoteToOrder(data: {
+    quoteId: string
+    total_target_meters: number
+    deadline: string
+    notes?: string
+}) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    // 1. Save quote snapshot whenever estimate data is present
-    // Note: quote_price_per_m may be 0 when no order qty is set, but we still save
-    // so it appears in Quote History. Use totalProductionCostPerM as minimum fallback.
-    let quoteId: string | undefined
-    if (data.estimate) {
-        const effectiveQuotePrice = (data.quote_price_per_m && data.quote_price_per_m > 0)
-            ? data.quote_price_per_m
-            : (data.totalProductionCostPerM ?? 0)
-        const quoteRes = await saveEstimatorQuoteV3({
-            partyName:               data.party_name,
-            qualityLabel:            data.quality_label,
-            warpInstruction:         data.warp_instruction,
-            weftInstruction:         data.weft_instruction,
-            estimate:                data.estimate,
-            totalProductionCostPerM: data.totalProductionCostPerM ?? 0,
-            quotePricePerM:          effectiveQuotePrice,
-        })
-        if (quoteRes.error) {
-            console.error('Failed to save estimator quote:', quoteRes.error)
-            // Don't block order creation if quote save fails — log and continue
-            console.warn('Continuing with order creation despite quote save failure')
-        } else if (quoteRes.quoteId) {
-            quoteId = quoteRes.quoteId
-        }
+    const targetMeters = Number(data.total_target_meters)
+    if (!Number.isFinite(targetMeters) || targetMeters <= 0) {
+        return { error: 'Order quantity must be greater than 0.' }
     }
 
-    // 2. Compute worker rate from estimate (if present) — same formula as saveEstimatorQuoteV3
-    let orderWorkerRatePerM: number | undefined
-    if (data.estimate) {
-        orderWorkerRatePerM =
-            data.estimate.weftRows.reduce((sum, r) => sum + (r.picks ?? 0), 0)
-            * (data.estimate.perPickCostPaisa ?? 0)
-    }
-
-    // 3. Create the order
-    const { data: order, error } = await supabase
-        .from('orders')
-        .insert({
-            org_id:               profile.org_id,
-            party_name:           data.party_name,
-            quality_label:        data.quality_label,
-            warp_instruction:     data.warp_instruction ?? '',
-            weft_instruction:     data.weft_instruction ?? '',
-            total_target_meters:  data.total_target_meters,
-            start_date:           new Date().toISOString().split('T')[0],
-            deadline:             data.deadline,
-            status:               'active',
-            // Weaver wage rate snapshot from quote — supervisors see this on shift setup
-            worker_rate_per_m:    orderWorkerRatePerM ?? null,
-            notes:                data.notes ?? '',
-            // Dispatch Bridge: unique 12-char tracking token for the Trader portal
-            tracking_token:       generateTrackingToken(),
-        })
-        .select('id, tracking_token')
+    const { data: quote, error: quoteError } = await supabase
+        .from('estimator_quotes')
+        .select('*')
+        .eq('id', data.quoteId)
+        .eq('org_id', profile.org_id)
         .single()
 
-    if (error) return { error: error.message }
+    if (quoteError || !quote) return { error: 'Quote not found.' }
+    if (quote.status !== 'accepted') return { error: 'Only accepted quotes can be converted into orders.' }
+    if (quote.order_id) return { error: 'This quote has already been converted into an order.' }
 
-    // 4. Link quote → order
-    if (quoteId && order?.id) {
+    const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+            org_id: profile.org_id,
+            party_name: quote.party_name,
+            quality_label: quote.quality_label,
+            warp_instruction: quote.warp_instruction ?? '',
+            weft_instruction: quote.weft_instruction ?? '',
+            total_target_meters: targetMeters,
+            start_date: new Date().toISOString().split('T')[0],
+            deadline: data.deadline,
+            status: 'active',
+            worker_rate_per_m: quote.worker_rate_per_m ?? null,
+            notes: data.notes?.trim() ?? '',
+            tracking_token: generateTrackingToken(),
+        })
+        .select('id')
+        .single()
+
+    if (orderError || !order) return { error: orderError?.message ?? 'Failed to create order.' }
+
+    const { error: linkError } = await supabase
+        .from('estimator_quotes')
+        .update({ order_id: order.id })
+        .eq('id', quote.id)
+        .eq('org_id', profile.org_id)
+        .is('order_id', null)
+
+    if (linkError) {
         await supabase
-            .from('estimator_quotes')
-            .update({ order_id: order.id })
-            .eq('id', quoteId)
+            .from('orders')
+            .delete()
+            .eq('id', order.id)
             .eq('org_id', profile.org_id)
+
+        return { error: linkError.message }
     }
 
-    // 5. Snapshot yarn requirement when the estimate becomes a live order
-    if (data.estimate && order?.id) {
-        const estimateForOrder: EstimateState = {
-            ...data.estimate,
-            orderQuantityM: data.total_target_meters,
-        }
-        const totals = calcFullTotals(estimateForOrder)
-        const warpRequiredKg = (totals.totalWarpKgPer100m / 100) * data.total_target_meters
-        const weftRequiredKg = ((totals.totalAllYarnKgPer100m - totals.totalWarpKgPer100m) / 100) * data.total_target_meters
-        const totalRequiredKg = warpRequiredKg + weftRequiredKg
-        const estimatedBeams = totals.estimatedBeamCapacityM > 0
-            ? Math.max(1, Math.ceil(data.total_target_meters / totals.estimatedBeamCapacityM))
-            : null
+    const estimateForOrder = hydrateEstimateStateFromQuote(quote, targetMeters)
+    const totals = calcFullTotals(estimateForOrder)
+    const warpRequiredKg = (totals.totalWarpKgPer100m / 100) * targetMeters
+    const weftRequiredKg = ((totals.totalAllYarnKgPer100m - totals.totalWarpKgPer100m) / 100) * targetMeters
+    const totalRequiredKg = warpRequiredKg + weftRequiredKg
+    const estimatedBeams = totals.estimatedBeamCapacityM > 0
+        ? Math.max(1, Math.ceil(targetMeters / totals.estimatedBeamCapacityM))
+        : null
 
-        await supabase
-            .from('order_yarn_requirements')
-            .upsert({
-                org_id: profile.org_id,
-                order_id: order.id,
-                quote_id: quoteId ?? null,
-                warp_required_kg: Number(warpRequiredKg.toFixed(3)),
-                weft_required_kg: Number(weftRequiredKg.toFixed(3)),
-                total_required_kg: Number(totalRequiredKg.toFixed(3)),
-                estimated_beams: estimatedBeams,
-                requirement_snapshot: {
-                    order_quantity_m: data.total_target_meters,
-                    estimated_beam_capacity_m: totals.estimatedBeamCapacityM,
-                    warp_rows: data.estimate.warpRows,
-                    weft_rows: data.estimate.weftRows,
-                    warp_crimp_pct: data.estimate.warpCrimpPct ?? 0,
-                    yarn_shortage_pct: data.estimate.yarnShortagePct ?? 0,
-                },
-            }, { onConflict: 'order_id' })
-    }
+    await supabase
+        .from('order_yarn_requirements')
+        .upsert({
+            org_id: profile.org_id,
+            order_id: order.id,
+            quote_id: quote.id,
+            warp_required_kg: Number(warpRequiredKg.toFixed(3)),
+            weft_required_kg: Number(weftRequiredKg.toFixed(3)),
+            total_required_kg: Number(totalRequiredKg.toFixed(3)),
+            estimated_beams: estimatedBeams,
+            requirement_snapshot: {
+                order_quantity_m: targetMeters,
+                estimated_beam_capacity_m: totals.estimatedBeamCapacityM,
+                warp_rows: estimateForOrder.warpRows,
+                weft_rows: estimateForOrder.weftRows,
+                warp_crimp_pct: estimateForOrder.warpCrimpPct ?? 0,
+                yarn_shortage_pct: estimateForOrder.yarnShortagePct ?? 0,
+            },
+        }, { onConflict: 'order_id' })
 
     revalidatePath('/owner/orders')
     revalidatePath('/owner/analytics')
     revalidatePath('/owner/quotes')
     revalidatePath('/owner/inventory')
-    return { success: true, orderId: order?.id }
+    return { success: true, orderId: order.id }
 }
 
 // ─── Party Rate Memory ────────────────────────────────────────────────────────
@@ -647,6 +678,27 @@ export async function getEstimatorQuotes(filters?: { status?: string }) {
 export async function updateQuoteStatus(id: string, status: 'draft' | 'sent' | 'accepted' | 'rejected') {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    const { data: current, error: currentError } = await supabase
+        .from('estimator_quotes')
+        .select('id, status, order_id')
+        .eq('id', id)
+        .eq('org_id', profile.org_id)
+        .single()
+
+    if (currentError || !current) return { error: currentError?.message ?? 'Quote not found.' }
+    if (current.order_id) return { error: 'Converted quotes can no longer change status.' }
+
+    const allowedTransitions: Record<string, string[]> = {
+        draft: ['sent'],
+        sent: ['accepted', 'rejected'],
+        accepted: [],
+        rejected: [],
+    }
+
+    if (!allowedTransitions[current.status]?.includes(status)) {
+        return { error: `Invalid quote transition from "${current.status}" to "${status}".` }
+    }
 
     const { data, error } = await supabase
         .from('estimator_quotes')

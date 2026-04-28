@@ -1227,7 +1227,7 @@ function OrderDetailDrawer({
                                         <Calculator className="h-6 w-6 text-slate-400 mx-auto mb-2" />
                                         <p className="text-xs text-slate-500 font-medium">No estimator quote linked</p>
                                         <p className="text-[10px] text-slate-400 mt-1">
-                                            Use Estimator → "Order" to create an order with a cost snapshot
+                                            Save the quote in Estimator, accept it in Quote History, then convert it into a live order
                                         </p>
                                         <a
                                             href="/owner/estimator"

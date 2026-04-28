@@ -601,7 +601,7 @@ export const gu = {
       total_order: "કુલ ઓર્ડર",
       margin: "માર્જિન",
       net_profit: "ચોખ્ખો નફો",
-      order_btn: "ઓર્ડર",
+      order_btn: "કોટ સેવ કરો",
       save_template_btn: "ટેમ્પલેટ સેવ"
     },
     templates: {
@@ -756,7 +756,7 @@ export const gu = {
       applied_as_is: "લાગુ કર્યું:",
       party_required: "પાર્ટીનું નામ જરૂરી છે",
       quality_required: "ક્વોલિટી લેબલ જરૂરી છે",
-      converted_success: "કોટ સફળતાપૂર્વક રૂપાંતરિત",
+      converted_success: "કોટ સફળતાપૂર્વક સેવ થયો",
       save_template_name_error: "કૃપા કરીને ફેબ્રિકનું નામ દાખલ કરો",
       rename_failed: "નામ બદલવામાં નિષ્ફળ:"
     }

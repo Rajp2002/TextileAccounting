@@ -1,59 +1,117 @@
-# Security Operations: Secret Rotation Workflow
+# Weavly Security Notes
 
-This document outlines the standard operating procedures (SOPs) for safely rotating critical secrets in the Textile SaaS (Weavly) production environment without causing application downtime.
+This document summarizes the security controls that are actually present in the codebase today and the operational steps for rotating the main secrets.
 
-## 1. Supabase JWT Secret Rotation
+## Current Controls
 
-The JWT Secret is used by Supabase to sign authentication tokens. If this secret is suspected to be compromised, anyone could forge a JWT with the `service_role` or `org_id` claims, leading to full data compromise.
+### Platform and app-layer controls
+- Supabase Auth with role-aware redirects
+- PostgreSQL RLS for org isolation
+- auth-route rate limiting via Upstash Redis
+- access-code rate limiting
+- tracking-token rate limiting
+- one-hour inactivity timeout in middleware
+- revocation checks for forcibly logged-out users
+- CSP and security headers in `next.config.ts`
+- Sentry instrumentation for browser, server, and edge code
 
-**Rotation Steps:**
-1. **Schedule Downtime**: Because rotating the JWT invalidates *all* currently active user sessions instantly, you should notify users and schedule a 5-minute maintenance window.
-2. In the Supabase Dashboard, navigate to **Project Settings** -> **API**.
-3. Under **JWT Secret**, click **Generate new secret**.
-4. Confirm the rotation. This takes effect immediately on the database side.
-5. Wait 2 minutes for edge caches to clear.
-6. **No Vercel Update Required**: Standard Supabase implementations fetch the JWT secret natively on their backend. Vercel environment variables (`NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`) do *not* contain the JWT secret itself, so they do not need to be rotated *unless* the API keys are explicitly rolled as well.
+### Sensitive operation controls
+- destructive and historical actions are protected by server actions and rate limiting
+- owner-generated access codes gate protected edits and certain destructive flows
+- export and delete flows live behind authenticated owner-only code paths
 
-## 2. Supabase API Key Rotation (Anon / Service Role)
+## Important Secrets In Use
 
-If the `SUPABASE_SERVICE_ROLE_KEY` is leaked (e.g., in a public GitHub repo), it grants full database access bypassing RLS.
+### Web app
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PROJECT_ID`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+- `RAZORPAY_KEY_ID`
+- `RAZORPAY_KEY_SECRET`
+- `NEXT_PUBLIC_RAZORPAY_KEY_ID`
+- `RAZORPAY_PLAN_ID_BASE`
+- `RAZORPAY_PLAN_ID_PREMIUM`
+- `RAZORPAY_WEBHOOK_SECRET`
+- `SENTRY_ORG`
+- `SENTRY_PROJECT`
 
-**Rotation Steps (Zero Downtime for Web App):**
-1. Wait until a low-traffic period.
-2. In the Supabase Dashboard, go to **Project Settings** -> **API**.
-3. Next to the compromised key, click **Roll**. You can choose to keep the old key active for up to 24 hours to prevent downtime. Choose **Keep old key active for 1 hour**.
-4. Immediately go to your **Vercel Dashboard** -> **Settings** -> **Environment Variables**.
-5. Update `NEXT_PUBLIC_SUPABASE_ANON_KEY` and/or `SUPABASE_SERVICE_ROLE_KEY` with the new values.
-6. Redeploy the production branch in Vercel to pick up the new variables.
-7. Wait 5 minutes, then test the application manually.
-8. Once verified, return to Supabase and manually delete the old key earlier than the 1-hour expiration.
+### Supabase edge functions
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `META_ACCESS_TOKEN`
+- `META_PHONE_NUMBER_ID`
+- `META_WEBHOOK_VERIFY_TOKEN`
+- `WHATSAPP_PROVIDER`
 
-## 3. Upstash Redis Token Rotation
+## Rotation Playbooks
 
-The Upstash Redis token protects the rate-limiter and session revocation lists. If leaked, an attacker could wipe rate limits or lock out arbitrary users.
+### 1. Supabase JWT secret
+Rotate this if token signing is suspected to be compromised.
 
-**Rotation Steps:**
-1. Log into your Upstash Dashboard and navigate to your Redis database.
-2. Go to the **Rest API** section.
-3. Click **Roll Credential**. This renders the old token invalid immediately.
-4. Rate Limiting Graceful Degradation: Because we built a "fail-open" rate limiter in `lib/rate-limit.ts`, the application will *not crash* during this brief window. It will simply allow requests through without throttling while it fails to connect to Redis.
-5. In **Vercel Environment Variables**, update `UPSTASH_REDIS_REST_TOKEN` with the new token.
-6. Redeploy the application.
-7. Rate limiting and session revocation will silently resume working.
+1. Schedule a maintenance window.
+2. Rotate the JWT secret in Supabase project settings.
+3. Expect existing sessions to become invalid.
+4. Verify fresh sign-in, role redirects, and owner/supervisor page access.
 
-## 4. Edge Function CRON_SECRET Rotation
+### 2. Supabase anon or service-role keys
+Rotate this if keys are leaked or over-exposed.
 
-The `CRON_SECRET` protects your Supabase Edge Functions (daily briefs, whatsapp integrations) from being triggered arbitrarily.
+1. Roll the compromised key in Supabase.
+2. Update Vercel environment variables:
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+3. Redeploy the app.
+4. Re-test auth, owner actions, supervisor actions, and any service-role-backed flows.
 
-**Rotation Steps:**
-1. Generate a new secure 32-byte secret locally:
-   ```bash
-   openssl rand -base64 32
-   ```
-2. Update the `CRON_SECRET` environment variable in Vercel and **Redeploy**.
-3. In your local terminal, navigate to your `/supabase` directory.
-4. Update the secrets in your Supabase project using the Supabase CLI:
-   ```bash
-   supabase secrets set CRON_SECRET="<your_new_secret_here>"
-   ```
-5. If you are using an external CRON scheduler (like GitHub Actions or a cron service), update the `Authorization: Bearer <secret>` header in those tools to use the new secret.
+### 3. Upstash Redis token
+Rotate this if rate-limiter credentials are exposed.
+
+1. Roll the Upstash credential.
+2. Update:
+   - `UPSTASH_REDIS_REST_URL` if changed
+   - `UPSTASH_REDIS_REST_TOKEN`
+3. Redeploy.
+4. Re-test login throttling, access-code throttling, and tracking rate limits.
+
+### 4. Razorpay keys
+Rotate on payment-key exposure.
+
+1. Roll the Razorpay API key pair.
+2. Update:
+   - `RAZORPAY_KEY_ID`
+   - `RAZORPAY_KEY_SECRET`
+   - `NEXT_PUBLIC_RAZORPAY_KEY_ID`
+3. If needed, re-check plan IDs and webhook signing secret.
+4. Re-test checkout and webhook-driven subscription activation.
+
+### 5. Razorpay webhook secret
+Rotate if webhook authenticity is in doubt.
+
+1. Create a new webhook secret in Razorpay.
+2. Update `RAZORPAY_WEBHOOK_SECRET`.
+3. Redeploy.
+4. Re-test `/api/webhooks/razorpay`.
+
+### 6. Meta WhatsApp credentials
+Rotate if the WhatsApp business account is compromised or keys are leaked.
+
+1. Rotate the Meta system-user or app token.
+2. Update:
+   - `META_ACCESS_TOKEN`
+   - `META_PHONE_NUMBER_ID` if the sender number changes
+   - `META_WEBHOOK_VERIFY_TOKEN` if webhook verification changes
+3. Re-deploy the affected edge functions or refresh secrets in Supabase.
+4. Re-test `send-access-code`, `send-daily-brief`, `send-payslip`, and `retry-failed-messages`.
+
+## Verification Checklist After Any Rotation
+
+- owner login works
+- supervisor login works
+- owner server actions still succeed
+- supervisor dashboard saves still succeed
+- WhatsApp logs continue to write to `whatsapp_delivery_log`
+- billing callbacks still activate subscriptions
+- audit and export pages still load
