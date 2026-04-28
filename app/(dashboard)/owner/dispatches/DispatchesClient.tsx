@@ -13,10 +13,6 @@ import {
     Layers,
     User,
     ChevronDown,
-    Package,
-    Hash,
-    Clock,
-    CircleDot,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -36,6 +32,15 @@ interface Dispatch {
     dispatched_at: string
     received_at: string | null
     notes: string | null
+    package_lines: Array<{
+        id: string
+        package_no: string
+        package_type: string
+        units_count: number
+        grade: string
+        qty_meters_sent: number
+        qty_meters_received: number | null
+    }>
     orders: {
         id: string
         party_name: string
@@ -168,6 +173,15 @@ function DispatchBatchRow({ dispatch }: { dispatch: Dispatch }) {
                     </div>
                 )}
             </div>
+            {dispatch.package_lines.length > 0 && (
+                <div className="flex w-full flex-wrap gap-1.5 sm:col-span-full">
+                    {dispatch.package_lines.map((line) => (
+                        <Badge key={line.id} variant="outline" className="bg-white/70 text-[10px] font-bold text-zinc-700">
+                            {line.package_no} · {Number(line.qty_meters_sent).toFixed(0)}m
+                        </Badge>
+                    ))}
+                </div>
+            )}
         </motion.div>
     )
 }

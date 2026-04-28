@@ -13,13 +13,15 @@ import {
     Menu,
     Activity,
     HandCoins,
-    ShieldAlert,
     History,
     Calculator,
     Package,
     CreditCard,
     FileText,
     Truck,
+    BookOpen,
+    Layers,
+    ShieldAlert,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -31,13 +33,16 @@ import { useTranslation } from "@/lib/i18n/context"
 const primaryNavItems = [
     { name: "Dashboard", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
     { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
+    { name: "Ledger", href: "/owner/ledger", icon: BookOpen, translationKey: "ledger" },
     { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
     { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll" },
 ]
 
 const secondaryNavItems = [
+    { name: "Stock", href: "/owner/stock", icon: ShieldAlert, translationKey: "stock" },
     { name: "Workers", href: "/owner/fixed-workers", icon: Users, translationKey: "workers" },
     { name: "Dispatches", href: "/owner/dispatches", icon: Truck, translationKey: "dispatches" },
+    { name: "Inventory", href: "/owner/inventory", icon: Layers, translationKey: "inventory" },
     { name: "Advances", href: "/owner/advances", icon: HandCoins, translationKey: "advances" },
     { name: "Machines", href: "/owner/machines", icon: Server, translationKey: "machines" },
     { name: "Quotes", href: "/owner/quotes", icon: FileText, translationKey: "quotes" },
@@ -62,10 +67,15 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
     return (
         <div className="flex flex-col h-full bg-sidebar">
             {/* Factory branding */}
-            <div className="px-4 py-4 border-b border-sidebar-border flex items-center justify-center">
+            <div className="px-4 py-4 border-b border-sidebar-border flex flex-col items-center justify-center gap-2">
                 <div className="relative h-20 w-36 shrink-0">
                     <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain" priority />
                 </div>
+                {factoryName && (
+                    <p className="max-w-full truncate text-center text-xs font-bold tracking-wide text-sidebar-foreground/70">
+                        {factoryName}
+                    </p>
+                )}
             </div>
 
             {/* Navigation */}
@@ -266,4 +276,3 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
         </>
     )
 }
-

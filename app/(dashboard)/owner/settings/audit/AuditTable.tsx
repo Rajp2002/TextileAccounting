@@ -63,7 +63,7 @@ const CATEGORIES: Record<CategoryKey, CategoryConfig> = {
     },
     inventory: {
         label: 'Inventory & Qualities',
-        tables: ['yarn_batches', 'qualities'],
+        tables: ['yarn_batches', 'yarn_lots', 'yarn_movements', 'beam_cards', 'beam_card_lots', 'order_yarn_requirements', 'qualities'],
         color: 'text-teal-700',
         bgColor: 'bg-teal-50',
         borderColor: 'border-teal-200',
@@ -101,6 +101,11 @@ const TABLE_LABELS: Record<string, string> = {
     machine_assignments: 'Machine Assignment',
     orders: 'Order',
     yarn_batches: 'Yarn Batch',
+    yarn_lots: 'Yarn Lot',
+    yarn_movements: 'Yarn Movement',
+    beam_cards: 'Beam Card',
+    beam_card_lots: 'Beam Lot Usage',
+    order_yarn_requirements: 'Order Yarn Target',
     qualities: 'Quality',
     profiles: 'User Profile',
     factory_cost_profile: 'Factory Cost Profile',
@@ -283,7 +288,7 @@ export default function AuditTable() {
                                       <Users className="h-3.5 w-3.5" /> All Users
                                    </div>
                                 </SelectItem>
-                                {actors?.map((actor: any) => (
+                                {actors?.map((actor: { id: string; full_name: string; role: string }) => (
                                     <SelectItem key={actor.id} value={actor.id}>
                                         <div className="flex flex-col py-0.5">
                                             <span className="font-bold text-[13px]">{actor.full_name}</span>
@@ -425,7 +430,16 @@ export default function AuditTable() {
                         </div>
 
                         <div className="pl-2 pr-2">
-                           {data?.items.map((log: any, idx: number) => (
+                           {data?.items.map((log: {
+                                id: string
+                                table_name: string
+                                action: string
+                                new_data?: Record<string, unknown> | null
+                                old_data?: Record<string, unknown> | null
+                                record_id?: string
+                                changed_at: string
+                                profiles?: { full_name: string; role: string }
+                           }, idx: number) => (
                                <AuditActivityItem 
                                  key={log.id} 
                                  log={log} 

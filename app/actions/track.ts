@@ -48,41 +48,25 @@ export async function confirmDispatchReceipt(
     }
 
     const supabase = createAdminClient()
+    const { data, error } = await supabase.rpc('confirm_fabric_dispatch_receipt', {
+        p_dispatch_id: normalizedDispatchId,
+        p_tracking_token: normalizedTrackingToken,
+        p_qty_received: qtyReceived,
+    })
 
-    // Dual-key check: dispatch must belong to the order that has this token.
-    // The !inner join means the query returns no row if the token doesn't match.
-    const { data: dispatch, error: fetchError } = await supabase
-        .from('dispatches')
-        .select('id, order_id, status, qty_meters_sent, orders!inner(tracking_token)')
-        .eq('id', normalizedDispatchId)
-        .eq('orders.tracking_token', normalizedTrackingToken)
-        .single()
-
-    if (fetchError || !dispatch) return { error: 'Invalid tracking link' }
-    if (dispatch.status !== 'in_transit') return { error: 'This batch has already been confirmed' }
-
-    // Default received qty to sent qty if trader doesn't enter a value
-    const received = qtyReceived !== null && qtyReceived >= 0
-        ? qtyReceived
-        : dispatch.qty_meters_sent
-
-    if (received > Number(dispatch.qty_meters_sent)) {
-        return { error: 'Received quantity cannot exceed the sent quantity' }
+    if (error) {
+        const message = error.message || 'Could not confirm receipt. Please try again.'
+        if (
+            message.includes('Invalid tracking link') ||
+            message.includes('already been confirmed') ||
+            message.includes('Received quantity cannot exceed') ||
+            message.includes('Enter a valid received quantity')
+        ) {
+            return { error: message }
+        }
+        return { error: 'Could not confirm receipt. Please try again.' }
     }
 
-    const { error: updateError } = await supabase
-        .from('dispatches')
-        .update({
-            status:               'delivered',
-            qty_meters_received:  received,
-            received_at:          new Date().toISOString(),
-        })
-        .eq('id', normalizedDispatchId)
-        .eq('status', 'in_transit')
-        .select('id')
-        .single()
-
-    if (updateError) return { error: 'Could not confirm receipt. Please try again.' }
-
-    return { success: true, qty_received: Number(received) }
+    const result = Array.isArray(data) ? data[0] : data
+    return { success: true, qty_received: Number(result?.qty_received ?? qtyReceived ?? 0) }
 }

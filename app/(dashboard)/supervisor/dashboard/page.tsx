@@ -38,6 +38,7 @@ import {
     upsertShiftAssignment,
     copyPreviousShiftAction,
     bulkLogProduction,
+    packProductionIntoBulkPackages,
     updateMachineStatus,
     updateMachineBreakdown,
     requestAccessCode,
@@ -610,7 +611,7 @@ export default function UnifiedDashboard() {
         }
     }
 
-    const handleBulkSubmit = async (code: string = '') => {
+    const handleBulkSubmit = async (code: string = '', packAfter: boolean = false) => {
         const assignedMachines = machines.filter((m) =>
             assignments.some((a) => a.machine_id === m.id && a.worker_id)
         )
@@ -646,17 +647,28 @@ export default function UnifiedDashboard() {
 
         setSubmitting(true)
         const res = await bulkLogProduction(entries, code)
-        setSubmitting(false)
-
         if (res.success) {
-            toast.success(`✅ Production Logged! (${res.logged} machines)`)
+            if (packAfter) {
+                const packRes = await packProductionIntoBulkPackages(entries)
+                if ('error' in packRes) {
+                    toast.error(packRes.error)
+                    setSubmitting(false)
+                    return
+                }
+                toast.success(`✅ Production logged and ${packRes.packages_created} bulk package${packRes.packages_created !== 1 ? 's' : ''} created`)
+            } else {
+                toast.success(`✅ Production Logged! (${res.logged} machines)`)
+            }
+            setSubmitting(false)
             setMeters({}) // Reset inputs after success
             localStorage.removeItem(`meters_${date}_${shift}`) // Clear cache
             setShowDuplicateDialog(false)
             setDuplicateAccessCode('')
         } else if (res.error === 'DUPLICATE_LOG_DETECTED') {
+            setSubmitting(false)
             setShowDuplicateDialog(true)
         } else {
+            setSubmitting(false)
             toast.error(res.error)
         }
     }
@@ -807,18 +819,29 @@ export default function UnifiedDashboard() {
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 md:left-[260px] p-4 md:p-6 bg-background/40 backdrop-blur-xl border-t border-border flex justify-center z-40 pb-floating-button">
-                <Button
-                    className="w-full max-w-lg h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-[0_12px_24px_-8px_#FF572280] gap-3 active:scale-[0.98] transition-all"
-                    onClick={() => handleBulkSubmit()}
-                    disabled={submitting || loggedMetersCount === 0}
-                >
-                    {submitting ? (
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                    ) : (
-                        <ClipboardList className="h-6 w-6" />
-                    )}
-                    SUBMIT SHIFT LOGS {loggedMetersCount > 0 && `(${loggedMetersCount})`}
-                </Button>
+                <div className="flex w-full max-w-2xl gap-3">
+                    <Button
+                        variant="outline"
+                        className="h-14 flex-1 border-primary/20 bg-white/90 text-primary hover:bg-primary/5 font-black text-base rounded-2xl gap-3"
+                        onClick={() => handleBulkSubmit('', true)}
+                        disabled={submitting || loggedMetersCount === 0}
+                    >
+                        {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Package className="h-5 w-5" />}
+                        SUBMIT & PACK
+                    </Button>
+                    <Button
+                        className="h-14 flex-[1.3] bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-[0_12px_24px_-8px_#FF572280] gap-3 active:scale-[0.98] transition-all"
+                        onClick={() => handleBulkSubmit()}
+                        disabled={submitting || loggedMetersCount === 0}
+                    >
+                        {submitting ? (
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                        ) : (
+                            <ClipboardList className="h-6 w-6" />
+                        )}
+                        SUBMIT SHIFT LOGS {loggedMetersCount > 0 && `(${loggedMetersCount})`}
+                    </Button>
+                </div>
             </div>
 
             {/* Machine Detail Sheet */}

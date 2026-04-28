@@ -944,6 +944,81 @@ export async function bulkLogProduction(entries: {
     return { success: true, logged: logs.length }
 }
 
+export async function packProductionIntoBulkPackages(entries: {
+    machine_id: string
+    worker_id: number
+    order_id: string | null
+    meters: number
+    shift: 'day' | 'night'
+    date: string
+}[]) {
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const validEntries = entries.filter((entry) => entry.order_id && entry.meters > 0)
+    if (validEntries.length === 0) return { error: 'No production entries available to pack' }
+
+    const grouped = new Map<string, { metres: number; date: string; shift: 'day' | 'night' }>()
+    for (const entry of validEntries) {
+        const key = entry.order_id as string
+        const existing = grouped.get(key)
+        if (existing) {
+            existing.metres += Number(entry.meters)
+        } else {
+            grouped.set(key, {
+                metres: Number(entry.meters),
+                date: entry.date,
+                shift: entry.shift,
+            })
+        }
+    }
+
+    const orderIds = Array.from(grouped.keys())
+    const { data: orders, error: orderError } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('org_id', profile.org_id)
+        .in('id', orderIds)
+
+    if (orderError) return { error: orderError.message }
+    const orderSet = new Set((orders ?? []).map((order) => order.id))
+
+    const inserts = Array.from(grouped.entries())
+        .filter(([orderId, meta]) => orderSet.has(orderId) && meta.metres > 0)
+        .map(([orderId, meta]) => ({
+            org_id: profile.org_id,
+            order_id: orderId,
+            package_type: 'bulk',
+            units_count: 1,
+            metres: Number(meta.metres.toFixed(2)),
+            grade: 'A',
+            inspection_status: 'pending',
+            stock_state: 'uninspected',
+            location: 'Grey Floor',
+            source_date: meta.date,
+            source_shift: meta.shift,
+            source_reference: `Packed from ${meta.shift} shift production`,
+            created_by: user.id,
+        }))
+
+    if (inserts.length === 0) return { error: 'No valid orders available to pack' }
+
+    const { error } = await supabase
+        .from('fabric_packages')
+        .insert(inserts)
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/owner/stock')
+    revalidatePath('/owner/orders')
+    revalidatePath('/owner/dispatches')
+    return {
+        success: true,
+        packages_created: inserts.length,
+        metres_packed: inserts.reduce((sum, item) => sum + Number(item.metres), 0),
+    }
+}
+
 // ─── Payroll & Float Management (Module 5) ────────────────────────────────────
 
 /**
@@ -1164,4 +1239,3 @@ export async function updateMachineBreakdown(params: {
     revalidatePath('/supervisor/dashboard')
     return { success: true }
 }
-
