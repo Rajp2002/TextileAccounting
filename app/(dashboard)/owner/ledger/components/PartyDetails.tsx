@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+'use client'
+
 import { format } from 'date-fns'
 import {
     AlertTriangle,
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n/context'
 import { LedgerAdjustment, LedgerInvoice, LedgerParty, LedgerReceipt } from '../actions'
 import { adjustmentLabels, getInvoiceStatusClass, methodLabels, partyTypeLabels, shortMoney } from '../utils'
 import { Transaction } from '../types'
@@ -61,17 +63,19 @@ export function PartyDetails({
     onTogglePartyActive,
     onOpenAddParty
 }: PartyDetailsProps) {
+    const { t } = useTranslation()
+
     if (!party) {
         return (
             <Card className="border-dashed">
                 <CardContent className="flex min-h-[420px] flex-col items-center justify-center text-center">
                     <BookOpen className="h-12 w-12 text-slate-300" />
-                    <h2 className="mt-4 text-xl font-black">Start with your first party</h2>
+                    <h2 className="mt-4 text-xl font-black">{t('emptyState.ledger.title')}</h2>
                     <p className="mt-2 max-w-md text-sm text-slate-500">
                         Add a trader, processor, or buyer, then record bills and receipts the way you would in a physical ledger.
                     </p>
                     <Button className="mt-5 bg-teal-700 hover:bg-teal-800" onClick={onOpenAddParty}>
-                        <Plus className="mr-2 h-4 w-4" /> Add Party
+                        <Plus className="mr-2 h-4 w-4" /> {t('emptyState.ledger.addParty')}
                     </Button>
                 </CardContent>
             </Card>

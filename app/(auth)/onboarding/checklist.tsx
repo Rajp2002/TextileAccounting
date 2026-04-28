@@ -191,7 +191,7 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
 
         // Phase 1: Insert all workers in parallel (eliminates N serial roundtrips)
         const results = await Promise.all(
-            valid.map(worker => addMeterWorker({ name: worker.name.trim(), pf_esi_eligible: false }))
+            valid.map(worker => addMeterWorker({ name: worker.name.trim(), pf_esi_enrolled: false }))
         )
 
         // Check for any insert errors

@@ -2,6 +2,13 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { checkAuthRateLimit } from '@/lib/rate-limit'
 
+function getRoleHomePath(role?: string): string {
+    if (role === 'owner') return '/owner/analytics'
+    if (role === 'supervisor') return '/supervisor/dashboard'
+    if (role === 'admin') return '/admin'
+    return '/login'
+}
+
 // ─── JWT Parse Utility ─────────────────────────────────────────────────────────
 
 /**
@@ -360,19 +367,19 @@ export async function updateSession(request: NextRequest) {
                     .single()
                 
                 if (profile?.role !== 'admin') {
-                    return NextResponse.redirect(new URL('/login', request.url))
+                    return NextResponse.redirect(new URL(getRoleHomePath(profile?.role ?? role), request.url))
                 }
             }
         }
 
         // 2. Owner restricted routes (Admins can access for support/audit)
         if (pathname.startsWith('/owner') && role === 'supervisor') {
-            return NextResponse.redirect(new URL('/supervisor/production', request.url))
+            return NextResponse.redirect(new URL(getRoleHomePath(role), request.url))
         }
 
         // 3. Supervisor restricted routes (Admins can access for support/audit)
         if (pathname.startsWith('/supervisor') && role === 'owner') {
-            return NextResponse.redirect(new URL('/owner/analytics', request.url))
+            return NextResponse.redirect(new URL(getRoleHomePath(role), request.url))
         }
     }
 

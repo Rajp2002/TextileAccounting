@@ -13,7 +13,8 @@ export async function toggleWorkerPaid(
     currentPaid: boolean,
     isFinalSettlement: boolean = false,
     manualDeductionOverride: number | null = null,
-    cycleStartDate: string | null = null
+    cycleStartDate: string | null = null,
+    paymentMode: 'cash' | 'bank_transfer' | 'upi' | 'cheque' | null = null
 ) {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -97,6 +98,10 @@ export async function toggleWorkerPaid(
 
     // ── Use atomic RPC for settlement ────────────────────────────────────
     if (newPaid) {
+        if (!paymentMode) {
+            return { error: 'Payment mode is required.' }
+        }
+
         const { data, error } = await supabase.rpc('settle_worker_payroll', {
             p_org_id: profile.org_id,
             p_worker_type: workerType,
@@ -105,7 +110,8 @@ export async function toggleWorkerPaid(
             p_gross_amount: grossAmount,
             p_is_final_settlement: isFinalSettlement,
             p_manual_deduction_override: manualDeductionOverride,
-            p_actor_id: user.id
+            p_actor_id: user.id,
+            p_payment_mode: paymentMode,
         })
 
         if (error) {
@@ -164,6 +170,53 @@ export async function toggleWorkerPaid(
             reverted_advances: (data as any)?.reverted_advances ?? 0
         }
     }
+}
+
+export async function createPayrollAdjustment(input: {
+    workerType: 'meter' | 'fixed'
+    workerId: number
+    month: string
+    cycleStartDay: number
+    categoryId: string
+    amount: number
+    description?: string
+}) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    if (!input.categoryId || !input.amount || input.amount <= 0) {
+        return { error: 'Valid category and amount are required.' }
+    }
+
+    const { data: bounds, error: boundsError } = await supabase.rpc('get_cycle_bounds', {
+        p_date: `${input.month}-01`,
+        p_cycle_start_day: input.cycleStartDay,
+    }).single()
+
+    if (boundsError || !bounds) {
+        return { error: 'Failed to determine payroll cycle.' }
+    }
+
+    const payload: Record<string, string | number> = {
+        org_id: profile.org_id,
+        worker_type: input.workerType,
+        category_id: input.categoryId,
+        amount: input.amount,
+        cycle_start_date: (bounds as { cycle_start: string }).cycle_start,
+    }
+
+    payload[input.workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id'] = input.workerId
+    if (input.description?.trim()) {
+        payload.description = input.description.trim()
+    }
+
+    const { error } = await supabase.from('payroll_adjustments').insert(payload)
+    if (error) {
+        return { error: error.message || 'Failed to add adjustment.' }
+    }
+
+    revalidatePath('/owner/payroll')
+    return { success: true }
 }
 
 export async function savePayrollConfig(cycleStartDay: number) {

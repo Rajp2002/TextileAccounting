@@ -308,6 +308,14 @@ export const gu = {
       earned_gross: "કુલ કમાણી (Earned)",
       cap_applied: "50% ની મર્યાદા લાગુ"
     },
+    payment: {
+      modeLabel: "ચૂકવણી પદ્ધતિ",
+      modeRequired: "ચૂકવણી પદ્ધતિ પસંદ કરો",
+      cash: "રોકડ",
+      bankTransfer: "બેંક ટ્રાન્સફર",
+      upi: "UPI",
+      cheque: "ચેક"
+    },
     empty: {
       no_production: "આ મહિને કોઈ ઉત્પાદન નોંધાયું નથી",
       no_fixed: "કોઈ ફિક્સ પગારવાળા કારીગરો મળ્યા નથી",
@@ -350,6 +358,34 @@ export const gu = {
         settled_in: "ચૂકવાયો:",
         select_above: "ઉપાડ જોવા અને નોંધવા માટે ઉપરથી કારીગર પસંદ કરો"
       }
+    }
+  },
+  confirm: {
+    title: "શું તમે ખાતરી છો?",
+    proceed: "હા, આગળ વધો",
+    cancel: "રદ કરો",
+    payroll: {
+      editBonus: "આ સેટલમેન્ટ માટે બોનસ બદલાશે.",
+      editFine: "આ સેટલમેન્ટ માટે દંડ બદલાશે.",
+      adjustAdvance: "આ સેટલમેન્ટ માટે એડવાન્સ કાપણી બદલાશે."
+    }
+  },
+  emptyState: {
+    advances: {
+      title: "હજી કોઈ એડવાન્સ નથી",
+      cta: "પ્રથમ એડવાન્સ આપો"
+    },
+    ledger: {
+      title: "હજી કોઈ વ્યવહાર નથી",
+      cta: "ચૂકવણી નોંધો",
+      addParty: "પાર્ટી ઉમેરો"
+    },
+    payroll: {
+      title: "આ મહિને કોઈ સેટલમેન્ટ નથી",
+      cta: "કામદારને સેટલ કરો"
+    },
+    dispatches: {
+      noStock: "પ્રથમ ફેબ્રિક સ્ટોકમાં ઉમેરો"
     }
   },
   inventory: {
@@ -798,7 +834,15 @@ export const gu = {
   worker: {
     title: "આજના કારીગરો",
     no_logs: "આજે કોઈ પ્રોડક્શન નોંધ્યું નથી",
-    rate_locked_on: "ભાવ {date} પર ફિક્સ થયો છે—ક્વોલિટીનો ભાવ બદલવા છતાં આ નહિ બદલાય."
+    rate_locked_on: "ભાવ {date} પર ફિક્સ થયો છે—ક્વોલિટીનો ભાવ બદલવા છતાં આ નહિ બદલાય.",
+    pfEsi: {
+      label: "PF / ESI નોંધણી",
+      helper: "આ કામદાર EPFO અને ESIC હેઠળ નોંધાયેલ હોય તો જ ચાલુ કરો",
+      enrolled: "નોંધાયેલ",
+      notEnrolled: "નોંધાયેલ નથી",
+      esiNumber: "ESI નંબર",
+      pfNumber: "PF નંબર"
+    }
   },
   dashboard: {
     date: "તારીખ",
