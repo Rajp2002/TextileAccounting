@@ -20,6 +20,32 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { Plus, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+    getActiveOrders,
+    getDispatchesForOrder,
+    type OrderSummary,
+    type DispatchSummary,
+    type DispatchRow
+} from '@/app/(dashboard)/owner/orders/actions'
+import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -372,6 +398,28 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<'all' | 'in_transit' | 'delivered' | 'disputed'>('all')
 
+    // Global Modal Flow State
+    const [globalModalStep, setGlobalModalStep] = useState<'idle' | 'select_order' | 'loading_summary' | 'create_dispatch'>('idle')
+    const [selectedOrder, setSelectedOrder] = useState<OrderSummary | null>(null)
+    const [dispatchSummary, setDispatchSummary] = useState<DispatchSummary | null>(null)
+
+    const handleFetchSummary = async (orderId: string) => {
+        setGlobalModalStep('loading_summary')
+        const res = await getDispatchesForOrder(orderId)
+        if ('error' in res) {
+            toast.error(res.error)
+            setGlobalModalStep('select_order')
+        } else {
+            if (res.available_packages.length === 0) {
+                toast.error('No packages are ready to dispatch for this order. Please inspect packages in Stock first.')
+                setGlobalModalStep('select_order')
+            } else {
+                setDispatchSummary(res)
+                setGlobalModalStep('create_dispatch')
+            }
+        }
+    }
+
     // ── Group dispatches by order ──
     const orderGroups = useMemo<OrderGroup[]>(() => {
         const map = new Map<string, OrderGroup>()
@@ -441,10 +489,18 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Dispatches</h1>
-                <p className="text-muted-foreground font-medium">Monitor fabric shipments grouped by order — track progress and verify trader confirmations.</p>
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="flex flex-col gap-2">
+                    <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Dispatches</h1>
+                    <p className="text-muted-foreground font-medium">Monitor fabric shipments grouped by order — track progress and verify trader confirmations.</p>
+                </div>
+                <Button 
+                    onClick={() => setGlobalModalStep('select_order')}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 shrink-0 h-11 px-6 rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
+                >
+                    <Plus className="h-5 w-5" />
+                    New Dispatch
+                </Button>
             </div>
 
             {/* Stats Cards */}
@@ -563,6 +619,151 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
                     )}
                 </AnimatePresence>
             </div>
+            {/* Global Dispatch Modal Flow */}
+            <GlobalDispatchModal 
+                step={globalModalStep} 
+                onClose={() => {
+                    setGlobalModalStep('idle')
+                    setSelectedOrder(null)
+                    setDispatchSummary(null)
+                }}
+                onOrderSelected={(order) => {
+                    setSelectedOrder(order)
+                    handleFetchSummary(order.id)
+                }}
+                dispatchSummary={dispatchSummary}
+                selectedOrder={selectedOrder}
+            />
         </div>
+    )
+}
+
+function GlobalDispatchModal({
+    step,
+    onClose,
+    onOrderSelected,
+    dispatchSummary,
+    selectedOrder
+}: {
+    step: 'idle' | 'select_order' | 'loading_summary' | 'create_dispatch'
+    onClose: () => void
+    onOrderSelected: (order: OrderSummary) => void
+    dispatchSummary: DispatchSummary | null
+    selectedOrder: OrderSummary | null
+}) {
+    const [orders, setOrders] = useState<OrderSummary[]>([])
+    const [loadingOrders, setLoadingOrders] = useState(false)
+
+    // Load active orders when step is select_order
+    useMemo(() => {
+        if (step === 'select_order') {
+            setLoadingOrders(true)
+            getActiveOrders().then(res => {
+                if (res.data) setOrders(res.data)
+                setLoadingOrders(false)
+            })
+        }
+    }, [step])
+
+    if (step === 'idle') return null
+
+    return (
+        <>
+            {/* Step 1: Select Order */}
+            <Dialog open={step === 'select_order'} onOpenChange={(v) => !v && onClose()}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Truck className="h-5 w-5 text-indigo-600" /> New Dispatch
+                        </DialogTitle>
+                        <DialogDescription>
+                            Which order/party are you dispatching for?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-slate-700">Select Order</Label>
+                            {loadingOrders ? (
+                                <div className="flex items-center gap-2 py-2 text-slate-400">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <span className="text-xs">Loading active orders...</span>
+                                </div>
+                            ) : orders.length === 0 ? (
+                                <p className="text-xs text-rose-500 font-medium bg-rose-50 p-3 rounded-lg border border-rose-100">
+                                    No active orders found. You can only dispatch for active orders.
+                                </p>
+                            ) : (
+                                <Select onValueChange={(val) => {
+                                    const order = orders.find(o => o.id === val)
+                                    if (order) onOrderSelected(order)
+                                }}>
+                                    <SelectTrigger className="h-11 border-slate-200">
+                                        <SelectValue placeholder="Choose order..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {orders.map(order => (
+                                            <SelectItem key={order.id} value={order.id}>
+                                                <div className="flex flex-col text-left">
+                                                    <span className="font-bold">{order.party_name}</span>
+                                                    <span className="text-[10px] opacity-60 uppercase font-mono">{order.quality_label || 'Unnamed Quality'}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={onClose}>Cancel</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Step 2: Loading Summary */}
+            <Dialog open={step === 'loading_summary'} onOpenChange={() => {}}>
+                <DialogContent className="max-w-sm text-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mx-auto mb-4" />
+                    <p className="text-sm font-bold text-slate-600">Fetching available stock...</p>
+                </DialogContent>
+            </Dialog>
+
+            {/* Step 3: Create Dispatch (Shared Modal) */}
+            {step === 'create_dispatch' && selectedOrder && dispatchSummary && (
+                <CreateDispatchModal 
+                    orderId={selectedOrder.id}
+                    availablePackages={dispatchSummary.available_packages}
+                    onClose={onClose}
+                    onCreated={async (dispatch, trackingToken, partyName, orgName) => {
+                        // Handle Challan PDF generation (reusing the logic from OrdersClient)
+                        try {
+                            const { generateChallan } = await import('@/lib/generate-challan')
+                            await generateChallan({
+                                org_name: orgName || 'Factory',
+                                party_name: partyName || selectedOrder.party_name,
+                                quality_label: selectedOrder.quality_label || null,
+                                dispatch_number: dispatch.dispatch_number,
+                                qty_meters_sent: Number(dispatch.qty_meters_sent),
+                                total_target_meters: Number(selectedOrder.total_target_meters || 0),
+                                package_lines: dispatch.package_lines.map((line) => ({
+                                    package_no: line.package_no,
+                                    package_type: line.package_type,
+                                    units_count: line.units_count,
+                                    grade: line.grade,
+                                    metres: Number(line.qty_meters_sent),
+                                })),
+                                notes: dispatch.notes,
+                                dispatched_at: dispatch.dispatched_at,
+                                tracking_token: trackingToken,
+                            })
+                        } catch (e) {
+                            toast.error('Failed to generate Challan PDF')
+                        }
+                        onClose()
+                        // Next.js will revalidate the path via the server action
+                    }}
+                />
+            )}
+        </>
     )
 }

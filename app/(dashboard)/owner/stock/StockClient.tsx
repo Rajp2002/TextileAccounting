@@ -12,9 +12,16 @@ import {
     Plus,
     Search,
     ShieldCheck,
+    Truck,
     Undo2,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+    getDispatchesForOrder,
+    type DispatchSummary,
+    type DispatchRow
+} from '../orders/actions'
+import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -472,6 +479,29 @@ export default function StockClient({ initialData }: { initialData: FabricStockB
     const [statePending, startStateTransition] = useTransition()
     const [correctPending, startCorrectTransition] = useTransition()
 
+    // Dispatch Flow State
+    const [dispatchingOrder, setDispatchingOrder] = useState<{ id: string, party_name: string, quality_label: string | null, total_target_meters: number } | null>(null)
+    const [dispatchSummary, setDispatchSummary] = useState<DispatchSummary | null>(null)
+    const [fetchingSummary, setFetchingSummary] = useState(false)
+
+    const handleStartDispatch = async (pkg: any) => {
+        setDispatchingOrder({
+            id: pkg.orders.id,
+            party_name: pkg.orders.party_name,
+            quality_label: pkg.orders.quality_label,
+            total_target_meters: Number(pkg.orders.total_target_meters || 0)
+        })
+        setFetchingSummary(true)
+        const res = await getDispatchesForOrder(pkg.orders.id)
+        setFetchingSummary(false)
+        if ('error' in res) {
+            toast.error(res.error)
+            setDispatchingOrder(null)
+        } else {
+            setDispatchSummary(res)
+        }
+    }
+
     const filtered = useMemo(() => {
         return initialData.packages.filter((pkg) => {
             const matchesState = stateFilter === 'all' || pkg.stock_state === stateFilter
@@ -679,6 +709,16 @@ export default function StockClient({ initialData }: { initialData: FabricStockB
                                             Correct metres
                                         </Button>
                                     )}
+
+                                    {['ready', 'reserved'].includes(pkg.stock_state) && (
+                                        <Button
+                                            className="bg-indigo-600 text-white hover:bg-indigo-500 font-bold"
+                                            onClick={() => handleStartDispatch(pkg)}
+                                        >
+                                            <Truck className="mr-2 h-4 w-4" />
+                                            Dispatch
+                                        </Button>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
@@ -749,6 +789,53 @@ export default function StockClient({ initialData }: { initialData: FabricStockB
                     <Loader2 className="mr-2 inline h-4 w-4 animate-spin" />
                     Updating package…
                 </div>
+            )}
+
+            {/* Quick Dispatch Modal Flow */}
+            <Dialog open={fetchingSummary} onOpenChange={() => {}}>
+                <DialogContent className="max-w-sm text-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mx-auto mb-4" />
+                    <p className="text-sm font-bold text-slate-600">Preparing dispatch batch...</p>
+                </DialogContent>
+            </Dialog>
+
+            {dispatchingOrder && dispatchSummary && (
+                <CreateDispatchModal 
+                    orderId={dispatchingOrder.id}
+                    availablePackages={dispatchSummary.available_packages}
+                    onClose={() => {
+                        setDispatchingOrder(null)
+                        setDispatchSummary(null)
+                    }}
+                    onCreated={async (dispatch, trackingToken, partyName, orgName) => {
+                        try {
+                            const { generateChallan } = await import('@/lib/generate-challan')
+                            await generateChallan({
+                                org_name: orgName || 'Factory',
+                                party_name: partyName || dispatchingOrder.party_name,
+                                quality_label: dispatchingOrder.quality_label || null,
+                                dispatch_number: dispatch.dispatch_number,
+                                qty_meters_sent: Number(dispatch.qty_meters_sent),
+                                total_target_meters: dispatchingOrder.total_target_meters,
+                                package_lines: dispatch.package_lines.map((line) => ({
+                                    package_no: line.package_no,
+                                    package_type: line.package_type,
+                                    units_count: line.units_count,
+                                    grade: line.grade,
+                                    metres: Number(line.qty_meters_sent),
+                                })),
+                                notes: dispatch.notes,
+                                dispatched_at: dispatch.dispatched_at,
+                                tracking_token: trackingToken,
+                            })
+                        } catch (e) {
+                            toast.error('Failed to generate Challan PDF')
+                        }
+                        setDispatchingOrder(null)
+                        setDispatchSummary(null)
+                        refresh()
+                    }}
+                />
             )}
         </div>
     )

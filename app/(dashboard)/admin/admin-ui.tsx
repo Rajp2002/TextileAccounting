@@ -734,7 +734,15 @@ export function AdminDashboardUI({
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">GRO Phone (Optional)</label>
-                            <Input value={groDetails.gro_phone || ''} onChange={(e) => setGroDetails({...groDetails, gro_phone: e.target.value})} />
+                            <Input 
+                                value={groDetails.gro_phone || ''} 
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, '').slice(0, 10)
+                                    setGroDetails({...groDetails, gro_phone: val})
+                                }} 
+                                maxLength={10}
+                                inputMode="numeric"
+                            />
                         </div>
                         <Button className="w-full" onClick={handleGROUpdate}>
                             Save Identity Details
