@@ -20,6 +20,11 @@ This is the current route and workflow reference for the implemented product.
 ### `/owner/orders`
 - Review live orders and progress.
 - Manage order state and downstream operational actions.
+- Physical inventory (fabric packages) remains in stock until a dispatch record is created from the order details flow.
+
+### `/owner/market-runs`
+- Manage speculative production (production for market sales without a predefined order).
+- Track market run lifecycle from Estimator to production, inventory, and final sales recording.
 
 ### `/owner/ledger`
 - Track party invoices, receipts, claims, discounts, and other ledger adjustments.
@@ -74,6 +79,7 @@ This is the current route and workflow reference for the implemented product.
 
 ### `/owner/settings/audit`
 - Search and inspect audit events and compliance records.
+- Track DPA signature status and proof documents.
 
 ## Supervisor Workflows
 
@@ -82,7 +88,9 @@ This is the current route and workflow reference for the implemented product.
 - Assign workers to machines.
 - Link machines to active orders.
 - Update machine running / idle / maintenance state.
-- Bulk-log production.
+- Bulk-log production:
+  - **SUBMIT SHIFT LOGS**: Record production for the shift without creating physical packages.
+  - **SUBMIT & PACK**: Record production and immediately create fabric packages (rolls/bales) in the system for inspection and dispatch.
 - Request access codes for protected edits.
 - Copy previous shift setup when needed.
 
@@ -105,7 +113,9 @@ This is the current route and workflow reference for the implemented product.
 ## Admin Workflows
 
 ### `/admin`
-- Review notices, grievances, DPA state, export logs, factory lockdown state, and breach reporting data.
+- Review notices, grievances, and export logs.
+- Manage **DPA Agreements**: Create and version DPA templates, track factory signature status, and record proof of signatures.
+- Oversight of factory lockdown state and breach reporting data.
 
 ## Public Workflow
 

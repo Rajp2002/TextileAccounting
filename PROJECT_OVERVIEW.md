@@ -7,11 +7,11 @@ This document reflects the current implementation in the repository as of April 
 Weavly is a production and back-office operating system for weaving factories. The app is organized around a practical factory loop:
 
 1. Estimate a fabric and create a quote.
-2. Convert an approved quote into a live order.
+2. Convert an approved quote into a live order or start a speculative Market Run.
 3. Assign workers and orders on the floor.
-4. Log production against machines and shifts.
+4. Log production against machines and shifts (with optional packing of fabric packages).
 5. Settle wages, advances, and statutory deductions.
-6. Track dispatches, stock, ledger balances, and compliance activity.
+6. Track dispatches, fabric package stock, ledger balances, and compliance activity.
 
 ## Roles
 
@@ -36,18 +36,20 @@ Supervisors use the floor operations side:
 ### Admin
 Admins use the compliance console:
 - notice registry
-- DPA and lockdown state
+- DPA (Data Processing Agreement) management and template versioning
+- lockdown state and breach reporting
 - grievance oversight
 - export logs
-- breach reporting
+- factory compliance signature tracking
 
 ## Current Module Map
 
 ### Estimator, Quotes, and Orders
-- Estimator lives at `/owner/estimator`.
+- Estimator lives at `/owner/estimator`. Supports margin calculations up to 100%.
 - Quotes are persisted and browsable at `/owner/quotes`.
 - Orders live at `/owner/orders`.
-- The product still follows an estimator-first design, but the authoritative implementation is the code and migrations, not the older narrative docs.
+- Market Runs live at `/owner/market-runs`, allowing for speculative production without an external party.
+- The product follows an estimator-first design: everything starts with a fabric estimate.
 
 ### Floor Operations
 - The main supervisor workspace is `/supervisor/dashboard`.
@@ -67,9 +69,9 @@ Admins use the compliance console:
 
 ### Commercial and Inventory Operations
 - Party ledger: `/owner/ledger`
-- Grey fabric stock: `/owner/stock`
+- Grey fabric stock: `/owner/stock` (tracks individual rolls/bales as fabric packages)
 - Yarn and beam inventory: `/owner/inventory`
-- Dispatches and tracking: `/owner/dispatches`
+- Dispatches and tracking: `/owner/dispatches` (physical inventory remains in stock until a dispatch record is created)
 
 ### Settings and Compliance
 - Settings: `/owner/settings`

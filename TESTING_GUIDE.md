@@ -33,6 +33,7 @@ The `scripts/` folder contains one-off operational scripts for schema inspection
 - Open `/owner/estimator` and create or load a quote.
 - Confirm the quote appears in `/owner/quotes`.
 - Open `/owner/orders` and verify order data renders correctly.
+- Open `/owner/market-runs` and verify speculative production tracking.
 - Open `/owner/analytics` and confirm KPI cards and active operational data load.
 
 ### 3. Supervisor Floor Flow
@@ -40,6 +41,7 @@ The `scripts/` folder contains one-off operational scripts for schema inspection
 - Assign a worker to a machine.
 - Link the machine to an active order.
 - Enter production and submit the bulk log flow.
+- Use **SUBMIT & PACK** and verify that fabric packages are created and visible in `/owner/stock`.
 - Verify the owner dashboard reflects the new data.
 
 ### 4. Payroll And Advances

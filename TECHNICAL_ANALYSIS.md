@@ -67,6 +67,7 @@ The route structure is fairly conventional App Router code: server pages load in
 - Core logic lives in `lib/estimator.ts` and owner estimator actions/components.
 - Quotes are persisted and later surfaced in `/owner/quotes`.
 - Orders are managed from `/owner/orders`.
+- **Market Runs** use the estimator logic but create orders without a `party_id`. They are tracked in `market_runs` table and linked to speculative production flows.
 
 ### Floor Operations
 - Main supervisor logic lives in `app/(dashboard)/supervisor/actions.ts` and the unified dashboard page.
@@ -79,13 +80,14 @@ The route structure is fairly conventional App Router code: server pages load in
 - PDF generation lives in `lib/generate-payslip.ts`.
 
 ### Inventory, Stock, Ledger, Dispatches
-- Inventory module: yarn and beam movement tracking
-- Stock module: grey fabric stock board
-- Ledger module: party invoices, receipts, claims, and adjustments
-- Dispatch module: outbound dispatch records plus public tracking
+- Inventory module: yarn and beam movement tracking.
+- Stock module: tracks `fabric_packages` created during production (the "PACK" step).
+- Ledger module: party invoices, receipts, claims, and adjustments.
+- Dispatch module: uses `create_fabric_dispatch` RPC to atomically assign dispatch numbers and link fabric packages to outbound dispatches.
 
 ### Compliance
 - Admin and owner compliance functionality spans `lib/actions/compliance.ts`, owner audit pages, lockdown tooling, and the admin dashboard.
+- **DPA Tracking**: Implements template versioning and signature recording. Proof of signature (PDF/Image URLs) is stored in `organization_dpas` table.
 
 ## Integrations
 

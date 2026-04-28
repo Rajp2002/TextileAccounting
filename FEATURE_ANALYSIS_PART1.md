@@ -9,9 +9,10 @@ This file now serves as a current implementation snapshot for the owner and floo
 - estimator
 - quotes
 - orders
+- market runs
 - machines
 - workers
-- dispatches
+- dispatches (fabric package tracking)
 - stock
 - inventory
 - ledger
@@ -30,8 +31,8 @@ This file now serves as a current implementation snapshot for the owner and floo
 ## What Has Changed Since Earlier Docs
 
 - `/supervisor/production` is no longer the primary working page; it redirects to `/supervisor/dashboard`.
-- the owner product surface is broader than the older docs described and now includes ledger, stock, inventory, dispatches, billing, and more compliance tooling
-- the floor dashboard combines worker assignment, order linking, machine state, and bulk production logging
+- the owner product surface is broader than the older docs described and now includes Market Runs, ledger, stock, inventory, dispatches, billing, and more compliance tooling
+- the floor dashboard combines worker assignment, order linking, machine state, and bulk production logging (with "SUBMIT & PACK" for physical stock entry)
 
 ## Current Strengths
 

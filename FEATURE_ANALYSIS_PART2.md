@@ -36,7 +36,7 @@ Current implementation includes:
 - admin compliance dashboard
 - grievance workflows
 - notice registry
-- DPA management and signature state
+- DPA management: template versioning, active-state control, and factory signature tracking with proof storage
 - export logging
 - lockdown state and related alerting
 - owner audit view
