@@ -27,6 +27,15 @@ const securityHeaders = [
 
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: '/owner/stock',
+        destination: '/owner/inventory?tab=grey-stock',
+        permanent: false,
+      },
+    ]
+  },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]
   },
@@ -58,6 +67,5 @@ export default withSentryConfig(nextConfig, {
   // Route Sentry tunnel to avoid ad-blocker interference
   tunnelRoute: '/monitoring',
 });
-
 
 

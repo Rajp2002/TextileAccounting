@@ -622,7 +622,7 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
                                 {initialDispatches.length === 0 && (
                                     <div className="pt-3">
                                         <Button variant="outline" asChild>
-                                            <Link href="/owner/inventory">{t('emptyState.dispatches.noStock')}</Link>
+                                            <Link href="/owner/inventory?tab=grey-stock">{t('emptyState.dispatches.noStock')}</Link>
                                         </Button>
                                     </div>
                                 )}

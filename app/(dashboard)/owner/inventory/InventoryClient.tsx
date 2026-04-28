@@ -41,7 +41,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import {
     createBeamCard,
@@ -50,6 +49,7 @@ import {
     type BeamCardSummary,
     type InventoryModuleData,
 } from './actions'
+import { useTranslation } from '@/lib/i18n/context'
 
 const movementOptions = [
     { value: 'issue_to_warping', label: 'Issue to warping' },
@@ -104,7 +104,14 @@ function StatBlock({
     )
 }
 
-export default function InventoryClient({ initialData }: { initialData: InventoryModuleData }) {
+export default function InventoryClient({
+    initialData,
+    activeView = 'yarn',
+}: {
+    initialData: InventoryModuleData
+    activeView?: 'yarn' | 'beams'
+}) {
+    const { t } = useTranslation()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
@@ -318,14 +325,19 @@ export default function InventoryClient({ initialData }: { initialData: Inventor
         setIsIssueOpen(true)
     }
 
+    const showYarnView = activeView === 'yarn'
+    const showBeamView = activeView === 'beams'
+
     return (
         <div className="space-y-6">
             <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div className="space-y-2">
-                    <p className="text-sm font-medium text-slate-500">Module 2</p>
-                    <h1 className="text-3xl font-semibold text-slate-900">Yarn + Beam Inventory</h1>
+                    <p className="text-sm font-medium text-slate-500">{showBeamView ? t('inventory.section.beamEyebrow') : t('inventory.section.yarnEyebrow')}</p>
+                    <h2 className="text-2xl font-semibold text-slate-900">{showBeamView ? t('inventory.section.beamTitle') : t('inventory.section.yarnTitle')}</h2>
                     <p className="max-w-3xl text-sm text-slate-600">
-                        See where yarn money is sitting, issue warp to beams quickly, and compare estimated yarn against what actually went out.
+                        {showBeamView
+                            ? t('inventory.section.beamBody')
+                            : t('inventory.section.yarnBody')}
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -333,57 +345,81 @@ export default function InventoryClient({ initialData }: { initialData: Inventor
                         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         Refresh
                     </Button>
-                    <Button variant="outline" onClick={() => setIsLotOpen(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add yarn lot
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsBeamOpen(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        New beam card
-                    </Button>
-                    <Button onClick={() => setIsIssueOpen(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Issue yarn to beam
-                    </Button>
+                    {showYarnView ? (
+                        <Button variant="outline" onClick={() => setIsLotOpen(true)}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add yarn lot
+                        </Button>
+                    ) : null}
+                    {showBeamView ? (
+                        <>
+                            <Button variant="outline" onClick={() => setIsBeamOpen(true)}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                New beam card
+                            </Button>
+                            <Button onClick={() => setIsIssueOpen(true)}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Issue yarn to beam
+                            </Button>
+                        </>
+                    ) : null}
                 </div>
             </section>
 
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <StatBlock
-                    label="Available yarn"
-                    value={formatKg(initialData.summary.total_available_kg)}
-                    hint={`${initialData.summary.total_available_cones.toLocaleString('en-IN')} cones on hand`}
-                    icon={Package}
-                />
-                <StatBlock
-                    label="Working capital"
-                    value={formatInr(initialData.summary.total_lot_value)}
-                    hint="Total purchase value across yarn lots"
-                    icon={CircleDollarSign}
-                />
-                <StatBlock
-                    label="Open beam cards"
-                    value={initialData.summary.open_beams.toString()}
-                    hint="Warp usage can be issued straight onto these beams"
-                    icon={Factory}
-                />
-                <StatBlock
-                    label="Orders with variance"
-                    value={initialData.summary.active_variance_orders.toString()}
-                    hint="Active orders carrying estimator-linked yarn targets"
-                    icon={TrendingUp}
-                />
+            <section className={cn('grid gap-4', showYarnView ? 'md:grid-cols-2 xl:grid-cols-4' : 'md:grid-cols-2 xl:grid-cols-3')}>
+                {showYarnView ? (
+                    <>
+                        <StatBlock
+                            label="Available yarn"
+                            value={formatKg(initialData.summary.total_available_kg)}
+                            hint={`${initialData.summary.total_available_cones.toLocaleString('en-IN')} cones on hand`}
+                            icon={Package}
+                        />
+                        <StatBlock
+                            label="Working capital"
+                            value={formatInr(initialData.summary.total_lot_value)}
+                            hint="Total purchase value across yarn lots"
+                            icon={CircleDollarSign}
+                        />
+                        <StatBlock
+                            label="Open beam cards"
+                            value={initialData.summary.open_beams.toString()}
+                            hint="Beam cards already created from active orders"
+                            icon={Factory}
+                        />
+                        <StatBlock
+                            label="Orders with variance"
+                            value={initialData.summary.active_variance_orders.toString()}
+                            hint="Active orders carrying estimator-linked yarn targets"
+                            icon={TrendingUp}
+                        />
+                    </>
+                ) : (
+                    <>
+                        <StatBlock
+                            label="Open beam cards"
+                            value={initialData.summary.open_beams.toString()}
+                            hint="Warp usage can be issued straight onto these beams"
+                            icon={Factory}
+                        />
+                        <StatBlock
+                            label={t('inventory.section.activeOrders')}
+                            value={initialData.activeOrders.length.toString()}
+                            hint={t('inventory.section.activeOrdersHint')}
+                            icon={TrendingUp}
+                        />
+                        <StatBlock
+                            label={t('inventory.section.recentMovements')}
+                            value={initialData.recentMovements.length.toString()}
+                            hint={t('inventory.section.recentMovementsHint')}
+                            icon={Package}
+                        />
+                    </>
+                )}
             </section>
 
-            <Tabs defaultValue="lots" className="gap-4">
-                <TabsList className="w-full justify-start">
-                    <TabsTrigger value="lots">Yarn Lots</TabsTrigger>
-                    <TabsTrigger value="beams">Beam Cards</TabsTrigger>
-                    <TabsTrigger value="variance">Variance</TabsTrigger>
-                    <TabsTrigger value="activity">Movements</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="lots">
+            {showYarnView ? (
+                <>
                     <div className="rounded-lg border bg-white">
                         <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
                             <div>
@@ -442,9 +478,118 @@ export default function InventoryClient({ initialData }: { initialData: Inventor
                             </TableBody>
                         </Table>
                     </div>
-                </TabsContent>
+                    <div className="rounded-lg border bg-white">
+                        <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
+                            <div>
+                                <h2 className="text-base font-semibold text-slate-900">Estimator vs issue variance</h2>
+                                <p className="text-sm text-slate-500">Required kg comes from the estimator snapshot taken when the quote became an order.</p>
+                            </div>
+                        </div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Order</TableHead>
+                                    <TableHead>Required</TableHead>
+                                    <TableHead>Issued</TableHead>
+                                    <TableHead>Leftover</TableHead>
+                                    <TableHead>Net consumed</TableHead>
+                                    <TableHead>Variance</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {initialData.orderVariance.map((row) => (
+                                    <TableRow key={row.id}>
+                                        <TableCell className="whitespace-normal">
+                                            <div className="space-y-1">
+                                                <p className="font-medium text-slate-900">{row.party_name}</p>
+                                                <p className="text-sm text-slate-500">{row.quality_label}</p>
+                                                {row.estimated_beams ? (
+                                                    <p className="text-xs text-slate-400">{row.estimated_beams} suggested beams</p>
+                                                ) : null}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-sm text-slate-600">
+                                            <p>Warp {formatKg(row.warp_required_kg)}</p>
+                                            <p>Weft {formatKg(row.weft_required_kg)}</p>
+                                            <p className="font-medium text-slate-900">Total {formatKg(row.total_required_kg)}</p>
+                                        </TableCell>
+                                        <TableCell className="text-sm text-slate-600">
+                                            <p>Warp {formatKg(row.warp_issued_kg)}</p>
+                                            <p>Weft {formatKg(row.weft_issued_kg)}</p>
+                                            <p className="font-medium text-slate-900">Total {formatKg(row.total_issued_kg)}</p>
+                                        </TableCell>
+                                        <TableCell className="text-sm text-slate-600">{formatKg(row.leftover_kg)}</TableCell>
+                                        <TableCell className="text-sm font-medium text-slate-900">{formatKg(row.net_consumed_kg)}</TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline" className={cn('font-medium', varianceTone(row.variance_kg))}>
+                                                {row.variance_kg > 0 ? '+' : ''}
+                                                {row.variance_kg.toFixed(2)} kg
+                                            </Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                                {initialData.orderVariance.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="py-10 text-center text-sm text-slate-500">
+                                            Estimator-linked variance will appear here as soon as an estimate is converted into an order.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : null}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <div className="rounded-lg border bg-white">
+                        <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
+                            <div>
+                                <h2 className="text-base font-semibold text-slate-900">Recent yarn movements</h2>
+                                <p className="text-sm text-slate-500">Purchase history is created from yarn lots. Floor movements stay lot-level for MVP.</p>
+                            </div>
+                        </div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Type</TableHead>
+                                    <TableHead>Lot</TableHead>
+                                    <TableHead>Beam / order</TableHead>
+                                    <TableHead>Qty</TableHead>
+                                    <TableHead>Notes</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {initialData.recentMovements.map((movement) => (
+                                    <TableRow key={movement.id}>
+                                        <TableCell>{format(new Date(movement.movement_date), 'dd MMM yyyy')}</TableCell>
+                                        <TableCell className="capitalize text-sm text-slate-600">
+                                            {movement.movement_type.replaceAll('_', ' ')}
+                                            {movement.adjustment_mode ? ` (${movement.adjustment_mode})` : ''}
+                                        </TableCell>
+                                        <TableCell className="whitespace-normal text-sm text-slate-600">{movement.lot_label}</TableCell>
+                                        <TableCell className="whitespace-normal text-sm text-slate-600">
+                                            <p>{movement.beam_no || 'No beam'}</p>
+                                            <p>{movement.order_label || 'No order'}</p>
+                                        </TableCell>
+                                        <TableCell className="text-sm text-slate-600">
+                                            <p>{formatKg(movement.quantity_kg)}</p>
+                                            <p>{movement.cones.toLocaleString('en-IN')} cones</p>
+                                        </TableCell>
+                                        <TableCell className="whitespace-normal text-sm text-slate-500">{movement.notes || '—'}</TableCell>
+                                    </TableRow>
+                                ))}
+                                {initialData.recentMovements.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={6} className="py-10 text-center text-sm text-slate-500">
+                                            No yarn movements yet.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : null}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </>
+            ) : null}
 
-                <TabsContent value="beams">
+            {showBeamView ? (
                     <div className="rounded-lg border bg-white">
                         <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
                             <div>
@@ -512,122 +657,7 @@ export default function InventoryClient({ initialData }: { initialData: Inventor
                             </TableBody>
                         </Table>
                     </div>
-                </TabsContent>
-
-                <TabsContent value="variance">
-                    <div className="rounded-lg border bg-white">
-                        <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
-                            <div>
-                                <h2 className="text-base font-semibold text-slate-900">Estimator vs issue variance</h2>
-                                <p className="text-sm text-slate-500">Required kg comes from the estimator snapshot taken when the quote became an order.</p>
-                            </div>
-                        </div>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Order</TableHead>
-                                    <TableHead>Required</TableHead>
-                                    <TableHead>Issued</TableHead>
-                                    <TableHead>Leftover</TableHead>
-                                    <TableHead>Net consumed</TableHead>
-                                    <TableHead>Variance</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {initialData.orderVariance.map((row) => (
-                                    <TableRow key={row.id}>
-                                        <TableCell className="whitespace-normal">
-                                            <div className="space-y-1">
-                                                <p className="font-medium text-slate-900">{row.party_name}</p>
-                                                <p className="text-sm text-slate-500">{row.quality_label}</p>
-                                                {row.estimated_beams ? (
-                                                    <p className="text-xs text-slate-400">{row.estimated_beams} suggested beams</p>
-                                                ) : null}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-sm text-slate-600">
-                                            <p>Warp {formatKg(row.warp_required_kg)}</p>
-                                            <p>Weft {formatKg(row.weft_required_kg)}</p>
-                                            <p className="font-medium text-slate-900">Total {formatKg(row.total_required_kg)}</p>
-                                        </TableCell>
-                                        <TableCell className="text-sm text-slate-600">
-                                            <p>Warp {formatKg(row.warp_issued_kg)}</p>
-                                            <p>Weft {formatKg(row.weft_issued_kg)}</p>
-                                            <p className="font-medium text-slate-900">Total {formatKg(row.total_issued_kg)}</p>
-                                        </TableCell>
-                                        <TableCell className="text-sm text-slate-600">{formatKg(row.leftover_kg)}</TableCell>
-                                        <TableCell className="text-sm font-medium text-slate-900">{formatKg(row.net_consumed_kg)}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className={cn('font-medium', varianceTone(row.variance_kg))}>
-                                                {row.variance_kg > 0 ? '+' : ''}
-                                                {row.variance_kg.toFixed(2)} kg
-                                            </Badge>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {initialData.orderVariance.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="py-10 text-center text-sm text-slate-500">
-                                            Estimator-linked variance will appear here as soon as an estimate is converted into an order.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : null}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="activity">
-                    <div className="rounded-lg border bg-white">
-                        <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
-                            <div>
-                                <h2 className="text-base font-semibold text-slate-900">Recent yarn movements</h2>
-                                <p className="text-sm text-slate-500">Purchase history is created from yarn lots. Floor movements stay lot-level for MVP.</p>
-                            </div>
-                        </div>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Lot</TableHead>
-                                    <TableHead>Beam / order</TableHead>
-                                    <TableHead>Qty</TableHead>
-                                    <TableHead>Notes</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {initialData.recentMovements.map((movement) => (
-                                    <TableRow key={movement.id}>
-                                        <TableCell>{format(new Date(movement.movement_date), 'dd MMM yyyy')}</TableCell>
-                                        <TableCell className="capitalize text-sm text-slate-600">
-                                            {movement.movement_type.replaceAll('_', ' ')}
-                                            {movement.adjustment_mode ? ` (${movement.adjustment_mode})` : ''}
-                                        </TableCell>
-                                        <TableCell className="whitespace-normal text-sm text-slate-600">{movement.lot_label}</TableCell>
-                                        <TableCell className="whitespace-normal text-sm text-slate-600">
-                                            <p>{movement.beam_no || 'No beam'}</p>
-                                            <p>{movement.order_label || 'No order'}</p>
-                                        </TableCell>
-                                        <TableCell className="text-sm text-slate-600">
-                                            <p>{formatKg(movement.quantity_kg)}</p>
-                                            <p>{movement.cones.toLocaleString('en-IN')} cones</p>
-                                        </TableCell>
-                                        <TableCell className="whitespace-normal text-sm text-slate-500">{movement.notes || '—'}</TableCell>
-                                    </TableRow>
-                                ))}
-                                {initialData.recentMovements.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="py-10 text-center text-sm text-slate-500">
-                                            No yarn movements yet.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : null}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </TabsContent>
-            </Tabs>
+                ) : null}
 
             <Dialog open={isLotOpen} onOpenChange={setIsLotOpen}>
                 <DialogContent className="sm:max-w-2xl">
