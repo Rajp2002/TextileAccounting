@@ -713,3 +713,299 @@ export async function updateQuoteStatus(id: string, status: 'draft' | 'sent' | '
     revalidatePath('/owner/quotes')
     return { success: true, data }
 }
+
+// ─── Market Run — Create ──────────────────────────────────────────────────────
+
+/**
+ * Creates a Market Run from estimator output.
+ * Steps:
+ *   1. Save the estimator snapshot as an estimator_quote (market mode)
+ *   2. Create the market_runs record with cost anchor
+ *   3. Link quote → market_run bidirectionally
+ *   4. Create a backing production order (party_name = fabric_label, market_run_id set)
+ *   5. Returns { marketRunId } for redirect
+ */
+export async function createMarketRunFromEstimator(params: {
+    fabricLabel:             string
+    qualityLabel:            string
+    warpInstruction?:        string
+    weftInstruction?:        string
+    targetMeters:            number
+    estimate:                EstimateState
+    totalProductionCostPerM: number
+    workerRatePerM:          number
+    notes?:                  string
+    deadline:                string
+}) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const targetMeters = Number(params.targetMeters)
+    if (!Number.isFinite(targetMeters) || targetMeters <= 0) {
+        return { error: 'Target meters must be greater than 0.' }
+    }
+    if (!params.fabricLabel.trim()) {
+        return { error: 'Fabric label is required.' }
+    }
+
+    const { estimate } = params
+
+    // 1. Save estimator snapshot as a quote (party_name = fabric label for display)
+    const { data: savedQuote, error: quoteError } = await supabase
+        .from('estimator_quotes')
+        .insert({
+            org_id:               profile.org_id,
+            party_name:           params.fabricLabel.trim(),   // fabric label used as party placeholder
+            quality_label:        params.qualityLabel.trim(),
+            warp_instruction:     params.warpInstruction?.trim(),
+            weft_instruction:     params.weftInstruction?.trim(),
+            warp_rows:            estimate.warpRows,
+            weft_rows:            estimate.weftRows,
+            per_pick_cost_paise:  estimate.perPickCostPaisa,
+            tape_length_m:        estimate.tapeLengthM,
+            warp_crimp_pct:       estimate.warpCrimpPct ?? 0,
+            warping_rate_per_kg:  estimate.warpingRatePerKg,
+            sizing_rate_per_kg:   estimate.sizingRatePerKg,
+            winding_rate_per_kg:  estimate.windingRatePerKg,
+            processing_rate_per_m: estimate.processingRatePerM,
+            finishing_rate_per_m: estimate.finishingRatePerM,
+            overhead_items:       estimate.overheadItems,
+            monthly_output_m:     estimate.monthlyOutputM,
+            overhead_override_per_m: estimate.overheadOverridePerM ?? null,
+            overhead_pct:         estimate.overheadPct,
+            commission_pct:       estimate.commissionPct,
+            transport_per_m:      estimate.transportPerM,
+            order_quantity_m:     targetMeters,
+            profit_margin_pct:    estimate.profitPct,
+            enabled_sections:     estimate.enabledSections,
+            loom_type:            estimate.loomType ?? null,
+            estimator_rpm:        estimate.loomRpm ?? null,
+            estimator_power_kw:   estimate.loomPowerKw ?? null,
+            hours_per_shift:      estimate.hoursPerShift,
+            sizing_mode:          estimate.sizingMode,
+            landed_cost_per_meter:    params.totalProductionCostPerM,
+            quote_price_per_meter:    params.totalProductionCostPerM,  // cost price = quote price for market runs
+            intended_margin_percent:  estimate.profitPct,
+            meters:                   targetMeters,
+            status:                   'accepted',       // auto-accept — no party negotiation needed
+            worker_rate_per_m:        params.workerRatePerM,
+            ppi:     estimate.weftRows[0]?.picks ?? 68,
+            yarn_denier: estimate.warpRows[0]?.calcDenier ?? 75,
+            yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
+        })
+        .select('id')
+        .single()
+
+    if (quoteError || !savedQuote) return { error: quoteError?.message ?? 'Failed to save estimator snapshot.' }
+
+    // 2. Create market_runs record
+    const { data: marketRun, error: runError } = await supabase
+        .from('market_runs')
+        .insert({
+            org_id:           profile.org_id,
+            fabric_label:     params.fabricLabel.trim(),
+            quality_label:    params.qualityLabel.trim() || null,
+            warp_instruction: params.warpInstruction?.trim() || null,
+            weft_instruction: params.weftInstruction?.trim() || null,
+            target_meters:    targetMeters,
+            cost_per_meter:   params.totalProductionCostPerM,
+            worker_rate_per_m: params.workerRatePerM,
+            quote_id:         savedQuote.id,
+            status:           'production',
+            notes:            params.notes?.trim() || null,
+        })
+        .select('id')
+        .single()
+
+    if (runError || !marketRun) {
+        // Cleanup orphaned quote
+        await supabase.from('estimator_quotes').delete().eq('id', savedQuote.id).eq('org_id', profile.org_id)
+        return { error: runError?.message ?? 'Failed to create market run.' }
+    }
+
+    // 3. Backlink quote → market_run
+    await supabase
+        .from('estimator_quotes')
+        .update({ market_run_id: marketRun.id })
+        .eq('id', savedQuote.id)
+        .eq('org_id', profile.org_id)
+
+    // 4. Create backing production order (no party_id — market run orders have no external party)
+    const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+            org_id:              profile.org_id,
+            party_name:          params.fabricLabel.trim(),     // fabric label as display name
+            quality_label:       params.qualityLabel.trim() || null,
+            warp_instruction:    params.warpInstruction?.trim() ?? '',
+            weft_instruction:    params.weftInstruction?.trim() ?? '',
+            total_target_meters: targetMeters,
+            start_date:          new Date().toISOString().split('T')[0],
+            deadline:            params.deadline,
+            status:              'active',
+            worker_rate_per_m:   params.workerRatePerM,
+            notes:               params.notes?.trim() ?? '',
+            tracking_token:      generateTrackingToken(),
+            market_run_id:       marketRun.id,
+        })
+        .select('id')
+        .single()
+
+    if (orderError || !order) {
+        // Cleanup
+        await supabase.from('market_runs').delete().eq('id', marketRun.id).eq('org_id', profile.org_id)
+        await supabase.from('estimator_quotes').delete().eq('id', savedQuote.id).eq('org_id', profile.org_id)
+        return { error: orderError?.message ?? 'Failed to create production order.' }
+    }
+
+    // 5. Compute and store yarn requirements (same as quote-to-order flow)
+    const estimateForOrder = {
+        ...estimate,
+        orderQuantityM: targetMeters,
+    }
+    const { calcFullTotals: calc } = await import('@/lib/estimator')
+    const totals = calc(estimateForOrder)
+    const warpRequiredKg = (totals.totalWarpKgPer100m / 100) * targetMeters
+    const weftRequiredKg = ((totals.totalAllYarnKgPer100m - totals.totalWarpKgPer100m) / 100) * targetMeters
+    const totalRequiredKg = warpRequiredKg + weftRequiredKg
+    const estimatedBeams = totals.estimatedBeamCapacityM > 0
+        ? Math.max(1, Math.ceil(targetMeters / totals.estimatedBeamCapacityM))
+        : null
+
+    await supabase
+        .from('order_yarn_requirements')
+        .upsert({
+            org_id: profile.org_id,
+            order_id: order.id,
+            quote_id: savedQuote.id,
+            warp_required_kg: Number(warpRequiredKg.toFixed(3)),
+            weft_required_kg: Number(weftRequiredKg.toFixed(3)),
+            total_required_kg: Number(totalRequiredKg.toFixed(3)),
+            estimated_beams: estimatedBeams,
+            requirement_snapshot: {
+                order_quantity_m: targetMeters,
+                estimated_beam_capacity_m: totals.estimatedBeamCapacityM,
+                warp_rows: estimate.warpRows,
+                weft_rows: estimate.weftRows,
+                warp_crimp_pct: estimate.warpCrimpPct ?? 0,
+                yarn_shortage_pct: estimate.yarnShortagePct ?? 0,
+            },
+        }, { onConflict: 'order_id' })
+
+    revalidatePath('/owner/market-runs')
+    revalidatePath('/owner/orders')
+    revalidatePath('/owner/analytics')
+    return { success: true, marketRunId: marketRun.id }
+}
+
+// ─── Market Run — Read ────────────────────────────────────────────────────────
+
+export async function getMarketRuns() {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('market_run_summary')
+        .select('*')
+        .eq('org_id', profile.org_id)
+        .order('created_at', { ascending: false })
+
+    if (error) return { error: error.message }
+    return { data: data ?? [] }
+}
+
+export async function getMarketRunDetail(marketRunId: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data: run, error } = await supabase
+        .from('market_run_summary')
+        .select('*')
+        .eq('market_run_id', marketRunId)
+        .eq('org_id', profile.org_id)
+        .single()
+
+    if (error || !run) return { error: error?.message ?? 'Market run not found.' }
+
+    // Fetch sales with party name
+    const { data: sales, error: salesError } = await supabase
+        .from('market_run_sales')
+        .select(`
+            *,
+            parties ( id, name, phone )
+        `)
+        .eq('market_run_id', marketRunId)
+        .eq('org_id', profile.org_id)
+        .order('sale_date', { ascending: false })
+
+    if (salesError) return { error: salesError.message }
+
+    return { data: { run, sales: sales ?? [] } }
+}
+
+// ─── Market Run — Record a Sale ───────────────────────────────────────────────
+
+export async function createMarketRunSaleAction(params: {
+    marketRunId:   string
+    partyId:       string
+    metersSold:    number
+    pricePerMeter: number
+    saleDate:      string
+    invoiceNumber: string
+    dueDays?:      number     // days from sale date → due date
+    notes?:        string
+}) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const metersSold = Number(params.metersSold)
+    const price = Number(params.pricePerMeter)
+
+    if (!Number.isFinite(metersSold) || metersSold <= 0) return { error: 'Meters sold must be greater than 0.' }
+    if (!Number.isFinite(price) || price < 0) return { error: 'Price per meter must be 0 or greater.' }
+    if (!params.invoiceNumber.trim()) return { error: 'Invoice number is required.' }
+
+    const saleDate = params.saleDate || new Date().toISOString().split('T')[0]
+    const dueDays  = params.dueDays ?? 30
+    const dueDate  = new Date(new Date(saleDate).getTime() + dueDays * 86400000).toISOString().split('T')[0]
+
+    const { data, error } = await supabase.rpc('create_market_run_sale', {
+        p_market_run_id:   params.marketRunId,
+        p_party_id:        params.partyId,
+        p_meters_sold:     metersSold,
+        p_price_per_meter: price,
+        p_sale_date:       saleDate,
+        p_notes:           params.notes?.trim() ?? null,
+        p_invoice_number:  params.invoiceNumber.trim(),
+        p_due_date:        dueDate,
+    })
+
+    if (error) return { error: error.message }
+
+    revalidatePath(`/owner/market-runs/${params.marketRunId}`)
+    revalidatePath('/owner/market-runs')
+    revalidatePath('/owner/ledger')
+    return { success: true, result: data?.[0] ?? null }
+}
+
+// ─── Market Run — Update Status ───────────────────────────────────────────────
+
+export async function updateMarketRunStatus(
+    marketRunId: string,
+    status: 'production' | 'in_godown' | 'partially_sold' | 'sold_out' | 'closed'
+) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { error } = await supabase
+        .from('market_runs')
+        .update({ status })
+        .eq('id', marketRunId)
+        .eq('org_id', profile.org_id)
+
+    if (error) return { error: error.message }
+
+    revalidatePath(`/owner/market-runs/${marketRunId}`)
+    revalidatePath('/owner/market-runs')
+    return { success: true }
+}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useReducer, useEffect, useMemo, useCallback, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { nanoid } from 'nanoid'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -70,6 +71,7 @@ import {
     getLastQuoteForParty,
     getMonthlyOutputSuggestion,
     upsertFactoryCostProfile,
+    createMarketRunFromEstimator,
 } from './actions'
 import {
     DropdownMenu,
@@ -494,6 +496,10 @@ export default function EstimatorClient({
     initialWorkers?: { id: number; name: string; role: string; monthly_salary: number }[]
 }) {
     const { t } = useTranslation()
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    
+    const [mode, setMode] = useState<'quote' | 'market'>(searchParams.get('mode') === 'market' ? 'market' : 'quote')
 
     // Build the initial state synchronously from server-provided data (no loading flash)
     const initialState = useMemo(() => {
@@ -873,28 +879,55 @@ export default function EstimatorClient({
     }
 
     const handleSaveQuote = async () => {
-        if (!partyName.trim())    return toast.error(t('estimator.toast.party_required'))
+        if (!partyName.trim()) {
+            return toast.error(mode === 'market' ? 'Fabric Label is required' : t('estimator.toast.party_required'))
+        }
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         if (!state.orderQuantityM || state.orderQuantityM <= 0) {
-            return toast.error('Set a quote quantity before saving the quote')
+            return toast.error('Set a quantity before saving')
         }
 
         setSavingQuote(true)
-        const res = await saveEstimatorQuoteV3({
-            partyName:               partyName.trim(),
-            qualityLabel:            qualityLabel.trim(),
-            warpInstruction:         warpInstruction.trim() || undefined,
-            weftInstruction:         weftInstruction.trim() || undefined,
-            estimate:                state,
-            quotePricePerM:          totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM,
-            totalProductionCostPerM: totals.totalProductionCostPerM,
-            status:                  'draft',
-        })
-        setSavingQuote(false)
-        if (res.success) {
-            toast.success(t('estimator.toast.converted_success'))
+        
+        if (mode === 'market') {
+            const workerRatePerM = state.weftRows.reduce((sum, r) => sum + (r.picks ?? 0), 0) * (state.perPickCostPaisa ?? 0)
+            const res = await createMarketRunFromEstimator({
+                fabricLabel:             partyName.trim(),
+                qualityLabel:            qualityLabel.trim(),
+                warpInstruction:         warpInstruction.trim() || undefined,
+                weftInstruction:         weftInstruction.trim() || undefined,
+                targetMeters:            state.orderQuantityM,
+                estimate:                state,
+                totalProductionCostPerM: totals.totalProductionCostPerM,
+                workerRatePerM:          workerRatePerM,
+                notes:                   '',
+                deadline:                new Date(new Date().getTime() + 30 * 86400000).toISOString().split('T')[0] // 30 days default
+            })
+            setSavingQuote(false)
+            if (res.error) {
+                toast.error(res.error)
+            } else {
+                toast.success('Market Run created successfully')
+                router.push(`/owner/market-runs/${res.marketRunId}`)
+            }
         } else {
-            toast.error(res.error ?? 'Failed to save quote')
+            const res = await saveEstimatorQuoteV3({
+                partyName:               partyName.trim(),
+                qualityLabel:            qualityLabel.trim(),
+                warpInstruction:         warpInstruction.trim() || undefined,
+                weftInstruction:         weftInstruction.trim() || undefined,
+                estimate:                state,
+                quotePricePerM:          totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM,
+                totalProductionCostPerM: totals.totalProductionCostPerM,
+                status:                  'draft',
+            })
+            setSavingQuote(false)
+            if (res.success) {
+                toast.success(t('estimator.toast.converted_success'))
+                router.push('/owner/quotes')
+            } else {
+                toast.error(res.error ?? 'Failed to save quote')
+            }
         }
     }
 
@@ -1029,15 +1062,40 @@ export default function EstimatorClient({
                         )}
 
                         {/* Actions */}
-                        <div className="flex gap-2 ml-auto shrink-0 self-center w-full sm:w-auto mt-1 sm:mt-0 pt-2 sm:pt-0 border-t border-slate-100 sm:border-0 order-last sm:order-none justify-end">
+                        <div className="flex flex-col sm:flex-row gap-2 ml-auto shrink-0 self-center w-full sm:w-auto mt-1 sm:mt-0 pt-2 sm:pt-0 border-t border-slate-100 sm:border-0 order-last sm:order-none justify-end">
+                            
+                            {/* Mode Toggle */}
+                            <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                                <button
+                                    onClick={() => setMode('quote')}
+                                    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+                                        mode === 'quote' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                                >
+                                    Party Quote
+                                </button>
+                                <button
+                                    onClick={() => setMode('market')}
+                                    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
+                                        mode === 'market' ? 'bg-brand-accent text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                                >
+                                    Market Run
+                                </button>
+                            </div>
+
                             <Button
                                 size="sm"
-                                className="flex-1 sm:flex-none h-9 px-3 sm:px-4 bg-brand-accent hover:bg-brand-accent/90 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-brand-accent/15"
+                                className={`flex-1 sm:flex-none h-9 px-3 sm:px-4 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg ${
+                                    mode === 'market' 
+                                        ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                                        : 'bg-brand-accent hover:bg-brand-accent/90 shadow-brand-accent/15'
+                                }`}
                                 onClick={handleSaveQuote}
                                 disabled={savingQuote}
                             >
-                                {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
-                                <span className="truncate">{t('estimator.hud.order_btn')}</span>
+                                {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : (mode === 'market' ? <Gauge className="h-3.5 w-3.5 shrink-0" /> : <Save className="h-3.5 w-3.5 shrink-0" />)}
+                                <span className="truncate">{mode === 'market' ? 'Start Market Run' : t('estimator.hud.order_btn')}</span>
                             </Button>
 
                             {appliedTemplate ? (
@@ -1242,11 +1300,13 @@ export default function EstimatorClient({
                     <CardContent className="p-5 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.party')}</Label>
+                                <Label className="text-[10px] uppercase font-bold text-slate-500">
+                                    {mode === 'market' ? 'Fabric Label' : t('estimator.order_basics.party')}
+                                </Label>
                                 <Input
                                     value={partyName}
                                     onChange={e => setPartyName(e.target.value)}
-                                    placeholder="Sundaram Textiles"
+                                    placeholder={mode === 'market' ? 'e.g. Canvas Shine 100D' : 'Sundaram Textiles'}
                                     className="font-bold border-slate-200 h-11"
                                 />
                                 {partyHint && (

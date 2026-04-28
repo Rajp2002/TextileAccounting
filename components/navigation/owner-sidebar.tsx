@@ -22,6 +22,7 @@ import {
     BookOpen,
     Layers,
     ShieldAlert,
+    Store,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -39,6 +40,7 @@ const primaryNavItems = [
 ]
 
 const secondaryNavItems = [
+    { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs" },
     { name: "Stock", href: "/owner/stock", icon: ShieldAlert, translationKey: "stock" },
     { name: "Workers", href: "/owner/fixed-workers", icon: Users, translationKey: "workers" },
     { name: "Dispatches", href: "/owner/dispatches", icon: Truck, translationKey: "dispatches" },
