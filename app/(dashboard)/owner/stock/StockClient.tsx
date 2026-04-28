@@ -47,6 +47,9 @@ import {
 import { requestAccessCodeAsOwner } from '../orders/actions'
 import { cn } from '@/lib/utils'
 
+type InspectionStatus = FabricPackageRow['inspection_status']
+type PackageType = FabricPackageRow['package_type']
+
 const stateOrder = ['all', 'ready', 'reserved', 'uninspected', 'dispatched', 'claimed', 'returned'] as const
 
 function stateBadge(state: FabricPackageRow['stock_state']) {
@@ -198,7 +201,18 @@ function NewPackageDialog({
     onSaved: () => void
 }) {
     const [pending, startTransition] = useTransition()
-    const [form, setForm] = useState({
+    const [form, setForm] = useState<{
+        order_id: string
+        package_no: string
+        package_type: PackageType
+        units_count: string
+        metres: string
+        grade: string
+        inspection_status: InspectionStatus
+        location: string
+        inspection_notes: string
+        inspection_photo_url: string
+    }>({
         order_id: orders[0]?.id ?? '',
         package_no: '',
         package_type: 'bulk',
@@ -276,7 +290,7 @@ function NewPackageDialog({
                     </div>
                     <div className="space-y-1.5">
                         <Label>Type</Label>
-                        <Select value={form.package_type} onValueChange={(value) => setForm((prev) => ({ ...prev, package_type: value }))}>
+                        <Select value={form.package_type} onValueChange={(value) => setForm((prev) => ({ ...prev, package_type: value as PackageType }))}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="roll">Roll</SelectItem>
@@ -314,7 +328,7 @@ function NewPackageDialog({
                     </div>
                     <div className="space-y-1.5">
                         <Label>Inspection</Label>
-                        <Select value={form.inspection_status} onValueChange={(value) => setForm((prev) => ({ ...prev, inspection_status: value }))}>
+                        <Select value={form.inspection_status} onValueChange={(value) => setForm((prev) => ({ ...prev, inspection_status: value as InspectionStatus }))}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="pending">Uninspected</SelectItem>
@@ -365,7 +379,13 @@ function InspectDialog({
     onSaved: () => void
 }) {
     const [pending, startTransition] = useTransition()
-    const [form, setForm] = useState(() => ({
+    const [form, setForm] = useState<{
+        inspection_status: InspectionStatus
+        grade: string
+        location: string
+        inspection_notes: string
+        inspection_photo_url: string
+    }>(() => ({
         inspection_status: pkg?.inspection_status || 'pending',
         grade: pkg?.grade || 'A',
         location: pkg?.location || 'Grey Floor',
@@ -387,7 +407,7 @@ function InspectDialog({
                 <div className="grid gap-4 py-2 sm:grid-cols-2">
                     <div className="space-y-1.5">
                         <Label>Inspection</Label>
-                        <Select value={form.inspection_status} onValueChange={(value) => setForm((prev) => ({ ...prev, inspection_status: value }))}>
+                        <Select value={form.inspection_status} onValueChange={(value) => setForm((prev) => ({ ...prev, inspection_status: value as InspectionStatus }))}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="pending">Uninspected</SelectItem>
@@ -590,7 +610,10 @@ export default function StockClient({ initialData }: { initialData: FabricStockB
                                             onClick={() => {
                                                 startStateTransition(async () => {
                                                     const res = await updateFabricPackageState({ package_id: pkg.id, stock_state: 'reserved' })
-                                                    if ('error' in res) return toast.error(res.error)
+                                                    if ('error' in res) {
+                                                        toast.error(res.error)
+                                                        return
+                                                    }
                                                     toast.success('Package reserved')
                                                     refresh()
                                                 })
@@ -608,7 +631,10 @@ export default function StockClient({ initialData }: { initialData: FabricStockB
                                             onClick={() => {
                                                 startStateTransition(async () => {
                                                     const res = await updateFabricPackageState({ package_id: pkg.id, stock_state: 'ready' })
-                                                    if ('error' in res) return toast.error(res.error)
+                                                    if ('error' in res) {
+                                                        toast.error(res.error)
+                                                        return
+                                                    }
                                                     toast.success('Package moved back to ready')
                                                     refresh()
                                                 })
@@ -626,7 +652,10 @@ export default function StockClient({ initialData }: { initialData: FabricStockB
                                             onClick={() => {
                                                 startStateTransition(async () => {
                                                     const res = await updateFabricPackageState({ package_id: pkg.id, stock_state: 'returned' })
-                                                    if ('error' in res) return toast.error(res.error)
+                                                    if ('error' in res) {
+                                                        toast.error(res.error)
+                                                        return
+                                                    }
                                                     toast.success('Package marked returned')
                                                     refresh()
                                                 })
