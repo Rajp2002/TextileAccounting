@@ -20,6 +20,7 @@ export const hi = {
     "quotes": "कोट्स (Quotes)",
     "billing": "बिलिंग (Billing)",
     "system health": "सिस्टम हेल्थ",
+    "market_runs": "मार्केट रन्स",
   },
   attendance: {
     title: "दैनिक उपस्थिति (Daily Attendance)",
@@ -690,7 +691,9 @@ export const hi = {
     },
     simulation: {
       title: "सिमुलेशन और मात्रा",
+      market_title: "मार्केट रन और मात्रा",
       quantity: "सिमुलेशन मात्रा",
+      market_target: "लक्ष्य उत्पादन (Target Production)",
       quantity_hint: "HUD कोट्स सक्रिय करता है",
       commission: "ब्रोकर कमीशन %",
       transport: "ट्रांसपोर्ट / मी"
@@ -747,6 +750,7 @@ export const hi = {
       dyeing_processing: "डाइंग/प्रोसेसिंग",
       finishing_per_m: "फिनिशिंग / मी",
       simulation_qty: "सिमुलेशन मात्रा",
+      market_target: "लक्ष्य उत्पादन (Target Production)",
       broker_comm: "ब्रोकर कमीशन %",
       transport_per_m: "ट्रांसपोर्ट / मी"
     },

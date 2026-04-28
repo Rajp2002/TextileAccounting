@@ -20,6 +20,7 @@ export const gu = {
     "quotes": "કોટ્સ (Quotes)",
     "billing": "બિલિંગ (Billing)",
     "system health": "સિસ્ટમ હેલ્થ",
+    "market_runs": "માર્કેટ રન્સ",
   },
   attendance: {
     title: "દૈનિક હાજરી (Daily Attendance)",
@@ -688,7 +689,9 @@ export const gu = {
     },
     simulation: {
       title: "સિમ્યુલેશન અને જથ્થો",
+      market_title: "માર્કેટ રન અને જથ્થો",
       quantity: "સિમ્યુલેશન જથ્થો",
+      market_target: "લક્ષ્ય ઉત્પાદન (Target Production)",
       quantity_hint: "HUD કોટ્સ ચાલુ કરે છે",
       commission: "બ્રોકર કમિશન %",
       transport: "ટ્રાન્સપોર્ટ / મી"
@@ -745,6 +748,7 @@ export const gu = {
       dyeing_processing: "ડાઇંગ/પ્રોસેસિંગ",
       finishing_per_m: "ફિનિશિંગ / મી",
       simulation_qty: "સિમ્યુલેશન જથ્થો",
+      market_target: "લક્ષ્ય ઉત્પાદન (Target Production)",
       broker_comm: "બ્રોકર કમિશન %",
       transport_per_m: "ટ્રાન્સપોર્ટ / મી"
     },
