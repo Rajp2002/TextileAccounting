@@ -7,6 +7,8 @@ export const hi = {
     "attendance": "अटेंडेंस (Attendance)",
     "dashboard": "डैशबोर्ड",
     "orders": "ऑर्डर",
+    "inventory": "इन्वेंटरी",
+    "stock": "स्टॉक",
     "dispatches": "डिस्पैच",
     "settings": "सेटिंग्स",
     "audit trail": "ऑडिट ट्रेल (Audit Trail)",
@@ -847,5 +849,3 @@ export const hi = {
     invalid_code: "अमान्य एक्सेस कोड",
   }
 }
-
-

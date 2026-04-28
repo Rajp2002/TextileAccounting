@@ -9,9 +9,17 @@ import { getBaseUrl } from './utils'
 export interface ChallanData {
     org_name:         string      // Factory name — from organizations table
     party_name:       string      // Trader / party name
+    quality_label?:   string | null
     dispatch_number:  number      // Batch number (1, 2, 3…)
     qty_meters_sent:  number      // Meters dispatched in this batch
     total_target_meters: number   // Total order target
+    package_lines: Array<{
+        package_no: string
+        package_type: string
+        units_count: number
+        grade: string
+        metres: number
+    }>
     notes:            string | null
     dispatched_at:    string      // ISO timestamp
     tracking_token:   string      // 12-char token for the QR URL
@@ -27,9 +35,9 @@ const APP_URL = getBaseUrl()
  * @param data - Challan data returned from the createDispatch Server Action
  */
 export async function generateChallan(data: ChallanData): Promise<void> {
-    const doc = new jsPDF({ unit: 'mm', format: 'a5' })  // A5 — standard challan size
-    const pageWidth  = doc.internal.pageSize.getWidth()   // 148mm
-    const pageHeight = doc.internal.pageSize.getHeight()  // 210mm
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+    const pageWidth  = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
     const L = 14   // left margin
     const R = 14   // right margin
     const contentWidth = pageWidth - L - R   // usable width: 120mm
@@ -45,7 +53,7 @@ export async function generateChallan(data: ChallanData): Promise<void> {
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(9)
     doc.setFont('helvetica', 'bold')
-    doc.text('DELIVERY CHALLAN', L, 7)
+    doc.text('GREY FABRIC CHALLAN', L, 7)
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(7)
     doc.text('Powered by Weavly', pageWidth - R, 7, { align: 'right' })
@@ -91,21 +99,64 @@ export async function generateChallan(data: ChallanData): Promise<void> {
 
     // Left column
     doc.text('Party Name', L, y)
-    doc.text('Target (Order)', L, y + 8)
-    doc.text('Dispatched (Batch)', L, y + 16)
+    doc.text('Quality', L, y + 8)
+    doc.text('Target (Order)', L, y + 16)
+    doc.text('Dispatch Total', L, y + 24)
 
     // Right column values
     doc.setTextColor(0)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(9)
     doc.text(data.party_name, L + 44, y)
-    doc.text(`${Number(data.total_target_meters).toLocaleString('en-IN')} m`, L + 44, y + 8)
+    doc.text(data.quality_label || 'Grey Fabric', L + 44, y + 8)
+    doc.text(`${Number(data.total_target_meters).toLocaleString('en-IN')} m`, L + 44, y + 16)
 
     // Dispatched meters — large, prominent
     doc.setFontSize(14)
     doc.setTextColor(255, 87, 34)
-    doc.text(`${Number(data.qty_meters_sent).toFixed(2)} m`, L + 44, y + 18)
-    y += 30
+    doc.text(`${Number(data.qty_meters_sent).toFixed(2)} m`, L + 44, y + 26)
+    y += 38
+
+    // ── Package table ───────────────────────────────────────────────────────────
+    doc.setDrawColor(225)
+    doc.setFillColor(248, 250, 252)
+    doc.roundedRect(L, y, contentWidth, 9, 2, 2, 'FD')
+    doc.setFontSize(8)
+    doc.setTextColor(90)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Package No', L + 3, y + 5.8)
+    doc.text('Type', L + 58, y + 5.8)
+    doc.text('Grade', L + 92, y + 5.8)
+    doc.text('Metres', pageWidth - R - 3, y + 5.8, { align: 'right' })
+    y += 11
+
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(35)
+    const packageLines = data.package_lines.length > 0
+        ? data.package_lines
+        : [{
+            package_no: `Batch ${data.dispatch_number}`,
+            package_type: 'dispatch',
+            units_count: 1,
+            grade: '-',
+            metres: data.qty_meters_sent,
+        }]
+
+    packageLines.forEach((line) => {
+        if (y > pageHeight - 78) {
+            doc.addPage()
+            y = 18
+        }
+
+        doc.setDrawColor(238)
+        doc.line(L, y + 6.5, pageWidth - R, y + 6.5)
+        doc.setFontSize(8)
+        doc.text(line.package_no, L + 3, y + 4.5)
+        doc.text(`${line.package_type}${line.units_count > 1 ? ` ×${line.units_count}` : ''}`, L + 58, y + 4.5)
+        doc.text(line.grade, L + 92, y + 4.5)
+        doc.text(`${Number(line.metres).toFixed(2)} m`, pageWidth - R - 3, y + 4.5, { align: 'right' })
+        y += 8
+    })
 
     // ── Notes (if any) ────────────────────────────────────────────────────────────
     if (data.notes) {
@@ -136,7 +187,7 @@ export async function generateChallan(data: ChallanData): Promise<void> {
         },
     })
 
-    const qrSize = 40   // 40mm × 40mm on the PDF
+    const qrSize = 42
     const qrX = pageWidth - R - qrSize   // right-aligned
     const qrY = y
 
@@ -151,9 +202,9 @@ export async function generateChallan(data: ChallanData): Promise<void> {
 
     const instructions = [
         'Scan the QR code or visit the URL below to:',
-        '  · Track production progress',
+        '  · Track order progress',
         '  · Confirm receipt of this batch',
-        '  · View dispatch history',
+        '  · View dispatched package history',
     ]
     doc.text(instructions, L, y + 11)
 
@@ -191,7 +242,7 @@ export async function generateChallan(data: ChallanData): Promise<void> {
     doc.setTextColor(150)
     doc.setFont('helvetica', 'normal')
     doc.text(
-        'Generated by Weavly · This is a computer-generated Delivery Challan.',
+        'Generated by Weavly · Computer-generated grey fabric challan.',
         pageWidth / 2,
         pageHeight - 8,
         { align: 'center' }

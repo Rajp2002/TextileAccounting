@@ -10,7 +10,6 @@ import {
   Calculator, 
   ChevronRight, 
   ChevronDown,
-  User,
   History,
   Info
 } from 'lucide-react'
@@ -44,7 +43,7 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
     const t = log.table_name
     if (['attendance', 'workers', 'fixed_workers', 'payroll_settlements', 'worker_advances', 'payroll_configs'].includes(t)) return 'hr_payroll'
     if (['production_logs', 'machines', 'machine_assignments', 'orders'].includes(t)) return 'production'
-    if (['yarn_batches', 'qualities'].includes(t)) return 'inventory'
+    if (['yarn_batches', 'yarn_lots', 'yarn_movements', 'beam_cards', 'beam_card_lots', 'order_yarn_requirements', 'qualities'].includes(t)) return 'inventory'
     if (['factory_cost_profile', 'estimator_templates', 'estimator_quotes'].includes(t)) return 'estimator'
     return 'settings_security'
   })()
@@ -55,6 +54,7 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
   const timeAgo = formatDistanceToNow(new Date(log.changed_at), { addSuffix: true })
   const actorName = log.profiles?.full_name || 'System'
   const actorInitial = actorName.charAt(0).toUpperCase()
+  const statusValue = typeof log.new_data?.status === 'string' ? log.new_data.status : null
 
   return (
     <div className="flex gap-4">
@@ -136,14 +136,14 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
                         {log.table_name.replace(/_/g, ' ')}
                      </span>
                   </div>
-                  {log.new_data?.status && (
+                  {statusValue && (
                     <div className="flex items-center gap-2 text-[11px]">
                       <span className="text-gray-400 font-medium tracking-wide uppercase">Status:</span>
                       <span className={cn(
                         "font-bold uppercase",
-                        log.new_data.status === 'paid' ? "text-emerald-600" : "text-amber-600"
+                        statusValue === 'paid' ? "text-emerald-600" : "text-amber-600"
                       )}>
-                        {log.new_data.status}
+                        {statusValue}
                       </span>
                     </div>
                   )}

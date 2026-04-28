@@ -3,7 +3,7 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import type { EstimateState, FactorySections, WarpRow, WeftRow, OverheadItem } from '@/lib/estimator'
+import { calcFullTotals, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
 import crypto from 'crypto'
 
 /**
@@ -489,9 +489,45 @@ export async function convertQuoteToOrder(data: {
             .eq('org_id', profile.org_id)
     }
 
+    // 5. Snapshot yarn requirement when the estimate becomes a live order
+    if (data.estimate && order?.id) {
+        const estimateForOrder: EstimateState = {
+            ...data.estimate,
+            orderQuantityM: data.total_target_meters,
+        }
+        const totals = calcFullTotals(estimateForOrder)
+        const warpRequiredKg = (totals.totalWarpKgPer100m / 100) * data.total_target_meters
+        const weftRequiredKg = ((totals.totalAllYarnKgPer100m - totals.totalWarpKgPer100m) / 100) * data.total_target_meters
+        const totalRequiredKg = warpRequiredKg + weftRequiredKg
+        const estimatedBeams = totals.estimatedBeamCapacityM > 0
+            ? Math.max(1, Math.ceil(data.total_target_meters / totals.estimatedBeamCapacityM))
+            : null
+
+        await supabase
+            .from('order_yarn_requirements')
+            .upsert({
+                org_id: profile.org_id,
+                order_id: order.id,
+                quote_id: quoteId ?? null,
+                warp_required_kg: Number(warpRequiredKg.toFixed(3)),
+                weft_required_kg: Number(weftRequiredKg.toFixed(3)),
+                total_required_kg: Number(totalRequiredKg.toFixed(3)),
+                estimated_beams: estimatedBeams,
+                requirement_snapshot: {
+                    order_quantity_m: data.total_target_meters,
+                    estimated_beam_capacity_m: totals.estimatedBeamCapacityM,
+                    warp_rows: data.estimate.warpRows,
+                    weft_rows: data.estimate.weftRows,
+                    warp_crimp_pct: data.estimate.warpCrimpPct ?? 0,
+                    yarn_shortage_pct: data.estimate.yarnShortagePct ?? 0,
+                },
+            }, { onConflict: 'order_id' })
+    }
+
     revalidatePath('/owner/orders')
     revalidatePath('/owner/analytics')
     revalidatePath('/owner/quotes')
+    revalidatePath('/owner/inventory')
     return { success: true, orderId: order?.id }
 }
 

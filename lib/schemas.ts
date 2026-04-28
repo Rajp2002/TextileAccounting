@@ -140,6 +140,73 @@ export const CloseBatchSchema = z.object({
         .default(0),
 })
 
+export const YarnMovementTypeSchema = z.enum([
+    'purchase',
+    'issue_to_warping',
+    'issue_to_sizing',
+    'issue_to_loom_weft',
+    'return_leftover',
+    'adjustment',
+])
+
+export const AdjustmentModeSchema = z.enum(['add', 'subtract'])
+
+export const YarnLotSchema = z.object({
+    supplier: z.string().trim().min(1, 'Supplier is required').max(120, 'Supplier name too long'),
+    bill_no: z.string().trim().min(1, 'Bill number is required').max(80, 'Bill number too long'),
+    bill_date: DateSchema,
+    yarn_type: z.string().trim().min(1, 'Yarn type is required').max(120, 'Yarn type too long'),
+    denier_count: z.string().trim().min(1, 'Denier/count is required').max(80, 'Denier/count too long'),
+    filament_material: z.string().trim().min(1, 'Filament/material is required').max(120, 'Filament/material too long'),
+    received_kg: z.number().positive('Weight must be positive').max(100_000, 'Weight exceeds maximum'),
+    received_cones: z.number().int('Cones must be a whole number').min(0, 'Cones cannot be negative').max(1_000_000, 'Cones exceeds maximum'),
+    rate_per_kg: z.number().nonnegative('Rate cannot be negative').max(100_000, 'Rate exceeds maximum'),
+    gst_percent: z.number().min(0, 'GST cannot be negative').max(100, 'GST cannot exceed 100%'),
+    total_cost: z.number().nonnegative('Total cost cannot be negative').max(1_000_000_000, 'Total cost exceeds maximum'),
+    notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+})
+
+export const BeamCardSchema = z.object({
+    beam_no: z.string().trim().min(1, 'Beam number is required').max(80, 'Beam number too long'),
+    order_id: UuidSchema,
+    quality_label: z.string().trim().min(1, 'Quality is required').max(160, 'Quality label too long'),
+    beam_ends: z.number().int('Beam ends must be a whole number').min(0, 'Beam ends cannot be negative').max(1_000_000, 'Beam ends exceeds maximum'),
+    tape_length_m: z.number().nonnegative('Tape length cannot be negative').max(1_000_000, 'Tape length exceeds maximum'),
+    expected_metres: z.number().nonnegative('Expected metres cannot be negative').max(10_000_000, 'Expected metres exceeds maximum'),
+    actual_beam_weight_kg: z.number().nonnegative('Actual beam weight cannot be negative').max(100_000, 'Beam weight exceeds maximum').nullable().optional(),
+    sizing_vendor: z.string().trim().max(120, 'Sizing vendor name too long').optional().or(z.literal('')),
+    sizing_bill_no: z.string().trim().max(80, 'Sizing bill number too long').optional().or(z.literal('')),
+    notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+})
+
+export const YarnMovementSchema = z.object({
+    yarn_lot_id: UuidSchema,
+    movement_type: YarnMovementTypeSchema,
+    movement_date: DateSchema,
+    quantity_kg: z.number().positive('Quantity must be positive').max(100_000, 'Quantity exceeds maximum'),
+    cones: z.number().int('Cones must be a whole number').min(0, 'Cones cannot be negative').max(1_000_000, 'Cones exceeds maximum').default(0),
+    order_id: UuidSchema.optional().or(z.literal('')),
+    beam_card_id: UuidSchema.optional().or(z.literal('')),
+    adjustment_mode: AdjustmentModeSchema.optional(),
+    notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+}).superRefine((data, ctx) => {
+    if (data.movement_type === 'adjustment' && !data.adjustment_mode) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Adjustment mode is required for adjustments',
+            path: ['adjustment_mode'],
+        })
+    }
+
+    if (data.movement_type !== 'adjustment' && data.adjustment_mode) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Adjustment mode can only be used with adjustments',
+            path: ['adjustment_mode'],
+        })
+    }
+})
+
 // ─── Order Schemas ────────────────────────────────────────────────────────────
 
 export const OrderSchema = z
@@ -246,6 +313,139 @@ export const FactoryCostProfileSchema = z.object({
     overhead_pct:            z.number().min(0).max(100),
     default_commission_pct:  z.number().min(0).max(100),
     default_transport_per_m: z.number().nonnegative().max(100_000),
+})
+
+// ─── Party Ledger Schemas ────────────────────────────────────────────────────
+
+export const PartyTypeSchema = z.enum(['trader', 'processor', 'broker', 'supplier', 'other'])
+
+export const OpeningBalanceTypeSchema = z.enum(['receivable', 'payable'])
+
+export const ReceiptMethodSchema = z.enum(['cash', 'upi', 'bank', 'cheque', 'other'])
+
+export const PartyAdjustmentTypeSchema = z.enum([
+    'shortage',
+    'quality_claim',
+    'rate_difference',
+    'discount',
+    'bad_debt',
+    'other',
+])
+
+export const PartyAdjustmentDirectionSchema = z.enum(['credit_to_party', 'debit_to_party'])
+
+export const CreatePartySchema = z.object({
+    name: z.string().trim().min(2, 'Party name is required').max(160, 'Party name too long'),
+    party_type: PartyTypeSchema.default('trader'),
+    phone: z.string().trim().regex(/^\d{10}$/, 'Phone must be exactly 10 digits').optional().or(z.literal('')),
+    gstin: z
+        .string()
+        .trim()
+        .toUpperCase()
+        .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, 'Invalid GSTIN')
+        .optional()
+        .or(z.literal('')),
+    address: z.string().trim().max(500, 'Address too long').optional().or(z.literal('')),
+    broker_name: z.string().trim().max(120, 'Broker name too long').optional().or(z.literal('')),
+    default_credit_days: z.number().int().min(0).max(365).default(30),
+    credit_limit: z.number().nonnegative().max(100_000_000, 'Credit limit too high').default(0),
+    opening_balance: z.number().nonnegative().max(100_000_000, 'Opening balance too high').default(0),
+    opening_balance_type: OpeningBalanceTypeSchema.default('receivable'),
+    risk_note: z.string().trim().max(500, 'Risk note too long').optional().or(z.literal('')),
+})
+
+export const UpdatePartySchema = CreatePartySchema.extend({
+    is_active: z.boolean().optional(),
+})
+
+export const CreatePartyInvoiceSchema = z
+    .object({
+        party_id: UuidSchema,
+        order_id: UuidSchema.optional().or(z.literal('')),
+        invoice_number: z.string().trim().max(40, 'Invoice number too long').optional().or(z.literal('')),
+        invoice_date: DateSchema,
+        due_date: DateSchema,
+        total_meters: z.number().nonnegative('Meters cannot be negative').max(10_000_000),
+        rate_per_m: z.number().nonnegative('Rate cannot be negative').max(100_000),
+        gst_percent: z.number().min(0).max(100).default(0),
+        notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+    })
+    .refine(d => d.invoice_date <= d.due_date, {
+        message: 'Due date must be on or after invoice date',
+        path: ['due_date'],
+    })
+
+export const CreatePartyReceiptSchema = z.object({
+    party_id: UuidSchema,
+    invoice_id: UuidSchema.optional().or(z.literal('')),
+    receipt_date: DateSchema,
+    amount: z.number().positive('Receipt amount must be positive').max(100_000_000, 'Receipt amount too high'),
+    method: ReceiptMethodSchema.default('cash'),
+    reference_no: z.string().trim().max(80, 'Reference too long').optional().or(z.literal('')),
+    notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+})
+
+export const CreatePartyAdjustmentSchema = z.object({
+    party_id: UuidSchema,
+    invoice_id: UuidSchema.optional().or(z.literal('')),
+    adjustment_date: DateSchema,
+    adjustment_type: PartyAdjustmentTypeSchema.default('other'),
+    direction: PartyAdjustmentDirectionSchema,
+    amount: z.number().positive('Adjustment amount must be positive').max(100_000_000, 'Adjustment amount too high'),
+    notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+})
+
+// ─── Grey Fabric Stock Schemas ──────────────────────────────────────────────
+
+export const FabricPackageTypeSchema = z.enum(['roll', 'bale', 'package', 'bulk'])
+
+export const FabricInspectionStatusSchema = z.enum(['pending', 'pass', 'minor_defect', 'reject'])
+
+export const FabricStockStateSchema = z.enum(['uninspected', 'ready', 'reserved', 'dispatched', 'claimed', 'returned'])
+
+export const FabricPackageGradeSchema = z.string().trim().min(1, 'Grade is required').max(40, 'Grade too long')
+
+export const CreateFabricPackageSchema = z.object({
+    order_id: UuidSchema,
+    package_no: z.string().trim().max(40, 'Package number too long').optional().or(z.literal('')),
+    package_type: FabricPackageTypeSchema.default('bulk'),
+    units_count: z.number().int().min(1, 'Units must be at least 1').max(100_000, 'Units too high').default(1),
+    metres: z.number().positive('Metres must be greater than zero').max(1_000_000, 'Metres too high'),
+    grade: FabricPackageGradeSchema.default('A'),
+    inspection_status: FabricInspectionStatusSchema.default('pending'),
+    location: z.string().trim().min(1, 'Location is required').max(120, 'Location too long').default('Grey Floor'),
+    inspection_notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+    inspection_photo_url: z.string().trim().url('Photo must be a valid URL').optional().or(z.literal('')),
+    source_date: DateSchema.optional().or(z.literal('')),
+    source_shift: ShiftSchema.optional().or(z.literal('')),
+    source_reference: z.string().trim().max(120, 'Reference too long').optional().or(z.literal('')),
+})
+
+export const UpdateFabricInspectionSchema = z.object({
+    package_id: UuidSchema,
+    inspection_status: FabricInspectionStatusSchema,
+    grade: FabricPackageGradeSchema,
+    location: z.string().trim().min(1, 'Location is required').max(120, 'Location too long'),
+    inspection_notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+    inspection_photo_url: z.string().trim().url('Photo must be a valid URL').optional().or(z.literal('')),
+})
+
+export const UpdateFabricPackageStateSchema = z.object({
+    package_id: UuidSchema,
+    stock_state: FabricStockStateSchema,
+})
+
+export const CorrectFabricPackageMetersSchema = z.object({
+    package_id: UuidSchema,
+    metres: z.number().positive('Metres must be greater than zero').max(1_000_000, 'Metres too high'),
+    access_code: AccessCodeSchema,
+    correction_note: z.string().trim().min(2, 'Reason is required').max(300, 'Reason too long'),
+})
+
+export const CreateFabricDispatchSchema = z.object({
+    order_id: UuidSchema,
+    package_ids: z.array(UuidSchema).min(1, 'Select at least one package').max(200, 'Too many packages selected'),
+    notes: z.string().trim().max(300, 'Notes too long').optional().or(z.literal('')),
 })
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
