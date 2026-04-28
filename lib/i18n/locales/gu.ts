@@ -360,6 +360,20 @@ export const gu = {
       }
     }
   },
+  advances: {
+    exit: {
+      title: "કામદારનું એડવાન્સ બાકી છે",
+      body: "{name} ₹{amount} એડવાન્સ બાકી છે. શું કરવું?",
+      finalSettle: "છેલ્લી ચૂકવણીમાં વસૂલ કરો",
+      writeOff: "માફ કરો",
+      keepActive: "કામદારને સક્રિય રાખો",
+      finalSettleWarning: "છેલ્લું સેટલમેન્ટ — 50% મર્યાદા વગર સંપૂર્ણ એડવાન્સ કાપવામાં આવશે.",
+      writeOffConfirm: "₹{amount} માફ કરવામાં આવશે. આ પૂર્વવત્ કરી શકાશે નહીં."
+    },
+    badge: {
+      outstanding: "₹{amount} એડવાન્સ બાકી"
+    }
+  },
   confirm: {
     title: "શું તમે ખાતરી છો?",
     proceed: "હા, આગળ વધો",

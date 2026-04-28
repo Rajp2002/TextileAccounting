@@ -517,6 +517,91 @@ export async function deleteMeterWorkerWithCode(workerId: number, accessCode: st
     return { success: true }
 }
 
+export async function setWorkerActiveStatus(
+    workerType: 'meter' | 'fixed',
+    workerId: number,
+    isActive: boolean
+) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(PositiveIntSchema, workerId)
+    if ('error' in parsed) return { error: parsed.error }
+
+    const table = workerType === 'meter' ? 'workers' : 'fixed_workers'
+    const { error } = await supabase
+        .from(table)
+        .update({ is_active: isActive })
+        .eq('id', parsed.data)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to update worker active status:', error)
+        return { error: 'Failed to update worker status. Please try again.' }
+    }
+
+    revalidatePath('/owner/fixed-workers')
+    revalidatePath('/owner/payroll')
+    return { success: true }
+}
+
+export async function writeOffWorkerAdvanceBalance(
+    workerType: 'meter' | 'fixed',
+    workerId: number,
+    reason: string = 'Worker exit write-off'
+) {
+    const { user, profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(PositiveIntSchema, workerId)
+    if ('error' in parsed) return { error: parsed.error }
+
+    const workerColumn = workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id'
+    const timestamp = new Date().toISOString()
+
+    const { data: advances, error: fetchError } = await supabase
+        .from('worker_advances')
+        .select('id, amount')
+        .eq('org_id', profile.org_id)
+        .eq('status', 'pending')
+        .is('writeoff_at', null)
+        .eq(workerColumn, parsed.data)
+
+    if (fetchError) {
+        console.error('Failed to fetch advances for write-off:', fetchError)
+        return { error: 'Failed to fetch outstanding advances.' }
+    }
+
+    if (!advances || advances.length === 0) {
+        return { error: 'No outstanding advances found for this worker.' }
+    }
+
+    const { error } = await supabase
+        .from('worker_advances')
+        .update({
+            writeoff_at: timestamp,
+            writeoff_by: user.id,
+            writeoff_reason: reason,
+        })
+        .eq('org_id', profile.org_id)
+        .eq('status', 'pending')
+        .is('writeoff_at', null)
+        .eq(workerColumn, parsed.data)
+
+    if (error) {
+        console.error('Failed to write off worker advances:', error)
+        return { error: 'Failed to write off outstanding advances.' }
+    }
+
+    revalidatePath('/owner/advances')
+    revalidatePath('/owner/fixed-workers')
+    revalidatePath('/owner/payroll')
+    return {
+        success: true,
+        amountWrittenOff: advances.reduce((sum, advance) => sum + Number(advance.amount), 0),
+    }
+}
+
 // ─── Inventory Actions ────────────────────────────────────────────────────────
 
 export async function addQuality(data: {

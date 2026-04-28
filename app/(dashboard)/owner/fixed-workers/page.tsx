@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,7 +14,7 @@ import { toast } from 'sonner'
 import { formatINR } from '@/lib/finance'
 import { Pencil, Trash2, Users, Briefcase, KeyRound, AlertCircle, Loader2, Gauge, MessageCircle, ShieldCheck } from 'lucide-react'
 import { getWorkerDebt } from '@/app/(dashboard)/supervisor/actions'
-import { deleteFixedWorkerWithCode, upsertFixedWorker, updateMeterWorker, deleteMeterWorkerWithCode } from '@/app/(dashboard)/owner/actions'
+import { deleteFixedWorkerWithCode, upsertFixedWorker, updateMeterWorker, deleteMeterWorkerWithCode, writeOffWorkerAdvanceBalance, setWorkerActiveStatus } from '@/app/(dashboard)/owner/actions'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -21,6 +22,7 @@ import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
 import { Amount } from '@/components/ui/amount'
 import { AddWorkerDialog } from '@/components/AddWorkerDialog'
+import { WorkerExitDialog } from '@/components/advances/WorkerExitDialog'
 
 const ROLES = [
     { value: 'master', defaultSalary: 30000 },
@@ -70,6 +72,10 @@ function getRoleColor(role: string) {
         daily: 'bg-orange-100 text-orange-800',
     }
     return colors[role] || 'bg-gray-100 text-gray-800'
+}
+
+function formatOutstandingAdvanceLabel(template: string, amount: number) {
+    return template.replace('{amount}', new Intl.NumberFormat('en-IN').format(amount))
 }
 
 // ─── Edit Meter Worker Dialog ─────────────────────────────────────────────────
@@ -233,17 +239,41 @@ function EditMeterWorkerDialog({
 function PieceRateTab({ orgId }: { orgId: string }) {
     const { t } = useTranslation()
     const tl = useTransliterate()
+    const router = useRouter()
     const supabase = createClient()
     const queryClient = useQueryClient()
 
     const [editWorker, setEditWorker] = useState<MeterWorker | null>(null)
     const [workerToDelete, setWorkerToDelete] = useState<MeterWorker | null>(null)
+    const [exitWorker, setExitWorker] = useState<MeterWorker | null>(null)
     const [workerDebt, setWorkerDebt] = useState<number>(0)
     const [accessCode, setAccessCode] = useState('')
     const [erasePII, setErasePII] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const [fetchingDebt, setFetchingDebt] = useState(false)
     const [verificationOpen, setVerificationOpen] = useState(false)
+    const [writingOff, setWritingOff] = useState(false)
+
+    const { data: outstandingAdvances } = useQuery({
+        queryKey: ['worker_exit_advances_meter', orgId],
+        enabled: !!orgId,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('worker_advances')
+                .select('meter_worker_id, amount')
+                .eq('org_id', orgId)
+                .eq('status', 'pending')
+                .is('writeoff_at', null)
+                .not('meter_worker_id', 'is', null)
+            if (error) throw error
+
+            return (data || []).reduce((map: Record<number, number>, row: { meter_worker_id: number | null; amount: number | string }) => {
+                const workerId = Number(row.meter_worker_id)
+                map[workerId] = (map[workerId] || 0) + Number(row.amount)
+                return map
+            }, {} as Record<number, number>)
+        },
+    })
 
     const { data: meterWorkers, isLoading } = useQuery({
         queryKey: ['meter_workers', orgId],
@@ -264,11 +294,42 @@ function PieceRateTab({ orgId }: { orgId: string }) {
         try {
             const res = await getWorkerDebt(worker.id, 'meter')
             setWorkerDebt(res.balance || 0)
+            if ((res.balance || 0) > 0) {
+                setExitWorker(worker)
+                return
+            }
             setWorkerToDelete(worker)
             setAccessCode('')
             setVerificationOpen(true)
         } finally {
             setFetchingDebt(false)
+        }
+    }
+
+    const handleWriteOff = async () => {
+        if (!exitWorker) return
+        setWritingOff(true)
+        try {
+            const writeOffResult = await writeOffWorkerAdvanceBalance('meter', exitWorker.id)
+            if (writeOffResult.error) {
+                toast.error(writeOffResult.error)
+                return
+            }
+
+            const deactivateResult = await setWorkerActiveStatus('meter', exitWorker.id, false)
+            if (deactivateResult.error) {
+                toast.error(deactivateResult.error)
+                return
+            }
+
+            toast.success(t('common.updated'))
+            setExitWorker(null)
+            setWorkerDebt(0)
+            queryClient.invalidateQueries({ queryKey: ['worker_exit_advances_meter'] })
+            queryClient.invalidateQueries({ queryKey: ['meter_workers'] })
+            queryClient.invalidateQueries({ queryKey: ['workers'] })
+        } finally {
+            setWritingOff(false)
         }
     }
 
@@ -344,11 +405,11 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                         <div className="divide-y">
                             {(meterWorkers || []).map((w) => (
                                 <div key={w.id} className="flex justify-between items-center py-3 gap-4">
-                                    <div className="min-w-0 flex-1">
-                                        <span className={cn('font-medium break-words block', !w.is_active && 'text-gray-400 line-through')}>
-                                            {tl(w.name)}
-                                        </span>
-                                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                <div className="min-w-0 flex-1">
+                                    <span className={cn('font-medium break-words block', !w.is_active && 'text-gray-400 line-through')}>
+                                        {tl(w.name)}
+                                    </span>
+                                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                             <span className="text-xs text-orange-600 font-medium">Per metre</span>
                                             {(w.pf_esi_enrolled ?? w.pf_esi_eligible) && (
                                                 <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
@@ -359,6 +420,11 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                                                 <span className="flex items-center gap-1 text-[10px] font-semibold bg-green-50 text-green-700 px-1.5 py-0.5 rounded">
                                                     <MessageCircle className="h-2.5 w-2.5" />
                                                     WA ✓
+                                                </span>
+                                            )}
+                                            {!!outstandingAdvances?.[w.id] && (
+                                                <span className="text-[10px] font-semibold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
+                                                    {formatOutstandingAdvanceLabel(t('advances.badge.outstanding'), outstandingAdvances[w.id])}
                                                 </span>
                                             )}
                                         </div>
@@ -457,6 +523,30 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <WorkerExitDialog
+                open={!!exitWorker}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setExitWorker(null)
+                        setWorkerDebt(0)
+                    }
+                }}
+                workerName={exitWorker?.name || ''}
+                amount={workerDebt}
+                onFinalSettle={() => {
+                    if (!exitWorker) return
+                    setExitWorker(null)
+                    setWorkerDebt(0)
+                    router.push(`/owner/payroll?exitWorkerType=meter&exitWorkerId=${exitWorker.id}&finalSettlement=1&deactivateAfterExit=1`)
+                }}
+                onWriteOff={handleWriteOff}
+                onKeepActive={() => {
+                    setExitWorker(null)
+                    setWorkerDebt(0)
+                }}
+                isWriteOffLoading={writingOff}
+            />
         </div>
     )
 }
@@ -466,6 +556,7 @@ function PieceRateTab({ orgId }: { orgId: string }) {
 function FixedWorkersTab({ orgId }: { orgId: string }) {
     const { t } = useTranslation()
     const tl = useTransliterate()
+    const router = useRouter()
     const supabase = createClient()
     const queryClient = useQueryClient()
 
@@ -481,12 +572,35 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const [saving, setSaving] = useState(false)
 
     const [workerToDelete, setWorkerToDelete] = useState<FixedWorker | null>(null)
+    const [exitWorker, setExitWorker] = useState<FixedWorker | null>(null)
     const [workerDebt, setWorkerDebt] = useState<number>(0)
     const [accessCode, setAccessCode] = useState('')
     const [erasePII, setErasePII] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const [fetchingDebt, setFetchingDebt] = useState(false)
     const [verificationOpen, setVerificationOpen] = useState(false)
+    const [writingOff, setWritingOff] = useState(false)
+
+    const { data: outstandingAdvances } = useQuery({
+        queryKey: ['worker_exit_advances_fixed', orgId],
+        enabled: !!orgId,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('worker_advances')
+                .select('fixed_worker_id, amount')
+                .eq('org_id', orgId)
+                .eq('status', 'pending')
+                .is('writeoff_at', null)
+                .not('fixed_worker_id', 'is', null)
+            if (error) throw error
+
+            return (data || []).reduce((map: Record<number, number>, row: { fixed_worker_id: number | null; amount: number | string }) => {
+                const workerId = Number(row.fixed_worker_id)
+                map[workerId] = (map[workerId] || 0) + Number(row.amount)
+                return map
+            }, {} as Record<number, number>)
+        },
+    })
 
     const { data: fixedWorkers, isLoading } = useQuery({
         queryKey: ['fixed_workers', orgId],
@@ -568,11 +682,41 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         try {
             const res = await getWorkerDebt(worker.id, 'fixed')
             setWorkerDebt(res.balance || 0)
+            if ((res.balance || 0) > 0) {
+                setExitWorker(worker)
+                return
+            }
             setWorkerToDelete(worker)
             setAccessCode('')
             setVerificationOpen(true)
         } finally {
             setFetchingDebt(false)
+        }
+    }
+
+    const handleWriteOff = async () => {
+        if (!exitWorker) return
+        setWritingOff(true)
+        try {
+            const writeOffResult = await writeOffWorkerAdvanceBalance('fixed', exitWorker.id)
+            if (writeOffResult.error) {
+                toast.error(writeOffResult.error)
+                return
+            }
+
+            const deactivateResult = await setWorkerActiveStatus('fixed', exitWorker.id, false)
+            if (deactivateResult.error) {
+                toast.error(deactivateResult.error)
+                return
+            }
+
+            toast.success(t('common.updated'))
+            setExitWorker(null)
+            setWorkerDebt(0)
+            queryClient.invalidateQueries({ queryKey: ['worker_exit_advances_fixed'] })
+            queryClient.invalidateQueries({ queryKey: ['fixed_workers'] })
+        } finally {
+            setWritingOff(false)
         }
     }
 
@@ -795,6 +939,11 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                                                 {t('worker.pfEsi.enrolled')}
                                                             </span>
                                                         )}
+                                                        {!!outstandingAdvances?.[w.id] && (
+                                                            <span className="text-[10px] font-semibold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
+                                                                {formatOutstandingAdvanceLabel(t('advances.badge.outstanding'), outstandingAdvances[w.id])}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
@@ -843,6 +992,11 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                                         {(w.pf_esi_enrolled ?? w.pf_esi_eligible) && (
                                                             <span className="text-[10px] font-semibold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded ml-2">
                                                                 {t('worker.pfEsi.enrolled')}
+                                                            </span>
+                                                        )}
+                                                        {!!outstandingAdvances?.[w.id] && (
+                                                            <span className="ml-2 text-[10px] font-semibold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
+                                                                {formatOutstandingAdvanceLabel(t('advances.badge.outstanding'), outstandingAdvances[w.id])}
                                                             </span>
                                                         )}
                                                     </div>
@@ -933,6 +1087,30 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <WorkerExitDialog
+                open={!!exitWorker}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setExitWorker(null)
+                        setWorkerDebt(0)
+                    }
+                }}
+                workerName={exitWorker?.name || ''}
+                amount={workerDebt}
+                onFinalSettle={() => {
+                    if (!exitWorker) return
+                    setExitWorker(null)
+                    setWorkerDebt(0)
+                    router.push(`/owner/payroll?exitWorkerType=fixed&exitWorkerId=${exitWorker.id}&finalSettlement=1&deactivateAfterExit=1`)
+                }}
+                onWriteOff={handleWriteOff}
+                onKeepActive={() => {
+                    setExitWorker(null)
+                    setWorkerDebt(0)
+                }}
+                isWriteOffLoading={writingOff}
+            />
         </div>
     )
 }

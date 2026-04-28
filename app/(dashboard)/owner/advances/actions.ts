@@ -162,6 +162,7 @@ export async function getPendingAdvancesSummary() {
         .select('meter_worker_id, fixed_worker_id, amount')
         .eq('org_id', profile.org_id)
         .eq('status', 'pending')
+        .is('writeoff_at', null)
 
     if (error) {
         console.error('Failed to fetch advances summary:', error)
