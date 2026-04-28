@@ -432,8 +432,8 @@ function hydrateEstimateStateFromQuote(quote: Record<string, unknown>, totalTarg
 
     return {
         ...base,
-        warpRows: Array.isArray(quote.warp_rows) && quote.warp_rows.length > 0 ? quote.warp_rows : base.warpRows,
-        weftRows: Array.isArray(quote.weft_rows) && quote.weft_rows.length > 0 ? quote.weft_rows : base.weftRows,
+        warpRows: Array.isArray(quote.warp_rows) && quote.warp_rows.length > 0 ? (quote.warp_rows as WarpRow[]) : base.warpRows,
+        weftRows: Array.isArray(quote.weft_rows) && quote.weft_rows.length > 0 ? (quote.weft_rows as WeftRow[]) : base.weftRows,
         tapeLengthM: Number(quote.tape_length_m ?? base.tapeLengthM),
         perPickCostPaisa: Number(quote.per_pick_cost_paise ?? base.perPickCostPaisa),
         warpingRatePerKg: Number(quote.warping_rate_per_kg ?? base.warpingRatePerKg),
@@ -443,7 +443,7 @@ function hydrateEstimateStateFromQuote(quote: Record<string, unknown>, totalTarg
         finishingRatePerM: Number(quote.finishing_rate_per_m ?? base.finishingRatePerM),
         yarnShortagePct: Number(quote.yarn_shortage_pct ?? base.yarnShortagePct),
         warpCrimpPct: Number(quote.warp_crimp_pct ?? base.warpCrimpPct),
-        overheadItems: Array.isArray(quote.overhead_items) ? quote.overhead_items : base.overheadItems,
+        overheadItems: Array.isArray(quote.overhead_items) ? (quote.overhead_items as OverheadItem[]) : base.overheadItems,
         monthlyOutputM: Number(quote.monthly_output_m ?? base.monthlyOutputM),
         overheadOverridePerM: quote.overhead_override_per_m != null ? Number(quote.overhead_override_per_m) : base.overheadOverridePerM,
         overheadPct: Number(quote.overhead_pct ?? base.overheadPct),
@@ -451,14 +451,14 @@ function hydrateEstimateStateFromQuote(quote: Record<string, unknown>, totalTarg
         transportPerM: Number(quote.transport_per_m ?? base.transportPerM),
         profitPct: Number(quote.profit_margin_pct ?? quote.intended_margin_percent ?? base.profitPct),
         orderQuantityM: totalTargetMeters > 0 ? totalTargetMeters : (Number(quote.meters ?? 0) || null),
-        enabledSections: quote.enabled_sections ?? base.enabledSections,
-        loomType: quote.loom_type ?? base.loomType,
+        enabledSections: (quote.enabled_sections as FactorySections) ?? base.enabledSections,
+        loomType: (quote.loom_type as EstimateState['loomType']) ?? base.loomType,
         loomRpm: quote.estimator_rpm != null ? Number(quote.estimator_rpm) : base.loomRpm,
         loomPowerKw: quote.estimator_power_kw != null ? Number(quote.estimator_power_kw) : base.loomPowerKw,
         loomRpmIsCustomised: quote.estimator_rpm != null,
         loomPowerKwIsCustomised: quote.estimator_power_kw != null,
         hoursPerShift: Number(quote.hours_per_shift ?? base.hoursPerShift),
-        sizingMode: quote.sizing_mode ?? base.sizingMode,
+        sizingMode: (quote.sizing_mode as EstimateState['sizingMode']) ?? base.sizingMode,
         isConfigured: true,
     }
 }

@@ -794,7 +794,6 @@ export default function EstimatorClient({
             setAppliedTemplate(null)
             setQualityLabel('')
             setPartyName('')
-            setTargetMeters(0)
             setCustomTargetPrice('')
             clearDraft()
             toast.success('Estimator reset to profile defaults')
