@@ -864,11 +864,14 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                     <DialogHeader>
                         <DialogTitle>{editingParty ? 'Edit party' : 'Add party'}</DialogTitle>
                         <DialogDescription>
-                            Keep this close to the register: name, credit days, broker, opening balance, and risk notes.
+                            Record only business details you need for billing, collections, and credit control.
                         </DialogDescription>
                     </DialogHeader>
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        Use business contact details you are authorised to record. Avoid personal, sensitive, or unrelated notes.
+                    </div>
                     <div className="grid gap-4 md:grid-cols-2">
-                        <Field label="Party name" className="md:col-span-2">
+                        <Field label="Party name" hint="Use the legal or trade name used on bills and receipts." className="md:col-span-2">
                             <Input value={partyForm.name} onChange={event => setPartyForm(prev => ({ ...prev, name: event.target.value }))} placeholder="e.g. Mahavir Traders" />
                         </Field>
                         <Field label="Party type">
@@ -879,14 +882,14 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                                 </SelectContent>
                             </Select>
                         </Field>
-                        <Field label="Phone">
-                            <Input value={partyForm.phone} onChange={event => setPartyForm(prev => ({ ...prev, phone: event.target.value }))} placeholder="10 digit mobile" inputMode="numeric" />
+                        <Field label="Business phone" hint="Prefer an office or business mobile number.">
+                            <Input value={partyForm.phone} onChange={event => setPartyForm(prev => ({ ...prev, phone: event.target.value }))} placeholder="10 digit business number" inputMode="numeric" />
                         </Field>
                         <Field label="GSTIN">
                             <Input value={partyForm.gstin} onChange={event => setPartyForm(prev => ({ ...prev, gstin: event.target.value.toUpperCase() }))} placeholder="Optional" />
                         </Field>
-                        <Field label="Broker name">
-                            <Input value={partyForm.broker_name} onChange={event => setPartyForm(prev => ({ ...prev, broker_name: event.target.value }))} placeholder="Optional" />
+                        <Field label="Broker / contact name" hint="Use a business contact only if needed for transactions.">
+                            <Input value={partyForm.broker_name} onChange={event => setPartyForm(prev => ({ ...prev, broker_name: event.target.value }))} placeholder="Optional business contact" />
                         </Field>
                         <Field label="Credit days">
                             <Input value={partyForm.default_credit_days} onChange={event => setPartyForm(prev => ({ ...prev, default_credit_days: event.target.value }))} type="number" min="0" />
@@ -906,11 +909,11 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                                 </SelectContent>
                             </Select>
                         </Field>
-                        <Field label="Address" className="md:col-span-2">
-                            <Textarea value={partyForm.address} onChange={event => setPartyForm(prev => ({ ...prev, address: event.target.value }))} placeholder="Optional" />
+                        <Field label="Business address" hint="Use billing, office, or registered address details only." className="md:col-span-2">
+                            <Textarea value={partyForm.address} onChange={event => setPartyForm(prev => ({ ...prev, address: event.target.value }))} placeholder="Optional business address" />
                         </Field>
-                        <Field label="Risk note" className="md:col-span-2">
-                            <Textarea value={partyForm.risk_note} onChange={event => setPartyForm(prev => ({ ...prev, risk_note: event.target.value }))} placeholder="e.g. Payment usually comes after processor confirmation" />
+                        <Field label="Collection note" hint="Keep this business-focused. Avoid personal or sensitive remarks." className="md:col-span-2">
+                            <Textarea value={partyForm.risk_note} onChange={event => setPartyForm(prev => ({ ...prev, risk_note: event.target.value }))} placeholder="e.g. Payment usually comes after delivery confirmation" />
                         </Field>
                     </div>
                     <DialogFooter>
@@ -1185,11 +1188,12 @@ function SimpleListCard({ title, rows, empty }: { title: string; rows: Array<{ i
     )
 }
 
-function Field({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
+function Field({ label, hint, className, children }: { label: string; hint?: string; className?: string; children: ReactNode }) {
     return (
         <div className={cn('space-y-2', className)}>
             <Label className="text-xs font-black uppercase tracking-wider text-slate-500">{label}</Label>
             {children}
+            {hint ? <p className="text-xs text-slate-500">{hint}</p> : null}
         </div>
     )
 }
