@@ -883,7 +883,16 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                             </Select>
                         </Field>
                         <Field label="Business phone" hint="Prefer an office or business mobile number.">
-                            <Input value={partyForm.phone} onChange={event => setPartyForm(prev => ({ ...prev, phone: event.target.value }))} placeholder="10 digit business number" inputMode="numeric" />
+                            <Input 
+                                value={partyForm.phone} 
+                                onChange={event => {
+                                    const val = event.target.value.replace(/\D/g, '').slice(0, 10)
+                                    setPartyForm(prev => ({ ...prev, phone: val }))
+                                }} 
+                                placeholder="10 digit business number" 
+                                inputMode="numeric"
+                                maxLength={10}
+                            />
                         </Field>
                         <Field label="GSTIN">
                             <Input value={partyForm.gstin} onChange={event => setPartyForm(prev => ({ ...prev, gstin: event.target.value.toUpperCase() }))} placeholder="Optional" />

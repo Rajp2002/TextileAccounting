@@ -291,7 +291,7 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
                                     type="tel"
                                     placeholder="9876543210"
                                     maxLength={10}
-                                    onChange={e => updateRow(i, 'phone', e.target.value.replace(/\D/g, ''))}
+                                    onChange={e => updateRow(i, 'phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
                                     className="h-9 text-sm font-mono"
                                 />
                                 {workers.length > 1 ? (

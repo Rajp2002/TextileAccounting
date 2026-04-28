@@ -1146,7 +1146,7 @@ export default function EstimatorClient({
                             </div>
                             <input
                                 type="range"
-                                min={0} max={40} step={0.5}
+                                min={0} max={100} step={0.5}
                                 value={state.profitPct}
                                 onChange={e => dispatch({ type: 'SET', field: 'profitPct', value: Number(e.target.value) })}
                                 className="flex-1 h-2 rounded-full bg-slate-200 appearance-none cursor-pointer accent-brand-accent"
