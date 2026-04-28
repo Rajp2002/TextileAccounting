@@ -63,7 +63,7 @@ export async function getActiveOrders() {
 
     const { data, error } = await supabase
         .from('orders')
-        .select('id, party_name, quality_label, warp_instruction, weft_instruction, total_target_meters, deadline, status')
+        .select('id, party_name, quality_label, quality_id, warp_instruction, weft_instruction, notes, total_target_meters, start_date, deadline, status, created_at, worker_rate_per_m')
         .eq('org_id', profile.org_id)
         .eq('status', 'active')
         .order('deadline', { ascending: true })
