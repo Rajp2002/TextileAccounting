@@ -603,7 +603,7 @@ export const hi = {
       total_order: "कुल ऑर्डर",
       margin: "मार्जिन",
       net_profit: "शुद्ध लाभ",
-      order_btn: "ऑर्डर",
+      order_btn: "कोट सेव करें",
       save_template_btn: "टेम्पलेट सेव"
     },
     templates: {
@@ -758,7 +758,7 @@ export const hi = {
       applied_as_is: "लागू किया:",
       party_required: "पार्टी का नाम आवश्यक है",
       quality_required: "क्वालिटी लेबल आवश्यक है",
-      converted_success: "कोट सफलतापूर्वक परिवर्तित",
+      converted_success: "कोट सफलतापूर्वक सेव हुआ",
       save_template_name_error: "कृपया फैब्रिक का नाम दर्ज करें",
       rename_failed: "नाम बदलने में विफल:"
     }

@@ -612,7 +612,7 @@ export const en = {
       total_order: "Total Order",
       margin: "Margin",
       net_profit: "Net Profit",
-      order_btn: "Order",
+      order_btn: "Save Quote",
       save_template_btn: "Save Template"
     },
     templates: {
@@ -767,7 +767,7 @@ export const en = {
       applied_as_is: "Applied:",
       party_required: "Party name required",
       quality_required: "Quality label required",
-      converted_success: "Quote converted successfully",
+      converted_success: "Quote saved successfully",
       save_template_name_error: "Please enter a fabric name",
       rename_failed: "Rename failed:"
     }

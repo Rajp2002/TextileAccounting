@@ -11,7 +11,6 @@ import {
     Calculator,
     TrendingUp,
     Save,
-    Package,
     Loader2,
     Sparkles,
     BookmarkPlus,
@@ -25,7 +24,6 @@ import {
     Scissors,
     Coins,
     Banknote,
-    CheckCircle2,
     History,
     Search,
     X,
@@ -64,7 +62,6 @@ import {
     getEstimatorTemplates,
     saveAsFabricTemplate,
     saveEstimatorQuoteV3,
-    convertQuoteToOrder,
     getFixedWorkersForOverhead,
     deleteTemplate,
     updateTemplateRates,
@@ -83,11 +80,10 @@ import {
 import { useAutosave } from '@/hooks/useAutosave'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { format, addDays } from 'date-fns'
+import { format } from 'date-fns'
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { useRouter } from 'next/navigation'
 import FactoryCostWizard from './FactoryCostWizard'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -497,7 +493,6 @@ export default function EstimatorClient({
     initialTemplates?: any[]
     initialWorkers?: { id: number; name: string; role: string; monthly_salary: number }[]
 }) {
-    const router = useRouter()
     const { t } = useTranslation()
 
     // Build the initial state synchronously from server-provided data (no loading flash)
@@ -552,7 +547,7 @@ export default function EstimatorClient({
     const [state, dispatch] = useReducer(estimateReducer, initialState)
     const [loading,   setLoading]   = useState(false)
     const [saving,    setSaving]    = useState(false)
-    const [converting, setConverting] = useState(false)
+    const [savingQuote, setSavingQuote] = useState(false)
     const [savingTemplate, setSavingTemplate] = useState(false)
     const [templates, setTemplates] = useState<any[]>(initialTemplates ?? [])
     const [outputSuggestion, setOutputSuggestion] = useState<EstimateState['outputSuggestion'] | null>(null)
@@ -565,12 +560,8 @@ export default function EstimatorClient({
     const [qualityLabel,    setQualityLabel]    = useState('')
     const [warpInstruction, setWarpInstruction] = useState('')
     const [weftInstruction, setWeftInstruction] = useState('')
-    const [targetMeters,    setTargetMeters]    = useState(1000)
-    const [deadline,        setDeadline]        = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
-    const [orderNotes,      setOrderNotes]      = useState('')
 
     const [showSaveTemplate, setShowSaveTemplate] = useState(false)
-    const [showConvert,      setShowConvert]      = useState(false)
     const [templateName,     setTemplateName]     = useState('')
 
     // Template management — "edit rates" sheet
@@ -882,30 +873,29 @@ export default function EstimatorClient({
         toast.success(t('estimator.toast.template_deleted'))
     }
 
-    const handleConvertToOrder = async () => {
+    const handleSaveQuote = async () => {
         if (!partyName.trim())    return toast.error(t('estimator.toast.party_required'))
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
-        setConverting(true)
-        const res = await convertQuoteToOrder({
-            party_name:          partyName.trim(),
-            quality_label:       qualityLabel.trim(),
-            warp_instruction:    warpInstruction.trim() || undefined,
-            weft_instruction:    weftInstruction.trim() || undefined,
-            notes:               orderNotes.trim() || undefined,
-            total_target_meters: targetMeters,
-            deadline,
-            estimate:            state,
-            quote_price_per_m:   totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM,
+        if (!state.orderQuantityM || state.orderQuantityM <= 0) {
+            return toast.error('Set a quote quantity before saving the quote')
+        }
+
+        setSavingQuote(true)
+        const res = await saveEstimatorQuoteV3({
+            partyName:               partyName.trim(),
+            qualityLabel:            qualityLabel.trim(),
+            warpInstruction:         warpInstruction.trim() || undefined,
+            weftInstruction:         weftInstruction.trim() || undefined,
+            estimate:                state,
+            quotePricePerM:          totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM,
             totalProductionCostPerM: totals.totalProductionCostPerM,
+            status:                  'draft',
         })
-        setConverting(false)
+        setSavingQuote(false)
         if (res.success) {
-            setShowConvert(false)
-            clearDraft()
             toast.success(t('estimator.toast.converted_success'))
-            router.push('/owner/orders')
         } else {
-            toast.error(res.error ?? 'Failed to create order')
+            toast.error(res.error ?? 'Failed to save quote')
         }
     }
 
@@ -1044,9 +1034,11 @@ export default function EstimatorClient({
                             <Button
                                 size="sm"
                                 className="flex-1 sm:flex-none h-9 px-3 sm:px-4 bg-brand-accent hover:bg-brand-accent/90 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-brand-accent/15"
-                                onClick={() => setShowConvert(true)}
+                                onClick={handleSaveQuote}
+                                disabled={savingQuote}
                             >
-                                <Package className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{t('estimator.hud.order_btn')}</span>
+                                {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
+                                <span className="truncate">{t('estimator.hud.order_btn')}</span>
                             </Button>
 
                             {appliedTemplate ? (
@@ -1402,7 +1394,7 @@ export default function EstimatorClient({
                         {/* Tape Length + Beam Capacity + Beams Needed */}
                         {(() => {
                             const beamM = totals.estimatedBeamCapacityM
-                            const orderQty = state.orderQuantityM ?? (targetMeters > 0 ? targetMeters : null)
+                            const orderQty = state.orderQuantityM
                             const beamsNeeded = (beamM > 0 && orderQty && orderQty > 0)
                                 ? Math.ceil(orderQty / beamM)
                                 : null
@@ -1434,10 +1426,9 @@ export default function EstimatorClient({
                                                 <div>
                                                     <p className="text-[10px] uppercase font-black text-indigo-600 tracking-wider">Beams Needed</p>
                                                     {beamsNeeded !== null ? (
-                                                        <p className="text-[9px] text-slate-500 font-medium">
+                                                    <p className="text-[9px] text-slate-500 font-medium">
                                                             for {(orderQty!).toLocaleString('en-IN')} m order
-                                                            {state.orderQuantityM ? '' : ' (from simulation qty)'}
-                                                        </p>
+                                                    </p>
                                                     ) : (
                                                         <p className="text-[9px] text-slate-400 font-medium">
                                                             set an order qty to see count
@@ -2365,130 +2356,6 @@ export default function EstimatorClient({
                             <span className="text-sm">
                                 {t('estimator.edit_template_dialog.save_apply')}
                             </span>
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Convert Dialog */}
-            <Dialog open={showConvert} onOpenChange={setShowConvert}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                           <Banknote className="h-5 w-5 text-emerald-500" />
-                           {t('estimator.convert_dialog.title')}
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="py-2 space-y-4">
-                        {/* ── Cost Summary Recap ── */}
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
-                            <div className="px-3 py-2 bg-slate-100 border-b border-slate-200">
-                                <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">{t('estimator.convert_dialog.cost_summary')}</p>
-                            </div>
-                            <div className="p-3 space-y-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs text-slate-500 font-medium">{t('estimator.convert_dialog.production_cost')}</span>
-                                    <span className="font-mono font-bold text-sm text-slate-800">₹{totals.totalProductionCostPerM.toFixed(2)}/m</span>
-                                </div>
-                                {totals.orderQuote && (
-                                    <>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs text-slate-500 font-medium">{t('estimator.convert_dialog.quote_price')}</span>
-                                            <span className="font-mono font-bold text-base text-brand-accent">₹{totals.orderQuote?.quotePricePerM.toFixed(2)}/m</span>
-                                        </div>
-                                        <div className="flex justify-between items-center border-t border-slate-200 pt-2">
-                                            <span className="text-xs text-slate-500 font-medium">
-                                                {t('estimator.convert_dialog.total_order_value')}
-                                                <span className="ml-1 text-slate-400">({targetMeters.toLocaleString('en-IN')}m)</span>
-                                            </span>
-                                            <span className="font-mono font-black text-sm text-emerald-700">
-                                                ₹{totals.orderQuote?.totalOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-xs text-slate-500 font-medium">{t('estimator.convert_dialog.gross_profit')}</span>
-                                            <span className="font-mono font-bold text-sm text-emerald-600">
-                                                ₹{totals.orderQuote?.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                                                <span className="text-slate-400 font-normal"> ({state.profitPct.toFixed(1)}%)</span>
-                                            </span>
-                                        </div>
-                                    </>
-                                )}
-                                {/* Loom Worker Wage — shown always so owner confirms rate before converting */}
-                                {(() => {
-                                    const totalPicks = state.weftRows.reduce((s, r) => s + (r.picks ?? 0), 0)
-                                    const workerRate = totalPicks * (state.perPickCostPaisa ?? 0)
-                                    if (workerRate <= 0) return null
-                                    return (
-                                        <div className="flex justify-between items-center border-t border-amber-100 pt-2 mt-1">
-                                            <span className="text-xs text-amber-700 font-semibold flex items-center gap-1">
-                                                🪡 Loom Worker Wage
-                                            </span>
-                                            <span className="font-mono font-bold text-sm text-amber-700">
-                                                ₹{workerRate.toFixed(2)}/m
-                                                <span className="text-slate-400 font-normal text-[10px] ml-1">
-                                                    ({totalPicks} picks × ₹{state.perPickCostPaisa}/pick)
-                                                </span>
-                                            </span>
-                                        </div>
-                                    )
-                                })()}
-                                {/* Target Beams — Calculated */}
-                                {totals.estimatedBeamCapacityM > 0 && targetMeters > 0 && (
-                                    <div className="flex justify-between items-center border-t border-indigo-100 pt-2 mt-1">
-                                        <span className="text-xs text-indigo-700 font-semibold flex items-center gap-1">
-                                            🎯 Beams Required
-                                        </span>
-                                        <span className="font-mono font-bold text-sm text-indigo-700">
-                                            {Math.ceil(targetMeters / totals.estimatedBeamCapacityM)} beams
-                                            <span className="text-slate-400 font-normal text-[10px] ml-1">
-                                                (≈ {totals.estimatedBeamCapacityM.toFixed(0)}m/beam)
-                                            </span>
-                                        </span>
-                                    </div>
-                                )}
-                                {!totals.orderQuote && (
-                                    <p className="text-[11px] text-slate-400 italic">{t('estimator.convert_dialog.set_qty_hint')}</p>
-                                )}
-                                {/* Cost stack mini-pills */}
-                                <div className="flex flex-wrap gap-1.5 pt-1 border-t border-slate-100">
-                                    {totals.warpCostPerM > 0 && <span className="text-[10px] bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-0.5 rounded-full font-mono">🧶 ₹{totals.warpCostPerM.toFixed(2)}</span>}
-                                    {totals.weftCostPerM > 0 && <span className="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-full font-mono">🧵 ₹{totals.weftCostPerM.toFixed(2)}</span>}
-                                    {totals.weaveCostPerM > 0 && <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded-full font-mono">⚙️ ₹{totals.weaveCostPerM.toFixed(2)}</span>}
-                                    {totals.overheadPerM > 0 && <span className="text-[10px] bg-rose-50 text-rose-600 border border-rose-100 px-2 py-0.5 rounded-full font-mono">🏭 ₹{totals.overheadPerM.toFixed(2)}</span>}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* ── Order Fields ── */}
-                        <div className="grid grid-cols-2 gap-3">
-                           <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.convert_dialog.total_metres')}</Label>
-                                <Input type="number" value={targetMeters} onChange={e => setTargetMeters(Number(e.target.value))} className="font-mono font-bold" />
-                           </div>
-                           <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.convert_dialog.deadline')}</Label>
-                                <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} />
-                           </div>
-                        </div>
-                        <div className="space-y-1.5">
-                             <Label className="text-[10px] uppercase font-black text-slate-500">Special Instructions / Notes</Label>
-                             <Textarea
-                                 value={orderNotes}
-                                 onChange={e => setOrderNotes(e.target.value)}
-                                 placeholder="e.g. Needs extra sizing, early delivery for first 2 beams..."
-                                 className="resize-none h-16 text-xs"
-                             />
-                        </div>
-                        <p className="text-[11px] text-slate-500 text-center px-4 leading-relaxed">
-                            {t('estimator.convert_dialog.order_ready_note_prefix')} <span className="text-indigo-600 font-bold">{t('estimator.convert_dialog.order_ready_note_section')}</span> {t('estimator.convert_dialog.order_ready_note_suffix')}
-                        </p>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setShowConvert(false)}>{t('estimator.convert_dialog.dismiss')}</Button>
-                        <Button className="bg-brand-accent text-white w-full sm:w-auto" onClick={handleConvertToOrder} disabled={converting}>
-                            {converting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-                            {t('estimator.convert_dialog.start_production')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
