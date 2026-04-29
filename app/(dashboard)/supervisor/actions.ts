@@ -18,6 +18,19 @@ import {
     safeParse,
 } from '@/lib/schemas'
 
+type ShiftType = 'day' | 'night'
+
+interface ProductionLogRow {
+    id: number
+    machine_id: string
+    date: string
+    shift: ShiftType
+    meters: number
+    closing_meter_reading: number | null
+    opening_meter_reading: number | null
+    submitted_at: string | null
+}
+
 // ─── Internal Helpers ──────────────────────────────────────────────────────────
 
 /**
@@ -34,6 +47,117 @@ function getServiceClient() {
     return createServiceClient(url, key, {
         auth: { autoRefreshToken: false, persistSession: false }
     })
+}
+
+function isEarlierShift(
+    candidateDate: string,
+    candidateShift: ShiftType,
+    targetDate: string,
+    targetShift: ShiftType
+) {
+    if (candidateDate < targetDate) return true
+    if (candidateDate > targetDate) return false
+    return candidateShift === 'day' && targetShift === 'night'
+}
+
+function getLatestSubmittedAt(logs: Array<{ submitted_at: string | null }>) {
+    const validTimestamps = logs
+        .map((log) => log.submitted_at)
+        .filter((value): value is string => Boolean(value))
+        .map((value) => new Date(value).getTime())
+        .filter((value) => Number.isFinite(value))
+
+    if (validTimestamps.length === 0) return null
+    return new Date(Math.max(...validTimestamps)).toISOString()
+}
+
+async function getPreviousClosingReadingMap(
+    supabase: Awaited<ReturnType<typeof createServerClient>>,
+    orgId: string,
+    machineIds: string[],
+    date: string,
+    shift: ShiftType
+) {
+    if (machineIds.length === 0) return {}
+
+    const { data, error } = await supabase
+        .from('production_logs')
+        .select('machine_id, date, shift, closing_meter_reading, submitted_at')
+        .eq('org_id', orgId)
+        .in('machine_id', machineIds)
+        .not('closing_meter_reading', 'is', null)
+
+    if (error) {
+        console.error('getPreviousClosingReadingMap error:', error)
+        return {}
+    }
+
+    const previousReadings: Record<string, number> = {}
+
+    for (const machineId of machineIds) {
+        const latestLog = (data ?? [])
+            .filter(
+                (log) =>
+                    log.machine_id === machineId &&
+                    isEarlierShift(log.date, log.shift as ShiftType, date, shift)
+            )
+            .sort((a, b) => {
+                if (a.date !== b.date) return b.date.localeCompare(a.date)
+                if (a.shift !== b.shift) return a.shift === 'night' ? 1 : -1
+                return (b.submitted_at ?? '').localeCompare(a.submitted_at ?? '')
+            })[0]
+
+        previousReadings[machineId] = Number(latestLog?.closing_meter_reading ?? 0)
+    }
+
+    return previousReadings
+}
+
+async function logShiftSelfCorrections(params: {
+    serviceClient: ReturnType<typeof getServiceClient>
+    userId: string
+    orgId: string
+    existingLogs: ProductionLogRow[]
+    replacementLogs: Array<{
+        machine_id: string
+        order_id: string
+        worker_id: number
+        meters: number
+        date: string
+        shift: ShiftType
+        opening_meter_reading: number
+        closing_meter_reading: number
+        submitted_at: string
+        created_by: string
+        updated_by: string
+        worker_rate_snapshot: number
+        client_ip: string
+    }>
+}) {
+    const auditRows = params.existingLogs.map((existingLog) => {
+        const replacementLog = params.replacementLogs.find((log) => log.machine_id === existingLog.machine_id)
+
+        return {
+            org_id: params.orgId,
+            table_name: 'production_logs',
+            record_id: existingLog.id.toString(),
+            action: 'shift_self_correction',
+            old_data: existingLog,
+            new_data: replacementLog ?? null,
+            changed_by: params.userId,
+            is_access_code_used: false,
+        }
+    })
+
+    if (auditRows.length === 0) return
+
+    const { error } = await params.serviceClient
+        .from('audit_log')
+        .insert(auditRows)
+
+    if (error) {
+        console.error('logShiftSelfCorrections error:', error)
+    }
 }
 
 import {
@@ -714,7 +838,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
     const [machinesRes, ordersRes, workersRes, assignmentsRes] = await Promise.all([
         supabase
             .from('machines')
-            .select('id, name, status, default_rate_per_m, current_order_id')
+            .select('id, name, status, machine_status, default_rate_per_m, current_order_id')
             .eq('org_id', orgId)
             .eq('status', 'active')
             .order('name'),
@@ -738,11 +862,29 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             .eq('shift', shift),
     ])
 
+    const machineIds = (machinesRes.data ?? []).map((machine) => machine.id)
+
+    const [currentLogsRes, previousMeterReadings] = await Promise.all([
+        machineIds.length === 0
+            ? Promise.resolve({ data: [] as ProductionLogRow[] })
+            : supabase
+                  .from('production_logs')
+                  .select('id, machine_id, date, shift, meters, opening_meter_reading, closing_meter_reading, submitted_at')
+                  .eq('org_id', orgId)
+                  .eq('date', date)
+                  .eq('shift', shift)
+                  .in('machine_id', machineIds),
+        getPreviousClosingReadingMap(supabase, orgId, machineIds, date, shift),
+    ])
+
     return {
         machines: machinesRes.data ?? [],
         orders: ordersRes.data ?? [],
         workers: workersRes.data ?? [],
         assignments: assignmentsRes.data ?? [],
+        existingLogs: currentLogsRes.data ?? [],
+        previousMeterReadings,
+        latestSubmittedAt: getLatestSubmittedAt((currentLogsRes.data ?? []) as Array<{ submitted_at: string | null }>),
     }
 }
 
@@ -820,6 +962,8 @@ export async function bulkLogProduction(entries: {
     worker_id: number
     order_id: string | null
     meters: number
+    opening_meter_reading: number
+    closing_meter_reading: number
     shift: 'day' | 'night'
     date: string
     rate_per_m?: number
@@ -834,23 +978,27 @@ export async function bulkLogProduction(entries: {
     const clientIp = headerList.get('x-forwarded-for')?.split(',')[0] || 'unknown'
 
     // ── Guard: Ensure every machine with meters has an order assigned ──
-    const invalidEntry = entries.find(e => e.meters > 0 && !e.order_id)
+    const invalidEntry = entries.find(e => e.meters !== 0 && !e.order_id)
     if (invalidEntry) {
         return { error: 'ORDER_MISSING', message: 'All machines with production must have an assigned order.' }
     }
 
     const logs = entries
-        .filter((e) => e.meters > 0) // We already know e.order_id exists from the guard above
+        .filter((e) => e.meters !== 0) // We already know e.order_id exists from the guard above
         .map((e) => ({
             org_id: orgId,
             machine_id: e.machine_id,
             worker_id: e.worker_id,
             order_id: e.order_id!,
             meters: e.meters,
+            opening_meter_reading: e.opening_meter_reading,
+            closing_meter_reading: e.closing_meter_reading,
             shift: e.shift,
             date: e.date,
             worker_rate_snapshot: e.rate_per_m ?? 1.5,
             created_by: user.id,
+            updated_by: user.id,
+            submitted_at: new Date().toISOString(),
             client_ip: clientIp
         }))
 
@@ -863,34 +1011,53 @@ export async function bulkLogProduction(entries: {
 
     const { data: existingLogs } = await supabase
         .from('production_logs')
-        .select('machine_id')
+        .select('id, machine_id, date, shift, meters, opening_meter_reading, closing_meter_reading, submitted_at')
         .eq('org_id', orgId)
         .eq('date', logDate)
         .eq('shift', logShift)
         .in('machine_id', machineIds)
 
     if (existingLogs && existingLogs.length > 0) {
-        if (!accessCode) {
-            return {
-                error: 'DUPLICATE_LOG_DETECTED',
-                message: 'Production logs already exist for some machines on this shift. This requires an owner access code to overwrite.',
-                duplicateMachines: existingLogs.map((l) => l.machine_id),
+        const now = Date.now()
+        const correctionWindowOpenForAll = existingLogs.every((log) => {
+            if (!log.submitted_at) return false
+            return now - new Date(log.submitted_at).getTime() < 30 * 60 * 1000
+        })
+
+        if (!correctionWindowOpenForAll) {
+            if (!accessCode) {
+                return {
+                    error: 'DUPLICATE_LOG_DETECTED',
+                    message: 'Production logs already exist for some machines on this shift. This requires an owner access code to overwrite.',
+                    duplicateMachines: existingLogs.map((l) => l.machine_id),
+                }
             }
-        }
 
-        // Validate the access code
-        let isCodeValid = false
-        try {
-            isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
-        } catch (e: any) {
-            return { error: e.message }
-        }
+            // Validate the access code
+            let isCodeValid = false
+            try {
+                isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
+            } catch (e: any) {
+                return { error: e.message }
+            }
 
-        if (!isCodeValid) return { error: 'Invalid or expired access code' }
+            if (!isCodeValid) return { error: 'Invalid or expired access code' }
+        }
 
         // If code is valid, delete existing logs for these machines/date/shift before inserting new ones
         // We use the service client because supervisors don't have DELETE permission on production_logs
         const serviceClient = getServiceClient()
+
+        if (correctionWindowOpenForAll) {
+            await logShiftSelfCorrections({
+                serviceClient,
+                userId: user.id,
+                orgId,
+                existingLogs: existingLogs as ProductionLogRow[],
+                replacementLogs: logs,
+            })
+        }
+
         const { error: deleteError } = await serviceClient
             .from('production_logs')
             .delete()
@@ -944,7 +1111,13 @@ export async function bulkLogProduction(entries: {
 
     revalidatePath('/supervisor/production')
     revalidatePath('/owner/orders')
-    return { success: true, logged: logs.length }
+    return {
+        success: true,
+        logged: logs.length,
+        correctionWindowExpiresAt: logs[0]?.submitted_at
+            ? new Date(new Date(logs[0].submitted_at).getTime() + 30 * 60 * 1000).toISOString()
+            : null,
+    }
 }
 
 export async function packProductionIntoBulkPackages(entries: {

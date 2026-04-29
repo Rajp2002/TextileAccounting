@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { FileText, Plus } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n/context'
 import { cn } from '@/lib/utils'
 
 import {
@@ -15,19 +16,25 @@ import {
     createPartyAdjustment,
     createPartyInvoice,
     createPartyReceipt,
+    createSupplier,
+    createSupplierLedgerEntry,
     setPartyActive,
     updateParty,
+    updateSupplier,
     type LedgerAdjustment,
     type LedgerData,
     type LedgerInvoice,
     type LedgerParty,
     type LedgerReceipt,
+    type LedgerSupplier,
 } from './actions'
 import {
     AdjustmentFormType,
     InvoiceFormType,
     PartyFormType,
     ReceiptFormType,
+    SupplierEntryFormType,
+    SupplierFormType,
     Transaction,
 } from './types'
 import { adjustmentLabels, methodLabels, shortMoney, toNumber } from './utils'
@@ -37,6 +44,10 @@ import { PartyFormModal } from './components/PartyFormModal'
 import { InvoiceFormModal } from './components/InvoiceFormModal'
 import { ReceiptFormModal } from './components/ReceiptFormModal'
 import { AdjustmentFormModal } from './components/AdjustmentFormModal'
+import { SupplierList } from './components/SupplierList'
+import { SupplierDetails } from './components/SupplierDetails'
+import { SupplierFormModal } from './components/SupplierFormModal'
+import { SupplierEntryFormModal } from './components/SupplierEntryFormModal'
 
 interface LedgerClientProps {
     initialData: LedgerData
@@ -110,6 +121,8 @@ function emptyReceiptForm(party?: LedgerParty | null): ReceiptFormType {
         method: 'bank',
         reference_no: '',
         notes: '',
+        allocate_across_invoices: false,
+        allocations: [],
     }
 }
 
@@ -122,6 +135,34 @@ function emptyAdjustmentForm(party?: LedgerParty | null): AdjustmentFormType {
         direction: 'credit_to_party',
         amount: '',
         notes: '',
+    }
+}
+
+function emptySupplierForm(): SupplierFormType {
+    return {
+        name: '',
+        phone: '',
+        gst_number: '',
+        notes: '',
+    }
+}
+
+function supplierToForm(supplier: LedgerSupplier): SupplierFormType {
+    return {
+        name: supplier.name,
+        phone: supplier.phone ?? '',
+        gst_number: supplier.gst_number ?? '',
+        notes: supplier.notes ?? '',
+    }
+}
+
+function emptySupplierEntryForm(supplier?: LedgerSupplier | null, type: 'purchase' | 'payment' = 'purchase'): SupplierEntryFormType {
+    return {
+        supplier_id: supplier?.id ?? '',
+        type,
+        amount: '',
+        entry_date: getToday(),
+        note: '',
     }
 }
 
@@ -186,26 +227,40 @@ function buildTransactions(
 }
 
 export default function LedgerClient({ initialData }: LedgerClientProps) {
+    const { t } = useTranslation()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
+    const [activeTab, setActiveTab] = useState<'parties' | 'suppliers'>('parties')
     const [search, setSearch] = useState('')
     const [showInactive, setShowInactive] = useState(false)
     const [selectedPartyId, setSelectedPartyId] = useState<string | null>(initialData.parties[0]?.id ?? null)
+    const [supplierSearch, setSupplierSearch] = useState('')
+    const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(initialData.suppliers[0]?.id ?? null)
     const [partyDialogOpen, setPartyDialogOpen] = useState(false)
     const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false)
     const [receiptDialogOpen, setReceiptDialogOpen] = useState(false)
     const [adjustmentDialogOpen, setAdjustmentDialogOpen] = useState(false)
+    const [supplierDialogOpen, setSupplierDialogOpen] = useState(false)
+    const [supplierEntryDialogOpen, setSupplierEntryDialogOpen] = useState(false)
     const [editingParty, setEditingParty] = useState<LedgerParty | null>(null)
+    const [editingSupplier, setEditingSupplier] = useState<LedgerSupplier | null>(null)
     const [partyForm, setPartyForm] = useState<PartyFormType>(emptyPartyForm())
     const [invoiceForm, setInvoiceForm] = useState<InvoiceFormType>(emptyInvoiceForm(initialData.parties[0]))
     const [receiptForm, setReceiptForm] = useState<ReceiptFormType>(emptyReceiptForm(initialData.parties[0]))
     const [adjustmentForm, setAdjustmentForm] = useState<AdjustmentFormType>(emptyAdjustmentForm(initialData.parties[0]))
+    const [supplierForm, setSupplierForm] = useState<SupplierFormType>(emptySupplierForm())
+    const [supplierEntryForm, setSupplierEntryForm] = useState<SupplierEntryFormType>(emptySupplierEntryForm(initialData.suppliers[0]))
 
     const activeParties = useMemo(() => initialData.parties.filter(party => party.is_active), [initialData.parties])
     const selectedParty = useMemo(() => {
         if (!selectedPartyId) return null
         return initialData.parties.find(party => party.id === selectedPartyId) ?? null
     }, [initialData.parties, selectedPartyId])
+
+    const selectedSupplier = useMemo(() => {
+        if (!selectedSupplierId) return null
+        return initialData.suppliers.find((supplier) => supplier.id === selectedSupplierId) ?? null
+    }, [initialData.suppliers, selectedSupplierId])
 
     const filteredParties = useMemo(() => {
         const q = search.trim().toLowerCase()
@@ -217,6 +272,16 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                 .some(value => value!.toLowerCase().includes(q))
         })
     }, [initialData.parties, search, showInactive])
+
+    const filteredSuppliers = useMemo(() => {
+        const q = supplierSearch.trim().toLowerCase()
+        return initialData.suppliers.filter((supplier) => {
+            if (!q) return true
+            return [supplier.name, supplier.phone, supplier.gst_number]
+                .filter(Boolean)
+                .some((value) => value!.toLowerCase().includes(q))
+        })
+    }, [initialData.suppliers, supplierSearch])
 
     const selectedInvoices = useMemo(() => {
         if (!selectedParty) return []
@@ -241,12 +306,20 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
     const invoiceParty = initialData.parties.find(party => party.id === invoiceForm.party_id) ?? selectedParty
     const receiptParty = initialData.parties.find(party => party.id === receiptForm.party_id) ?? selectedParty
     const adjustmentParty = initialData.parties.find(party => party.id === adjustmentForm.party_id) ?? selectedParty
+    const selectedSupplierEntries = useMemo(() => {
+        if (!selectedSupplier) return []
+        return initialData.supplierEntries.filter((entry) => entry.supplier_id === selectedSupplier.id)
+    }, [initialData.supplierEntries, selectedSupplier])
 
     const receiptInvoiceOptions = initialData.invoices.filter(invoice => (
         invoice.party_id === receiptForm.party_id &&
         invoice.status !== 'cancelled' &&
         invoice.balance_amount > 0.01
     ))
+
+    const receiptAllocatedTotal = useMemo(() => {
+        return receiptForm.allocations.reduce((sum, allocation) => sum + toNumber(allocation.allocated_amount), 0)
+    }, [receiptForm.allocations])
 
     const adjustmentInvoiceOptions = initialData.invoices.filter(invoice => (
         invoice.party_id === adjustmentForm.party_id && invoice.status !== 'cancelled'
@@ -296,6 +369,24 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
         setAdjustmentDialogOpen(true)
     }
 
+    function openAddSupplier() {
+        setEditingSupplier(null)
+        setSupplierForm(emptySupplierForm())
+        setSupplierDialogOpen(true)
+    }
+
+    function openEditSupplier(supplier: LedgerSupplier) {
+        setEditingSupplier(supplier)
+        setSupplierForm(supplierToForm(supplier))
+        setSupplierDialogOpen(true)
+    }
+
+    function openSupplierEntry(supplier?: LedgerSupplier | null, type: 'purchase' | 'payment' = 'purchase') {
+        const fallback = supplier ?? selectedSupplier ?? initialData.suppliers[0] ?? null
+        setSupplierEntryForm(emptySupplierEntryForm(fallback, type))
+        setSupplierEntryDialogOpen(true)
+    }
+
     function handleInvoicePartyChange(partyId: string) {
         const party = initialData.parties.find(p => p.id === partyId)
         setInvoiceForm(prev => ({
@@ -332,13 +423,13 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                 return
             }
 
-            refreshAfter(editingParty ? 'Party updated' : 'Party added', () => setPartyDialogOpen(false))
+            refreshAfter(editingParty ? t('ledger.party.updated') : t('ledger.party.added'), () => setPartyDialogOpen(false))
         })
     }
 
     async function submitInvoice() {
         if (!invoiceForm.party_id) {
-            toast.error('Select a party first')
+            toast.error(t('ledger.party.selectFirst'))
             return
         }
 
@@ -356,13 +447,13 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                 return
             }
 
-            refreshAfter('Bill recorded', () => setInvoiceDialogOpen(false))
+            refreshAfter(t('ledger.invoice.recorded'), () => setInvoiceDialogOpen(false))
         })
     }
 
     async function submitReceipt() {
         if (!receiptForm.party_id) {
-            toast.error('Select a party first')
+            toast.error(t('ledger.party.selectFirst'))
             return
         }
 
@@ -371,6 +462,14 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                 ...receiptForm,
                 invoice_id: receiptForm.invoice_id === 'none' ? '' : receiptForm.invoice_id,
                 amount: toNumber(receiptForm.amount),
+                allocations: receiptForm.allocate_across_invoices
+                    ? receiptForm.allocations
+                        .map((allocation) => ({
+                            invoice_id: allocation.invoice_id,
+                            allocated_amount: toNumber(allocation.allocated_amount),
+                        }))
+                        .filter((allocation) => allocation.allocated_amount > 0)
+                    : [],
             })
 
             if ('error' in result) {
@@ -378,13 +477,13 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                 return
             }
 
-            refreshAfter('Receipt recorded', () => setReceiptDialogOpen(false))
+            refreshAfter(t('ledger.receipt.receiptRecorded'), () => setReceiptDialogOpen(false))
         })
     }
 
     async function submitAdjustment() {
         if (!adjustmentForm.party_id) {
-            toast.error('Select a party first')
+            toast.error(t('ledger.party.selectFirst'))
             return
         }
 
@@ -400,7 +499,7 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                 return
             }
 
-            refreshAfter('Adjustment recorded', () => setAdjustmentDialogOpen(false))
+            refreshAfter(t('ledger.adjustment.recorded'), () => setAdjustmentDialogOpen(false))
         })
     }
 
@@ -411,7 +510,46 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                 toast.error(result.error)
                 return
             }
-            refreshAfter(party.is_active ? 'Party archived' : 'Party restored')
+            refreshAfter(party.is_active ? t('ledger.party.archived') : t('ledger.party.restored'))
+        })
+    }
+
+    async function submitSupplier() {
+        startTransition(async () => {
+            const result = editingSupplier
+                ? await updateSupplier(editingSupplier.id, supplierForm)
+                : await createSupplier(supplierForm)
+
+            if ('error' in result) {
+                toast.error(result.error)
+                return
+            }
+
+            refreshAfter(editingSupplier ? t('ledger.supplier.updated') : t('ledger.supplier.added'), () => setSupplierDialogOpen(false))
+        })
+    }
+
+    async function submitSupplierEntry() {
+        if (!supplierEntryForm.supplier_id) {
+            toast.error(t('ledger.supplier.selectFirst'))
+            return
+        }
+
+        startTransition(async () => {
+            const result = await createSupplierLedgerEntry({
+                ...supplierEntryForm,
+                amount: toNumber(supplierEntryForm.amount),
+            })
+
+            if ('error' in result) {
+                toast.error(result.error)
+                return
+            }
+
+            refreshAfter(
+                supplierEntryForm.type === 'purchase' ? t('suppliers.entry.recordPurchase') : t('suppliers.entry.recordPayment'),
+                () => setSupplierEntryDialogOpen(false)
+            )
         })
     }
 
@@ -421,62 +559,113 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-3xl space-y-3">
                         <Badge variant="outline" className="border-teal-200 bg-white/70 text-teal-800">
-                            Module 1 · Party receivable register
+                            {t('ledger.heroBadge')}
                         </Badge>
                         <div>
                             <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
                                 <BookOpen className="h-8 w-8 text-teal-700" />
-                                Party Ledger
+                                {t('ledger.pageTitle')}
                             </h1>
                             <p className="mt-2 text-sm leading-6 text-slate-600 md:text-base">
-                                Convert the paper register into a simple digital flow: party master, bill entry, payment receipt, claim/deduction, and overdue follow-up.
+                                {t('ledger.pageDescription')}
                             </p>
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" className="bg-white/80" onClick={openAddParty}>
-                            <Plus className="mr-2 h-4 w-4" /> Add Party
-                        </Button>
-                        <Button className="bg-teal-700 hover:bg-teal-800" onClick={() => openInvoice()} disabled={activeParties.length === 0}>
-                            <FileText className="mr-2 h-4 w-4" /> New Bill
-                        </Button>
+                        <div className="flex rounded-2xl border border-slate-200 bg-white/80 p-1">
+                            <Button variant={activeTab === 'parties' ? 'default' : 'ghost'} className={cn('rounded-xl', activeTab === 'parties' ? 'bg-slate-900 text-white hover:bg-slate-900' : '')} onClick={() => setActiveTab('parties')}>
+                                {t('ledger.tabs.parties')}
+                            </Button>
+                            <Button variant={activeTab === 'suppliers' ? 'default' : 'ghost'} className={cn('rounded-xl', activeTab === 'suppliers' ? 'bg-slate-900 text-white hover:bg-slate-900' : '')} onClick={() => setActiveTab('suppliers')}>
+                                {t('ledger.tabs.suppliers')}
+                            </Button>
+                        </div>
+                        {activeTab === 'parties' ? (
+                            <>
+                                <Button variant="outline" className="bg-white/80" onClick={openAddParty}>
+                                    <Plus className="mr-2 h-4 w-4" /> {t('emptyState.ledger.addParty')}
+                                </Button>
+                                <Button className="bg-teal-700 hover:bg-teal-800" onClick={() => openInvoice()} disabled={activeParties.length === 0}>
+                                    <FileText className="mr-2 h-4 w-4" /> {t('ledger.invoice.submit')}
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button variant="outline" className="bg-white/80" onClick={openAddSupplier}>
+                                    <Plus className="mr-2 h-4 w-4" /> {t('suppliers.addSupplier')}
+                                </Button>
+                                <Button className="bg-indigo-700 hover:bg-indigo-800" onClick={() => openSupplierEntry(undefined, 'purchase')} disabled={initialData.suppliers.length === 0}>
+                                    <FileText className="mr-2 h-4 w-4" /> {t('suppliers.entry.recordPurchase')}
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
             </section>
 
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <MetricCard title="Receivable" value={shortMoney(totals.receivable)} helper="Money parties owe you" icon={WalletCards} tone="teal" />
-                <MetricCard title="Overdue" value={shortMoney(totals.overdue)} helper="Past credit date" icon={Clock} tone="rose" />
-                <MetricCard title="Payable/Credit" value={shortMoney(totals.payable)} helper="Advance or overpaid parties" icon={HandCoins} tone="sky" />
-                <MetricCard title="Credit Risk" value={String(totals.overLimit)} helper="Parties over credit limit" icon={AlertTriangle} tone="amber" />
+                {activeTab === 'parties' ? (
+                    <>
+                        <MetricCard title={t('ledger.metrics.receivable')} value={shortMoney(totals.receivable)} helper={t('ledger.metrics.receivableHelp')} icon={WalletCards} tone="teal" />
+                        <MetricCard title={t('ledger.metrics.overdue')} value={shortMoney(totals.overdue)} helper={t('ledger.metrics.overdueHelp')} icon={Clock} tone="rose" />
+                        <MetricCard title={t('ledger.metrics.payable')} value={shortMoney(totals.payable)} helper={t('ledger.metrics.payableHelp')} icon={HandCoins} tone="sky" />
+                        <MetricCard title={t('ledger.metrics.creditRisk')} value={String(totals.overLimit)} helper={t('ledger.metrics.creditRiskHelp')} icon={AlertTriangle} tone="amber" />
+                    </>
+                ) : (
+                    <>
+                        <MetricCard title={t('ledger.metrics.suppliers')} value={String(initialData.suppliers.length)} helper={t('ledger.metrics.suppliersHelp')} icon={BookOpen} tone="teal" />
+                        <MetricCard title={t('suppliers.entry.purchasesMetric')} value={shortMoney(initialData.supplierEntries.filter(entry => entry.type === 'purchase').reduce((sum, entry) => sum + entry.amount, 0))} helper={t('ledger.metrics.purchasesHelp')} icon={FileText} tone="amber" />
+                        <MetricCard title={t('suppliers.entry.paymentsMetric')} value={shortMoney(initialData.supplierEntries.filter(entry => entry.type === 'payment').reduce((sum, entry) => sum + entry.amount, 0))} helper={t('ledger.metrics.paymentsHelp')} icon={HandCoins} tone="sky" />
+                        <MetricCard title={t('suppliers.balance')} value={shortMoney(initialData.suppliers.reduce((sum, supplier) => sum + Math.max(0, supplier.balance), 0))} helper={t('ledger.metrics.supplierPayableHelp')} icon={AlertTriangle} tone="rose" />
+                    </>
+                )}
             </section>
 
-            <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
-                <PartyList
-                    parties={filteredParties}
-                    search={search}
-                    onSearchChange={setSearch}
-                    showInactive={showInactive}
-                    onToggleShowInactive={() => setShowInactive(prev => !prev)}
-                    selectedPartyId={selectedPartyId}
-                    onSelectParty={setSelectedPartyId}
-                />
+            {activeTab === 'parties' ? (
+                <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
+                    <PartyList
+                        parties={filteredParties}
+                        search={search}
+                        onSearchChange={setSearch}
+                        showInactive={showInactive}
+                        onToggleShowInactive={() => setShowInactive(prev => !prev)}
+                        selectedPartyId={selectedPartyId}
+                        onSelectParty={setSelectedPartyId}
+                    />
 
-                <PartyDetails
-                    party={selectedParty}
-                    invoices={selectedInvoices}
-                    receipts={selectedReceipts}
-                    adjustments={selectedAdjustments}
-                    transactions={selectedTransactions}
-                    isPending={isPending}
-                    onOpenInvoice={openInvoice}
-                    onOpenReceipt={openReceipt}
-                    onOpenAdjustment={openAdjustment}
-                    onOpenEditParty={openEditParty}
-                    onTogglePartyActive={togglePartyActive}
-                    onOpenAddParty={openAddParty}
-                />
-            </section>
+                    <PartyDetails
+                        party={selectedParty}
+                        invoices={selectedInvoices}
+                        receipts={selectedReceipts}
+                        adjustments={selectedAdjustments}
+                        transactions={selectedTransactions}
+                        isPending={isPending}
+                        onOpenInvoice={openInvoice}
+                        onOpenReceipt={openReceipt}
+                        onOpenAdjustment={openAdjustment}
+                        onOpenEditParty={openEditParty}
+                        onTogglePartyActive={togglePartyActive}
+                        onOpenAddParty={openAddParty}
+                    />
+                </section>
+            ) : (
+                <section className="grid gap-5 lg:grid-cols-[360px_1fr]">
+                    <SupplierList
+                        suppliers={filteredSuppliers}
+                        search={supplierSearch}
+                        onSearchChange={setSupplierSearch}
+                        selectedSupplierId={selectedSupplierId}
+                        onSelectSupplier={setSelectedSupplierId}
+                    />
+                    <SupplierDetails
+                        supplier={selectedSupplier}
+                        entries={selectedSupplierEntries}
+                        onOpenAddSupplier={openAddSupplier}
+                        onOpenEditSupplier={openEditSupplier}
+                        onOpenEntry={openSupplierEntry}
+                    />
+                </section>
+            )}
 
             <PartyFormModal
                 open={partyDialogOpen}
@@ -509,6 +698,7 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                 activeParties={activeParties}
                 invoiceOptions={receiptInvoiceOptions}
                 receiptParty={receiptParty}
+                allocatedTotal={receiptAllocatedTotal}
                 isPending={isPending}
                 onSubmit={submitReceipt}
             />
@@ -523,6 +713,26 @@ export default function LedgerClient({ initialData }: LedgerClientProps) {
                 adjustmentParty={adjustmentParty}
                 isPending={isPending}
                 onSubmit={submitAdjustment}
+            />
+
+            <SupplierFormModal
+                open={supplierDialogOpen}
+                onOpenChange={setSupplierDialogOpen}
+                supplierForm={supplierForm}
+                setSupplierForm={setSupplierForm}
+                editing={!!editingSupplier}
+                isPending={isPending}
+                onSubmit={submitSupplier}
+            />
+
+            <SupplierEntryFormModal
+                open={supplierEntryDialogOpen}
+                onOpenChange={setSupplierEntryDialogOpen}
+                entryForm={supplierEntryForm}
+                setEntryForm={setSupplierEntryForm}
+                suppliers={initialData.suppliers}
+                isPending={isPending}
+                onSubmit={submitSupplierEntry}
             />
         </div>
     )

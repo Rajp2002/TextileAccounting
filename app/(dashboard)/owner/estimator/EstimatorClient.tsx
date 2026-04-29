@@ -689,7 +689,7 @@ export default function EstimatorClient({
         dispatch({ type: 'APPLY_TEMPLATE', template: tpl })
         setAppliedTemplate(tpl)
         setQualityLabel(tpl.name)
-        toast.success(`${t('estimator.toast.applied_template')} ${tpl.name}`)
+        toast.success(`${t('estimator.quality.applied')} ${tpl.name}`)
     }, [t])
 
     const handleSaveProfile = async () => {
@@ -726,7 +726,7 @@ export default function EstimatorClient({
     }
 
     const handleSaveTemplate = async () => {
-        if (!templateName.trim()) return toast.error(t('estimator.toast.save_template_name_error'))
+        if (!templateName.trim()) return toast.error(t('estimator.quality.nameRequired'))
         setSavingTemplate(true)
         const res = await saveAsFabricTemplate({
             name:             templateName.trim(),
@@ -750,9 +750,9 @@ export default function EstimatorClient({
             setShowSaveTemplate(false)
             setTemplateName('')
             clearDraft()
-            toast.success(t('estimator.toast.saved_template'))
+            toast.success(t('estimator.quality.saved'))
         } else {
-            toast.error(res.error ?? 'Failed to save template')
+            toast.error(res.error ?? t('estimator.quality.saveFailed'))
         }
     }
 
@@ -782,9 +782,9 @@ export default function EstimatorClient({
             const tRes = await getEstimatorTemplates()
             if (tRes.data) setTemplates(tRes.data)
             setAppliedTemplate({ ...appliedTemplate, name: updatedName })
-            toast.success(`Updated '${updatedName}' successfully!`)
+            toast.success(t('estimator.toast.updated_applied'))
         } else {
-            toast.error(res.error ?? 'Failed to update template')
+            toast.error(res.error ?? t('estimator.quality.updateFailed'))
         }
     }
 
@@ -876,7 +876,7 @@ export default function EstimatorClient({
         setDeletingTpl(null)
         if (res.error) { toast.error(res.error); return }
         setTemplates(prev => prev.filter(t => t.id !== id))
-        toast.success(t('estimator.toast.template_deleted'))
+        toast.success(t('estimator.quality.deleted'))
     }
 
     const handleSaveQuote = async () => {
@@ -1116,7 +1116,7 @@ export default function EstimatorClient({
                                         size="sm"
                                         onClick={() => setAppliedTemplate(null)}
                                         className="h-9 px-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors ml-1"
-                                        title="Detach template (Go back to 'Save' mode)"
+                                        title={t('estimator.quality.detachTooltip')}
                                     >
                                         <X className="h-4 w-4" />
                                     </Button>
@@ -1131,7 +1131,7 @@ export default function EstimatorClient({
                                         setShowSaveTemplate(true)
                                     }}
                                 >
-                                    <BookmarkPlus className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{t('estimator.hud.save_template_btn')}</span>
+                                    <BookmarkPlus className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{t('estimator.quality.saveQuality')}</span>
                                 </Button>
                             )}
                         </div>
@@ -1194,15 +1194,15 @@ export default function EstimatorClient({
             {/* ── MAIN FORM ────────────────────────────────────────────── */}
             <div className="max-w-4xl mx-auto space-y-6">
 
-                {/* Fabric Templates Row */}
+                {/* Saved Qualities Row */}
                 {templates.length > 0 && (
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
                             <History className="h-3.5 w-3.5 text-slate-400" />
-                            <p className="text-[11px] uppercase tracking-widest text-slate-500 font-bold">{t('estimator.templates.label')}</p>
-                            <span className="ml-auto text-[10px] text-slate-400 font-medium">{t('estimator.templates.hint')}</span>
+                            <p className="text-[11px] uppercase tracking-widest text-slate-500 font-bold">{t('estimator.quality.myQualities')}</p>
+                            <span className="ml-auto text-[10px] text-slate-400 font-medium">{t('estimator.quality.hint')}</span>
                         </div>
-                        {/* Search — only shown when there are more than 5 templates */}
+                        {/* Search — only shown when there are more than 5 qualities */}
                         {templates.length > 5 && (
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
@@ -1210,7 +1210,7 @@ export default function EstimatorClient({
                                     type="text"
                                     value={templateSearch}
                                     onChange={e => setTemplateSearch(e.target.value)}
-                                    placeholder={`Search ${templates.length} templates…`}
+                                    placeholder={t('estimator.quality.searchPlaceholder').replace('{count}', String(templates.length))}
                                     className="w-full pl-8 pr-8 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent"
                                 />
                                 {templateSearch && (
@@ -1223,7 +1223,9 @@ export default function EstimatorClient({
                                 )}
                                 {templateSearch && (
                                     <p className="text-[10px] text-slate-400 mt-1">
-                                        {filteredTemplates.length} of {templates.length} templates
+                                        {t('estimator.quality.searchResults')
+                                            .replace('{shown}', String(filteredTemplates.length))
+                                            .replace('{total}', String(templates.length))}
                                     </p>
                                 )}
                             </div>
@@ -1236,7 +1238,7 @@ export default function EstimatorClient({
                                 className="shrink-0 rounded-xl px-3 h-[38px] border-dashed border-slate-300 text-slate-400 hover:text-brand-accent hover:border-brand-accent hover:bg-brand-accent/5 transition-all gap-1.5 font-bold"
                              >
                                 <RotateCcw className="h-3.5 w-3.5" />
-                                {t('estimator.templates.reset_btn') || 'Reset'}
+                                {t('estimator.quality.resetBtn')}
                              </Button>
 
                              <Button
@@ -1249,7 +1251,7 @@ export default function EstimatorClient({
                                 className="shrink-0 rounded-xl px-4 h-[38px] border-indigo-200 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-100/50 hover:border-indigo-300 transition-all gap-1.5 font-bold shadow-sm"
                              >
                                 <Plus className="h-3.5 w-3.5" />
-                                {t('estimator.templates.save_btn') || 'Save'}
+                                {t('estimator.quality.newQuality')}
                              </Button>
                             {filteredTemplates.map(tpl => (
                                 <div key={tpl.id} className="relative shrink-0 group flex items-center">
@@ -1268,20 +1270,20 @@ export default function EstimatorClient({
                                         <button
                                             onClick={e => { e.stopPropagation(); openEditRates(tpl) }}
                                             className="p-1 rounded-md hover:bg-brand-accent/10 text-slate-400 hover:text-brand-accent transition-colors"
-                                            title={t('estimator.templates.edit_rates_title')}
+                                            title={t('estimator.quality.editRatesTitle')}
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                         </button>
                                         <button
                                             onClick={e => {
                                                 e.stopPropagation();
-                                                if (window.confirm(t('estimator.edit_template_dialog.delete_confirm').replace('{name}', tpl.name))) {
+                                                if (window.confirm(t('estimator.quality.deleteConfirm').replace('{name}', tpl.name))) {
                                                     handleDeleteTemplate(tpl.id)
                                                 }
                                             }}
                                             disabled={deletingTpl === tpl.id}
                                             className="p-1 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
-                                            title={t('estimator.edit_template_dialog.delete_button')}
+                                            title={t('estimator.quality.deleteButton')}
                                         >
                                             {deletingTpl === tpl.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                                         </button>
@@ -1289,7 +1291,7 @@ export default function EstimatorClient({
                                 </div>
                             ))}
                             {filteredTemplates.length === 0 && templateSearch && (
-                                <p className="text-xs text-slate-400 italic py-2">No templates match "{templateSearch}"</p>
+                                <p className="text-xs text-slate-400 italic py-2">{t('estimator.quality.noMatch').replace('{query}', templateSearch)}</p>
                             )}
                         </div>
                     </div>
@@ -2269,15 +2271,15 @@ export default function EstimatorClient({
 
             {/* ── DIALOGS ────────────────────────────────────────────────── */}
 
-            {/* Save Template Dialog */}
+            {/* Save Quality Dialog */}
             <Dialog open={showSaveTemplate} onOpenChange={setShowSaveTemplate}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>{t('estimator.save_template_dialog.title')}</DialogTitle>
+                        <DialogTitle>{t('estimator.quality.saveDialogTitle')}</DialogTitle>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.save_template_dialog.quality_name_label')}</Label>
+                            <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.quality.qualityNameLabel')}</Label>
                             <Input
                                 placeholder="Japan Satin, Canvas Shine"
                                 value={templateName}
@@ -2287,32 +2289,32 @@ export default function EstimatorClient({
                             />
                         </div>
                         <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 leading-relaxed space-y-1">
-                            <p>{t('estimator.save_template_dialog.saves_note_prefix')} {state.warpRows.length} {t('estimator.save_template_dialog.saves_note_warp')} {state.weftRows.length} {t('estimator.save_template_dialog.saves_note_weft')}</p>
-                            <p className="text-slate-400">{t('estimator.save_template_dialog.rate_note')}</p>
+                            <p>{t('estimator.quality.savesNotePrefix')} {state.warpRows.length} {t('estimator.quality.savesNoteWarp')} {state.weftRows.length} {t('estimator.quality.savesNoteWeft')}</p>
+                            <p className="text-slate-400">{t('estimator.quality.rateNote')}</p>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setShowSaveTemplate(false)}>{t('estimator.save_template_dialog.cancel')}</Button>
+                        <Button variant="ghost" onClick={() => setShowSaveTemplate(false)}>{t('estimator.quality.cancel')}</Button>
                         <Button className="bg-brand-accent text-white" onClick={handleSaveTemplate} disabled={savingTemplate}>
                             {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                            {t('estimator.save_template_dialog.confirm')}
+                            {t('estimator.quality.confirmSave')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            {/* Edit Template Rates Dialog */}
+            {/* Edit Quality Rates Dialog */}
             <Dialog open={!!editRatesTpl} onOpenChange={open => { if (!open) setEditRatesTpl(null) }}>
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-brand-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            {t('estimator.edit_template_dialog.title')} {editRatesTpl?.name}
+                            {t('estimator.quality.editDialogTitle')} {editRatesTpl?.name}
                         </DialogTitle>
                     </DialogHeader>
                     <div className="py-3 space-y-5">
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.edit_template_dialog.quality_name_label')}</Label>
+                            <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.quality.qualityNameLabel')}</Label>
                             <Input
                                 value={editingTplName}
                                 onChange={e => setEditingTplName(e.target.value)}
@@ -2320,13 +2322,13 @@ export default function EstimatorClient({
                             />
                         </div>
                         <p className="text-xs text-slate-500 leading-relaxed">
-                            {t('estimator.edit_template_dialog.structure_note_prefix')} <span className="font-bold text-slate-700">{t('estimator.edit_template_dialog.structure_note_and')}</span> {t('estimator.edit_template_dialog.structure_note_suffix')}
+                            {t('estimator.quality.structureNotePrefix')} <span className="font-bold text-slate-700">{t('estimator.quality.structureNoteAnd')}</span> {t('estimator.quality.structureNoteSuffix')}
                         </p>
 
                         {/* Warp rates */}
                         {editingWarpRates.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest font-black text-indigo-600">{t('estimator.edit_template_dialog.warp_rates')}</p>
+                                <p className="text-[10px] uppercase tracking-widest font-black text-indigo-600">{t('estimator.quality.warpRates')}</p>
                                 {(editRatesTpl?.warp_rows ?? []).map((row: WarpRow, i: number) => (
                                     <div key={row.id} className="flex items-center gap-4 bg-indigo-50/50 border border-indigo-100/50 rounded-2xl px-4 py-3 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50">
                                         <div className="flex-1 min-w-0">
@@ -2355,7 +2357,7 @@ export default function EstimatorClient({
                         {/* Weft rates */}
                         {editingWeftRates.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest font-black text-emerald-600">{t('estimator.edit_template_dialog.weft_rates')}</p>
+                                <p className="text-[10px] uppercase tracking-widest font-black text-emerald-600">{t('estimator.quality.weftRates')}</p>
                                 {(editRatesTpl?.weft_rows ?? []).map((row: WeftRow, i: number) => (
                                     <div key={row.id} className="flex items-center gap-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl px-4 py-3 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50">
                                         <div className="flex-1 min-w-0">
@@ -2385,7 +2387,7 @@ export default function EstimatorClient({
                         <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2">
                             <button
                                 onClick={() => {
-                                    if (editRatesTpl && window.confirm(t('estimator.edit_template_dialog.delete_confirm').replace('{name}', editRatesTpl.name))) {
+                                    if (editRatesTpl && window.confirm(t('estimator.quality.deleteConfirm').replace('{name}', editRatesTpl.name))) {
                                         handleDeleteTemplate(editRatesTpl.id)
                                         setEditRatesTpl(null)
                                     }
@@ -2394,9 +2396,9 @@ export default function EstimatorClient({
                                 className="text-[11px] font-bold text-red-500 hover:text-red-700 transition-colors flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-red-50"
                             >
                                 <Trash2 className="h-3.5 w-3.5" />
-                                {t('estimator.edit_template_dialog.delete_button')}
+                                {t('estimator.quality.deleteButton')}
                             </button>
-                            <p className="text-[10px] text-slate-400 font-medium">{t('estimator.edit_template_dialog.delete_note')}</p>
+                            <p className="text-[10px] text-slate-400 font-medium">{t('estimator.quality.deleteNote')}</p>
                         </div>
                     </div>
                     <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-2">
@@ -2406,7 +2408,7 @@ export default function EstimatorClient({
                             onClick={handleApplyCurrentRates} 
                             className="text-slate-500 font-bold hover:bg-slate-50 rounded-xl"
                         >
-                            {t('estimator.edit_template_dialog.apply_as_is')}
+                            {t('estimator.quality.applyAsIs')}
                         </Button>
                         <Button 
                             className="bg-brand-accent text-white font-black rounded-xl h-12 sm:h-11 shadow-lg shadow-brand-accent/20 hover:shadow-xl hover:shadow-brand-accent/30 transition-all flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[180px]" 
@@ -2415,7 +2417,7 @@ export default function EstimatorClient({
                         >
                             {savingRates ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
                             <span className="text-sm">
-                                {t('estimator.edit_template_dialog.save_apply')}
+                                {t('estimator.quality.saveApply')}
                             </span>
                         </Button>
                     </DialogFooter>

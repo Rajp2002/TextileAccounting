@@ -57,6 +57,8 @@ export const en = {
     signing_out: "Signing out securely...",
     select: "Select",
     fill_all: "Please fill all fields",
+    optional: "Optional",
+    saving: "Saving...",
     updated: "Updated successfully",
     added: "Added successfully",
     removed: "Removed successfully",
@@ -107,6 +109,24 @@ export const en = {
     unconsume: "Un-consume Beam",
     unconsume_success: "Beam reverted to active status.",
     meters: "mtrs",
+  },
+  floor: {
+    ownerBanner: {
+      message: "Viewing as Owner",
+      switch: "Switch to Owner View"
+    },
+    meter: {
+      counterReading: "Loom Counter Reading",
+      counterHelper: "Enter the number shown on your loom's meter display right now",
+      openingReading: "Opening (previous shift)",
+      shiftProduction: "Meters this shift",
+      counterWarning: "Reading is less than opening. Please verify.",
+      counterConfirm: "One or more closing readings are below the opening value. Please confirm before saving this shift."
+    },
+    correction: {
+      windowOpen: "You can edit this entry for {minutes} more minutes",
+      windowClosed: "Edit window expired. Ask the owner for an access code."
+    }
   },
   assignments: {
     title: "Worker Assignments",
@@ -397,7 +417,8 @@ export const en = {
     ledger: {
       title: "No transactions yet",
       cta: "Record a Payment",
-      addParty: "Add Party"
+      addParty: "Add Party",
+      noSupplier: "No suppliers added yet"
     },
     payroll: {
       title: "No settlements this month",
@@ -405,6 +426,23 @@ export const en = {
     },
     dispatches: {
       noStock: "Add fabric to stock first"
+    }
+  },
+  dispatch: {
+    receipt: {
+      recordButton: "Record Receipt",
+      metersReceived: "Meters Received by Trader",
+      note: "Confirmation Note",
+      alreadyConfirmed: "Receipt already confirmed"
+    },
+    shortage: {
+      badge: "{amount}m short",
+      extra: "{amount}m extra",
+      awaiting: "Awaiting receipt",
+      received: "Received ✓"
+    },
+    filter: {
+      pendingReceipt: "Pending Receipt"
     }
   },
   inventory: {
@@ -542,6 +580,109 @@ export const en = {
       dismissed_success: "Alert dismissed.",
       unconsume: "Un-consume (Re-activate)",
       unconsume_desc: "Reverting a consumed beam to 'active' requires an owner access code."
+    }
+  },
+  suppliers: {
+    addSupplier: "Add Supplier",
+    editSupplier: "Edit Supplier",
+    name: "Supplier Name",
+    balance: "Amount Payable",
+    searchPlaceholder: "Search supplier, GST, phone...",
+    noPhone: "No phone",
+    payable: "Payable",
+    settled: "Settled",
+    introTitle: "No suppliers yet",
+    introBody: "Add your yarn or processing suppliers, then record purchases and payments in one simple payable ledger.",
+    formDescription: "Keep one simple payable card for each yarn or job-work supplier.",
+    phone: "Phone",
+    gstNumber: "GST Number",
+    notes: "Notes",
+    ledgerTitle: "Supplier Ledger",
+    noEntries: "No supplier entries yet.",
+    entry: {
+      purchase: "Yarn Purchase",
+      payment: "Payment Made",
+      formDescription: "Record what you bought from the supplier or what you paid back.",
+      supplier: "Supplier",
+      type: "Type",
+      date: "Date",
+      amount: "Amount",
+      note: "Note",
+      selectSupplier: "Select supplier",
+      recordPurchase: "Record Purchase",
+      recordPayment: "Record Payment",
+      purchasesMetric: "Purchases",
+      paymentsMetric: "Payments"
+    }
+  },
+  ledger: {
+    heroBadge: "Module 1 · Party receivable register",
+    pageTitle: "Party Ledger",
+    pageDescription: "Convert the paper register into a simple digital flow: party master, bill entry, payment receipt, claim/deduction, and overdue follow-up.",
+    tabs: {
+      parties: "Parties",
+      suppliers: "Suppliers"
+    },
+    metrics: {
+      receivable: "Receivable",
+      receivableHelp: "Money parties owe you",
+      overdue: "Overdue",
+      overdueHelp: "Past credit date",
+      payable: "Payable/Credit",
+      payableHelp: "Advance or overpaid parties",
+      creditRisk: "Credit Risk",
+      creditRiskHelp: "Parties over credit limit",
+      suppliers: "Suppliers",
+      suppliersHelp: "Active supplier master",
+      purchasesHelp: "Recorded yarn purchases",
+      paymentsHelp: "Money already paid out",
+      supplierPayableHelp: "Outstanding supplier dues"
+    },
+    payment: {
+      allocateToggle: "Allocate across invoices",
+      allocateHelp: "Split one payment across multiple open invoices when needed.",
+      allocated: "Allocated",
+      remaining: "Remaining",
+      allocateFull: "Fully Allocated ✓",
+      allocateWarning: "Allocated amount must equal payment total",
+      noOpenInvoices: "No open invoices available for allocation.",
+      dueBalance: "Due {date} · Balance {amount}"
+    },
+    receipt: {
+      title: "Record Receipt",
+      description: "Record a payment received from a party and optionally allocate it across open bills.",
+      party: "Party",
+      selectParty: "Select party",
+      againstBill: "Against bill",
+      generalReceipt: "General receipt",
+      date: "Date",
+      amount: "Amount",
+      method: "Method",
+      reference: "Reference",
+      referencePlaceholder: "UTR, cheque, or cash note",
+      notes: "Notes",
+      submit: "Record receipt",
+      allocationLabel: "Allocate ₹",
+      receiptRecorded: "Receipt recorded"
+    },
+    party: {
+      updated: "Party updated",
+      added: "Party added",
+      archived: "Party archived",
+      restored: "Party restored",
+      selectFirst: "Select a party first"
+    },
+    invoice: {
+      recorded: "Bill recorded",
+      submit: "New Bill"
+    },
+    adjustment: {
+      recorded: "Adjustment recorded"
+    },
+    supplier: {
+      updated: "Supplier updated",
+      added: "Supplier added",
+      selectFirst: "Select a supplier first"
     }
   },
   settings: {
@@ -686,17 +827,52 @@ export const en = {
       total_order: "Total Order",
       margin: "Margin",
       net_profit: "Net Profit",
-      order_btn: "Save Quote",
-      save_template_btn: "Save Template"
+      order_btn: "Save Quote"
     },
-    templates: {
-      label: "Templates",
+    quality: {
+      myQualities: "My Qualities",
+      newQuality: "New Quality",
+      editQuality: "Edit Quality",
+      saveQuality: "Save Quality",
       hint: "Tap to apply · Long-press to edit rates",
-      edit_rates_title: "Update yarn rates",
-      delete_template: "Delete template",
-      structure_preserved: "Structure preserved · only rates change",
-      reset_btn: "Reset",
-      save_btn: "Save"
+      editRatesTitle: "Update yarn rates",
+      deleteQuality: "Delete Quality",
+      structurePreserved: "Structure preserved · only rates change",
+      resetBtn: "Reset",
+      searchPlaceholder: "Search {count} qualities...",
+      searchResults: "{shown} of {total} qualities",
+      noMatch: "No qualities match \"{query}\"",
+      detachTooltip: "Detach quality (Go back to 'Save' mode)",
+      updateButton: "Update {name}",
+      saveDialogTitle: "Save New Quality",
+      editDialogTitle: "Edit Quality:",
+      qualityNameLabel: "Quality Name",
+      savesNotePrefix: "Saves",
+      savesNoteWarp: "warp +",
+      savesNoteWeft: "weft blend layers including current yarn rates.",
+      rateNote: "Yarn rates can be updated anytime without recreating this quality.",
+      cancel: "Cancel",
+      confirmSave: "Save Quality",
+      structureNotePrefix: "Update yarn rates below. The fabric structure (denier, ends, picks) stays the same. Saving will update this quality",
+      structureNoteAnd: "and",
+      structureNoteSuffix: "apply it to the estimator.",
+      warpRates: "Warp Yarn Rates",
+      weftRates: "Weft Yarn Rates",
+      deleteButton: "Delete Quality",
+      deleteNote: "· This action is permanent",
+      deleteConfirm: "Delete quality \"{name}\"? This action cannot be undone.",
+      applyAsIs: "Apply as-is",
+      saveApply: "Save Rates & Apply",
+      applied: "Applied quality:",
+      saved: "Quality saved!",
+      deleted: "Quality deleted",
+      nameRequired: "Please enter a quality name",
+      saveFailed: "Failed to save quality",
+      updateFailed: "Failed to update quality",
+      settingsTitle: "My Qualities",
+      settingsDescription: "Manage your frequently used fabric configurations. Qualities are saved from the estimator page using \"Save Quality.\"",
+      settingsEmpty: "No qualities saved yet. Open the estimator and use \"Save Quality\" to create your first one.",
+      settingsDeleteConfirm: "Delete this quality?"
     },
     order_basics: {
       title: "Order & Fabric Label",
@@ -780,30 +956,6 @@ export const en = {
       commission: "Broker Comm. %",
       transport: "Transport / m"
     },
-    save_template_dialog: {
-      title: "Save Fabric Template",
-      quality_name_label: "Fabric Quality Name",
-      saves_note_prefix: "Saves",
-      saves_note_warp: "warp +",
-      saves_note_weft: "weft blend layers including current yarn rates.",
-      rate_note: "Yarn rates can be updated anytime without recreating the template.",
-      cancel: "Cancel",
-      confirm: "Confirm & Save"
-    },
-    edit_template_dialog: {
-      title: "Edit Template:",
-      quality_name_label: "Fabric Quality Name",
-      structure_note_prefix: "Update yarn rates below. The fabric structure (denier, ends, picks) stays the same. Saving will update the stored template",
-      structure_note_and: "and",
-      structure_note_suffix: "apply it to the estimator.",
-      warp_rates: "Warp Yarn Rates",
-      weft_rates: "Weft Yarn Rates",
-      delete_button: "Delete template",
-      delete_note: "· This action is permanent",
-      structure_preserved: "Structure preserved · only rates change",
-      apply_as_is: "Apply as-is",
-      save_apply: "Save Rates & Apply"
-    },
     convert_dialog: {
       title: "Convert to Production Order",
       cost_summary: "Cost Summary",
@@ -837,15 +989,11 @@ export const en = {
       transport_per_m: "Transport / m"
     },
     toast: {
-      applied_template: "Applied fabric template:",
-      saved_template: "Fabric template saved!",
-      template_deleted: "Template deleted",
-      updated_applied: "Template updated & applied",
+      updated_applied: "Quality updated & applied",
       applied_as_is: "Applied:",
       party_required: "Party name required",
       quality_required: "Quality label required",
       converted_success: "Quote saved successfully",
-      save_template_name_error: "Please enter a fabric name",
       rename_failed: "Rename failed:"
     }
   },

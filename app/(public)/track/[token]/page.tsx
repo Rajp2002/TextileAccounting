@@ -10,6 +10,7 @@ export interface TrackingDispatch {
     dispatch_number: number
     qty_meters_sent: number
     qty_meters_received: number | null
+    receipt_confirmed_by_owner: boolean
     status: 'in_transit' | 'delivered' | 'disputed'
     dispatched_at: string
     received_at: string | null

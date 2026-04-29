@@ -109,7 +109,7 @@ const TABLE_LABELS: Record<string, string> = {
     qualities: 'Quality',
     profiles: 'User Profile',
     factory_cost_profile: 'Factory Cost Profile',
-    estimator_templates: 'Estimator Template',
+    estimator_templates: 'Quality',
     estimator_quotes: 'Quote',
 }
 

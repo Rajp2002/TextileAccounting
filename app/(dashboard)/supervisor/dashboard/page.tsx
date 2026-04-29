@@ -61,6 +61,9 @@ import {
 } from "@/components/ui/dialog"
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
+import { useUserProfile } from '@/hooks/use-user-profile'
+import { RoleBanner } from '@/components/RoleBanner'
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
@@ -71,6 +74,12 @@ function getCurrentShift(): 'day' | 'night' {
 
 function getTodayString() {
     return format(new Date(), 'yyyy-MM-dd')
+}
+
+function getRemainingCorrectionMinutes(expiresAt: string | null) {
+    if (!expiresAt) return 0
+    const remainingMs = new Date(expiresAt).getTime() - Date.now()
+    return Math.max(0, Math.ceil(remainingMs / 60000))
 }
 
 // ─── Status Badge Component ──────────────────────────────────────────────────
@@ -105,8 +114,9 @@ interface MachineUnifiedRowProps {
     workers: any[]
     orders: any[]
     assignment: any
-    metersValue: number
-    onMetersChange: (v: number) => void
+    closingReading: number
+    openingReading: number
+    onClosingReadingChange: (v: number) => void
     onStatusClick: (machine: any) => void
     onAssignmentChange: (machineId: string, workerId: number | null, orderId: string | null) => void
     isSyncing?: boolean
@@ -118,8 +128,9 @@ function MachineUnifiedRow({
     workers,
     orders,
     assignment,
-    metersValue,
-    onMetersChange,
+    closingReading,
+    openingReading,
+    onClosingReadingChange,
     onStatusClick,
     onAssignmentChange,
     isSyncing,
@@ -132,6 +143,8 @@ function MachineUnifiedRow({
 
     const selectedOrder = orders.find((o) => o.id === orderId)
     const isMaintenance = status === 'maintenance'
+    const shiftMeters = closingReading - openingReading
+    const readingWarning = closingReading > 0 && closingReading < openingReading
 
     return (
         <div className={cn(
@@ -237,22 +250,33 @@ function MachineUnifiedRow({
                         <>
                             <div className={cn(
                                 "flex items-center bg-background border-2 rounded-2xl overflow-hidden transition-all duration-300 group/input",
-                                metersValue > 0 ? "border-primary shadow-[0_8px_20px_-6px_rgba(255,87,34,0.25)] ring-4 ring-primary/5" : "border-border shadow-sm"
+                                closingReading > 0 ? "border-primary shadow-[0_8px_20px_-6px_rgba(255,87,34,0.25)] ring-4 ring-primary/5" : "border-border shadow-sm"
                             )}>
                                 <Input
                                     type="number"
                                     inputMode="decimal"
                                     pattern="[0-9]*"
                                     placeholder="0"
-                                    value={metersValue || ''}
-                                    onChange={(e) => onMetersChange(Number(e.target.value))}
+                                    value={closingReading || ''}
+                                    onChange={(e) => onClosingReadingChange(Number(e.target.value))}
                                     className="h-10 xs:h-12 flex-1 border-none bg-transparent text-lg xs:text-xl font-black text-center font-mono focus-visible:ring-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                             </div>
-                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-card border border-border px-2 py-0.5 rounded-full shadow-sm">
-                                <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">
-                                    {t('production.meters')}
-                                </span>
+                            <div className="absolute -bottom-8 left-1/2 flex min-w-max -translate-x-1/2 flex-col items-center gap-1">
+                                <div className="flex items-center gap-1 bg-card border border-border px-2 py-0.5 rounded-full shadow-sm">
+                                    <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">
+                                        {t('floor.meter.counterReading')}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                                    <span>{t('floor.meter.openingReading')}: {openingReading}</span>
+                                    <span>{t('floor.meter.shiftProduction')}: {shiftMeters}</span>
+                                </div>
+                                {readingWarning && (
+                                    <span className="max-w-[11rem] text-center text-[9px] font-semibold text-red-600">
+                                        {t('floor.meter.counterWarning')}
+                                    </span>
+                                )}
                             </div>
                         </>
                     )}
@@ -445,6 +469,7 @@ function MachineDetailSheet({
 
 export default function UnifiedDashboard() {
     const { t } = useTranslation()
+    const { data: userProfile } = useUserProfile()
     const [date, setDate] = useState(getTodayString())
     const [shift, setShift] = useState<'day' | 'night'>(getCurrentShift())
     const [loading, setLoading] = useState(true)
@@ -457,7 +482,12 @@ export default function UnifiedDashboard() {
     const [assignments, setAssignments] = useState<any[]>([])
 
     // Bulk Entry state
-    const [meters, setMeters] = useState<Record<string, number>>({})
+    const [closingReadings, setClosingReadings] = useState<Record<string, number>>({})
+    const [openingReadings, setOpeningReadings] = useState<Record<string, number>>({})
+    const [correctionWindowExpiresAt, setCorrectionWindowExpiresAt] = useState<string | null>(null)
+    const [confirmNegativeReadings, setConfirmNegativeReadings] = useState(false)
+    const [pendingPackAfter, setPendingPackAfter] = useState(false)
+    const [, setCountdownTick] = useState(0)
     
     // Optimistic / Sync markers
     const [syncingState, setSyncingState] = useState<Record<string, 'syncing' | 'saved' | null>>({})
@@ -516,24 +546,22 @@ export default function UnifiedDashboard() {
         touchStartRef.current = null
     }
 
-    // Load meter entries from localStorage for offline recovery
+    // Save to localStorage whenever closing readings change
     useEffect(() => {
-        const cached = localStorage.getItem(`meters_${date}_${shift}`)
-        if (cached) {
-            try {
-                setMeters(JSON.parse(cached))
-            } catch (e) {
-                console.error('Failed to parse cached meters', e)
-            }
+        if (Object.keys(closingReadings).length > 0) {
+            localStorage.setItem(`closing_readings_${date}_${shift}`, JSON.stringify(closingReadings))
         }
-    }, [date, shift])
+    }, [closingReadings, date, shift])
 
-    // Save to localStorage whenever meters change
     useEffect(() => {
-        if (Object.keys(meters).length > 0) {
-            localStorage.setItem(`meters_${date}_${shift}`, JSON.stringify(meters))
-        }
-    }, [meters, date, shift])
+        if (!correctionWindowExpiresAt) return
+
+        const interval = window.setInterval(() => {
+            setCountdownTick((prev) => prev + 1)
+        }, 30000)
+
+        return () => window.clearInterval(interval)
+    }, [correctionWindowExpiresAt])
 
     const fetchData = useCallback(async () => {
         setLoading(true)
@@ -542,6 +570,30 @@ export default function UnifiedDashboard() {
         setWorkers(data.workers)
         setOrders(data.orders)
         setAssignments(data.assignments)
+        setOpeningReadings(data.previousMeterReadings ?? {})
+        setCorrectionWindowExpiresAt(data.latestSubmittedAt
+            ? new Date(new Date(data.latestSubmittedAt).getTime() + 30 * 60 * 1000).toISOString()
+            : null
+        )
+
+        const existingClosingReadings = (data.existingLogs ?? []).reduce((acc: Record<string, number>, log: any) => {
+            if (typeof log.closing_meter_reading === 'number') {
+                acc[log.machine_id] = log.closing_meter_reading
+            }
+            return acc
+        }, {})
+
+        const cached = localStorage.getItem(`closing_readings_${date}_${shift}`)
+        if (cached) {
+            try {
+                setClosingReadings(JSON.parse(cached))
+            } catch (error) {
+                console.error('Failed to parse cached counter readings', error)
+                setClosingReadings(existingClosingReadings)
+            }
+        } else {
+            setClosingReadings(existingClosingReadings)
+        }
         setLoading(false)
     }, [date, shift])
 
@@ -597,7 +649,7 @@ export default function UnifiedDashboard() {
 
             // Clear meters locally if worker or order was unassigned
             if (!workerId || !orderId) {
-                setMeters(prev => {
+                setClosingReadings(prev => {
                     const next = { ...prev }
                     delete next[machineId]
                     return next
@@ -611,7 +663,7 @@ export default function UnifiedDashboard() {
         }
     }
 
-    const handleBulkSubmit = async (code: string = '', packAfter: boolean = false) => {
+    const handleBulkSubmit = async (code: string = '', packAfter: boolean = false, skipNegativeConfirmation: boolean = false) => {
         const assignedMachines = machines.filter((m) =>
             assignments.some((a) => a.machine_id === m.id && a.worker_id)
         )
@@ -619,28 +671,40 @@ export default function UnifiedDashboard() {
         const entries = assignedMachines
             .map((m) => {
                 const assignment = assignments.find((a) => a.machine_id === m.id)
+                const openingReading = openingReadings[m.id] ?? 0
+                const closingReading = closingReadings[m.id] ?? 0
                 return {
                     machine_id: m.id,
                     worker_id: assignment?.worker_id,
                     order_id: assignment?.order_id ?? null,
-                    meters: meters[m.id] ?? 0,
+                    meters: closingReading - openingReading,
+                    opening_meter_reading: openingReading,
+                    closing_meter_reading: closingReading,
                     shift,
                     date,
                     rate_per_m: assignment?.rate_per_m,
                 }
             })
-            .filter((e) => e.worker_id && e.order_id && e.meters > 0)
+            .filter((e) => e.worker_id && e.order_id && e.closing_meter_reading > 0)
+
+        const negativeReadings = entries.filter((entry) => entry.closing_meter_reading < entry.opening_meter_reading)
+
+        if (negativeReadings.length > 0 && !skipNegativeConfirmation) {
+            setPendingPackAfter(packAfter)
+            setConfirmNegativeReadings(true)
+            return
+        }
 
         if (entries.length === 0) {
-            // Check if any machines HAVE meters but were filtered out due to missing order
+            // Check if any machines HAVE readings but were filtered out due to missing order
             const machinesWithMetersButNoOrder = machines.filter(m => 
-                (meters[m.id] ?? 0) > 0 && !assignments.find(a => a.machine_id === m.id)?.order_id
+                (closingReadings[m.id] ?? 0) > 0 && !assignments.find(a => a.machine_id === m.id)?.order_id
             )
 
             if (machinesWithMetersButNoOrder.length > 0) {
                 toast.error(`Cannot log production for ${machinesWithMetersButNoOrder.length} machines: No order assigned.`)
             } else {
-                toast.error('No valid production entries found. Ensure both a worker and an order are assigned to each machine.')
+                toast.error('No valid counter readings found. Ensure both a worker and an order are assigned to each machine.')
             }
             return
         }
@@ -660,10 +724,14 @@ export default function UnifiedDashboard() {
                 toast.success(`✅ Production Logged! (${res.logged} machines)`)
             }
             setSubmitting(false)
-            setMeters({}) // Reset inputs after success
-            localStorage.removeItem(`meters_${date}_${shift}`) // Clear cache
+            setClosingReadings({}) // Reset inputs after success
+            localStorage.removeItem(`closing_readings_${date}_${shift}`) // Clear cache
             setShowDuplicateDialog(false)
             setDuplicateAccessCode('')
+            setCorrectionWindowExpiresAt(res.correctionWindowExpiresAt ?? null)
+            setConfirmNegativeReadings(false)
+            setPendingPackAfter(false)
+            fetchData()
         } else if (res.error === 'DUPLICATE_LOG_DETECTED') {
             setSubmitting(false)
             setShowDuplicateDialog(true)
@@ -700,7 +768,11 @@ export default function UnifiedDashboard() {
     }
 
     const assignedCount = assignments.filter((a) => a.worker_id).length
-    const loggedMetersCount = Object.keys(meters).length
+    const loggedMetersCount = Object.keys(closingReadings).filter((machineId) => (closingReadings[machineId] ?? 0) > 0).length
+    const remainingCorrectionMinutes = getRemainingCorrectionMinutes(correctionWindowExpiresAt)
+    const correctionBannerText = remainingCorrectionMinutes > 0
+        ? t('floor.correction.windowOpen').replace('{minutes}', remainingCorrectionMinutes.toString())
+        : t('floor.correction.windowClosed')
 
     return (
         <div 
@@ -724,6 +796,21 @@ export default function UnifiedDashboard() {
             {/* Header - Sticky with safe padding */}
             <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border px-4 py-4 pt-safe shadow-sm">
                 <div className="max-w-6xl mx-auto space-y-4">
+                    {userProfile?.role === 'owner' && (
+                        <RoleBanner href="/owner/analytics" />
+                    )}
+
+                    {correctionWindowExpiresAt && (
+                        <div className={cn(
+                            "rounded-2xl border px-4 py-3 text-sm font-medium shadow-sm",
+                            remainingCorrectionMinutes > 0
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                                : "border-amber-200 bg-amber-50 text-amber-900"
+                        )}>
+                            {correctionBannerText}
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-xl font-black text-foreground tracking-tight">Shift Dashboard</h1>
@@ -778,6 +865,10 @@ export default function UnifiedDashboard() {
                             </button>
                         </div>
                     </div>
+
+                    <p className="text-xs text-muted-foreground">
+                        {t('floor.meter.counterHelper')}
+                    </p>
                 </div>
             </div>
 
@@ -805,8 +896,9 @@ export default function UnifiedDashboard() {
                                 workers={workers}
                                 orders={orders}
                                 assignment={assignment}
-                                metersValue={meters[machine.id] ?? 0}
-                                onMetersChange={(v) => setMeters(prev => ({ ...prev, [machine.id]: v }))}
+                                closingReading={closingReadings[machine.id] ?? 0}
+                                openingReading={openingReadings[machine.id] ?? 0}
+                                onClosingReadingChange={(v) => setClosingReadings(prev => ({ ...prev, [machine.id]: v }))}
                                 onStatusClick={setSelectedMachine}
                                 onAssignmentChange={handleAssignmentChange}
                                 isSyncing={syncingState[machine.id] === 'syncing'}
@@ -914,6 +1006,18 @@ export default function UnifiedDashboard() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmActionDialog
+                open={confirmNegativeReadings}
+                onOpenChange={(open) => {
+                    setConfirmNegativeReadings(open)
+                    if (!open) setPendingPackAfter(false)
+                }}
+                title={t('floor.meter.counterWarning')}
+                description={t('floor.meter.counterConfirm')}
+                onConfirm={() => handleBulkSubmit('', pendingPackAfter, true)}
+                isLoading={submitting}
+            />
         </div>
     )
 }

@@ -324,6 +324,9 @@ export interface DispatchRow {
     dispatch_number: number
     qty_meters_sent: number
     qty_meters_received: number | null
+    receipt_confirmed_by_owner: boolean
+    receipt_confirmation_note: string | null
+    receipt_confirmed_by: string | null
     status: 'in_transit' | 'delivered' | 'disputed'
     notes: string | null
     dispatched_at: string
@@ -374,6 +377,9 @@ export interface DispatchWithOrder {
     dispatch_number: number
     qty_meters_sent: number
     qty_meters_received: number | null
+    receipt_confirmed_by_owner: boolean
+    receipt_confirmation_note: string | null
+    receipt_confirmed_by: string | null
     status: 'in_transit' | 'delivered' | 'disputed'
     dispatched_at: string
     received_at: string | null
@@ -434,6 +440,9 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
             dispatch_number,
             qty_meters_sent,
             qty_meters_received,
+            receipt_confirmed_by_owner,
+            receipt_confirmation_note,
+            receipt_confirmed_by,
             status,
             notes,
             dispatched_at,
@@ -618,6 +627,9 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
             dispatch_number,
             qty_meters_sent,
             qty_meters_received,
+            receipt_confirmed_by_owner,
+            receipt_confirmation_note,
+            receipt_confirmed_by,
             status,
             dispatched_at,
             received_at,
@@ -656,4 +668,74 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
             orders: Array.isArray(row.orders) ? row.orders[0] : row.orders,
         })),
     }
+}
+
+export async function confirmDispatchReceiptByOwner(
+    dispatchId: string,
+    qtyReceived: number,
+    note?: string
+): Promise<{ success: true; qty_received: number } | { error: string }> {
+    const { user, profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    if (!Number.isFinite(qtyReceived) || qtyReceived < 0) {
+        return { error: 'Enter a valid received quantity' }
+    }
+
+    const { data: dispatch, error: dispatchError } = await supabase
+        .from('dispatches')
+        .select(`
+            id,
+            org_id,
+            qty_meters_sent,
+            orders!inner (
+                tracking_token
+            )
+        `)
+        .eq('id', dispatchId)
+        .eq('org_id', profile.org_id)
+        .single()
+
+    if (dispatchError || !dispatch) {
+        return { error: 'Dispatch not found' }
+    }
+
+    if (qtyReceived > Number(dispatch.qty_meters_sent)) {
+        return { error: 'Received quantity cannot exceed dispatched quantity' }
+    }
+
+    const orderData = Array.isArray(dispatch.orders) ? dispatch.orders[0] : dispatch.orders
+    const trackingToken = orderData?.tracking_token
+    if (!trackingToken) {
+        return { error: 'Tracking link not found for this dispatch' }
+    }
+
+    const { data, error } = await supabase.rpc('confirm_fabric_dispatch_receipt', {
+        p_dispatch_id: dispatchId,
+        p_tracking_token: trackingToken,
+        p_qty_received: qtyReceived,
+    })
+
+    if (error) {
+        return { error: error.message || 'Could not confirm receipt. Please try again.' }
+    }
+
+    const { error: updateError } = await supabase
+        .from('dispatches')
+        .update({
+            receipt_confirmed_by_owner: true,
+            receipt_confirmation_note: note?.trim() || null,
+            receipt_confirmed_by: user.id,
+        })
+        .eq('id', dispatchId)
+        .eq('org_id', profile.org_id)
+
+    if (updateError) {
+        return { error: updateError.message }
+    }
+
+    revalidatePath('/owner/dispatches')
+
+    const result = Array.isArray(data) ? data[0] : data
+    return { success: true, qty_received: Number(result?.qty_received ?? qtyReceived) }
 }

@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import {
+    CreateSupplierLedgerEntrySchema,
+    CreateSupplierSchema,
     CreatePartyAdjustmentSchema,
     CreatePartyInvoiceSchema,
     CreatePartyReceiptSchema,
@@ -114,6 +116,45 @@ export interface LedgerData {
     receipts: LedgerReceipt[]
     adjustments: LedgerAdjustment[]
     orders: LedgerOrderOption[]
+    suppliers: LedgerSupplier[]
+    supplierEntries: SupplierLedgerEntry[]
+    paymentAllocations: PaymentAllocation[]
+}
+
+export interface PaymentAllocation {
+    id: string
+    org_id: string
+    party_receipt_id: string
+    invoice_id: string
+    allocated_amount: number
+    created_at: string
+}
+
+export interface LedgerSupplier {
+    id: string
+    org_id: string
+    name: string
+    phone: string | null
+    gst_number: string | null
+    notes: string | null
+    is_active: boolean
+    created_at: string
+    updated_at: string
+    purchase_total: number
+    payment_total: number
+    balance: number
+    last_activity_at: string | null
+}
+
+export interface SupplierLedgerEntry {
+    id: string
+    org_id: string
+    supplier_id: string
+    type: 'purchase' | 'payment'
+    amount: number
+    note: string | null
+    entry_date: string
+    created_at: string
 }
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createServerClient>>
@@ -137,6 +178,11 @@ type RawInvoice = Omit<LedgerInvoice,
     | 'balance_amount'
     | 'is_overdue'
     | 'days_overdue'
+>
+
+type RawSupplier = Omit<
+    LedgerSupplier,
+    'purchase_total' | 'payment_total' | 'balance' | 'last_activity_at'
 >
 
 const LEDGER_PATH = '/owner/ledger'
@@ -204,6 +250,18 @@ function normalizeOrder(row: LedgerOrderOption): LedgerOrderOption {
     return { ...row, total_target_meters: money(row.total_target_meters) }
 }
 
+function normalizePaymentAllocation(row: PaymentAllocation): PaymentAllocation {
+    return { ...row, allocated_amount: money(row.allocated_amount) }
+}
+
+function normalizeSupplier(row: RawSupplier): RawSupplier {
+    return { ...row }
+}
+
+function normalizeSupplierEntry(row: SupplierLedgerEntry): SupplierLedgerEntry {
+    return { ...row, amount: money(row.amount) }
+}
+
 function getOpeningSigned(party: RawParty) {
     return party.opening_balance_type === 'receivable'
         ? money(party.opening_balance)
@@ -213,11 +271,16 @@ function getOpeningSigned(party: RawParty) {
 function invoiceBalance(
     invoice: RawInvoice,
     receipts: LedgerReceipt[],
-    adjustments: LedgerAdjustment[]
+    adjustments: LedgerAdjustment[],
+    allocations: PaymentAllocation[]
 ) {
-    const paid = receipts
+    const directPaid = receipts
         .filter(receipt => receipt.invoice_id === invoice.id)
         .reduce((sum, receipt) => sum.plus(receipt.amount), new Decimal(0))
+
+    const allocatedPaid = allocations
+        .filter(allocation => allocation.invoice_id === invoice.id)
+        .reduce((sum, allocation) => sum.plus(allocation.allocated_amount), new Decimal(0))
 
     const credits = adjustments
         .filter(adj => adj.invoice_id === invoice.id && adj.direction === 'credit_to_party')
@@ -227,6 +290,7 @@ function invoiceBalance(
         .filter(adj => adj.invoice_id === invoice.id && adj.direction === 'debit_to_party')
         .reduce((sum, adj) => sum.plus(adj.amount), new Decimal(0))
 
+    const paid = directPaid.plus(allocatedPaid)
     const balance = Decimal.max(0, new Decimal(invoice.net_amount).plus(debits).minus(paid).minus(credits))
 
     return {
@@ -240,12 +304,13 @@ function invoiceBalance(
 function enrichInvoices(
     invoices: RawInvoice[],
     receipts: LedgerReceipt[],
-    adjustments: LedgerAdjustment[]
+    adjustments: LedgerAdjustment[],
+    allocations: PaymentAllocation[]
 ): LedgerInvoice[] {
     const today = todayDateString()
 
     return invoices.map(invoice => {
-        const balance = invoiceBalance(invoice, receipts, adjustments)
+        const balance = invoiceBalance(invoice, receipts, adjustments, allocations)
         const isOverdue = invoice.status !== 'cancelled' && balance.balance > 0.01 && invoice.due_date < today
 
         return {
@@ -314,6 +379,35 @@ function buildPartySummaries(
     })
 }
 
+function buildSupplierSummaries(
+    suppliers: RawSupplier[],
+    entries: SupplierLedgerEntry[]
+): LedgerSupplier[] {
+    return suppliers.map((supplier) => {
+        const supplierEntries = entries.filter((entry) => entry.supplier_id === supplier.id)
+        const purchaseTotal = supplierEntries
+            .filter((entry) => entry.type === 'purchase')
+            .reduce((sum, entry) => sum.plus(entry.amount), new Decimal(0))
+        const paymentTotal = supplierEntries
+            .filter((entry) => entry.type === 'payment')
+            .reduce((sum, entry) => sum.plus(entry.amount), new Decimal(0))
+
+        return {
+            ...supplier,
+            purchase_total: money(purchaseTotal.toString()),
+            payment_total: money(paymentTotal.toString()),
+            balance: money(purchaseTotal.minus(paymentTotal).toString()),
+            last_activity_at: latestDate(
+                ...supplierEntries.map((entry) => entry.created_at),
+                supplier.updated_at
+            ),
+        }
+    }).sort((a, b) => {
+        if (a.is_active !== b.is_active) return a.is_active ? -1 : 1
+        return Math.abs(b.balance) - Math.abs(a.balance)
+    })
+}
+
 async function generateInvoiceNumber(supabase: SupabaseServerClient, orgId: string) {
     const prefix = `INV-${todayDateString().replace(/-/g, '')}`
     const { count } = await supabase
@@ -359,7 +453,7 @@ async function assertInvoiceMatchesParty(
 async function refreshInvoiceStatus(supabase: SupabaseServerClient, orgId: string, invoiceId: string | null) {
     if (!invoiceId) return
 
-    const [invoiceResult, receiptsResult, adjustmentsResult] = await Promise.all([
+    const [invoiceResult, receiptsResult, adjustmentsResult, allocationsResult] = await Promise.all([
         supabase
             .from('party_invoices')
             .select('id, org_id, party_id, order_id, invoice_number, invoice_date, due_date, total_meters, rate_per_m, gross_amount, gst_percent, gst_amount, net_amount, status, notes, created_at')
@@ -376,6 +470,11 @@ async function refreshInvoiceStatus(supabase: SupabaseServerClient, orgId: strin
             .select('id, org_id, party_id, invoice_id, adjustment_date, adjustment_type, direction, amount, notes, created_at')
             .eq('invoice_id', invoiceId)
             .eq('org_id', orgId),
+        supabase
+            .from('payment_allocations')
+            .select('id, org_id, party_receipt_id, invoice_id, allocated_amount, created_at')
+            .eq('invoice_id', invoiceId)
+            .eq('org_id', orgId),
     ])
 
     if (invoiceResult.error || !invoiceResult.data || invoiceResult.data.status === 'cancelled') return
@@ -383,8 +482,9 @@ async function refreshInvoiceStatus(supabase: SupabaseServerClient, orgId: strin
     const invoice = normalizeInvoice(invoiceResult.data as RawInvoice)
     const receipts = ((receiptsResult.data ?? []) as LedgerReceipt[]).map(normalizeReceipt)
     const adjustments = ((adjustmentsResult.data ?? []) as LedgerAdjustment[]).map(normalizeAdjustment)
-    const balance = invoiceBalance(invoice, receipts, adjustments)
-    const hasActivity = receipts.length > 0 || adjustments.some(adj => adj.direction === 'credit_to_party')
+    const normalizedAllocations = ((allocationsResult.data ?? []) as PaymentAllocation[]).map(normalizePaymentAllocation)
+    const balance = invoiceBalance(invoice, receipts, adjustments, normalizedAllocations)
+    const hasActivity = receipts.length > 0 || normalizedAllocations.length > 0 || adjustments.some(adj => adj.direction === 'credit_to_party')
     const status: InvoiceStatus = balance.balance <= 0.01 ? 'paid' : hasActivity ? 'partial' : 'unpaid'
 
     await supabase
@@ -398,7 +498,7 @@ export async function getLedgerData(): Promise<{ data: LedgerData } | { error: s
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const [partiesResult, invoicesResult, receiptsResult, adjustmentsResult, ordersResult] = await Promise.all([
+    const [partiesResult, invoicesResult, receiptsResult, adjustmentsResult, ordersResult, suppliersResult, supplierEntriesResult, paymentAllocationsResult] = await Promise.all([
         supabase
             .from('parties')
             .select('id, org_id, name, party_type, phone, gstin, address, broker_name, default_credit_days, credit_limit, opening_balance, opening_balance_type, risk_note, is_active, created_at, updated_at')
@@ -426,20 +526,47 @@ export async function getLedgerData(): Promise<{ data: LedgerData } | { error: s
             .in('status', ['active', 'completed'])
             .order('created_at', { ascending: false })
             .limit(100),
+        supabase
+            .from('suppliers')
+            .select('id, org_id, name, phone, gst_number, notes, is_active, created_at, updated_at')
+            .eq('org_id', profile.org_id)
+            .order('name', { ascending: true }),
+        supabase
+            .from('supplier_ledger_entries')
+            .select('id, org_id, supplier_id, type, amount, note, entry_date, created_at')
+            .eq('org_id', profile.org_id)
+            .order('entry_date', { ascending: false }),
+        supabase
+            .from('payment_allocations')
+            .select('id, org_id, party_receipt_id, invoice_id, allocated_amount, created_at')
+            .eq('org_id', profile.org_id)
+            .order('created_at', { ascending: false }),
     ])
 
-    const firstError = partiesResult.error || invoicesResult.error || receiptsResult.error || adjustmentsResult.error || ordersResult.error
+    const firstError =
+        partiesResult.error ||
+        invoicesResult.error ||
+        receiptsResult.error ||
+        adjustmentsResult.error ||
+        ordersResult.error ||
+        suppliersResult.error ||
+        supplierEntriesResult.error ||
+        paymentAllocationsResult.error
     if (firstError) return { error: firstError.message }
 
     const rawParties = ((partiesResult.data ?? []) as RawParty[]).map(normalizeParty)
     const rawInvoices = ((invoicesResult.data ?? []) as RawInvoice[]).map(normalizeInvoice)
     const receipts = ((receiptsResult.data ?? []) as LedgerReceipt[]).map(normalizeReceipt)
     const adjustments = ((adjustmentsResult.data ?? []) as LedgerAdjustment[]).map(normalizeAdjustment)
-    const invoices = enrichInvoices(rawInvoices, receipts, adjustments)
+    const paymentAllocations = ((paymentAllocationsResult.data ?? []) as PaymentAllocation[]).map(normalizePaymentAllocation)
+    const invoices = enrichInvoices(rawInvoices, receipts, adjustments, paymentAllocations)
     const parties = buildPartySummaries(rawParties, invoices, receipts, adjustments)
     const orders = ((ordersResult.data ?? []) as LedgerOrderOption[]).map(normalizeOrder)
+    const rawSuppliers = ((suppliersResult.data ?? []) as RawSupplier[]).map(normalizeSupplier)
+    const supplierEntries = ((supplierEntriesResult.data ?? []) as SupplierLedgerEntry[]).map(normalizeSupplierEntry)
+    const suppliers = buildSupplierSummaries(rawSuppliers, supplierEntries)
 
-    return { data: { parties, invoices, receipts, adjustments, orders } }
+    return { data: { parties, invoices, receipts, adjustments, orders, suppliers, supplierEntries, paymentAllocations } }
 }
 
 export async function createParty(input: unknown): Promise<{ success: true } | { error: string }> {
@@ -577,15 +704,24 @@ export async function createPartyReceipt(input: unknown): Promise<{ success: tru
     const supabase = await createServerClient()
     const data = parsed.data
     const invoiceId = toDbUuid(data.invoice_id)
+    const allocations = data.allocations ?? []
 
     try {
         await assertPartyBelongsToOrg(supabase, profile.org_id, data.party_id)
         await assertInvoiceMatchesParty(supabase, profile.org_id, data.party_id, invoiceId)
+        for (const allocation of allocations) {
+            await assertInvoiceMatchesParty(supabase, profile.org_id, data.party_id, allocation.invoice_id)
+        }
     } catch (error) {
         return { error: error instanceof Error ? error.message : 'Invalid receipt' }
     }
 
-    const { error } = await supabase.from('party_receipts').insert({
+    const allocatedTotal = allocations.reduce((sum, allocation) => sum.plus(allocation.allocated_amount), new Decimal(0))
+    if (allocations.length > 0 && !allocatedTotal.equals(new Decimal(data.amount))) {
+        return { error: 'Allocated amount must equal payment total' }
+    }
+
+    const { data: insertedReceipt, error } = await supabase.from('party_receipts').insert({
         org_id: profile.org_id,
         party_id: data.party_id,
         invoice_id: invoiceId,
@@ -595,11 +731,30 @@ export async function createPartyReceipt(input: unknown): Promise<{ success: tru
         reference_no: toDbText(data.reference_no),
         notes: toDbText(data.notes),
         created_by: user.id,
-    })
+    }).select('id').single()
 
     if (error) return { error: error.message }
 
-    await refreshInvoiceStatus(supabase, profile.org_id, invoiceId)
+    if (allocations.length > 0 && insertedReceipt) {
+        const { error: allocationError } = await supabase.from('payment_allocations').insert(
+            allocations.map((allocation) => ({
+                org_id: profile.org_id,
+                party_receipt_id: insertedReceipt.id,
+                invoice_id: allocation.invoice_id,
+                allocated_amount: allocation.allocated_amount,
+            }))
+        )
+
+        if (allocationError) return { error: allocationError.message }
+    }
+
+    const invoiceIdsToRefresh = new Set<string>()
+    if (invoiceId) invoiceIdsToRefresh.add(invoiceId)
+    allocations.forEach((allocation) => invoiceIdsToRefresh.add(allocation.invoice_id))
+
+    await Promise.all(Array.from(invoiceIdsToRefresh).map((targetInvoiceId) =>
+        refreshInvoiceStatus(supabase, profile.org_id, targetInvoiceId)
+    ))
     revalidatePath(LEDGER_PATH)
     return { success: true }
 }
@@ -635,6 +790,89 @@ export async function createPartyAdjustment(input: unknown): Promise<{ success: 
     if (error) return { error: error.message }
 
     await refreshInvoiceStatus(supabase, profile.org_id, invoiceId)
+    revalidatePath(LEDGER_PATH)
+    return { success: true }
+}
+
+export async function createSupplier(input: unknown): Promise<{ success: true } | { error: string }> {
+    const parsed = safeParse(CreateSupplierSchema, input)
+    if ('error' in parsed) return parsed
+
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+    const data = parsed.data
+
+    const { error } = await supabase.from('suppliers').insert({
+        org_id: profile.org_id,
+        name: data.name,
+        phone: toDbText(data.phone),
+        gst_number: toDbText(data.gst_number),
+        notes: toDbText(data.notes),
+    })
+
+    if (error) return { error: error.message }
+
+    revalidatePath(LEDGER_PATH)
+    return { success: true }
+}
+
+export async function updateSupplier(supplierId: string, input: unknown): Promise<{ success: true } | { error: string }> {
+    const id = safeParse(UuidSchema, supplierId)
+    if ('error' in id) return id
+
+    const parsed = safeParse(CreateSupplierSchema, input)
+    if ('error' in parsed) return parsed
+
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+    const data = parsed.data
+
+    const { error } = await supabase
+        .from('suppliers')
+        .update({
+            name: data.name,
+            phone: toDbText(data.phone),
+            gst_number: toDbText(data.gst_number),
+            notes: toDbText(data.notes),
+        })
+        .eq('id', id.data)
+        .eq('org_id', profile.org_id)
+
+    if (error) return { error: error.message }
+
+    revalidatePath(LEDGER_PATH)
+    return { success: true }
+}
+
+export async function createSupplierLedgerEntry(input: unknown): Promise<{ success: true } | { error: string }> {
+    const parsed = safeParse(CreateSupplierLedgerEntrySchema, input)
+    if ('error' in parsed) return parsed
+
+    const { user, profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+    const data = parsed.data
+
+    const { data: supplier, error: supplierError } = await supabase
+        .from('suppliers')
+        .select('id')
+        .eq('id', data.supplier_id)
+        .eq('org_id', profile.org_id)
+        .maybeSingle()
+
+    if (supplierError || !supplier) return { error: 'Supplier not found' }
+
+    const { error } = await supabase.from('supplier_ledger_entries').insert({
+        org_id: profile.org_id,
+        supplier_id: data.supplier_id,
+        type: data.type,
+        amount: data.amount,
+        note: toDbText(data.note),
+        entry_date: data.entry_date,
+        created_by: user.id,
+    })
+
+    if (error) return { error: error.message }
+
     revalidatePath(LEDGER_PATH)
     return { success: true }
 }

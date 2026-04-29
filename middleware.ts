@@ -377,8 +377,10 @@ export async function updateSession(request: NextRequest) {
             return NextResponse.redirect(new URL(getRoleHomePath(role), request.url))
         }
 
+        const ownerSupervisorRouteAllowed = pathname === '/supervisor/dashboard'
+
         // 3. Supervisor restricted routes (Admins can access for support/audit)
-        if (pathname.startsWith('/supervisor') && role === 'owner') {
+        if (pathname.startsWith('/supervisor') && role === 'owner' && !ownerSupervisorRouteAllowed) {
             return NextResponse.redirect(new URL(getRoleHomePath(role), request.url))
         }
     }

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useTransition } from 'react'
 import { format } from 'date-fns'
 import {
     Truck,
@@ -31,6 +31,7 @@ import {
     type DispatchSummary,
     type DispatchRow
 } from '@/app/(dashboard)/owner/orders/actions'
+import { confirmDispatchReceiptByOwner } from '@/app/(dashboard)/owner/orders/actions'
 import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
 import {
     Dialog,
@@ -48,6 +49,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Textarea } from '@/components/ui/textarea'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -56,6 +59,9 @@ interface Dispatch {
     dispatch_number: number
     qty_meters_sent: number
     qty_meters_received: number | null
+    receipt_confirmed_by_owner: boolean
+    receipt_confirmation_note: string | null
+    receipt_confirmed_by: string | null
     status: 'in_transit' | 'delivered' | 'disputed'
     dispatched_at: string
     received_at: string | null
@@ -135,15 +141,77 @@ const getOrderStatusBadge = (group: OrderGroup) => {
     return { label: 'All Delivered', color: 'bg-emerald-500' }
 }
 
+const getReceiptBadge = (dispatch: Dispatch, t: (key: string) => string) => {
+    if (dispatch.qty_meters_received === null) {
+        return {
+            label: t('dispatch.shortage.awaiting'),
+            className: 'bg-amber-50 text-amber-700 border-amber-200',
+        }
+    }
+
+    const variance = Number(dispatch.qty_meters_received) - Number(dispatch.qty_meters_sent)
+    if (variance < -0.01) {
+        return {
+            label: t('dispatch.shortage.badge').replace('{amount}', Math.abs(variance).toFixed(2)),
+            className: 'bg-rose-50 text-rose-700 border-rose-200',
+        }
+    }
+    if (variance > 0.01) {
+        return {
+            label: t('dispatch.shortage.extra').replace('{amount}', variance.toFixed(2)),
+            className: 'bg-sky-50 text-sky-700 border-sky-200',
+        }
+    }
+
+    return {
+        label: t('dispatch.shortage.received'),
+        className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    }
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function DispatchBatchRow({ dispatch }: { dispatch: Dispatch }) {
+function DispatchBatchRow({
+    dispatch,
+    onOwnerReceiptConfirmed,
+}: {
+    dispatch: Dispatch
+    onOwnerReceiptConfirmed: (dispatchId: string, qtyReceived: number, note: string) => void
+}) {
+    const { t } = useTranslation()
+    const [isReceiptSheetOpen, setIsReceiptSheetOpen] = useState(false)
+    const [metersReceived, setMetersReceived] = useState(String(dispatch.qty_meters_sent))
+    const [confirmationNote, setConfirmationNote] = useState('')
+    const [isPending, startTransition] = useTransition()
     const status = getStatusConfig(dispatch.status)
     const shortage = dispatch.qty_meters_received !== null
         ? Number(dispatch.qty_meters_sent) - Number(dispatch.qty_meters_received)
         : 0
+    const receiptBadge = getReceiptBadge(dispatch, t)
+    const showRecordReceipt = dispatch.qty_meters_received === null
+
+    const handleOwnerReceiptConfirm = () => {
+        const qty = Number.parseFloat(metersReceived)
+        if (!Number.isFinite(qty) || qty < 0) {
+            toast.error(t('dispatch.receipt.metersReceived'))
+            return
+        }
+
+        startTransition(async () => {
+            const result = await confirmDispatchReceiptByOwner(dispatch.id, qty, confirmationNote)
+            if ('error' in result) {
+                toast.error(result.error)
+                return
+            }
+
+            toast.success(t('dispatch.receipt.recordButton'))
+            onOwnerReceiptConfirmed(dispatch.id, result.qty_received, confirmationNote)
+            setIsReceiptSheetOpen(false)
+        })
+    }
 
     return (
+        <>
         <motion.div
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
@@ -159,6 +227,9 @@ function DispatchBatchRow({ dispatch }: { dispatch: Dispatch }) {
                     <Badge className={cn("mt-0.5 text-[10px] font-bold px-2 py-0 rounded-full border", status.className)}>
                         <status.icon className="h-2.5 w-2.5 mr-1" />
                         {status.label}
+                    </Badge>
+                    <Badge className={cn("mt-1 text-[10px] font-bold px-2 py-0 rounded-full border", receiptBadge.className)}>
+                        {receiptBadge.label}
                     </Badge>
                 </div>
             </div>
@@ -186,6 +257,12 @@ function DispatchBatchRow({ dispatch }: { dispatch: Dispatch }) {
                         <p className="text-sm font-black text-rose-600 tabular-nums">-{shortage.toFixed(2)}<span className="text-[10px] ml-0.5 font-bold opacity-70">m</span></p>
                     </div>
                 )}
+                {shortage < -0.01 && (
+                    <div className="border-l border-zinc-200 dark:border-zinc-700 pl-4">
+                        <p className="text-[10px] font-black text-sky-500 uppercase tracking-wider">Extra</p>
+                        <p className="text-sm font-black text-sky-600 tabular-nums">+{Math.abs(shortage).toFixed(2)}<span className="text-[10px] ml-0.5 font-bold opacity-70">m</span></p>
+                    </div>
+                )}
             </div>
 
             {/* Dates */}
@@ -200,6 +277,15 @@ function DispatchBatchRow({ dispatch }: { dispatch: Dispatch }) {
                         {format(new Date(dispatch.received_at), 'dd MMM yyyy')}
                     </div>
                 )}
+                {showRecordReceipt && (
+                    <Button
+                        size="sm"
+                        className="mt-2 h-8 rounded-lg bg-emerald-600 px-3 text-[11px] font-bold text-white hover:bg-emerald-500"
+                        onClick={() => setIsReceiptSheetOpen(true)}
+                    >
+                        {t('dispatch.receipt.recordButton')}
+                    </Button>
+                )}
             </div>
             {dispatch.package_lines.length > 0 && (
                 <div className="flex w-full flex-wrap gap-1.5 sm:col-span-full">
@@ -211,15 +297,64 @@ function DispatchBatchRow({ dispatch }: { dispatch: Dispatch }) {
                 </div>
             )}
         </motion.div>
+        <Sheet open={isReceiptSheetOpen} onOpenChange={setIsReceiptSheetOpen}>
+            <SheetContent side="bottom" className="rounded-t-[28px] pb-8">
+                <SheetHeader>
+                    <SheetTitle>{t('dispatch.receipt.recordButton')}</SheetTitle>
+                    <SheetDescription>
+                        {dispatch.orders.party_name} · Batch #{dispatch.dispatch_number}
+                    </SheetDescription>
+                </SheetHeader>
+                <div className="space-y-4 px-4">
+                    <div className="space-y-2">
+                        <Label>{t('dispatch.receipt.metersReceived')}</Label>
+                        <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={metersReceived}
+                            onChange={(event) => setMetersReceived(event.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>{t('dispatch.receipt.note')}</Label>
+                        <Textarea
+                            value={confirmationNote}
+                            onChange={(event) => setConfirmationNote(event.target.value)}
+                        />
+                    </div>
+                </div>
+                <SheetFooter>
+                    <Button
+                        variant="outline"
+                        onClick={() => setIsReceiptSheetOpen(false)}
+                        disabled={isPending}
+                    >
+                        {t('confirm.cancel')}
+                    </Button>
+                    <Button
+                        className="bg-emerald-600 hover:bg-emerald-500"
+                        onClick={handleOwnerReceiptConfirm}
+                        disabled={isPending || metersReceived.trim() === ''}
+                    >
+                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                        {t('dispatch.receipt.recordButton')}
+                    </Button>
+                </SheetFooter>
+            </SheetContent>
+        </Sheet>
+        </>
     )
 }
 
 function OrderGroupCard({
     group,
     statusFilter,
+    onOwnerReceiptConfirmed,
 }: {
     group: OrderGroup
     statusFilter: 'all' | 'in_transit' | 'delivered' | 'disputed'
+    onOwnerReceiptConfirmed: (dispatchId: string, qtyReceived: number, note: string) => void
 }) {
     const [expanded, setExpanded] = useState(false)
 
@@ -376,7 +511,11 @@ function OrderGroupCard({
                                     <AnimatePresence>
                                         {visibleDispatches.length > 0 ? (
                                             visibleDispatches.map(d => (
-                                                <DispatchBatchRow key={d.id} dispatch={d} />
+                                                <DispatchBatchRow
+                                                    key={d.id}
+                                                    dispatch={d}
+                                                    onOwnerReceiptConfirmed={onOwnerReceiptConfirmed}
+                                                />
                                             ))
                                         ) : (
                                             <div className="py-6 text-center text-sm font-medium text-muted-foreground/50">
@@ -398,8 +537,10 @@ function OrderGroupCard({
 
 export default function DispatchesClient({ initialDispatches }: DispatchesClientProps) {
     const { t } = useTranslation()
+    const [dispatches, setDispatches] = useState(initialDispatches)
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<'all' | 'in_transit' | 'delivered' | 'disputed'>('all')
+    const [pendingReceiptOnly, setPendingReceiptOnly] = useState(false)
 
     // Global Modal Flow State
     const [globalModalStep, setGlobalModalStep] = useState<'idle' | 'select_order' | 'loading_summary' | 'create_dispatch'>('idle')
@@ -423,11 +564,28 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
         }
     }
 
+    const handleOwnerReceiptConfirmed = (dispatchId: string, qtyReceived: number, note: string) => {
+        setDispatches((prev) =>
+            prev.map((dispatch) =>
+                dispatch.id === dispatchId
+                    ? {
+                        ...dispatch,
+                        qty_meters_received: qtyReceived,
+                        status: 'delivered',
+                        received_at: new Date().toISOString(),
+                        receipt_confirmed_by_owner: true,
+                        receipt_confirmation_note: note.trim() || null,
+                    }
+                    : dispatch
+            )
+        )
+    }
+
     // ── Group dispatches by order ──
     const orderGroups = useMemo<OrderGroup[]>(() => {
         const map = new Map<string, OrderGroup>()
 
-        for (const d of initialDispatches) {
+        for (const d of dispatches) {
             const oid = d.orders.id
             if (!map.has(oid)) {
                 map.set(oid, {
@@ -467,7 +625,7 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
         }
 
         return Array.from(map.values())
-    }, [initialDispatches])
+    }, [dispatches])
 
     // ── Filter order groups ──
     const filteredGroups = useMemo(() => {
@@ -480,14 +638,17 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
             const matchesStatus = statusFilter === 'all' ||
                 g.dispatches.some(d => d.status === statusFilter)
 
-            return matchesSearch && matchesStatus
+            const matchesPendingReceipt = !pendingReceiptOnly ||
+                g.dispatches.some(d => d.qty_meters_received === null)
+
+            return matchesSearch && matchesStatus && matchesPendingReceipt
         })
-    }, [orderGroups, search, statusFilter])
+    }, [orderGroups, search, statusFilter, pendingReceiptOnly])
 
     // ── Summary stats (across all dispatches) ──
-    const totalSent = initialDispatches.reduce((acc, d) => acc + Number(d.qty_meters_sent), 0)
-    const totalReceived = initialDispatches.reduce((acc, d) => acc + Number(d.qty_meters_received || 0), 0)
-    const inTransitCount = initialDispatches.filter(d => d.status === 'in_transit').length
+    const totalSent = dispatches.reduce((acc, d) => acc + Number(d.qty_meters_sent), 0)
+    const totalReceived = dispatches.reduce((acc, d) => acc + Number(d.qty_meters_received || 0), 0)
+    const inTransitCount = dispatches.filter(d => d.status === 'in_transit').length
     const shortageTotal = orderGroups.reduce((acc, g) => acc + g.shortage, 0)
 
     return (
@@ -578,6 +739,16 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
                     />
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
+                    <Button
+                        variant={pendingReceiptOnly ? 'default' : 'outline'}
+                        onClick={() => setPendingReceiptOnly((prev) => !prev)}
+                        className={cn(
+                            "h-11 px-5 rounded-xl font-bold transition-all",
+                            pendingReceiptOnly ? "shadow-md scale-105" : "bg-white dark:bg-zinc-900/50"
+                        )}
+                    >
+                        {t('dispatch.filter.pendingReceipt')}
+                    </Button>
                     {(['all', 'in_transit', 'delivered', 'disputed'] as const).map((status) => (
                         <Button
                             key={status}
@@ -603,6 +774,7 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
                                 key={group.orderId}
                                 group={group}
                                 statusFilter={statusFilter}
+                                onOwnerReceiptConfirmed={handleOwnerReceiptConfirmed}
                             />
                         ))
                     ) : (
@@ -617,9 +789,9 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
                             <div className="space-y-1">
                                 <h3 className="text-xl font-black text-foreground">No dispatches found</h3>
                                 <p className="text-muted-foreground font-medium max-w-xs mx-auto">
-                                    {initialDispatches.length === 0 ? t('emptyState.dispatches.noStock') : 'Try adjusting your search or filters.'}
+                                    {dispatches.length === 0 ? t('emptyState.dispatches.noStock') : 'Try adjusting your search or filters.'}
                                 </p>
-                                {initialDispatches.length === 0 && (
+                                {dispatches.length === 0 && (
                                     <div className="pt-3">
                                         <Button variant="outline" asChild>
                                             <Link href="/owner/inventory?tab=grey-stock">{t('emptyState.dispatches.noStock')}</Link>
