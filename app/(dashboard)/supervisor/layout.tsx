@@ -5,7 +5,7 @@ import { OfflineSyncProvider } from '@/components/offline-sync-provider'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
     // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs
-    const { profile } = await requireRole(['supervisor'])
+    const { profile } = await requireRole(['supervisor', 'owner'])
     const userOrgId = profile.org_id
     const userFullName = profile.full_name
 

@@ -119,9 +119,9 @@ export function getAuditSummary(log: AuditLogEntry): string {
       break
 
     case 'estimator_templates':
-      if (action === 'INSERT') return 'Fabric template saved'
-      if (action === 'UPDATE') return 'Template updated'
-      if (action === 'DELETE') return 'Template removed'
+      if (action === 'INSERT') return 'Quality saved'
+      if (action === 'UPDATE') return 'Quality updated'
+      if (action === 'DELETE') return 'Quality removed'
       break
 
     case 'profiles':

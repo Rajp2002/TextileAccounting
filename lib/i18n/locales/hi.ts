@@ -56,6 +56,8 @@ export const hi = {
     signing_out: "सुरक्षित रूप से लॉग आउट हो रहा है...",
     select: "चुनें",
     fill_all: "कृपया सभी फ़ील्ड भरें",
+    optional: "वैकल्पिक",
+    saving: "सेव किया जा रहा है...",
     code_sent: "सत्यापन कोड मालिक को भेज दिया गया है",
     invalid_code: "अमान्य या समाप्त हो चुका एक्सेस कोड",
     updated: "सफलतापूर्वक अपडेट किया गया",
@@ -104,6 +106,24 @@ export const hi = {
     handover_failed: "हैंडोवर विफल",
     enter_code: "6-अंकों का कोड दर्ज़ करें",
     meters: "mtrs",
+  },
+  floor: {
+    ownerBanner: {
+      message: "मालिक के रूप में देख रहे हैं",
+      switch: "मालिक व्यू पर जाएं"
+    },
+    meter: {
+      counterReading: "लूम काउंटर रीडिंग",
+      counterHelper: "अभी अपने लूम के मीटर डिस्प्ले पर दिखाया गया नंबर दर्ज करें",
+      openingReading: "शुरुआत (पिछली पाली)",
+      shiftProduction: "इस पाली के मीटर",
+      counterWarning: "रीडिंग शुरुआत से कम है। कृपया सत्यापित करें।",
+      counterConfirm: "एक या अधिक क्लोजिंग रीडिंग शुरुआत से कम हैं। इस पाली को सेव करने से पहले पुष्टि करें।"
+    },
+    correction: {
+      windowOpen: "आप इसे {minutes} मिनट तक संपादित कर सकते हैं",
+      windowClosed: "संपादन समय समाप्त। मालिक से एक्सेस कोड लें।"
+    }
   },
   assignments: {
     title: "कारीगरों का कार्य आवंटन",
@@ -394,7 +414,8 @@ export const hi = {
     ledger: {
       title: "अभी कोई लेन-देन नहीं",
       cta: "भुगतान दर्ज करें",
-      addParty: "पार्टी जोड़ें"
+      addParty: "पार्टी जोड़ें",
+      noSupplier: "अभी तक कोई सप्लायर नहीं जोड़ा गया"
     },
     payroll: {
       title: "इस महीने कोई भुगतान नहीं",
@@ -402,6 +423,23 @@ export const hi = {
     },
     dispatches: {
       noStock: "पहले कपड़ा स्टॉक में जोड़ें"
+    }
+  },
+  dispatch: {
+    receipt: {
+      recordButton: "प्राप्ति दर्ज करें",
+      metersReceived: "ट्रेडर द्वारा प्राप्त मीटर",
+      note: "पुष्टि नोट",
+      alreadyConfirmed: "प्राप्ति पहले से दर्ज"
+    },
+    shortage: {
+      badge: "{amount}मी कम",
+      extra: "{amount}मी अतिरिक्त",
+      awaiting: "प्राप्ति बाकी",
+      received: "प्राप्त ✓"
+    },
+    filter: {
+      pendingReceipt: "प्राप्ति बाकी"
     }
   },
   inventory: {
@@ -533,6 +571,109 @@ export const hi = {
       mark_consumed: "माल पूरा हुआ (बैच क्लोज करें/Mark Consumed)",
       closing: "क्लोज किया जा रहा है...",
       success: "बैच सफलतापूर्वक क्लोज और ऑडिट कर दिया गया।"
+    }
+  },
+  suppliers: {
+    addSupplier: "सप्लायर जोड़ें",
+    editSupplier: "सप्लायर संपादित करें",
+    name: "सप्लायर का नाम",
+    balance: "देय राशि",
+    searchPlaceholder: "सप्लायर, GST, फोन खोजें...",
+    noPhone: "फोन नहीं",
+    payable: "देय",
+    settled: "सेटल",
+    introTitle: "अभी तक कोई सप्लायर नहीं",
+    introBody: "अपने धागा या जॉब-वर्क सप्लायर जोड़ें, फिर एक ही सरल पेयेबल लेजर में खरीद और भुगतान दर्ज करें।",
+    formDescription: "हर धागा या जॉब-वर्क सप्लायर के लिए एक सरल पेयेबल कार्ड रखें।",
+    phone: "फोन",
+    gstNumber: "GST नंबर",
+    notes: "नोट्स",
+    ledgerTitle: "सप्लायर लेजर",
+    noEntries: "अभी तक कोई सप्लायर एंट्री नहीं है।",
+    entry: {
+      purchase: "धागा खरीद",
+      payment: "भुगतान किया",
+      formDescription: "सप्लायर से क्या खरीदा या क्या भुगतान किया, यह दर्ज करें।",
+      supplier: "सप्लायर",
+      type: "प्रकार",
+      date: "तारीख",
+      amount: "राशि",
+      note: "नोट",
+      selectSupplier: "सप्लायर चुनें",
+      recordPurchase: "खरीद दर्ज करें",
+      recordPayment: "भुगतान दर्ज करें",
+      purchasesMetric: "खरीद",
+      paymentsMetric: "भुगतान"
+    }
+  },
+  ledger: {
+    heroBadge: "मॉड्यूल 1 · पार्टी उधारी रजिस्टर",
+    pageTitle: "पार्टी लेजर",
+    pageDescription: "कागज़ के रजिस्टर को सरल डिजिटल फ्लो में बदलें: पार्टी मास्टर, बिल एंट्री, भुगतान प्राप्ति, दावा/कटौती, और ओवरड्यू फॉलो-अप.",
+    tabs: {
+      parties: "पक्ष",
+      suppliers: "सप्लायर"
+    },
+    metrics: {
+      receivable: "प्राप्य",
+      receivableHelp: "पार्टियों से मिलने वाले पैसे",
+      overdue: "ओवरड्यू",
+      overdueHelp: "क्रेडिट तारीख निकल गई",
+      payable: "देय/क्रेडिट",
+      payableHelp: "एडवांस या अधिक भुगतान वाली पार्टियां",
+      creditRisk: "क्रेडिट जोखिम",
+      creditRiskHelp: "क्रेडिट सीमा से ऊपर पार्टियां",
+      suppliers: "सप्लायर",
+      suppliersHelp: "सक्रिय सप्लायर मास्टर",
+      purchasesHelp: "दर्ज की गई धागा खरीद",
+      paymentsHelp: "पहले से किया गया भुगतान",
+      supplierPayableHelp: "बाकी सप्लायर देनदारी"
+    },
+    payment: {
+      allocateToggle: "इनवॉइस के अनुसार विभाजित करें",
+      allocateHelp: "ज़रूरत हो तो एक भुगतान को कई खुले इनवॉइस में बाँटें।",
+      allocated: "आवंटित",
+      remaining: "शेष",
+      allocateFull: "पूरी तरह आवंटित ✓",
+      allocateWarning: "आवंटित राशि भुगतान के बराबर होनी चाहिए",
+      noOpenInvoices: "आवंटन के लिए कोई खुला इनवॉइस उपलब्ध नहीं है।",
+      dueBalance: "{date} देय · बैलेंस {amount}"
+    },
+    receipt: {
+      title: "रसीद दर्ज करें",
+      description: "पार्टी से मिली भुगतान राशि दर्ज करें और ज़रूरत हो तो खुले बिलों में बाँटें.",
+      party: "पार्टी",
+      selectParty: "पार्टी चुनें",
+      againstBill: "किस बिल के खिलाफ",
+      generalReceipt: "जनरल रसीद",
+      date: "तारीख",
+      amount: "राशि",
+      method: "विधि",
+      reference: "रेफरेंस",
+      referencePlaceholder: "UTR, चेक, या नकद नोट",
+      notes: "नोट्स",
+      submit: "रसीद दर्ज करें",
+      allocationLabel: "₹ आवंटित करें",
+      receiptRecorded: "रसीद दर्ज की गई"
+    },
+    party: {
+      updated: "पार्टी अपडेट हुई",
+      added: "पार्टी जोड़ी गई",
+      archived: "पार्टी आर्काइव की गई",
+      restored: "पार्टी फिर सक्रिय की गई",
+      selectFirst: "पहले एक पार्टी चुनें"
+    },
+    invoice: {
+      recorded: "बिल दर्ज किया गया",
+      submit: "नया बिल"
+    },
+    adjustment: {
+      recorded: "समायोजन दर्ज किया गया"
+    },
+    supplier: {
+      updated: "सप्लायर अपडेट हुआ",
+      added: "सप्लायर जोड़ा गया",
+      selectFirst: "पहले एक सप्लायर चुनें"
     }
   },
   settings: {
@@ -677,17 +818,52 @@ export const hi = {
       total_order: "कुल ऑर्डर",
       margin: "मार्जिन",
       net_profit: "शुद्ध लाभ",
-      order_btn: "कोट सेव करें",
-      save_template_btn: "टेम्पलेट सेव"
+      order_btn: "कोट सेव करें"
     },
-    templates: {
-      label: "टेम्पलेट्स",
+    quality: {
+      myQualities: "मेरी क्वालिटी",
+      newQuality: "नई क्वालिटी",
+      editQuality: "क्वालिटी संपादित करें",
+      saveQuality: "क्वालिटी सहेजें",
       hint: "लागू करने के लिए टैप करें · रेट्स बदलने के लिए लॉन्ग-प्रेस करें",
-      edit_rates_title: "सूत रेट्स अपडेट करें",
-      delete_template: "टेम्पलेट हटाएं",
-      structure_preserved: "संरचना सुरक्षित · केवल रेट्स बदलते हैं",
-      reset_btn: "रिसेट",
-      save_btn: "सेव"
+      editRatesTitle: "सूत रेट्स अपडेट करें",
+      deleteQuality: "क्वालिटी हटाएं",
+      structurePreserved: "संरचना सुरक्षित · केवल रेट्स बदलते हैं",
+      resetBtn: "रिसेट",
+      searchPlaceholder: "{count} क्वालिटी खोजें...",
+      searchResults: "{total} में से {shown} क्वालिटी",
+      noMatch: "\"{query}\" से कोई क्वालिटी मेल नहीं खाती",
+      detachTooltip: "क्वालिटी अलग करें (फिर 'Save' मोड में जाएं)",
+      updateButton: "{name} अपडेट करें",
+      saveDialogTitle: "नई क्वालिटी सहेजें",
+      editDialogTitle: "क्वालिटी संपादित करें:",
+      qualityNameLabel: "क्वालिटी का नाम",
+      savesNotePrefix: "सहेजता है",
+      savesNoteWarp: "ताना +",
+      savesNoteWeft: "बाना ब्लेंड लेयर्स सहित वर्तमान सूत रेट्स।",
+      rateNote: "इस क्वालिटी को दोबारा बनाए बिना सूत रेट्स कभी भी अपडेट किए जा सकते हैं।",
+      cancel: "रद्द करें",
+      confirmSave: "क्वालिटी सहेजें",
+      structureNotePrefix: "नीचे सूत रेट्स अपडेट करें। फैब्रिक संरचना (डेनियर, एंड्स, पिक्स) वही रहेगी। सेव करने पर यह क्वालिटी अपडेट होगी",
+      structureNoteAnd: "और",
+      structureNoteSuffix: "एस्टीमेटर में लागू होगी।",
+      warpRates: "ताना सूत रेट्स",
+      weftRates: "बाना सूत रेट्स",
+      deleteButton: "क्वालिटी हटाएं",
+      deleteNote: "· यह क्रिया स्थायी है",
+      deleteConfirm: "क्वालिटी \"{name}\" हटाएं? यह क्रिया पूर्ववत नहीं की जा सकती।",
+      applyAsIs: "जैसा है वैसे ही लागू करें",
+      saveApply: "रेट्स सहेजें और लागू करें",
+      applied: "क्वालिटी लागू:",
+      saved: "क्वालिटी सहेज ली गई!",
+      deleted: "क्वालिटी हटाई गई",
+      nameRequired: "कृपया क्वालिटी का नाम दर्ज करें",
+      saveFailed: "क्वालिटी सहेजने में विफल",
+      updateFailed: "क्वालिटी अपडेट करने में विफल",
+      settingsTitle: "मेरी क्वालिटी",
+      settingsDescription: "अपनी अक्सर उपयोग होने वाली फैब्रिक कॉन्फ़िगरेशन मैनेज करें। क्वालिटी को एस्टीमेटर पेज से \"क्वालिटी सहेजें\" के जरिए सहेजा जाता है।",
+      settingsEmpty: "अभी तक कोई क्वालिटी सहेजी नहीं गई है। अपनी पहली क्वालिटी बनाने के लिए एस्टीमेटर खोलें और \"क्वालिटी सहेजें\" का उपयोग करें।",
+      settingsDeleteConfirm: "क्या इस क्वालिटी को हटाना है?"
     },
     order_basics: {
       title: "ऑर्डर और फैब्रिक लेबल",
@@ -771,30 +947,6 @@ export const hi = {
       commission: "ब्रोकर कमीशन %",
       transport: "ट्रांसपोर्ट / मी"
     },
-    save_template_dialog: {
-      title: "फैब्रिक टेम्पलेट सेव करें",
-      quality_name_label: "फैब्रिक क्वालिटी का नाम",
-      saves_note_prefix: "सेव करता है",
-      saves_note_warp: "ताना +",
-      saves_note_weft: "बाना ब्लेंड लेयर्स सहित वर्तमान सूत रेट्स।",
-      rate_note: "सूत रेट्स कभी भी टेम्पलेट पुनः बनाए बिना अपडेट किए जा सकते हैं।",
-      cancel: "रद्द करें",
-      confirm: "पुष्टि करें और सेव करें"
-    },
-    edit_template_dialog: {
-      title: "टेम्पलेट एडिट करें:",
-      quality_name_label: "फैब्रिक क्वालिटी का नाम",
-      structure_note_prefix: "नीचे सूत रेट्स अपडेट करें। फैब्रिक संरचना (डेनियर, एंड्स, पिक्स) वही रहेगी। सेव करने पर टेम्पलेट अपडेट होगा",
-      structure_note_and: "और",
-      structure_note_suffix: "एस्टीमेटर में लागू होगा।",
-      warp_rates: "ताना सूत रेट्स",
-      weft_rates: "बाना सूत रेट्स",
-      delete_button: "टेम्पलेट हटाएं",
-      delete_note: "· यह क्रिया स्थायी है",
-      structure_preserved: "संरचना सुरक्षित · केवल रेट्स बदलते हैं",
-      apply_as_is: "जैसा है वैसे ही लागू करें",
-      save_apply: "રેટ્સ સેવ કરો અને લાગુ કરો"
-    },
     convert_dialog: {
       title: "प्रोडक्शन ऑर्डर में बदलें",
       cost_summary: "लागत सारांश",
@@ -828,15 +980,11 @@ export const hi = {
       transport_per_m: "ट्रांसपोर्ट / मी"
     },
     toast: {
-      applied_template: "फैब्रिक टेम्पलेट लागू:",
-      saved_template: "फैब्रिक टेम्पलेट सेव हो गया!",
-      template_deleted: "टेम्पलेट हटाया गया",
-      updated_applied: "टेम्पलेट अपडेट और लागू हो गया",
+      updated_applied: "क्वालिटी अपडेट और लागू हो गई",
       applied_as_is: "लागू किया:",
       party_required: "पार्टी का नाम आवश्यक है",
       quality_required: "क्वालिटी लेबल आवश्यक है",
       converted_success: "कोट सफलतापूर्वक सेव हुआ",
-      save_template_name_error: "कृपया फैब्रिक का नाम दर्ज करें",
       rename_failed: "नाम बदलने में विफल:"
     }
   },

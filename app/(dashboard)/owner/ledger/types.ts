@@ -46,6 +46,11 @@ export type ReceiptFormType = {
     method: ReceiptMethod
     reference_no: string
     notes: string
+    allocate_across_invoices: boolean
+    allocations: Array<{
+        invoice_id: string
+        allocated_amount: string
+    }>
 }
 
 export type AdjustmentFormType = {
@@ -66,4 +71,19 @@ export type Transaction = {
     debit: number
     credit: number
     notes: string | null
+}
+
+export type SupplierFormType = {
+    name: string
+    phone: string
+    gst_number: string
+    notes: string
+}
+
+export type SupplierEntryFormType = {
+    supplier_id: string
+    type: 'purchase' | 'payment'
+    amount: string
+    entry_date: string
+    note: string
 }

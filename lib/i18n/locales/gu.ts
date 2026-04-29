@@ -56,6 +56,8 @@ export const gu = {
     signing_out: "સુરક્ષિત રીતે લોગ આઉટ થઈ રહ્યું છે...",
     select: "પસંદ કરો",
     fill_all: "મહેરબાની કરીને બધી વિગતો ભરો",
+    optional: "વૈકલ્પિક",
+    saving: "સેવ થઈ રહ્યું છે...",
     updated: "સફળતાપૂર્વક અપડેટ થયું",
     added: "સફળતાપૂર્વક ઉમેરવામાં આવ્યું",
     removed: "સફળતાપૂર્વક હટાવવામાં આવ્યું",
@@ -102,6 +104,24 @@ export const gu = {
     handover_failed: "હેન્ડોવર નિષ્ફળ",
     enter_code: "6-અંકોનો કોડ દાખલ કરો",
     meters: "mtrs",
+  },
+  floor: {
+    ownerBanner: {
+      message: "માલિક તરીકે જોઈ રહ્યા છો",
+      switch: "માલિક દૃશ્ય પર જાઓ"
+    },
+    meter: {
+      counterReading: "લૂમ કાઉન્ટર રીડિંગ",
+      counterHelper: "હમણાં તમારા લૂમના મીટર ડિસ્પ્લે પર બતાવેલ નંબર દાખલ કરો",
+      openingReading: "શરૂઆત (પાછળની પાળી)",
+      shiftProduction: "આ પાળીના મીટર",
+      counterWarning: "રીડિંગ શરૂઆત કરતાં ઓછું છે. કૃ. ચકાસો.",
+      counterConfirm: "એક અથવા વધુ ક્લોઝિંગ રીડિંગ શરૂઆત કરતાં ઓછાં છે. આ પાળી સેવ કરતા પહેલા ખાતરી કરો."
+    },
+    correction: {
+      windowOpen: "તમે આ {minutes} મિનિટ સુધી સુધારી શકો છો",
+      windowClosed: "સુધારવાનો સમય પૂરો. માલિક પાસેથી કોડ મેળવો."
+    }
   },
   assignments: {
     title: "કારીગરોની કામગીરી",
@@ -392,7 +412,8 @@ export const gu = {
     ledger: {
       title: "હજી કોઈ વ્યવહાર નથી",
       cta: "ચૂકવણી નોંધો",
-      addParty: "પાર્ટી ઉમેરો"
+      addParty: "પાર્ટી ઉમેરો",
+      noSupplier: "હજુ સુધી કોઈ સપ્લાયર ઉમેરાયો નથી"
     },
     payroll: {
       title: "આ મહિને કોઈ સેટલમેન્ટ નથી",
@@ -400,6 +421,23 @@ export const gu = {
     },
     dispatches: {
       noStock: "પ્રથમ ફેબ્રિક સ્ટોકમાં ઉમેરો"
+    }
+  },
+  dispatch: {
+    receipt: {
+      recordButton: "પ્રાપ્તિ નોંધો",
+      metersReceived: "ટ્રેડર દ્વારા મળેલ મીટર",
+      note: "પ્રાપ્તિ નોંધ",
+      alreadyConfirmed: "પ્રાપ્તિ પહેલેથી નોંધાઈ"
+    },
+    shortage: {
+      badge: "{amount}મ ઓછા",
+      extra: "{amount}મ વધારે",
+      awaiting: "પ્રાપ્તિ બાકી",
+      received: "મળ્યું ✓"
+    },
+    filter: {
+      pendingReceipt: "પ્રાપ્તિ બાકી"
     }
   },
   inventory: {
@@ -531,6 +569,109 @@ export const gu = {
       mark_consumed: "માલ પૂરો થયો (બેચ ક્લોઝ કરો/Mark Consumed)",
       closing: "ક્લોઝ થાય છે...",
       success: "બેચ સફળતાપૂર્વક ક્લોઝ અને ઓડિટ કરવામાં આવ્યો."
+    }
+  },
+  suppliers: {
+    addSupplier: "સપ્લાયર ઉમેરો",
+    editSupplier: "સપ્લાયર સંપાદિત કરો",
+    name: "સપ્લાયરનું નામ",
+    balance: "ચૂકવવાની રકમ",
+    searchPlaceholder: "સપ્લાયર, GST, ફોન શોધો...",
+    noPhone: "ફોન નથી",
+    payable: "ચૂકવવાનું",
+    settled: "સેટલ",
+    introTitle: "હજુ સુધી કોઈ સપ્લાયર નથી",
+    introBody: "તમારા યાર્ન અથવા જૉબ-વર્ક સપ્લાયરો ઉમેરો, પછી એક જ સરળ પેયેબલ લેજરમાં ખરીદી અને ચુકવણી નોંધો.",
+    formDescription: "દરેક યાર્ન અથવા જૉબ-વર્ક સપ્લાયર માટે એક સરળ પેયેબલ કાર્ડ રાખો.",
+    phone: "ફોન",
+    gstNumber: "GST નંબર",
+    notes: "નોંધ",
+    ledgerTitle: "સપ્લાયર લેજર",
+    noEntries: "હજુ સુધી કોઈ સપ્લાયર એન્ટ્રી નથી.",
+    entry: {
+      purchase: "યાર્ન ખરીદી",
+      payment: "ચૂકવણી કરી",
+      formDescription: "સપ્લાયર પાસેથી શું ખરીદ્યું અથવા શું ચુકવ્યું તે નોંધો.",
+      supplier: "સપ્લાયર",
+      type: "પ્રકાર",
+      date: "તારીખ",
+      amount: "રકમ",
+      note: "નોંધ",
+      selectSupplier: "સપ્લાયર પસંદ કરો",
+      recordPurchase: "ખરીદી નોંધો",
+      recordPayment: "ચૂકવણી નોંધો",
+      purchasesMetric: "ખરીદી",
+      paymentsMetric: "ચૂકવણીઓ"
+    }
+  },
+  ledger: {
+    heroBadge: "મોડ્યુલ 1 · પાર્ટી ઉઘરાણી રજિસ્ટર",
+    pageTitle: "પાર્ટી લેજર",
+    pageDescription: "કાગળના રજિસ્ટરને સરળ ડિજિટલ પ્રવાહમાં ફેરવો: પાર્ટી માસ્ટર, બિલ એન્ટ્રી, ચુકવણી એન્ટ્રી, ક્લેઇમ/કપાત, અને ઓવરડ્યુ ફોલો-અપ.",
+    tabs: {
+      parties: "પક્ષો",
+      suppliers: "સપ્લાયર્સ"
+    },
+    metrics: {
+      receivable: "ઉઘરાણી",
+      receivableHelp: "પાર્ટીઓએ આપવાના પૈસા",
+      overdue: "ઓવરડ્યુ",
+      overdueHelp: "ક્રેડિટ તારીખ પસાર થઈ ગઈ",
+      payable: "ચૂકવવાનું/ક્રેડિટ",
+      payableHelp: "એડવાન્સ અથવા વધારે ચૂકવેલી પાર્ટીઓ",
+      creditRisk: "ક્રેડિટ જોખમ",
+      creditRiskHelp: "ક્રેડિટ મર્યાદા પાર ગયેલી પાર્ટીઓ",
+      suppliers: "સપ્લાયર્સ",
+      suppliersHelp: "સક્રિય સપ્લાયર માસ્ટર",
+      purchasesHelp: "નોંધાયેલી યાર્ન ખરીદી",
+      paymentsHelp: "પહેલેથી ચુકવેલા પૈસા",
+      supplierPayableHelp: "બાકી સપ્લાયર ચુકવણીઓ"
+    },
+    payment: {
+      allocateToggle: "ઇન્વૉઇસ પ્રમાણે વહેંચો",
+      allocateHelp: "જરૂર પડે ત્યારે એક જ ચુકવણીને ઘણા ખુલ્લા ઇન્વૉઇસમાં વહેંચો.",
+      allocated: "ફાળવેલ",
+      remaining: "બાકી",
+      allocateFull: "સંપૂર્ણ ફાળવાઈ ✓",
+      allocateWarning: "ફાળવેલ રકમ ચૂકવણી જેટલી હોવી જોઈએ",
+      noOpenInvoices: "ફાળવણી માટે કોઈ ખુલ્લા ઇન્વૉઇસ ઉપલબ્ધ નથી.",
+      dueBalance: "{date} સુધી બાકી · બેલેન્સ {amount}"
+    },
+    receipt: {
+      title: "રસીદ નોંધો",
+      description: "પાર્ટી પાસેથી મળેલી ચુકવણી નોંધો અને જરૂર હોય તો ખુલ્લા બિલોમાં ફાળવો.",
+      party: "પાર્ટી",
+      selectParty: "પાર્ટી પસંદ કરો",
+      againstBill: "કયા બિલ સામે",
+      generalReceipt: "જનરલ રસીદ",
+      date: "તારીખ",
+      amount: "રકમ",
+      method: "પદ્ધતિ",
+      reference: "રેફરન્સ",
+      referencePlaceholder: "UTR, ચેક, અથવા રોકડ નોંધ",
+      notes: "નોંધ",
+      submit: "રસીદ નોંધો",
+      allocationLabel: "₹ ફાળવો",
+      receiptRecorded: "રસીદ નોંધાઈ"
+    },
+    party: {
+      updated: "પાર્ટી અપડેટ થઈ",
+      added: "પાર્ટી ઉમેરાઈ",
+      archived: "પાર્ટી આર્કાઇવ થઈ",
+      restored: "પાર્ટી ફરી સક્રિય થઈ",
+      selectFirst: "પહેલાં પાર્ટી પસંદ કરો"
+    },
+    invoice: {
+      recorded: "બિલ નોંધાયું",
+      submit: "નવું બિલ"
+    },
+    adjustment: {
+      recorded: "એડજસ્ટમેન્ટ નોંધાઈ"
+    },
+    supplier: {
+      updated: "સપ્લાયર અપડેટ થયો",
+      added: "સપ્લાયર ઉમેરાયો",
+      selectFirst: "પહેલાં સપ્લાયર પસંદ કરો"
     }
   },
   settings: {
@@ -675,17 +816,52 @@ export const gu = {
       total_order: "કુલ ઓર્ડર",
       margin: "માર્જિન",
       net_profit: "ચોખ્ખો નફો",
-      order_btn: "કોટ સેવ કરો",
-      save_template_btn: "ટેમ્પલેટ સેવ"
+      order_btn: "કોટ સેવ કરો"
     },
-    templates: {
-      label: "ટેમ્પલેટ્સ",
+    quality: {
+      myQualities: "મારી ક્વોલિટી",
+      newQuality: "નવી ક્વોલિટી",
+      editQuality: "ક્વોલિટી સંપાદિત કરો",
+      saveQuality: "ક્વોલિટી સાચવો",
       hint: "લાગુ કરવા ટેપ કરો · રેટ્સ બદલવા લૉન્ગ-પ્રેસ કરો",
-      edit_rates_title: "સૂત રેટ્સ અપડેટ કરો",
-      delete_template: "ટેમ્પલેટ ડિલીટ કરો",
-      structure_preserved: "સ્ટ્રક્ચર સુરક્ષિત · ફક્ત રેટ્સ બદલાય છે",
-      reset_btn: "રિસેટ",
-      save_btn: "સેવ"
+      editRatesTitle: "સૂત રેટ્સ અપડેટ કરો",
+      deleteQuality: "ક્વોલિટી ડિલીટ કરો",
+      structurePreserved: "સ્ટ્રક્ચર સુરક્ષિત · ફક્ત રેટ્સ બદલાય છે",
+      resetBtn: "રિસેટ",
+      searchPlaceholder: "{count} ક્વોલિટી શોધો...",
+      searchResults: "{total} માંથી {shown} ક્વોલિટી",
+      noMatch: "\"{query}\" માટે કોઈ ક્વોલિટી મળી નથી",
+      detachTooltip: "ક્વોલિટી અલગ કરો (ફરી 'Save' મોડમાં જાઓ)",
+      updateButton: "{name} અપડેટ કરો",
+      saveDialogTitle: "નવી ક્વોલિટી સાચવો",
+      editDialogTitle: "ક્વોલિટી સંપાદિત કરો:",
+      qualityNameLabel: "ક્વોલિટીનું નામ",
+      savesNotePrefix: "સાચવે છે",
+      savesNoteWarp: "તાણો +",
+      savesNoteWeft: "ભરણ બ્લેન્ડ લેયર્સ સહિત વર્તમાન સૂત રેટ્સ.",
+      rateNote: "આ ક્વોલિટી ફરીથી બનાવ્યા વગર સૂત રેટ્સ ગમે ત્યારે અપડેટ કરી શકાય.",
+      cancel: "રદ કરો",
+      confirmSave: "ક્વોલિટી સાચવો",
+      structureNotePrefix: "નીચે સૂત રેટ્સ અપડેટ કરો. ફેબ્રિક સ્ટ્રક્ચર (ડેનિયર, એન્ડ્સ, પિક્સ) એ જ રહેશે. સેવ કરવાથી આ ક્વોલિટી અપડેટ થશે",
+      structureNoteAnd: "અને",
+      structureNoteSuffix: "એસ્ટીમેટરમાં લાગુ થશે.",
+      warpRates: "તાણા સૂત રેટ્સ",
+      weftRates: "ભરણ સૂત રેટ્સ",
+      deleteButton: "ક્વોલિટી ડિલીટ કરો",
+      deleteNote: "· આ કાયમી છે",
+      deleteConfirm: "\"{name}\" ક્વોલિટી ડિલીટ કરશો? આ ક્રિયા પાછી ફરી શકાશે નહીં.",
+      applyAsIs: "જેવું છે તેવું લાગુ કરો",
+      saveApply: "રેટ્સ સાચવો અને લાગુ કરો",
+      applied: "ક્વોલિટી લાગુ:",
+      saved: "ક્વોલિટી સાચવાઈ ગઈ!",
+      deleted: "ક્વોલિટી ડિલીટ થઈ ગઈ",
+      nameRequired: "કૃપા કરીને ક્વોલિટીનું નામ દાખલ કરો",
+      saveFailed: "ક્વોલિટી સાચવવામાં નિષ્ફળ",
+      updateFailed: "ક્વોલિટી અપડેટ કરવામાં નિષ્ફળ",
+      settingsTitle: "મારી ક્વોલિટી",
+      settingsDescription: "તમારી વારંવાર ઉપયોગમાં આવતી ફેબ્રિક રચનાઓ મેનેજ કરો. ક્વોલિટી એસ્ટીમેટર પેજ પરથી \"ક્વોલિટી સાચવો\" દ્વારા સાચવાય છે.",
+      settingsEmpty: "હજી કોઈ ક્વોલિટી સાચવાઈ નથી. તમારી પહેલી ક્વોલિટી બનાવવા એસ્ટીમેટર ખોલો અને \"ક્વોલિટી સાચવો\" વાપરો.",
+      settingsDeleteConfirm: "આ ક્વોલિટી ડિલીટ કરશો?"
     },
     order_basics: {
       title: "ઓર્ડર અને ફેબ્રિક લેબલ",
@@ -769,30 +945,6 @@ export const gu = {
       commission: "બ્રોકર કમિશન %",
       transport: "ટ્રાન્સપોર્ટ / મી"
     },
-    save_template_dialog: {
-      title: "ફેબ્રિક ટેમ્પલેટ સેવ કરો",
-      quality_name_label: "ફેબ્રિક ક્વોલિટીનું નામ",
-      saves_note_prefix: "સેવ કરે છે",
-      saves_note_warp: "તાણો +",
-      saves_note_weft: "ભરણ બ્લેન્ડ લેયર્સ સહિત વર્તમાન સૂત રેટ્સ.",
-      rate_note: "ટેમ્પલેટ ફરીથી બનાવ્યા વગર સૂત રેટ્સ ગમે ત્યારે અપડેટ કરી શકાય.",
-      cancel: "રદ કરો",
-      confirm: "ખાતરી અને સેવ"
-    },
-    edit_template_dialog: {
-      title: "ટેમ્પલેટ એડિટ કરો:",
-      quality_name_label: "ફેબ્રિક ક્વોલિટીનું નામ",
-      structure_note_prefix: "નીચે સૂત રેટ્સ અપડેટ કરો. ફેબ્રિક સ્ટ્રક્ચર (ડેનિયર, એન્ડ્સ, પિક્સ) એ જ રહેશે. સેવ કરવાથી સ્ટોર્ડ ટેમ્પલેટ અપડેટ થશે",
-      structure_note_and: "અને",
-      structure_note_suffix: "એસ્ટીમેટરમાં લાગુ થશે.",
-      warp_rates: "તાણો સૂત રેટ્સ",
-      weft_rates: "ભરણ સૂત રેટ્સ",
-      delete_button: "ટેમ્પલેટ ડિલીટ કરો",
-      delete_note: "· આ કાયમી છે",
-      structure_preserved: "સ્ટ્રક્ચર સુરક્ષિત · ફક્ત રેટ્સ બદલાય",
-      apply_as_is: "જેવું છે તેવું લાગુ કરો",
-      save_apply: "રેટ્સ સેવ કરો અને લાગુ કરો"
-    },
     convert_dialog: {
       title: "પ્રોડક્શન ઓર્ડરમાં બદલો",
       cost_summary: "ખર્ચ સારાંશ",
@@ -826,15 +978,11 @@ export const gu = {
       transport_per_m: "ટ્રાન્સપોર્ટ / મી"
     },
     toast: {
-      applied_template: "ફેબ્રિક ટેમ્પલેટ લાગુ:",
-      saved_template: "ફેબ્રિક ટેમ્પલેટ સેવ થઈ ગયું!",
-      template_deleted: "ટેમ્પલેટ ડિલીટ થઈ ગયું",
-      updated_applied: "ટેમ્પલેટ અપડેટ અને લાગુ થઈ ગયું",
+      updated_applied: "ક્વોલિટી અપડેટ અને લાગુ થઈ ગઈ",
       applied_as_is: "લાગુ કર્યું:",
       party_required: "પાર્ટીનું નામ જરૂરી છે",
       quality_required: "ક્વોલિટી લેબલ જરૂરી છે",
       converted_success: "કોટ સફળતાપૂર્વક સેવ થયો",
-      save_template_name_error: "કૃપા કરીને ફેબ્રિકનું નામ દાખલ કરો",
       rename_failed: "નામ બદલવામાં નિષ્ફળ:"
     }
   },

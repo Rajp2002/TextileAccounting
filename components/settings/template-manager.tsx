@@ -26,19 +26,19 @@ interface TemplateV3 {
 export function TemplateManager() {
     const { t } = useTranslation()
     const [loading,   setLoading]   = useState(true)
-    const [templates, setTemplates] = useState<TemplateV3[]>([])
+    const [qualities, setQualities] = useState<TemplateV3[]>([])
 
     const load = async () => {
         setLoading(true)
         const res = await getEstimatorTemplates()
-        if (res.data) setTemplates(res.data as TemplateV3[])
+        if (res.data) setQualities(res.data as TemplateV3[])
         setLoading(false)
     }
 
     useEffect(() => { load() }, [])
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Delete this fabric template?')) return
+        if (!confirm(t('estimator.quality.settingsDeleteConfirm'))) return
         const res = await deleteTemplate(id)
         if (res.success) {
             toast.success(t('common.removed'))
@@ -48,26 +48,26 @@ export function TemplateManager() {
         }
     }
 
-    // Derive display summary from V3 or V1 template
-    function templateSummary(tpl: TemplateV3): { totalEnds: number; firstPicks: number; warpLayers: number; weftLayers: number } {
-        if (tpl.warp_rows && tpl.warp_rows.length > 0) {
+    // Derive display summary from V3 or V1 quality
+    function qualitySummary(quality: TemplateV3): { totalEnds: number; firstPicks: number; warpLayers: number; weftLayers: number } {
+        if (quality.warp_rows && quality.warp_rows.length > 0) {
             return {
-                totalEnds:  tpl.warp_rows.reduce((s, r) => s + r.beamEnds, 0),
-                firstPicks: tpl.weft_rows?.[0]?.picks ?? 0,
-                warpLayers: tpl.warp_rows.length,
-                weftLayers: tpl.weft_rows?.length ?? 1,
+                totalEnds:  quality.warp_rows.reduce((s, r) => s + r.beamEnds, 0),
+                firstPicks: quality.weft_rows?.[0]?.picks ?? 0,
+                warpLayers: quality.warp_rows.length,
+                weftLayers: quality.weft_rows?.length ?? 1,
             }
         }
         // Legacy V1 display
         return {
-            totalEnds:  tpl.beam_ends ?? 0,
-            firstPicks: tpl.ppi ?? 0,
+            totalEnds:  quality.beam_ends ?? 0,
+            firstPicks: quality.ppi ?? 0,
             warpLayers: 1,
             weftLayers: 1,
         }
     }
 
-    if (loading && templates.length === 0) {
+    if (loading && qualities.length === 0) {
         return (
             <Card className="shadow-sm border-gray-200 mt-6">
                 <CardContent className="flex items-center justify-center h-24">
@@ -82,32 +82,32 @@ export function TemplateManager() {
             <CardHeader>
                 <div className="flex items-center gap-2">
                     <FileText className="h-5 w-5 text-blue-500" />
-                    <CardTitle>Saved Fabric Templates</CardTitle>
+                    <CardTitle>{t('estimator.quality.settingsTitle')}</CardTitle>
                 </div>
                 <CardDescription>
-                    Manage your frequently used fabric configurations. Templates are saved from the estimator page using "Save as Fabric".
+                    {t('estimator.quality.settingsDescription')}
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                {templates.length === 0 ? (
+                {qualities.length === 0 ? (
                     <div className="py-10 text-center border-2 border-dashed rounded-2xl bg-gray-50/50">
                         <p className="text-sm text-gray-400 italic">
-                            No fabric templates saved yet. Open the estimator and use "Save as Fabric" to create your first one.
+                            {t('estimator.quality.settingsEmpty')}
                         </p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {templates.map(tpl => {
-                            const summary = templateSummary(tpl)
-                            const isV3 = !!(tpl.warp_rows && tpl.warp_rows.length > 0)
+                        {qualities.map(quality => {
+                            const summary = qualitySummary(quality)
+                            const isV3 = !!(quality.warp_rows && quality.warp_rows.length > 0)
                             return (
                                 <div
-                                    key={tpl.id}
+                                    key={quality.id}
                                     className="group p-3 rounded-xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-gray-200 hover:shadow-sm transition-all duration-200"
                                 >
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
-                                            <h5 className="font-bold text-gray-900 group-hover:text-indigo-700 text-sm">{tpl.name}</h5>
+                                            <h5 className="font-bold text-gray-900 group-hover:text-indigo-700 text-sm">{quality.name}</h5>
                                             {isV3 && (
                                                 <span className="text-[10px] bg-indigo-100 text-indigo-600 rounded-full px-1.5 py-0.5 font-semibold">
                                                     V3 · {summary.warpLayers}W + {summary.weftLayers}F
@@ -118,7 +118,7 @@ export function TemplateManager() {
                                             variant="ghost"
                                             size="icon"
                                             className="h-7 w-7 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={() => handleDelete(tpl.id)}
+                                            onClick={() => handleDelete(quality.id)}
                                         >
                                             <Trash2 className="h-3.5 w-3.5" />
                                         </Button>
@@ -132,9 +132,9 @@ export function TemplateManager() {
                                             <Layers className="h-2.5 w-2.5" />
                                             Picks: <b className="text-gray-700">{summary.firstPicks} PPI</b>
                                         </span>
-                                        {isV3 && tpl.warp_rows && (
+                                        {isV3 && quality.warp_rows && (
                                             <span className="col-span-2 text-gray-400 truncate">
-                                                {tpl.warp_rows.map(r => `${r.beamEnds}×${r.calcDenier}D`).join(' + ')}
+                                                {quality.warp_rows.map(r => `${r.beamEnds}×${r.calcDenier}D`).join(' + ')}
                                             </span>
                                         )}
                                     </div>

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { confirmDispatchReceipt } from '@/app/actions/track'
 import type { TrackingData, TrackingDispatch } from './page'
 import { format } from 'date-fns'
+import { useTranslation } from '@/lib/i18n/context'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -37,6 +38,7 @@ function DispatchCard({
     isPreview?: boolean
     onConfirmed: (id: string, qty: number) => void
 }) {
+    const { t } = useTranslation()
     const [expanded, setExpanded] = useState(false)
     const [qtyInput, setQtyInput] = useState(String(dispatch.qty_meters_sent))
     const [pending, startTransition] = useTransition()
@@ -130,7 +132,7 @@ function DispatchCard({
                                 transition: 'background 0.15s',
                             }}
                         >
-                            {isPreview ? '✓ Trader will confirm receipt' : '▼ Confirm Receipt'}
+                            {isPreview ? '✓ Trader will confirm receipt' : t('dispatch.receipt.recordButton')}
                         </button>
                     ) : (
                         <div style={{
@@ -210,6 +212,20 @@ function DispatchCard({
                     )}
                 </>
             )}
+
+            {isDelivered && dispatch.receipt_confirmed_by_owner && (
+                <div style={{
+                    marginTop: 12,
+                    background: '#f0fdf4',
+                    border: '1.5px solid #bbf7d0',
+                    borderRadius: 10,
+                    padding: '10px 12px',
+                }}>
+                    <p style={{ fontSize: 12, color: '#15803d', fontWeight: 700, margin: 0 }}>
+                        {t('dispatch.receipt.alreadyConfirmed')}
+                    </p>
+                </div>
+            )}
         </div>
     )
 }
@@ -254,7 +270,7 @@ export default function TrackingPortal({
             ...prev,
             dispatches: prev.dispatches.map(d =>
                 d.id === id
-                    ? { ...d, status: 'delivered', qty_meters_received: qtyReceived, received_at: new Date().toISOString() }
+                    ? { ...d, status: 'delivered', qty_meters_received: qtyReceived, received_at: new Date().toISOString(), receipt_confirmed_by_owner: false }
                     : d
             ),
         }))

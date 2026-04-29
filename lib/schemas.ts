@@ -383,6 +383,10 @@ export const CreatePartyReceiptSchema = z.object({
     method: ReceiptMethodSchema.default('cash'),
     reference_no: z.string().trim().max(80, 'Reference too long').optional().or(z.literal('')),
     notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+    allocations: z.array(z.object({
+        invoice_id: UuidSchema,
+        allocated_amount: z.number().positive('Allocated amount must be positive').max(100_000_000, 'Allocated amount too high'),
+    })).optional().default([]),
 })
 
 export const CreatePartyAdjustmentSchema = z.object({
@@ -393,6 +397,27 @@ export const CreatePartyAdjustmentSchema = z.object({
     direction: PartyAdjustmentDirectionSchema,
     amount: z.number().positive('Adjustment amount must be positive').max(100_000_000, 'Adjustment amount too high'),
     notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+})
+
+export const CreateSupplierSchema = z.object({
+    name: z.string().trim().min(1, 'Supplier name is required').max(120, 'Supplier name too long'),
+    phone: z.string().trim().regex(/^\d{10}$/, 'Phone must be exactly 10 digits').optional().or(z.literal('')),
+    gst_number: z
+        .string()
+        .trim()
+        .toUpperCase()
+        .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, 'Invalid GST number')
+        .optional()
+        .or(z.literal('')),
+    notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+})
+
+export const CreateSupplierLedgerEntrySchema = z.object({
+    supplier_id: UuidSchema,
+    type: z.enum(['purchase', 'payment']),
+    amount: z.number().positive('Amount must be positive').max(100_000_000, 'Amount too high'),
+    entry_date: DateSchema,
+    note: z.string().trim().max(500, 'Note too long').optional().or(z.literal('')),
 })
 
 // ─── Grey Fabric Stock Schemas ──────────────────────────────────────────────
