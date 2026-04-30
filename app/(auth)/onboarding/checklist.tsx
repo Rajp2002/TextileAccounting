@@ -19,6 +19,7 @@ import { savePayrollConfig } from '@/app/(dashboard)/owner/payroll/actions'
 import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/actions/auth'
 import { TrialButton } from '@/components/billing/TrialButton'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
+import { BrandBackground } from '@/components/brand-background'
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -668,11 +669,12 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 flex items-start justify-center p-4 pt-8">
+        <div className="relative isolate min-h-screen overflow-hidden bg-background flex items-start justify-center p-4 pt-8">
+            <BrandBackground variant="auth" />
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-xl"
+                className="relative z-10 w-full max-w-xl"
             >
                 {/* Header */}
                 <div className="text-center mb-8">

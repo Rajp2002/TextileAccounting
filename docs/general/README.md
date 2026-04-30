@@ -99,6 +99,7 @@ There is currently no dedicated `test` script in `package.json`. The repo has on
 
 ## Documentation Map
 
+- [MASTER_PRODUCT_DOCUMENT.md](./MASTER_PRODUCT_DOCUMENT.md) - comprehensive developer-facing master product document spanning workflows, architecture, data model, and module logic
 - [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md) - product and module overview
 - [USER_WORKFLOWS.md](./USER_WORKFLOWS.md) - role-based route and workflow reference
 - [TECHNICAL_ANALYSIS.md](./TECHNICAL_ANALYSIS.md) - implementation architecture notes
