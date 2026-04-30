@@ -13,12 +13,12 @@ export function BrandBackground({ className, variant = 'app' }: BrandBackgroundP
     return (
         <div
             className={cn(
-                'pointer-events-none absolute inset-0 z-0 overflow-hidden bg-background',
+                'pointer-events-none fixed inset-0 z-0 overflow-hidden bg-background',
                 className
             )}
             aria-hidden="true"
         >
-            <div className="absolute inset-0 bg-grid-pattern [mask-image:linear-gradient(to_bottom,white_0%,white_88%,transparent_100%)]" />
+            <div className="absolute inset-0 bg-grid-pattern" />
 
             <div className={cn(
                 'absolute inset-x-0 -top-48 transform-gpu overflow-hidden blur-3xl sm:-top-72',
