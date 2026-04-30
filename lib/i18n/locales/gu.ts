@@ -668,6 +668,9 @@ export const gu = {
     adjustment: {
       recorded: "એડજસ્ટમેન્ટ નોંધાઈ"
     },
+    creditNote: {
+      shortageAdjustment: "શોર્ટેજ ક્રેડિટ નોટ"
+    },
     supplier: {
       updated: "સપ્લાયર અપડેટ થયો",
       added: "સપ્લાયર ઉમેરાયો",

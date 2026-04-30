@@ -679,6 +679,9 @@ export const en = {
     adjustment: {
       recorded: "Adjustment recorded"
     },
+    creditNote: {
+      shortageAdjustment: "Shortage credit note"
+    },
     supplier: {
       updated: "Supplier updated",
       added: "Supplier added",

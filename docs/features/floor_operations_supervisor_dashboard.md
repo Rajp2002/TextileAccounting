@@ -23,14 +23,21 @@ Floor operations are chaotic. Workers change shifts, machines break down, and pr
 
 ## User Interaction
 1.  **Shift Setup**: Select Date and Shift (Day/Night). Use "Copy Yest." to quickly fill assignments.
+    Each loom assignment supports two worker slots: `Weaver` (`primary_worker_id`, required) and `Helper/Khadki` (`helper_worker_id`, optional).
 2.  **Machine Check**: Tap machine cards to update status (e.g., mark as "Service" for a mechanical failure).
-3.  **Logging**: Enter the meters produced for each loom.
+3.  **Logging**: Enter the loom counter reading for each loom. If the counter was reset during the shift, check "Counter was reset this shift"; production for that row becomes the closing reading and the opening reading is stored as null.
 4.  **Submission**: Tap "Submit Shift Logs" to save all entries. Use "Submit & Pack" if physical fabric packages need to be created immediately.
 
 ## Technical Logic
 - **Unified State**: Manages a complex grid of machines, workers, and orders using a responsive client-side state.
 - **Offline Recovery**: Uses `localStorage` to cache meter entries. If the browser refreshes or internet drops, the numbers are preserved.
 - **Atomic Sync**: `upsertShiftAssignment` ensures that worker/order changes are saved instantly even before the final submission.
+- **Two-Worker Loom Assignment**: `shift_assignments` stores `primary_worker_id`/`worker_id` for the weaver and optional `helper_worker_id` for the helper/khadki. The supervisor dashboard displays both slots. If no helper is assigned, the single operator receives the full configured piece-rate.
+- **Payroll Split**: For a shift with both workers, payroll creates separate earnings:
+  - Weaver: `shift_meters * weaver_rate_per_meter`.
+  - Helper: `shift_meters * helper_rate_per_meter`.
+  The helper rate is snapshotted on the shift assignment so later worker rate edits do not rewrite historical payroll.
+- **Counter Reset Handling**: When `closing_reading < opening_reading`, the UI warns as before. If the supervisor marks "Counter was reset this shift", then `shift_meters = closing_reading` and `opening_reading = null` for that production log.
 - **Duplicate Guard**: A server-side check prevents logging the same (Machine, Date, Shift) combination unless an Owner Access Code is provided.
 
 ## Relation to Other Features

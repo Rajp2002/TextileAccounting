@@ -69,6 +69,7 @@ function emptyPartyForm(): PartyFormType {
         party_type: 'trader',
         phone: '',
         gstin: '',
+        state: 'Gujarat',
         address: '',
         broker_name: '',
         default_credit_days: '30',
@@ -86,6 +87,7 @@ function partyToForm(party: LedgerParty): PartyFormType {
         party_type: party.party_type,
         phone: party.phone ?? '',
         gstin: party.gstin ?? '',
+        state: party.state || 'Gujarat',
         address: party.address ?? '',
         broker_name: party.broker_name ?? '',
         default_credit_days: String(party.default_credit_days),
@@ -107,7 +109,7 @@ function emptyInvoiceForm(party?: LedgerParty | null): InvoiceFormType {
         due_date: addDays(today, party?.default_credit_days ?? 30),
         total_meters: '',
         rate_per_m: '',
-        gst_percent: '0',
+        gst_percent: '5',
         notes: '',
     }
 }

@@ -3,7 +3,7 @@ import QRCode from 'qrcode'
 import { getBaseUrl } from './utils'
 
 /**
- * Data required to generate a Delivery Challan PDF.
+ * Data required to generate a Tax Invoice cum Delivery Challan PDF.
  * Provided by the createDispatch Server Action response.
  */
 export interface ChallanData {
@@ -13,6 +13,17 @@ export interface ChallanData {
     dispatch_number:  number      // Batch number (1, 2, 3…)
     qty_meters_sent:  number      // Meters dispatched in this batch
     total_target_meters: number   // Total order target
+    factory_gstin?:    string | null
+    party_gstin?:      string | null
+    invoice_number?:   string | null
+    hsn_code?:         string | null
+    rate_per_m?:       number | null
+    taxable_value?:    number | null
+    gst_percent?:      number | null
+    cgst_amount?:      number | null
+    sgst_amount?:      number | null
+    igst_amount?:      number | null
+    total_invoice_value?: number | null
     package_lines: Array<{
         package_no: string
         package_type: string
@@ -28,7 +39,7 @@ export interface ChallanData {
 const APP_URL = getBaseUrl()
 
 /**
- * Generate and auto-download a Delivery Challan PDF with an embedded QR code.
+ * Generate and auto-download a Tax Invoice cum Delivery Challan PDF with an embedded QR code.
  * Called client-side immediately after createDispatch() Server Action resolves.
  * Pattern mirrors lib/generate-payslip.ts (same jsPDF structure, same .save() trigger).
  *
@@ -53,7 +64,7 @@ export async function generateChallan(data: ChallanData): Promise<void> {
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(9)
     doc.setFont('helvetica', 'bold')
-    doc.text('GREY FABRIC CHALLAN', L, 7)
+    doc.text('TAX INVOICE CUM DELIVERY CHALLAN', L, 7)
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(7)
     doc.text('Powered by Weavly', pageWidth - R, 7, { align: 'right' })
@@ -67,14 +78,14 @@ export async function generateChallan(data: ChallanData): Promise<void> {
     doc.text(data.org_name, pageWidth / 2, y, { align: 'center' })
     y += 6
 
-    // ── Dispatch Badge (Batch #N) ─────────────────────────────────────────────────
+    // ── Invoice Badge (Batch #N) ─────────────────────────────────────────────────
     doc.setFillColor(255, 245, 242)   // light orange tint
     doc.setDrawColor(255, 87, 34)
     doc.roundedRect(L, y, 44, 8, 2, 2, 'FD')
     doc.setFontSize(9)
     doc.setTextColor(255, 87, 34)
     doc.setFont('helvetica', 'bold')
-    doc.text(`Dispatch Batch #${data.dispatch_number}`, L + 22, y + 5.5, { align: 'center' })
+    doc.text(data.invoice_number || `Invoice Batch #${data.dispatch_number}`, L + 22, y + 5.5, { align: 'center' })
 
     // Date on the right
     doc.setFontSize(8)
@@ -116,6 +127,48 @@ export async function generateChallan(data: ChallanData): Promise<void> {
     doc.setTextColor(255, 87, 34)
     doc.text(`${Number(data.qty_meters_sent).toFixed(2)} m`, L + 44, y + 26)
     y += 38
+
+    const ratePerM = Number(data.rate_per_m ?? 0)
+    const taxableValue = Number(data.taxable_value ?? (ratePerM > 0 ? data.qty_meters_sent * ratePerM : 0))
+    const gstPercent = Number(data.gst_percent ?? 5)
+    const totalGst = Number(data.cgst_amount ?? 0) + Number(data.sgst_amount ?? 0) + Number(data.igst_amount ?? 0)
+    const computedGst = totalGst > 0 ? totalGst : taxableValue * gstPercent / 100
+    const totalInvoiceValue = Number(data.total_invoice_value ?? (taxableValue + computedGst))
+
+    doc.setFontSize(8)
+    doc.setTextColor(120)
+    doc.setFont('helvetica', 'normal')
+    doc.text('Factory GSTIN', L, y)
+    doc.text('Trader GSTIN', L, y + 7)
+    doc.text('HSN Code', L, y + 14)
+    doc.setTextColor(0)
+    doc.setFont('helvetica', 'bold')
+    doc.text(data.factory_gstin || '-', L + 44, y)
+    doc.text(data.party_gstin || '-', L + 44, y + 7)
+    doc.text(data.hsn_code || '5407', L + 44, y + 14)
+    y += 24
+
+    if (taxableValue > 0) {
+        doc.setDrawColor(225)
+        doc.setFillColor(248, 250, 252)
+        doc.roundedRect(L, y, contentWidth, 28, 2, 2, 'FD')
+        doc.setFontSize(8)
+        doc.setTextColor(90)
+        doc.setFont('helvetica', 'bold')
+        doc.text('Taxable Value', L + 3, y + 6)
+        doc.text('GST', L + 3, y + 13)
+        doc.text('Invoice Total', L + 3, y + 22)
+        doc.setTextColor(0)
+        doc.text(`Rs. ${taxableValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`, pageWidth - R - 3, y + 6, { align: 'right' })
+        const gstParts = Number(data.igst_amount ?? 0) > 0
+            ? `IGST ${gstPercent}%`
+            : `CGST ${(gstPercent / 2).toFixed(1)}% + SGST ${(gstPercent / 2).toFixed(1)}%`
+        doc.text(`${gstParts}: Rs. ${computedGst.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`, pageWidth - R - 3, y + 13, { align: 'right' })
+        doc.setFontSize(10)
+        doc.setTextColor(255, 87, 34)
+        doc.text(`Rs. ${totalInvoiceValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`, pageWidth - R - 3, y + 22, { align: 'right' })
+        y += 36
+    }
 
     // ── Package table ───────────────────────────────────────────────────────────
     doc.setDrawColor(225)
@@ -242,7 +295,7 @@ export async function generateChallan(data: ChallanData): Promise<void> {
     doc.setTextColor(150)
     doc.setFont('helvetica', 'normal')
     doc.text(
-        'Generated by Weavly · Computer-generated grey fabric challan.',
+        'Generated by Weavly · Computer-generated Tax Invoice cum Delivery Challan.',
         pageWidth / 2,
         pageHeight - 8,
         { align: 'center' }
@@ -250,5 +303,5 @@ export async function generateChallan(data: ChallanData): Promise<void> {
 
     // ── Auto-Download ─────────────────────────────────────────────────────────────
     const safeName = data.party_name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_')
-    doc.save(`Challan-${safeName}-Batch${data.dispatch_number}.pdf`)
+    doc.save(`Tax-Invoice-${safeName}-Batch${data.dispatch_number}.pdf`)
 }

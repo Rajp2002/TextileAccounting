@@ -14,7 +14,7 @@ import { toast } from 'sonner'
 import { formatINR } from '@/lib/finance'
 import { Pencil, Trash2, Users, Briefcase, KeyRound, AlertCircle, Loader2, Gauge, MessageCircle, ShieldCheck } from 'lucide-react'
 import { getWorkerDebt } from '@/app/(dashboard)/supervisor/actions'
-import { deleteFixedWorkerWithCode, upsertFixedWorker, updateMeterWorker, deleteMeterWorkerWithCode, writeOffWorkerAdvanceBalance, setWorkerActiveStatus } from '@/app/(dashboard)/owner/actions'
+import { deleteFixedWorker, deleteFixedWorkerWithCode, upsertFixedWorker, updateMeterWorker, deleteMeterWorker, deleteMeterWorkerWithCode, writeOffWorkerAdvanceBalance, setWorkerActiveStatus } from '@/app/(dashboard)/owner/actions'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -23,6 +23,7 @@ import { useTransliterate } from '@/hooks/use-transliterate'
 import { Amount } from '@/components/ui/amount'
 import { AddWorkerDialog } from '@/components/AddWorkerDialog'
 import { WorkerExitDialog } from '@/components/advances/WorkerExitDialog'
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 
 const ROLES = [
     { value: 'master', defaultSalary: 30000 },
@@ -56,6 +57,36 @@ interface MeterWorker {
     whatsapp_language?: string | null
     esi_number?: string | null
     pf_number?: string | null
+}
+
+async function hasMeterWorkerHistory(supabase: ReturnType<typeof createClient>, orgId: string, workerId: number) {
+    const [{ data: settlements, error: settlementsError }, { data: advances, error: advancesError }] = await Promise.all([
+        supabase.from('payroll_settlements').select('id').eq('org_id', orgId).eq('meter_worker_id', workerId).limit(1),
+        supabase.from('worker_advances').select('id').eq('org_id', orgId).eq('meter_worker_id', workerId).limit(1),
+    ])
+
+    if (settlementsError) throw settlementsError
+    if (advancesError) throw advancesError
+
+    return (settlements?.length ?? 0) > 0 || (advances?.length ?? 0) > 0
+}
+
+async function hasFixedWorkerHistory(supabase: ReturnType<typeof createClient>, orgId: string, workerId: number) {
+    const [
+        { data: settlements, error: settlementsError },
+        { data: advances, error: advancesError },
+        { data: attendance, error: attendanceError },
+    ] = await Promise.all([
+        supabase.from('payroll_settlements').select('id').eq('org_id', orgId).eq('fixed_worker_id', workerId).limit(1),
+        supabase.from('worker_advances').select('id').eq('org_id', orgId).eq('fixed_worker_id', workerId).limit(1),
+        supabase.from('attendance').select('fixed_worker_id').eq('org_id', orgId).eq('fixed_worker_id', workerId).limit(1),
+    ])
+
+    if (settlementsError) throw settlementsError
+    if (advancesError) throw advancesError
+    if (attendanceError) throw attendanceError
+
+    return (settlements?.length ?? 0) > 0 || (advances?.length ?? 0) > 0 || (attendance?.length ?? 0) > 0
 }
 
 function getRoleLabel(role: string, t: any) {
@@ -247,6 +278,7 @@ function PieceRateTab({ orgId }: { orgId: string }) {
     const [workerToDelete, setWorkerToDelete] = useState<MeterWorker | null>(null)
     const [exitWorker, setExitWorker] = useState<MeterWorker | null>(null)
     const [workerDebt, setWorkerDebt] = useState<number>(0)
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
     const [accessCode, setAccessCode] = useState('')
     const [erasePII, setErasePII] = useState(false)
     const [deleting, setDeleting] = useState(false)
@@ -298,11 +330,39 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                 setExitWorker(worker)
                 return
             }
+            const hasHistory = await hasMeterWorkerHistory(supabase, orgId, worker.id)
             setWorkerToDelete(worker)
-            setAccessCode('')
-            setVerificationOpen(true)
+            if (hasHistory) {
+                setAccessCode('')
+                setVerificationOpen(true)
+            } else {
+                setConfirmDeleteOpen(true)
+            }
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to prepare worker deletion')
         } finally {
             setFetchingDebt(false)
+        }
+    }
+
+    const executeDirectDelete = async () => {
+        if (!workerToDelete) return
+        setDeleting(true)
+        try {
+            const result = await deleteMeterWorker(workerToDelete.id)
+            if (!('success' in result) || !result.success) {
+                toast.error(result.error || 'Failed to delete worker')
+                return
+            }
+            toast.success(t('common.removed'))
+            setConfirmDeleteOpen(false)
+            setWorkerToDelete(null)
+            queryClient.invalidateQueries({ queryKey: ['meter_workers'] })
+            queryClient.invalidateQueries({ queryKey: ['workers'] })
+        } catch (err: any) {
+            toast.error(err.message)
+        } finally {
+            setDeleting(false)
         }
     }
 
@@ -523,6 +583,16 @@ function PieceRateTab({ orgId }: { orgId: string }) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <ConfirmActionDialog
+                open={confirmDeleteOpen}
+                onOpenChange={setConfirmDeleteOpen}
+                title="Delete worker"
+                description={workerToDelete ? `Delete ${workerToDelete.name}? This worker has no production history, so no access code is required.` : ''}
+                confirmLabel={t('common.remove')}
+                onConfirm={executeDirectDelete}
+                isDestructive
+                isLoading={deleting}
+            />
 
             <WorkerExitDialog
                 open={!!exitWorker}
@@ -574,6 +644,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const [workerToDelete, setWorkerToDelete] = useState<FixedWorker | null>(null)
     const [exitWorker, setExitWorker] = useState<FixedWorker | null>(null)
     const [workerDebt, setWorkerDebt] = useState<number>(0)
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
     const [accessCode, setAccessCode] = useState('')
     const [erasePII, setErasePII] = useState(false)
     const [deleting, setDeleting] = useState(false)
@@ -686,11 +757,38 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                 setExitWorker(worker)
                 return
             }
+            const hasHistory = await hasFixedWorkerHistory(supabase, orgId, worker.id)
             setWorkerToDelete(worker)
-            setAccessCode('')
-            setVerificationOpen(true)
+            if (hasHistory) {
+                setAccessCode('')
+                setVerificationOpen(true)
+            } else {
+                setConfirmDeleteOpen(true)
+            }
+        } catch (err: any) {
+            toast.error(err.message || 'Failed to prepare worker deletion')
         } finally {
             setFetchingDebt(false)
+        }
+    }
+
+    const executeDirectDelete = async () => {
+        if (!workerToDelete) return
+        setDeleting(true)
+        try {
+            const result = await deleteFixedWorker(workerToDelete.id)
+            if (!('success' in result) || !result.success) {
+                toast.error(result.error || 'Failed to delete worker')
+                return
+            }
+            toast.success(t('common.removed'))
+            setConfirmDeleteOpen(false)
+            setWorkerToDelete(null)
+            queryClient.invalidateQueries({ queryKey: ['fixed_workers'] })
+        } catch (err: any) {
+            toast.error(err.message)
+        } finally {
+            setDeleting(false)
         }
     }
 
@@ -1087,6 +1185,16 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <ConfirmActionDialog
+                open={confirmDeleteOpen}
+                onOpenChange={setConfirmDeleteOpen}
+                title="Delete worker"
+                description={workerToDelete ? `Delete ${workerToDelete.name}? This worker has no production history, so no access code is required.` : ''}
+                confirmLabel={t('common.remove')}
+                onConfirm={executeDirectDelete}
+                isDestructive
+                isLoading={deleting}
+            />
 
             <WorkerExitDialog
                 open={!!exitWorker}

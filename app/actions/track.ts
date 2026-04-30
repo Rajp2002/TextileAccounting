@@ -59,9 +59,11 @@ export async function confirmDispatchReceipt(
         if (
             message.includes('Invalid tracking link') ||
             message.includes('already been confirmed') ||
-            message.includes('Received quantity cannot exceed') ||
             message.includes('Enter a valid received quantity')
         ) {
+            if (message.includes('already been confirmed')) {
+                return { error: 'Receipt already confirmed' }
+            }
             return { error: message }
         }
         return { error: 'Could not confirm receipt. Please try again.' }

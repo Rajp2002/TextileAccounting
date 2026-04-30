@@ -19,13 +19,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
-import { deleteWorkerWithCode, getWorkerDebt, toggleWorkerActive as toggleWorkerActiveAction } from '@/app/(dashboard)/supervisor/actions'
+import { deleteWorker, deleteWorkerWithCode, getWorkerDebt, toggleWorkerActive as toggleWorkerActiveAction } from '@/app/(dashboard)/supervisor/actions'
 import { formatINR } from '@/lib/finance'
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 
 const ROLE_COLORS: Record<string, string> = {
     master: 'bg-purple-100 text-purple-700', supervisor: 'bg-blue-100 text-blue-700',
@@ -40,6 +41,7 @@ export default function SupervisorWorkersPage() {
     // Authorization State
     const [workerToDelete, setWorkerToDelete] = useState<number | null>(null)
     const [workerDebt, setWorkerDebt] = useState<number>(0)
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
     const [accessCode, setAccessCode] = useState('')
     const [deleting, setDeleting] = useState(false)
     const [fetchingDebt, setFetchingDebt] = useState(false)
@@ -75,9 +77,40 @@ export default function SupervisorWorkersPage() {
             const res = await getWorkerDebt(id, 'meter')
             setWorkerDebt(res.balance || 0)
             setWorkerToDelete(id)
-            setAccessCode('')
+            const [{ data: settlements, error: settlementsError }, { data: advances, error: advancesError }] = await Promise.all([
+                supabase.from('payroll_settlements').select('id').eq('org_id', userProfile.org_id).eq('meter_worker_id', id).limit(1),
+                supabase.from('worker_advances').select('id').eq('org_id', userProfile.org_id).eq('meter_worker_id', id).limit(1),
+            ])
+            if (settlementsError) throw settlementsError
+            if (advancesError) throw advancesError
+            const hasHistory = (settlements?.length ?? 0) > 0 || (advances?.length ?? 0) > 0
+            if (hasHistory) {
+                setAccessCode('')
+            } else {
+                setConfirmDeleteOpen(true)
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to prepare worker deletion')
         } finally {
             setFetchingDebt(false)
+        }
+    }
+
+    const executeDirectDelete = async () => {
+        if (!workerToDelete || !userProfile?.org_id) return
+        setDeleting(true)
+        try {
+            const result = await deleteWorker(workerToDelete)
+            if (result.error) throw new Error(result.error)
+
+            toast.success('Worker deleted successfully')
+            setConfirmDeleteOpen(false)
+            setWorkerToDelete(null)
+            queryClient.invalidateQueries({ queryKey: ['workers'] })
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to delete worker')
+        } finally {
+            setDeleting(false)
         }
     }
 
@@ -209,7 +242,7 @@ export default function SupervisorWorkersPage() {
             </div>
 
             {/* Access Code Modal (SEC-004) */}
-            <Dialog open={workerToDelete !== null} onOpenChange={(open) => !open && setWorkerToDelete(null)}>
+            <Dialog open={workerToDelete !== null && !confirmDeleteOpen} onOpenChange={(open) => !open && setWorkerToDelete(null)}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-red-600">
@@ -255,6 +288,16 @@ export default function SupervisorWorkersPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <ConfirmActionDialog
+                open={confirmDeleteOpen}
+                onOpenChange={setConfirmDeleteOpen}
+                title="Delete worker"
+                description="This worker has no production history, so no access code is required."
+                confirmLabel={t('common.remove')}
+                onConfirm={executeDirectDelete}
+                isDestructive
+                isLoading={deleting}
+            />
         </div>
     )
 }

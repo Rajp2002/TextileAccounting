@@ -519,7 +519,7 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
 /**
  * Create a new dispatch entry for an order.
  * Atomically assigns the next dispatch number via RPC.
- * Returns the created dispatch + tracking_token for Challan PDF generation.
+ * Returns the created dispatch + tracking_token for invoice/challan PDF generation.
  */
 export async function createDispatch(
     orderId: string,
@@ -700,10 +700,6 @@ export async function confirmDispatchReceiptByOwner(
         return { error: 'Dispatch not found' }
     }
 
-    if (qtyReceived > Number(dispatch.qty_meters_sent)) {
-        return { error: 'Received quantity cannot exceed dispatched quantity' }
-    }
-
     const orderData = Array.isArray(dispatch.orders) ? dispatch.orders[0] : dispatch.orders
     const trackingToken = orderData?.tracking_token
     if (!trackingToken) {
@@ -717,7 +713,14 @@ export async function confirmDispatchReceiptByOwner(
     })
 
     if (error) {
-        return { error: error.message || 'Could not confirm receipt. Please try again.' }
+        const message = error.message || 'Could not confirm receipt. Please try again.'
+        if (message.includes('already been confirmed')) {
+            return { error: 'Receipt already confirmed' }
+        }
+        if (message.includes('Enter a valid received quantity')) {
+            return { error: 'Enter a valid received quantity' }
+        }
+        return { error: message }
     }
 
     const { error: updateError } = await supabase

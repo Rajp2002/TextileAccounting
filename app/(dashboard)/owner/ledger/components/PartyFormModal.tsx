@@ -80,6 +80,9 @@ export function PartyFormModal({
                     <Field label="GSTIN">
                         <Input value={partyForm.gstin} onChange={event => setPartyForm(prev => ({ ...prev, gstin: event.target.value.toUpperCase() }))} placeholder="Optional" />
                     </Field>
+                    <Field label="State" hint="Used for CGST/SGST vs IGST on invoices.">
+                        <Input value={partyForm.state} onChange={event => setPartyForm(prev => ({ ...prev, state: event.target.value }))} placeholder="Gujarat" />
+                    </Field>
                     <Field label="Broker / contact name" hint="Use a business contact only if needed for transactions.">
                         <Input value={partyForm.broker_name} onChange={event => setPartyForm(prev => ({ ...prev, broker_name: event.target.value }))} placeholder="Optional business contact" />
                     </Field>

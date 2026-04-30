@@ -508,9 +508,6 @@ BEGIN
   IF v_received < 0 THEN
     RAISE EXCEPTION 'Enter a valid received quantity';
   END IF;
-  IF v_received > v_dispatch.qty_meters_sent THEN
-    RAISE EXCEPTION 'Received quantity cannot exceed the sent quantity';
-  END IF;
 
   SELECT o.id, o.party_id, o.party_name
     INTO v_order

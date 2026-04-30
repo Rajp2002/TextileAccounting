@@ -16,6 +16,7 @@ export type PartyFormType = {
     party_type: PartyType
     phone: string
     gstin: string
+    state: string
     address: string
     broker_name: string
     default_credit_days: string

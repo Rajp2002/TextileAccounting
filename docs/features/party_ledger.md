@@ -8,7 +8,7 @@ Factory owners often deal with dozens of Traders. Keeping track of who owes how 
 
 ## Pain Points Solved
 - **Payment Delays**: Clearly see "Overdue" balances and follow up with Traders.
-- **Billing Disputes**: Link every ledger entry to a specific Dispatch Challan or Invoice.
+- **Billing Disputes**: Link every ledger entry to a specific Tax Invoice cum Delivery Challan or Invoice.
 - **Tax Readiness**: Export ledger data for accounting and GST filing.
 
 ## Old Workflow Translation
@@ -23,20 +23,27 @@ Factory owners often deal with dozens of Traders. Keeping track of who owes how 
 ## User Interaction
 1.  **Selection**: Select a Party to view their specific statement.
 2.  **Transaction Entry**: Manually record a "Payment Received" (Cash, Bank, Cheque).
-3.  **Automatic Entries**: Dispatches automatically create a "Debit" entry (Party owes money) in the ledger.
+3.  **Automatic Entries**: Dispatch invoices automatically create a "Debit" entry (Party owes money) in the ledger for the total invoice value including GST.
 4.  **Statement Sharing**: Export the ledger as a PDF to send to the Trader for reconciliation.
 
 ## Technical Logic
 - **Tabbed Interface**: Organized into "Transactions", "Pending Invoices", and "Analytics" for a comprehensive view.
 - **Real-time Totals**: Summarizes debits and credits to show the "Net Balance" at the top of the page.
+- **GST Split**: Invoice debits store taxable value, GST percent, GST amount, and net invoice value separately. For Surat/Gujarat parties, GST is split into CGST 2.5% + SGST 2.5%; for out-of-state parties, it is IGST 5%.
+- **Receivables Aging**: Party summary and transaction list show aging buckets:
+  - Current `< 30 days` in normal text.
+  - Overdue `30-60 days` in amber.
+  - Overdue `> 60 days` in red with a "Follow up" badge.
+- **Shortage Credit Notes**: Shortage adjustments are stored as linked credit note entries against the original dispatch invoice, using i18n key `ledger.creditNote.shortageAdjustment`.
 - **Soft Deletion**: Ledger entries are carefully managed to ensure the audit trail is never broken.
 
 ## Relation to Other Features
-- **Dispatches**: The primary driver of ledger debits.
+- **Dispatches**: Tax Invoice cum Delivery Challans are the primary driver of ledger debits.
 - **Orders**: Ledger entries are often tagged with an Order ID for context.
 - **Settings**: Party profiles are managed in the central settings/parties area.
 
 ## Output/Result
 - **Ledger Statement**: A list of all financial interactions.
 - **Net Balance**: The current amount owed by or to the Party.
+- **Aging Breakdown**: Current, 30-60 day overdue, and >60 day overdue receivables.
 - **PDF Export**: A formal financial document for reconciliation.
