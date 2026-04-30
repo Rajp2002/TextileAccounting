@@ -22,25 +22,29 @@ export function BrandBackground({ className, variant = 'app' }: BrandBackgroundP
 
             <div className={cn(
                 'absolute inset-x-0 -top-48 transform-gpu overflow-hidden blur-3xl sm:-top-72',
-                isAuth ? 'opacity-100' : 'opacity-95'
+                isAuth ? 'opacity-100' : 'opacity-100'
             )}>
                 <div
                     className={cn(
-                        'relative left-[calc(50%-12rem)] aspect-[1155/678] w-[34rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#f59e0b] to-[#c2410c] sm:left-[calc(50%-28rem)] sm:w-[68rem]',
-                        isAuth ? 'opacity-20 dark:opacity-[0.24]' : 'opacity-[0.28] dark:opacity-[0.24]'
+                        'relative aspect-[1155/678] w-[42rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#f59e0b] via-[#ea580c] to-[#c2410c] sm:w-[84rem]',
+                        isAuth
+                            ? 'left-[calc(50%-12rem)] opacity-20 dark:opacity-[0.24] sm:left-[calc(50%-28rem)]'
+                            : 'left-[calc(50%-2rem)] opacity-[0.46] dark:opacity-[0.30] sm:left-[calc(50%-12rem)]'
                     )}
                     style={{ clipPath: blobPolygon }}
                 />
             </div>
 
             <div className={cn(
-                'absolute inset-x-0 top-[18%] transform-gpu overflow-hidden blur-3xl',
-                isAuth ? 'opacity-90' : 'opacity-85'
+                'absolute inset-x-0 top-[16%] transform-gpu overflow-hidden blur-3xl',
+                isAuth ? 'opacity-90' : 'opacity-100'
             )}>
                 <div
                     className={cn(
-                        'relative left-[calc(50%+10rem)] aspect-[1155/678] w-[32rem] -translate-x-1/2 -rotate-[18deg] bg-gradient-to-tl from-[#f59e0b] to-[#ea580c] sm:left-[calc(50%+26rem)] sm:w-[58rem]',
-                        isAuth ? 'opacity-[0.16] dark:opacity-[0.22]' : 'opacity-[0.18] dark:opacity-[0.18]'
+                        'relative aspect-[1155/678] w-[38rem] -translate-x-1/2 -rotate-[18deg] bg-gradient-to-tl from-[#f59e0b] to-[#ea580c] sm:w-[72rem]',
+                        isAuth
+                            ? 'left-[calc(50%+10rem)] opacity-[0.16] dark:opacity-[0.22] sm:left-[calc(50%+26rem)]'
+                            : 'left-[calc(50%+20rem)] opacity-[0.32] dark:opacity-[0.24] sm:left-[calc(50%+28rem)]'
                     )}
                     style={{ clipPath: blobPolygon }}
                 />
@@ -48,7 +52,7 @@ export function BrandBackground({ className, variant = 'app' }: BrandBackgroundP
 
             <div className={cn(
                 'absolute inset-0',
-                isAuth ? 'bg-background/60 dark:bg-background/72' : 'bg-background/35 dark:bg-background/65'
+                isAuth ? 'bg-background/60 dark:bg-background/72' : 'bg-background/18 dark:bg-background/55'
             )} />
         </div>
     )
