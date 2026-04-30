@@ -29,7 +29,6 @@ import {
     getDispatchesForOrder,
     type OrderSummary,
     type DispatchSummary,
-    type DispatchRow
 } from '@/app/(dashboard)/owner/orders/actions'
 import { confirmDispatchReceiptByOwner } from '@/app/(dashboard)/owner/orders/actions'
 import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
@@ -51,6 +50,7 @@ import {
 } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -180,6 +180,7 @@ function DispatchBatchRow({
 }) {
     const { t } = useTranslation()
     const [isReceiptSheetOpen, setIsReceiptSheetOpen] = useState(false)
+    const [showExtraConfirm, setShowExtraConfirm] = useState(false)
     const [metersReceived, setMetersReceived] = useState(String(dispatch.qty_meters_sent))
     const [confirmationNote, setConfirmationNote] = useState('')
     const [isPending, startTransition] = useTransition()
@@ -190,7 +191,7 @@ function DispatchBatchRow({
     const receiptBadge = getReceiptBadge(dispatch, t)
     const showRecordReceipt = dispatch.qty_meters_received === null
 
-    const handleOwnerReceiptConfirm = () => {
+    const submitOwnerReceiptConfirm = () => {
         const qty = Number.parseFloat(metersReceived)
         if (!Number.isFinite(qty) || qty < 0) {
             toast.error(t('dispatch.receipt.metersReceived'))
@@ -207,7 +208,23 @@ function DispatchBatchRow({
             toast.success(t('dispatch.receipt.recordButton'))
             onOwnerReceiptConfirmed(dispatch.id, result.qty_received, confirmationNote)
             setIsReceiptSheetOpen(false)
+            setShowExtraConfirm(false)
         })
+    }
+
+    const handleOwnerReceiptConfirm = () => {
+        const qty = Number.parseFloat(metersReceived)
+        if (!Number.isFinite(qty) || qty < 0) {
+            toast.error(t('dispatch.receipt.metersReceived'))
+            return
+        }
+
+        if (qty > Number(dispatch.qty_meters_sent)) {
+            setShowExtraConfirm(true)
+            return
+        }
+
+        submitOwnerReceiptConfirm()
     }
 
     return (
@@ -343,6 +360,15 @@ function DispatchBatchRow({
                 </SheetFooter>
             </SheetContent>
         </Sheet>
+        <ConfirmActionDialog
+            open={showExtraConfirm}
+            onOpenChange={setShowExtraConfirm}
+            title="Confirm extra received"
+            description={`This batch was sent as ${Number(dispatch.qty_meters_sent).toFixed(2)} m and will be recorded as ${metersReceived || '0'} m received.`}
+            confirmLabel="Record receipt"
+            onConfirm={submitOwnerReceiptConfirm}
+            isLoading={isPending}
+        />
         </>
     )
 }
@@ -919,7 +945,7 @@ function GlobalDispatchModal({
                     availablePackages={dispatchSummary.available_packages}
                     onClose={onClose}
                     onCreated={async (dispatch, trackingToken, partyName, orgName) => {
-                        // Handle Challan PDF generation (reusing the logic from OrdersClient)
+                        // Handle invoice/challan PDF generation (reusing the logic from OrdersClient)
                         try {
                             const { generateChallan } = await import('@/lib/generate-challan')
                             await generateChallan({
@@ -940,8 +966,8 @@ function GlobalDispatchModal({
                                 dispatched_at: dispatch.dispatched_at,
                                 tracking_token: trackingToken,
                             })
-                        } catch (e) {
-                            toast.error('Failed to generate Challan PDF')
+                        } catch {
+                            toast.error('Failed to generate invoice PDF')
                         }
                         onClose()
                         // Next.js will revalidate the path via the server action

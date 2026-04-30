@@ -286,7 +286,7 @@ function QuoteCostBreakdown({ quote, targetMeters }: { quote: any; targetMeters:
 
 /**
  * Single dispatch card for the Weaver's internal Order Detail drawer.
- * Shows sent/received meters, status badge, and a re-print Challan button.
+ * Shows sent/received meters, status badge, and a re-print invoice button.
  */
 function DispatchItemRow({
     dispatch,
@@ -346,7 +346,7 @@ function DispatchItemRow({
                 onClick={() => onReprint(dispatch)}
                 className="text-[10px] text-slate-400 hover:text-indigo-600 flex items-center gap-1 transition-colors"
             >
-                <QrCode className="h-3 w-3" /> Re-print Challan
+                <QrCode className="h-3 w-3" /> Re-print Invoice
             </button>
         </div>
     )
@@ -417,7 +417,7 @@ function DispatchSection({
     const handleDispatchCreated = async (newDispatch: DispatchRow, token: string, partyName: string, orgName: string) => {
         await loadDispatches()
         setShowCreateModal(false)
-        // Trigger Challan PDF (client-side)
+        // Trigger invoice/challan PDF (client-side)
         onReprintChallan(newDispatch, token, partyName, orgName, totalTargetMeters)
     }
 
@@ -997,8 +997,8 @@ function OrderDetailDrawer({
                                                 dispatched_at: dispatch.dispatched_at,
                                                 tracking_token: trackingToken,
                                             })
-                                        } catch (e) {
-                                            toast.error('Failed to generate Challan PDF')
+                                        } catch {
+                                            toast.error('Failed to generate invoice PDF')
                                         }
                                     }}
                                 />

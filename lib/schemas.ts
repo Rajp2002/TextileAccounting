@@ -345,6 +345,7 @@ export const CreatePartySchema = z.object({
         .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, 'Invalid GSTIN')
         .optional()
         .or(z.literal('')),
+    state: z.string().trim().min(2, 'State is required').max(80, 'State too long').default('Gujarat'),
     address: z.string().trim().max(500, 'Address too long').optional().or(z.literal('')),
     broker_name: z.string().trim().max(120, 'Broker name too long').optional().or(z.literal('')),
     default_credit_days: z.number().int().min(0).max(365).default(30),
@@ -463,7 +464,6 @@ export const UpdateFabricPackageStateSchema = z.object({
 export const CorrectFabricPackageMetersSchema = z.object({
     package_id: UuidSchema,
     metres: z.number().positive('Metres must be greater than zero').max(1_000_000, 'Metres too high'),
-    access_code: AccessCodeSchema,
     correction_note: z.string().trim().min(2, 'Reason is required').max(300, 'Reason too long'),
 })
 

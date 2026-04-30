@@ -55,7 +55,7 @@ export function CreateDispatchModal({
             if ('error' in res) {
                 toast.error(res.error)
             } else {
-                toast.success(`Dispatch #${res.dispatch_number} created — downloading Challan…`)
+                toast.success(`Dispatch #${res.dispatch_number} created — downloading invoice…`)
                 onCreated(res.dispatch, res.tracking_token, res.party_name, res.org_name)
             }
         })
@@ -70,7 +70,7 @@ export function CreateDispatchModal({
                     </DialogTitle>
                     <DialogDescription>
                         Select the exact packages you are sending to the trader.
-                        A Challan PDF with a tracking QR code will auto-download.
+                        A Tax Invoice cum Delivery Challan PDF with a tracking QR code will auto-download.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-2">
@@ -115,12 +115,12 @@ export function CreateDispatchModal({
                         <Input
                             value={notes}
                             onChange={e => setNotes(e.target.value)}
-                            placeholder="Challan #, truck number, etc."
+                            placeholder="Invoice #, truck number, e-way bill, etc."
                             className="text-slate-900 border-slate-200"
                         />
                     </div>
                     <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2 text-[11px] text-indigo-700">
-                        📄 A Delivery Challan PDF with a scannable QR code will download automatically after creating this dispatch.
+                        A Tax Invoice cum Delivery Challan PDF with a scannable QR code will download automatically after creating this dispatch.
                     </div>
                 </div>
                 <DialogFooter className="gap-2">
@@ -131,7 +131,7 @@ export function CreateDispatchModal({
                         className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2"
                     >
                         {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                        {pending ? 'Creating…' : 'Create & Download Challan'}
+                        {pending ? 'Creating…' : 'Create & Download Invoice'}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -168,7 +168,7 @@ export function ShareTrackingModal({
                         <QrCode className="h-5 w-5 text-indigo-600" /> Share Tracking Link
                     </DialogTitle>
                     <DialogDescription>
-                        Print this QR on the Challan, or paste the link into WhatsApp.
+                        Print this QR on the invoice/challan, or paste the link into WhatsApp.
                         No login required for your Trader.
                     </DialogDescription>
                 </DialogHeader>
@@ -190,6 +190,7 @@ export function ShareTrackingModal({
                     <div className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Tracking URL</p>
                         <p className="text-xs font-mono text-slate-700 break-all leading-relaxed">{trackingUrl}</p>
+                        <p className="mt-1 text-[10px] font-mono text-slate-400">Token {trackingToken}</p>
                     </div>
 
                     {/* Copy button */}

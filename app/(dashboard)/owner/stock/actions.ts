@@ -1,15 +1,7 @@
 'use server'
-
-import crypto from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
-import {
-    checkAccessCodeLockout,
-    checkAccessCodeRateLimit,
-    recordAccessCodeFailure,
-    resetAccessCodeFailures,
-} from '@/lib/rate-limit'
 import {
     CreateFabricPackageSchema,
     UpdateFabricInspectionSchema,
@@ -80,51 +72,6 @@ function deriveStockState(
     }
 
     return 'uninspected'
-}
-
-async function validateOwnerAccessCode(userId: string, orgId: string, inputCode: string): Promise<boolean> {
-    const isLockedOut = await checkAccessCodeLockout(userId)
-    if (isLockedOut) throw new Error('Account temporarily locked due to too many failed attempts. Try again in 1 hour.')
-
-    const rl = await checkAccessCodeRateLimit(userId)
-    if (rl) throw new Error(`Too many attempts. Try again in ${Math.ceil(rl / 1000)} seconds.`)
-
-    if (!inputCode || inputCode.length !== 6) {
-        await recordAccessCodeFailure(userId)
-        return false
-    }
-
-    const supabase = await createServerClient()
-    const { data: org, error } = await supabase
-        .from('organizations')
-        .select('access_code_hash, access_code_expires_at')
-        .eq('id', orgId)
-        .single()
-
-    if (error || !org || !org.access_code_hash) {
-        await recordAccessCodeFailure(userId)
-        return false
-    }
-
-    if (new Date(org.access_code_expires_at) < new Date()) {
-        await recordAccessCodeFailure(userId)
-        return false
-    }
-
-    const inputHash = crypto.createHash('sha256').update(inputCode.toUpperCase()).digest('hex')
-    const isValid = crypto.timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(org.access_code_hash, 'hex'))
-    if (!isValid) {
-        await recordAccessCodeFailure(userId)
-        return false
-    }
-
-    await supabase
-        .from('organizations')
-        .update({ access_code_hash: null, access_code_expires_at: null, last_code_plain: null })
-        .eq('id', orgId)
-
-    await resetAccessCodeFailures(userId)
-    return true
 }
 
 export async function getFabricStockBoard(): Promise<FabricStockBoardData | { error: string }> {
@@ -321,16 +268,6 @@ export async function correctFabricPackageMetres(input: unknown) {
     const { user, profile } = await requireRole(['owner'])
     const parsed = safeParse(CorrectFabricPackageMetersSchema, input)
     if ('error' in parsed) return parsed
-
-    let isCodeValid = false
-    try {
-        isCodeValid = await validateOwnerAccessCode(user.id, profile.org_id, parsed.data.access_code)
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unable to validate access code'
-        return { error: message }
-    }
-
-    if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
     const supabase = await createServerClient()
     const { data: current, error: fetchError } = await supabase

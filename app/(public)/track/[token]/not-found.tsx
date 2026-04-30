@@ -31,7 +31,7 @@ export default function NotFound() {
                 lineHeight: 1.6,
                 margin: '0 0 32px',
             }}>
-                This tracking link is invalid or has expired. Please ask your weaver for a fresh link or scan the QR code on your Delivery Challan again.
+                This tracking link is invalid or has expired. Please ask your weaver for a fresh link or scan the QR code on your invoice/challan again.
             </p>
 
             <div style={{

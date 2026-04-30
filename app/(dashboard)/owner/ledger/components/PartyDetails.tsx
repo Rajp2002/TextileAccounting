@@ -125,6 +125,17 @@ export function PartyDetails({
                         </div>
                     </div>
 
+                    <div className="mt-5 grid gap-2 md:grid-cols-3">
+                        <MiniStat label="Current <30d" value={shortMoney(party.current_amount)} tone="sky" />
+                        <MiniStat label="Overdue 30-60d" value={shortMoney(party.overdue_30_60_amount)} tone="amber" />
+                        <div className="relative">
+                            <MiniStat label="Overdue >60d" value={shortMoney(party.overdue_60_plus_amount)} tone="rose" />
+                            {party.overdue_60_plus_amount > 0 && (
+                                <Badge className="absolute right-3 top-3 border-rose-200 bg-white text-rose-700">Follow up</Badge>
+                            )}
+                        </div>
+                    </div>
+
                     <div className="mt-6 flex flex-wrap gap-2">
                         <Button className="bg-teal-700 hover:bg-teal-800" onClick={() => onOpenInvoice(party)} disabled={!party.is_active}>
                             <FileText className="mr-2 h-4 w-4" /> New Bill

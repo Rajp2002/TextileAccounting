@@ -80,6 +80,30 @@ export async function updateMachine(machineId: string, name: string, loomType?: 
 /** @deprecated Use updateMachine instead */
 export const renameMachine = async (machineId: string, name: string) => updateMachine(machineId, name)
 
+async function ownerWorkerHasHistory(
+    supabase: Awaited<ReturnType<typeof createServerClient>>,
+    orgId: string,
+    workerId: number,
+    workerType: 'meter' | 'fixed'
+) {
+    const workerColumn = workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id'
+    const [settlementsRes, advancesRes, attendanceRes] = await Promise.all([
+        supabase.from('payroll_settlements').select('id').eq('org_id', orgId).eq(workerColumn, workerId).limit(1),
+        supabase.from('worker_advances').select('id').eq('org_id', orgId).eq(workerColumn, workerId).limit(1),
+        workerType === 'fixed'
+            ? supabase.from('attendance').select('fixed_worker_id').eq('org_id', orgId).eq('fixed_worker_id', workerId).limit(1)
+            : Promise.resolve({ data: [] as Array<{ fixed_worker_id: number }>, error: null }),
+    ])
+
+    if (settlementsRes.error) throw settlementsRes.error
+    if (advancesRes.error) throw advancesRes.error
+    if (attendanceRes.error) throw attendanceRes.error
+
+    return (settlementsRes.data?.length ?? 0) > 0
+        || (advancesRes.data?.length ?? 0) > 0
+        || (attendanceRes.data?.length ?? 0) > 0
+}
+
 
 export async function toggleMachineStatus(machineId: string, currentStatus: string) {
     const { profile } = await requireRole(['owner'])
@@ -416,6 +440,64 @@ export async function validateAndRotateAccessCode(orgId: string, inputCode: stri
         .eq('id', profile.org_id)
 
     return true
+}
+
+/**
+ * Delete a fixed/salaried worker with no historical records.
+ */
+export async function deleteFixedWorker(workerId: number) {
+    const { profile } = await requireRole(['owner'])
+    const orgId = profile.org_id
+
+    const workerParsed = safeParse(PositiveIntSchema, workerId)
+    if ('error' in workerParsed) return { error: workerParsed.error }
+
+    const supabase = await createServerClient()
+    const hasHistory = await ownerWorkerHasHistory(supabase, orgId, workerParsed.data, 'fixed')
+    if (hasHistory) return { error: 'This worker has production history and still requires an access code.' }
+
+    const { error } = await supabase
+        .from('fixed_workers')
+        .delete()
+        .eq('id', workerParsed.data)
+        .eq('org_id', orgId)
+
+    if (error) {
+        console.error('Error deleting fixed worker:', error)
+        return { error: 'Failed to delete worker. Please try again.' }
+    }
+
+    revalidatePath('/owner/fixed-workers')
+    return { success: true }
+}
+
+/**
+ * Delete a piece-rate (meter) worker with no historical records.
+ */
+export async function deleteMeterWorker(workerId: number) {
+    const { profile } = await requireRole(['owner'])
+    const orgId = profile.org_id
+
+    const workerParsed = safeParse(PositiveIntSchema, workerId)
+    if ('error' in workerParsed) return { error: workerParsed.error }
+
+    const supabase = await createServerClient()
+    const hasHistory = await ownerWorkerHasHistory(supabase, orgId, workerParsed.data, 'meter')
+    if (hasHistory) return { error: 'This worker has production history and still requires an access code.' }
+
+    const { error } = await supabase
+        .from('workers')
+        .delete()
+        .eq('id', workerParsed.data)
+        .eq('org_id', orgId)
+
+    if (error) {
+        console.error('Error deleting meter worker:', error)
+        return { error: 'Failed to delete worker. Please try again.' }
+    }
+
+    revalidatePath('/owner/workers')
+    return { success: true }
 }
 
 /**

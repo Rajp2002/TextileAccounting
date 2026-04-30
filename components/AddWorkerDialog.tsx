@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, ShieldCheck, Loader2, Plus } from 'lucide-react'
+import { AlertTriangle, Loader2, Plus } from 'lucide-react'
 import { MIN_WAGE_MONTHLY } from '@/lib/wage-config'
 import {
     Dialog,
@@ -29,8 +29,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import * as Sentry from '@sentry/nextjs'
 import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
-import { ComplianceNotice } from '@/components/compliance/ComplianceNotice'
-import { logWorkerConsent } from '@/app/(dashboard)/owner/actions/compliance'
 
 const FIXED_ROLES = [
     { value: 'master', defaultSalary: 30000 },
@@ -85,12 +83,9 @@ interface AddWorkerDialogProps {
     onWorkerAdded?: () => void
 }
 
-export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) {
+export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
     const [open, setOpen] = useState(false)
     const [ageConfirmed, setAgeConfirmed] = useState(false)
-    const [complianceConsent, setComplianceConsent] = useState(false)
-    const [activeNoticeId, setActiveNoticeId] = useState<string | null>(null)
-    const [granularConsent, setGranularConsent] = useState<Record<string, boolean>>({})
     const [whatsappPhone, setWhatsappPhone] = useState('')
     const [whatsappLang, setWhatsappLang] = useState<'en' | 'hi' | 'gu'>('en')
     const [whatsappConsent, setWhatsappConsent] = useState(false)
@@ -129,7 +124,6 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
     const selectedRole = watch('role')
     const watchedSalary = watch('salary')
     const watchedPfEsiEnrolled = watch('pf_esi_enrolled')
-    const workerName = watch('name')
 
     const mutation = useMutation({
         mutationFn: async (data: WorkerFormValues) => {
@@ -153,11 +147,6 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
             }
             if (result.error) throw new Error(result.error)
             const workerId = (result as any).workerId as number
-
-            // DPDP 2026: Log Granular Consent Artifact
-            if (activeNoticeId) {
-                await logWorkerConsent(workerId, activeNoticeId, 'CLIENT_IP_PLACEHOLDER', granularConsent)
-            }
 
             return { ...data, workerId }
         },
@@ -185,7 +174,6 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
             setWhatsappLang('en')
             setWhatsappConsent(false)
             setAgeConfirmed(false)
-            setComplianceConsent(false)
             if (onWorkerAdded) {
                 onWorkerAdded()
             }
@@ -208,7 +196,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
     }
 
     return (
-        <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) { reset(); setAgeConfirmed(false); setComplianceConsent(false) } }}>
+        <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) { reset(); setAgeConfirmed(false) } }}>
             <DialogTrigger asChild>
                 <Button className="gap-2">
                     <Plus className="h-4 w-4" />
@@ -361,20 +349,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
                             )}
                         </div>
 
-                        <div className="border-t border-gray-100 pt-4 mt-2 space-y-4">
-                            <div className="flex items-center gap-2">
-                                <ShieldCheck className="h-4 w-4 text-blue-600" />
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Legal Compliance (DPDP 2026)</h3>
-                            </div>
-                            <ComplianceNotice 
-                                type="consent" 
-                                workerName={workerName} 
-                                onConsentChange={(given, id, granular) => {
-                                    setComplianceConsent(given)
-                                    setActiveNoticeId(id)
-                                    if (granular) setGranularConsent(granular)
-                                }} 
-                            />
+                        <div className="border-t border-gray-100 pt-4 mt-2">
                             <div className="flex items-start gap-2.5 px-1">
                                 <input type="checkbox" id="age-confirm" checked={ageConfirmed} onChange={(e) => setAgeConfirmed(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
                                 <label htmlFor="age-confirm" className="text-xs text-gray-500 leading-snug cursor-pointer">I confirm this worker is 18 years of age or older</label>
@@ -384,7 +359,7 @@ export function AddWorkerDialog({ orgId, onWorkerAdded }: AddWorkerDialogProps) 
 
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={mutation.isPending}>{t('common.cancel')}</Button>
-                        <Button type="submit" disabled={mutation.isPending || !ageConfirmed || !complianceConsent} className={cn("transition-all", ageConfirmed && complianceConsent ? "bg-blue-600 hover:bg-blue-700" : "")}>
+                        <Button type="submit" disabled={mutation.isPending || !ageConfirmed} className={cn("transition-all", ageConfirmed ? "bg-blue-600 hover:bg-blue-700" : "")}>
                             {mutation.isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('workers.adding')}</>) : t('workers.add_worker')}
                         </Button>
                     </DialogFooter>

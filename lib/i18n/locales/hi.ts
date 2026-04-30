@@ -670,6 +670,9 @@ export const hi = {
     adjustment: {
       recorded: "समायोजन दर्ज किया गया"
     },
+    creditNote: {
+      shortageAdjustment: "शॉर्टेज क्रेडिट नोट"
+    },
     supplier: {
       updated: "सप्लायर अपडेट हुआ",
       added: "सप्लायर जोड़ा गया",

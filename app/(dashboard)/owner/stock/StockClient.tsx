@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import {
     AlertTriangle,
     CheckCircle2,
-    KeyRound,
     Loader2,
     MapPin,
     Package,
@@ -19,7 +18,6 @@ import { toast } from 'sonner'
 import {
     getDispatchesForOrder,
     type DispatchSummary,
-    type DispatchRow
 } from '../orders/actions'
 import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
 import { Button } from '@/components/ui/button'
@@ -51,8 +49,8 @@ import {
     type FabricPackageRow,
     type FabricStockBoardData,
 } from './actions'
-import { requestAccessCodeAsOwner } from '../orders/actions'
 import { cn } from '@/lib/utils'
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 
 type InspectionStatus = FabricPackageRow['inspection_status']
 type PackageType = FabricPackageRow['package_type']
@@ -108,91 +106,6 @@ function PackageMetric({
                 </p>
             </CardContent>
         </Card>
-    )
-}
-
-function AccessCodeDialog({
-    open,
-    onClose,
-    onConfirm,
-}: {
-    open: boolean
-    onClose: () => void
-    onConfirm: (code: string) => void
-}) {
-    const [code, setCode] = useState('')
-    const [generatedCode, setGeneratedCode] = useState<string | null>(null)
-    const [pending, startTransition] = useTransition()
-
-    return (
-        <Dialog
-            open={open}
-            onOpenChange={(next) => {
-                if (!next) {
-                    setCode('')
-                    setGeneratedCode(null)
-                    onClose()
-                }
-            }}
-        >
-            <DialogContent className="max-w-sm">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-amber-700">
-                        <KeyRound className="h-5 w-5" /> Owner authorisation
-                    </DialogTitle>
-                    <DialogDescription>
-                        Correcting package metres consumes a one-time access code.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                    <Button
-                        variant="outline"
-                        className="w-full"
-                        disabled={pending}
-                        onClick={() => {
-                            startTransition(async () => {
-                                const res = await requestAccessCodeAsOwner()
-                                if ('error' in res) {
-                                    toast.error(res.error)
-                                    return
-                                }
-                                setGeneratedCode(res.code)
-                                setCode(res.code)
-                            })
-                        }}
-                    >
-                        {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
-                        {generatedCode ? 'Regenerate code' : 'Generate access code'}
-                    </Button>
-                    {generatedCode && (
-                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">Access code</p>
-                            <p className="mt-2 font-mono text-3xl font-black tracking-[0.3em] text-amber-700">{generatedCode}</p>
-                        </div>
-                    )}
-                    <div className="space-y-1.5">
-                        <Label>Enter code</Label>
-                        <Input
-                            value={code}
-                            onChange={(event) => setCode(event.target.value.toUpperCase().slice(0, 6))}
-                            placeholder="XXXXXX"
-                            maxLength={6}
-                            className="h-12 text-center font-mono text-lg tracking-[0.4em]"
-                        />
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button
-                        className="bg-amber-600 text-white hover:bg-amber-700"
-                        disabled={code.length < 6}
-                        onClick={() => onConfirm(code)}
-                    >
-                        Confirm
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     )
 }
 
@@ -479,7 +392,7 @@ export default function StockClient({
     const [createOpen, setCreateOpen] = useState(false)
     const [inspectPkg, setInspectPkg] = useState<FabricPackageRow | null>(null)
     const [correctPkg, setCorrectPkg] = useState<FabricPackageRow | null>(null)
-    const [accessCodeOpen, setAccessCodeOpen] = useState(false)
+    const [confirmCorrectionOpen, setConfirmCorrectionOpen] = useState(false)
     const [metresDraft, setMetresDraft] = useState('')
     const [correctionNote, setCorrectionNote] = useState('')
     const [statePending, startStateTransition] = useTransition()
@@ -720,7 +633,6 @@ export default function StockClient({
                                                 setCorrectionNote('')
                                             }}
                                         >
-                                            <KeyRound className="mr-2 h-4 w-4" />
                                             Correct metres
                                         </Button>
                                     )}
@@ -749,7 +661,7 @@ export default function StockClient({
                     <DialogHeader>
                         <DialogTitle>Correct package metres</DialogTitle>
                         <DialogDescription>
-                            Use the owner access code to adjust {correctPkg?.package_no}.
+                            Review the corrected metres and note for {correctPkg?.package_no}.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-2">
@@ -766,25 +678,26 @@ export default function StockClient({
                         <Button variant="outline" onClick={() => setCorrectPkg(null)}>Cancel</Button>
                         <Button
                             disabled={!metresDraft || !correctionNote.trim()}
-                            onClick={() => setAccessCodeOpen(true)}
+                            onClick={() => setConfirmCorrectionOpen(true)}
                         >
-                            <KeyRound className="mr-2 h-4 w-4" />
                             Continue
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            <AccessCodeDialog
-                open={accessCodeOpen}
-                onClose={() => setAccessCodeOpen(false)}
-                onConfirm={(code) => {
+            <ConfirmActionDialog
+                open={confirmCorrectionOpen}
+                onOpenChange={setConfirmCorrectionOpen}
+                title="Correct package metres"
+                description={`Update ${correctPkg?.package_no ?? 'this package'} to ${metresDraft || '0'} metres? This will save the new measured quantity and correction note.`}
+                confirmLabel="Save correction"
+                onConfirm={() => {
                     if (!correctPkg) return
                     startCorrectTransition(async () => {
                         const res = await correctFabricPackageMetres({
                             package_id: correctPkg.id,
                             metres: Number(metresDraft),
-                            access_code: code,
                             correction_note: correctionNote,
                         })
                         if ('error' in res) {
@@ -792,11 +705,12 @@ export default function StockClient({
                             return
                         }
                         toast.success('Package metres updated')
-                        setAccessCodeOpen(false)
+                        setConfirmCorrectionOpen(false)
                         setCorrectPkg(null)
                         refresh()
                     })
                 }}
+                isLoading={correctPending}
             />
 
             {correctPending && (
@@ -843,8 +757,8 @@ export default function StockClient({
                                 dispatched_at: dispatch.dispatched_at,
                                 tracking_token: trackingToken,
                             })
-                        } catch (e) {
-                            toast.error('Failed to generate Challan PDF')
+                        } catch {
+                            toast.error('Failed to generate invoice PDF')
                         }
                         setDispatchingOrder(null)
                         setDispatchSummary(null)

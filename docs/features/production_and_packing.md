@@ -18,7 +18,7 @@ In many factories, production is logged, but the physical rolls sit in a pile un
 ## Value Provided
 - **Physical Accountability**: Every meter produced is accounted for as a physical unit.
 - **Streamlined Workflow**: Combines two operational steps (Logging + Stock Entry) into one.
-- **Dispatch Readiness**: Stock is immediately available to be added to a dispatch challan.
+- **Dispatch Readiness**: Stock is immediately available to be added to a dispatch invoice/challan.
 
 ## User Interaction
 1.  **Entry**: Supervisor enters meters for multiple machines.

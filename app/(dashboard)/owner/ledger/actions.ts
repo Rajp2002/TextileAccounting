@@ -30,6 +30,7 @@ export interface LedgerParty {
     party_type: PartyType
     phone: string | null
     gstin: string | null
+    state: string
     address: string | null
     broker_name: string | null
     default_credit_days: number
@@ -46,6 +47,9 @@ export interface LedgerParty {
     adjustment_credits: number
     outstanding: number
     overdue_amount: number
+    current_amount: number
+    overdue_30_60_amount: number
+    overdue_60_plus_amount: number
     overdue_invoice_count: number
     credit_used_pct: number | null
     last_activity_at: string | null
@@ -223,6 +227,7 @@ function normalizeParty(row: RawParty): RawParty {
         default_credit_days: Number(row.default_credit_days ?? 30),
         credit_limit: money(row.credit_limit),
         opening_balance: money(row.opening_balance),
+        state: row.state || 'Gujarat',
     }
 }
 
@@ -351,6 +356,19 @@ function buildPartySummaries(
             .minus(receiptTotal)
             .minus(adjustmentCredits)
 
+        const today = todayDateString()
+        const currentAmount = partyInvoices
+            .filter(invoice => daysBetween(invoice.invoice_date, today) < 30)
+            .reduce((sum, invoice) => sum.plus(invoice.balance_amount), new Decimal(0))
+        const overdue30To60Amount = partyInvoices
+            .filter(invoice => {
+                const age = daysBetween(invoice.invoice_date, today)
+                return age >= 30 && age <= 60
+            })
+            .reduce((sum, invoice) => sum.plus(invoice.balance_amount), new Decimal(0))
+        const overdue60PlusAmount = partyInvoices
+            .filter(invoice => daysBetween(invoice.invoice_date, today) > 60)
+            .reduce((sum, invoice) => sum.plus(invoice.balance_amount), new Decimal(0))
         const overdueInvoices = partyInvoices.filter(invoice => invoice.is_overdue)
         const overdueAmount = overdueInvoices.reduce((sum, invoice) => sum.plus(invoice.balance_amount), new Decimal(0))
         const creditLimit = new Decimal(party.credit_limit || 0)
@@ -364,6 +382,9 @@ function buildPartySummaries(
             adjustment_credits: money(adjustmentCredits.toString()),
             outstanding: outstandingMoney,
             overdue_amount: money(overdueAmount.toString()),
+            current_amount: money(currentAmount.toString()),
+            overdue_30_60_amount: money(overdue30To60Amount.toString()),
+            overdue_60_plus_amount: money(overdue60PlusAmount.toString()),
             overdue_invoice_count: overdueInvoices.length,
             credit_used_pct: creditLimit.gt(0) ? Number(new Decimal(outstandingMoney).div(creditLimit).times(100).toFixed(1)) : null,
             last_activity_at: latestDate(
@@ -501,7 +522,7 @@ export async function getLedgerData(): Promise<{ data: LedgerData } | { error: s
     const [partiesResult, invoicesResult, receiptsResult, adjustmentsResult, ordersResult, suppliersResult, supplierEntriesResult, paymentAllocationsResult] = await Promise.all([
         supabase
             .from('parties')
-            .select('id, org_id, name, party_type, phone, gstin, address, broker_name, default_credit_days, credit_limit, opening_balance, opening_balance_type, risk_note, is_active, created_at, updated_at')
+            .select('id, org_id, name, party_type, phone, gstin, state, address, broker_name, default_credit_days, credit_limit, opening_balance, opening_balance_type, risk_note, is_active, created_at, updated_at')
             .eq('org_id', profile.org_id)
             .order('name', { ascending: true }),
         supabase
@@ -583,6 +604,7 @@ export async function createParty(input: unknown): Promise<{ success: true } | {
         party_type: data.party_type,
         phone: toDbText(data.phone),
         gstin: toDbText(data.gstin),
+        state: data.state,
         address: toDbText(data.address),
         broker_name: toDbText(data.broker_name),
         default_credit_days: data.default_credit_days,
@@ -616,6 +638,7 @@ export async function updateParty(partyId: string, input: unknown): Promise<{ su
             party_type: data.party_type,
             phone: toDbText(data.phone),
             gstin: toDbText(data.gstin),
+            state: data.state,
             address: toDbText(data.address),
             broker_name: toDbText(data.broker_name),
             default_credit_days: data.default_credit_days,
@@ -671,6 +694,14 @@ export async function createPartyInvoice(input: unknown): Promise<{ success: tru
     const gross = new Decimal(data.total_meters).times(data.rate_per_m)
     const gst = gross.times(data.gst_percent).div(100)
     const net = gross.plus(gst)
+    const { data: partyForTax } = await supabase
+        .from('parties')
+        .select('state')
+        .eq('id', data.party_id)
+        .eq('org_id', profile.org_id)
+        .maybeSingle()
+    const gstTreatment = (partyForTax?.state || 'Gujarat').trim().toLowerCase() === 'gujarat' ? 'intra_state' : 'inter_state'
+    const halfGst = gst.div(2)
 
     const { error } = await supabase.from('party_invoices').insert({
         org_id: profile.org_id,
@@ -684,6 +715,11 @@ export async function createPartyInvoice(input: unknown): Promise<{ success: tru
         gross_amount: money(gross.toString()),
         gst_percent: data.gst_percent,
         gst_amount: money(gst.toString()),
+        hsn_code: '5407',
+        gst_treatment: gstTreatment,
+        cgst_amount: gstTreatment === 'intra_state' ? money(halfGst.toString()) : 0,
+        sgst_amount: gstTreatment === 'intra_state' ? money(halfGst.toString()) : 0,
+        igst_amount: gstTreatment === 'inter_state' ? money(gst.toString()) : 0,
         net_amount: money(net.toString()),
         status: 'unpaid',
         notes: toDbText(data.notes),

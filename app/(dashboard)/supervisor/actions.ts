@@ -71,6 +71,22 @@ function getLatestSubmittedAt(logs: Array<{ submitted_at: string | null }>) {
     return new Date(Math.max(...validTimestamps)).toISOString()
 }
 
+async function supervisorWorkerHasHistory(
+    supabase: Awaited<ReturnType<typeof createServerClient>>,
+    orgId: string,
+    workerId: number
+) {
+    const [settlementsRes, advancesRes] = await Promise.all([
+        supabase.from('payroll_settlements').select('id').eq('org_id', orgId).eq('meter_worker_id', workerId).limit(1),
+        supabase.from('worker_advances').select('id').eq('org_id', orgId).eq('meter_worker_id', workerId).limit(1),
+    ])
+
+    if (settlementsRes.error) throw settlementsRes.error
+    if (advancesRes.error) throw advancesRes.error
+
+    return (settlementsRes.data?.length ?? 0) > 0 || (advancesRes.data?.length ?? 0) > 0
+}
+
 async function getPreviousClosingReadingMap(
     supabase: Awaited<ReturnType<typeof createServerClient>>,
     orgId: string,
@@ -350,6 +366,42 @@ export async function deleteMachineWithCode(machineId: string, accessCode: strin
 }
 
 // ─── Worker Management ────────────────────────────────────────────────────────
+
+/**
+ * Delete a worker with no historical records.
+ */
+export async function deleteWorker(workerId: number) {
+    const { user, profile } = await requireRole(['supervisor'])
+    const orgId = profile.org_id
+
+    const workerParsed = safeParse(WorkerIdSchema, workerId)
+    if ('error' in workerParsed) return { error: workerParsed.error }
+
+    const supabase = await createServerClient()
+    const hasHistory = await supervisorWorkerHasHistory(supabase, orgId, workerParsed.data)
+    if (hasHistory) return { error: 'This worker has production history and still requires an access code.' }
+
+    let serviceClient
+    try {
+        serviceClient = getServiceClient()
+    } catch {
+        return { error: 'A server error occurred. Please try again later.' }
+    }
+
+    await serviceClient.rpc('set_actor_for_audit', { p_actor_id: user.id })
+
+    const { error } = await serviceClient
+        .from('workers')
+        .delete()
+        .eq('id', workerParsed.data)
+        .eq('org_id', orgId)
+
+    if (error) {
+        console.error('Error deleting worker:', error)
+        return { error: 'Failed to delete worker. Please try again.' }
+    }
+    return { success: true }
+}
 
 /**
  * Delete a worker. Requires a valid one-time owner access code.

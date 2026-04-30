@@ -26,7 +26,6 @@ import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
 import { setBeamTrackingEnabled, updateOrganizationName } from '@/app/(dashboard)/owner/actions'
 import { SupervisorFloatManager } from '@/components/settings/supervisor-float-manager'
-import { EmergencyLockdown } from '@/components/settings/EmergencyLockdown'
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -446,8 +445,6 @@ export default function SettingsPage() {
                         </div>
                     </CardContent>
                 </Card>
-
-                <EmergencyLockdown />
             </SettingsCategory>
         </div>
     )
