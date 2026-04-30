@@ -5,6 +5,7 @@ import { confirmDispatchReceipt } from '@/app/actions/track'
 import type { TrackingData, TrackingDispatch } from './page'
 import { format } from 'date-fns'
 import { useTranslation } from '@/lib/i18n/context'
+import { BrandBackground } from '@/components/brand-background'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -285,14 +286,19 @@ export default function TrackingPortal({
     const orderCompleted = data.status === 'completed' || data.status === 'cancelled'
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #f0fdf4 0%, #f8fafc 50%, #fafaf5 100%)',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        }}>
+        <div
+            className="relative isolate overflow-hidden bg-background"
+            style={{
+                minHeight: '100vh',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            }}
+        >
+            <BrandBackground />
             {/* ── Preview Mode Banner ───────────────────────────────────────── */}
             {isPreview && (
                 <div style={{
+                    position: 'relative',
+                    zIndex: 10,
                     background: '#fef3c7',
                     borderBottom: '1px solid #fde68a',
                     padding: '8px 20px',
@@ -306,6 +312,8 @@ export default function TrackingPortal({
 
             {/* ── Top Navigation Bar ────────────────────────────────────────── */}
             <div style={{
+                position: 'relative',
+                zIndex: 10,
                 background: '#1A5C38',
                 padding: '12px 20px',
                 display: 'flex',
@@ -345,7 +353,7 @@ export default function TrackingPortal({
             </div>
 
             {/* ── Main Content ──────────────────────────────────────────────── */}
-            <div style={{ maxWidth: 480, margin: '0 auto', padding: '20px 16px 40px' }}>
+            <div style={{ position: 'relative', zIndex: 10, maxWidth: 480, margin: '0 auto', padding: '20px 16px 40px' }}>
 
                 {/* ── Production Progress Card ─────────────────────────────── */}
                 <div style={{

@@ -3,11 +3,13 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle } from 'lucide-react'
+import { BrandBackground } from '@/components/brand-background'
 
 export default function AuthCodeError() {
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-            <div className="w-full max-w-md text-center space-y-8">
+        <div className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-4 py-12 sm:px-6 lg:px-8">
+            <BrandBackground variant="auth" />
+            <div className="relative z-10 w-full max-w-md text-center space-y-8">
                 <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-red-100">
                     <AlertTriangle className="h-12 w-12 text-red-600" aria-hidden="true" />
                 </div>

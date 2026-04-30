@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SupervisorSidebar } from '@/components/navigation/supervisor-nav'
 import { requireRole } from '@/lib/auth'
 import { OfflineSyncProvider } from '@/components/offline-sync-provider'
+import { BrandBackground } from '@/components/brand-background'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
     // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs
@@ -22,7 +23,8 @@ export default async function SupervisorLayout({ children }: { children: React.R
     }
 
     return (
-        <div className="min-h-screen bg-background bg-grid-pattern overflow-x-hidden">
+        <div className="relative isolate min-h-screen overflow-x-hidden bg-background">
+            <BrandBackground />
 
             <SupervisorSidebar
                 factoryName={factoryName}
@@ -42,7 +44,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
              * px-safe        — side clearance for iPhone landscape where the
              *   rounded screen corners / Dynamic Island eat into the sides.
              */}
-            <div className="md:pl-[260px] pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-0 px-safe md:px-0">
+            <div className="relative z-10 md:pl-[260px] pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-0 px-safe md:px-0">
                 <main className="max-w-6xl mx-auto px-4 py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
                     <OfflineSyncProvider>
                         {children}

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { BrandBackground } from '@/components/brand-background'
 
 function parseJWTClaims(token: string): Record<string, any> {
     try {
@@ -118,8 +119,9 @@ function ConfirmContent() {
     }, [])
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
-            <div className="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 p-8 flex flex-col items-center space-y-6 text-center">
+        <div className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background p-4">
+            <BrandBackground variant="auth" />
+            <div className="relative z-10 w-full max-w-md bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 p-8 flex flex-col items-center space-y-6 text-center">
                 {error ? (
                     <>
                         <div className="h-14 w-14 rounded-full bg-red-50 flex items-center justify-center">
@@ -155,8 +157,9 @@ function ConfirmContent() {
 export default function ConfirmPage() {
     return (
         <Suspense fallback={
-            <div className="flex min-h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-background">
+                <BrandBackground variant="auth" />
+                <Loader2 className="relative z-10 h-8 w-8 animate-spin text-gray-400" />
             </div>
         }>
             <ConfirmContent />

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { ReactNode } from 'react'
 import Image from 'next/image'
 import { getSuratDate } from '@/lib/time'
+import { BrandBackground } from '@/components/brand-background'
 
 interface AuthLayoutProps {
     children: ReactNode
@@ -13,13 +14,8 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
     return (
-        <div className="relative min-h-[100svh] w-full overflow-hidden bg-white dark:bg-zinc-950 flex items-center justify-center p-4">
-            {/* Premium Decorative background elements */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-amber-500/10 blur-[120px] animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-orange-600/10 blur-[120px] animate-pulse [animation-delay:2s]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.05)_0%,transparent_70%)]" />
-            </div>
+        <div className="relative isolate min-h-[100svh] w-full overflow-hidden bg-background flex items-center justify-center p-4">
+            <BrandBackground variant="auth" />
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.98, y: 10 }}

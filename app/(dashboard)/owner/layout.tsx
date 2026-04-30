@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { OwnerSidebar } from '@/components/navigation/owner-sidebar'
 import { requireRole } from '@/lib/auth'
 import { AccessCodeBanner } from '@/components/AccessCodeBanner'
+import { BrandBackground } from '@/components/brand-background'
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
     // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs
@@ -31,7 +32,8 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     }
 
     return (
-        <div className="min-h-screen bg-background bg-grid-pattern overflow-x-hidden">
+        <div className="relative isolate min-h-screen overflow-x-hidden bg-background">
+            <BrandBackground />
 
             <OwnerSidebar
                 factoryName={factoryName}
@@ -39,7 +41,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
             />
 
             {/* Content area — offset by sidebar on desktop, padding-bottom for bottom nav on mobile */}
-            <div className="md:pl-[260px] pb-[72px] md:pb-0">
+            <div className="relative z-10 md:pl-[260px] pb-[72px] md:pb-0">
                 <main className="max-w-6xl mx-auto px-4 py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
                     {children}
                 </main>
