@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Check, X, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -28,10 +27,10 @@ const tiers = [
         href: '/signup',
         priceMonthly: '₹2,000',
         priceSuffix: '/month',
-        description: 'Perfect for factories that primarily use the cost estimator.',
+        description: 'For owners who want Weavly as their quoting and costing desk.',
         features: [
-            'Weavly Estimator',
-            'Basic order cost calculations',
+            'Warp/weft cost estimator',
+            'Fabric templates and quote history',
             'Single owner account',
         ],
         notIncluded: [
@@ -47,13 +46,14 @@ const tiers = [
         href: '/signup',
         priceMonthly: '₹5,000',
         priceSuffix: '/month',
-        description: 'Everything you need to run your factory end-to-end.',
+        description: 'For factories ready to connect quotes, looms, production logs, and payroll.',
         features: [
             'Everything in Base',
-            'Full production & order tracking',
+            'Orders, market runs & dispatch tracking',
+            'Shift production logs with meter readings',
             'Payroll, advances & settlement',
-            'Daily WhatsApp brief',
-            'Analytics & performance reports',
+            'WhatsApp briefs, payslips & receipts',
+            'Operational analytics for owners',
             'Unlimited machines & workers',
             'Priority support',
         ],
@@ -69,11 +69,11 @@ export default function LandingPricing() {
                 <div className="mx-auto max-w-4xl text-center">
                     <h2 className="text-base font-semibold leading-7 text-amber-700 dark:text-amber-500 tracking-widest uppercase">Pricing</h2>
                     <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl dark:text-white">
-                        Simple, transparent pricing
+                        Choose how much of the factory loop you want in Weavly
                     </p>
                 </div>
                 <p className="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-300">
-                    Choose the plan that fits your factory&apos;s size. No hidden fees.
+                    Start with quoting, or run the full Phase 1 workflow from estimate to settlement. No hidden fees.
                 </p>
                 <p className="mx-auto mt-2 text-center text-sm text-gray-400 dark:text-gray-500">
                     All prices are exclusive of 18% GST
@@ -180,7 +180,7 @@ export default function LandingPricing() {
                             Skip the learning curve. Our team will handle the initial software configuration, data import, and provide a comprehensive training session for your staff so you can hit the ground running.
                         </p>
                         <div className="mt-8 flex items-center gap-x-4">
-                            <h4 className="flex-none text-sm font-semibold leading-6 text-amber-700 dark:text-amber-500">What's included</h4>
+                            <h4 className="flex-none text-sm font-semibold leading-6 text-amber-700 dark:text-amber-500">What&apos;s included</h4>
                             <div className="h-px flex-auto bg-gray-100 dark:bg-zinc-800" />
                         </div>
                         <ul role="list" className="mt-8 grid grid-cols-1 gap-4 text-sm leading-6 text-gray-600 dark:text-gray-300 sm:grid-cols-2 sm:gap-6">

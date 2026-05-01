@@ -5,10 +5,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    TrendingUp, Package, Warehouse, ArrowRight, Plus,
-    Loader2, AlertCircle, BarChart3, Layers,
+    TrendingUp, Warehouse, ArrowRight, Plus,
+    AlertCircle, BarChart3, Layers,
 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -161,8 +160,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
             </div>
             <h3 className="text-lg font-bold text-foreground mb-2">No market runs yet</h3>
             <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                Start a speculative production run when you want to weave fabric based on market demand — 
-                without a party order in hand.
+                Start a market run to keep looms productive when client orders are light, then track godown stock and trader sales.
             </p>
             <Button onClick={onNew} className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -213,7 +211,7 @@ export default function MarketRunsClient({
                 <div>
                     <h1 className="text-2xl font-black tracking-tight text-foreground">Market Runs</h1>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                        Speculative production — weave first, sell to traders later
+                        Keep looms productive between client orders, then sell finished grey fabric to traders
                     </p>
                 </div>
                 <Button onClick={goToEstimator} className="gap-2 shrink-0">
@@ -234,7 +232,7 @@ export default function MarketRunsClient({
                                 <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Active</span>
                             </div>
                             <p className="text-2xl font-black text-foreground">{activeRuns}</p>
-                            <p className="text-[11px] text-muted-foreground">runs in production</p>
+                            <p className="text-[11px] text-muted-foreground">loom runs in production</p>
                         </CardContent>
                     </Card>
                     <Card className="border-border/50">

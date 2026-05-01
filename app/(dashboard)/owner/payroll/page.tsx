@@ -266,6 +266,14 @@ function MeterWorkerRow({
                             <span className="hidden sm:inline w-1 h-1 rounded-full bg-gray-300" />
                             <span>{worker.machines.length} {worker.machines.length === 1 ? 'machine' : 'machines'}</span>
                         </div>
+                        {!isPaid && (
+                            <div className="mt-1 text-[10px] font-bold text-gray-500">
+                                Gross {formatINR(worker.totalPay, { hideDecimals: true })}
+                                {displayDeduction > 0 && <> - Advance {formatINR(displayDeduction, { hideDecimals: true })}</>}
+                                {' = '}
+                                <span className="text-green-700">Net {formatINR(displayNet, { hideDecimals: true })}</span>
+                            </div>
+                        )}
                         {(hasAdvances || isCapped) && (
                             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                 {hasAdvances && (
@@ -555,6 +563,14 @@ function FixedWorkerRow({
                             {isPaid && <Check className="h-3 w-3 text-green-500" />}
                         </div>
                         <span className="font-bold text-gray-900 truncate block text-base">{tl(worker.name)}</span>
+                        {!isPaid && (
+                            <div className="mt-1 text-[10px] font-bold text-gray-500">
+                                Gross {formatINR(worker.earnedPay, { hideDecimals: true })}
+                                {displayDeduction > 0 && <> - Advance {formatINR(displayDeduction, { hideDecimals: true })}</>}
+                                {' = '}
+                                <span className="text-green-700">Net {formatINR(displayNet, { hideDecimals: true })}</span>
+                            </div>
+                        )}
                         {(hasAdvances || isCapped) && (
                             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                 {hasAdvances && (

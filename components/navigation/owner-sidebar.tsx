@@ -11,16 +11,12 @@ import {
     DollarSign,
     Settings,
     Menu,
-    Activity,
     HandCoins,
-    History,
     Calculator,
     Package,
     CreditCard,
     FileText,
     Truck,
-    BookOpen,
-    Layers,
     Store,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
@@ -50,7 +46,6 @@ const navGroups = [
     {
         label: "Financials",
         items: [
-            { name: "Ledger", href: "/owner/ledger", icon: BookOpen, translationKey: "ledger" },
             { name: "Billing", href: "/owner/billing", icon: CreditCard, translationKey: "billing" },
         ]
     },
@@ -65,15 +60,12 @@ const navGroups = [
     {
         label: "Operations",
         items: [
-            { name: "Inventory", href: "/owner/inventory", icon: Layers, translationKey: "inventory" },
             { name: "Machines", href: "/owner/machines", icon: Server, translationKey: "machines" },
         ]
     },
     {
         label: "System",
         items: [
-            { name: "System Health", href: "/owner/system-health", icon: Activity, translationKey: "system health" },
-            { name: "Audit Trail", href: "/owner/settings/audit", icon: History, translationKey: "audit trail" },
             { name: "Settings", href: "/owner/settings", icon: Settings, translationKey: "settings" },
         ]
     }
@@ -82,7 +74,7 @@ const navGroups = [
 const bottomNavItems = [
     { name: "Dashboard", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
     { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
-    { name: "Ledger", href: "/owner/ledger", icon: BookOpen, translationKey: "ledger" },
+    { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs" },
     { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
     { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll" },
 ]

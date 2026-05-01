@@ -558,7 +558,6 @@ export async function convertAcceptedQuoteToOrder(data: {
     revalidatePath('/owner/orders')
     revalidatePath('/owner/analytics')
     revalidatePath('/owner/quotes')
-    revalidatePath('/owner/inventory')
     return { success: true, orderId: order.id }
 }
 
@@ -984,7 +983,6 @@ export async function createMarketRunSaleAction(params: {
 
     revalidatePath(`/owner/market-runs/${params.marketRunId}`)
     revalidatePath('/owner/market-runs')
-    revalidatePath('/owner/ledger')
     return { success: true, result: data?.[0] ?? null }
 }
 

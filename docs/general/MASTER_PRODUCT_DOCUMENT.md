@@ -1,10 +1,10 @@
 # Weavly Master Product Document
 
-This document is the high-context developer guide for the product as implemented in this repository as of April 30, 2026. It is intended to be the starting point for new engineers who need to understand what the product does, how the major workflows connect, where the logic lives, and which parts of the codebase are authoritative.
+This document is the high-context developer guide for the product as implemented in this repository as of April 30, 2026. It is intended to help engineers understand what exists in the codebase. For current Phase 1 launch scope and prioritization, `docs/general/PHASE_1_SCOPE.md` is authoritative.
 
 ## 1. Executive Summary
 
-Weavly is a multi-tenant operating system for Indian weaving factories. It combines commercial planning, floor execution, stock movement, dispatch, receivables, payroll, advances, subscriptions, and compliance into a single product.
+Weavly is a multi-tenant operating system for Indian weaving factories. The repository includes commercial planning, floor execution, stock movement, dispatch, receivables, payroll, advances, subscriptions, and compliance. Phase 1 narrows that broad surface around estimator, production logging/tracking, and payroll/advances, with analytics, market runs, dispatches, WhatsApp, referrals, billing, quotes/orders, workers, machines, and attendance kept only where they support that core loop.
 
 The product is built around one factory loop:
 
@@ -13,10 +13,11 @@ The product is built around one factory loop:
 3. Convert an accepted quote into an order, or create a speculative market run.
 4. Assign machines and workers on the floor.
 5. Log production and optionally pack it into fabric packages.
-6. Inspect, grade, and dispatch finished stock.
-7. Record party receivables and incoming payments.
-8. Settle worker payroll, recover advances, and send WhatsApp payslips.
-9. Maintain auditability, compliance evidence, and tenant security.
+6. Dispatch finished goods professionally where lightweight dispatch support adds value.
+7. Settle worker payroll, recover advances, and send WhatsApp payslips.
+8. Keep billing/referrals transparent without distracting from workflow readiness.
+
+Ledger, deep inventory/stock, system health, compliance registry, DPA, grievances, language requests, supplier accounting, and admin dashboard surfaces are not Phase 1 polish priorities unless a specific slice directly supports the core loop.
 
 This repo already contains several focused docs. This file is the synthesis layer that ties them together:
 

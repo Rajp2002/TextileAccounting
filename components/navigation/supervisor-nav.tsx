@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
     ClipboardList,
-    ClipboardCheck,
     Users,
     Settings,
     Calendar,
@@ -20,10 +19,15 @@ import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { useTranslation } from "@/lib/i18n/context"
 import { DownloadCloud } from "lucide-react"
 
+type BeforeInstallPromptEvent = Event & {
+    prompt: () => Promise<void>
+    userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
 // ─── Nav item definitions ────────────────────────────────────────────────────
 
 const primaryNavItems = [
-    { name: "Dashboard",      href: "/supervisor/dashboard",  icon: ClipboardList,  translationKey: "dashboard"   },
+    { name: "Production Log", href: "/supervisor/dashboard",  icon: ClipboardList,  translationKey: "production_log" },
     { name: "Workers",        href: "/supervisor/workers",     icon: Users,           translationKey: "workers"     },
     { name: "Attendance",     href: "/supervisor/attendance",  icon: Calendar,        translationKey: "attendance"  },
 ]
@@ -32,7 +36,7 @@ const secondaryNavItems = [
     { name: "Machines", href: "/supervisor/machines", icon: Settings, translationKey: "machines" },
 ]
 
-// Bottom nav shows Dashboard, Workers, Attendance
+// Bottom nav keeps the Phase 1 floor workflow one tap away.
 const bottomNavItems = primaryNavItems
 
 // ─── Supervisor Role Label ────────────────────────────────────────────────────
@@ -61,8 +65,15 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
         <div className="flex flex-col h-full bg-sidebar">
             {/* Branding — extra top padding on iOS standalone for Dynamic Island */}
             <div className="px-4 py-4 pt-safe border-b border-sidebar-border flex items-center justify-center">
-                <div className="relative h-20 w-36 shrink-0">
-                    <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain" priority />
+                <div className="flex flex-col items-center gap-2">
+                    <div className="relative h-20 w-36 shrink-0">
+                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain" priority />
+                    </div>
+                    {factoryName && (
+                        <p className="max-w-full truncate text-center text-xs font-bold tracking-wide text-sidebar-foreground/70">
+                            {factoryName}
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -141,20 +152,19 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
 
 export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarProps) {
     const [isOpen, setIsOpen] = useState(false)
-    const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
-    const [isStandalone, setIsStandalone] = useState(false)
+    const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+    const [isStandalone] = useState(() => {
+        if (typeof window === 'undefined') return false
+        const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean }
+        return window.matchMedia('(display-mode: standalone)').matches || !!navigatorWithStandalone.standalone
+    })
     const pathname = usePathname()
     const { t } = useTranslation()
 
     useEffect(() => {
-        // Check if app is in standalone mode
-        if (typeof window !== 'undefined') {
-            setIsStandalone(window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone)
-        }
-
-        const handler = (e: any) => {
+        const handler = (e: Event) => {
             e.preventDefault()
-            setDeferredPrompt(e)
+            setDeferredPrompt(e as BeforeInstallPromptEvent)
         }
         window.addEventListener('beforeinstallprompt', handler)
         return () => window.removeEventListener('beforeinstallprompt', handler)

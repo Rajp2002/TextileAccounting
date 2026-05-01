@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { checkAuthRateLimit } from '@/lib/rate-limit'
+import { PHASE_1_ARCHIVE_REDIRECT, isPhase1ArchivedRoute } from '@/lib/phase1-scope'
 
 function getRoleHomePath(role?: string): string {
     if (role === 'owner') return '/owner/analytics'
@@ -17,7 +18,7 @@ function getRoleHomePath(role?: string): string {
  * cryptographically before we read it; we only consume the claims.
  * Uses `atob` for Node/Edge cross-compatibility (Buffer is missing on Edge).
  */
-function parseJWTClaims(token: string): Record<string, any> {
+function parseJWTClaims(token: string): Record<string, unknown> {
     try {
         let payload = token.split('.')[1]
         // Convert base64url to standard base64
@@ -28,14 +29,16 @@ function parseJWTClaims(token: string): Record<string, any> {
         // Supabase custom claims are placed inside app_metadata.custom_claims 
         // or directly at the root depending on the Supabase version. We will attempt 
         // to grab them from everywhere safely.
-        const parsed = JSON.parse(decoded)
-        const customClaims = parsed.app_metadata?.custom_claims || parsed
+        const parsed = JSON.parse(decoded) as Record<string, unknown>
+        const appMetadata = parsed.app_metadata as { custom_claims?: Record<string, unknown> } | undefined
+        const userMetadata = parsed.user_metadata as { role?: unknown; org_id?: unknown } | undefined
+        const customClaims = appMetadata?.custom_claims || parsed
         
         return {
             ...parsed,
             ...customClaims,
-            user_role: customClaims.user_role ?? parsed.user_metadata?.role,
-            org_id: customClaims.org_id ?? parsed.user_metadata?.org_id,
+            user_role: customClaims.user_role ?? userMetadata?.role,
+            org_id: customClaims.org_id ?? userMetadata?.org_id,
             onboarding_complete: customClaims.onboarding_complete ?? false
         }
     } catch {
@@ -192,7 +195,7 @@ export async function updateSession(request: NextRequest) {
     if (user && (isAuthRoute(pathname) || pathname === '/') && pathname !== '/auth/callback') {
         const token = request.cookies.get('sb-' + process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID + '-auth-token')
         
-        let jwt: Record<string, any> = {}
+        let jwt: Record<string, unknown> = {}
         if (token) {
              // Supabase stores cookies as JSON arrays, so parse and take the first item token
              try {
@@ -200,7 +203,7 @@ export async function updateSession(request: NextRequest) {
                  if (Array.isArray(parsedToken) && parsedToken.length > 0) {
                      jwt = parseJWTClaims(parsedToken[0]);
                  }
-             } catch(e) {
+             } catch {
                  // Ignore parsing errors, JWT will just be empty
              }
         }
@@ -213,8 +216,8 @@ export async function updateSession(request: NextRequest) {
              }
         }
         
-        const role = jwt.user_role
-        const onboardingComplete = jwt.onboarding_complete
+        const role = typeof jwt.user_role === 'string' ? jwt.user_role : undefined
+        const onboardingComplete = jwt.onboarding_complete === true
 
         if (role === 'owner') {
             if (!onboardingComplete) {
@@ -244,14 +247,14 @@ export async function updateSession(request: NextRequest) {
     if (user && !isPublicRoute(pathname)) {
         const token = request.cookies.get('sb-' + process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID + '-auth-token')
         
-        let jwt: Record<string, any> = {}
+        let jwt: Record<string, unknown> = {}
         if (token) {
              try {
                  const parsedToken = JSON.parse(token.value);
                  if (Array.isArray(parsedToken) && parsedToken.length > 0) {
                      jwt = parseJWTClaims(parsedToken[0]);
                  }
-             } catch(e) {}
+             } catch {}
         }
         
         if(Object.keys(jwt).length === 0){
@@ -263,9 +266,13 @@ export async function updateSession(request: NextRequest) {
              }
         }
 
-        const role = jwt.user_role
-        const onboardingComplete = jwt.onboarding_complete
-        const orgId = jwt.org_id
+        const role = typeof jwt.user_role === 'string' ? jwt.user_role : undefined
+        const onboardingComplete = jwt.onboarding_complete === true
+        const orgId = typeof jwt.org_id === 'string' ? jwt.org_id : undefined
+
+        if (!pathname.startsWith('/api/') && isPhase1ArchivedRoute(pathname)) {
+            return NextResponse.redirect(new URL(PHASE_1_ARCHIVE_REDIRECT, request.url))
+        }
 
         let resolvedOrgId = orgId
         let resolvedOnboarding = onboardingComplete
@@ -347,7 +354,6 @@ export async function updateSession(request: NextRequest) {
             !pathname.startsWith('/api/') &&
             !pathname.startsWith('/onboarding') &&
             !pathname.startsWith('/owner/machines') &&
-            !pathname.startsWith('/owner/inventory') &&
             !pathname.startsWith('/owner/workers') &&
             !pathname.startsWith('/owner/settings')
         ) {

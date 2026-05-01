@@ -348,7 +348,7 @@ export default function MarketRunDetailClient({
                     <DialogHeader>
                         <DialogTitle>Record Sale to Trader</DialogTitle>
                         <DialogDescription>
-                            Create a sale from the {fmtM(availableGodown)} available in godown. This will auto-draft an invoice in their ledger.
+                            Create a sale from the {fmtM(availableGodown)} available in godown and keep market-run profit updated.
                         </DialogDescription>
                     </DialogHeader>
 

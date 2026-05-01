@@ -29,7 +29,7 @@ export function YieldAlertBanner({ alert }: YieldAlertBannerProps) {
         </div>
       </div>
       <Link
-        href="/owner/inventory?filter=leaking"
+        href="/feature-archived"
         className="flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400 hover:text-red-700 transition-colors shrink-0 mt-0.5"
       >
         View <ArrowRight className="h-3 w-3" />

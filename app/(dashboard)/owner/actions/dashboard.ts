@@ -84,7 +84,6 @@ export async function getDashboardData(): Promise<DashboardData> {
   const results = await Promise.allSettled([
     supabase.rpc('get_kpi_yesterday',             { p_org_id: org_id, p_date: yesterday }),
     supabase.rpc('get_kpi_today_live',            { p_org_id: org_id, p_date: today }),
-    supabase.rpc('get_yield_alert',               { p_org_id: org_id }),
     supabase.rpc('get_active_orders_with_pace',   { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_worker_breakdown_today',    { p_org_id: org_id, p_date: today }),
     supabase.from('machines').select('id, name, current_order_id').eq('org_id', org_id).eq('status', 'active'),
@@ -98,7 +97,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       .order('date', { ascending: true }),
   ])
 
-  const [kpiYesterday, kpiToday, yieldAlert, orders, workerBreakdown, machines, rawLogs] = results.map(r =>
+  const [kpiYesterday, kpiToday, orders, workerBreakdown, machines, rawLogs] = results.map(r =>
     r.status === 'fulfilled' ? r.value.data : null
   )
 
@@ -115,7 +114,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   return {
     yesterday:       kpiYesterday,
     today:           kpiToday ? { ...(kpiToday as any), date: today } : null,
-    yieldAlert:      yieldAlert as any,
+    yieldAlert:      null,
     orders:          (orders as any) || null,
     workerBreakdown: (workerBreakdown as any) || null,
     machines:        (machines as any) || null,
@@ -173,4 +172,3 @@ export async function fetchHistoricalData(targetDate: string) {
     workerBreakdown: (workerBreakdown as any) || null,
   }
 }
-

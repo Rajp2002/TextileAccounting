@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { KpiStrip } from './KpiStrip'
-import { YieldAlertBanner } from './YieldAlertBanner'
 import { OrderHealthSummary } from './OrderHealthSummary'
 import { MachineUtilization } from './MachineUtilization'
 import { ProductionTrend } from './ProductionTrend'
@@ -13,7 +13,7 @@ import type { DashboardData } from '../../actions/dashboard'
 import { getSuratTodayString } from '@/lib/time'
 import { Input } from '@/components/ui/input'
 import { useTranslation } from '@/lib/i18n/context'
-import { CalendarDays, Wifi, WifiOff } from 'lucide-react'
+import { CalendarDays, ClipboardList, DollarSign, Store, Wifi, WifiOff } from 'lucide-react'
 
 export function DashboardClient({ initialData, orgId }: { initialData: DashboardData, orgId: string }) {
   const [data, setData] = useState(initialData)
@@ -137,9 +137,9 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground tracking-tight">Dashboard</h1>
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">Production Overview</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {isToday ? 'Live factory overview' : 'Historical view'}
+            {isToday ? 'Orders, market runs, machines, and payroll signals' : 'Historical production view'}
           </p>
         </div>
 
@@ -185,8 +185,31 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
       {/* KPI Strip */}
       <KpiStrip yesterday={data.yesterday} today={data.today} isConnected={connectionStatus === 'connected'} selectedDate={selectedDate} />
 
-      {/* Yield Alert */}
-      {data.yieldAlert && <YieldAlertBanner alert={data.yieldAlert} />}
+      {isToday && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Link href="/owner/orders" className="group rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">Client Orders</span>
+            </div>
+            <p className="mt-2 text-sm font-semibold text-foreground">Check pace and assign production</p>
+          </Link>
+          <Link href="/owner/market-runs" className="group rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5">
+            <div className="flex items-center gap-2">
+              <Store className="h-4 w-4 text-primary" />
+              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">Market Runs</span>
+            </div>
+            <p className="mt-2 text-sm font-semibold text-foreground">Track speculative loom output</p>
+          </Link>
+          <Link href="/owner/payroll" className="group rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-primary" />
+              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">Payroll</span>
+            </div>
+            <p className="mt-2 text-sm font-semibold text-foreground">Review wage liability from logs</p>
+          </Link>
+        </div>
+      )}
 
       {/* Analytics widgets — 2-col on md+ */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

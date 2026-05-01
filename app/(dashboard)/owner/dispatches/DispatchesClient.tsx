@@ -815,12 +815,14 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
                             <div className="space-y-1">
                                 <h3 className="text-xl font-black text-foreground">No dispatches found</h3>
                                 <p className="text-muted-foreground font-medium max-w-xs mx-auto">
-                                    {dispatches.length === 0 ? t('emptyState.dispatches.noStock') : 'Try adjusting your search or filters.'}
+                                    {dispatches.length === 0
+                                        ? 'Create a dispatch from an active order to generate a professional challan.'
+                                        : 'Try adjusting your search or filters.'}
                                 </p>
                                 {dispatches.length === 0 && (
                                     <div className="pt-3">
                                         <Button variant="outline" asChild>
-                                            <Link href="/owner/inventory?tab=grey-stock">{t('emptyState.dispatches.noStock')}</Link>
+                                            <Link href="/owner/orders">Open Orders</Link>
                                         </Button>
                                     </div>
                                 )}
