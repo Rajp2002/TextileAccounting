@@ -201,6 +201,66 @@
     animation: spin-slow 8s linear infinite;
   }
 
+  @keyframes thread-draw {
+    0% {
+      stroke-dashoffset: 1200;
+      opacity: 0;
+    }
+    12% {
+      opacity: 0.72;
+    }
+    52% {
+      opacity: 0.72;
+    }
+    82% {
+      stroke-dashoffset: 0;
+      opacity: 0.12;
+    }
+    100% {
+      stroke-dashoffset: -260;
+      opacity: 0;
+    }
+  }
+
+  @keyframes thread-breathe {
+    0%, 100% { opacity: 0.38; }
+    50% { opacity: 0.7; }
+  }
+
+  .landing-thread-path {
+    stroke-dasharray: 280 920;
+    stroke-dashoffset: 1200;
+  }
+
+  .animate-thread-draw-slow {
+    animation: thread-draw 24s ease-in-out infinite;
+  }
+
+  .animate-thread-draw-medium {
+    animation: thread-draw 18s ease-in-out infinite;
+  }
+
+  .landing-thread-static {
+    animation: thread-breathe 14s ease-in-out infinite;
+  }
+
+  .landing-thread-glints {
+    animation: thread-breathe 10s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .landing-thread-path,
+    .landing-thread-static,
+    .landing-thread-glints {
+      animation: none;
+    }
+
+    .landing-thread-path {
+      stroke-dashoffset: 0;
+      opacity: 0.18;
+    }
+  }
+
   /* Pull to Refresh Indicator */
   .ptr-indicator {
     height: 0;

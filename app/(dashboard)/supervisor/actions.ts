@@ -1035,6 +1035,11 @@ export async function bulkLogProduction(entries: {
         return { error: 'ORDER_MISSING', message: 'All machines with production must have an assigned order.' }
     }
 
+    const negativeEntry = entries.find(e => e.closing_meter_reading < e.opening_meter_reading || e.meters < 0)
+    if (negativeEntry) {
+        return { error: 'Closing meter reading cannot be below opening meter reading.' }
+    }
+
     const logs = entries
         .filter((e) => e.meters !== 0) // We already know e.order_id exists from the guard above
         .map((e) => ({
@@ -1237,7 +1242,6 @@ export async function packProductionIntoBulkPackages(entries: {
 
     if (error) return { error: error.message }
 
-    revalidatePath('/owner/inventory')
     revalidatePath('/owner/orders')
     revalidatePath('/owner/dispatches')
     return {

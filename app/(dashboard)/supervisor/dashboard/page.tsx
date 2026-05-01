@@ -38,7 +38,6 @@ import {
     upsertShiftAssignment,
     copyPreviousShiftAction,
     bulkLogProduction,
-    packProductionIntoBulkPackages,
     updateMachineStatus,
     updateMachineBreakdown,
     requestAccessCode,
@@ -63,7 +62,6 @@ import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { RoleBanner } from '@/components/RoleBanner'
-import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
@@ -485,8 +483,6 @@ export default function UnifiedDashboard() {
     const [closingReadings, setClosingReadings] = useState<Record<string, number>>({})
     const [openingReadings, setOpeningReadings] = useState<Record<string, number>>({})
     const [correctionWindowExpiresAt, setCorrectionWindowExpiresAt] = useState<string | null>(null)
-    const [confirmNegativeReadings, setConfirmNegativeReadings] = useState(false)
-    const [pendingPackAfter, setPendingPackAfter] = useState(false)
     const [, setCountdownTick] = useState(0)
     
     // Optimistic / Sync markers
@@ -663,7 +659,7 @@ export default function UnifiedDashboard() {
         }
     }
 
-    const handleBulkSubmit = async (code: string = '', packAfter: boolean = false, skipNegativeConfirmation: boolean = false) => {
+    const handleBulkSubmit = async (code: string = '') => {
         const assignedMachines = machines.filter((m) =>
             assignments.some((a) => a.machine_id === m.id && a.worker_id)
         )
@@ -689,9 +685,8 @@ export default function UnifiedDashboard() {
 
         const negativeReadings = entries.filter((entry) => entry.closing_meter_reading < entry.opening_meter_reading)
 
-        if (negativeReadings.length > 0 && !skipNegativeConfirmation) {
-            setPendingPackAfter(packAfter)
-            setConfirmNegativeReadings(true)
+        if (negativeReadings.length > 0) {
+            toast.error(`Cannot save ${negativeReadings.length} machine reading${negativeReadings.length === 1 ? '' : 's'}: closing meter is below opening meter.`)
             return
         }
 
@@ -712,25 +707,13 @@ export default function UnifiedDashboard() {
         setSubmitting(true)
         const res = await bulkLogProduction(entries, code)
         if (res.success) {
-            if (packAfter) {
-                const packRes = await packProductionIntoBulkPackages(entries)
-                if ('error' in packRes) {
-                    toast.error(packRes.error)
-                    setSubmitting(false)
-                    return
-                }
-                toast.success(`✅ Production logged and ${packRes.packages_created} bulk package${packRes.packages_created !== 1 ? 's' : ''} created`)
-            } else {
-                toast.success(`✅ Production Logged! (${res.logged} machines)`)
-            }
+            toast.success(`Production logged (${res.logged} machines)`)
             setSubmitting(false)
             setClosingReadings({}) // Reset inputs after success
             localStorage.removeItem(`closing_readings_${date}_${shift}`) // Clear cache
             setShowDuplicateDialog(false)
             setDuplicateAccessCode('')
             setCorrectionWindowExpiresAt(res.correctionWindowExpiresAt ?? null)
-            setConfirmNegativeReadings(false)
-            setPendingPackAfter(false)
             fetchData()
         } else if (res.error === 'DUPLICATE_LOG_DETECTED') {
             setSubmitting(false)
@@ -813,7 +796,7 @@ export default function UnifiedDashboard() {
 
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-xl font-black text-foreground tracking-tight">Shift Dashboard</h1>
+                            <h1 className="text-xl font-black text-foreground tracking-tight">Production Log</h1>
                             <div className="flex items-center gap-2 mt-1">
                                 <Badge variant="secondary" className="text-[10px] font-bold h-5 bg-muted/50 border-none">
                                     {assignedCount}/{machines.length} Assigned
@@ -911,18 +894,9 @@ export default function UnifiedDashboard() {
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 md:left-[260px] p-4 md:p-6 bg-background/40 backdrop-blur-xl border-t border-border flex justify-center z-40 pb-floating-button">
-                <div className="flex w-full max-w-2xl gap-3">
+                <div className="flex w-full max-w-xl gap-3">
                     <Button
-                        variant="outline"
-                        className="h-14 flex-1 border-primary/20 bg-white/90 text-primary hover:bg-primary/5 font-black text-base rounded-2xl gap-3"
-                        onClick={() => handleBulkSubmit('', true)}
-                        disabled={submitting || loggedMetersCount === 0}
-                    >
-                        {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Package className="h-5 w-5" />}
-                        SUBMIT & PACK
-                    </Button>
-                    <Button
-                        className="h-14 flex-[1.3] bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-[0_12px_24px_-8px_#FF572280] gap-3 active:scale-[0.98] transition-all"
+                        className="h-14 flex-1 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-[0_12px_24px_-8px_#FF572280] gap-3 active:scale-[0.98] transition-all"
                         onClick={() => handleBulkSubmit()}
                         disabled={submitting || loggedMetersCount === 0}
                     >
@@ -1007,17 +981,6 @@ export default function UnifiedDashboard() {
                 </DialogContent>
             </Dialog>
 
-            <ConfirmActionDialog
-                open={confirmNegativeReadings}
-                onOpenChange={(open) => {
-                    setConfirmNegativeReadings(open)
-                    if (!open) setPendingPackAfter(false)
-                }}
-                title={t('floor.meter.counterWarning')}
-                description={t('floor.meter.counterConfirm')}
-                onConfirm={() => handleBulkSubmit('', pendingPackAfter, true)}
-                isLoading={submitting}
-            />
         </div>
     )
 }

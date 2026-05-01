@@ -1,17 +1,19 @@
 # Weavly Project Overview
 
-This document reflects the current implementation in the repository as of April 2026.
+This document reflects the current implementation in the repository as of April 2026. For current launch scope, use `docs/general/PHASE_1_SCOPE.md` as the source of truth.
 
 ## What Weavly Is
 
-Weavly is a production and back-office operating system for weaving factories. The app is organized around a practical factory loop:
+Weavly is a production and back-office operating system for weaving factories. The codebase contains a broad product surface, but Phase 1 is organized around a practical factory loop:
 
 1. Estimate a fabric and create a quote.
 2. Convert an approved quote into a live order or start a speculative Market Run.
 3. Assign workers and orders on the floor.
 4. Log production against machines and shifts (with optional packing of fabric packages).
 5. Settle wages, advances, and statutory deductions.
-6. Track dispatches, fabric package stock, ledger balances, and compliance activity.
+6. Track dispatches and client-facing handoff professionally.
+
+For Phase 1, ledger, deep inventory/stock, system health, compliance registry, DPA, grievances, language requests, and admin dashboard work are out of scope unless a small part directly improves estimator, production logging/tracking, or payroll/advances.
 
 ## Roles
 
@@ -19,11 +21,10 @@ Weavly is a production and back-office operating system for weaving factories. T
 Owners use the commercial and financial side of the product:
 - analytics dashboard
 - estimator and quotes
-- order management
-- party ledger
+- order management and market runs
 - payroll and advances
-- machines, workers, inventory, stock, dispatches
-- billing, audit, settings, exports, access codes
+- machines, workers, attendance support, lightweight dispatches
+- billing, referrals, WhatsApp, settings, access codes
 
 ### Supervisor
 Supervisors use the floor operations side:

@@ -579,7 +579,6 @@ export async function createDispatch(
     if (dispatchError || !dispatch) return { error: dispatchError?.message ?? 'Failed to load dispatch' }
 
     revalidatePath('/owner/orders')
-    revalidatePath('/owner/inventory')
     revalidatePath('/owner/dispatches')
     return {
         dispatch: normalizeDispatchRow(dispatch as RawDispatchRow),

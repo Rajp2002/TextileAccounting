@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import LandingThreadBackground from './thread-background'
 
 export default function LandingBackground() {
     // The exact polygon shape used in the hero component
@@ -21,6 +22,8 @@ export default function LandingBackground() {
                 </defs>
                 <rect width="100%" height="100%" strokeWidth={0} fill="url(#grid-pattern-global)" />
             </svg>
+
+            <LandingThreadBackground />
 
             {/* Blob 1: Top (Original Hero Blob) */}
             <div className="absolute inset-x-0 -top-40 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">

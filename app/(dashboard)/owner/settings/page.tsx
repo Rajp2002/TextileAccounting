@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -10,26 +9,34 @@ import {
     Dialog, DialogContent, DialogDescription, DialogFooter,
     DialogHeader, DialogTitle, DialogTrigger
 } from '@/components/ui/dialog'
-import { Factory, User, ShieldCheck, Download, Trash2, Loader2, AlertTriangle, Copy, RefreshCw, MessageSquare, Smartphone, Layers } from 'lucide-react'
+import { Factory, User, ShieldCheck, Loader2, AlertTriangle, Copy, RefreshCw, MessageSquare, Smartphone } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
 import { AccessCodeGenerator } from '@/components/AccessCodeGenerator'
 import { WhatsAppOptIn } from '@/components/settings/WhatsAppOptIn'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
-import { exportOrganizationData, deleteOrganizationData } from './data-export'
 import { toast } from 'sonner'
 import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
 import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
-import { setBeamTrackingEnabled, updateOrganizationName } from '@/app/(dashboard)/owner/actions'
+import { updateOrganizationName } from '@/app/(dashboard)/owner/actions'
 import { SupervisorFloatManager } from '@/components/settings/supervisor-float-manager'
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
-function SettingsCategory({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
+type OrganizationSettings = {
+    name: string
+    join_code: string | null
+    join_code_expires_at: string | null
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback
+}
+
+function SettingsCategory({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
@@ -46,12 +53,9 @@ function SettingsCategory({ title, icon: Icon, children }: { title: string; icon
 export default function SettingsPage() {
     const { t } = useTranslation()
     const supabase = createClient()
-    const router = useRouter()
     const queryClient = useQueryClient()
     const { data: userProfile, isLoading: profileLoading } = useUserProfile()
 
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-    const [deleteConfirmation, setDeleteConfirmation] = useState('')
     const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false)
     const [factoryName, setFactoryName] = useState('')
     const [isEditingName, setIsEditingName] = useState(false)
@@ -63,20 +67,13 @@ export default function SettingsPage() {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('organizations')
-                .select('name, join_code, join_code_expires_at, beam_tracking_enabled')
+                .select('name, join_code, join_code_expires_at')
                 .eq('id', userProfile!.org_id)
                 .single()
             if (error) throw error
             return data
         }
     })
-
-    // Sync local state when organization data is loaded
-    useEffect(() => {
-        if (org?.name) {
-            setFactoryName(org.name)
-        }
-    }, [org?.name])
 
     // Update factory name mutation
     const updateNameMutation = useMutation({
@@ -85,13 +82,14 @@ export default function SettingsPage() {
             if (result.error) throw new Error(result.error)
             return result
         },
-        onSuccess: () => {
+        onSuccess: (_result, newName) => {
             queryClient.invalidateQueries({ queryKey: ['organization'] })
+            setFactoryName(newName)
             setIsEditingName(false)
             toast.success('Factory name updated successfully')
         },
-        onError: (err: any) => {
-            toast.error(err.message || 'Failed to update name')
+        onError: (err: unknown) => {
+            toast.error(getErrorMessage(err, 'Failed to update name'))
         }
     })
 
@@ -104,7 +102,7 @@ export default function SettingsPage() {
         },
         onSuccess: (data) => {
             // Optimistic update — don't wait for refetch
-            queryClient.setQueryData(['organization', userProfile?.org_id], (old: any) => ({
+            queryClient.setQueryData(['organization', userProfile?.org_id], (old: OrganizationSettings | undefined) => ({
                 ...old,
                 join_code: data.joinCode,
                 join_code_expires_at: data.expiresAt,
@@ -112,67 +110,13 @@ export default function SettingsPage() {
             setRegenerateDialogOpen(false)
             toast.success('Join code regenerated. The old code is now invalid.')
         },
-        onError: (err: any) => {
-            toast.error(err.message || 'Failed to regenerate code')
-        }
-    })
-
-    const beamTrackingMutation = useMutation({
-        mutationFn: async (enabled: boolean) => {
-            const result = await setBeamTrackingEnabled(enabled)
-            if (result.error) throw new Error(result.error)
-            return result
-        },
-        onSuccess: (_, enabled) => {
-            queryClient.setQueryData(['organization', userProfile?.org_id], (old: any) => ({
-                ...old,
-                beam_tracking_enabled: enabled,
-            }))
-            toast.success(t('common.updated'))
-        },
-        onError: (err: any) => {
-            toast.error(err.message || 'Failed to update beam tracking')
-        }
-    })
-
-    // Export data mutation
-    const exportMutation = useMutation({
-        mutationFn: async () => {
-            const data = await exportOrganizationData()
-            // Trigger browser download
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `weavly-data-export-${new Date().toISOString().split('T')[0]}.json`
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-            URL.revokeObjectURL(url)
-        },
-        onSuccess: () => {
-            toast.success('Data exported successfully')
-        },
-        onError: (err: any) => {
-            toast.error(err.message || 'Failed to export data')
-        }
-    })
-
-    // Delete account mutation
-    const deleteMutation = useMutation({
-        mutationFn: async () => {
-            await deleteOrganizationData(deleteConfirmation)
-        },
-        onSuccess: () => {
-            toast.success('Account and all data deleted')
-            router.push('/')
-        },
-        onError: (err: any) => {
-            toast.error(err.message || 'Failed to delete account')
+        onError: (err: unknown) => {
+            toast.error(getErrorMessage(err, 'Failed to regenerate code'))
         }
     })
 
     const isLoading = profileLoading || orgLoading
+    const currentFactoryName = isEditingName ? factoryName : (factoryName || org?.name || '')
 
     if (isLoading) {
         return (
@@ -228,12 +172,12 @@ export default function SettingsPage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <Label>{t('settings.factory.name')}</Label>
-                                {factoryName !== org?.name && !isEditingName && (
+                                {currentFactoryName !== org?.name && !isEditingName && (
                                     <Button 
                                         variant="link" 
                                         size="sm" 
                                         className="h-auto p-0 text-blue-600 font-semibold"
-                                        onClick={() => updateNameMutation.mutate(factoryName)}
+                                        onClick={() => updateNameMutation.mutate(currentFactoryName)}
                                         disabled={updateNameMutation.isPending}
                                     >
                                         {updateNameMutation.isPending ? 'Saving...' : 'Save Changes'}
@@ -242,17 +186,20 @@ export default function SettingsPage() {
                             </div>
                             <div className="flex gap-2">
                                 <Input 
-                                    value={factoryName} 
-                                    onChange={(e) => setFactoryName(e.target.value)}
+                                    value={currentFactoryName} 
+                                    onChange={(e) => {
+                                        setIsEditingName(true)
+                                        setFactoryName(e.target.value)
+                                    }}
                                     className="flex-1"
                                     placeholder="Enter factory name"
                                     disabled={updateNameMutation.isPending}
                                 />
-                                {factoryName !== org?.name && (
+                                {currentFactoryName !== org?.name && (
                                     <Button 
                                         className="bg-blue-600 hover:bg-blue-700 text-white shrink-0" 
                                         size="sm"
-                                        onClick={() => updateNameMutation.mutate(factoryName)}
+                                        onClick={() => updateNameMutation.mutate(currentFactoryName)}
                                         disabled={updateNameMutation.isPending}
                                     >
                                         {updateNameMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
@@ -379,73 +326,9 @@ export default function SettingsPage() {
                 <div className="lg:col-span-2 space-y-6">
                     <FactoryCostProfile />
                     <TemplateManager />
-                    <Card className="shadow-sm border-gray-200">
-                        <CardHeader>
-                            <div className="flex items-center gap-2">
-                                <Layers className="h-5 w-5 text-indigo-600" />
-                                <CardTitle>{t('inventory.beams.settingsTitle')}</CardTitle>
-                            </div>
-                            <CardDescription>{t('inventory.beams.settingsHelper')}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 p-4">
-                                <div className="space-y-1">
-                                    <p className="text-sm font-medium text-gray-900">{t('inventory.tabs.beams')}</p>
-                                    <p className="text-xs text-gray-500">{t('inventory.beams.settingsHelper')}</p>
-                                </div>
-                                <Switch
-                                    checked={!!org?.beam_tracking_enabled}
-                                    disabled={beamTrackingMutation.isPending}
-                                    onCheckedChange={(checked: boolean) => beamTrackingMutation.mutate(checked)}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
                 </div>
             </SettingsCategory>
 
-            {/* Section 5: Admin & Legal */}
-            <SettingsCategory title="Organization Administration" icon={Download}>
-                <Card className="shadow-sm border-gray-200 lg:col-span-1">
-                    <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <Download className="h-5 w-5 text-blue-600" />
-                            <CardTitle>Data Management</CardTitle>
-                        </div>
-                        <CardDescription>Export or delete your data per DPDP Act 2023</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
-                            <div>
-                                <p className="text-sm font-medium text-gray-900">Export My Data</p>
-                                <p className="text-xs text-gray-500 mt-0.5">Download JSON export of your organization</p>
-                            </div>
-                            <Button variant="outline" size="sm" onClick={() => exportMutation.mutate()} disabled={exportMutation.isPending}>
-                                {exportMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 mr-1.5" />}
-                                Export
-                            </Button>
-                        </div>
-                        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/30 p-4">
-                            <div>
-                                <p className="text-sm font-medium text-red-900">Delete Account</p>
-                                <p className="text-xs text-red-600 mt-0.5">Permanently delete all data</p>
-                            </div>
-                            <Dialog open={deleteDialogOpen} onOpenChange={(val) => { setDeleteDialogOpen(val); if (!val) setDeleteConfirmation('') }}>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" size="sm" className="border-red-300 text-red-700 hover:bg-red-100">
-                                        <Trash2 className="h-4 w-4 mr-1.5" /> Delete
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="sm:max-w-[420px]">
-                                    <DialogHeader><DialogTitle className="flex items-center gap-2 text-red-700"><AlertTriangle className="h-5 w-5" />Delete All Data</DialogTitle><DialogDescription>This will permanently delete your organization and all records. This cannot be undone.</DialogDescription></DialogHeader>
-                                    <div className="space-y-3 py-2"><p className="text-sm text-gray-700">Type <span className="font-mono font-bold text-red-700">{org?.name}</span> to confirm:</p><Input value={deleteConfirmation} onChange={(e) => setDeleteConfirmation(e.target.value)} placeholder="Type your factory name" className="border-red-200 focus:border-red-400" /></div>
-                                    <DialogFooter><Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button><Button variant="destructive" disabled={deleteConfirmation !== org?.name || deleteMutation.isPending} onClick={() => deleteMutation.mutate()}>{deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Trash2 className="h-4 w-4 mr-1.5" />}Delete Everything</Button></DialogFooter>
-                                </DialogContent>
-                            </Dialog>
-                        </div>
-                    </CardContent>
-                </Card>
-            </SettingsCategory>
         </div>
     )
 }

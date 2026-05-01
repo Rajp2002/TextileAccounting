@@ -1,8 +1,12 @@
 # Weavly
 
-Weavly is a multi-tenant textile operations SaaS for Indian weaving factories. The current product combines estimation, quote-to-order conversion, production logging, payroll, advances, dispatch tracking, stock tracking, inventory, party ledger, billing, and compliance workflows in one Next.js + Supabase application.
+Weavly is a multi-tenant textile operations SaaS for Indian weaving factories. The current codebase contains a broad operating-system surface, but Phase 1 is intentionally focused on estimator, production logging/tracking, and payroll/advances, with supporting modules only where they strengthen those core workflows.
+
+For scope decisions, start with [PHASE_1_SCOPE.md](./PHASE_1_SCOPE.md).
 
 ## Current Product Surface
+
+Phase 1 keeps analytics, market runs, dispatches, WhatsApp, referrals, billing, quotes/orders, workers, machines, and attendance where they directly support the core operating loop. Ledger, deep inventory/stock, system health, compliance/DPA/grievance/admin surfaces are present in the repo but are not Phase 1 polish priorities.
 
 ### Owner routes
 - `/owner/analytics` - production KPI dashboard
@@ -100,6 +104,7 @@ There is currently no dedicated `test` script in `package.json`. The repo has on
 ## Documentation Map
 
 - [MASTER_PRODUCT_DOCUMENT.md](./MASTER_PRODUCT_DOCUMENT.md) - comprehensive developer-facing master product document spanning workflows, architecture, data model, and module logic
+- [PHASE_1_SCOPE.md](./PHASE_1_SCOPE.md) - current launch scope, kept modules, out-of-scope modules, and production-readiness checklist
 - [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md) - product and module overview
 - [USER_WORKFLOWS.md](./USER_WORKFLOWS.md) - role-based route and workflow reference
 - [TECHNICAL_ANALYSIS.md](./TECHNICAL_ANALYSIS.md) - implementation architecture notes

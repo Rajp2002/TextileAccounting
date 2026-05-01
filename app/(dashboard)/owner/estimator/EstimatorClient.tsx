@@ -586,6 +586,7 @@ export default function EstimatorClient({
 
     // Scenario panel
     const [showScenarios,      setShowScenarios]      = useState(false)
+    const [showAdvancedCosting, setShowAdvancedCosting] = useState(false)
     const [customTargetPrice,  setCustomTargetPrice]  = useState<string>('')
 
     // Party rate memory — debounced with 800ms + 3-char min
@@ -953,6 +954,13 @@ export default function EstimatorClient({
         )) ||
         (!electricityItem.isLocked && (electricityItem.monthlyAmount || 0) === 0)
     )
+    const estimateWarnings = [
+        ...(state.warpRows.some(row => row.yarnRate <= 0) ? ['Warp yarn rate missing'] : []),
+        ...(state.weftRows.some(row => row.yarnRate <= 0) ? ['Weft yarn rate missing'] : []),
+        state.perPickCostPaisa <= 0 ? 'Loom wage missing' : null,
+        !hasOrderQty ? 'Quantity not set' : null,
+        state.monthlyOutputM <= 0 && totals.overheadPerM <= 0 ? 'Factory overhead not configured' : null,
+    ].filter((warning): warning is string => Boolean(warning))
 
     return (
         <div className="space-y-6 pb-20 relative">
@@ -1193,6 +1201,19 @@ export default function EstimatorClient({
 
             {/* ── MAIN FORM ────────────────────────────────────────────── */}
             <div className="max-w-4xl mx-auto space-y-6">
+                {estimateWarnings.length > 0 && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3">
+                        <div className="flex items-start gap-3">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                            <div className="min-w-0">
+                                <p className="text-xs font-black uppercase tracking-wider text-amber-800">Before saving, check these costing inputs</p>
+                                <p className="mt-1 text-xs font-medium text-amber-700">
+                                    {estimateWarnings.join(' · ')}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Saved Qualities Row */}
                 {templates.length > 0 && (
@@ -1759,6 +1780,21 @@ export default function EstimatorClient({
                     </CardContent>
                 </Card>
 
+                <button
+                    type="button"
+                    onClick={() => setShowAdvancedCosting(prev => !prev)}
+                    className="flex w-full items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-3 text-left shadow-sm transition-colors hover:border-brand-accent/40 hover:bg-brand-accent/5"
+                >
+                    <Calculator className="h-4 w-4 text-brand-accent" />
+                    <div className="min-w-0 flex-1">
+                        <p className="text-sm font-black text-slate-800">Advanced costing</p>
+                        <p className="text-xs font-medium text-slate-500">Factory overhead, processing, finishing, and stress-test scenarios</p>
+                    </div>
+                    {showAdvancedCosting ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                </button>
+
+                {showAdvancedCosting && (
+                    <>
                 {/* 5b. Factory Overhead — Itemized Breakdown */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
                     <SectionHeader
@@ -2176,6 +2212,8 @@ export default function EstimatorClient({
                         </div>
                     </CardContent>
                 </Card>
+                    </>
+                )}
 
                 {/* 7. Simulation / Order */}
                 <Card className="border-border/60 shadow-sm overflow-hidden bg-slate-50/20">
@@ -2203,7 +2241,7 @@ export default function EstimatorClient({
             </div>
 
             {/* ── SCENARIO ANALYSIS (STRESS TESTS) ───────────────────────── */}
-            {hasOrderQty && totals.orderQuote && (
+            {showAdvancedCosting && hasOrderQty && totals.orderQuote && (
                 <div className="max-w-4xl mx-auto space-y-2">
                     <button
                         onClick={() => setShowScenarios(!showScenarios)}

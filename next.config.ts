@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/owner/stock',
-        destination: '/owner/inventory?tab=grey-stock',
+        destination: '/feature-archived',
         permanent: false,
       },
     ]
@@ -67,5 +67,3 @@ export default withSentryConfig(nextConfig, {
   // Route Sentry tunnel to avoid ad-blocker interference
   tunnelRoute: '/monitoring',
 });
-
-

@@ -6,6 +6,7 @@ export const en = {
     "machines": "Machines",
     "attendance": "Attendance",
     "dashboard": "Dashboard",
+    "production_log": "Production Log",
     "orders": "Orders",
     "ledger": "Ledger",
     "inventory": "Inventory",
