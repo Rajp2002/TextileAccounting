@@ -19,7 +19,7 @@ export default function LandingHero() {
             <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-12 sm:pb-28 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:pb-32 lg:pt-28">
                 <div className="max-w-3xl">
                     <motion.div
-                        initial="hidden"
+                        initial={false}
                         animate="visible"
                         variants={{
                             hidden: { opacity: 0, y: 30 },
@@ -95,7 +95,7 @@ export default function LandingHero() {
                 </div>
 
                 <motion.div
-                    initial={{ opacity: 0, x: 32 }}
+                    initial={false}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
                     className="relative"
@@ -140,14 +140,34 @@ export default function LandingHero() {
                                     ))}
                                 </div>
 
-                                <video
-                                    className="mt-4 aspect-video w-full border border-gray-200 bg-gray-950 object-cover dark:border-white/10"
-                                    src="/videos/hero-tutorial.mov"
-                                    autoPlay
-                                    muted
-                                    loop
-                                    playsInline
-                                />
+                                <div className="mt-4 border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-zinc-900/80">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div>
+                                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Order #214</p>
+                                            <p className="mt-1 text-sm font-bold text-gray-950 dark:text-white">34,820 m of 50,000 m</p>
+                                        </div>
+                                        <span className="border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400">
+                                            Pace watch
+                                        </span>
+                                    </div>
+                                    <div className="mt-4 h-2 overflow-hidden bg-gray-100 dark:bg-white/10">
+                                        <div className="h-full w-[70%] bg-amber-600" />
+                                    </div>
+                                    <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+                                        <div>
+                                            <p className="font-bold text-gray-950 dark:text-white">12</p>
+                                            <p className="text-gray-500">looms</p>
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-950 dark:text-white">2 shifts</p>
+                                            <p className="text-gray-500">logged</p>
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-950 dark:text-white">₹8.40/m</p>
+                                            <p className="text-gray-500">rate</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="border-t border-gray-200 bg-gray-50/80 p-4 dark:border-white/10 dark:bg-white/5 lg:border-l lg:border-t-0">

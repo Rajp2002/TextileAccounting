@@ -18,7 +18,7 @@ export default function LandingHeader() {
 
     return (
         <motion.header
-            initial={{ y: -100, opacity: 0 }}
+            initial={false}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className="fixed top-0 left-0 right-0 z-50 pt-0 px-4 pb-4 sm:px-6 lg:px-8"
