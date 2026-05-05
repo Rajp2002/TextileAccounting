@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useMemo, useTransition } from 'react'
+import { useEffect, useState, useMemo, useTransition } from 'react'
 import { format } from 'date-fns'
 import {
     Truck,
@@ -29,6 +29,7 @@ import {
     getDispatchesForOrder,
     type OrderSummary,
     type DispatchSummary,
+    type DispatchRow,
 } from '@/app/(dashboard)/owner/orders/actions'
 import { confirmDispatchReceiptByOwner } from '@/app/(dashboard)/owner/orders/actions'
 import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
@@ -581,7 +582,7 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
             setGlobalModalStep('select_order')
         } else {
             if (res.available_packages.length === 0) {
-                toast.error(t('emptyState.dispatches.noStock'))
+                toast.error('Record a stock sale first, then dispatch the sold takas from here.')
                 setGlobalModalStep('select_order')
             } else {
                 setDispatchSummary(res)
@@ -845,6 +846,23 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
                 }}
                 dispatchSummary={dispatchSummary}
                 selectedOrder={selectedOrder}
+                onDispatchCreated={(dispatch, trackingToken) => {
+                    if (!selectedOrder) return
+                    setDispatches((prev) => [
+                        {
+                            ...dispatch,
+                            orders: {
+                                id: selectedOrder.id,
+                                party_name: selectedOrder.party_name,
+                                quality_label: selectedOrder.quality_label,
+                                tracking_token: trackingToken,
+                                total_target_meters: selectedOrder.total_target_meters,
+                                status: selectedOrder.status,
+                            },
+                        },
+                        ...prev,
+                    ])
+                }}
             />
         </div>
     )
@@ -855,19 +873,21 @@ function GlobalDispatchModal({
     onClose,
     onOrderSelected,
     dispatchSummary,
-    selectedOrder
+    selectedOrder,
+    onDispatchCreated,
 }: {
     step: 'idle' | 'select_order' | 'loading_summary' | 'create_dispatch'
     onClose: () => void
     onOrderSelected: (order: OrderSummary) => void
     dispatchSummary: DispatchSummary | null
     selectedOrder: OrderSummary | null
+    onDispatchCreated: (dispatch: DispatchRow, trackingToken: string) => void
 }) {
     const [orders, setOrders] = useState<OrderSummary[]>([])
     const [loadingOrders, setLoadingOrders] = useState(false)
 
     // Load active orders when step is select_order
-    useMemo(() => {
+    useEffect(() => {
         if (step === 'select_order') {
             setLoadingOrders(true)
             getActiveOrders().then(res => {
@@ -936,7 +956,7 @@ function GlobalDispatchModal({
             <Dialog open={step === 'loading_summary'} onOpenChange={() => {}}>
                 <DialogContent className="max-w-sm text-center py-10">
                     <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mx-auto mb-4" />
-                    <p className="text-sm font-bold text-slate-600">Fetching available stock...</p>
+                    <p className="text-sm font-bold text-slate-600">Fetching sold stock pending dispatch...</p>
                 </DialogContent>
             </Dialog>
 
@@ -971,6 +991,7 @@ function GlobalDispatchModal({
                         } catch {
                             toast.error('Failed to generate invoice PDF')
                         }
+                        onDispatchCreated(dispatch, trackingToken)
                         onClose()
                         // Next.js will revalidate the path via the server action
                     }}
