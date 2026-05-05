@@ -502,7 +502,7 @@ export const DismissStockInwardDraftSchema = z.object({
 
 export const RecordTakaStockSaleSchema = z.object({
     stock_lot_id: UuidSchema,
-    taka_sold: z.number().positive('Takas sold must be greater than zero').max(1_000_000, 'Takas sold too high'),
+    taka_sold: z.number().int('Takas sold must be a whole number').positive('Takas sold must be greater than zero').max(1_000_000, 'Takas sold too high'),
     price_per_meter: z.number().nonnegative('Sale price cannot be negative').max(1_000_000, 'Sale price too high'),
     sale_date: DateSchema,
     notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),

@@ -887,7 +887,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
     const orgId = profile.org_id
     const supabase = await createServerClient()
 
-    const [machinesRes, ordersRes, workersRes, assignmentsRes] = await Promise.all([
+    const [machinesRes, ordersRes, workersRes, assignmentsRes, standingAssignmentsRes] = await Promise.all([
         supabase
             .from('machines')
             .select('id, name, status, machine_status, default_rate_per_m, current_order_id')
@@ -912,9 +912,50 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             .eq('org_id', orgId)
             .eq('date', date)
             .eq('shift', shift),
+        supabase
+            .from('machine_assignments')
+            .select('machine_id, worker_id, shift')
+            .eq('org_id', orgId)
+            .eq('shift', shift),
     ])
 
     const machineIds = (machinesRes.data ?? []).map((machine) => machine.id)
+    const orderRateById = new Map((ordersRes.data ?? []).map((order) => [order.id, Number(order.worker_rate_per_m)]))
+    const standingWorkerByMachineId = new Map(
+        (standingAssignmentsRes.data ?? []).map((assignment) => [assignment.machine_id, assignment.worker_id])
+    )
+    const datedAssignmentByMachineId = new Map(
+        (assignmentsRes.data ?? []).map((assignment) => [assignment.machine_id, assignment])
+    )
+    const assignments = (machinesRes.data ?? []).flatMap((machine) => {
+        const existing = datedAssignmentByMachineId.get(machine.id)
+        const workerId = standingWorkerByMachineId.get(machine.id) ?? null
+        const orderId = machine.current_order_id ?? null
+
+        if (existing) {
+            const mergedOrderId = existing.order_id ?? orderId
+
+            return [{
+                ...existing,
+                worker_id: existing.worker_id ?? workerId,
+                order_id: mergedOrderId,
+                rate_per_m: existing.rate_per_m
+                    ?? (mergedOrderId ? (orderRateById.get(mergedOrderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5)),
+            }]
+        }
+
+        if (!workerId && !orderId) return []
+
+        return [{
+            id: null,
+            machine_id: machine.id,
+            worker_id: workerId,
+            order_id: orderId,
+            rate_per_m: orderId ? (orderRateById.get(orderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5),
+            breakdown_category: null,
+            breakdown_notes: null,
+        }]
+    })
 
     const [currentLogsRes, previousMeterReadings] = await Promise.all([
         machineIds.length === 0
@@ -933,7 +974,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
         machines: machinesRes.data ?? [],
         orders: ordersRes.data ?? [],
         workers: workersRes.data ?? [],
-        assignments: assignmentsRes.data ?? [],
+        assignments,
         existingLogs: currentLogsRes.data ?? [],
         previousMeterReadings,
         latestSubmittedAt: getLatestSubmittedAt((currentLogsRes.data ?? []) as Array<{ submitted_at: string | null }>),
@@ -954,6 +995,13 @@ export async function upsertShiftAssignment(data: {
     const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
+    const [machineParsed, shiftParsed] = [
+        safeParse(UuidSchema, data.machine_id),
+        safeParse(ShiftSchema, data.shift),
+    ]
+    if ('error' in machineParsed) return { error: machineParsed.error }
+    if ('error' in shiftParsed) return { error: shiftParsed.error }
+
     const { error } = await supabase
         .from('shift_assignments')
         .upsert(
@@ -961,7 +1009,7 @@ export async function upsertShiftAssignment(data: {
                 org_id: profile.org_id,
                 date: data.date,
                 shift: data.shift,
-                machine_id: data.machine_id,
+                machine_id: machineParsed.data,
                 worker_id: data.worker_id,
                 order_id: data.order_id,
                 rate_per_m: data.rate_per_m,
@@ -973,6 +1021,38 @@ export async function upsertShiftAssignment(data: {
     if (error) {
         console.error('upsertShiftAssignment error:', error)
         return { error: error.message }
+    }
+
+    if (data.worker_id) {
+        const { error: standingWorkerError } = await supabase
+            .from('machine_assignments')
+            .upsert(
+                {
+                    org_id: profile.org_id,
+                    machine_id: machineParsed.data,
+                    shift: shiftParsed.data,
+                    worker_id: data.worker_id,
+                },
+                { onConflict: 'org_id,machine_id,shift' }
+            )
+
+        if (standingWorkerError) {
+            console.error('standing machine assignment error:', standingWorkerError)
+            return { error: standingWorkerError.message }
+        }
+    }
+
+    if (data.order_id !== null) {
+        const { error: standingOrderError } = await supabase
+            .from('machines')
+            .update({ current_order_id: data.order_id })
+            .eq('id', machineParsed.data)
+            .eq('org_id', profile.org_id)
+
+        if (standingOrderError) {
+            console.error('standing machine order error:', standingOrderError)
+            return { error: standingOrderError.message }
+        }
     }
 
     return { success: true }
