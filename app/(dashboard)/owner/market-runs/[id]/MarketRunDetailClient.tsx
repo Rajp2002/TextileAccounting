@@ -2,22 +2,19 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import {
-    ArrowLeft, Calendar, FileText, CheckCircle2, ChevronRight,
-    TrendingUp, Package, Warehouse, DollarSign, Store, Tag, Plus, Receipt
+    ArrowLeft,
+    TrendingUp,
+    Package,
+    Warehouse,
+    Store,
+    Tag,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { createMarketRunSaleAction, updateMarketRunStatus } from '../../estimator/actions'
+import { updateMarketRunStatus } from '../../estimator/actions'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,8 +52,6 @@ type MarketRunSale = {
     parties:         { id: string; name: string; phone: string | null }
 }
 
-type Party = { id: string; name: string }
-
 const STATUS_CONFIG: Record<MarketRunSummary['status'], { label: string; color: string; dot: string }> = {
     production:     { label: 'In Production', color: 'bg-blue-50 text-blue-700 border-blue-200',   dot: 'bg-blue-500' },
     in_godown:      { label: 'In Godown',     color: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
@@ -73,25 +68,11 @@ function fmtM(n: number) { return `${n.toLocaleString('en-IN', { maximumFraction
 export default function MarketRunDetailClient({
     run,
     initialSales,
-    parties,
 }: {
     run: MarketRunSummary
     initialSales: MarketRunSale[]
-    parties: Party[]
 }) {
-    const router = useRouter()
-    
-    // UI State
-    const [isSaleOpen, setIsSaleOpen] = useState(false)
     const [submitting, setSubmitting] = useState(false)
-
-    // Form State
-    const [partyId, setPartyId] = useState<string>('')
-    const [metersSold, setMetersSold] = useState<string>('')
-    const [pricePerMeter, setPricePerMeter] = useState<string>('')
-    const [saleDate, setSaleDate] = useState<string>(new Date().toISOString().split('T')[0])
-    const [invoiceNumber, setInvoiceNumber] = useState<string>('')
-    const [notes, setNotes] = useState<string>('')
 
     const status = STATUS_CONFIG[run.status] ?? STATUS_CONFIG.production
     const marginPct = run.total_revenue > 0
@@ -99,43 +80,6 @@ export default function MarketRunDetailClient({
         : '0.0'
 
     const availableGodown = Math.max(0, run.meters_in_godown)
-    const usesStockLots = Number(run.stock_lot_count ?? 0) > 0
-
-    const handleRecordSale = async () => {
-        if (!partyId) return toast.error('Select a party')
-        if (!metersSold || Number(metersSold) <= 0) return toast.error('Enter valid meters to sell')
-        if (!pricePerMeter || Number(pricePerMeter) < 0) return toast.error('Enter valid price')
-        if (!invoiceNumber.trim()) return toast.error('Invoice number is required')
-        
-        if (Number(metersSold) > availableGodown) {
-            return toast.error(`Cannot sell more than available godown stock (${fmtM(availableGodown)})`)
-        }
-
-        setSubmitting(true)
-        const res = await createMarketRunSaleAction({
-            marketRunId: run.market_run_id,
-            partyId,
-            metersSold: Number(metersSold),
-            pricePerMeter: Number(pricePerMeter),
-            saleDate,
-            invoiceNumber: invoiceNumber.trim(),
-            notes: notes.trim()
-        })
-        setSubmitting(false)
-
-        if (res.error) {
-            toast.error(res.error)
-        } else {
-            toast.success('Sale recorded successfully')
-            setIsSaleOpen(false)
-            // Reset form
-            setPartyId('')
-            setMetersSold('')
-            setPricePerMeter('')
-            setInvoiceNumber('')
-            setNotes('')
-        }
-    }
 
     const handleCloseRun = async () => {
         if (!confirm('Are you sure you want to mark this run as closed? It will be archived.')) return
@@ -186,23 +130,12 @@ export default function MarketRunDetailClient({
                                 Mark Closed
                             </Button>
                         )}
-                        {usesStockLots ? (
-                            <Button asChild className="gap-2 shadow-md shadow-primary/20">
-                                <Link href="/owner/stock">
-                                    <Store className="h-4 w-4" />
-                                    Sell from Stock
-                                </Link>
-                            </Button>
-                        ) : (
-                            <Button
-                                className="gap-2 shadow-md shadow-primary/20"
-                                disabled={availableGodown <= 0 || run.status === 'closed'}
-                                onClick={() => setIsSaleOpen(true)}
-                            >
+                        <Button asChild className="gap-2 shadow-md shadow-primary/20">
+                            <Link href="/owner/stock">
                                 <Store className="h-4 w-4" />
-                                Record Sale
-                            </Button>
-                        )}
+                                Manage Stock
+                            </Link>
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -230,11 +163,11 @@ export default function MarketRunDetailClient({
                             <div className="p-1.5 rounded-lg bg-amber-100">
                                 <Warehouse className="h-3.5 w-3.5 text-amber-700" />
                             </div>
-                            <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Available in Godown</span>
+                            <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Stock Remaining</span>
                         </div>
                         <div>
                             <p className="text-2xl font-black text-amber-700">{fmtM(availableGodown)}</p>
-                            <p className="text-xs text-amber-700/70 mt-0.5">ready to sell</p>
+                            <p className="text-xs text-amber-700/70 mt-0.5">sellable via stock lots</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -275,7 +208,7 @@ export default function MarketRunDetailClient({
             {/* Sales List */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold tracking-tight">Sales to Traders ({run.sales_count})</h2>
+                    <h2 className="text-lg font-bold tracking-tight">Run Profit Trail</h2>
                 </div>
 
                 {initialSales.length === 0 ? (
@@ -283,12 +216,12 @@ export default function MarketRunDetailClient({
                         <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
                             <Store className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <h3 className="text-base font-bold text-foreground">No sales recorded yet</h3>
+                        <h3 className="text-base font-bold text-foreground">No direct trader invoices</h3>
                         <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
-                            Once production reaches the godown, you can record sales to multiple traders here.
+                            Sell and adjust physical takas from Stock. This run summary will still reflect market-run stock sales.
                         </p>
-                        <Button variant="outline" onClick={() => setIsSaleOpen(true)} disabled={availableGodown <= 0}>
-                            Record First Sale
+                        <Button variant="outline" asChild>
+                            <Link href="/owner/stock">Open Stock</Link>
                         </Button>
                     </div>
                 ) : (
@@ -297,7 +230,7 @@ export default function MarketRunDetailClient({
                             <thead className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold border-b border-border">
                                 <tr>
                                     <th className="px-4 py-3 font-semibold">Date</th>
-                                    <th className="px-4 py-3 font-semibold">Trader</th>
+                                    <th className="px-4 py-3 font-semibold">Direct Trader Invoice</th>
                                     <th className="px-4 py-3 font-semibold text-right">Meters</th>
                                     <th className="px-4 py-3 font-semibold text-right">Price/m</th>
                                     <th className="px-4 py-3 font-semibold text-right">Profit/m</th>
@@ -352,105 +285,6 @@ export default function MarketRunDetailClient({
                     </div>
                 )}
             </div>
-
-            {/* Record Sale Dialog */}
-            <Dialog open={isSaleOpen} onOpenChange={setIsSaleOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Record Sale to Trader</DialogTitle>
-                        <DialogDescription>
-                            Create a sale from the {fmtM(availableGodown)} available in godown and keep market-run profit updated.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="party">Select Trader / Party</Label>
-                            <Select value={partyId} onValueChange={setPartyId}>
-                                <SelectTrigger id="party">
-                                    <SelectValue placeholder="Select party" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {parties.map(p => (
-                                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="meters">Meters Sold</Label>
-                                <Input 
-                                    id="meters" 
-                                    type="number" 
-                                    placeholder="e.g. 5000"
-                                    value={metersSold}
-                                    onChange={e => setMetersSold(e.target.value)}
-                                    max={availableGodown}
-                                />
-                                <p className="text-[10px] text-muted-foreground text-right">Max: {fmtM(availableGodown)}</p>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="price">Selling Price (₹/m)</Label>
-                                <Input 
-                                    id="price" 
-                                    type="number" 
-                                    placeholder={`Cost: ₹${Number(run.cost_per_meter).toFixed(2)}`}
-                                    value={pricePerMeter}
-                                    onChange={e => setPricePerMeter(e.target.value)}
-                                />
-                                {pricePerMeter && Number(pricePerMeter) > 0 && (
-                                    <p className={`text-[10px] text-right font-semibold ${Number(pricePerMeter) >= run.cost_per_meter ? 'text-emerald-600' : 'text-red-600'}`}>
-                                        Margin: ₹{(Number(pricePerMeter) - run.cost_per_meter).toFixed(2)}/m
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="date">Sale Date</Label>
-                                <Input 
-                                    id="date" 
-                                    type="date" 
-                                    value={saleDate}
-                                    onChange={e => setSaleDate(e.target.value)}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="invoice">Invoice Number</Label>
-                                <Input 
-                                    id="invoice" 
-                                    placeholder="e.g. INV-2026-001"
-                                    value={invoiceNumber}
-                                    onChange={e => setInvoiceNumber(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="notes">Notes (Optional)</Label>
-                            <Textarea 
-                                id="notes" 
-                                placeholder="Payment terms, dispatch details..."
-                                value={notes}
-                                onChange={e => setNotes(e.target.value)}
-                                className="resize-none h-16"
-                            />
-                        </div>
-                    </div>
-
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsSaleOpen(false)} disabled={submitting}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleRecordSale} disabled={submitting}>
-                            {submitting ? 'Recording...' : 'Record Sale & Draft Invoice'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
         </div>
     )

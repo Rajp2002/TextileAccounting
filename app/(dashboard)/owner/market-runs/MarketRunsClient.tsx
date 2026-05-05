@@ -160,7 +160,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
             </div>
             <h3 className="text-lg font-bold text-foreground mb-2">No market runs yet</h3>
             <p className="text-sm text-muted-foreground max-w-sm mb-6">
-                Start a market run to keep looms productive when client orders are light, then track godown stock and trader sales.
+                Start a market run to keep looms productive when client orders are light, then manage physical takas from Stock.
             </p>
             <Button onClick={onNew} className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -187,7 +187,7 @@ export default function MarketRunsClient({
     const FILTERS = [
         { key: 'all',     label: 'All' },
         { key: 'active',  label: 'In Production' },
-        { key: 'selling', label: 'Selling' },
+        { key: 'selling', label: 'In Stock' },
         { key: 'done',    label: 'Completed' },
     ] as const
 
@@ -211,7 +211,7 @@ export default function MarketRunsClient({
                 <div>
                     <h1 className="text-2xl font-black tracking-tight text-foreground">Market Runs</h1>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                        Keep looms productive between client orders, then sell finished grey fabric to traders
+                        Plan speculative grey fabric production, then manage finished takas from Stock
                     </p>
                 </div>
                 <Button onClick={goToEstimator} className="gap-2 shrink-0">
@@ -244,7 +244,7 @@ export default function MarketRunsClient({
                                 <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Godown</span>
                             </div>
                             <p className="text-2xl font-black text-foreground">{fmtM(inGodown)}</p>
-                            <p className="text-[11px] text-muted-foreground">available to sell</p>
+                            <p className="text-[11px] text-muted-foreground">tracked in Stock</p>
                         </CardContent>
                     </Card>
                     <Card className="border-border/50 col-span-2 sm:col-span-1">
