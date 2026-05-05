@@ -41,20 +41,20 @@ export default function Home() {
             <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
               <div className="relative mx-auto max-w-3xl text-center">
                 <p className="text-sm font-bold uppercase tracking-widest text-amber-400">
-                  Ready for the Phase 1 loop
+                  Start with one factory floor
                 </p>
                 <h2 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">
-                  Put estimating, production logs, and payroll on the same thread.
+                  Bring your active orders, supervisors, looms, and payroll into one record.
                   <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-400">Start with one factory floor.</span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-400">See the difference in the first week.</span>
                 </h2>
                 <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-300">
-                  Bring one supervisor, a few machines, active orders or market runs, and the worker payment cycle into Weavly. That is enough to feel the difference.
+                  A focused pilot is enough: one supervisor logs shift meters, the owner sees order pace, and payroll starts from the same production data.
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
                   <Link href="/signup">
-                    <Button size="lg" className="rounded-md px-8 py-6 text-base font-semibold bg-white text-gray-900 hover:bg-gray-100 shadow-xl shadow-white/10 transition-all hover:-translate-y-0.5 group">
-                      Get Started <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    <Button size="lg" className="rounded-md px-8 py-6 text-base font-semibold bg-white text-gray-900 hover:bg-gray-100 shadow-xl shadow-white/10 transition-all group">
+                      Request Pilot Access <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
                 </div>

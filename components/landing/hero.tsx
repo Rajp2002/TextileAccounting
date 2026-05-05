@@ -4,8 +4,8 @@ import { ArrowRight, CheckCircle2, MessageCircle, ReceiptText } from 'lucide-rea
 
 const loomRows = [
     { loom: 'Loom 04', fabric: 'Canvas Shine 100D', shift: 'Day', output: '186 m', status: 'On pace' },
-    { loom: 'Loom 11', fabric: 'Order #214', shift: 'Night', output: '142 m', status: 'Needs assign' },
-    { loom: 'Loom 18', fabric: 'Market run', shift: 'Day', output: '201 m', status: 'Ready payroll' },
+    { loom: 'Loom 11', fabric: 'Order #214', shift: 'Night', output: '142 m', status: 'Needs worker' },
+    { loom: 'Loom 18', fabric: 'Market run', shift: 'Day', output: '201 m', status: 'Payroll ready' },
 ]
 
 const loopSteps = ['Estimate', 'Assign looms', 'Log shift', 'Settle']
@@ -13,26 +13,23 @@ const loopSteps = ['Estimate', 'Assign looms', 'Log shift', 'Settle']
 export default function LandingHero() {
     return (
         <div className="relative isolate overflow-hidden pt-20">
-            <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-12 sm:pb-28 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:pb-32 lg:pt-28">
+            <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-16 pt-12 sm:pb-24 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:pb-28 lg:pt-28">
                 <div className="max-w-3xl">
                     <div>
-                        <div>
-                            <div className="inline-flex items-center gap-2 border border-amber-500/20 bg-white/70 px-3 py-1.5 text-sm font-semibold text-amber-800 shadow-sm backdrop-blur dark:bg-zinc-950/60 dark:text-amber-400">
-                                <span className="h-2 w-2 rounded-full bg-amber-600" />
-                                Phase 1: the weaving factory operating loop
-                            </div>
-                        </div>
+                        <p className="text-sm font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-400">
+                            Built for grey fabric weaving factories
+                        </p>
 
                         <h1
-                            className="mt-8 max-w-4xl text-5xl font-extrabold tracking-tight text-gray-950 sm:text-6xl dark:text-white leading-[1.04]"
+                            className="mt-7 max-w-4xl text-5xl font-extrabold tracking-tight text-gray-950 sm:text-6xl dark:text-white leading-[1.04]"
                         >
-                            From quote to loom to payroll, without the factory notebook.
+                            From quote to loom to payroll, one system built for weaving factories.
                         </h1>
 
                         <p
                             className="mt-6 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-300"
                         >
-                            Weavly is focused on the Phase 1 work that actually moves a weaving unit: fabric estimating, order and market-run tracking, shift production logs, advances, payroll, dispatches, and WhatsApp updates.
+                            Weavly connects fabric estimates, loom assignments, shift meter logs, dispatches, advances, and payroll so owners know what happened on the floor without chasing registers and WhatsApp messages.
                         </p>
 
                         <div
@@ -43,27 +40,27 @@ export default function LandingHero() {
                                     <Button
                                         id="hero-owner-signup-btn"
                                         size="lg"
-                                        className="w-full rounded-md bg-amber-600 px-7 py-6 text-base font-semibold text-white shadow-xl shadow-amber-500/20 transition-all hover:-translate-y-0.5 hover:bg-amber-700 sm:w-auto"
+                                        className="w-full rounded-md bg-gray-950 px-7 py-6 text-base font-semibold text-white shadow-xl shadow-gray-950/10 transition-all hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100 sm:w-auto"
                                     >
-                                        Start free 7-day trial
+                                        Request pilot access
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     </Button>
                                 </Link>
-                                <Link href="/join" className="flex-1 sm:flex-none">
+                                <Link href="#workflow" className="flex-1 sm:flex-none">
                                     <Button
-                                        id="hero-supervisor-join-btn"
+                                        id="hero-workflow-btn"
                                         size="lg"
                                         variant="outline"
-                                        className="w-full rounded-md border-2 border-gray-300 px-7 py-6 text-base font-semibold transition-all hover:-translate-y-0.5 hover:border-amber-500 hover:text-amber-700 dark:border-zinc-600 dark:text-white dark:hover:border-amber-500 sm:w-auto"
+                                        className="w-full rounded-md border-2 border-gray-300 bg-white/70 px-7 py-6 text-base font-semibold transition-all hover:border-amber-500 hover:text-amber-700 dark:border-zinc-600 dark:bg-zinc-950/50 dark:text-white dark:hover:border-amber-500 sm:w-auto"
                                     >
-                                        Join as supervisor
+                                        See factory workflow
                                         <ArrowRight className="ml-2 h-4 w-4" />
                                     </Button>
                                 </Link>
                             </div>
                             <div className="grid gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 sm:grid-cols-3">
                                 <p className="flex items-center gap-2">
-                                    <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Full Premium access
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-600" /> 7-day Premium trial
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <CheckCircle2 className="h-4 w-4 text-emerald-600" /> No credit card
@@ -76,6 +73,10 @@ export default function LandingHero() {
                                 <Link href="/login" className="text-amber-700 hover:underline font-medium dark:text-amber-500">
                                     Log in
                                 </Link>
+                                <span className="px-2 text-gray-300">|</span>
+                                <Link href="/join" className="text-gray-600 hover:text-gray-950 hover:underline font-medium dark:text-gray-300 dark:hover:text-white">
+                                    Supervisor join
+                                </Link>
                             </p>
                         </div>
                     </div>
@@ -85,11 +86,11 @@ export default function LandingHero() {
                     className="relative"
                 >
                     <div className="absolute -inset-6 -z-10 bg-gradient-to-tr from-amber-500/20 via-orange-500/10 to-transparent blur-3xl" />
-                    <div className="overflow-hidden rounded-lg border border-gray-900/10 bg-white/85 shadow-2xl shadow-orange-900/10 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/80">
-                        <div className="border-b border-gray-200/80 px-4 py-3 dark:border-white/10">
+                    <div className="overflow-hidden rounded-md border border-gray-900/10 bg-white/92 shadow-2xl shadow-orange-900/10 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/85">
+                        <div className="border-b border-gray-200/80 bg-gray-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
-                                    <p className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">Today on floor</p>
+                                    <p className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">Owner floor view</p>
                                     <p className="text-sm font-bold text-gray-950 dark:text-white">Shift production workspace</p>
                                 </div>
                                 <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
