@@ -37,6 +37,7 @@ type MarketRunSummary = {
     total_profit:         number
     sales_count:          number
     order_id:             string | null
+    stock_lot_count?:     number
     created_at:           string
 }
 
@@ -98,6 +99,7 @@ export default function MarketRunDetailClient({
         : '0.0'
 
     const availableGodown = Math.max(0, run.meters_in_godown)
+    const usesStockLots = Number(run.stock_lot_count ?? 0) > 0
 
     const handleRecordSale = async () => {
         if (!partyId) return toast.error('Select a party')
@@ -184,14 +186,23 @@ export default function MarketRunDetailClient({
                                 Mark Closed
                             </Button>
                         )}
-                        <Button 
-                            className="gap-2 shadow-md shadow-primary/20" 
-                            disabled={availableGodown <= 0 || run.status === 'closed'}
-                            onClick={() => setIsSaleOpen(true)}
-                        >
-                            <Store className="h-4 w-4" />
-                            Record Sale
-                        </Button>
+                        {usesStockLots ? (
+                            <Button asChild className="gap-2 shadow-md shadow-primary/20">
+                                <Link href="/owner/stock">
+                                    <Store className="h-4 w-4" />
+                                    Sell from Stock
+                                </Link>
+                            </Button>
+                        ) : (
+                            <Button
+                                className="gap-2 shadow-md shadow-primary/20"
+                                disabled={availableGodown <= 0 || run.status === 'closed'}
+                                onClick={() => setIsSaleOpen(true)}
+                            >
+                                <Store className="h-4 w-4" />
+                                Record Sale
+                            </Button>
+                        )}
                     </div>
                 </div>
             </div>
