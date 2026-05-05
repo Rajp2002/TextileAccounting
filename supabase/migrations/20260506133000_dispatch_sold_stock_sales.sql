@@ -3,6 +3,14 @@
 ALTER TABLE fabric_stock_sales
   ADD COLUMN IF NOT EXISTS dispatch_id UUID REFERENCES dispatches(id) ON DELETE SET NULL;
 
+ALTER TABLE dispatches
+  ADD COLUMN IF NOT EXISTS eway_bill_required BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS vehicle_number TEXT,
+  ADD COLUMN IF NOT EXISTS transporter_name TEXT,
+  ADD COLUMN IF NOT EXISTS transporter_id TEXT,
+  ADD COLUMN IF NOT EXISTS approximate_distance_km NUMERIC(10,2),
+  ADD COLUMN IF NOT EXISTS eway_bill_generated_at TIMESTAMPTZ;
+
 CREATE INDEX IF NOT EXISTS idx_fabric_stock_sales_pending_dispatch
   ON fabric_stock_sales(org_id, sale_date DESC, created_at DESC)
   WHERE dispatch_id IS NULL;
@@ -12,6 +20,12 @@ CREATE OR REPLACE FUNCTION create_stock_sale_dispatch(
   p_order_id UUID,
   p_sale_ids UUID[],
   p_notes TEXT,
+  p_eway_bill_number TEXT,
+  p_vehicle_number TEXT,
+  p_transporter_name TEXT,
+  p_transporter_id TEXT,
+  p_approximate_distance_km NUMERIC,
+  p_eway_bill_generated_at TIMESTAMPTZ,
   p_created_by UUID
 )
 RETURNS TABLE (
@@ -39,6 +53,10 @@ DECLARE
   v_quality_label TEXT;
   v_role TEXT;
   v_actor_org_id UUID;
+  v_gst_percent NUMERIC := 5;
+  v_gst_amount NUMERIC;
+  v_total_invoice_value NUMERIC;
+  v_eway_required BOOLEAN;
 BEGIN
   v_actor_org_id := (auth.jwt() ->> 'org_id')::uuid;
   v_role := auth.jwt() ->> 'user_role';
@@ -76,8 +94,8 @@ BEGIN
     AND s.id = ANY(p_sale_ids)
   FOR UPDATE;
 
-  SELECT COUNT(*), COALESCE(SUM(s.meters_sold), 0)
-    INTO v_sale_count, v_total
+  SELECT COUNT(*), COALESCE(SUM(s.meters_sold), 0), COALESCE(SUM(s.revenue_amount), 0)
+    INTO v_sale_count, v_total, v_total_invoice_value
   FROM fabric_stock_sales s
   JOIN fabric_stock_lots l ON l.id = s.stock_lot_id
   WHERE s.org_id = p_org_id
@@ -96,6 +114,9 @@ BEGIN
     RAISE EXCEPTION 'One or more selected stock sales are already dispatched or do not match this order';
   END IF;
 
+  v_gst_amount := ROUND(v_total_invoice_value * v_gst_percent / 100, 2);
+  v_eway_required := (v_total_invoice_value + v_gst_amount) > 50000;
+
   SELECT next_dispatch_number(p_order_id)
     INTO v_dispatch_number;
 
@@ -106,6 +127,19 @@ BEGIN
     qty_meters_sent,
     status,
     notes,
+    eway_bill_number,
+    eway_bill_required,
+    vehicle_number,
+    transporter_name,
+    transporter_id,
+    approximate_distance_km,
+    eway_bill_generated_at,
+    taxable_value,
+    gst_percent,
+    cgst_amount,
+    sgst_amount,
+    igst_amount,
+    total_invoice_value,
     dispatched_at,
     created_by
   ) VALUES (
@@ -115,6 +149,19 @@ BEGIN
     v_total,
     'in_transit',
     NULLIF(btrim(COALESCE(p_notes, '')), ''),
+    NULLIF(btrim(COALESCE(p_eway_bill_number, '')), ''),
+    v_eway_required,
+    NULLIF(btrim(COALESCE(p_vehicle_number, '')), ''),
+    NULLIF(btrim(COALESCE(p_transporter_name, '')), ''),
+    NULLIF(btrim(COALESCE(p_transporter_id, '')), ''),
+    p_approximate_distance_km,
+    p_eway_bill_generated_at,
+    v_total_invoice_value,
+    v_gst_percent,
+    ROUND(v_gst_amount / 2, 2),
+    ROUND(v_gst_amount / 2, 2),
+    0,
+    v_total_invoice_value + v_gst_amount,
     NOW(),
     p_created_by
   )
@@ -208,5 +255,5 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION create_stock_sale_dispatch(UUID, UUID, UUID[], TEXT, UUID)
+GRANT EXECUTE ON FUNCTION create_stock_sale_dispatch(UUID, UUID, UUID[], TEXT, TEXT, TEXT, TEXT, TEXT, NUMERIC, TIMESTAMPTZ, UUID)
   TO authenticated, service_role;

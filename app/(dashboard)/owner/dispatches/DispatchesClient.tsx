@@ -67,6 +67,20 @@ interface Dispatch {
     dispatched_at: string
     received_at: string | null
     notes: string | null
+    eway_bill_number: string | null
+    eway_bill_required: boolean
+    vehicle_number: string | null
+    transporter_name: string | null
+    transporter_id: string | null
+    approximate_distance_km: number | null
+    eway_bill_generated_at: string | null
+    hsn_code: string | null
+    taxable_value: number | null
+    gst_percent: number | null
+    cgst_amount: number | null
+    sgst_amount: number | null
+    igst_amount: number | null
+    total_invoice_value: number | null
     package_lines: Array<{
         id: string
         package_no: string
@@ -985,6 +999,20 @@ function GlobalDispatchModal({
                                     metres: Number(line.qty_meters_sent),
                                 })),
                                 notes: dispatch.notes,
+                                eway_bill_number: dispatch.eway_bill_number,
+                                eway_bill_required: dispatch.eway_bill_required,
+                                vehicle_number: dispatch.vehicle_number,
+                                transporter_name: dispatch.transporter_name,
+                                transporter_id: dispatch.transporter_id,
+                                approximate_distance_km: dispatch.approximate_distance_km,
+                                eway_bill_generated_at: dispatch.eway_bill_generated_at,
+                                hsn_code: dispatch.hsn_code,
+                                taxable_value: dispatch.taxable_value,
+                                gst_percent: dispatch.gst_percent,
+                                cgst_amount: dispatch.cgst_amount,
+                                sgst_amount: dispatch.sgst_amount,
+                                igst_amount: dispatch.igst_amount,
+                                total_invoice_value: dispatch.total_invoice_value,
                                 dispatched_at: dispatch.dispatched_at,
                                 tracking_token: trackingToken,
                             })

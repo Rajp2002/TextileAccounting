@@ -519,6 +519,12 @@ export const CreateFabricDispatchSchema = z.object({
     order_id: UuidSchema,
     package_ids: z.array(UuidSchema).min(1, 'Select at least one sold stock entry').max(200, 'Too many stock sales selected'),
     notes: z.string().trim().max(300, 'Notes too long').optional().or(z.literal('')),
+    eway_bill_number: z.string().trim().max(30, 'E-way bill number too long').optional().or(z.literal('')),
+    vehicle_number: z.string().trim().max(20, 'Vehicle number too long').optional().or(z.literal('')),
+    transporter_name: z.string().trim().max(120, 'Transporter name too long').optional().or(z.literal('')),
+    transporter_id: z.string().trim().max(30, 'Transporter ID too long').optional().or(z.literal('')),
+    approximate_distance_km: z.number().nonnegative('Distance cannot be negative').max(10000, 'Distance too high').optional().nullable(),
+    eway_bill_generated_at: z.string().trim().optional().or(z.literal('')),
 })
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

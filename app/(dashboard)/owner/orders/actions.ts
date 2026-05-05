@@ -329,6 +329,20 @@ export interface DispatchRow {
     receipt_confirmed_by: string | null
     status: 'in_transit' | 'delivered' | 'disputed'
     notes: string | null
+    eway_bill_number: string | null
+    eway_bill_required: boolean
+    vehicle_number: string | null
+    transporter_name: string | null
+    transporter_id: string | null
+    approximate_distance_km: number | null
+    eway_bill_generated_at: string | null
+    hsn_code: string | null
+    taxable_value: number | null
+    gst_percent: number | null
+    cgst_amount: number | null
+    sgst_amount: number | null
+    igst_amount: number | null
+    total_invoice_value: number | null
     dispatched_at: string
     received_at: string | null
     package_lines: DispatchPackageLine[]
@@ -357,6 +371,8 @@ export interface AvailableFabricPackage {
     inspection_status: 'pending' | 'pass' | 'minor_defect' | 'reject'
     stock_state: 'uninspected' | 'ready' | 'reserved' | 'dispatched' | 'claimed' | 'returned'
     location: string
+    sale_value?: number
+    price_per_meter?: number
 }
 
 type PendingStockSaleDispatchRow = {
@@ -364,6 +380,8 @@ type PendingStockSaleDispatchRow = {
     sale_date: string
     taka_sold: number
     meters_sold: number
+    price_per_meter: number
+    revenue_amount: number
     dispatch_id: string | null
     fabric_stock_lots: {
         quality_label: string
@@ -403,6 +421,20 @@ export interface DispatchWithOrder {
     dispatched_at: string
     received_at: string | null
     notes: string | null
+    eway_bill_number: string | null
+    eway_bill_required: boolean
+    vehicle_number: string | null
+    transporter_name: string | null
+    transporter_id: string | null
+    approximate_distance_km: number | null
+    eway_bill_generated_at: string | null
+    hsn_code: string | null
+    taxable_value: number | null
+    gst_percent: number | null
+    cgst_amount: number | null
+    sgst_amount: number | null
+    igst_amount: number | null
+    total_invoice_value: number | null
     package_lines: DispatchPackageLine[]
     orders: {
         id: string
@@ -464,6 +496,20 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
             receipt_confirmed_by,
             status,
             notes,
+            eway_bill_number,
+            eway_bill_required,
+            vehicle_number,
+            transporter_name,
+            transporter_id,
+            approximate_distance_km,
+            eway_bill_generated_at,
+            hsn_code,
+            taxable_value,
+            gst_percent,
+            cgst_amount,
+            sgst_amount,
+            igst_amount,
+            total_invoice_value,
             dispatched_at,
             received_at,
             dispatch_package_lines (
@@ -492,6 +538,8 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
             sale_date,
             taka_sold,
             meters_sold,
+            price_per_meter,
+            revenue_amount,
             dispatch_id,
             fabric_stock_lots!inner (
                 quality_label,
@@ -540,6 +588,8 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
             inspection_status: 'pass',
             stock_state: 'reserved',
             location: `${lot?.godown || 'Godown'} · ${Number(sale.taka_sold ?? 0)} ${unitLabel}`,
+            sale_value: Number(sale.revenue_amount ?? 0),
+            price_per_meter: Number(sale.price_per_meter ?? 0),
         }
     })
     const totalSent = rows.reduce((s, d) => s + Number(d.qty_meters_sent), 0)
@@ -574,7 +624,15 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
 export async function createDispatch(
     orderId: string,
     packageIds: string[],
-    notes?: string
+    notes?: string,
+    ewayDetails?: {
+        eway_bill_number?: string
+        vehicle_number?: string
+        transporter_name?: string
+        transporter_id?: string
+        approximate_distance_km?: number | null
+        eway_bill_generated_at?: string
+    }
 ): Promise<{ dispatch: DispatchRow; tracking_token: string; party_name: string; org_name: string; dispatch_number: number } | { error: string }> {
     const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
@@ -582,6 +640,12 @@ export async function createDispatch(
         order_id: orderId,
         package_ids: packageIds,
         notes: notes ?? '',
+        eway_bill_number: ewayDetails?.eway_bill_number ?? '',
+        vehicle_number: ewayDetails?.vehicle_number ?? '',
+        transporter_name: ewayDetails?.transporter_name ?? '',
+        transporter_id: ewayDetails?.transporter_id ?? '',
+        approximate_distance_km: ewayDetails?.approximate_distance_km ?? null,
+        eway_bill_generated_at: ewayDetails?.eway_bill_generated_at ?? '',
     })
     if ('error' in parsed) return parsed
 
@@ -590,6 +654,12 @@ export async function createDispatch(
         p_order_id: parsed.data.order_id,
         p_sale_ids: parsed.data.package_ids,
         p_notes: parsed.data.notes || null,
+        p_eway_bill_number: parsed.data.eway_bill_number || null,
+        p_vehicle_number: parsed.data.vehicle_number || null,
+        p_transporter_name: parsed.data.transporter_name || null,
+        p_transporter_id: parsed.data.transporter_id || null,
+        p_approximate_distance_km: parsed.data.approximate_distance_km ?? null,
+        p_eway_bill_generated_at: parsed.data.eway_bill_generated_at || null,
         p_created_by: user.id,
     })
 
@@ -610,6 +680,20 @@ export async function createDispatch(
             receipt_confirmed_by,
             status,
             notes,
+            eway_bill_number,
+            eway_bill_required,
+            vehicle_number,
+            transporter_name,
+            transporter_id,
+            approximate_distance_km,
+            eway_bill_generated_at,
+            hsn_code,
+            taxable_value,
+            gst_percent,
+            cgst_amount,
+            sgst_amount,
+            igst_amount,
+            total_invoice_value,
             dispatched_at,
             received_at,
             dispatch_package_lines (
@@ -687,6 +771,20 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
             dispatched_at,
             received_at,
             notes,
+            eway_bill_number,
+            eway_bill_required,
+            vehicle_number,
+            transporter_name,
+            transporter_id,
+            approximate_distance_km,
+            eway_bill_generated_at,
+            hsn_code,
+            taxable_value,
+            gst_percent,
+            cgst_amount,
+            sgst_amount,
+            igst_amount,
+            total_invoice_value,
             dispatch_package_lines (
                 id,
                 package_id,

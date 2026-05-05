@@ -24,6 +24,13 @@ export interface ChallanData {
     sgst_amount?:      number | null
     igst_amount?:      number | null
     total_invoice_value?: number | null
+    eway_bill_number?: string | null
+    eway_bill_required?: boolean | null
+    vehicle_number?: string | null
+    transporter_name?: string | null
+    transporter_id?: string | null
+    approximate_distance_km?: number | null
+    eway_bill_generated_at?: string | null
     package_lines: Array<{
         package_no: string
         package_type: string
@@ -168,6 +175,25 @@ export async function generateChallan(data: ChallanData): Promise<void> {
         doc.setTextColor(255, 87, 34)
         doc.text(`Rs. ${totalInvoiceValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`, pageWidth - R - 3, y + 22, { align: 'right' })
         y += 36
+    }
+
+    if (data.eway_bill_required || data.eway_bill_number || data.vehicle_number || data.transporter_name || data.approximate_distance_km) {
+        doc.setDrawColor(225)
+        doc.setFillColor(255, 251, 235)
+        doc.roundedRect(L, y, contentWidth, 26, 2, 2, 'FD')
+        doc.setFontSize(8)
+        doc.setTextColor(120)
+        doc.setFont('helvetica', 'normal')
+        doc.text('E-Way Bill', L + 3, y + 6)
+        doc.text('Vehicle / Transporter', L + 3, y + 13)
+        doc.text('Distance', L + 3, y + 20)
+        doc.setTextColor(0)
+        doc.setFont('helvetica', 'bold')
+        doc.text(data.eway_bill_number || (data.eway_bill_required ? 'Required - generate before movement' : '-'), L + 44, y + 6)
+        const transporter = [data.vehicle_number, data.transporter_name, data.transporter_id].filter(Boolean).join(' / ')
+        doc.text(transporter || '-', L + 44, y + 13)
+        doc.text(data.approximate_distance_km ? `${Number(data.approximate_distance_km).toFixed(0)} km` : '-', L + 44, y + 20)
+        y += 34
     }
 
     // ── Package table ───────────────────────────────────────────────────────────
