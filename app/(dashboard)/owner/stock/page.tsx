@@ -1,10 +1,10 @@
-import { getFabricStockBoard } from './actions'
-import StockClient from './StockClient'
+import { getTakaStockBoard } from './actions'
+import TakaStockClient from './TakaStockClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function StockPage() {
-    const data = await getFabricStockBoard()
+    const data = await getTakaStockBoard()
 
     if ('error' in data) {
         return (
@@ -15,5 +15,5 @@ export default async function StockPage() {
         )
     }
 
-    return <StockClient initialData={data} />
+    return <TakaStockClient initialData={data} />
 }

@@ -20,6 +20,7 @@ export const en = {
     "advances": "Advances",
     "estimator": "Estimator",
     "quotes": "Quotes",
+    "commercials": "Commercials",
     "billing": "Billing",
     "system health": "WhatsApp Health",
     "market_runs": "Market Runs",
