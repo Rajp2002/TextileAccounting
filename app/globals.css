@@ -235,13 +235,13 @@
   }
 
   .landing-thread-base {
-    opacity: 0.48;
+    opacity: 0.34;
   }
 
   .landing-thread-highlight {
     stroke-dasharray: 150 970;
     stroke-dashoffset: 1120;
-    opacity: 0.9;
+    opacity: 0.68;
     animation-name: thread-flow;
     animation-timing-function: linear;
     animation-iteration-count: infinite;
@@ -258,11 +258,11 @@
 
   @media (max-width: 1023px) {
     .landing-thread-base {
-      opacity: 0.34;
+      opacity: 0.24;
     }
 
     .landing-thread-highlight {
-      opacity: 0.62;
+      opacity: 0.48;
     }
   }
 

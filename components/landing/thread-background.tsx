@@ -13,27 +13,35 @@ const warpThreads = [
 
 const threadPaths = [
     {
-        id: 'hero-loop-thread',
-        d: 'M -120 210 C 120 120, 312 172, 392 282 C 468 388, 324 444, 286 346 C 246 244, 418 216, 542 286 C 692 370, 790 486, 948 432 C 1118 374, 1072 210, 930 252 C 806 290, 890 420, 1038 482 C 1194 548, 1344 474, 1588 356',
+        id: 'upper-sewing-thread',
+        d: 'M -160 86 C 56 132, 178 68, 276 138 C 382 214, 238 282, 178 192 C 116 100, 286 54, 430 128 C 598 214, 826 154, 1040 92 C 1198 46, 1326 96, 1604 74',
         baseWidth: 1.65,
         highlightWidth: 2.45,
         delay: '0s',
         duration: '16s',
     },
     {
-        id: 'sewing-pass-thread',
-        d: 'M -100 650 C 84 544, 248 578, 344 690 C 438 800, 286 850, 246 742 C 208 638, 380 606, 522 704 C 652 794, 768 856, 906 770 C 1038 688, 984 544, 862 590 C 750 632, 836 756, 1012 826 C 1186 896, 1362 818, 1568 680',
+        id: 'lower-sewing-thread',
+        d: 'M -150 812 C 92 716, 274 754, 374 850 C 474 944, 314 990, 266 884 C 218 778, 408 748, 576 840 C 760 940, 932 856, 1098 784 C 1258 714, 1396 790, 1610 706',
         baseWidth: 1.35,
         highlightWidth: 2.1,
         delay: '-7s',
         duration: '19s',
+    },
+    {
+        id: 'right-edge-loop-thread',
+        d: 'M 1518 -60 C 1308 74, 1262 224, 1398 320 C 1532 414, 1636 256, 1510 186 C 1368 108, 1194 306, 1290 486 C 1386 668, 1572 612, 1608 832',
+        baseWidth: 1.25,
+        highlightWidth: 1.95,
+        delay: '-12s',
+        duration: '21s',
     },
 ]
 
 export default function LandingThreadBackground() {
     return (
         <div
-            className="fixed inset-0 hidden overflow-hidden opacity-95 [contain:paint] [mask-image:linear-gradient(90deg,transparent_0%,white_10%,white_90%,transparent_100%)] md:block"
+            className="fixed inset-0 hidden overflow-hidden opacity-80 [contain:paint] [mask-image:linear-gradient(90deg,transparent_0%,white_8%,white_92%,transparent_100%)] md:block"
             aria-hidden="true"
         >
             <svg
@@ -62,9 +70,13 @@ export default function LandingThreadBackground() {
                         <stop offset="58%" stopColor="#64748b" stopOpacity="0.13" />
                         <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
                     </linearGradient>
+                    <mask id="thread-reading-mask">
+                        <rect x="-40" y="-40" width="1520" height="1040" fill="white" />
+                        <rect x="168" y="148" width="1104" height="632" rx="88" fill="black" />
+                    </mask>
                 </defs>
 
-                <g className="landing-thread-warp">
+                <g className="landing-thread-warp" mask="url(#thread-reading-mask)">
                     {warpThreads.map((thread) => (
                         <line
                             key={thread.x}
@@ -80,7 +92,7 @@ export default function LandingThreadBackground() {
                     ))}
                 </g>
 
-                <g className="landing-thread-field">
+                <g className="landing-thread-field" mask="url(#thread-reading-mask)">
                     {threadPaths.map((thread) => (
                         <g key={thread.id}>
                             <path
@@ -111,7 +123,7 @@ export default function LandingThreadBackground() {
                     ))}
                 </g>
 
-                <g className="landing-thread-needle">
+                <g className="landing-thread-needle" mask="url(#thread-reading-mask)">
                     <ellipse cx="386" cy="281" rx="4" ry="2.2" fill="#ea580c" opacity="0.2" />
                     <ellipse cx="948" cy="432" rx="4.5" ry="2.4" fill="#f59e0b" opacity="0.18" />
                     <ellipse cx="344" cy="690" rx="4" ry="2.2" fill="#ea580c" opacity="0.18" />
