@@ -1,6 +1,9 @@
-const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
-const path = require('path');
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Load env vars from .env.local
 const envPath = path.resolve(__dirname, '../.env.local');
@@ -44,7 +47,7 @@ async function purgeData() {
     ];
 
     for (const table of tables) {
-        const { error } = await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+        await supabase.from(table).delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
         // Note: .delete().all() isn't valid, need a filter. id != nil UUID is a trick, or just greater than something.
         // Actually, better to use .neq('id', 0) if IDs are ints, or just a condition that is always true.
         // For UUIDs, .neq('id', '00000000-0000-0000-0000-000000000000') works.

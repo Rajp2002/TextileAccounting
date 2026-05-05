@@ -24,10 +24,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    setIsMounted(true)
-    const savedLang = localStorage.getItem("weavly_language") as Language
-    if (savedLang && ["en", "hi", "gu"].includes(savedLang)) {
-      setLanguageState(savedLang)
+    let disposed = false
+    queueMicrotask(() => {
+      if (disposed) return
+      setIsMounted(true)
+      const savedLang = localStorage.getItem("weavly_language") as Language
+      if (savedLang && ["en", "hi", "gu"].includes(savedLang)) {
+        setLanguageState(savedLang)
+      }
+    })
+    return () => {
+      disposed = true
     }
   }, [])
 

@@ -382,7 +382,12 @@ function DispatchSection({
         setLoadingDispatches(false)
     }, [orderId])
 
-    useEffect(() => { loadDispatches() }, [loadDispatches])
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            void loadDispatches()
+        }, 0)
+        return () => clearTimeout(timer)
+    }, [loadDispatches])
 
     // Realtime subscription — refreshes when Trader confirms receipt
     useEffect(() => {

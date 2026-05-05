@@ -28,14 +28,19 @@ export function TemplateManager() {
     const [loading,   setLoading]   = useState(true)
     const [qualities, setQualities] = useState<TemplateV3[]>([])
 
-    const load = async () => {
-        setLoading(true)
+    const load = async ({ showLoading = true }: { showLoading?: boolean } = {}) => {
+        if (showLoading) setLoading(true)
         const res = await getEstimatorTemplates()
         if (res.data) setQualities(res.data as TemplateV3[])
         setLoading(false)
     }
 
-    useEffect(() => { load() }, [])
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            void load({ showLoading: false })
+        }, 0)
+        return () => clearTimeout(timer)
+    }, [])
 
     const handleDelete = async (id: string) => {
         if (!confirm(t('estimator.quality.settingsDeleteConfirm'))) return

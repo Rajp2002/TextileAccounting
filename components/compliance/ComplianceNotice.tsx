@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getActiveNotice } from '@/app/(dashboard)/owner/actions/compliance'
 import { Button } from '@/components/ui/button'
 import { Loader2, Volume2, Globe, AlertCircle, CheckCircle2 } from 'lucide-react'
@@ -19,6 +19,11 @@ export function ComplianceNotice({ type, workerName, onConsentChange }: Complian
     const [loading, setLoading] = useState(true)
     const [requestDialogOpen, setRequestDialogOpen] = useState(false)
     const [granularConsent, setGranularConsent] = useState<Record<string, boolean>>({})
+    const onConsentChangeRef = useRef(onConsentChange)
+
+    useEffect(() => {
+        onConsentChangeRef.current = onConsentChange
+    }, [onConsentChange])
 
     useEffect(() => {
         async function fetchNotice() {
@@ -38,7 +43,7 @@ export function ComplianceNotice({ type, workerName, onConsentChange }: Complian
                 if (purposes.length === 0) initialConsent['ALL'] = false
                 
                 setGranularConsent(initialConsent)
-                onConsentChange(false, data.id, initialConsent)
+                onConsentChangeRef.current(false, data.id, initialConsent)
             }
         }
         fetchNotice()

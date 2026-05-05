@@ -13,7 +13,7 @@ export async function getActiveNotice(type: 'consent' | 'privacy' | 'erasure_not
     const supabase = await createServerClient()
     
     // 1. Try to find the specific language
-    let { data, error } = await supabase
+    const { data, error } = await supabase
         .from('notice_registry')
         .select('*')
         .eq('notice_type', type)

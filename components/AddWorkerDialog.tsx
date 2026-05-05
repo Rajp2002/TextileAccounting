@@ -22,7 +22,7 @@ import { formatINR } from '@/lib/finance'
 import { cn } from '@/lib/utils'
 import { addMeterWorker, addFixedWorker } from '@/app/(dashboard)/supervisor/actions'
 import { saveWorkerWhatsApp } from '@/app/(dashboard)/owner/actions'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -101,7 +101,6 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
         register,
         handleSubmit,
         control,
-        watch,
         setValue,
         reset,
         formState: { errors }
@@ -120,10 +119,10 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
         }
     })
 
-    const workerType = watch('workerType')
-    const selectedRole = watch('role')
-    const watchedSalary = watch('salary')
-    const watchedPfEsiEnrolled = watch('pf_esi_enrolled')
+    const workerType = useWatch({ control, name: 'workerType' })
+    const selectedRole = useWatch({ control, name: 'role' })
+    const watchedSalary = useWatch({ control, name: 'salary' })
+    const watchedPfEsiEnrolled = useWatch({ control, name: 'pf_esi_enrolled' })
 
     const mutation = useMutation({
         mutationFn: async (data: WorkerFormValues) => {
