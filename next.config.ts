@@ -27,15 +27,6 @@ const securityHeaders = [
 
 
 const nextConfig: NextConfig = {
-  async redirects() {
-    return [
-      {
-        source: '/owner/stock',
-        destination: '/feature-archived',
-        permanent: false,
-      },
-    ]
-  },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]
   },
