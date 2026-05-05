@@ -13,7 +13,7 @@ import LandingFooter from "@/components/landing/footer";
 export default function Home() {
   return (
     <main className="h-screen w-full overflow-x-hidden overflow-y-auto font-sans selection:bg-amber-500/30 scroll-smooth snap-y snap-proximity">
-      <div className="relative w-full">
+      <div className="relative w-full min-h-max">
         <LandingBackground />
         <LandingHeader />
         <LandingHero />
