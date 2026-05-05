@@ -12,7 +12,7 @@ import LandingFooter from "@/components/landing/footer";
 
 export default function Home() {
   return (
-    <main className="h-screen w-full overflow-x-hidden overflow-y-auto font-sans selection:bg-amber-500/30 scroll-smooth snap-y snap-mandatory scroll-pt-24">
+    <main className="h-screen w-full overflow-x-hidden overflow-y-auto font-sans selection:bg-amber-500/30 scroll-smooth snap-y snap-mandatory">
       <div className="relative w-full">
         <LandingBackground />
         <LandingHeader />
@@ -25,7 +25,7 @@ export default function Home() {
         <LandingFAQ />
  
         {/* Pre-footer CTA */}
-        <section className="relative isolate overflow-hidden bg-zinc-950 border-y border-white/10 mt-24 snap-start">
+        <section className="relative isolate overflow-hidden bg-zinc-950 border-y border-white/10 mt-24 snap-start scroll-mt-20">
           <div className="absolute inset-0 bg-grid-pattern opacity-20" aria-hidden="true" />
           <div className="absolute left-1/2 top-0 h-72 w-[44rem] -translate-x-1/2 rounded-full bg-orange-500/20 blur-3xl" aria-hidden="true" />
           <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
