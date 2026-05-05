@@ -827,7 +827,7 @@ function SettlementDialog({
 }) {
     const { t } = useTranslation()
     const tl = useTransliterate()
-    const [isFinal, setIsFinal] = useState(false)
+    const [isFinal, setIsFinal] = useState(initialIsFinal)
     const [manualDeduction, setManualDeduction] = useState<string>('')
     const [confirmed, setConfirmed] = useState(false)
     const [addingAdjustment, setAddingAdjustment] = useState(false)
@@ -855,19 +855,6 @@ function SettlementDialog({
         enrolled,
         manualDeduction: manualDeductionValue,
     })
-
-    useEffect(() => {
-        if (!open) return
-        setIsFinal(initialIsFinal)
-        setManualDeduction('')
-        setConfirmed(false)
-        setAdjAmount('')
-        setAdjCategoryId('')
-        setAdjDesc('')
-        setPaymentMode('')
-        setShowAdjustmentConfirm(false)
-        setShowAdvanceConfirm(false)
-    }, [open, worker.id, initialIsFinal])
 
     const handleAddAdjustment = async () => {
         const amount = parseFloat(adjAmount)
@@ -1338,7 +1325,7 @@ export default function PayrollPage() {
             const settlements = settlementsRes.data
             const advances = advancesRes.data
 
-            let attendanceMap: Record<number, number> = {}
+            const attendanceMap: Record<number, number> = {}
             ;(att || []).forEach((a: any) => {
                 attendanceMap[a.fixed_worker_id] = (attendanceMap[a.fixed_worker_id] || 0) + 1
             })
@@ -1580,40 +1567,50 @@ export default function PayrollPage() {
     }, [fixedWorkers, searchTerm])
 
     useEffect(() => {
+        let disposed = false
         const exitWorkerType = searchParams.get('exitWorkerType')
         const exitWorkerId = searchParams.get('exitWorkerId')
         const finalSettlement = searchParams.get('finalSettlement') === '1'
         const deactivateAfterExit = searchParams.get('deactivateAfterExit') === '1'
 
         if (!exitWorkerType || !exitWorkerId || !finalSettlement || handledExitLaunch) {
-            return
+            return undefined
         }
 
         const parsedWorkerId = Number(exitWorkerId)
         if (!Number.isFinite(parsedWorkerId)) {
-            setHandledExitLaunch(true)
-            return
+            queueMicrotask(() => {
+                if (!disposed) setHandledExitLaunch(true)
+            })
+            return () => { disposed = true }
         }
 
         const source = exitWorkerType === 'meter' ? meterWorkers : fixedWorkers
-        if (!source) return
+        if (!source) return undefined
 
         const worker = source.find((item: MeterWorkerPayroll | FixedWorkerPayroll) => item.id === parsedWorkerId)
         if (!worker) {
-            setHandledExitLaunch(true)
-            toast.error('Worker not found for final settlement.')
-            return
+            queueMicrotask(() => {
+                if (disposed) return
+                setHandledExitLaunch(true)
+                toast.error('Worker not found for final settlement.')
+            })
+            return () => { disposed = true }
         }
 
-        setActiveTab(exitWorkerType === 'meter' ? 'meter' : 'fixed')
-        setPendingSettleWorker({
-            ...worker,
-            type: exitWorkerType,
-            initialIsFinal: true,
-            deactivateAfterExit,
+        queueMicrotask(() => {
+            if (disposed) return
+            setActiveTab(exitWorkerType === 'meter' ? 'meter' : 'fixed')
+            setPendingSettleWorker({
+                ...worker,
+                type: exitWorkerType,
+                initialIsFinal: true,
+                deactivateAfterExit,
+            })
+            setShowSettlementDialog(true)
+            setHandledExitLaunch(true)
         })
-        setShowSettlementDialog(true)
-        setHandledExitLaunch(true)
+        return () => { disposed = true }
     }, [searchParams, meterWorkers, fixedWorkers, handledExitLaunch])
 
     if (!selectedMonth) return null
@@ -1921,6 +1918,7 @@ export default function PayrollPage() {
             {/* Settlement Dialog V2 */}
             {pendingSettleWorker && (
                 <SettlementDialog
+                    key={`${pendingSettleWorker.type}-${pendingSettleWorker.id}-${pendingSettleWorker.initialIsFinal ? 'final' : 'regular'}-${showSettlementDialog ? 'open' : 'closed'}`}
                     open={showSettlementDialog}
                     onOpenChange={setShowSettlementDialog}
                     worker={pendingSettleWorker}

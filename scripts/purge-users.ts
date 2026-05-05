@@ -51,7 +51,7 @@ async function purgeAllUsers() {
 
 
     // 2. Delete Auth Users
-    let { data: { users }, error } = await supabase.auth.admin.listUsers()
+    const { data: { users }, error } = await supabase.auth.admin.listUsers()
 
     if (error) {
         console.error('Error fetching users:', error)

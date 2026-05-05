@@ -45,16 +45,13 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
   useEffect(() => {
     const isToday = selectedDate === getSuratTodayString()
     
-    if (!isToday) {
-      setConnectionStatus('historical')
-      return
-    }
+    if (!isToday) return
 
-    if (typeof window !== 'undefined' && !navigator.onLine) {
-      setConnectionStatus('offline')
-    } else {
-      setConnectionStatus('connecting')
-    }
+    let disposed = false
+    queueMicrotask(() => {
+      if (disposed) return
+      setConnectionStatus(typeof window !== 'undefined' && !navigator.onLine ? 'offline' : 'connecting')
+    })
 
     const channelName = `org-${orgId || 'no-org'}-production-logs`
     const channel = supabase
@@ -94,6 +91,7 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
     }
 
     return () => {
+      disposed = true
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current)
       }

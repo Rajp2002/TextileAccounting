@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,6 @@ import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function JoinPage() {
-    const [isPending, startTransition] = useTransition()
     const [loading, setLoading] = useState(false)
 
     // Join code state
@@ -33,7 +32,7 @@ export default function JoinPage() {
     const [errors, setErrors]                 = useState<Record<string, string>>({})
 
     // ── On-blur / Auto-validate: validate the join code ──────────────────────────
-    const handleCodeBlur = async () => {
+    const handleCodeBlur = useCallback(async () => {
         const normalized = joinCode.trim().toUpperCase()
         if (!normalized || normalized.length !== 8) return
 
@@ -48,13 +47,16 @@ export default function JoinPage() {
         } else {
             setErrors(p => ({ ...p, joinCode: result.error || 'Please enter a valid join code' }))
         }
-    }
+    }, [joinCode])
 
     useEffect(() => {
         if (joinCode.length === 8 && !codeResult && !codeValidating) {
-            handleCodeBlur()
+            const timer = setTimeout(() => {
+                void handleCodeBlur()
+            }, 0)
+            return () => clearTimeout(timer)
         }
-    }, [joinCode, codeResult, codeValidating])
+    }, [joinCode, codeResult, codeValidating, handleCodeBlur])
 
     const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         // Auto-uppercase + strip spaces on each keystroke
