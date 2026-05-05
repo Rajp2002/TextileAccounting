@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 
@@ -17,10 +16,7 @@ export default function LandingHeader() {
     ]
 
     return (
-        <motion.header
-            initial={false}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+        <header
             className="fixed top-0 left-0 right-0 z-50 pt-0 px-4 pb-4 sm:px-6 lg:px-8"
         >
             <div className="mx-auto max-w-7xl">
@@ -28,7 +24,7 @@ export default function LandingHeader() {
                     <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                     <Link href="/" className="flex items-center group">
                             <div className="relative h-16 w-40 sm:h-20 sm:w-56 group-hover:opacity-80 transition-opacity duration-200">
-                                <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain object-left" priority />
+                                <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="(max-width: 640px) 10rem, 14rem" className="object-contain object-left" priority />
                             </div>
                         </Link>
 
@@ -78,42 +74,34 @@ export default function LandingHeader() {
                 </div>
 
                 {/* Mobile Menu */}
-                <AnimatePresence>
-                    {mobileMenuOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                            transition={{ duration: 0.2 }}
-                            className="absolute top-24 left-4 right-4 z-50 md:hidden"
-                        >
-                            <div className="overflow-hidden rounded-3xl bg-white/95 shadow-2xl ring-1 ring-gray-900/5 backdrop-blur-2xl dark:bg-zinc-900/95 dark:ring-zinc-800">
-                                <div className="p-5 space-y-4">
-                                    {navLinks.map((link) => (
-                                        <Link
-                                            key={link.name}
-                                            href={link.href}
-                                            className="block text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50/80 rounded-xl px-4 py-3 dark:text-white dark:hover:bg-zinc-800/80 transition-colors"
-                                            onClick={() => setMobileMenuOpen(false)}
-                                        >
-                                            {link.name}
-                                        </Link>
-                                    ))}
-                                    <div className="h-px bg-gray-100 dark:bg-zinc-800 my-2" />
-                                    <div className="flex flex-col gap-3">
-                                        <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                            <Button variant="outline" className="w-full rounded-2xl py-6 font-semibold border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-900 dark:text-white">Log in</Button>
-                                        </Link>
-                                        <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                                            <Button className="w-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:opacity-90 rounded-2xl py-6 font-semibold shadow-md">Sign Up</Button>
-                                        </Link>
-                                    </div>
+                {mobileMenuOpen && (
+                    <div className="absolute top-24 left-4 right-4 z-50 md:hidden">
+                        <div className="overflow-hidden rounded-3xl bg-white/95 shadow-2xl ring-1 ring-gray-900/5 backdrop-blur-2xl dark:bg-zinc-900/95 dark:ring-zinc-800">
+                            <div className="p-5 space-y-4">
+                                {navLinks.map((link) => (
+                                    <Link
+                                        key={link.name}
+                                        href={link.href}
+                                        className="block text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50/80 rounded-xl px-4 py-3 dark:text-white dark:hover:bg-zinc-800/80 transition-colors"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        {link.name}
+                                    </Link>
+                                ))}
+                                <div className="h-px bg-gray-100 dark:bg-zinc-800 my-2" />
+                                <div className="flex flex-col gap-3">
+                                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                                        <Button variant="outline" className="w-full rounded-2xl py-6 font-semibold border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-900 dark:text-white">Log in</Button>
+                                    </Link>
+                                    <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                                        <Button className="w-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:opacity-90 rounded-2xl py-6 font-semibold shadow-md">Sign Up</Button>
+                                    </Link>
                                 </div>
                             </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        </div>
+                    </div>
+                )}
             </div>
-        </motion.header>
+        </header>
     )
 }
