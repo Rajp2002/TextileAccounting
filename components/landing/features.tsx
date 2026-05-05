@@ -105,7 +105,7 @@ export default function LandingFeatures() {
                             </h2>
                         </div>
                         <p className="text-lg leading-8 text-gray-600 dark:text-gray-300">
-                            Instead of equal-weight feature cards, Weavly follows how a weaving unit actually moves work: quote the fabric, assign the floor, log meters, dispatch stock, and settle people correctly.
+                            Weavly follows how a weaving unit actually moves work: quote the fabric, assign the floor, log meters, dispatch stock, and settle people correctly.
                         </p>
                     </div>
 
@@ -135,9 +135,9 @@ export default function LandingFeatures() {
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
                     <div className="grid gap-8 lg:grid-cols-[0.78fr_1fr] lg:items-end">
                         <div>
-                            <p className="text-sm font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-400">Trust signals</p>
+                            <p className="text-sm font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-400">FACTORY-FIRST, NOT ERP-RETROFITTED</p>
                             <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-gray-950 sm:text-5xl dark:text-white">
-                                It should feel familiar to the factory, not generic to software.
+                                Every term in the product is a term from your factory floor.
                             </h2>
                         </div>
                         <p className="text-lg leading-8 text-gray-600 dark:text-gray-300">

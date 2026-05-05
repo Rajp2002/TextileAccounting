@@ -23,7 +23,7 @@ export default function LandingHero() {
                         <h1
                             className="mt-7 max-w-4xl text-5xl font-extrabold tracking-tight text-gray-950 sm:text-6xl dark:text-white leading-[1.04]"
                         >
-                            From quote to loom to payroll, one system built for weaving factories.
+                            One system for the whole factory floor. No notebook. No WhatsApp. No missed meters.
                         </h1>
 
                         <p
