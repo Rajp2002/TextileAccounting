@@ -18,6 +18,7 @@ import {
     FileText,
     Truck,
     Store,
+    Warehouse,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -40,12 +41,14 @@ const navGroups = [
         items: [
             { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
             { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs" },
+            { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock" },
             { name: "Dispatches", href: "/owner/dispatches", icon: Truck, translationKey: "dispatches" },
         ]
     },
     {
         label: "Financials",
         items: [
+            { name: "Commercials", href: "/owner/commercials", icon: DollarSign, translationKey: "commercials" },
             { name: "Billing", href: "/owner/billing", icon: CreditCard, translationKey: "billing" },
         ]
     },

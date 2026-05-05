@@ -467,6 +467,39 @@ export const CorrectFabricPackageMetersSchema = z.object({
     correction_note: z.string().trim().min(2, 'Reason is required').max(300, 'Reason too long'),
 })
 
+// ─── Phase 1 Taka Stock Schemas ──────────────────────────────────────────────
+
+export const FabricStockSourceTypeSchema = z.enum(['opening', 'market_run', 'order', 'manual', 'adjustment'])
+
+export const CreateTakaStockLotSchema = z.object({
+    quality_label: z.string().trim().min(1, 'Quality is required').max(160, 'Quality name too long'),
+    godown: z.string().trim().min(1, 'Godown is required').max(120, 'Godown name too long').default('Main Godown'),
+    source_type: FabricStockSourceTypeSchema.default('manual'),
+    market_run_id: UuidSchema.optional().or(z.literal('')),
+    order_id: UuidSchema.optional().or(z.literal('')),
+    quote_id: UuidSchema.optional().or(z.literal('')),
+    taka_count: z.number().positive('Taka count must be greater than zero').max(1_000_000, 'Taka count too high'),
+    meters_per_taka: z.number().positive('Meters per taka must be greater than zero').max(1_000_000, 'Meters per taka too high'),
+    cost_per_meter: z.number().nonnegative('Cost cannot be negative').max(1_000_000, 'Cost per meter too high'),
+    received_date: DateSchema,
+    notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+})
+
+export const RecordTakaStockSaleSchema = z.object({
+    stock_lot_id: UuidSchema,
+    taka_sold: z.number().positive('Takas sold must be greater than zero').max(1_000_000, 'Takas sold too high'),
+    price_per_meter: z.number().nonnegative('Sale price cannot be negative').max(1_000_000, 'Sale price too high'),
+    sale_date: DateSchema,
+    notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
+})
+
+export const AdjustTakaStockLotSchema = z.object({
+    stock_lot_id: UuidSchema,
+    adjustment_mode: z.enum(['add', 'subtract']),
+    taka_count: z.number().positive('Taka count must be greater than zero').max(1_000_000, 'Taka count too high'),
+    notes: z.string().trim().min(2, 'Reason is required').max(500, 'Reason too long'),
+})
+
 export const CreateFabricDispatchSchema = z.object({
     order_id: UuidSchema,
     package_ids: z.array(UuidSchema).min(1, 'Select at least one package').max(200, 'Too many packages selected'),
