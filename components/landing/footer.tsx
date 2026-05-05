@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Minus, Twitter, Linkedin, Facebook } from 'lucide-react'
 
 const footerSections = [
@@ -50,7 +49,7 @@ export default function LandingFooter() {
                         <div className="col-span-1 md:col-span-1 flex flex-col items-center md:items-start text-center md:text-left">
                             <Link href="/">
                                 <div className="relative h-14 w-36 mb-4 hover:opacity-80 transition-opacity">
-                                    <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain object-center md:object-left" />
+                                    <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="9rem" className="object-contain object-center md:object-left" />
                                 </div>
                             </Link>
                             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs cursor-default">
@@ -110,29 +109,22 @@ export default function LandingFooter() {
                                     </ul>
 
                                     {/* Mobile Collapsible List */}
-                                    <AnimatePresence>
-                                        {openSection === section.title && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                className="md:hidden overflow-hidden"
-                                            >
-                                                <ul className="flex flex-col space-y-4 py-4 px-2">
-                                                    {section.links.map((link) => (
-                                                        <li key={link.name}>
-                                                            <Link 
-                                                                href={link.href} 
-                                                                className="text-gray-400 hover:text-white transition-colors text-sm"
-                                                            >
-                                                                {link.name}
-                                                            </Link>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
+                                    {openSection === section.title && (
+                                        <div className="md:hidden overflow-hidden">
+                                            <ul className="flex flex-col space-y-4 py-4 px-2">
+                                                {section.links.map((link) => (
+                                                    <li key={link.name}>
+                                                        <Link
+                                                            href={link.href}
+                                                            className="text-gray-400 hover:text-white transition-colors text-sm"
+                                                        >
+                                                            {link.name}
+                                                        </Link>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>

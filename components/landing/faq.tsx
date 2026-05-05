@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Minus } from 'lucide-react'
 
 const faqs = [
@@ -38,12 +37,7 @@ export default function LandingFAQ() {
         <section className="py-16 sm:py-24 relative overflow-hidden" id="faq">
             <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
                 <div className="mx-auto max-w-2xl text-center">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                    >
+                    <div>
                         <h2 className="text-sm font-bold leading-7 text-amber-700 dark:text-amber-500 tracking-widest uppercase">FAQ</h2>
                         <p className="mt-2 text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl dark:text-white">
                             Common Questions
@@ -51,18 +45,14 @@ export default function LandingFAQ() {
                         <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300">
                             Everything you need to know about about the Weavly platform and how it helps your textile business.
                         </p>
-                    </motion.div>
+                    </div>
                 </div>
 
                 <div className="mx-auto mt-16 max-w-3xl">
                     <div className="space-y-4">
                         {faqs.map((faq, index) => (
-                            <motion.div
+                            <div
                                 key={index}
-                                initial={{ opacity: 0, y: 10 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.3, delay: index * 0.1 }}
                                 className="rounded-3xl border border-gray-100 bg-white/50 backdrop-blur-sm dark:border-white/5 dark:bg-zinc-900/50 overflow-hidden shadow-sm"
                             >
                                 <button
@@ -81,21 +71,12 @@ export default function LandingFAQ() {
                                     </div>
                                 </button>
                                 
-                                <AnimatePresence>
-                                    {openIndex === index && (
-                                        <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: 'auto', opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            transition={{ duration: 0.3, ease: 'easeOut' }}
-                                        >
-                                            <div className="px-6 pb-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 border-t border-gray-50 dark:border-white/5 pt-4">
-                                                {faq.answer}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </motion.div>
+                                {openIndex === index && (
+                                    <div className="px-6 pb-6 text-base leading-relaxed text-gray-600 dark:text-gray-400 border-t border-gray-50 dark:border-white/5 pt-4">
+                                        {faq.answer}
+                                    </div>
+                                )}
+                            </div>
                         ))}
                     </div>
                 </div>

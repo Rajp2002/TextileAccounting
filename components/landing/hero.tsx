@@ -1,8 +1,5 @@
-'use client'
-
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { motion } from 'framer-motion'
 import { ArrowRight, CheckCircle2, MessageCircle, ReceiptText } from 'lucide-react'
 
 const loomRows = [
@@ -18,37 +15,27 @@ export default function LandingHero() {
         <div className="relative isolate overflow-hidden pt-20">
             <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-12 sm:pb-28 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:pb-32 lg:pt-28">
                 <div className="max-w-3xl">
-                    <motion.div
-                        initial={false}
-                        animate="visible"
-                        variants={{
-                            hidden: { opacity: 0, y: 30 },
-                            visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.1, delayChildren: 0.1 } }
-                        }}
-                    >
-                        <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+                    <div>
+                        <div>
                             <div className="inline-flex items-center gap-2 border border-amber-500/20 bg-white/70 px-3 py-1.5 text-sm font-semibold text-amber-800 shadow-sm backdrop-blur dark:bg-zinc-950/60 dark:text-amber-400">
                                 <span className="h-2 w-2 rounded-full bg-amber-600" />
                                 Phase 1: the weaving factory operating loop
                             </div>
-                        </motion.div>
+                        </div>
 
-                        <motion.h1
-                            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+                        <h1
                             className="mt-8 max-w-4xl text-5xl font-extrabold tracking-tight text-gray-950 sm:text-6xl dark:text-white leading-[1.04]"
                         >
                             From quote to loom to payroll, without the factory notebook.
-                        </motion.h1>
+                        </h1>
 
-                        <motion.p
-                            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+                        <p
                             className="mt-6 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-300"
                         >
                             Weavly is focused on the Phase 1 work that actually moves a weaving unit: fabric estimating, order and market-run tracking, shift production logs, advances, payroll, dispatches, and WhatsApp updates.
-                        </motion.p>
+                        </p>
 
-                        <motion.div
-                            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+                        <div
                             className="mt-9 space-y-5"
                         >
                             <div className="flex flex-col gap-3 sm:flex-row">
@@ -90,14 +77,11 @@ export default function LandingHero() {
                                     Log in
                                 </Link>
                             </p>
-                        </motion.div>
-                    </motion.div>
+                        </div>
+                    </div>
                 </div>
 
-                <motion.div
-                    initial={false}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
+                <div
                     className="relative"
                 >
                     <div className="absolute -inset-6 -z-10 bg-gradient-to-tr from-amber-500/20 via-orange-500/10 to-transparent blur-3xl" />
@@ -190,7 +174,7 @@ export default function LandingHero() {
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
             </div>
 
         </div>

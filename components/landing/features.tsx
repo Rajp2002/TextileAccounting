@@ -1,6 +1,3 @@
-'use client'
-
-import { motion } from 'framer-motion'
 import { Calculator, ClipboardList, Factory, MessageCircle, ReceiptIndianRupee, Truck } from 'lucide-react'
 
 const features = [
@@ -53,17 +50,12 @@ export default function LandingFeatures() {
         <div className="py-16 sm:py-24 relative overflow-hidden" id="features">
             <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
                 <div className="grid gap-8 lg:grid-cols-[0.78fr_1fr] lg:items-end">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                    >
+                    <div>
                         <h2 className="text-sm font-bold leading-7 text-amber-700 dark:text-amber-500 tracking-widest uppercase">Phase 1 scope</h2>
                         <p className="mt-2 text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl dark:text-white">
                             Built around the daily factory loop, not ERP sprawl.
                         </p>
-                    </motion.div>
+                    </div>
                     <p className="text-lg leading-8 text-gray-600 dark:text-gray-300">
                         The first release keeps the main path sharp: estimate the work, keep looms productive, log what happened, pay people correctly, and keep owners and parties informed.
                     </p>
@@ -71,13 +63,9 @@ export default function LandingFeatures() {
 
                 <div className="mx-auto mt-12 sm:mt-16 lg:mt-18">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        {features.map((feature, index) => (
-                            <motion.div
+                        {features.map((feature) => (
+                            <div
                                 key={feature.name}
-                                initial={{ opacity: 0, y: 18 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.45, delay: index * 0.06 }}
                                 className={`relative min-h-[230px] overflow-hidden rounded-lg border p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-500/10 ${feature.accent}`}
                             >
                                 <div className="absolute inset-0 -z-10 bg-white/70 backdrop-blur-sm dark:bg-zinc-950/55" />
@@ -98,7 +86,7 @@ export default function LandingFeatures() {
                                         {feature.description}
                                     </p>
                                 </div>
-                            </motion.div>
+                            </div>
                         ))}
                     </div>
                 </div>

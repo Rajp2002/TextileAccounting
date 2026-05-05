@@ -1,6 +1,3 @@
-'use client'
-
-import { motion } from 'framer-motion'
 import { Check, X, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -80,13 +77,9 @@ export default function LandingPricing() {
                 </p>
 
                 <div className="isolate mx-auto mt-12 sm:mt-16 grid max-w-md grid-cols-1 gap-8 lg:max-w-7xl lg:grid-cols-3">
-                    {tiers.map((tier, tierIdx) => (
-                        <motion.div
+                    {tiers.map((tier) => (
+                        <div
                             key={tier.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: tierIdx * 0.15 }}
                             className={cn(
                                 tier.featured ? 'ring-2 ring-amber-600 dark:ring-amber-500 shadow-2xl lg:scale-105 my-2 lg:my-0' : 'ring-1 ring-gray-200 dark:ring-white/10 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm',
                                 'p-8 xl:p-10 rounded-[2rem] relative flex flex-col justify-between transition-transform duration-300 hover:-translate-y-2'
@@ -162,16 +155,12 @@ export default function LandingPricing() {
                                     ))}
                                 </ul>
                             </div>
-                        </motion.div>
+                        </div>
                     ))}
                 </div>
 
                 {/* Add-on Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
+                <div
                     className="mx-auto mt-12 max-w-2xl rounded-[2rem] bg-amber-50 ring-1 ring-inset ring-amber-200 dark:bg-amber-500/5 dark:ring-amber-500/20 sm:mt-16 lg:mx-0 lg:flex lg:max-w-none shadow-sm"
                 >
                     <div className="p-8 sm:p-10 lg:flex-auto">
@@ -219,7 +208,7 @@ export default function LandingPricing() {
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
             </div>
         </div>
     )

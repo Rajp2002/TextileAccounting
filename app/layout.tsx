@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google"
-import Script from "next/script"
 import "./globals.css"
 
 const jakarta = Plus_Jakarta_Sans({
@@ -49,6 +48,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${jakarta.variable} ${geistMono.variable} antialiased font-sans`}
+        suppressHydrationWarning
       >
         {/* Inline script: adds app-ready class to body as early as possible
             so the PWA splash background (#fdf6e9) transitions to the real
@@ -59,11 +59,6 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `document.body.classList.add('app-ready');`,
           }}
-        />
-        {/* Razorpay checkout.js — loaded lazily, only when payment modal is triggered */}
-        <Script
-          src="https://checkout.razorpay.com/v1/checkout.js"
-          strategy="lazyOnload"
         />
         <Providers>
           {children}
