@@ -3,15 +3,15 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-import { Plus, Minus, Twitter, Linkedin, Facebook } from 'lucide-react'
+import { Plus, Minus } from 'lucide-react'
 
 const footerSections = [
     {
         title: 'Product',
         links: [
-            { name: 'Features', href: '/#features' },
+            { name: 'Workflow', href: '/#workflow' },
             { name: 'Pricing', href: '/#pricing' },
-            { name: 'Production Tracking', href: '/#features' },
+            { name: 'Production Tracking', href: '/#workflow' },
             { name: 'Payroll Engine', href: '/#features' },
         ]
     },
@@ -19,9 +19,9 @@ const footerSections = [
         title: 'Resources',
         links: [
             { name: 'FAQ', href: '/#faq' },
-            { name: 'Help Center', href: '#' },
             { name: 'Owner Dashboard', href: '/login' },
             { name: 'Supervisor App', href: '/join' },
+            { name: 'Request Pilot', href: '/signup' },
         ]
     },
     {
@@ -53,22 +53,8 @@ export default function LandingFooter() {
                                 </div>
                             </Link>
                             <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs cursor-default">
-                                Empowering Indian textile manufacturers with complete production, payroll, and order management tools.
+                                Built for grey fabric weaving factories that need costing, loom production, dispatch, and payroll in one operating record.
                             </p>
-                            <div className="flex gap-4">
-                                <a href="#" className="h-10 w-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 hover:text-amber-500 text-gray-400 transition-colors">
-                                    <Twitter className="h-5 w-5" />
-                                    <span className="sr-only">Twitter</span>
-                                </a>
-                                <a href="#" className="h-10 w-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 hover:text-amber-500 text-gray-400 transition-colors">
-                                    <Linkedin className="h-5 w-5" />
-                                    <span className="sr-only">LinkedIn</span>
-                                </a>
-                                <a href="#" className="h-10 w-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 hover:text-amber-500 text-gray-400 transition-colors">
-                                    <Facebook className="h-5 w-5" />
-                                    <span className="sr-only">Facebook</span>
-                                </a>
-                            </div>
                         </div>
 
                         {/* Column 2-4: Sections */}
@@ -136,7 +122,7 @@ export default function LandingFooter() {
                             &copy; {new Date().getFullYear()} Weavly. All rights reserved.
                         </p>
                         <div className="flex items-center gap-6 text-sm text-gray-500">
-                            <span>Built securely for the Indian textile industry.</span>
+                            <span>Built securely for Indian textile factory operations.</span>
                         </div>
                     </div>
                 </div>

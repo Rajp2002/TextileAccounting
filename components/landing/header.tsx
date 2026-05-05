@@ -10,7 +10,7 @@ export default function LandingHeader() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     const navLinks = [
-        { name: 'Features', href: '#features' },
+        { name: 'Workflow', href: '#workflow' },
         { name: 'Pricing', href: '#pricing' },
         { name: 'FAQ', href: '#faq' },
     ]
@@ -20,7 +20,7 @@ export default function LandingHeader() {
             className="fixed top-0 left-0 right-0 z-50 pt-0 px-4 pb-4 sm:px-6 lg:px-8"
         >
             <div className="mx-auto max-w-7xl">
-                <div className="rounded-b-[2rem] border border-t-0 border-white/20 bg-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 transition-all dark:bg-zinc-950/60 dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
+                <div className="rounded-b-xl border border-t-0 border-gray-200/80 bg-white/85 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/85 transition-all dark:bg-zinc-950/80 dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
                     <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
                     <Link href="/" className="flex items-center group">
                             <div className="relative h-16 w-40 sm:h-20 sm:w-56 group-hover:opacity-80 transition-opacity duration-200">
@@ -49,8 +49,8 @@ export default function LandingHeader() {
                                 </Button>
                             </Link>
                             <Link href="/signup">
-                                <Button className="bg-gray-900 hover:bg-gray-800 text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 shadow-lg shadow-gray-900/10 dark:shadow-white/10 transition-all hover:scale-105 rounded-full px-6 font-semibold">
-                                    Sign Up
+                                <Button className="bg-gray-950 hover:bg-gray-800 text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 shadow-lg shadow-gray-900/10 dark:shadow-white/10 rounded-md px-6 font-semibold">
+                                    Request Pilot
                                 </Button>
                             </Link>
                         </div>
@@ -76,7 +76,7 @@ export default function LandingHeader() {
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
                     <div className="absolute top-24 left-4 right-4 z-50 md:hidden">
-                        <div className="overflow-hidden rounded-3xl bg-white/95 shadow-2xl ring-1 ring-gray-900/5 backdrop-blur-2xl dark:bg-zinc-900/95 dark:ring-zinc-800">
+                        <div className="overflow-hidden rounded-xl bg-white/95 shadow-2xl ring-1 ring-gray-900/5 backdrop-blur-2xl dark:bg-zinc-900/95 dark:ring-zinc-800">
                             <div className="p-5 space-y-4">
                                 {navLinks.map((link) => (
                                     <Link
@@ -91,10 +91,10 @@ export default function LandingHeader() {
                                 <div className="h-px bg-gray-100 dark:bg-zinc-800 my-2" />
                                 <div className="flex flex-col gap-3">
                                     <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                        <Button variant="outline" className="w-full rounded-2xl py-6 font-semibold border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-900 dark:text-white">Log in</Button>
+                                        <Button variant="outline" className="w-full rounded-md py-6 font-semibold border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-900 dark:text-white">Log in</Button>
                                     </Link>
                                     <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                                        <Button className="w-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 hover:opacity-90 rounded-2xl py-6 font-semibold shadow-md">Sign Up</Button>
+                                        <Button className="w-full bg-gray-950 text-white dark:bg-white dark:text-gray-900 hover:opacity-90 rounded-md py-6 font-semibold shadow-md">Request Pilot</Button>
                                     </Link>
                                 </div>
                             </div>

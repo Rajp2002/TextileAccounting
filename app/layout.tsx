@@ -22,8 +22,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: "Weavly — Textile Production Management",
-  description: "B2B SaaS PWA for Indian textile manufacturers. Track production, manage workers, and automate daily briefs.",
+  title: "Weavly — Factory OS for Textile Weaving Units",
+  description: "Weavly connects fabric costing, loom production logs, dispatches, advances, payroll, and WhatsApp briefs for grey fabric weaving factories.",
   // Apple PWA meta tags
   appleWebApp: {
     capable: true,
