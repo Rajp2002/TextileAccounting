@@ -58,9 +58,9 @@ const trustItems = [
 export default function LandingFeatures() {
     return (
         <>
-            <section className="py-16 sm:py-24 snap-start scroll-mt-28" id="problem">
+            <section className="relative z-10 py-16 sm:py-24 snap-start scroll-mt-28" id="problem">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="grid gap-10 lg:grid-cols-[0.86fr_1.14fr] lg:items-start">
+                    <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
                         <div>
                             <p className="text-sm font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-400">The daily pain</p>
                             <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-gray-950 sm:text-5xl dark:text-white">
@@ -95,9 +95,9 @@ export default function LandingFeatures() {
                 </div>
             </section>
 
-            <section className="py-16 sm:py-24 snap-start scroll-mt-28" id="workflow">
+            <section className="relative z-10 py-16 sm:py-24 snap-start scroll-mt-28" id="workflow">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="grid gap-8 lg:grid-cols-[0.78fr_1fr] lg:items-end">
+                    <div className="grid gap-8 lg:grid-cols-2 lg:items-end">
                         <div>
                             <p className="text-sm font-bold leading-7 text-amber-700 dark:text-amber-500 tracking-[0.22em] uppercase">Factory workflow</p>
                             <h2 className="mt-2 text-4xl font-extrabold tracking-tight text-gray-950 sm:text-5xl dark:text-white">
@@ -131,9 +131,9 @@ export default function LandingFeatures() {
                 </div>
             </section>
 
-            <section className="py-16 sm:py-24 snap-start scroll-mt-28" id="features">
+            <section className="relative z-10 py-16 sm:py-24 snap-start scroll-mt-28" id="features">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="grid gap-8 lg:grid-cols-[0.78fr_1fr] lg:items-end">
+                    <div className="grid gap-8 lg:grid-cols-2 lg:items-end">
                         <div>
                             <p className="text-sm font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-400">FACTORY-FIRST, NOT ERP-RETROFITTED</p>
                             <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-gray-950 sm:text-5xl dark:text-white">

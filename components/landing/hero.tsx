@@ -12,8 +12,8 @@ const loopSteps = ['Estimate', 'Assign looms', 'Log shift', 'Settle']
 
 export default function LandingHero() {
     return (
-        <div className="relative isolate overflow-hidden pt-20 snap-start scroll-mt-28">
-            <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-16 pt-12 sm:pb-24 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:pb-28 lg:pt-28">
+        <div className="relative z-10 isolate overflow-hidden pt-20 snap-start scroll-mt-28">
+            <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-16 pt-12 sm:pb-24 lg:grid-cols-2 lg:px-8 lg:pb-28 lg:pt-28">
                 <div className="max-w-3xl">
                     <div>
                         <p className="text-sm font-bold uppercase tracking-[0.22em] text-amber-700 dark:text-amber-400">

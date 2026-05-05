@@ -16,13 +16,21 @@ export default function Home() {
       <div className="relative w-full min-h-max">
         <LandingBackground />
         <LandingHeader />
-        <LandingHero />
+        <div>
+          <LandingHero />
+        </div>
         
-        <LandingFeatures />
+        <div>
+          <LandingFeatures />
+        </div>
         
-        <LandingPricing />
+        <div>
+          <LandingPricing />
+        </div>
         
-        <LandingFAQ />
+        <div>
+          <LandingFAQ />
+        </div>
  
         {/* Pre-footer CTA */}
         <section className="relative isolate overflow-hidden bg-zinc-950 border-y border-white/10 mt-24 snap-start scroll-mt-28">
