@@ -37,7 +37,7 @@ const plans = [
 
 export default function LandingPricing() {
     return (
-        <section className="relative overflow-hidden py-16 sm:py-24 snap-start scroll-mt-20" id="pricing">
+        <section className="relative overflow-hidden py-16 sm:py-24 snap-start scroll-mt-28" id="pricing">
             <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
                 <div className="mx-auto max-w-4xl text-center">
                     <p className="text-sm font-bold leading-7 text-amber-700 dark:text-amber-500 tracking-[0.22em] uppercase">Pricing</p>
