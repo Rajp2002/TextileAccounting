@@ -6,6 +6,8 @@ import {
     Loader2,
     QrCode,
     Copy,
+    AlertTriangle,
+    ExternalLink,
 } from 'lucide-react'
 import {
     Dialog,
@@ -38,20 +40,42 @@ export function CreateDispatchModal({
     onCreated: (dispatch: DispatchRow, trackingToken: string, partyName: string, orgName: string) => void
 }) {
     const [notes, setNotes] = useState('')
+    const [ewayNumber, setEwayNumber] = useState('')
+    const [vehicleNumber, setVehicleNumber] = useState('')
+    const [transporterName, setTransporterName] = useState('')
+    const [transporterId, setTransporterId] = useState('')
+    const [distanceKm, setDistanceKm] = useState('')
     const [selected, setSelected] = useState<string[]>(availablePackages.map((pkg) => pkg.id))
     const [pending, startTransition] = useTransition()
 
-    const totalMetres = availablePackages
-        .filter((pkg) => selected.includes(pkg.id))
+    const selectedPackages = availablePackages.filter((pkg) => selected.includes(pkg.id))
+    const totalMetres = selectedPackages
         .reduce((sum, pkg) => sum + Number(pkg.metres ?? 0), 0)
+    const taxableValue = selectedPackages
+        .reduce((sum, pkg) => sum + Number(pkg.sale_value ?? 0), 0)
+    const estimatedGst = taxableValue * 0.05
+    const estimatedConsignmentValue = taxableValue + estimatedGst
+    const ewayLikelyRequired = estimatedConsignmentValue > 50000
+    const parsedDistance = distanceKm.trim() ? Number(distanceKm) : null
 
     const handleSubmit = () => {
         if (selected.length === 0) {
             toast.error('Select at least one sold stock entry')
             return
         }
+        if (parsedDistance !== null && (!Number.isFinite(parsedDistance) || parsedDistance < 0)) {
+            toast.error('Enter a valid distance')
+            return
+        }
         startTransition(async () => {
-            const res = await createDispatch(orderId, selected, notes || undefined)
+            const res = await createDispatch(orderId, selected, notes || undefined, {
+                eway_bill_number: ewayNumber,
+                vehicle_number: vehicleNumber,
+                transporter_name: transporterName,
+                transporter_id: transporterId,
+                approximate_distance_km: parsedDistance,
+                eway_bill_generated_at: ewayNumber.trim() ? new Date().toISOString() : '',
+            })
             if ('error' in res) {
                 toast.error(res.error)
             } else {
@@ -63,7 +87,7 @@ export function CreateDispatchModal({
 
     return (
         <Dialog open onOpenChange={(v) => !v && onClose()}>
-            <DialogContent className="max-w-sm">
+            <DialogContent className="max-w-lg">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Send className="h-5 w-5 text-indigo-600" /> Create Dispatch Batch
@@ -107,6 +131,86 @@ export function CreateDispatchModal({
                             {selected.length} sale{selected.length !== 1 ? 's' : ''} selected · {totalMetres.toFixed(2)} m total
                         </p>
                     </div>
+
+                    <div className={cn(
+                        'rounded-xl border px-3 py-2.5 text-[11px]',
+                        ewayLikelyRequired
+                            ? 'border-amber-200 bg-amber-50 text-amber-800'
+                            : 'border-emerald-100 bg-emerald-50 text-emerald-800'
+                    )}>
+                        <div className="flex items-start gap-2">
+                            <AlertTriangle className={cn('mt-0.5 h-3.5 w-3.5 shrink-0', ewayLikelyRequired ? 'text-amber-600' : 'text-emerald-600')} />
+                            <div className="space-y-1">
+                                <p className="font-bold">
+                                    {ewayLikelyRequired ? 'E-way bill may be required' : 'E-way bill likely not required by value'}
+                                </p>
+                                <p>
+                                    Estimated consignment value is Rs. {estimatedConsignmentValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}.
+                                    E-way bill is generally needed above Rs. 50,000 before goods move. Check local/state exemptions.
+                                </p>
+                                <a
+                                    href="https://ewaybillgst.gov.in"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 font-bold underline underline-offset-2"
+                                >
+                                    Open E-Way Bill Portal <ExternalLink className="h-3 w-3" />
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-slate-700">E-way Bill No.</Label>
+                            <Input
+                                value={ewayNumber}
+                                onChange={e => setEwayNumber(e.target.value)}
+                                placeholder="Optional"
+                                className="text-slate-900 border-slate-200"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-slate-700">Vehicle No.</Label>
+                            <Input
+                                value={vehicleNumber}
+                                onChange={e => setVehicleNumber(e.target.value.toUpperCase())}
+                                placeholder="GJ01AB1234"
+                                className="text-slate-900 border-slate-200"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-slate-700">Transporter</Label>
+                            <Input
+                                value={transporterName}
+                                onChange={e => setTransporterName(e.target.value)}
+                                placeholder="Transport name"
+                                className="text-slate-900 border-slate-200"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-semibold text-slate-700">Transporter ID</Label>
+                            <Input
+                                value={transporterId}
+                                onChange={e => setTransporterId(e.target.value.toUpperCase())}
+                                placeholder="Optional"
+                                className="text-slate-900 border-slate-200"
+                            />
+                        </div>
+                        <div className="space-y-1.5 sm:col-span-2">
+                            <Label className="text-xs font-semibold text-slate-700">Approx. Distance (km)</Label>
+                            <Input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={distanceKm}
+                                onChange={e => setDistanceKm(e.target.value)}
+                                placeholder="Used for EWB validity planning"
+                                className="text-slate-900 border-slate-200"
+                            />
+                        </div>
+                    </div>
+
                     <div className="space-y-1.5">
                         <Label className="text-xs font-semibold text-slate-700">
                             Notes / Reference
