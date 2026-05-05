@@ -5,7 +5,7 @@ import { getMarketRuns } from '../estimator/actions'
 
 export const metadata = {
     title: 'Market Runs — Weavly',
-    description: 'Manage speculative production runs and track sales to traders',
+    description: 'Manage speculative production runs and their stock-backed P&L',
 }
 
 export default async function MarketRunsPage() {

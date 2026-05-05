@@ -77,7 +77,7 @@ const navGroups = [
 const bottomNavItems = [
     { name: "Dashboard", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
     { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
-    { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs" },
+    { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock" },
     { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
     { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll" },
 ]
