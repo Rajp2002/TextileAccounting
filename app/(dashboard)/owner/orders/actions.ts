@@ -359,6 +359,25 @@ export interface AvailableFabricPackage {
     location: string
 }
 
+type PendingStockSaleDispatchRow = {
+    id: string
+    sale_date: string
+    taka_sold: number
+    meters_sold: number
+    dispatch_id: string | null
+    fabric_stock_lots: {
+        quality_label: string
+        godown: string
+        order_id: string | null
+        unit_label: string | null
+    } | Array<{
+        quality_label: string
+        godown: string
+        order_id: string | null
+        unit_label: string | null
+    }>
+}
+
 export interface DispatchSummary {
     dispatches: DispatchRow[]
     total_sent: number
@@ -425,7 +444,7 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
     // Verify the order belongs to this org
     const { data: order, error: orderError } = await supabase
         .from('orders')
-        .select('id, total_target_meters')
+        .select('id, total_target_meters, quality_label')
         .eq('id', orderId)
         .eq('org_id', profile.org_id)
         .single()
@@ -466,14 +485,27 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
 
     if (dispatchError) return { error: dispatchError.message }
 
-    const { data: packageRows, error: packageError } = await supabase
-        .from('fabric_packages')
-        .select('id, package_no, package_type, units_count, metres, grade, inspection_status, stock_state, location')
-        .eq('order_id', orderId)
+    const { data: saleRows, error: saleError } = await supabase
+        .from('fabric_stock_sales')
+        .select(`
+            id,
+            sale_date,
+            taka_sold,
+            meters_sold,
+            dispatch_id,
+            fabric_stock_lots!inner (
+                quality_label,
+                godown,
+                order_id,
+                unit_label
+            )
+        `)
         .eq('org_id', profile.org_id)
+        .is('dispatch_id', null)
+        .order('sale_date', { ascending: false })
         .order('created_at', { ascending: false })
 
-    if (packageError) return { error: packageError.message }
+    if (saleError) return { error: saleError.message }
 
     // Fetch meters produced from production_logs
     const { data: prodData } = await supabase
@@ -485,22 +517,40 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
 
     // Compute summary
     const rows = ((dispatches ?? []) as RawDispatchRow[]).map(normalizeDispatchRow)
-    const availablePackages = ((packageRows ?? []) as AvailableFabricPackage[]).filter(
-        (pkg) => pkg.stock_state === 'ready' || pkg.stock_state === 'reserved'
-    )
+    const pendingSales = ((saleRows ?? []) as unknown as PendingStockSaleDispatchRow[])
+        .filter((sale) => {
+            const lot = Array.isArray(sale.fabric_stock_lots) ? sale.fabric_stock_lots[0] : sale.fabric_stock_lots
+            return lot?.order_id === orderId ||
+                (
+                    !lot?.order_id &&
+                    Boolean(order.quality_label) &&
+                    lot?.quality_label.trim().toLowerCase() === order.quality_label?.trim().toLowerCase()
+                )
+        })
+    const availablePackages: AvailableFabricPackage[] = pendingSales.map((sale) => {
+        const lot = Array.isArray(sale.fabric_stock_lots) ? sale.fabric_stock_lots[0] : sale.fabric_stock_lots
+        const unitLabel = lot?.unit_label || 'taka'
+        return {
+            id: sale.id,
+            package_no: `${lot?.quality_label || 'Stock sale'} · ${new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}`,
+            package_type: 'bulk',
+            units_count: Number(sale.taka_sold ?? 0),
+            metres: Number(sale.meters_sold ?? 0),
+            grade: 'Sold',
+            inspection_status: 'pass',
+            stock_state: 'reserved',
+            location: `${lot?.godown || 'Godown'} · ${Number(sale.taka_sold ?? 0)} ${unitLabel}`,
+        }
+    })
     const totalSent = rows.reduce((s, d) => s + Number(d.qty_meters_sent), 0)
     const totalReceived = rows
         .filter(d => d.status === 'delivered')
         .reduce((s, d) => s + Number(d.qty_meters_received ?? 0), 0)
     const shortageMters = totalSent - totalReceived
     const remainingToDispatch = availablePackages.reduce((sum, pkg) => sum + Number(pkg.metres ?? 0), 0)
-    const packagedTotalMeters = (packageRows ?? []).reduce((sum, pkg) => sum + Number(pkg.metres ?? 0), 0)
-    const packagesWaitingInspectionMeters = (packageRows ?? [])
-        .filter((pkg) => pkg.stock_state === 'uninspected')
-        .reduce((sum, pkg) => sum + Number(pkg.metres ?? 0), 0)
-    const reservedMeters = (packageRows ?? [])
-        .filter((pkg) => pkg.stock_state === 'reserved')
-        .reduce((sum, pkg) => sum + Number(pkg.metres ?? 0), 0)
+    const packagedTotalMeters = pendingSales.reduce((sum, sale) => sum + Number(sale.meters_sold ?? 0), 0)
+    const packagesWaitingInspectionMeters = 0
+    const reservedMeters = remainingToDispatch
 
     return {
         dispatches: rows,
@@ -535,10 +585,10 @@ export async function createDispatch(
     })
     if ('error' in parsed) return parsed
 
-    const { data: rpcData, error: rpcError } = await supabase.rpc('create_fabric_dispatch', {
+    const { data: rpcData, error: rpcError } = await supabase.rpc('create_stock_sale_dispatch', {
         p_org_id: profile.org_id,
         p_order_id: parsed.data.order_id,
-        p_package_ids: parsed.data.package_ids,
+        p_sale_ids: parsed.data.package_ids,
         p_notes: parsed.data.notes || null,
         p_created_by: user.id,
     })
@@ -555,6 +605,9 @@ export async function createDispatch(
             dispatch_number,
             qty_meters_sent,
             qty_meters_received,
+            receipt_confirmed_by_owner,
+            receipt_confirmation_note,
+            receipt_confirmed_by,
             status,
             notes,
             dispatched_at,
@@ -577,13 +630,6 @@ export async function createDispatch(
         .single()
 
     if (dispatchError || !dispatch) return { error: dispatchError?.message ?? 'Failed to load dispatch' }
-
-    await supabase.rpc('consume_order_stock_for_dispatch', {
-        p_order_id: parsed.data.order_id,
-        p_meters_to_consume: Number(dispatch.qty_meters_sent ?? 0),
-        p_reference: `Dispatch #${dispatch.dispatch_number}`,
-        p_notes: parsed.data.notes || null,
-    })
 
     revalidatePath('/owner/orders')
     revalidatePath('/owner/dispatches')

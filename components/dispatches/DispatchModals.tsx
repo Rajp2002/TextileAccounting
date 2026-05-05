@@ -47,7 +47,7 @@ export function CreateDispatchModal({
 
     const handleSubmit = () => {
         if (selected.length === 0) {
-            toast.error('Select at least one package')
+            toast.error('Select at least one sold stock entry')
             return
         }
         startTransition(async () => {
@@ -69,13 +69,13 @@ export function CreateDispatchModal({
                         <Send className="h-5 w-5 text-indigo-600" /> Create Dispatch Batch
                     </DialogTitle>
                     <DialogDescription>
-                        Select the exact packages you are sending to the trader.
+                        Select the sold takas you are sending to the trader.
                         A Tax Invoice cum Delivery Challan PDF with a tracking QR code will auto-download.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-2">
                     <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-700">Packages to Dispatch</Label>
+                        <Label className="text-xs font-semibold text-slate-700">Sold Stock to Dispatch</Label>
                         <div className="max-h-72 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-2">
                             {availablePackages.map((pkg) => {
                                 const checked = selected.includes(pkg.id)
@@ -92,19 +92,19 @@ export function CreateDispatchModal({
                                         <div>
                                             <p className="text-sm font-black text-slate-900">{pkg.package_no}</p>
                                             <p className="text-[11px] font-semibold text-slate-500">
-                                                {pkg.package_type} · {pkg.units_count} unit{pkg.units_count !== 1 ? 's' : ''} · {pkg.location}
+                                                {pkg.units_count} unit{pkg.units_count !== 1 ? 's' : ''} · {pkg.location}
                                             </p>
                                         </div>
                                         <div className="text-right">
                                             <p className="font-mono text-sm font-black text-slate-900">{Number(pkg.metres).toFixed(2)} m</p>
-                                            <p className="text-[10px] font-bold text-slate-400">Grade {pkg.grade}</p>
+                                            <p className="text-[10px] font-bold text-slate-400">Sold stock</p>
                                         </div>
                                     </button>
                                 )
                             })}
                         </div>
                         <p className="text-[11px] font-mono text-slate-500">
-                            {selected.length} package{selected.length !== 1 ? 's' : ''} selected · {totalMetres.toFixed(2)} m total
+                            {selected.length} sale{selected.length !== 1 ? 's' : ''} selected · {totalMetres.toFixed(2)} m total
                         </p>
                     </div>
                     <div className="space-y-1.5">

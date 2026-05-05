@@ -517,7 +517,7 @@ export const AdjustTakaStockLotSchema = z.object({
 
 export const CreateFabricDispatchSchema = z.object({
     order_id: UuidSchema,
-    package_ids: z.array(UuidSchema).min(1, 'Select at least one package').max(200, 'Too many packages selected'),
+    package_ids: z.array(UuidSchema).min(1, 'Select at least one sold stock entry').max(200, 'Too many stock sales selected'),
     notes: z.string().trim().max(300, 'Notes too long').optional().or(z.literal('')),
 })
 
