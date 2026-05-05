@@ -78,6 +78,16 @@ function stockQuantity(unitCount: number, meterCount: number, unitLabel = 'taka'
     return `${stockUnits(unitCount, unitLabel)} (${meters(meterCount)})`
 }
 
+function positiveWholeInput(value: string, max: number) {
+    if (value === '') return ''
+    if (!/^\d+$/.test(value)) return null
+
+    const parsed = Number(value)
+    if (!Number.isSafeInteger(parsed) || parsed < 1) return ''
+
+    return String(Math.min(parsed, Math.floor(max)))
+}
+
 function MetricCard({
     label,
     value,
@@ -556,8 +566,18 @@ function SaleDialog({
     const metersSold = takasSold * lot.meters_per_taka
     const revenue = metersSold * price
     const profit = metersSold * (price - lot.cost_per_meter)
+    const canSubmit = Number.isInteger(takasSold)
+        && takasSold > 0
+        && takasSold <= lot.available_taka_count
+        && price >= 0
+        && form.price_per_meter !== ''
 
     const handleSubmit = () => {
+        if (!canSubmit) {
+            toast.error(`${lot.unit_label} sold must be a positive whole number`)
+            return
+        }
+
         startTransition(async () => {
             const res = await recordTakaStockSale({
                 stock_lot_id: lot.stock_lot_id,
@@ -592,11 +612,22 @@ function SaleDialog({
                         <Label>{lot.unit_label} Sold</Label>
                         <Input
                             type="number"
-                            min="0.01"
+                            inputMode="numeric"
+                            min="1"
                             max={lot.available_taka_count}
-                            step="0.01"
+                            step="1"
                             value={form.taka_sold}
-                            onChange={(event) => setForm((prev) => ({ ...prev, taka_sold: event.target.value }))}
+                            onKeyDown={(event) => {
+                                if (['.', ',', '-', '+', 'e', 'E'].includes(event.key)) {
+                                    event.preventDefault()
+                                }
+                            }}
+                            onChange={(event) => {
+                                const next = positiveWholeInput(event.target.value, lot.available_taka_count)
+                                if (next !== null) {
+                                    setForm((prev) => ({ ...prev, taka_sold: next }))
+                                }
+                            }}
                             placeholder={`Max ${lot.available_taka_count}`}
                         />
                         <p className="text-[10px] font-semibold text-muted-foreground">
@@ -656,7 +687,7 @@ function SaleDialog({
 
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={handleSubmit} disabled={pending}>
+                    <Button onClick={handleSubmit} disabled={pending || !canSubmit}>
                         {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Store className="mr-2 h-4 w-4" />}
                         Record Sale
                     </Button>

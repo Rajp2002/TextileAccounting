@@ -235,10 +235,10 @@ function MachineUnifiedRow({
 
             {/* Production Input (The Quick Log) */}
             <div className={cn(
-                "w-28 xs:w-32 shrink-0 flex items-center justify-center p-3 pb-5 border-l border-border bg-muted/5",
+                "w-32 xs:w-36 sm:w-48 md:w-36 lg:w-44 shrink-0 flex items-center justify-center p-3 border-l border-border bg-muted/5",
                 (!workerId || !orderId) && "opacity-50 grayscale"
             )}>
-                <div className="relative w-full">
+                <div className="flex w-full flex-col items-center gap-2">
                     {(!workerId || !orderId) ? (
                         <div className="flex flex-col items-center justify-center h-10 xs:h-12 text-[10px] font-black text-muted-foreground/60 leading-tight text-center px-1 animate-in fade-in duration-500">
                              {!workerId ? t('production.no_worker') : t('production.link_order')}
@@ -260,15 +260,15 @@ function MachineUnifiedRow({
                                     className="h-10 xs:h-12 flex-1 border-none bg-transparent text-lg xs:text-xl font-black text-center font-mono focus-visible:ring-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                             </div>
-                            <div className="absolute -bottom-8 left-1/2 flex min-w-max -translate-x-1/2 flex-col items-center gap-1">
-                                <div className="flex items-center gap-1 bg-card border border-border px-2 py-0.5 rounded-full shadow-sm">
-                                    <span className="text-[9px] font-black text-primary uppercase tracking-widest leading-none">
+                            <div className="flex w-full flex-col items-center gap-1">
+                                <div className="flex max-w-full items-center gap-1 bg-card border border-border px-2 py-0.5 rounded-full shadow-sm">
+                                    <span className="text-center text-[8px] xs:text-[9px] font-black text-primary uppercase tracking-wide leading-tight">
                                         {t('floor.meter.counterReading')}
                                     </span>
                                 </div>
-                                <div className="flex items-center gap-2 rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                                    <span>{t('floor.meter.openingReading')}: {openingReading}</span>
-                                    <span>{t('floor.meter.shiftProduction')}: {shiftMeters}</span>
+                                <div className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full bg-muted/40 px-2 py-0.5 text-center text-[9px] xs:text-[10px] font-bold leading-tight text-muted-foreground">
+                                    <span className="whitespace-nowrap">{t('floor.meter.openingReading')}: {openingReading}</span>
+                                    <span className="whitespace-nowrap">{t('floor.meter.shiftProduction')}: {shiftMeters}</span>
                                 </div>
                                 {readingWarning && (
                                     <span className="max-w-[11rem] text-center text-[9px] font-semibold text-red-600">
@@ -614,7 +614,7 @@ export default function UnifiedDashboard() {
         const originalAssignments = [...assignments]
         setAssignments(prev => {
             const next = prev.filter(a => a.machine_id !== machineId)
-            if (workerId) {
+            if (workerId || orderId) {
                 next.push({ 
                     machine_id: machineId, 
                     worker_id: workerId, 

@@ -94,6 +94,7 @@ CREATE TRIGGER trg_fabric_stock_inward_drafts_updated_at
 
 ALTER TABLE fabric_stock_inward_drafts ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "fabric_stock_inward_drafts_org_select" ON fabric_stock_inward_drafts;
 CREATE POLICY "fabric_stock_inward_drafts_org_select"
   ON fabric_stock_inward_drafts FOR SELECT
   USING (
@@ -101,6 +102,7 @@ CREATE POLICY "fabric_stock_inward_drafts_org_select"
     AND org_id = (auth.jwt() ->> 'org_id')::uuid
   );
 
+DROP POLICY IF EXISTS "fabric_stock_inward_drafts_owner_insert" ON fabric_stock_inward_drafts;
 CREATE POLICY "fabric_stock_inward_drafts_owner_insert"
   ON fabric_stock_inward_drafts FOR INSERT
   WITH CHECK (
@@ -108,6 +110,7 @@ CREATE POLICY "fabric_stock_inward_drafts_owner_insert"
     AND org_id = (auth.jwt() ->> 'org_id')::uuid
   );
 
+DROP POLICY IF EXISTS "fabric_stock_inward_drafts_owner_update" ON fabric_stock_inward_drafts;
 CREATE POLICY "fabric_stock_inward_drafts_owner_update"
   ON fabric_stock_inward_drafts FOR UPDATE
   USING (
@@ -466,11 +469,15 @@ BEGIN
     RAISE EXCEPTION 'Only owners can record stock sales';
   END IF;
 
-  IF p_taka_sold <= 0 THEN
+  IF p_taka_sold IS NULL OR p_taka_sold <= 0 THEN
     RAISE EXCEPTION 'Units sold must be greater than zero';
   END IF;
 
-  IF p_price_per_meter < 0 THEN
+  IF p_taka_sold <> TRUNC(p_taka_sold) THEN
+    RAISE EXCEPTION 'Units sold must be a whole number';
+  END IF;
+
+  IF p_price_per_meter IS NULL OR p_price_per_meter < 0 THEN
     RAISE EXCEPTION 'Sale price cannot be negative';
   END IF;
 
@@ -518,7 +525,9 @@ BEGIN
     NULLIF(BTRIM(COALESCE(p_notes, '')), ''),
     auth.uid()
   )
-  RETURNING id, revenue_amount, gross_profit_amount
+  RETURNING fabric_stock_sales.id,
+            fabric_stock_sales.revenue_amount,
+            fabric_stock_sales.gross_profit_amount
   INTO v_sale_id, v_revenue, v_profit;
 
   UPDATE fabric_stock_lots
@@ -764,20 +773,16 @@ SELECT
   l.quality_label,
   l.godown,
   l.source_type,
-  l.stock_purpose,
   l.market_run_id,
   l.order_id,
   l.quote_id,
   l.original_taka_count,
   l.available_taka_count,
-  l.original_meters,
-  l.available_meters,
+  l.original_meters::NUMERIC AS original_meters,
+  l.available_meters::NUMERIC AS available_meters,
   l.meters_per_taka,
-  l.unit_label,
   l.cost_per_meter,
   l.received_date,
-  l.source_date,
-  l.source_shift,
   l.notes,
   l.created_at,
   l.updated_at,
@@ -790,7 +795,11 @@ SELECT
     WHEN l.available_taka_count = 0 OR l.available_meters = 0 THEN 'sold_out'
     WHEN COALESCE(SUM(s.taka_sold), 0) > 0 THEN 'partially_sold'
     ELSE 'available'
-  END AS stock_status
+  END AS stock_status,
+  l.stock_purpose,
+  l.unit_label,
+  l.source_date,
+  l.source_shift
 FROM fabric_stock_lots l
 LEFT JOIN fabric_stock_sales s ON s.stock_lot_id = l.id
 GROUP BY l.id;
@@ -910,4 +919,10 @@ SELECT
 
 FROM market_runs mr;
 
-ALTER PUBLICATION supabase_realtime ADD TABLE fabric_stock_inward_drafts;
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE fabric_stock_inward_drafts;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END;
+$$;
