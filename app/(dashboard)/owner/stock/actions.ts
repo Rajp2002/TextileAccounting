@@ -4,8 +4,10 @@ import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import {
     AdjustTakaStockLotSchema,
+    ConfirmStockInwardDraftSchema,
     CreateFabricPackageSchema,
     CreateTakaStockLotSchema,
+    DismissStockInwardDraftSchema,
     RecordTakaStockSaleSchema,
     UpdateFabricInspectionSchema,
     UpdateFabricPackageStateSchema,
@@ -65,8 +67,12 @@ export interface TakaStockLotSummary {
     original_meters: number
     available_meters: number
     meters_per_taka: number
+    unit_label: string
+    stock_purpose: 'sellable' | 'order_reserved' | 'manual'
     cost_per_meter: number
     received_date: string
+    source_date: string | null
+    source_shift: 'day' | 'night' | null
     notes: string | null
     created_at: string
     sold_taka_count: number
@@ -94,6 +100,7 @@ export interface TakaStockSaleRow {
         quality_label: string
         godown: string
         meters_per_taka: number
+        unit_label: string
     }
 }
 
@@ -110,6 +117,7 @@ export interface TakaStockMovementRow {
     fabric_stock_lots: {
         quality_label: string
         godown: string
+        unit_label: string
     }
 }
 
@@ -121,12 +129,34 @@ export interface StockSourceOption {
     cost_per_meter: number
     suggested_takas?: number | null
     meters?: number | null
+    meters_per_taka?: number | null
+    unit_label?: string | null
+}
+
+export interface StockInwardDraftRow {
+    id: string
+    source_type: 'market_run' | 'order'
+    market_run_id: string | null
+    order_id: string
+    quote_id: string | null
+    quality_label: string
+    source_date: string
+    source_shift: 'day' | 'night'
+    suggested_meters: number
+    suggested_unit_count: number
+    meters_per_unit: number
+    unit_label: string
+    cost_per_meter: number
+    suggested_godown: string
+    notes: string | null
+    created_at: string
 }
 
 export interface TakaStockBoardData {
     lots: TakaStockLotSummary[]
     sales: TakaStockSaleRow[]
     movements: TakaStockMovementRow[]
+    pendingInwards: StockInwardDraftRow[]
     sourceOptions: StockSourceOption[]
     summary: {
         available_taka: number
@@ -234,7 +264,7 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const [lotsRes, salesRes, movementsRes, runsRes, quotesRes] = await Promise.all([
+    const [lotsRes, salesRes, movementsRes, draftsRes, runsRes, quotesRes] = await Promise.all([
         supabase
             .from('fabric_stock_lot_summary')
             .select('*')
@@ -258,7 +288,8 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
                 fabric_stock_lots!inner (
                     quality_label,
                     godown,
-                    meters_per_taka
+                    meters_per_taka,
+                    unit_label
                 )
             `)
             .eq('org_id', profile.org_id)
@@ -278,12 +309,20 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
                 created_at,
                 fabric_stock_lots!inner (
                     quality_label,
-                    godown
+                    godown,
+                    unit_label
                 )
             `)
             .eq('org_id', profile.org_id)
             .order('created_at', { ascending: false })
             .limit(80),
+        supabase
+            .from('fabric_stock_inward_drafts')
+            .select('*')
+            .eq('org_id', profile.org_id)
+            .eq('status', 'pending')
+            .order('source_date', { ascending: false })
+            .order('created_at', { ascending: false }),
         supabase
             .from('market_run_summary')
             .select('market_run_id, fabric_label, quality_label, cost_per_meter, target_meters, meters_in_godown, status')
@@ -316,6 +355,7 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
     if (lotsRes.error) return { error: lotsRes.error.message }
     if (salesRes.error) return { error: salesRes.error.message }
     if (movementsRes.error) return { error: movementsRes.error.message }
+    if (draftsRes.error) return { error: draftsRes.error.message }
     if (runsRes.error) return { error: runsRes.error.message }
     if (quotesRes.error) return { error: quotesRes.error.message }
 
@@ -328,6 +368,7 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
             original_meters: toNumber(item.original_meters),
             available_meters: toNumber(item.available_meters),
             meters_per_taka: toNumber(item.meters_per_taka),
+            unit_label: String(item.unit_label || 'taka'),
             cost_per_meter: toNumber(item.cost_per_meter),
             sold_taka_count: toNumber(item.sold_taka_count),
             sold_meters: toNumber(item.sold_meters),
@@ -339,6 +380,16 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
 
     const sales = ((salesRes.data ?? []) as unknown[]).map((row) => normalizeRelation(row as Record<string, unknown>, 'fabric_stock_lots')) as unknown as TakaStockSaleRow[]
     const movements = ((movementsRes.data ?? []) as unknown[]).map((row) => normalizeRelation(row as Record<string, unknown>, 'fabric_stock_lots')) as unknown as TakaStockMovementRow[]
+    const pendingInwards = ((draftsRes.data ?? []) as unknown[]).map((row) => {
+        const item = row as Record<string, unknown>
+        return {
+            ...item,
+            suggested_meters: toNumber(item.suggested_meters),
+            suggested_unit_count: toNumber(item.suggested_unit_count),
+            meters_per_unit: toNumber(item.meters_per_unit),
+            cost_per_meter: toNumber(item.cost_per_meter),
+        } as StockInwardDraftRow
+    })
 
     const marketRunOptions: StockSourceOption[] = ((runsRes.data ?? []) as unknown[]).map((rawRun) => {
         const run = rawRun as Record<string, unknown>
@@ -352,6 +403,8 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
             quality_label: qualityLabel,
             cost_per_meter: toNumber(run.cost_per_meter),
             meters: stockMeters,
+            meters_per_taka: null,
+            unit_label: null,
         }
     })
 
@@ -368,6 +421,8 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
             quality_label: qualityLabel,
             cost_per_meter: toNumber(raw.landed_cost_per_meter),
             meters: quantity,
+            meters_per_taka: null,
+            unit_label: null,
         }
     })
 
@@ -390,6 +445,7 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
         lots,
         sales,
         movements,
+        pendingInwards,
         sourceOptions: [...marketRunOptions, ...orderOptions],
         summary,
     }
@@ -437,6 +493,14 @@ export async function createTakaStockLot(input: unknown) {
             original_taka_count: parsed.data.taka_count,
             available_taka_count: parsed.data.taka_count,
             meters_per_taka: parsed.data.meters_per_taka,
+            unit_label: parsed.data.unit_label,
+            original_meters: parsed.data.taka_count * parsed.data.meters_per_taka,
+            available_meters: parsed.data.taka_count * parsed.data.meters_per_taka,
+            stock_purpose: sourceType === 'market_run'
+                ? 'sellable'
+                : sourceType === 'order'
+                    ? 'order_reserved'
+                    : 'manual',
             cost_per_meter: parsed.data.cost_per_meter,
             received_date: parsed.data.received_date,
             notes: parsed.data.notes || null,
@@ -465,6 +529,53 @@ export async function createTakaStockLot(input: unknown) {
 
     revalidatePath('/owner/stock')
     revalidatePath('/owner/commercials')
+    return { success: true }
+}
+
+export async function confirmStockInwardDraft(input: unknown) {
+    const parsed = safeParse(ConfirmStockInwardDraftSchema, input)
+    if ('error' in parsed) return parsed
+
+    await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase.rpc('confirm_stock_inward_draft', {
+        p_draft_id: parsed.data.draft_id,
+        p_actual_unit_count: parsed.data.actual_unit_count,
+        p_meters_per_unit: parsed.data.meters_per_unit,
+        p_godown: parsed.data.godown,
+        p_unit_label: parsed.data.unit_label,
+        p_notes: parsed.data.notes || null,
+    })
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/owner/stock')
+    revalidatePath('/owner/market-runs')
+    revalidatePath('/owner/orders')
+    revalidatePath('/owner/commercials')
+    return { success: true, result: data?.[0] ?? null }
+}
+
+export async function dismissStockInwardDraft(input: unknown) {
+    const { profile } = await requireRole(['owner'])
+    const parsed = safeParse(DismissStockInwardDraftSchema, input)
+    if ('error' in parsed) return parsed
+
+    const supabase = await createServerClient()
+    const { error } = await supabase
+        .from('fabric_stock_inward_drafts')
+        .update({
+            status: 'dismissed',
+            notes: parsed.data.notes || null,
+        })
+        .eq('id', parsed.data.draft_id)
+        .eq('org_id', profile.org_id)
+        .eq('status', 'pending')
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/owner/stock')
     return { success: true }
 }
 

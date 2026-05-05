@@ -578,8 +578,16 @@ export async function createDispatch(
 
     if (dispatchError || !dispatch) return { error: dispatchError?.message ?? 'Failed to load dispatch' }
 
+    await supabase.rpc('consume_order_stock_for_dispatch', {
+        p_order_id: parsed.data.order_id,
+        p_meters_to_consume: Number(dispatch.qty_meters_sent ?? 0),
+        p_reference: `Dispatch #${dispatch.dispatch_number}`,
+        p_notes: parsed.data.notes || null,
+    })
+
     revalidatePath('/owner/orders')
     revalidatePath('/owner/dispatches')
+    revalidatePath('/owner/stock')
     return {
         dispatch: normalizeDispatchRow(dispatch as RawDispatchRow),
         tracking_token: dispatchMeta.tracking_token,
