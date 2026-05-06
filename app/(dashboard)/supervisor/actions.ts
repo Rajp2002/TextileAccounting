@@ -28,6 +28,7 @@ interface ProductionLogRow {
     meters: number
     closing_meter_reading: number | null
     opening_meter_reading: number | null
+    counter_was_reset: boolean
     submitted_at: string | null
 }
 
@@ -143,6 +144,7 @@ async function logShiftSelfCorrections(params: {
         shift: ShiftType
         opening_meter_reading: number
         closing_meter_reading: number
+        counter_was_reset: boolean
         submitted_at: string
         created_by: string
         updated_by: string
@@ -962,7 +964,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             ? Promise.resolve({ data: [] as ProductionLogRow[] })
             : supabase
                   .from('production_logs')
-                  .select('id, machine_id, date, shift, meters, opening_meter_reading, closing_meter_reading, submitted_at')
+                  .select('id, machine_id, date, shift, meters, opening_meter_reading, closing_meter_reading, counter_was_reset, submitted_at')
                   .eq('org_id', orgId)
                   .eq('date', date)
                   .eq('shift', shift)
@@ -1096,6 +1098,7 @@ export async function bulkLogProduction(entries: {
     meters: number
     opening_meter_reading: number
     closing_meter_reading: number
+    counter_was_reset?: boolean
     shift: 'day' | 'night'
     date: string
     rate_per_m?: number
@@ -1115,7 +1118,7 @@ export async function bulkLogProduction(entries: {
         return { error: 'ORDER_MISSING', message: 'All machines with production must have an assigned order.' }
     }
 
-    const negativeEntry = entries.find(e => e.closing_meter_reading < e.opening_meter_reading || e.meters < 0)
+    const negativeEntry = entries.find(e => !e.counter_was_reset && (e.closing_meter_reading < e.opening_meter_reading || e.meters < 0))
     if (negativeEntry) {
         return { error: 'Closing meter reading cannot be below opening meter reading.' }
     }
@@ -1127,9 +1130,10 @@ export async function bulkLogProduction(entries: {
             machine_id: e.machine_id,
             worker_id: e.worker_id,
             order_id: e.order_id!,
-            meters: e.meters,
-            opening_meter_reading: e.opening_meter_reading,
+            meters: e.counter_was_reset ? e.closing_meter_reading : e.meters,
+            opening_meter_reading: e.counter_was_reset ? 0 : e.opening_meter_reading,
             closing_meter_reading: e.closing_meter_reading,
+            counter_was_reset: e.counter_was_reset ?? false,
             shift: e.shift,
             date: e.date,
             worker_rate_snapshot: e.rate_per_m ?? 1.5,
@@ -1148,7 +1152,7 @@ export async function bulkLogProduction(entries: {
 
     const { data: existingLogs } = await supabase
         .from('production_logs')
-        .select('id, machine_id, date, shift, meters, opening_meter_reading, closing_meter_reading, submitted_at')
+        .select('id, machine_id, date, shift, meters, opening_meter_reading, closing_meter_reading, counter_was_reset, submitted_at')
         .eq('org_id', orgId)
         .eq('date', logDate)
         .eq('shift', logShift)
