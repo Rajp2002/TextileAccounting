@@ -315,7 +315,7 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
             `)
             .eq('org_id', profile.org_id)
             .order('created_at', { ascending: false })
-            .limit(80),
+            .limit(500),
         supabase
             .from('fabric_stock_inward_drafts')
             .select('*')
