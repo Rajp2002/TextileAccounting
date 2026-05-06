@@ -1,12 +1,18 @@
 # Weavly WhatsApp Integration Guide
 
-This guide reflects the implementation in the repo today.
+Last analyzed from the active codebase on May 6, 2026.
 
 ## Provider
 
-Weavly currently sends operational WhatsApp messages through the Meta WhatsApp Cloud API, using the shared utility in `supabase/functions/_shared/whatsapp.ts`.
+Weavly currently sends operational WhatsApp messages through the Meta WhatsApp Cloud API using:
 
-The code still contains a few legacy comments mentioning Interakt, but the send path in use is Meta.
+- `supabase/functions/_shared/whatsapp.ts`
+
+Some legacy comments may still mention Interakt. The implemented send path is Meta.
+
+## Role in Phase 1
+
+WhatsApp supports the factory loop but should not block it. A production log, payroll settlement, advance record, or access-code action should not fail just because message delivery fails. Message failures should be logged and retried.
 
 ## Current Edge Functions
 
@@ -21,9 +27,7 @@ The code still contains a few legacy comments mentioning Interakt, but the send 
 - `send-lockdown-alert`
 - `whatsapp-webhook`
 
-## Required Secrets
-
-Set these in Supabase edge-function secrets:
+## Required Supabase Edge Secrets
 
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -32,9 +36,9 @@ Set these in Supabase edge-function secrets:
 - `META_WEBHOOK_VERIFY_TOKEN`
 - `WHATSAPP_PROVIDER`
 
-`WHATSAPP_PROVIDER` defaults to `meta`. Set it to `simulate` when you want the edge functions to succeed without sending real messages.
+`WHATSAPP_PROVIDER` defaults to `meta`. Use `simulate` for test runs that should log success without sending real messages.
 
-## Templates Referenced In Code
+## Templates Referenced in Code
 
 - `weavly_daily_brief_v2`
 - `weavly_deadline_risk`
@@ -44,56 +48,72 @@ Set these in Supabase edge-function secrets:
 - `worker_payslips`
 - `weavly_tenant_lockdown`
 
-These names must stay aligned with the approved templates in your WhatsApp Business setup.
+Template names must match approved templates in the WhatsApp Business setup.
+
+## Message Types
+
+Phase 1-relevant:
+
+- owner/supervisor access codes
+- daily production summaries
+- deadline or pace risk alerts
+- worker advance receipts
+- worker payslips
+- monthly production/finance briefs
+
+Governance/deferred:
+
+- tenant lockdown alerts
+- compliance/admin notifications where enabled
 
 ## Message Logging
 
-Every send attempt writes to `whatsapp_delivery_log` through the shared helper.
+Every send attempt should write to `whatsapp_delivery_log`.
 
 The log stores:
-- org
+
+- organization
 - recipient phone
 - template name
 - notification type
 - status
 - payload snapshot
-- Meta callback data
-- Meta message ID when available
+- provider response/callback data
+- Meta message ID where available
 
-Owner-facing visibility for recent logs lives at `/owner/system-health`.
+`/owner/system-health` contains owner-facing log/retry concepts but is archived from Phase 1 polish in the current route gate.
 
 ## Retry Flow
 
-Failed rows in `whatsapp_delivery_log` are retried by `retry-failed-messages`.
-
-The owner UI also exposes a manual retry action from `/owner/system-health`.
+`retry-failed-messages` handles failed delivery rows. Keep retry behavior operational even if the full system-health UI is not part of Phase 1 polish.
 
 ## Payslip Special Case
 
-`send-payslip` does two things:
+`send-payslip` sends:
 
-1. Sends the top-level summary template.
-2. Sends a follow-up freeform message with itemized breakdown data from `payroll_settlements.itemization_payload`.
+1. A top-level payslip summary template.
+2. A follow-up freeform itemized breakdown from `payroll_settlements.itemization_payload`.
 
-That breakdown can include:
+The itemization can include:
+
+- machine/order rows
+- gross pay
 - bonuses
 - fines
 - advances recovered
-- PF and ESI values
+- PF/ESI values
+- net payout
 
 ## Webhook Notes
 
-`whatsapp-webhook` is present for delivery-status updates. It uses `META_WEBHOOK_VERIFY_TOKEN` and correlates incoming statuses against `meta_message_id` in `whatsapp_delivery_log`.
+`whatsapp-webhook` verifies against `META_WEBHOOK_VERIFY_TOKEN` and correlates incoming delivery statuses using `meta_message_id`.
 
 ## Recommended Validation
 
-After configuration:
-
-1. Set `WHATSAPP_PROVIDER=simulate` and invoke one or two edge flows to confirm logging.
-2. Switch to real Meta credentials.
-3. Test:
-   - access code delivery
-   - daily brief
-   - advance receipt
-   - payslip summary plus itemized follow-up
-4. Confirm owner logs are visible in `/owner/system-health`.
+1. Set `WHATSAPP_PROVIDER=simulate`.
+2. Trigger access-code send.
+3. Trigger advance receipt.
+4. Trigger payslip send.
+5. Confirm rows in `whatsapp_delivery_log`.
+6. Switch to Meta credentials in a safe test org.
+7. Confirm real delivery and webhook status updates.

@@ -1,4 +1,4 @@
-import { getAllDispatches } from "../orders/actions"
+import { getAllDispatches, getDispatchOverviewStats } from "../orders/actions"
 import DispatchesClient from "./DispatchesClient"
 
 export const metadata = {
@@ -7,20 +7,24 @@ export const metadata = {
 }
 
 export default async function DispatchesPage() {
-    const { data: dispatches, error } = await getAllDispatches()
+    const [dispatchesResult, overviewResult] = await Promise.all([
+        getAllDispatches(),
+        getDispatchOverviewStats(),
+    ])
+    const { data: dispatches, error } = dispatchesResult
 
-    if (error) {
+    if (error || overviewResult.error || !overviewResult.data) {
         return (
             <div className="p-8 text-center">
                 <h1 className="text-2xl font-bold text-red-500">Error loading dispatches</h1>
-                <p className="text-muted-foreground">{error}</p>
+                <p className="text-muted-foreground">{error || overviewResult.error || 'Unable to load dispatch overview'}</p>
             </div>
         )
     }
 
     return (
         <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-            <DispatchesClient initialDispatches={dispatches || []} />
+            <DispatchesClient initialDispatches={dispatches || []} initialOverview={overviewResult.data} />
         </div>
     )
 }

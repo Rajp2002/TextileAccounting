@@ -1,42 +1,64 @@
-# Feature Analysis: Advances Management
+# Advances Management
 
-## Overview
-In the Indian textile industry, "Advances" are interest-free loans given to workers for personal needs. Weavly tracks these advances, provides receipts to workers, and manages the automatic recovery of these loans during payroll.
+Last analyzed from the active codebase on May 6, 2026.
 
-## Why It's Needed
-Worker advances are a massive hidden liability. Owners often lose track of who owes what, leading to financial leakage. Workers also need clarity on their outstanding balance to avoid feelings of being "cheated" by the factory.
+## Phase 1 Status
+
+Core Phase 1 pillar because advances/Upaad directly affect worker trust and payroll settlement.
+
+## What It Does
+
+Advances records money given to meter or fixed workers before settlement. Pending advances are visible on the worker profile and are recovered during payroll according to deduction caps and final settlement behavior.
+
+## User Workflow
+
+1. Owner opens `/owner/advances`.
+2. Owner searches across active meter and fixed workers.
+3. Owner selects a worker.
+4. Owner sees pending and deducted advances.
+5. Owner sees total pending, total deducted, and debt warnings based on typical monthly pay.
+6. Owner records a new advance with amount and description.
+7. Payroll later deducts the pending advance.
+8. Deducted advances retain settlement history.
+9. Owner deletes or writes off records where allowed by the current rules.
+
+## Existing Workflow Translation
+
+Old workflow:
+
+- Owner writes Upaad in a notebook or remembers small advances.
+- Worker and owner may disagree on remaining balance.
+- Month-end deductions can feel opaque.
+
+Weavly workflow:
+
+- Each advance is a record with amount, description, status, creation date, and deduction metadata.
+- Payroll uses pending advances to calculate recovery.
+- Worker payslip can show recovered advances and remaining debt.
 
 ## Pain Points Solved
-- **Balance Confusion**: Both owner and worker can see the current "Outstanding Balance" at any time.
-- **Manual Deduction Errors**: No more forgetting to deduct an advance during the monthly settlement.
-- **Audit Trails**: Every advance given and every rupee recovered is logged with a timestamp and reason.
 
-## Old Workflow Translation
-- **Old way**: A small notebook (Chopdi) where the owner writes "Rs 5000 given to Ramesh". When Ramesh gets paid, the owner tries to remember to subtract it and crosses it out.
-- **Weavly way**: Owner records a "New Advance" in the app. Ramesh gets a WhatsApp confirmation. During payroll, Weavly automatically calculates the deduction and updates the balance.
+- Lost advance memory.
+- Over-deduction risk.
+- Worker mistrust during settlement.
+- Lack of linkage between advance and payroll month.
 
-## Value Provided
-- **Cash Flow Control**: Real-time visibility into the total "Money on the Floor" (sum of all worker debts).
-- **Reduced Friction**: Automated deductions remove the need for "negotiation" during payday.
-- **Worker Stability**: Clear debt tracking helps workers manage their finances better.
+## Data and Code
 
-## User Interaction
-1.  **Issuance**: Owner enters worker name, amount, and category (e.g., "Medical", "Travel").
-2.  **Notification**: System sends a WhatsApp "Advance Receipt" to the worker.
-3.  **Recovery**: During the "Settle" action in the Payroll module, the system suggests a deduction amount.
-4.  **Tracking**: Owner views the "Advances Ledger" to see a history of all loans and repayments for a specific worker.
+- `app/(dashboard)/owner/advances/page.tsx`
+- `app/(dashboard)/owner/advances/actions.ts`
+- `components/advances/WorkerExitDialog.tsx`
+- `worker_advances`
+- `payroll_settlements`
 
-## Technical Logic
-- **Ledger-based Tracking**: Advances are stored as debits in a worker-specific ledger.
-- **Settlement Bridge**: The `settle_worker_payroll` RPC looks up the current `total_outstanding` for the worker and applies the deduction logic.
-- **Reversal Safety**: If a payroll settlement is "Unsettled", the system automatically reverts the advance recovery, restoring the worker's debt balance.
+## Downstream Effects
 
-## Relation to Other Features
-- **Payroll**: The primary mechanism for advance recovery.
-- **Workers**: Advances are linked to the worker profile.
-- **WhatsApp Integration**: Sends instant receipts for every advance transaction.
+- Payroll settlement recovers advances.
+- WhatsApp advance receipts can be sent.
+- Worker exit/final settlement flows can use remaining debt.
 
-## Output/Result
-- **Advance Record**: Timestamped entry in the `worker_advances` table.
-- **WhatsApp Receipt**: Confirmation message sent to the worker.
-- **Outstanding Balance**: A real-time number shown on the worker's profile and payroll card.
+## Readiness Notes
+
+- Advance deduction behavior needs focused tests.
+- Write-off and deletion should remain auditable.
+- Debt warnings should help owners without becoming legal advice.

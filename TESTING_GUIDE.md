@@ -1,92 +1,165 @@
 # Weavly Testing Guide
 
-This guide reflects the current app surface and the current level of automated coverage.
+Last analyzed from the active codebase on May 6, 2026.
 
-## Automated Checks
+## Current Automated Coverage
 
-### Lint
-```bash
-npm run lint
-```
+The repo currently has a maintained finance math test suite at:
 
-### Finance unit tests
-The maintained unit-test suite currently lives in `__tests__/finance.test.ts`.
+- `__tests__/finance.test.ts`
 
-```bash
-npx vitest run __tests__/finance.test.ts
-```
+There are also ad hoc scripts in `scripts/` and several test/probe files, but Phase 1 should not assume comprehensive automated workflow coverage.
 
-### Useful diagnostic scripts
-The `scripts/` folder contains one-off operational scripts for schema inspection, workflow debugging, migrations, and data cleanup. Treat these as developer tools, not a stable test suite.
+## Commands
 
-## Manual Smoke Test Matrix
+- `npm run lint`
+- `npm run build`
 
-### 1. Authentication
-- Sign up as an owner.
-- Complete onboarding.
-- Log out and log back in.
-- Confirm owner redirect goes to `/owner/analytics`.
-- Join an organization as a supervisor.
-- Confirm supervisor redirect lands on `/supervisor/dashboard` via `/supervisor/production`.
+There is no dedicated `test` script in `package.json` at the time of this pass. If adding tests, also add a stable package script.
 
-### 2. Owner Core Flow
-- Open `/owner/estimator` and create or load a quote.
-- Confirm the quote appears in `/owner/quotes`.
-- Open `/owner/orders` and verify order data renders correctly.
-- Open `/owner/market-runs` and verify speculative production tracking.
-- Open `/owner/analytics` and confirm KPI cards and active operational data load.
+## Phase 1 Test Priorities
 
-### 3. Supervisor Floor Flow
-- Open `/supervisor/dashboard`.
-- Assign a worker to a machine.
-- Link the machine to an active order.
-- Enter production and submit the bulk log flow.
-- Use **SUBMIT & PACK** and verify that fabric packages are created and visible in `/owner/stock`.
-- Verify the owner dashboard reflects the new data.
+### 1. Estimator
 
-### 4. Payroll And Advances
-- Record an advance in `/owner/advances`.
-- Open `/owner/payroll` for a target month.
-- Settle a worker with pending debt.
-- Verify net payout, carry-forward debt, and statutory payload sections render.
-- Trigger payslip generation and, if configured, WhatsApp sending.
+Validate with real factory examples:
 
-### 5. Inventory, Stock, Ledger, Dispatches
-- Confirm `/owner/inventory` loads yarn and beam module data.
-- Confirm `/owner/stock` loads the grey fabric stock board.
-- Confirm `/owner/ledger` loads party ledger data.
-- Confirm `/owner/dispatches` loads dispatch rows and that a public tracking token works.
+- warp yarn kg/cost
+- weft yarn kg/cost
+- GST
+- shortage
+- warp crimp
+- warping/sizing/winding/process/finishing
+- overhead allocation and override
+- loom RPM/power assumptions
+- commission, transport, margin
+- quote price and landed cost
+- quote snapshot restore
+- accepted quote to order conversion
+- market run creation from estimator
 
-### 6. Settings, Audit, And Billing
-- Open `/owner/settings`.
-- Regenerate join code.
-- Generate an access code.
-- Open `/owner/settings/audit` and verify events load.
-- Open `/owner/billing` and verify subscription state loads.
+### 2. Supervisor Production Log
 
-### 7. WhatsApp And Ops
-- Open `/owner/system-health`.
-- Confirm delivery logs render.
-- Retry a failed log if test data exists.
+Manual and automated scenarios:
 
-### 8. Admin
-- Open `/admin`.
-- Confirm grievances, notices, DPA state, and breach/export data render.
+- current date/current shift default
+- date and shift switching
+- copy previous shift
+- assign worker and order/run
+- missing worker
+- missing order/run
+- closing reading greater than opening
+- closing reading lower than opening
+- duplicate machine/date/shift submission
+- correction within allowed window
+- protected overwrite with owner access code
+- past-date attendance or production protection
+- machine status update
+- maintenance/breakdown note update
 
-## Regression Hotspots
+### 3. Orders and Market Runs
 
-Pay extra attention to these areas after schema or action changes:
+Scenarios:
 
-- supervisor dashboard bulk logging
-- owner payroll settlement math
-- quote-to-order data continuity
-- public tracking token access
-- WhatsApp retries and logging
-- subscription gating and redirects
-- access-code-protected destructive or historical edits
+- quote accepted to active order
+- order target/deadline validation
+- machine assignment update
+- production log updates order progress
+- order pace/days remaining display
+- complete/cancel order
+- create market run
+- production updates market-run produced meters
+- stock inward/sale updates market-run status and profit
 
-## Known Gaps In The Test Story
+### 4. Stock and Commercials
 
-- There is no first-class end-to-end test suite in the repository yet.
-- Timezone-sensitive flows still need extra manual verification because some client screens use browser-local time helpers.
-- Most high-risk business logic outside `lib/finance.ts` is still validated by manual smoke tests and migration-level reasoning.
+Scenarios:
+
+- create stock lot manually
+- create stock lot from market run
+- create stock lot from order source
+- confirm inward draft
+- adjust stock up
+- adjust stock down
+- prevent invalid negative stock
+- record stock sale
+- verify revenue/cost/gross profit
+- verify Commercials filtering and summary totals
+
+### 5. Dispatches and Tracking
+
+Scenarios:
+
+- create dispatch from order
+- include transport/GST/e-way metadata
+- public tracking token loads without login
+- owner confirms exact received meters
+- owner confirms shortage
+- owner confirms extra received with confirmation
+- status transitions to delivered/disputed
+
+### 6. Payroll and Advances
+
+Scenarios:
+
+- meter worker gross from production logs
+- fixed worker salary/daily attendance calculation
+- pending advances display
+- advance deduction cap
+- final settlement deduction behavior
+- PF/ESI deductions
+- payment mode persistence
+- settle and unsettle
+- paid/pending status
+- payslip PDF generation
+- WhatsApp payslip send path in simulate mode
+- advance receipt send path in simulate mode
+
+### 7. Auth, Settings, and Access Codes
+
+Scenarios:
+
+- owner signup and onboarding gate
+- supervisor join code
+- role redirects
+- archived route redirect
+- one-time access code generation
+- invalid code rate limiting/lockout
+- code consumption after success
+- inactive session redirect
+- organization name update
+- join-code regeneration invalidates old code
+
+## WhatsApp Test Mode
+
+Use Supabase edge-function secret:
+
+- `WHATSAPP_PROVIDER=simulate`
+
+This should let send functions succeed and log attempts without sending real messages.
+
+Verify:
+
+- `whatsapp_delivery_log` rows are created.
+- failed rows can be retried where retry UI/function is available.
+- core writes still succeed when message send fails.
+
+## Browser/Manual Smoke Test
+
+Minimum release smoke:
+
+1. Owner signup.
+2. Onboarding complete with machines/workers/payroll.
+3. Estimator creates quote.
+4. Quote accepted and converted to order.
+5. Supervisor logs production.
+6. Owner analytics updates.
+7. Payroll previews worker earnings.
+8. Advance is recorded and deducted.
+9. Stock lot or inward draft is created/confirmed.
+10. Stock sale appears in Commercials.
+11. Dispatch is created and tracking link opens.
+12. Billing page shows plan/trial state.
+
+## Release Confidence Gap
+
+Before declaring Phase 1 production-ready, add automated tests around estimator math, production logging guards, payroll settlement, stock sale math, and dispatch receipt variance. These are the areas with the highest trust impact.

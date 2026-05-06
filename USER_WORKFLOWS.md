@@ -1,163 +1,350 @@
 # Weavly User Workflows
 
-This document provides a comprehensive map of how users interact with the Weavly platform, the lifecycle of core entities, and the data flow between modules.
+Last analyzed from the active codebase on May 6, 2026.
 
----
+This document explains how users progress through Weavly in the active product. It is written from the user's workflow outward: what they are trying to do, what pain point it replaces, how they interact with the app, and what records are created.
 
-## 1. Fabric Design & Commercial Workflow (Owner)
+## 1. Owner Setup Workflow
 
-**Entry Point**: `/owner/estimator`
+Entry points: `/signup`, `/onboarding`, `/owner/settings`, `/owner/billing`
 
-The "Estimator-First" design ensures that every order starts with a technically accurate cost breakdown.
+### Goal
 
-### Lifecycle
-1.  **Baseline Setup**: The owner configures the factory's cost profile (warping, sizing, electricity, overheads) in Settings.
-2.  **Design Entry**: Input warp/weft specifications (yarn type, denier, rate, ends, picks).
-3.  **Cost Discovery**: The engine calculates total yarn weight (kg), conversion costs, and effective overheads per meter.
-4.  **Quotation**: The owner adds a profit margin (up to 100%) and saves the result as a **Quote**.
-5.  **Iteration**: Quotes can be updated if yarn market rates change before acceptance.
+Get a factory into a usable digital state before production logging and payroll begin.
 
-### Data Flow
--   **Inputs**: Yarn specs, machine parameters (RPM, Power), margin %, party name.
--   **Outputs**: 
-    -   `Fabric Design`: A reusable recipe for production.
-    -   `Quote`: A commercial offer with landed cost and quote price.
-    -   `Worker Rate`: The weaver's piece-rate (derived from picks and pick-rate).
+### Flow
 
----
+1. Owner signs up and creates an organization.
+2. Owner is routed to onboarding until required setup exists.
+3. Owner adds machines manually or in bulk.
+4. Owner adds meter workers manually or in bulk, optionally saving WhatsApp numbers with consent.
+5. Owner saves payroll baseline.
+6. Owner starts trial or subscribes where access requires it.
+7. Owner lands on `/owner/analytics`.
+8. Owner continues setup in `/owner/settings`: factory name, join code, WhatsApp, factory cost profile, templates, access codes, supervisor float, and security/data controls.
+9. Supervisor joins with the current join code and is routed to production.
 
-## 2. Order & Production Lifecycle (Owner)
+### Pain Point Replaced
 
-**Entry Point**: `/owner/quotes` → `/owner/orders`
+Paper master lists and informal supervisor onboarding become structured organization setup.
 
-Transitioning from a commercial quote to a live factory floor instruction.
+### Outputs
 
-### Lifecycle
-1.  **Acceptance**: A Quote is marked as `Accepted` after party confirmation.
-2.  **Activation**: The owner converts the Accepted Quote into an **Order**.
-3.  **Speculative Production**: For market-driven fabrics, the owner creates a **Market Run** directly from the Estimator (auto-accepts).
-4.  **Inventory Planning**: On order creation, the system automatically calculates `Yarn Requirements` (kg) and `Beam Capacity` (estimated beams needed).
-5.  **Visibility**: The order appears as `Active` on the Supervisor Dashboard for machine assignment.
+- `organizations`
+- `profiles`
+- `machines`
+- `workers`
+- `fixed_workers`
+- `payroll_configs`
+- `org_subscriptions`
+- WhatsApp/profile settings
 
-### Data Flow
--   **Inputs**: Target meters, deadline, notes.
--   **Outputs**: 
-    -   `Order Record`: The primary production anchor.
-    -   `Requirement Snapshot`: Exact KG of warp/weft yarn needed.
-    -   `Tracking Token`: A unique token for public shipment tracking.
+## 2. Estimator to Quote Workflow
 
----
+Entry points: `/owner/estimator`, `/owner/quotes`
 
-## 3. Floor Operations & Production (Supervisor)
+### Goal
 
-**Entry Point**: `/supervisor/dashboard`
+Turn fabric costing from mental math and Excel into repeatable, auditable quote snapshots.
 
-The real-time workspace for managing the factory floor and logging output.
+### Flow
 
-### Lifecycle
-1.  **Shift Setup**: Supervisor assigns workers and active orders to specific machines for the current shift (Day/Night).
-2.  **Execution**: Update machine status (Running, Idle, Maintenance) to maintain floor visibility.
-3.  **Production Logging**: At the end of the shift, the supervisor logs meter readings.
-    -   **Submit Shift Logs**: Records production for payroll and analytics only.
-    -   **Submit & Pack**: Records production and immediately creates **Fabric Packages** (rolls/bales) in the digital warehouse.
-4.  **Handover**: Machines are cleared for the next shift assignment.
+1. Owner opens the estimator.
+2. Owner loads a template or starts from defaults.
+3. Owner enters warp and weft details: denier, beam ends, picks, reed space, yarn rates, GST, shortage, crimp, and tape length.
+4. Owner chooses loom type and production assumptions: RPM, power, hours per shift, sizing mode.
+5. Owner adjusts factory costs: warping, sizing, winding, process costs, finishing, overheads, fixed-worker overhead, commission, transport, monthly output.
+6. Owner reviews landed cost, quote price, margin, and scenarios.
+7. Owner saves or updates a fabric template.
+8. Owner saves a quote with party, quality label, quantity, instructions, and snapshot data.
+9. Owner manages status in quote history: draft, sent, accepted, rejected.
+10. Owner can restore the quote snapshot to re-estimate.
 
-### Data Flow
--   **Inputs**: Machine-Order mapping, worker assignment, meter readings, breakdown notes.
--   **Outputs**: 
-    -   `Production Logs`: Piece-rate data for payroll.
-    -   `Fabric Packages`: Physical inventory records (Stock state: `uninspected`).
+### Pain Point Replaced
 
----
+The handwritten parchi/calculator workflow becomes a structured fabric recipe and commercial offer.
 
-## 4. Inventory & Quality Assurance (Owner/QC)
+### Outputs
 
-**Entry Point**: `/owner/stock`
+- `factory_cost_profile`
+- `estimator_templates`
+- `estimator_quotes`
 
-Bridging the gap between raw production and shippable goods.
+## 3. Quote to Order Workflow
 
-### Lifecycle
-1.  **Production Output**: Packages created by supervisors land here as `uninspected`.
-2.  **Inspection**: QC staff/Owner inspects the physical roll for defects.
-3.  **Grading**: Marks the package as `Pass` (Grade A), `Minor Defect` (Grade B), or `Reject`.
-4.  **Readying**: Only `Pass` or `Minor Defect` packages can be moved to the `Ready` state.
-5.  **Corrections**: If a meter reading was wrong, the owner uses an **Access Code** to correct the package meters.
+Entry points: `/owner/quotes`, `/owner/orders`
 
-### Data Flow
--   **Inputs**: Inspection status, grade, location, photo, correction notes.
--   **Outputs**: 
-    -   `Ready Stock`: Packages eligible for dispatch.
-    -   `Audit Trail`: Record of who inspected and when.
+### Goal
 
----
+Convert a confirmed party quote into a live production commitment.
 
-## 5. Dispatch & Fulfillment (Owner)
+### Flow
 
-**Entry Point**: `/owner/dispatches`
+1. Owner marks a quote accepted.
+2. Owner clicks create active order.
+3. Owner confirms target meters, deadline, and notes.
+4. System creates an order with quote snapshot values and tracking token.
+5. Owner opens orders.
+6. Owner reviews progress, pace, deadline, margin, and total order value.
+7. Owner assigns machines.
+8. Supervisor sees/selects the order in the production log.
+9. Production logs update progress.
+10. Owner dispatches output when ready.
 
-Fulfilling orders and providing transparency to the buyer.
+### Pain Point Replaced
 
-### Lifecycle
-1.  **Batching**: Owner selects an active order and chooses from the `Ready` packages assigned to that order.
-2.  **Dispatch Creation**: A new Dispatch record is created. Selected packages are automatically moved to `dispatched` state.
-3.  **Documentation**: System generates a **Challan PDF** (Delivery Note) for the driver.
-4.  **Tracking**: The buyer receives a link to the **Public Tracking Portal** (token-based).
-5.  **Reconciliation**: Once delivered, the owner records the `Received Meters` (confirmed by buyer) to track shortages.
+The whiteboard order list becomes a tracked production commitment with machine assignment and pace.
 
-### Data Flow
--   **Inputs**: Package selection, transport details, party confirmation.
--   **Outputs**: 
-    -   `Dispatch Record`: Linked to the order and party ledger.
-    -   `Challan PDF`: Physical proof of shipment.
-    -   `Shortage Analytics`: Discrepancy between sent and received meters.
+### Outputs
 
----
+- `orders`
+- `machine_assignments`
+- `shift_assignments`
+- `production_logs`
+- `dispatches`
 
-## 6. Financial & Payroll Settlement (Owner)
+## 4. Market Run Workflow
 
-**Entry Point**: `/owner/ledger` & `/owner/payroll`
+Entry points: `/owner/estimator?mode=market`, `/owner/market-runs`, `/owner/market-runs/[id]`
 
-The final step in the factory loop: settling accounts with parties and workers.
+### Goal
 
-### Lifecycle
-1.  **Party Ledger**: Every dispatch impacts the party balance. Owner records payments (Receipts) and claims (Shortage adjustments).
-2.  **Worker Payroll**:
-    -   **Piece-Rate**: System sums meters from `Production Logs` for the month.
-    -   **Fixed-Rate**: Derived from the monthly Attendance registry.
-    -   **Deductions**: Automatically recovers Advances (Upaad), applies PF/ESI (if eligible), and fines.
-3.  **Payout**: Owner settles the cycle. Payslips are generated and sent via **WhatsApp**.
+Keep looms productive when client orders are light while still knowing cost, stock, sales, and profit.
 
-### Data Flow
--   **Inputs**: Invoices, Payments, Attendance, Manual adjustments (Bonuses/Fines).
--   **Outputs**: 
-    -   `Ledger Statement`: Comprehensive financial history for the party.
-    -   `Payslip PDF`: Itemized breakdown of earnings and deductions.
+### Flow
 
----
+1. Owner starts a market run from the estimator.
+2. Owner sets the target meters and cost assumptions.
+3. Supervisor logs production against the market-run production anchor.
+4. Owner tracks produced meters, in-godown meters, sold meters, revenue, cost, and profit.
+5. Output is confirmed into stock lots or inward drafts.
+6. Owner records sale when stock is sold.
+7. Owner closes the run when done.
 
-## 7. Governance & Security (Admin / Owner)
+### Pain Point Replaced
 
-**Entry Point**: `/admin` & `/owner/settings`
+Informal "market maal" becomes costed speculative production with measurable profit.
 
-System-wide controls for compliance and operational integrity.
+### Outputs
 
-### Lifecycle
-1.  **Access Codes**: Supervisors request codes for "protected" actions (deleting workers, overwriting production). Owner receives a WhatsApp request and generates a one-time code.
-2.  **DPDP Compliance**: Admin manages **Data Processing Agreements (DPA)**. Owners track worker signatures and upload proof of compliance.
-3.  **Audit Logs**: Every critical action (machine rename, salary change, code usage) is recorded in the Audit log with the actor's identity.
-4.  **Emergency Lockdown**: Owner can trigger a tenant-wide lockdown in case of a breach, requiring Admin intervention to restore.
+- `market_runs`
+- `production_logs`
+- `fabric_stock_inward_drafts`
+- `fabric_stock_lots`
+- `market_run_sales`
 
-### Data Flow
--   **Inputs**: DPA Templates, Access code requests, Audit filters.
--   **Outputs**: 
-    -   `Compliance Status`: Org-level visibility into legal readiness.
-    -   `Audit Report`: Immutable history of system changes.
+## 5. Supervisor Production Log Workflow
 
----
+Entry points: `/supervisor/dashboard`, `/supervisor/production`
 
-## Authentication and Onboarding
+### Goal
 
--   **Signup**: Owner registers the organization.
--   **Onboarding**: Step-by-step setup of looms, workers, and cost baseline.
--   **Join Flow**: Supervisors join an existing organization using a secure Join Code.
--   **Redirects**: Owners land on Analytics; Supervisors land on the Unified Production Dashboard.
+Capture the shift's real production in the moment, with enough structure to power payroll and analytics.
+
+### Flow
+
+1. Supervisor opens the production log.
+2. Supervisor chooses date and shift.
+3. Supervisor copies previous shift setup when useful.
+4. Supervisor assigns worker and order/run to each machine.
+5. Supervisor sets machine status: running, idle, maintenance.
+6. Supervisor adds breakdown notes if a loom is under service.
+7. Supervisor enters closing meter readings.
+8. System compares against previous closing/opening readings.
+9. Supervisor submits logs.
+10. Duplicate/correction cases require protected handling and may use owner access codes.
+
+### Pain Point Replaced
+
+The production register becomes a mobile shift screen that feeds owner analytics and payroll.
+
+### Outputs
+
+- `shift_assignments`
+- `production_logs`
+- `machines.machine_status`
+- `audit_log`
+
+## 6. Owner Analytics Workflow
+
+Entry point: `/owner/analytics`
+
+### Goal
+
+Give the owner an operational cockpit for today's production and historical review.
+
+### Flow
+
+1. Owner opens production overview.
+2. Owner sees live/historical KPI strip.
+3. Owner checks order health and machine utilization.
+4. Owner reviews seven-day production trend.
+5. Owner reviews worker breakdown.
+6. Owner jumps to orders, market runs, or payroll from action cards.
+7. Live dashboard updates when production logs are inserted.
+
+### Pain Point Replaced
+
+Owner no longer waits for register handoff to understand the day.
+
+### Outputs Consumed
+
+- `production_logs`
+- dashboard RPCs
+- `orders`
+- `machines`
+- worker aggregates
+
+## 7. Stock and Godown Workflow
+
+Entry point: `/owner/stock`
+
+### Goal
+
+Know what physical fabric exists in godown, what it cost, and what profit it creates when sold.
+
+### Flow
+
+1. Owner opens Stock.
+2. Owner reviews available takas, meters, stock value at cost, realized revenue, and realized profit.
+3. Owner confirms pending inward drafts from order or market-run output.
+4. Owner adds manual/opening/order/market-run stock lots.
+5. Owner records quality, godown, unit count, meters per unit, unit label, received date, cost per meter, and notes.
+6. Owner adjusts stock for physical differences.
+7. Owner records stock sale.
+8. Commercials reflects realized stock profit.
+
+### Pain Point Replaced
+
+Loose godown memory becomes a lot-based stock board with cost and sale profit.
+
+### Outputs
+
+- `fabric_stock_lots`
+- `fabric_stock_sales`
+- `fabric_stock_movements`
+- `fabric_stock_inward_drafts`
+
+## 8. Dispatch and Tracking Workflow
+
+Entry points: `/owner/dispatches`, `/owner/orders`, `/track/[token]`
+
+### Goal
+
+Create a professional handoff for fabric leaving the factory and capture received-meter variance.
+
+### Flow
+
+1. Owner chooses an order.
+2. Owner creates dispatch with sent meters and transport/GST metadata.
+3. System creates a dispatch batch and keeps package/batch lines.
+4. Owner shares public tracking link.
+5. Party or owner confirms received meters.
+6. System records delivered, disputed, shortage, or extra received state.
+
+### Pain Point Replaced
+
+Challan-plus-phone-call handoff becomes tracked dispatch and receipt reconciliation.
+
+### Outputs
+
+- `dispatches`
+- `dispatch_package_lines`
+- `party_dispatch_claims`
+
+## 9. Commercials Workflow
+
+Entry point: `/owner/commercials`
+
+### Goal
+
+Show realized and expected gross profit without requiring full accounting readiness.
+
+### Flow
+
+1. Owner opens Commercials.
+2. Owner reviews realized revenue, realized cost, realized profit, expected profit, and margin.
+3. Owner filters by realized/expected.
+4. Owner filters by orders, stock, market runs, and expected quotes.
+5. Owner searches by quality/reference/source.
+6. Owner reviews row-level revenue, cost, gross profit, and margin.
+
+### Pain Point Replaced
+
+Profit visibility no longer waits for a full ledger close.
+
+### Outputs Consumed
+
+- quotes/orders
+- stock sales
+- market-run sales
+- invoice-like records where present
+
+## 10. Payroll and Advances Workflow
+
+Entry points: `/owner/payroll`, `/owner/advances`
+
+### Goal
+
+Pay workers from actual production and recover advances transparently.
+
+### Flow
+
+1. Owner records advances in `/owner/advances`.
+2. Owner opens `/owner/payroll`.
+3. Owner selects month.
+4. Owner reviews meter-worker earnings from production logs.
+5. Owner reviews fixed-worker earnings from salary/attendance.
+6. Owner checks advances, PF/ESI, deductions, net payout, and remaining debt.
+7. Owner toggles final settlement where needed.
+8. Owner selects payment mode.
+9. Owner settles worker.
+10. Owner generates PDF or sends WhatsApp payslip.
+
+### Pain Point Replaced
+
+Production register plus Upaad notebook becomes itemized settlement and worker communication.
+
+### Outputs
+
+- `worker_advances`
+- `payroll_settlements`
+- `payroll_adjustments`
+- WhatsApp delivery log
+
+## 11. WhatsApp Workflow
+
+Entry points: owner/supervisor actions, Supabase Edge Functions
+
+### Goal
+
+Use the communication channel factories already rely on without making messages block core writes.
+
+### Flow
+
+1. Core action triggers an edge function or message helper.
+2. Meta WhatsApp Cloud API sends the template/freeform message.
+3. Attempt is recorded in `whatsapp_delivery_log`.
+4. Webhook updates delivery status when Meta calls back.
+5. Retry function handles failed rows.
+
+### Message Types
+
+- access code
+- daily brief
+- deadline alert
+- advance receipt
+- payslip summary and itemized follow-up
+- monthly brief
+- lockdown alert
+
+## 12. Archived Workflows
+
+These exist in code but are not Phase 1 polish drivers:
+
+- `/owner/inventory` deep yarn/beam inventory.
+- `/owner/ledger` party/supplier accounting.
+- `/owner/settings/audit` audit browsing.
+- `/owner/system-health` delivery/system console.
+- `/admin` compliance dashboard.
+- DPA, grievance, language request, and broader governance workflows.

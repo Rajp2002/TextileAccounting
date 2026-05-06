@@ -1,44 +1,83 @@
-# Feature Analysis: Payroll & Settlements
+# Payroll and Settlements
 
-## Overview
-Weavly's Payroll module automates the complex task of calculating and paying wages for both piece-rate (meter-based) weavers and fixed-salary staff. It handles statutory deductions, advance recoveries, and delivery of itemized payslips.
+Last analyzed from the active codebase on May 6, 2026.
 
-## Why It's Needed
-Payroll is the biggest friction point in factory management. Disputes over meters, missing advances, and "over-payment" are common. Owners need a transparent, audit-ready system that the workers can trust.
+## Phase 1 Status
+
+Core Phase 1 pillar.
+
+## What It Does
+
+Payroll converts production logs, worker rates, fixed-worker setup, attendance, advances, PF/ESI settings, adjustments, and payment mode into settlement records and payslips.
+
+## User Workflow
+
+1. Owner opens `/owner/payroll`.
+2. Owner selects a month.
+3. Owner reviews meter workers and fixed workers.
+4. Meter workers show meters, machine/order rows, rate, gross pay, advances, deductions, and net pay.
+5. Fixed workers show role, salary/daily earnings, attendance where applicable, advances, deductions, and net pay.
+6. Owner expands a worker row to inspect itemization.
+7. Owner toggles final settlement if the worker is exiting.
+8. Owner selects payment mode.
+9. Owner settles or un-settles where allowed.
+10. Owner generates a payslip PDF or sends the WhatsApp payslip.
+
+## Existing Workflow Translation
+
+Old workflow:
+
+- Owner calculates wages from production register totals.
+- Worker advances are deducted from memory or a notebook.
+- PF/ESI and final settlement behavior may be handled manually.
+- Worker receives a verbal explanation or handwritten note.
+
+Weavly workflow:
+
+- Production logs become wage input.
+- Advances become itemized deduction input.
+- Settlement records preserve gross, deductions, net, remaining debt, payment mode, and status.
+- Payslips can be generated or sent on WhatsApp.
 
 ## Pain Points Solved
-- **Advance Recovery Stress**: Automatically calculates how much to deduct from a worker's salary to pay back their advances, while respecting the 50% legal cap.
-- **Meter Disputes**: Since wages are derived directly from the supervisor-logged meters, there is a single "Source of Truth".
-- **Statutory Compliance**: Automatically calculates PF (Provident Fund) and ESI (Insurance) for eligible workers.
-- **Messaging Overhead**: No more printing and handing out slips; every worker gets an itemized breakdown on WhatsApp.
 
-## Old Workflow Translation
-- **Old way**: Owner sits with a "Parchi" list of meters and an "Advance" book. They manually subtract debts and write a total on a slip of paper.
-- **Weavly way**: Owner clicks "Settle" for a worker. The system pulls all meters for the month, calculates gross pay, subtracts advances (up to the cap), adds bonuses/fines, and generates a PDF payslip.
+- Worker wage disputes.
+- Manual advance recovery mistakes.
+- Preview/final payout drift.
+- Lack of payment mode record.
+- Weak itemization for statutory deductions.
 
-## Value Provided
-- **Financial Precision**: Every paisa of wage and debt is tracked.
-- **Worker Retention**: Transparency and professional WhatsApp payslips build trust with the workforce.
-- **Legal Protection**: Adheres to wage deduction caps and provides an audit trail for all payments.
+## Key Behaviors
 
-## User Interaction
-1.  **Review**: Owner opens the Payroll dashboard and sees "Pending" settlements for the month.
-2.  **Configuration**: Sets the "Cycle Start Day" (e.g., the 1st or 7th of every month).
-3.  **Settlement**: Clicks "Settle". A drawer shows the itemized breakdown (Meters x Rate - Advances - PF/ESI + Bonuses).
-4.  **Finalize**: Clicks "Confirm Payment". System creates a `payroll_settlements` record and fires a WhatsApp notification.
+- Meter-worker gross pay comes from `production_logs`.
+- Rate snapshots protect historical payroll from later rate edits.
+- Advance deduction caps apply, with final settlement behavior where enabled.
+- PF/ESI deductions are computed for enrolled workers.
+- Payment mode supports cash, bank transfer, UPI, and cheque.
+- WhatsApp payslip sends a summary template plus itemized follow-up.
 
-## Technical Logic
-- **Atomic RPC**: `settle_worker_payroll` ensures that the wage payment, advance deduction, and ledger update happen as a single database transaction (ACID compliant).
-- **Snapshot Rates**: Uses `worker_rate_snapshot` from production logs to ensure that if a rate changes mid-month, previous production is still paid at the old rate.
-- **Deduction Cap**: Logic in `lib/finance.ts` ensures that automatic advance deductions never exceed 50% of the gross wage, preventing worker hardship and legal issues.
-- **Edge Functions**: Uses Supabase Edge Functions to generate PDFs and interface with the Meta WhatsApp Cloud API.
+## Data and Code
 
-## Relation to Other Features
-- **Supervisor Dashboard**: Provides the meters used for piece-rate calculations.
-- **Advances**: Settlements are the primary way workers pay back their advances.
-- **Party Ledger**: (Indirectly) Factory wage expenses are reflected in the overall business health.
+- `app/(dashboard)/owner/payroll/page.tsx`
+- `app/(dashboard)/owner/payroll/actions.ts`
+- `app/(dashboard)/owner/payroll/whatsapp-actions.ts`
+- `lib/finance.ts`
+- `lib/generate-payslip.ts`
+- `lib/wage-config.ts`
+- `production_logs`
+- `attendance`
+- `payroll_settlements`
+- `payroll_adjustments`
+- `payroll_adjustment_categories`
+- `worker_advances`
 
-## Output/Result
-- **Payroll Settlement Record**: An immutable record of the payment.
-- **PDF Payslip**: A professional, itemized document.
-- **WhatsApp Summary**: A message sent to the worker with their take-home pay and a link to the breakdown.
+## Downstream Effects
+
+- Advances are marked deducted through settlement behavior.
+- WhatsApp delivery logs record payslip sends.
+- Audit log captures sensitive payroll changes where configured.
+
+## Readiness Notes
+
+- Settlement preview and persisted settlement must match.
+- Tests should cover caps, final settlement, PF/ESI, payment modes, and advance recovery.

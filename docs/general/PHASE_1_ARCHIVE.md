@@ -1,36 +1,58 @@
 # Phase 1 Feature Archive
 
-These modules are preserved in the repository for a future release, but they are not part of the Phase 1 runtime surface.
+Last analyzed from the active codebase on May 6, 2026.
 
-## Archived Routes
+The repository contains modules that are valuable for a future fuller ERP-style release, but they are not part of the Phase 1 polish path. Archiving here means "do not make this a launch blocker," not "delete the code."
+
+## Actively Archived Routes
+
+The current active archive gate lives in `lib/phase1-scope.ts` and is enforced from `middleware.ts`.
+
+Routes currently redirected to `/feature-archived`:
 
 - `/admin`
 - `/owner/inventory`
-- `/owner/stock`
 - `/owner/ledger`
 - `/owner/settings/audit`
 - `/owner/system-health`
 
-The active archive gate lives in `lib/phase1-scope.ts` and is enforced from `middleware.ts`. Archived routes redirect to `/feature-archived` so their pages, queries, and heavier workflows do not load during Phase 1.
+## Not Archived in Current Code
 
-## Archived Product Areas
+`/owner/stock` is not in `PHASE_1_ARCHIVED_ROUTES` and is present in owner navigation. This reflects the Phase 1 extension around taka/godown stock, inward drafts, stock sales, and commercials support. The older deep yarn/beam inventory route remains archived through `/owner/inventory`.
 
-- Ledger and supplier ledger
-- Inventory, yarn stock, beam cards, and stock page
-- System health dashboard
-- Admin dashboard
-- Audit/compliance registry screens
-- DPDP data export/delete settings flow
+## Product Areas Deferred From Phase 1 Polish
 
-## Kept In Phase 1
+- Admin dashboard and compliance command center.
+- Deep yarn lots, beam cards, yarn movements, and order yarn requirements.
+- Party ledger, supplier ledger, payment allocation, and full accounting replacement.
+- Audit-table browsing and compliance registry UI.
+- System-health dashboard and manual message retry UI.
+- DPA template/version management.
+- Grievance and language-request workflows.
+- Full DPDP data export/delete polish beyond launch-critical security controls.
 
-- Estimator
-- Payroll and advances
-- Production logging
-- Owner production analytics
-- Orders and market runs
-- Dispatch challans
-- Billing/subscription and referrals
-- WhatsApp core integration
+## Kept in Phase 1
 
-Future reactivation should start by removing the route from `PHASE_1_ARCHIVED_ROUTES`, then restoring its navigation entry and checking whether any Phase 1 shortcuts need to point back into that module.
+- Estimator and quote snapshots.
+- Quote to order conversion.
+- Orders and market runs.
+- Supervisor production log.
+- Owner production analytics.
+- Godown/taka stock board.
+- Dispatches and public tracking.
+- Commercial gross-profit view.
+- Payroll and advances.
+- Workers, machines, attendance, settings, access codes.
+- Billing/subscription and referrals.
+- Core WhatsApp notifications.
+
+## Future Reactivation Checklist
+
+When reactivating an archived module:
+
+1. Remove the route from `PHASE_1_ARCHIVED_ROUTES`.
+2. Restore or promote the navigation entry.
+3. Verify role guards and RLS policies.
+4. Run the module's main workflow manually end to end.
+5. Check whether Phase 1 shortcuts or simplified flows should now point into the reactivated module.
+6. Update `PHASE_1_SCOPE.md`, `PROJECT_OVERVIEW.md`, and the relevant feature document.

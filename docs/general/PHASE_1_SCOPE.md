@@ -1,191 +1,239 @@
 # Weavly Phase 1 Scope
 
-This document is the Phase 1 product frame for Weavly. The codebase contains a broader operating-system surface, but Phase 1 should be judged by whether it makes the core factory operating loop production-ready.
+Last analyzed from the active codebase on May 6, 2026.
+
+Phase 1 is a focused launch of Weavly as a weaving-factory operating loop, not a full ERP. The codebase contains ledger, deep inventory, compliance, DPA, admin, audit, and system health surfaces, but Phase 1 readiness should be judged by whether a factory can trust the daily loop from costing to production to worker settlement.
 
 ## Phase 1 Thesis
 
-Phase 1 is not a full ERP launch. It is a focused launch around the workflows that create daily value for weaving factories:
+Weavly Phase 1 must help an owner answer seven daily questions:
 
-1. Estimate fabric work accurately.
-2. Keep looms productive through client orders or market runs.
-3. Log production cleanly by shift, machine, worker, and order/run.
-4. Settle payroll and advances with trust.
-5. Communicate operationally through WhatsApp.
-6. Present professionally to parties through quotes, dispatches, and tracking.
+1. What should I quote for this fabric?
+2. Which client orders or market runs are my looms producing today?
+3. Did the supervisor record the shift correctly?
+4. Are orders or market runs on pace?
+5. What stock or takas do I now have in godown?
+6. What did I earn or expect to earn from this work?
+7. What do I owe workers after production, advances, and deductions?
 
 The product rule:
 
-> A Phase 1 feature must materially improve estimating, production logging/tracking, payroll/advances, loom utilization, client professionalism, WhatsApp communication, billing transparency, or market penetration.
+> A Phase 1 feature is in scope only if it improves estimating, quotes/orders, market runs, production logging/tracking, payroll/advances, dispatch professionalism, stock/commercial visibility, WhatsApp communication, billing/referrals, or setup required for those workflows.
 
-If a feature does not support one of those outcomes, it is out of scope for Phase 1 even if it exists in the repository.
+## In-Scope Pillars
 
-## Core Pillars
+### 1. Factory Setup and Access
 
-### 1. Estimator
+Phase 1 starts before the first estimate. An owner must be able to create an organization, select or trial a plan, add machines, add workers, set a payroll baseline, configure factory cost assumptions, and invite supervisors.
 
-The estimator is the commercial entry point. It must be reliable enough for owners to trust it over paper, Excel, and mental math.
+In scope:
 
-Phase 1 expectations:
+- Owner signup, login, onboarding checklist, and route guarding.
+- Supervisor join flow through organization join code.
+- Role-aware redirects: owner to analytics, supervisor to production log, admin to admin.
+- Machine creation and management with loom type where available.
+- Meter worker and fixed worker setup.
+- Payroll config baseline during onboarding.
+- Factory name, settings, join-code regeneration, and language switching.
+- Access-code generation for protected supervisor or correction flows.
+- Subscription/trial gating where it controls product access.
 
-- Accurate warp/weft costing with yarn rates, GST, shortage, crimp, and conversion charges.
-- Clear landed cost, quote price, and margin visibility.
-- Quote creation and quote history.
-- Fabric templates for repeat qualities.
-- Accepted quote to order conversion.
-- Worker piece-rate snapshot that flows downstream into production and payroll.
-- Factory cost profile only where it improves quote accuracy.
+Why this matters:
 
-Polish priorities:
+The old workflow assumes the owner already has a paper list of machines and workers. The digital workflow needs that master data before production logs or payroll can be trusted.
 
-- Reduce first-time complexity with a clearer basic path.
-- Add focused tests for estimator formulas and quote snapshots.
-- Validate factory math assumptions with real sample calculations.
-- Keep advanced costing controls available but secondary.
+### 2. Estimator and Quotes
 
-### 2. Production Logging And Tracking
+The estimator is the commercial entry point and must feel more trustworthy than mental math, Excel, or a handwritten parchi.
 
-Production logging is the floor source of truth. It feeds order progress, market-run progress, analytics, and payroll.
+In scope:
 
-Phase 1 expectations:
+- Warp and weft row costing.
+- Yarn rates, GST, shortage, warp crimp, tape length, picks, reed space, denier, and beam ends.
+- Loom type, RPM, power, hours per shift, and output assumptions.
+- Warping, sizing, winding, processing, finishing, transport, commission, overheads, and profit margin.
+- Factory cost profile and factory cost wizard.
+- Fixed-worker-derived overhead items.
+- Monthly output suggestions from recent production.
+- Scenario analysis.
+- Template save/update/rename/delete.
+- Quote save with full snapshot data.
+- Quote status: draft, sent, accepted, rejected.
+- Restoring a quote snapshot into the estimator for re-estimation.
+- Accepted quote to active order conversion.
+- Market run creation from estimator mode.
 
-- Supervisor shift workspace for day/night production entry.
-- Machine, worker, and order/run assignment per shift.
-- Opening and closing meter readings.
-- Production logs with rate snapshots.
-- Duplicate protection and controlled correction flow.
-- Owner analytics for production tracking, order progress, and market-run visibility.
-- Market runs as a first-class production mode, because factories often run looms speculatively when client orders are not constant.
+Readiness bar:
 
-Polish priorities:
+- Estimator formulas should be tested against real factory examples.
+- Quote snapshots must be stable enough that later factory cost edits do not rewrite historical quotes.
+- First-time owner flow should keep the basic path clear while leaving advanced controls available.
 
-- Position the supervisor landing screen as a production log workspace, not a generic dashboard.
-- Keep production entry fast on mobile.
-- Make order/run assignment state obvious before logging.
-- Add validation around negative readings, duplicate overwrites, date bounds, and missing assignments.
-- Treat packing/stock linkage as optional support, not the center of Phase 1 production logging.
+### 3. Orders and Market Runs
 
-### 3. Payroll And Advances
+Orders are client commitments. Market runs are speculative, stock-oriented production. Both are in Phase 1 because both represent real loom utilization.
 
-Payroll and advances turn production logs into worker trust. This is one of the most important production-readiness surfaces.
+In scope:
 
-Phase 1 expectations:
+- Active order list with progress, deadline, pace, and status.
+- Quote-linked order detail with cost stack and total order value.
+- Target meters and deadline editing with protected access-code flows where needed.
+- Machine assignment from owner order detail.
+- Order completion/cancellation.
+- Dispatch section inside orders.
+- Public tracking token access.
+- Market-run creation from estimator.
+- Market-run summaries: target, produced, in godown, sold, revenue, cost, profit, status.
+- Market-run detail and closing/sale workflow where implemented.
 
-- Piece-rate payroll from production logs.
-- Fixed and daily worker payroll.
-- Worker advances / Upaad.
-- Automatic advance recovery with deduction caps.
-- PF/ESI fields and deductions where enabled.
-- Payment mode capture.
-- Settlement records with itemized breakdowns.
-- WhatsApp payslips and advance receipts.
+Readiness bar:
 
-Polish priorities:
+- Owners must know whether work is on track before the party calls.
+- Supervisors must see the right order/run choices while logging production.
+- Market-run output should flow into stock and profit visibility without pretending to be a confirmed client order.
 
-- Ensure preview and final settlement calculations cannot drift.
-- Add tests for settlement, deduction caps, final settlement, PF/ESI, and advance recovery.
-- Make reversals/write-offs clearly auditable.
-- Keep payroll screens calm, explicit, and owner-trustworthy.
+### 4. Supervisor Production Log
 
-## Kept In Phase 1 Because They Support The Core
+The supervisor screen is Phase 1's floor source of truth.
 
-### Owner Analytics
+In scope:
 
-Keep owner analytics, but keep it operational. It should focus on:
+- Mobile-first `/supervisor/dashboard` production log.
+- `/supervisor/production` redirect to the active production workspace.
+- Day/night shift selection and current shift defaulting.
+- Machine cards with worker selection and order selection.
+- Opening/closing meter readings from previous logs.
+- Shift meters calculation.
+- Copy previous shift setup.
+- Immediate assignment upsert.
+- Bulk production log submission.
+- Duplicate guard and protected overwrite/correction behavior.
+- Self-correction window and audit rows for replacements.
+- Owner access-code request and verification flow.
+- Machine running/idle/maintenance status.
+- Machine breakdown category and notes.
+- Supervisor worker CRUD where allowed.
+- Fixed worker attendance.
+- Supervisor machine view.
 
-- order progress
-- market-run progress
-- production by machine/worker/shift
-- pace and delay visibility
-- payroll-relevant production totals
+Readiness bar:
 
-Avoid broad executive-dashboard expansion unless it directly helps production or payroll decisions.
+- Logging should be fast on a phone.
+- Missing worker/order assignments should be obvious before submission.
+- Negative readings, reset/correction cases, duplicate logs, and past-date changes need clear handling.
+- Production logs must remain the trusted source for owner analytics and payroll.
 
-### Market Runs
+### 5. Payroll and Advances
 
-Keep market runs. They are not a side feature; they reflect how factories actually keep looms productive when confirmed client orders are not always available.
+Payroll and advances are a Phase 1 trust anchor. If workers cannot understand how pay and Upaad were settled, the system will not replace registers.
 
-Market runs should reuse estimator logic and feed production tracking cleanly.
+In scope:
 
-### Dispatches
+- Meter-worker payroll from `production_logs`.
+- Fixed-worker payroll from fixed worker setup and attendance.
+- Worker rate snapshots from production time.
+- Settlement preview and final record.
+- Advance recovery with deduction caps.
+- Final settlement mode.
+- PF/ESI enrolled fields and employee deductions.
+- Payment mode capture: cash, bank transfer, UPI, cheque.
+- Paid/unpaid state and unsettlement behavior where available.
+- Payroll adjustments/categories where implemented.
+- Payslip PDF generation.
+- WhatsApp payslip send with itemized follow-up.
+- Advances for meter and fixed workers.
+- Pending/deducted advance states.
+- Debt-to-typical-pay warnings.
+- Advance receipt WhatsApp flow.
+- Write-off/reversal auditability where implemented.
 
-Keep dispatches as a lightweight professionalism layer:
+Readiness bar:
 
-- delivery/challan documentation
-- dispatch history
-- public tracking where useful
-- client-facing polish
+- Preview and final settlement must not drift.
+- Itemized payout must be explainable to an owner and worker.
+- Advance deduction caps and final settlement behavior require focused tests.
 
-Avoid turning dispatches into a full stock, accounting, or logistics suite during Phase 1.
+### 6. Stock, Dispatches, and Commercials
 
-### Quotes And Orders
+This scope has been extended beyond the original three pillars because production value is incomplete if output cannot be seen, moved, or valued.
 
-Keep quotes and orders because they connect the estimator to production logging.
+In scope:
 
-Phase 1 should support:
+- `/owner/stock` as the Phase 1 godown/taka stock board.
+- Fabric stock lots from manual, opening, market-run, order, and adjustment sources.
+- Pending inward drafts from completed/produced order or market-run output.
+- Unit count, meters per unit, godown, cost per meter, and available meters.
+- Stock adjustment add/subtract.
+- Stock sale recording with price, cost, revenue, and gross profit.
+- Stock movements history.
+- Dispatches for order-linked output.
+- Dispatch package/batch rows, transport/GST/e-way metadata, and receipt confirmation.
+- Shortage/extra received tracking.
+- Public `/track/[token]` portal.
+- `/owner/commercials` as a lightweight gross-profit view across order invoices, order quotes, stock sales, and market-run sales.
 
-- saved quotes
-- accepted quote to order conversion
-- active order progress
-- worker rate propagation
-- order instructions for the floor
+Not in scope:
 
-### Workers, Machines, And Attendance
+- Full accounting replacement.
+- Full supplier ledger readiness.
+- Deep yarn/beam inventory polish.
+- Complex logistics planning.
 
-Keep these as required infrastructure for production logging and payroll.
+Readiness bar:
 
-### WhatsApp
+- Stock and commercials should support owner decision-making without dragging Phase 1 into a full ERP.
+- Dispatch should feel professional but lightweight.
 
-Keep WhatsApp because it matches user behavior in the market and strengthens trust:
+### 7. WhatsApp, Billing, and Referrals
 
-- payslips
-- advance receipts
-- access-code requests
-- daily production summaries
-- key operational notifications
+These are kept because they make the core loop usable and sellable in the target market.
 
-WhatsApp should support the core workflows without making the core writes depend on message delivery.
+In scope:
 
-### Billing And Subscription
+- Meta WhatsApp Cloud API send path.
+- Delivery logging and retry support.
+- Access code notifications.
+- Daily production briefs.
+- Deadline alerts.
+- Advance receipts.
+- Payslips and itemized follow-up.
+- Monthly briefs.
+- Lockdown alerts where governance is active.
+- Razorpay Base/Premium subscription plans, trial, payment history, renewal/cancel state, webhook processing.
+- Referral codes, referral application, conversion/refund support, and billing-page referral card.
 
-Keep billing/subscription for transparency and monetization. Keep it simple:
+Readiness bar:
 
-- current plan
-- trial state
-- renewal/cancel state
-- payment history where available
+- WhatsApp failure should never block core writes.
+- Billing should be transparent enough for launch without becoming a billing analytics project.
+- Referrals should stay lightweight.
 
-Avoid overbuilding billing analytics or plan complexity in Phase 1.
+## Out of Scope for Phase 1 Polish
 
-### Referrals
+These modules may exist in code and may even be routable in some environments, but they are not Phase 1 readiness drivers:
 
-Keep referrals as go-to-market infrastructure. Network effects matter in this industry, but referral work should remain lightweight and should not compete with workflow readiness.
-
-## Out Of Scope For Phase 1
-
-These modules may exist in the repository, but they should not drive Phase 1 polish or navigation prominence unless a specific part directly supports the core loop.
-
-- Ledger / party accounting
-- Deep inventory, stock, yarn batch, beam, and supplier workflows
-- System health console
-- Compliance registry
-- DPA management
-- Grievances
-- Language requests
-- Admin dashboard
-- Supplier ledger and payment allocations
-- Full CRM/accounting workflows
-- Heavy platform governance surfaces
+- `/owner/inventory` yarn lots, beam cards, yarn movements, order yarn requirements.
+- `/owner/ledger` party invoices, receipts, payment allocations, supplier ledger.
+- `/owner/settings/audit` audit registry and compliance activity browsing.
+- `/owner/system-health` operational message log console.
+- `/admin` full compliance dashboard.
+- DPA template/version management.
+- Grievance and language request workflows.
+- Deep DPDP export/delete polish beyond launch-critical controls.
+- Full CRM/accounting workflows.
 
 ## Navigation Implication
 
-Phase 1 owner navigation should feel like:
+Phase 1 owner navigation should prioritize:
 
-- Analytics
+- Dashboard
 - Estimator
 - Quotes
 - Orders
 - Market Runs
+- Stock
 - Dispatches
+- Commercials
 - Payroll
 - Advances
 - Workers
@@ -193,28 +241,29 @@ Phase 1 owner navigation should feel like:
 - Billing
 - Settings
 
-Phase 1 supervisor navigation should feel like:
+Phase 1 supervisor navigation should prioritize:
 
 - Production Log
 - Workers
 - Attendance
 - Machines
 
-Out-of-scope modules should be hidden, feature-flagged, or moved away from the primary path until the three pillars are production-ready.
-
-Archived Phase 1 routes are documented in `docs/general/PHASE_1_ARCHIVE.md` and gated by `lib/phase1-scope.ts`.
+Archived routes are documented in `docs/general/PHASE_1_ARCHIVE.md`; the active gate is `lib/phase1-scope.ts` and middleware enforcement.
 
 ## Readiness Checklist
 
-Before calling Phase 1 production-ready:
-
-- Estimator formulas are tested against real factory examples.
-- Quote to order to production to payroll flow has an end-to-end test plan.
-- Production logging handles duplicate/correction/negative/missing-assignment cases cleanly.
-- Payroll settlement preview matches final settlement behavior.
-- Advances recovery and reversals are auditable.
-- Market runs appear clearly in analytics and production tracking.
-- Dispatch creation remains lightweight and does not require full inventory readiness.
-- WhatsApp failures do not block core writes.
-- Primary navigation reflects the Phase 1 focus.
-- Lint/build/test gates are clean enough for release confidence.
+- Owner onboarding creates enough data for downstream screens.
+- Estimator formulas are validated with real factory examples.
+- Quote snapshots preserve historical assumptions.
+- Accepted quote to order flow is tested.
+- Market run creation, production, inward stock, sale, and profit flow are tested.
+- Supervisor production logging covers happy path, duplicate path, missing assignment, past date, correction, and meter-reading edge cases.
+- Owner analytics reflects live production and historical date selection.
+- Payroll preview matches final settlement.
+- Advance recovery, final settlement, PF/ESI, payment mode, and payslip send are tested.
+- Stock inward drafts, lot creation, adjustment, sale, and commercials aggregation are tested.
+- Dispatch creation, receipt confirmation, shortage, and public tracking are tested.
+- WhatsApp failures are logged and retryable without blocking writes.
+- Billing/trial/subscription states are clear.
+- Archived routes do not distract from the core loop.
+- Lint/build pass before release.
