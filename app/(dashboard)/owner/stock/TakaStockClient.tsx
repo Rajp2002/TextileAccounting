@@ -156,8 +156,6 @@ function movementLabel(type: TakaStockMovementRow['movement_type']) {
             return 'Adjustment add'
         case 'adjustment_subtract':
             return 'Adjustment subtract'
-        default:
-            return type.replace('_', ' ')
     }
 }
 
