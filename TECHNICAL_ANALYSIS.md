@@ -1,112 +1,206 @@
 # Weavly Technical Analysis
 
-This document summarizes the current implementation rather than the older aspirational architecture.
+Last analyzed from the active codebase on May 6, 2026.
 
-## High-Level Stack
+## Stack
 
-- Framework: Next.js 16 App Router
-- UI runtime: React 19
-- Styling: Tailwind CSS 4 and shadcn/ui components
-- Data: Supabase Postgres with RLS
-- Auth: Supabase Auth with JWT claims
-- Client state: TanStack Query
-- Offline support: Dexie-based local persistence for floor workflows
-- Monitoring: Sentry
-- Payments: Razorpay
-- Messaging: Meta WhatsApp Cloud API
-- Rate limiting: Upstash Redis
+- Next.js App Router with React client/server split.
+- Supabase Auth, Postgres, RLS, RPCs, Realtime, and Edge Functions.
+- Tailwind CSS and shadcn/ui primitives.
+- TanStack Query for interactive client views.
+- Razorpay for subscriptions.
+- Meta WhatsApp Cloud API through Supabase Edge Functions.
+- Upstash Redis for rate limiting/session revocation when configured.
+- Sentry configs for client, server, and edge.
 
 ## Route Architecture
 
-- Public marketing and policy routes live under `app/`.
-- Auth flows live under `app/(auth)`.
-- Owner features live under `app/(dashboard)/owner`.
-- Supervisor features live under `app/(dashboard)/supervisor`.
-- Admin compliance lives under `app/(dashboard)/admin`.
-- Public tracking lives under `app/(public)/track/[token]`.
+Public/auth:
 
-The route structure is fairly conventional App Router code: server pages load initial data, then interactive clients take over for mutations and incremental refreshes.
+- `/`
+- `/login`, `/signup`, `/join`, `/verify`, `/onboarding`
+- `/auth/callback`, `/auth/confirm`, `/auth/auth-code-error`
+- `/privacy`, `/terms`, `/refund-policy`
+- `/track/[token]`
 
-## Auth, Authorization, And Tenant Isolation
+Owner:
 
-### Middleware
-`middleware.ts` currently handles:
-- public-route detection
-- auth-route rate limiting
-- API-route auth protection for non-public APIs
-- session refresh
+- active Phase 1: analytics, estimator, quotes, orders, market-runs, stock, dispatches, commercials, payroll, advances, fixed-workers, machines, billing, settings
+- archived/deferred: inventory, ledger, settings/audit, system-health, admin-facing DPA/compliance paths
+
+Supervisor:
+
+- dashboard/production log, workers, attendance, machines
+
+Admin:
+
+- `/admin`, archived for Phase 1 through `lib/phase1-scope.ts`
+
+## Auth and Route Guards
+
+The middleware handles:
+
+- public route classification
+- API JSON 401 behavior for protected API routes
+- auth route rate limiting
+- Supabase session refresh
+- session revocation check
 - one-hour inactivity timeout
-- instant revocation checks
-- role-based redirects after sign-in
+- authenticated redirects by role
+- owner onboarding redirect
+- role mismatch redirects
+- Phase 1 archive redirects to `/feature-archived`
 
-### Tenant model
-- Data is partitioned by `org_id`.
-- Supabase JWT claims are read in middleware and server helpers.
-- RLS is the main tenant boundary.
+`requireRole()` is used in server components and actions for server-side role enforcement.
 
-### Roles in code
-- `owner`
-- `supervisor`
-- `admin`
+## Multi-Tenancy
 
-## Data And Mutation Model
+The core tenancy boundary is `org_id`.
 
-### Read paths
-- Server components load first paint for many owner pages.
-- Client components use Supabase browser clients and TanStack Query for interactive views.
-- Realtime updates are used on owner-facing operational dashboards.
+Tenancy is enforced through:
 
-### Write paths
-- Next.js server actions back most privileged mutations.
-- Some actions create service-role Supabase clients for protected operations.
-- Several modules rely on Postgres RPCs for transaction-heavy business logic.
+- Supabase RLS policies.
+- Server-side role checks.
+- Custom JWT claims for `user_role`, `org_id`, and onboarding status.
+- Server actions that derive org from the authenticated profile rather than trusting client input.
 
-## Domain Modules
+## Core Domain Tables
 
-### Estimator, Quotes, Orders
-- Core logic lives in `lib/estimator.ts` and owner estimator actions/components.
-- Quotes are persisted and later surfaced in `/owner/quotes`.
-- Orders are managed from `/owner/orders`.
-- **Market Runs** use the estimator logic but create orders without a `party_id`. They are tracked in `market_runs` table and linked to speculative production flows.
+Setup and identity:
 
-### Floor Operations
-- Main supervisor logic lives in `app/(dashboard)/supervisor/actions.ts` and the unified dashboard page.
-- Bulk production logging, order linking, worker assignment, machine status changes, access-code requests, and kharchi flows all converge there.
+- `organizations`
+- `profiles`
+- `machines`
+- `workers`
+- `fixed_workers`
 
-### Payroll
-- Finance helpers live in `lib/finance.ts`.
-- Payroll UI lives in `/owner/payroll`.
-- Settlement data includes advances, bonuses, fines, and statutory payload details.
-- PDF generation lives in `lib/generate-payslip.ts`.
+Estimator and commercial:
 
-### Inventory, Stock, Ledger, Dispatches
-- Inventory module: yarn and beam movement tracking.
-- Stock module: tracks `fabric_packages` created during production (the "PACK" step).
-- Ledger module: party invoices, receipts, claims, and adjustments.
-- Dispatch module: uses `create_fabric_dispatch` RPC to atomically assign dispatch numbers and link fabric packages to outbound dispatches.
+- `factory_cost_profile`
+- `estimator_templates`
+- `estimator_quotes`
+- `orders`
+- `market_runs`
+- `market_run_sales`
 
-### Compliance
-- Admin and owner compliance functionality spans `lib/actions/compliance.ts`, owner audit pages, lockdown tooling, and the admin dashboard.
-- **DPA Tracking**: Implements template versioning and signature recording. Proof of signature (PDF/Image URLs) is stored in `organization_dpas` table.
+Production:
 
-## Integrations
+- `shift_assignments`
+- `machine_assignments`
+- `production_logs`
+- `attendance`
 
-### WhatsApp
-- Shared edge-function utility is `supabase/functions/_shared/whatsapp.ts`.
-- The implemented provider is Meta WhatsApp Cloud API.
-- `WHATSAPP_PROVIDER=simulate` is supported for non-production testing.
+Stock and dispatch:
 
-### Payments
-- Razorpay is used for plan checkout and webhook confirmation.
-- The app exposes base and premium plan concepts in code.
+- `fabric_packages`
+- `dispatches`
+- `dispatch_package_lines`
+- `party_dispatch_claims`
+- `fabric_stock_lots`
+- `fabric_stock_sales`
+- `fabric_stock_movements`
+- `fabric_stock_inward_drafts`
 
-### Monitoring
-- Browser, server, and edge Sentry configs are present.
-- Security headers and CSP are defined in `next.config.ts`.
+Payroll and advances:
 
-## Current Implementation Caveats
+- `worker_advances`
+- `payroll_settlements`
+- `payroll_adjustments`
+- `payroll_adjustment_categories`
+- `payroll_configs`
+- `payroll_payments`
+- `supervisor_float_transactions`
 
-- Time handling is mixed. The repo has `lib/time.ts`, but some client pages still use browser-local `new Date()` for shift and date defaults.
-- Comments are not uniformly refreshed. A few edge-function comments still mention Interakt even though the send utility has already moved to Meta.
-- Test coverage is narrow compared to feature breadth.
-- Because the product leans heavily on migrations and RPCs, schema changes in `supabase/migrations` are often the clearest source of truth for business rules.
+Deferred ERP/governance:
+
+- `parties`, `party_invoices`, `party_receipts`, `party_adjustments`, `payment_allocations`
+- `suppliers`, `supplier_ledger_entries`
+- `yarn_lots`, `beam_cards`, `beam_card_lots`, `yarn_movements`, `order_yarn_requirements`
+- `audit_log`, `notice_registry`, `grievances`, `dpas`, `organization_dpas`, `breach_reports`
+
+## Important Server Actions
+
+Estimator and quotes:
+
+- `getFactoryCostProfile`
+- `upsertFactoryCostProfile`
+- `getEstimatorTemplates`
+- `saveAsFabricTemplate`
+- `saveEstimatorQuoteV3`
+- `convertAcceptedQuoteToOrder`
+- `createMarketRunFromEstimator`
+- `getMarketRuns`
+- `createMarketRunSaleAction`
+
+Supervisor:
+
+- `getShiftSetupData`
+- `upsertShiftAssignment`
+- `copyPreviousShiftAction`
+- `bulkLogProduction`
+- `updateMachineStatus`
+- `updateMachineBreakdown`
+- `requestAccessCode`
+
+Owner operations:
+
+- machine and worker actions in `app/(dashboard)/owner/actions.ts`
+- order/dispatch actions in `app/(dashboard)/owner/orders/actions.ts`
+- stock actions in `app/(dashboard)/owner/stock/actions.ts`
+- payroll actions in `app/(dashboard)/owner/payroll/actions.ts`
+- advances actions in `app/(dashboard)/owner/advances/actions.ts`
+- commercials actions in `app/(dashboard)/owner/commercials/actions.ts`
+
+## Realtime and Offline
+
+Owner analytics subscribes to `production_logs` insert events and refreshes live dashboard data with debouncing.
+
+Offline support exists through hooks/providers and Dexie-style mutation queueing patterns. Production UX also uses local state/local persistence for user-entered readings in some areas. Offline behavior should be verified carefully before claiming full offline-first reliability.
+
+## WhatsApp
+
+Supabase Edge Functions handle operational messaging:
+
+- `send-access-code`
+- `send-daily-brief`
+- `send-deadline-alert`
+- `check-pace-index`
+- `monthly-brief`
+- `send-advance-receipt`
+- `send-payslip`
+- `retry-failed-messages`
+- `send-lockdown-alert`
+- `whatsapp-webhook`
+
+The active provider is Meta WhatsApp Cloud API through `supabase/functions/_shared/whatsapp.ts`. Delivery attempts are logged in `whatsapp_delivery_log`.
+
+## Billing
+
+Billing uses Razorpay:
+
+- `app/api/subscriptions/create/route.ts`
+- `app/api/subscriptions/trial/route.ts`
+- `app/api/subscriptions/auto-renew/route.ts`
+- `app/api/webhooks/razorpay/route.ts`
+- `org_subscriptions`
+- `subscription_payments`
+- `subscription_plans`
+
+## Known Technical Realities
+
+- Documentation must distinguish active `/owner/stock` from archived `/owner/inventory`.
+- Some old comments/docs may still mention Interakt; implemented send path is Meta.
+- Automated tests are thin relative to workflow complexity.
+- `lib/time.ts` centralizes Surat date helpers, but some client code still uses browser `new Date()` for current shift/date.
+- Large migration history means runtime code and latest migrations should be treated as authoritative.
+
+## Phase 1 Technical Risk Areas
+
+- Estimator formula correctness.
+- Production log duplicate/correction/past-date behavior.
+- Payroll preview versus settlement persistence.
+- Advance recovery and final settlement edge cases.
+- Stock inward/sale/adjustment math.
+- Dispatch receipt variance.
+- WhatsApp failure isolation.
+- Archive route/navigation consistency.

@@ -30,6 +30,7 @@ import {
     type OrderSummary,
     type DispatchSummary,
     type DispatchRow,
+    type DispatchOverviewStats,
 } from '@/app/(dashboard)/owner/orders/actions'
 import { confirmDispatchReceiptByOwner } from '@/app/(dashboard)/owner/orders/actions'
 import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
@@ -117,6 +118,7 @@ interface OrderGroup {
 
 interface DispatchesClientProps {
     initialDispatches: Dispatch[]
+    initialOverview: DispatchOverviewStats
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -576,9 +578,51 @@ function OrderGroupCard({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function DispatchesClient({ initialDispatches }: DispatchesClientProps) {
+function MetricCard({
+    label,
+    value,
+    helper,
+    icon: Icon,
+    tone,
+    badge,
+}: {
+    label: string
+    value: string
+    helper: string
+    icon: typeof Truck
+    tone: 'orange' | 'amber' | 'emerald' | 'rose'
+    badge?: string
+}) {
+    const toneClasses = {
+        orange: 'bg-orange-50 text-orange-600',
+        amber: 'bg-amber-100 text-amber-600',
+        emerald: 'bg-emerald-100 text-emerald-600',
+        rose: 'bg-rose-100 text-rose-600',
+    }
+
+    return (
+        <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white dark:bg-zinc-900/50">
+            <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                    <div className={cn('p-2.5 rounded-xl', toneClasses[tone])}>
+                        <Icon className="h-5 w-5" />
+                    </div>
+                    {badge && <Badge variant="outline" className="bg-white/70 text-[11px] font-bold">{badge}</Badge>}
+                </div>
+                <div className="mt-4">
+                    <p className="text-sm font-bold text-muted-foreground/80 uppercase tracking-wider">{label}</p>
+                    <h3 className={cn('text-2xl font-black mt-1 tabular-nums', tone === 'rose' && 'text-rose-600')}>{value}</h3>
+                    <p className="mt-1 text-xs font-semibold text-muted-foreground">{helper}</p>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
+export default function DispatchesClient({ initialDispatches, initialOverview }: DispatchesClientProps) {
     const { t } = useTranslation()
     const [dispatches, setDispatches] = useState(initialDispatches)
+    const [overview, setOverview] = useState(initialOverview)
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<'all' | 'in_transit' | 'delivered' | 'disputed'>('all')
     const [pendingReceiptOnly, setPendingReceiptOnly] = useState(false)
@@ -686,11 +730,18 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
         })
     }, [orderGroups, search, statusFilter, pendingReceiptOnly])
 
-    // ── Summary stats (across all dispatches) ──
-    const totalSent = dispatches.reduce((acc, d) => acc + Number(d.qty_meters_sent), 0)
-    const totalReceived = dispatches.reduce((acc, d) => acc + Number(d.qty_meters_received || 0), 0)
     const inTransitCount = dispatches.filter(d => d.status === 'in_transit').length
+    const inTransitMeters = dispatches
+        .filter(d => d.status === 'in_transit')
+        .reduce((acc, d) => acc + Number(d.qty_meters_sent), 0)
+    const ewayAttention = dispatches.filter(d => d.eway_bill_required && !d.eway_bill_number)
+    const ewayAttentionValue = ewayAttention.reduce((acc, d) => acc + Number(d.total_invoice_value ?? 0), 0)
     const shortageTotal = orderGroups.reduce((acc, g) => acc + g.shortage, 0)
+    const shortageBatches = dispatches.filter((d) =>
+        d.status === 'delivered' &&
+        d.qty_meters_received !== null &&
+        Number(d.qty_meters_sent) - Number(d.qty_meters_received) > 0.01
+    ).length
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -710,62 +761,36 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white dark:bg-zinc-900/50">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                            <div className="p-2.5 bg-primary/10 rounded-xl">
-                                <Layers className="h-5 w-5 text-primary" />
-                            </div>
-                        </div>
-                        <div className="mt-4">
-                            <p className="text-sm font-bold text-muted-foreground/80 uppercase tracking-wider">Total Sent</p>
-                            <h3 className="text-2xl font-black mt-1 tabular-nums">{totalSent.toLocaleString()} m</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white dark:bg-zinc-900/50">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                            <div className="p-2.5 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl">
-                                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                            </div>
-                        </div>
-                        <div className="mt-4">
-                            <p className="text-sm font-bold text-muted-foreground/80 uppercase tracking-wider">Confirmed Received</p>
-                            <h3 className="text-2xl font-black mt-1 tabular-nums">{totalReceived.toLocaleString()} m</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white dark:bg-zinc-900/50">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                            <div className="p-2.5 bg-amber-100 dark:bg-amber-500/20 rounded-xl">
-                                <Truck className="h-5 w-5 text-amber-600" />
-                            </div>
-                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Active</Badge>
-                        </div>
-                        <div className="mt-4">
-                            <p className="text-sm font-bold text-muted-foreground/80 uppercase tracking-wider">In Transit</p>
-                            <h3 className="text-2xl font-black mt-1 tabular-nums">{inTransitCount} Batches</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white dark:bg-zinc-900/50">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                            <div className="p-2.5 bg-rose-100 dark:bg-rose-500/20 rounded-xl">
-                                <AlertTriangle className="h-5 w-5 text-rose-600" />
-                            </div>
-                        </div>
-                        <div className="mt-4">
-                            <p className="text-sm font-bold text-muted-foreground/80 uppercase tracking-wider">Total Shortage</p>
-                            <h3 className="text-2xl font-black mt-1 tabular-nums text-rose-600">-{shortageTotal.toFixed(2)} m</h3>
-                        </div>
-                    </CardContent>
-                </Card>
+                <MetricCard
+                    label="Pending Dispatch"
+                    value={`${overview.pending_dispatch_meters.toLocaleString('en-IN', { maximumFractionDigits: 0 })} m`}
+                    helper={`Rs. ${overview.pending_dispatch_value.toLocaleString('en-IN', { maximumFractionDigits: 0 })} sold value`}
+                    icon={Layers}
+                    tone="orange"
+                    badge={`${overview.pending_sales_count} sale${overview.pending_sales_count !== 1 ? 's' : ''}`}
+                />
+                <MetricCard
+                    label="In Transit"
+                    value={`${inTransitCount} batch${inTransitCount !== 1 ? 'es' : ''}`}
+                    helper={`${inTransitMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })} m awaiting receipt`}
+                    icon={Truck}
+                    tone="amber"
+                    badge={inTransitCount > 0 ? 'Active' : 'Clear'}
+                />
+                <MetricCard
+                    label="E-Way Attention"
+                    value={ewayAttention.length > 0 ? `${ewayAttention.length} need${ewayAttention.length === 1 ? 's' : ''} EWB` : 'Clear'}
+                    helper={ewayAttention.length > 0 ? `Rs. ${ewayAttentionValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })} missing EWB no.` : 'No required EWB gaps'}
+                    icon={CheckCircle2}
+                    tone={ewayAttention.length > 0 ? 'rose' : 'emerald'}
+                />
+                <MetricCard
+                    label="Shortage / Disputes"
+                    value={shortageTotal > 0 ? `-${shortageTotal.toFixed(2)} m` : 'Clear'}
+                    helper={shortageBatches > 0 ? `${shortageBatches} batch${shortageBatches !== 1 ? 'es' : ''} short` : 'No confirmed shortages'}
+                    icon={AlertTriangle}
+                    tone={shortageTotal > 0 ? 'rose' : 'emerald'}
+                />
             </div>
 
             {/* Filters bar */}
@@ -876,6 +901,12 @@ export default function DispatchesClient({ initialDispatches }: DispatchesClient
                         },
                         ...prev,
                     ])
+                    setOverview((prev) => ({
+                        ...prev,
+                        pending_sales_count: Math.max(0, prev.pending_sales_count - dispatch.package_lines.length),
+                        pending_dispatch_meters: Math.max(0, prev.pending_dispatch_meters - Number(dispatch.qty_meters_sent ?? 0)),
+                        pending_dispatch_value: Math.max(0, prev.pending_dispatch_value - Number(dispatch.taxable_value ?? 0)),
+                    }))
                 }}
             />
         </div>

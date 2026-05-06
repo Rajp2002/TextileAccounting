@@ -1,45 +1,84 @@
-# Feature Analysis: Inventory & Stock Management
+# Inventory and Stock
 
-## Overview
-Weavly tracks three critical layers of inventory:
-1.  **Yarn Stock**: Raw material (cones/bags).
-2.  **Beams**: Wound yarn ready for the loom.
-3.  **Grey Stock**: Finished fabric packages (rolls/bales) ready for dispatch.
+Last analyzed from the active codebase on May 6, 2026.
 
-## Why It's Needed
-Inventory is tied up capital. Knowing exactly how many bags of yarn are in the warehouse or how many meters of a specific quality are in stock prevents over-buying and helps in planning future production.
+## Phase 1 Status
+
+Split status:
+
+- `/owner/stock` is active Phase 1 support for taka/godown stock, inward drafts, sales, movements, and profit.
+- `/owner/inventory` is archived/deferred for Phase 1 and covers deeper yarn/beam inventory.
+
+## What Active Stock Does
+
+The active stock board helps owners track physical fabric in godown. It supports manual/opening stock, order-linked stock, market-run stock, inward drafts, adjustments, sales, and movement history.
+
+## User Workflow
+
+1. Owner opens `/owner/stock`.
+2. Owner sees available takas/meters, stock value at cost, realized revenue, and realized profit.
+3. Owner confirms pending inward drafts from order or market-run output.
+4. Owner adds stock lots manually when needed.
+5. Owner records source, quality, godown, units, meters per unit, unit label, cost per meter, and notes.
+6. Owner adjusts stock if physical counts differ.
+7. Owner records stock sale with taka count, meters, price per meter, and notes.
+8. Commercials reflects realized stock profit.
+
+## Existing Workflow Translation
+
+Old workflow:
+
+- Godown takas are counted on paper or from memory.
+- Owner may know the selling rate but not the exact production cost basis.
+- Stock produced for market is hard to connect to original costing.
+
+Weavly workflow:
+
+- Each stock lot has source, cost, units, meters, godown, and movement history.
+- Sales compute revenue, cost, and gross profit.
+- Market-run and order output can become inward drafts.
 
 ## Pain Points Solved
-- **Stock Outs**: Alerts when yarn for an active order is running low.
-- **Wastage Tracking**: Compare "Yarn Issued" vs "Fabric Produced" to identify excessive wastage.
-- **Warehouse Confusion**: Clearly see what is "Available" vs "In-Transit" vs "Dispatched".
 
-## Old Workflow Translation
-- **Old way**: A "Godown" register where a clerk writes down every bag of yarn that arrives. Fabric rolls are counted manually once a week.
-- **Weavly way**: Digital ledgers for Yarn, Beams, and Fabric. Entries are made as soon as material arrives or fabric is packed.
+- Unclear godown quantity.
+- Lost taka-level stock memory.
+- Profit uncertainty on stock sales.
+- Manual reconciliation between production and sale.
 
-## Value Provided
-- **Working Capital Efficiency**: Don't buy yarn you already have.
-- **Production Continuity**: Ensure beams are ready before a loom goes "Idle".
-- **Dispatch Accuracy**: Ensure you have enough packed stock to fulfill an upcoming dispatch.
+## Deferred Deep Inventory
 
-## User Interaction
-1.  **Yarn Inflow**: Owner records new yarn purchases (Inward).
-2.  **Beam Inflow**: Supervisor/Owner records when yarn is wound onto a beam.
-3.  **Grey Stock**: Auto-populated via "Submit & Pack" on the supervisor dashboard.
-4.  **Inspection**: Owner can "Inspect" a fabric package to mark it as "A Grade" or "B Grade" before it is available for dispatch.
+The archived `/owner/inventory` surface includes or points toward:
 
-## Technical Logic
-- **Package-level Tracking**: Grey stock is tracked as individual `fabric_packages`, each with its own ID, weight, and meter count.
-- **Atomic Operations**: Inventory increments and decrements are handled via server actions to ensure data integrity.
-- **Relationship Mapping**: Beams are linked to specific machines, and fabric packages are linked to specific orders.
+- yarn lots
+- beam cards
+- yarn movements
+- beam card lots
+- order yarn requirements
+- yarn/beam planning workflows
 
-## Relation to Other Features
-- **Production & Packing**: The primary source of Grey Stock.
-- **Dispatches**: Dispatches remove items from "Grey Stock".
-- **Estimator**: Real-world inventory costs can be used to update estimator baselines.
+These are useful but not Phase 1 polish priorities.
 
-## Output/Result
-- **Inventory Dashboard**: Charts and tables showing current stock levels.
-- **Stock Audit**: A history of all movements (Inward, Internal, Outward).
-- **Grading List**: A list of packed fabric rolls categorized by quality grade.
+## Data and Code
+
+Active:
+
+- `app/(dashboard)/owner/stock/TakaStockClient.tsx`
+- `app/(dashboard)/owner/stock/actions.ts`
+- `fabric_stock_lots`
+- `fabric_stock_sales`
+- `fabric_stock_movements`
+- `fabric_stock_inward_drafts`
+
+Deferred:
+
+- `app/(dashboard)/owner/inventory`
+- `yarn_lots`
+- `beam_cards`
+- `yarn_movements`
+- `beam_card_lots`
+- `order_yarn_requirements`
+
+## Readiness Notes
+
+- Stock should help owners decide and sell; it should not become a full inventory ERP in Phase 1.
+- Inward draft and sale math should be tested because it feeds commercials.

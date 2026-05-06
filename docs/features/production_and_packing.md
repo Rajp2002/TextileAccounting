@@ -1,42 +1,72 @@
-# Feature Analysis: Production & Packing (Submit & Pack)
+# Production and Packing
 
-## Overview
-While "Production Logging" records *how much* was woven, "Packing" records the *physical items* created. The "Submit & Pack" feature allows supervisors to turn a meter entry into a "Fabric Package" (roll or bale) in the inventory system with a single tap.
+Last analyzed from the active codebase on May 6, 2026.
 
-## Why It's Needed
-In many factories, production is logged, but the physical rolls sit in a pile until someone manually counts them. This leads to "Ghost Inventory"—you know you produced 500 meters, but you don't know where it is or if it's been packed and graded.
+## Phase 1 Status
+
+Core production logging is Phase 1. Packing/package workflows and stock inward workflows are supporting Phase 1 surfaces where they connect production to physical goods.
+
+## What It Does
+
+Production logging records how many meters were woven by machine, worker, order/run, date, and shift. Packing and stock workflows translate those meters into physical stock records: packages, takas, inward drafts, lots, movements, and sales.
+
+## User Workflow
+
+1. Supervisor logs shift production.
+2. Production logs update order/run progress and payroll earnings.
+3. Output can be represented as packages or as stock inward drafts.
+4. Owner confirms or creates physical stock records.
+5. Stock can be inspected, adjusted, dispatched, or sold depending on workflow.
+
+## Existing Workflow Translation
+
+Old workflow:
+
+- Supervisor writes meters in a production register.
+- Physical rolls or takas are counted separately.
+- The owner later reconciles produced meters against godown stock.
+
+Weavly workflow:
+
+- Production logs are created at source.
+- Physical stock can be created from production.
+- Godown stock and dispatch readiness become visible earlier.
 
 ## Pain Points Solved
-- **Inventory Mismatch**: Ensures that what is logged as produced is also logged as physical stock.
-- **Grading Lag**: Allows for immediate packing and quality tagging on the floor.
-- **Dispatch Delays**: You can't dispatch what isn't in stock. packing creates the stock records needed for dispatches.
 
-## Old Workflow Translation
-- **Old way**: Supervisor writes down meters. Later, a "Folder" or "Packer" manually creates a "Takka" (roll) list on paper. The owner then types this list into a ledger.
-- **Weavly way**: Supervisor logs 100 meters on Machine 5 and clicks "Submit & Pack". The system instantly creates a new "Fabric Package" in the `stock` table, ready for dispatch.
+- Produced meters not matching physical stock.
+- Lost roll/taka counts.
+- Delayed dispatch readiness.
+- Payroll disconnected from actual production.
 
-## Value Provided
-- **Physical Accountability**: Every meter produced is accounted for as a physical unit.
-- **Streamlined Workflow**: Combines two operational steps (Logging + Stock Entry) into one.
-- **Dispatch Readiness**: Stock is immediately available to be added to a dispatch invoice/challan.
+## Key Concepts
 
-## User Interaction
-1.  **Entry**: Supervisor enters meters for multiple machines.
-2.  **Action**: Instead of "Submit Shift Logs", they click "Submit & Pack".
-3.  **Outcome**: System logs the production and creates one "Bulk Package" per machine-order combination for that shift.
-4.  **Refinement**: (Optional) Owner can later go to the Stock module to split bulk packages into individual rolls or bales.
+- `production_logs`: the payroll and progress source of truth.
+- `fabric_packages`: package-style stock for rolls/bales/bulk output.
+- `fabric_stock_inward_drafts`: suggested stock inward records from order or market-run output.
+- `fabric_stock_lots`: taka/godown inventory with cost per meter.
+- `fabric_stock_movements`: inward, sale, and adjustment history.
 
-## Technical Logic
-- **RPC Logic**: Uses `packProductionIntoBulkPackages` which takes the shift logs and performs a batch insert into the `fabric_packages` table.
-- **Order Linkage**: Each package is automatically linked to the `order_id` from the shift assignment, preserving the chain of custody.
-- **Tenant Scoping**: All packages are org-scoped to ensure factory data isolation.
+## Data and Code
 
-## Relation to Other Features
-- **Stock Management**: This is the primary "Inflow" for the Stock module.
-- **Dispatches**: Only "Packed" packages can be dispatched to a customer.
-- **Orders**: Updates the "Produced" vs "Packed" stats for the order.
+- `app/(dashboard)/supervisor/actions.ts`
+- `app/(dashboard)/owner/stock/actions.ts`
+- `components/dispatches/DispatchModals.tsx`
+- `production_logs`
+- `fabric_packages`
+- `fabric_stock_inward_drafts`
+- `fabric_stock_lots`
+- `fabric_stock_movements`
 
-## Output/Result
-- **Fabric Packages**: New entries in the stock ledger with unique package numbers.
-- **Updated Inventory**: Increases the "Total Grey Stock" for the factory.
-- **Production Audit**: A link between the production log and the physical package ID.
+## Downstream Effects
+
+- Owner analytics.
+- Payroll.
+- Orders and market-run progress.
+- Stock valuation and sales.
+- Dispatch creation and receipt reconciliation.
+
+## Readiness Notes
+
+- Production logging must remain the primary Phase 1 focus.
+- Packing/stock should stay helpful and lightweight, not become a full warehouse system before the log-to-pay loop is stable.

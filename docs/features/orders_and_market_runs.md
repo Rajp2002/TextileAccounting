@@ -1,42 +1,95 @@
-# Feature Analysis: Order Management & Market Runs
+# Orders and Market Runs
 
-## Overview
-Orders represent the live commitments a factory has with its customers (Parties). Market Runs are a specialized type of "speculative" order where the factory produces fabric for its own stock to sell later in the market.
+Last analyzed from the active codebase on May 6, 2026.
 
-## Why It's Needed
-Factories need to track production progress against specific deadlines and quantities. Without centralized tracking, it's difficult to know which looms are free, which orders are overdue, and how much fabric is ready to be dispatched.
+## Phase 1 Status
+
+Core Phase 1 pillar. Orders and market runs connect commercial intent to loom execution.
+
+## What It Does
+
+Orders represent committed party-backed production. Market runs represent speculative production for godown stock. Both are tracked through production logs, owner analytics, stock movement, and commercial profit visibility.
+
+## User Workflow: Order
+
+1. Owner saves a quote from the estimator.
+2. Owner marks the quote accepted in `/owner/quotes`.
+3. Owner converts it into an active order with target meters, deadline, and notes.
+4. Owner opens `/owner/orders`.
+5. Owner reviews order cards by status, pace, progress, deadline, cost, and margin.
+6. Owner opens the order detail drawer.
+7. Owner assigns machines.
+8. Supervisor logs production against that order.
+9. Owner monitors progress and pace.
+10. Owner creates dispatches from the order when output is ready.
+11. Owner marks the order complete or cancelled where appropriate.
+
+## User Workflow: Market Run
+
+1. Owner opens estimator in market mode or clicks New Run from `/owner/market-runs`.
+2. Owner uses the same costing engine but creates a speculative run instead of a party quote.
+3. Supervisor logs production against the run/order anchor.
+4. Output moves toward godown stock.
+5. Owner reviews produced meters, in-godown meters, sold meters, revenue, cost, profit, and status.
+6. Owner records market-run sales and closes runs when appropriate.
+
+## Existing Workflow Translation
+
+Old workflow:
+
+- Client orders are written on a board or in a register.
+- Production progress is manually estimated from rolls or end-of-day updates.
+- Speculative market fabric is tracked informally.
+- Machine assignment is communicated verbally.
+
+Weavly workflow:
+
+- Orders and market runs are digital production anchors.
+- Progress is computed from production logs.
+- Pace and deadline risk are visible.
+- Market production gets cost and profit visibility.
 
 ## Pain Points Solved
-- **Deadline Blindness**: Owners get real-time alerts for orders at risk of missing their deadlines.
-- **Machine Under-utilization**: Clearly see which machines are assigned to which order and move them as needed.
-- **Speculative Risk**: Market Runs allow owners to keep the factory running even when customer orders are low, with full cost tracking.
 
-## Old Workflow Translation
-- **Old way**: A "Whiteboard" or "Chopdi" (register) listing active orders. Supervisors manually count rolls at the end of the day to estimate progress.
-- **Weavly way**: A digital dashboard showing `Progress %`, `Pace Index` (are we fast enough?), and `Days Remaining`. Progress is updated automatically as supervisors log production.
+- Deadline blindness.
+- Machine under-utilization.
+- Confusion between client work and market work.
+- Inability to know whether speculative production is profitable.
+- Manual handoff errors between owner and supervisor.
 
-## Value Provided
-- **Operational Clarity**: Real-time visibility into what the factory is currently "weaving".
-- **Customer Trust**: Provide accurate delivery estimates to Traders.
-- **Financial Control**: Track the "Total Order Value" and "Landed Cost" to ensure the order remains profitable throughout its lifecycle.
+## User Interaction Details
 
-## User Interaction
-1.  **Creation**: Converts an approved Quote into an Order by setting a `Target Quantity` and `Deadline`.
-2.  **Machine Assignment**: Owner assigns specific machines to the order via a drag-and-drop or checklist interface.
-3.  **Monitoring**: Tracks the "Progress Bar" and "Pace Index" on the Orders dashboard.
-4.  **Completion**: When target is reached, the order is marked "Completed", freeing up machines for the next task.
+- Order cards show progress, days remaining, and pace color.
+- Order detail includes quote cost stack and total order value.
+- Machine assignment is managed inline.
+- Protected edits can require owner access code.
+- Dispatch summary appears from the order detail.
+- Market-run cards show target, produced, godown, profit, and sale count.
 
-## Technical Logic
-- **Progress Tracking**: Calculated via an RPC that aggregates `production_logs` against the `total_target_meters` of the order.
-- **Pace Index**: A specialized calculation (`meters_produced / (meters_targeted / total_days) * days_elapsed`) to determine if the current speed will meet the deadline.
-- **Access Codes**: Sensitive edits (like changing the target quantity after production has started) require an "Owner Access Code" for security.
+## Data and Code
 
-## Relation to Other Features
-- **Estimator**: Every Order/Market Run must originate from a fabric estimate.
-- **Supervisor Dashboard**: Assignments made here dictate what the supervisor sees on the floor.
-- **Stock & Dispatches**: Finished fabric packages are linked to the Order for tracking.
+- `app/(dashboard)/owner/orders/OrdersClient.tsx`
+- `app/(dashboard)/owner/orders/actions.ts`
+- `app/(dashboard)/owner/market-runs/MarketRunsClient.tsx`
+- `app/(dashboard)/owner/market-runs/[id]/MarketRunDetailClient.tsx`
+- `app/(dashboard)/owner/estimator/actions.ts`
+- `orders`
+- `market_runs`
+- `market_run_sales`
+- `machine_assignments`
+- `shift_assignments`
+- `production_logs`
 
-## Output/Result
-- **Order Progress Dashboard**: Visual cards with pace and deadline markers.
-- **Machine Assignments**: Linkages between looms and specific fabric qualities.
-- **Market Run Stock**: Fabric produced without a party is tagged as "Market Stock".
+## Downstream Effects
+
+- Supervisor production log pulls active orders/runs.
+- Owner analytics summarizes order health.
+- Stock inward drafts and stock lots can originate from completed production.
+- Dispatches and public tracking attach to orders.
+- Commercials aggregates expected and realized profit.
+
+## Readiness Notes
+
+- Order/run selection must be unambiguous for supervisors.
+- Pace calculations must be clear enough for owners to trust.
+- Market runs should stay distinct from party orders while reusing the same production machinery.

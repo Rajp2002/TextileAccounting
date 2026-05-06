@@ -1,117 +1,137 @@
 # Weavly Security Notes
 
-This document summarizes the security controls that are actually present in the codebase today and the operational steps for rotating the main secrets.
+Last analyzed from the active codebase on May 6, 2026.
 
-## Current Controls
+## Security Model
 
-### Platform and app-layer controls
-- Supabase Auth with role-aware redirects
-- PostgreSQL RLS for org isolation
-- auth-route rate limiting via Upstash Redis
-- access-code rate limiting
-- tracking-token rate limiting
-- one-hour inactivity timeout in middleware
-- revocation checks for forcibly logged-out users
-- CSP and security headers in `next.config.ts`
-- Sentry instrumentation for browser, server, and edge code
+Weavly is a multi-tenant SaaS. The primary security boundary is organization-level isolation through `org_id`.
 
-### Sensitive operation controls
-- destructive and historical actions are protected by server actions and rate limiting
-- owner-generated access codes gate protected edits and certain destructive flows
-- export and delete flows live behind authenticated owner-only code paths
+Protection layers:
 
-## Important Secrets In Use
+- Supabase Auth.
+- Custom JWT claims for role and org.
+- Server-side `requireRole()` checks.
+- Supabase RLS policies.
+- Middleware redirects and protected API behavior.
+- One-time owner access codes for protected supervisor/correction actions.
+- Rate limiting and lockout where configured.
+- Audit logging for sensitive writes.
 
-### Web app
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_SUPABASE_PROJECT_ID`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
-- `RAZORPAY_KEY_ID`
-- `RAZORPAY_KEY_SECRET`
-- `NEXT_PUBLIC_RAZORPAY_KEY_ID`
-- `RAZORPAY_PLAN_ID_BASE`
-- `RAZORPAY_PLAN_ID_PREMIUM`
-- `RAZORPAY_WEBHOOK_SECRET`
-- `SENTRY_ORG`
-- `SENTRY_PROJECT`
+## Roles
 
-### Supabase edge functions
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `owner`: commercial, workforce, payroll, settings, billing, and factory-control user.
+- `supervisor`: floor production, worker, attendance, and machine-status user.
+- `admin`: platform/compliance governance user.
+
+Role homes:
+
+- owner: `/owner/analytics`
+- supervisor: `/supervisor/dashboard` or `/supervisor/production` redirect
+- admin: `/admin`
+
+## Route Protection
+
+`middleware.ts` handles:
+
+- public route allowlist
+- auth route rate limiting
+- API JSON 401 responses for protected APIs
+- session refresh
+- revoked-session checks
+- one-hour inactivity timeout
+- auth-page redirects for already signed-in users
+- onboarding gate for owners
+- role mismatch redirects
+- Phase 1 archived route redirects
+
+## Access Codes
+
+Owner access codes protect sensitive operations such as destructive actions, correction flows, and past-date changes.
+
+Important behaviors:
+
+- Codes are org-scoped.
+- Codes are hashed server-side.
+- Codes expire.
+- Codes are one-time use and consumed after success.
+- Format is validated before DB lookup.
+- Failed attempts are recorded.
+- Repeated failures can lock out code attempts temporarily.
+- Successful code use clears failure history.
+- Audit context records code-authorized changes where implemented.
+
+## Tenant Isolation
+
+Server actions should derive `org_id` from the authenticated profile, never from client input.
+
+Tables should be queried with:
+
+- authenticated user context where RLS applies, or
+- service role only after explicit role validation and actor context setup.
+
+When using service role:
+
+- verify role first
+- scope by `org_id`
+- set audit actor when writing sensitive data
+
+## WhatsApp Security
+
+WhatsApp uses Meta Cloud API secrets in Supabase Edge Functions:
+
 - `META_ACCESS_TOKEN`
 - `META_PHONE_NUMBER_ID`
 - `META_WEBHOOK_VERIFY_TOKEN`
 - `WHATSAPP_PROVIDER`
 
-## Rotation Playbooks
+Webhook verification must use `META_WEBHOOK_VERIFY_TOKEN`. Delivery callbacks should correlate with `meta_message_id`.
 
-### 1. Supabase JWT secret
-Rotate this if token signing is suspected to be compromised.
+Core workflow writes should not depend on WhatsApp success.
 
-1. Schedule a maintenance window.
-2. Rotate the JWT secret in Supabase project settings.
-3. Expect existing sessions to become invalid.
-4. Verify fresh sign-in, role redirects, and owner/supervisor page access.
+## Billing Security
 
-### 2. Supabase anon or service-role keys
-Rotate this if keys are leaked or over-exposed.
+Razorpay routes require:
 
-1. Roll the compromised key in Supabase.
-2. Update Vercel environment variables:
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-3. Redeploy the app.
-4. Re-test auth, owner actions, supervisor actions, and any service-role-backed flows.
+- `RAZORPAY_KEY_ID`
+- `RAZORPAY_KEY_SECRET`
+- `NEXT_PUBLIC_RAZORPAY_KEY_ID`
+- plan IDs
+- `RAZORPAY_WEBHOOK_SECRET`
 
-### 3. Upstash Redis token
-Rotate this if rate-limiter credentials are exposed.
+Webhook verification should be treated as mandatory before mutating subscription or payment state.
 
-1. Roll the Upstash credential.
-2. Update:
-   - `UPSTASH_REDIS_REST_URL` if changed
-   - `UPSTASH_REDIS_REST_TOKEN`
-3. Redeploy.
-4. Re-test login throttling, access-code throttling, and tracking rate limits.
+## Archived Routes
 
-### 4. Razorpay keys
-Rotate on payment-key exposure.
+The current Phase 1 archive gate redirects:
 
-1. Roll the Razorpay API key pair.
-2. Update:
-   - `RAZORPAY_KEY_ID`
-   - `RAZORPAY_KEY_SECRET`
-   - `NEXT_PUBLIC_RAZORPAY_KEY_ID`
-3. If needed, re-check plan IDs and webhook signing secret.
-4. Re-test checkout and webhook-driven subscription activation.
+- `/admin`
+- `/owner/inventory`
+- `/owner/ledger`
+- `/owner/settings/audit`
+- `/owner/system-health`
 
-### 5. Razorpay webhook secret
-Rotate if webhook authenticity is in doubt.
+`/owner/stock` is active and should not be treated as archived unless `lib/phase1-scope.ts` changes.
 
-1. Create a new webhook secret in Razorpay.
-2. Update `RAZORPAY_WEBHOOK_SECRET`.
-3. Redeploy.
-4. Re-test `/api/webhooks/razorpay`.
+## Sensitive Product Areas
 
-### 6. Meta WhatsApp credentials
-Rotate if the WhatsApp business account is compromised or keys are leaked.
+Highest-risk writes:
 
-1. Rotate the Meta system-user or app token.
-2. Update:
-   - `META_ACCESS_TOKEN`
-   - `META_PHONE_NUMBER_ID` if the sender number changes
-   - `META_WEBHOOK_VERIFY_TOKEN` if webhook verification changes
-3. Re-deploy the affected edge functions or refresh secrets in Supabase.
-4. Re-test `send-access-code`, `send-daily-brief`, `send-payslip`, and `retry-failed-messages`.
+- payroll settlement/unsettlement
+- worker advance deletion/write-off/recovery
+- production log overwrite/correction
+- past attendance changes
+- machine/worker destructive operations
+- subscription webhook updates
+- data export/delete
+- tenant lockdown/unlock
 
-## Verification Checklist After Any Rotation
+## Operational Checklist
 
-- owner login works
-- supervisor login works
-- owner server actions still succeed
-- supervisor dashboard saves still succeed
-- WhatsApp logs continue to write to `whatsapp_delivery_log`
-- billing callbacks still activate subscriptions
-- audit and export pages still load
+- Ensure Supabase RLS is enabled on tenant tables.
+- Ensure service-role keys are never exposed to client bundles.
+- Rotate WhatsApp and Razorpay secrets after suspected exposure.
+- Keep archived route list aligned with navigation.
+- Confirm access-code failure lockout works.
+- Confirm public `/track/[token]` exposes only intended tracking data.
+- Confirm owner/supervisor role mismatch redirects cannot reveal data.
+- Confirm audit logging captures actor identity for service-role writes.

@@ -446,8 +446,18 @@ export interface DispatchWithOrder {
     }
 }
 
+export interface DispatchOverviewStats {
+    pending_sales_count: number
+    pending_dispatch_meters: number
+    pending_dispatch_value: number
+}
+
 type DispatchesResult =
     | { data: DispatchWithOrder[]; error?: never }
+    | { data?: never; error: string }
+
+type DispatchOverviewResult =
+    | { data: DispatchOverviewStats; error?: never }
     | { data?: never; error: string }
 
 type RawDispatchWithOrder = Omit<DispatchWithOrder, 'orders'> & {
@@ -818,6 +828,28 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
             package_lines: (row as unknown as RawDispatchRow).dispatch_package_lines ?? [],
             orders: Array.isArray(row.orders) ? row.orders[0] : row.orders,
         })),
+    }
+}
+
+export async function getDispatchOverviewStats(): Promise<DispatchOverviewResult> {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('fabric_stock_sales')
+        .select('meters_sold, revenue_amount')
+        .eq('org_id', profile.org_id)
+        .is('dispatch_id', null)
+
+    if (error) return { error: error.message }
+
+    const rows = data ?? []
+    return {
+        data: {
+            pending_sales_count: rows.length,
+            pending_dispatch_meters: rows.reduce((sum, row) => sum + Number(row.meters_sold ?? 0), 0),
+            pending_dispatch_value: rows.reduce((sum, row) => sum + Number(row.revenue_amount ?? 0), 0),
+        },
     }
 }
 

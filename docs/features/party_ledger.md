@@ -1,49 +1,91 @@
-# Feature Analysis: Party Ledger
+# Commercials and Party Ledger
 
-## Overview
-The Party Ledger is the financial record-keeping system for interactions with Traders (Parties). it tracks sales (dispatches), payments received, and the running balance for each customer.
+Last analyzed from the active codebase on May 6, 2026.
 
-## Why It's Needed
-Factory owners often deal with dozens of Traders. Keeping track of who owes how much for which batch of fabric is a full-time job. A digital ledger ensures that no bill is missed and every payment is recorded.
+## Phase 1 Status
+
+Split status:
+
+- `/owner/commercials` is active Phase 1 support for gross-profit visibility.
+- `/owner/ledger` is archived/deferred for Phase 1 and represents deeper receivables/accounting.
+
+## What Active Commercials Does
+
+Commercials gives the owner a source-tagged view of expected and realized profit across operational work:
+
+- realized order sales/invoices
+- expected order quote profit
+- market-run sales
+- stock sales
+
+It shows revenue, production cost, gross profit, and margin. It can filter by stage and source and search by quality/reference/source.
+
+## User Workflow
+
+1. Owner opens `/owner/commercials`.
+2. Owner reviews realized revenue, realized profit, expected profit, and filtered profit.
+3. Owner filters by all/realized/expected.
+4. Owner filters by Orders, Stock, Market Runs, or Expected.
+5. Owner searches a quality or reference.
+6. Owner reviews row-level revenue, cost, profit, and margin.
+
+## Existing Workflow Translation
+
+Old workflow:
+
+- Owner knows selling price but may not immediately see production cost and gross margin.
+- Market-run and stock sale profit is remembered informally.
+- Accounting ledger may lag operational decisions.
+
+Weavly workflow:
+
+- Profit is visible from operational sources.
+- Expected and realized stages are separated.
+- Stock and market-run sales become part of the same profit story.
+
+## Deferred Party Ledger
+
+The archived ledger includes:
+
+- parties
+- party invoices
+- party receipts
+- party adjustments
+- payment allocations
+- suppliers
+- supplier ledger entries
+
+This is important for future ERP depth but not required for Phase 1 launch readiness.
 
 ## Pain Points Solved
-- **Payment Delays**: Clearly see "Overdue" balances and follow up with Traders.
-- **Billing Disputes**: Link every ledger entry to a specific Tax Invoice cum Delivery Challan or Invoice.
-- **Tax Readiness**: Export ledger data for accounting and GST filing.
 
-## Old Workflow Translation
-- **Old way**: A massive physical ledger book where each page belongs to a Party. Bills are handwritten and stuck into the book.
-- **Weavly way**: A clean, digital ledger that auto-populates when a dispatch is confirmed and allows for quick entry of "Payment Received" notes.
+- Lack of gross-profit visibility.
+- Delayed accounting feedback.
+- Poor connection between stock sale and production cost.
 
-## Value Provided
-- **Financial Health**: Instant view of "Total Receivables" (money owed to the factory).
-- **Professionalism**: Share professional-looking ledger statements with Traders via PDF or WhatsApp.
-- **Audit Accuracy**: Every entry is timestamped and linked to an order or dispatch.
+## Data and Code
 
-## User Interaction
-1.  **Selection**: Select a Party to view their specific statement.
-2.  **Transaction Entry**: Manually record a "Payment Received" (Cash, Bank, Cheque).
-3.  **Automatic Entries**: Dispatch invoices automatically create a "Debit" entry (Party owes money) in the ledger for the total invoice value including GST.
-4.  **Statement Sharing**: Export the ledger as a PDF to send to the Trader for reconciliation.
+Active:
 
-## Technical Logic
-- **Tabbed Interface**: Organized into "Transactions", "Pending Invoices", and "Analytics" for a comprehensive view.
-- **Real-time Totals**: Summarizes debits and credits to show the "Net Balance" at the top of the page.
-- **GST Split**: Invoice debits store taxable value, GST percent, GST amount, and net invoice value separately. For Surat/Gujarat parties, GST is split into CGST 2.5% + SGST 2.5%; for out-of-state parties, it is IGST 5%.
-- **Receivables Aging**: Party summary and transaction list show aging buckets:
-  - Current `< 30 days` in normal text.
-  - Overdue `30-60 days` in amber.
-  - Overdue `> 60 days` in red with a "Follow up" badge.
-- **Shortage Credit Notes**: Shortage adjustments are stored as linked credit note entries against the original dispatch invoice, using i18n key `ledger.creditNote.shortageAdjustment`.
-- **Soft Deletion**: Ledger entries are carefully managed to ensure the audit trail is never broken.
+- `app/(dashboard)/owner/commercials/CommercialsClient.tsx`
+- `app/(dashboard)/owner/commercials/actions.ts`
+- `fabric_stock_sales`
+- `market_run_sales`
+- `estimator_quotes`
+- `orders`
 
-## Relation to Other Features
-- **Dispatches**: Tax Invoice cum Delivery Challans are the primary driver of ledger debits.
-- **Orders**: Ledger entries are often tagged with an Order ID for context.
-- **Settings**: Party profiles are managed in the central settings/parties area.
+Deferred:
 
-## Output/Result
-- **Ledger Statement**: A list of all financial interactions.
-- **Net Balance**: The current amount owed by or to the Party.
-- **Aging Breakdown**: Current, 30-60 day overdue, and >60 day overdue receivables.
-- **PDF Export**: A formal financial document for reconciliation.
+- `app/(dashboard)/owner/ledger`
+- `parties`
+- `party_invoices`
+- `party_receipts`
+- `party_adjustments`
+- `payment_allocations`
+- `suppliers`
+- `supplier_ledger_entries`
+
+## Readiness Notes
+
+- Commercials should remain an operational margin view, not a full accounting promise.
+- Ledger reactivation should happen only after Phase 1 core flows are stable.

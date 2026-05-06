@@ -1,55 +1,68 @@
-# Feature Analysis: Dispatches & Tracking
+# Dispatches and Tracking
 
-## Overview
-The Dispatch module handles the physical movement of fabric from the factory to the Trader. For normal Surat grey fabric sales, dispatch is also the sale event, so the generated document is a **Tax Invoice cum Delivery Challan**, not a standalone Delivery Challan. It provides a compliant invoice, a movement document, and a public tracking link for the customer.
+Last analyzed from the active codebase on May 6, 2026.
 
-## Why It's Needed
-Once fabric leaves the factory, it enters a "Black Box". Owners need to know if the Trader has received it, if there was a shortage, and when they can expect payment. Traders also appreciate being able to track their orders without calling the factory owner.
+## Phase 1 Status
+
+In scope as a lightweight professionalism and reconciliation layer.
+
+## What It Does
+
+Dispatches record fabric handoff from factory to party. They support sent meters, received meters, status, transport metadata, GST/e-way metadata, package lines, owner receipt confirmation, shortages/extras, and public tracking links.
+
+## User Workflow
+
+1. Owner opens `/owner/dispatches` or an order detail dispatch section.
+2. Owner chooses an active order.
+3. Owner creates a dispatch from available output.
+4. Owner enters sent quantity and optional transport details: vehicle, transporter, distance, e-way details, HSN/GST/taxable values.
+5. System creates a dispatch batch.
+6. Owner shares the public tracking link from the order token.
+7. Party or owner records received meters.
+8. System marks delivered/disputed depending on receipt variance.
+9. Owner sees shortage/extra received and can use it in downstream reconciliation.
+
+## Existing Workflow Translation
+
+Old workflow:
+
+- Fabric leaves with a challan, phone call, or WhatsApp note.
+- The buyer later confirms receipt informally.
+- Shortages become payment disputes after the fact.
+
+Weavly workflow:
+
+- Dispatch batch records sent and received meters.
+- Tracking portal gives a buyer-facing status surface.
+- Shortage/extra is captured at receipt time.
 
 ## Pain Points Solved
-- **The "Has it arrived?" Call**: Traders can check the status themselves via a secure link.
-- **Shortage Disputes**: Traders can log "Received Meters" on the tracking portal, allowing the owner to instantly see any discrepancies (Shortages).
-- **Manual Billing**: One-click generation of professional Tax Invoice cum Delivery Challans with QR codes.
-- **GST Compliance Risk**: Dispatch documents include GSTIN, HSN 5407, GST split, taxable value, and sequential invoice number for GSTR-1 filing.
 
-## Old Workflow Translation
-- **Old way**: A carbon-copy bill/challan book. One copy goes with the driver, one stays in the book. If the driver loses it, the record is gone.
-- **Weavly way**: A digital dispatch record. The Tax Invoice cum Delivery Challan is generated as a PDF, and a "Tracking Link" is sent to the Trader via WhatsApp.
+- Poor client-facing shipment visibility.
+- Missing shortage records.
+- Unclear dispatch history by order.
+- Professional documentation gap.
 
-## Value Provided
-- **Professional Image**: Factory looks tech-forward and reliable to the Trader.
-- **Instant Reconciliation**: Shortages are flagged immediately, not weeks later during payment.
-- **Logistical Control**: Track which "Transporter" or "Vehicle" was used for each batch.
+## Data and Code
 
-## User Interaction
-1.  **Creation**: Select an Order and pick specific "Available" fabric packages from stock.
-2.  **Dispatch**: Click "Confirm Dispatch". System generates a Tax Invoice cum Delivery Challan PDF and a unique Tracking Token.
-3.  **Sharing**: Send the "Tracking Link" to the Trader.
-4.  **Trader Portal**: Trader opens the link, sees the roll list, and clicks "Confirm Receipt" (optionally entering received meters).
-5.  **Shortage Adjustment**: If received meters are lower than sent meters, prompt the owner: "Create adjustment for {shortage_meters}m shortage?". On confirmation, create a linked credit note entry in the party ledger.
+- `app/(dashboard)/owner/dispatches/DispatchesClient.tsx`
+- `app/(dashboard)/owner/orders/OrdersClient.tsx`
+- `app/(dashboard)/owner/orders/actions.ts`
+- `components/dispatches/DispatchModals.tsx`
+- `app/(public)/track/[token]/TrackingPortal.tsx`
+- `dispatches`
+- `dispatch_package_lines`
+- `fabric_packages`
+- `party_dispatch_claims`
 
-## Technical Logic
-- **Stock Integration**: Confirming a dispatch moves fabric packages from `available` to `in_transit` status.
-- **Invoice Document**: Dispatch generates a "Tax Invoice cum Delivery Challan" with:
-  - Factory GSTIN and Trader GSTIN.
-  - HSN Code `5407` for synthetic filament woven grey fabric.
-  - Taxable value as `meters * rate_per_meter`.
-  - GST at 5%.
-  - CGST 2.5% + SGST 2.5% when the Trader state matches the factory state, otherwise IGST 5%.
-  - Total invoice value including GST.
-  - Sequential invoice number suitable for GSTR-1 filing.
-- **Ledger Debit**: The automatic party ledger debit is the total invoice value including GST. The ledger stores base taxable value and GST amount separately for reconciliation.
-- **E-Way Bill Awareness**: If total invoice value exceeds `50000`, show a non-blocking banner: "This dispatch requires an E-Way Bill before the vehicle departs. Generate on the GST portal." Link to `https://ewaybillgst.gov.in`, and allow the owner to save an optional `eway_bill_number` on the dispatch record.
-- **Shortage Credit Note**: When a shortage is confirmed by the Trader portal or owner-side receipt entry, the owner can create a one-tap credit note for `shortage_meters * rate_per_meter + GST`. The credit note is linked to the original dispatch invoice and labelled with i18n key `ledger.creditNote.shortageAdjustment`.
-- **Public Portal**: A specialized Next.js route `/track/[token]` that provides a read-only (and receipt-confirmable) view of the dispatch without requiring a login.
-- **QR Codes**: Every invoice/challan includes a QR code that links directly to the public tracking portal.
+## Downstream Effects
 
-## Relation to Other Features
-- **Stock Management**: Dispatches consume items from the Grey Stock.
-- **Orders**: Updates the "Dispatched Quantity" for the order.
-- **Party Ledger**: Automatically creates a debit entry for the full invoice value, with taxable value and GST tracked separately.
+- Public tracking.
+- Shortage analytics.
+- Party ledger/accounting in future scope.
+- Commercial source records where dispatch/invoice data is used.
 
-## Output/Result
-- **Tax Invoice cum Delivery Challan (PDF)**: A professional GST-compliant document with factory/party details and itemized roll list.
-- **Public Tracking Link**: A URL (e.g., `weavly.app/track/xyz`) for the Trader.
-- **Shortage Alert + Credit Note Prompt**: A notification if the Trader records fewer meters than sent, followed by an optional linked ledger credit note.
+## Readiness Notes
+
+- Keep dispatch useful without requiring the full ledger.
+- Receipt confirmation and shortage behavior need manual testing.

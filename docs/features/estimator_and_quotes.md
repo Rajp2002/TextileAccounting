@@ -1,43 +1,88 @@
-# Feature Analysis: Estimator & Quotes
+# Estimator and Quotes
 
-## Overview
-The Estimator is the commercial heart of Weavly. it allows factory owners to calculate the precise "Landed Cost" of a fabric before they even start production. Once an estimate is refined, it can be saved as a Quote and sent to a Party (Trader).
+Last analyzed from the active codebase on May 6, 2026.
 
-## Why It's Needed
-In weaving factories, margins are often thin. A small miscalculation in yarn weight, wastage, or overhead can turn a profitable order into a loss. Owners need a scientific way to price their fabric that accounts for every variable: yarn rates, GST, crimp, shortage, and factory overheads.
+## Phase 1 Status
+
+Core Phase 1 pillar. The estimator is the commercial entry point for Weavly.
+
+## What It Does
+
+The estimator lets an owner calculate the cost and quote price of a fabric from weaving-specific inputs. It covers warp/weft yarn rows, denier, beam ends, picks, reed space, yarn rates, GST, shortage, warp crimp, loom type, RPM, power, hours per shift, warping, sizing, winding, processing, finishing, overheads, fixed-worker overhead, commission, transport, and profit.
+
+Quotes save both the final commercial values and the estimator state snapshot so historical quote assumptions can be restored later.
+
+## User Workflow
+
+1. Owner opens `/owner/estimator`.
+2. Owner starts from defaults or applies a saved template.
+3. Owner enters fabric quality details: warp rows, weft rows, tape length, picks, denier, yarn rate, GST, shortage, and crimp.
+4. Owner configures loom assumptions: loom type, RPM, power, hours per shift, and sizing mode.
+5. Owner reviews cost stack and scenarios.
+6. Owner saves a reusable fabric template or updates an existing one.
+7. Owner enters party name, quality label, warp/weft instructions, meters, and margin.
+8. Owner saves the quote.
+9. Owner manages quote status in `/owner/quotes`: draft, sent, accepted, rejected.
+10. Owner re-estimates an old quote by restoring its snapshot into local estimator draft state.
+11. Owner converts an accepted quote into an active order.
+12. Owner can create a market run from estimator market mode.
+
+## Existing Workflow Translation
+
+Old workflow:
+
+- Owner calculates yarn and weaving cost in a notebook, calculator, Excel file, or from memory.
+- Old rates and fabric qualities are copied from previous parchi.
+- Margin is decided quickly under trader pressure.
+- A quote may be sent over phone or WhatsApp, but the assumptions are hard to reconstruct later.
+
+Weavly workflow:
+
+- The fabric recipe is structured.
+- Inputs update totals immediately.
+- Templates preserve repeat qualities.
+- Quotes store a durable snapshot.
+- Accepted quotes can become production orders without retyping.
 
 ## Pain Points Solved
-- **Guesswork Pricing**: No more "feeling out" a price. Every paisa is accounted for.
-- **Hidden Costs**: Automatically includes factory overheads (electricity, maintenance, salaries) which are often forgotten.
-- **Complex Math**: Handles the "denier to grams" and "ends to weight" conversions that usually require complex Excel sheets or manual registers.
-- **Template Management**: Easily reuse successful fabric configurations instead of re-entering data.
 
-## Old Workflow Translation
-- **Old way**: Owner uses a calculator and a paper "Parchi" to do rough math. They might forget to add the 5% GST on yarn or miss the 2% transport cost.
-- **Weavly way**: A guided UI where the owner enters the quality parameters (Warp, Weft, Reed Space, PPI) and the system provides an instant, itemized cost breakdown.
+- Guesswork pricing.
+- Hidden overhead and process costs.
+- Re-entering repeat qualities.
+- Losing quote assumptions after yarn rates change.
+- Poor handoff from commercial quote to production instruction.
 
-## Value Provided
-- **Profit Protection**: Ensures a minimum desired margin (up to 100%).
-- **Faster Quoting**: Respond to Trader inquiries in seconds by applying a saved template.
-- **Scenario Analysis**: Instantly see how a change in yarn rate or target price affects the bottom line.
+## User Interaction Details
 
-## User Interaction
-1.  **Input Quality**: User enters Warp and Weft rows (Denier, Ends, Rate, GST).
-2.  **Configure Loom**: Selects Loom Type (Waterjet, Rapier, etc.) which auto-fills RPM and Power usage.
-3.  **Adjust Overheads**: System pulls factory-wide overheads (synced from Settings) and allocates them per meter based on monthly output.
-4.  **Save/Quote**: User saves as a "Fabric Template" for internal use or generates a "Quote" for a specific Party.
+- Templates can be saved, renamed, updated, rate-updated, deleted, and applied.
+- Factory cost profile can be saved from the estimator.
+- Monthly output suggestions can use recent production.
+- Fixed workers can be merged into overhead items.
+- Scenario analysis helps the owner see sensitivity to margin/price assumptions.
+- Quote history lets the owner filter by status and restore or convert records.
 
-## Technical Logic
-- **State Management**: Uses a complex React `useReducer` to manage dozens of interdependent variables in real-time.
-- **Calculation Engine**: Centralized logic in `lib/estimator.ts` and `lib/finance.ts` ensures mathematical accuracy.
-- **Server Actions**: Uses `upsertFactoryCostProfile` to keep factory-wide baseline costs (like electricity rates) synced across all estimates.
+## Data and Code
 
-## Relation to Other Features
-- **Orders**: An approved Quote is the required starting point for a new Order.
-- **Settings**: Factory cost profiles (overhead items) are pulled into every estimate.
-- **Market Runs**: Estimates can be used to start speculative production without a quote.
+- `app/(dashboard)/owner/estimator/EstimatorClient.tsx`
+- `app/(dashboard)/owner/estimator/actions.ts`
+- `app/(dashboard)/owner/quotes/QuotesClient.tsx`
+- `lib/estimator.ts`
+- `lib/finance.ts`
+- `factory_cost_profile`
+- `estimator_templates`
+- `estimator_quotes`
+- `orders`
+- `market_runs`
 
-## Output/Result
-- **Fabric Template**: A reusable configuration saved to the database.
-- **Quote Record**: A timestamped price offer linked to a Party.
-- **Cost Stack**: A visual pill-based breakdown showing Warp vs Weft vs Overhead vs Wage.
+## Downstream Effects
+
+- Accepted quote conversion creates active orders.
+- Market mode creates market runs.
+- Worker-rate and cost snapshots flow into production and payroll.
+- Quote data feeds expected commercial profit.
+
+## Readiness Notes
+
+- Formula tests are critical before launch.
+- Quote snapshots must remain stable after template or factory-profile edits.
+- The first-time owner path should remain simple despite the advanced controls.

@@ -1,113 +1,71 @@
-# Weavly
+# Weavly Documentation Index
 
-Weavly is a multi-tenant textile operations SaaS for Indian weaving factories. The current codebase contains a broad operating-system surface, but Phase 1 is intentionally focused on estimator, production logging/tracking, and payroll/advances, with supporting modules only where they strengthen those core workflows.
+Last analyzed from the active codebase on May 6, 2026.
 
-For scope decisions, start with [PHASE_1_SCOPE.md](./PHASE_1_SCOPE.md).
+Weavly is a multi-tenant operating system for Indian weaving factories. The current Phase 1 source of truth is the factory loop from estimating to quotes/orders/market runs, production logging, stock/dispatch/commercial visibility, and payroll/advances.
 
-## Current Product Surface
+Start here:
 
-Phase 1 keeps analytics, market runs, dispatches, WhatsApp, referrals, billing, quotes/orders, workers, machines, and attendance where they directly support the core operating loop. Ledger, deep inventory/stock, system health, compliance/DPA/grievance/admin surfaces are present in the repo but are not Phase 1 polish priorities.
+- [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md) - concise product and implementation overview.
+- [PHASE_1_SCOPE.md](./PHASE_1_SCOPE.md) - authoritative Phase 1 launch scope.
+- [MASTER_PRODUCT_DOCUMENT.md](./MASTER_PRODUCT_DOCUMENT.md) - comprehensive product, workflow, route, data, and pain-point reference.
+- [MASTER_FEATURE_DOCUMENT.md](./MASTER_FEATURE_DOCUMENT.md) - unified feature map across all module docs.
+- [PHASE_1_ARCHIVE.md](./PHASE_1_ARCHIVE.md) - routes and product areas deferred from Phase 1 polish.
 
-### Owner routes
-- `/owner/analytics` - production KPI dashboard
-- `/owner/orders` - live order management
-- `/owner/ledger` - party receivables, payments, claims, and adjustments
-- `/owner/estimator` - costing engine, templates, and quote creation
-- `/owner/payroll` - month-end settlement for piece-rate and fixed workers
-- `/owner/stock` - grey fabric stock board
-- `/owner/fixed-workers` - worker directory and fixed staff management
-- `/owner/dispatches` - dispatch list and public tracking links
-- `/owner/inventory` - yarn and beam inventory
-- `/owner/advances` - worker advances / Upaad
-- `/owner/machines` - machine fleet management
-- `/owner/quotes` - saved estimator quotes and conversion history
-- `/owner/billing` - trial and Razorpay subscription management
-- `/owner/system-health` - WhatsApp delivery logs and retry actions
-- `/owner/settings` and `/owner/settings/audit` - organization settings, exports, access codes, audit, WhatsApp opt-in, float management, lockdown controls
+Root-level companion docs:
 
-### Supervisor routes
-- `/supervisor/dashboard` - unified floor dashboard for shift assignment, order linking, machine status, and bulk production logging
-- `/supervisor/workers` - worker CRUD and status updates
-- `/supervisor/attendance` - daily attendance for fixed staff
-- `/supervisor/machines` - floor-facing machine view
-- `/supervisor/production` - redirect to the unified dashboard
+- [USER_WORKFLOWS.md](../../USER_WORKFLOWS.md) - role-based user workflows and end-to-end flows.
+- [TECHNICAL_ANALYSIS.md](../../TECHNICAL_ANALYSIS.md) - implementation architecture and technical boundaries.
+- [WHATSAPP_INTEGRATION_GUIDE.md](../../WHATSAPP_INTEGRATION_GUIDE.md) - Meta WhatsApp Cloud API setup and operations.
+- [TESTING_GUIDE.md](../../TESTING_GUIDE.md) - validation plan for Phase 1.
+- [SECURITY.md](../../SECURITY.md) - security, access-code, RLS, and operational notes.
 
-### Admin routes
-- `/admin` - compliance dashboard for notices, grievances, exports, DPA state, breach and lockdown oversight
+Feature docs:
 
-### Public routes
-- `/track/[token]` - public dispatch tracking portal
-- `/privacy`, `/terms`, `/refund-policy` - policy pages
+- [Estimator and Quotes](../features/estimator_and_quotes.md)
+- [Orders and Market Runs](../features/orders_and_market_runs.md)
+- [Floor Operations and Supervisor Dashboard](../features/floor_operations_supervisor_dashboard.md)
+- [Production and Packing](../features/production_and_packing.md)
+- [Inventory and Stock](../features/inventory_and_stock.md)
+- [Dispatches and Tracking](../features/dispatches_and_tracking.md)
+- [Commercials and Party Ledger](../features/party_ledger.md)
+- [Payroll and Settlements](../features/payroll_and_settlements.md)
+- [Advances Management](../features/advances_management.md)
+- [Compliance and Admin](../features/compliance_and_admin.md)
 
-## Architecture
+## Current Phase 1 Owner Surface
 
-- Next.js 16 App Router with React 19
-- Supabase for auth, Postgres, RLS, edge functions, and realtime
-- Tailwind CSS 4 + shadcn/ui primitives
-- TanStack Query on the client
-- Dexie-backed offline queueing for production workflows
-- Razorpay for paid subscriptions
-- Meta WhatsApp Cloud API for operational messaging
-- Upstash Redis for rate limiting and revocation checks
-- Sentry across browser, server, and edge runtimes
+- `/owner/analytics` - live production overview, historical date view, order health, machine utilization, trend, worker breakdown.
+- `/owner/estimator` - costing engine, templates, quotes, market-run creation.
+- `/owner/quotes` - quote history, status changes, re-estimate, accepted quote conversion.
+- `/owner/orders` - active order board, progress, pace, assignment, dispatch section.
+- `/owner/market-runs` - speculative production tracking.
+- `/owner/stock` - taka/godown stock board, inward drafts, sales, adjustments, movements.
+- `/owner/dispatches` - order-linked dispatches, receipt reconciliation, tracking links.
+- `/owner/commercials` - expected and realized gross-profit view.
+- `/owner/payroll` - meter and fixed payroll, settlements, WhatsApp payslips.
+- `/owner/advances` - worker Upaad tracking and recovery support.
+- `/owner/fixed-workers` - workforce setup and fixed staff management.
+- `/owner/machines` - loom setup and assignment infrastructure.
+- `/owner/billing` - trial, Razorpay subscription, payment history, referrals.
+- `/owner/settings` - org identity, join code, access codes, WhatsApp, templates, cost profile, float/security controls.
 
-## Local Development
+## Current Phase 1 Supervisor Surface
 
-```bash
-npm install
-npm run dev
-```
+- `/supervisor/dashboard` - primary production log workspace.
+- `/supervisor/production` - redirect into the production log workspace.
+- `/supervisor/workers` - worker maintenance where allowed.
+- `/supervisor/attendance` - fixed worker attendance.
+- `/supervisor/machines` - machine status/view.
 
-Open [http://localhost:3000](http://localhost:3000).
+## Archived or Deferred Surfaces
 
-## Environment Variables
+The active archive gate is in `lib/phase1-scope.ts`.
 
-The codebase currently reads these values:
+- `/admin`
+- `/owner/inventory`
+- `/owner/ledger`
+- `/owner/settings/audit`
+- `/owner/system-health`
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_SUPABASE_PROJECT_ID`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_SITE_URL`
-- `VERCEL_URL`
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
-- `RAZORPAY_KEY_ID`
-- `RAZORPAY_KEY_SECRET`
-- `NEXT_PUBLIC_RAZORPAY_KEY_ID`
-- `RAZORPAY_PLAN_ID_BASE`
-- `RAZORPAY_PLAN_ID_PREMIUM`
-- `NEXT_PUBLIC_RAZORPAY_PLAN_ID_BASE`
-- `NEXT_PUBLIC_RAZORPAY_PLAN_ID_PREMIUM`
-- `RAZORPAY_WEBHOOK_SECRET`
-- `SENTRY_ORG`
-- `SENTRY_PROJECT`
-
-Supabase edge functions also read:
-
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `META_ACCESS_TOKEN`
-- `META_PHONE_NUMBER_ID`
-- `META_WEBHOOK_VERIFY_TOKEN`
-- `WHATSAPP_PROVIDER` (`meta` by default, `simulate` for testing)
-
-## Commands
-
-- `npm run dev` - start the dev server
-- `npm run build` - production build
-- `npm run start` - run the production build
-- `npm run lint` - ESLint
-
-There is currently no dedicated `test` script in `package.json`. The repo has one maintained Vitest suite for finance math at `__tests__/finance.test.ts` plus several ad hoc scripts in `scripts/`.
-
-## Documentation Map
-
-- [MASTER_PRODUCT_DOCUMENT.md](./MASTER_PRODUCT_DOCUMENT.md) - comprehensive developer-facing master product document spanning workflows, architecture, data model, and module logic
-- [PHASE_1_SCOPE.md](./PHASE_1_SCOPE.md) - current launch scope, kept modules, out-of-scope modules, and production-readiness checklist
-- [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md) - product and module overview
-- [USER_WORKFLOWS.md](./USER_WORKFLOWS.md) - role-based route and workflow reference
-- [TECHNICAL_ANALYSIS.md](./TECHNICAL_ANALYSIS.md) - implementation architecture notes
-- [TESTING_GUIDE.md](./TESTING_GUIDE.md) - current manual and automated validation guide
-- [WHATSAPP_INTEGRATION_GUIDE.md](./WHATSAPP_INTEGRATION_GUIDE.md) - Meta WhatsApp setup and operations
-- [SECURITY.md](./SECURITY.md) - operational security and secret rotation notes
+These should not define Phase 1 readiness unless a specific slice directly supports the core loop.

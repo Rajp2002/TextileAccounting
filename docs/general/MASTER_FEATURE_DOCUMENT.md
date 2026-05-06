@@ -1,607 +1,410 @@
 # Weavly Master Feature Document
 
-This document conjoins the focused feature analyses in `docs/features/` into one master reference. The individual feature documents remain the source-specific breakdowns for each module; this file is the unified product feature view as of May 1, 2026.
+Last analyzed from the active codebase on May 6, 2026.
 
-## Source Feature Documents
+This document unifies the feature docs under `docs/features/`. It is organized around the user workflow rather than the file tree, because Weavly's value comes from how each feature hands off to the next.
 
-- `docs/features/advances_management.md`
-- `docs/features/estimator_and_quotes.md`
-- `docs/features/dispatches_and_tracking.md`
-- `docs/features/floor_operations_supervisor_dashboard.md`
-- `docs/features/production_and_packing.md`
-- `docs/features/inventory_and_stock.md`
-- `docs/features/party_ledger.md`
-- `docs/features/orders_and_market_runs.md`
-- `docs/features/payroll_and_settlements.md`
-- `docs/features/compliance_and_admin.md`
+## Unified Feature Loop
 
-## Unified Feature Map
-
-Weavly's feature set forms one connected operating loop for Indian weaving factories:
-
-1. Estimate fabric cost and generate a quote.
-2. Convert the approved quote into an order, or create a speculative market run.
-3. Assign looms, orders, and workers on the floor.
-4. Log production by shift and optionally pack produced meters into fabric packages.
-5. Manage yarn, beams, and grey stock.
-6. Dispatch packed fabric with GST-aware Tax Invoice cum Delivery Challans and public tracking.
-7. Record receivables, payments, shortage credit notes, and party balances in the ledger.
-8. Settle payroll from production logs, recover worker advances, and send WhatsApp payslips.
-9. Maintain audit trails, compliance packs, legal notices, grievances, DPAs, and tenant controls.
+1. Owner sets up the factory, plan, machines, workers, payroll baseline, cost profile, join codes, WhatsApp, and access-code controls.
+2. Owner estimates fabric cost and saves templates/quotes.
+3. Owner converts accepted quotes to orders or starts market runs for speculative stock production.
+4. Supervisor assigns workers and work to machines and logs shift production from meter readings.
+5. Owner watches analytics for pace, production, machine utilization, and worker output.
+6. Production becomes stock and dispatch-ready output.
+7. Stock sales, market-run sales, quotes, and invoices feed commercial gross-profit visibility.
+8. Owner settles payroll, recovers advances, records payment mode, and sends payslips/receipts over WhatsApp.
+9. Billing, referrals, settings, access codes, audit, and compliance support the operating loop.
 
 ## Cross-Feature Dependencies
 
 | Feature | Depends On | Feeds Into |
 | --- | --- | --- |
-| Estimator & Quotes | Factory cost profile, loom assumptions, yarn rates | Orders, Market Runs |
-| Orders & Market Runs | Quotes, machines, parties | Supervisor Dashboard, Stock, Dispatches |
-| Floor Operations & Supervisor Dashboard | Machines, workers, orders | Production Logs, Payroll, Owner Analytics |
-| Production & Packing | Supervisor shift logs, order assignments | Grey Stock, Dispatches |
-| Inventory & Stock | Yarn inflows, beam records, packed fabric | Production planning, Dispatches |
-| Dispatches & Tracking | Orders, grey stock, parties | Party Ledger, public tracking, shortage handling |
-| Party Ledger | Dispatch invoices, receipts, adjustments | Receivables, GST/accounting exports |
-| Payroll & Settlements | Production logs, worker rates, advances | Worker payments, advance recovery, payslips |
-| Advances Management | Worker profiles, payroll settlements | Payroll deductions, worker balance visibility |
-| Compliance & Admin Console | Organization profiles, audit logs, legal records | Compliance exports, lockdowns, governance |
+| Onboarding and Settings | Auth, organizations, subscription, machines, workers | Estimator, production log, payroll, supervisor access |
+| Estimator | Factory cost profile, fixed workers, loom assumptions | Templates, quotes, orders, market runs |
+| Quotes | Estimator snapshots | Orders, re-estimation, expected commercials |
+| Orders | Accepted quotes, machines, workers | Supervisor log, analytics, dispatches, commercials |
+| Market Runs | Estimator snapshots | Supervisor log, stock inward drafts, stock sales, commercials |
+| Supervisor Production Log | Machines, workers, orders/runs | Production logs, analytics, payroll, stock drafts |
+| Analytics | Production logs, orders, machines | Owner decisions, order/run monitoring |
+| Stock | Production output, market runs, orders | Dispatch, stock sales, commercials |
+| Dispatches | Orders, packages/stock, parties | Tracking portal, receipt/shortage reconciliation |
+| Commercials | Quotes, invoices, stock sales, market-run sales | Owner profit visibility |
+| Payroll | Production logs, attendance, worker rates, advances | Settlements, payslips, debt recovery |
+| Advances | Workers, settlements | Payroll deductions, WhatsApp receipts |
+| WhatsApp | Worker/profile numbers, templates, edge functions | Operational communication logs |
+| Billing and Referrals | Organizations, Razorpay, referral tables | Subscription access and growth |
+| Compliance/Admin | Audit and legal records | Deferred governance workflows |
 
-## Feature Analysis: Estimator & Quotes
+## 1. Onboarding, Settings, and Access
 
-### Overview
+### What It Is
 
-The Estimator is the commercial heart of Weavly. It allows factory owners to calculate the precise "Landed Cost" of a fabric before they even start production. Once an estimate is refined, it can be saved as a Quote and sent to a Party (Trader).
+The setup layer that makes every operational workflow possible. Owners create the organization, establish a subscription/trial, add machines and workers, set payroll configuration, configure cost assumptions, generate join codes, and control protected actions with one-time access codes.
 
-### Why It's Needed
+### User Workflow
 
-In weaving factories, margins are often thin. A small miscalculation in yarn weight, wastage, or overhead can turn a profitable order into a loss. Owners need a scientific way to price their fabric that accounts for every variable: yarn rates, GST, crimp, shortage, and factory overheads.
-
-### Pain Points Solved
-
-- **Guesswork Pricing**: No more "feeling out" a price. Every paisa is accounted for.
-- **Hidden Costs**: Automatically includes factory overheads (electricity, maintenance, salaries) which are often forgotten.
-- **Complex Math**: Handles the "denier to grams" and "ends to weight" conversions that usually require complex Excel sheets or manual registers.
-- **Template Management**: Easily reuse successful fabric configurations instead of re-entering data.
-
-### Old Workflow Translation
-
-- **Old way**: Owner uses a calculator and a paper "Parchi" to do rough math. They might forget to add the 5% GST on yarn or miss the 2% transport cost.
-- **Weavly way**: A guided UI where the owner enters the quality parameters (Warp, Weft, Reed Space, PPI) and the system provides an instant, itemized cost breakdown.
-
-### Value Provided
-
-- **Profit Protection**: Ensures a minimum desired margin (up to 100%).
-- **Faster Quoting**: Respond to Trader inquiries in seconds by applying a saved template.
-- **Scenario Analysis**: Instantly see how a change in yarn rate or target price affects the bottom line.
-
-### User Interaction
-
-1. **Input Quality**: User enters Warp and Weft rows (Denier, Ends, Rate, GST).
-2. **Configure Loom**: Selects Loom Type (Waterjet, Rapier, etc.) which auto-fills RPM and Power usage.
-3. **Adjust Overheads**: System pulls factory-wide overheads (synced from Settings) and allocates them per meter based on monthly output.
-4. **Save/Quote**: User saves as a "Fabric Template" for internal use or generates a "Quote" for a specific Party.
-
-### Technical Logic
-
-- **State Management**: Uses a complex React `useReducer` to manage dozens of interdependent variables in real-time.
-- **Calculation Engine**: Centralized logic in `lib/estimator.ts` and `lib/finance.ts` ensures mathematical accuracy.
-- **Server Actions**: Uses `upsertFactoryCostProfile` to keep factory-wide baseline costs (like electricity rates) synced across all estimates.
-
-### Relation to Other Features
-
-- **Orders**: An approved Quote is the required starting point for a new Order.
-- **Settings**: Factory cost profiles (overhead items) are pulled into every estimate.
-- **Market Runs**: Estimates can be used to start speculative production without a quote.
-
-### Output/Result
-
-- **Fabric Template**: A reusable configuration saved to the database.
-- **Quote Record**: A timestamped price offer linked to a Party.
-- **Cost Stack**: A visual pill-based breakdown showing Warp vs Weft vs Overhead vs Wage.
-
-## Feature Analysis: Order Management & Market Runs
-
-### Overview
-
-Orders represent the live commitments a factory has with its customers (Parties). Market Runs are a specialized type of "speculative" order where the factory produces fabric for its own stock to sell later in the market.
-
-### Why It's Needed
-
-Factories need to track production progress against specific deadlines and quantities. Without centralized tracking, it's difficult to know which looms are free, which orders are overdue, and how much fabric is ready to be dispatched.
+1. Owner signs up.
+2. Middleware routes incomplete owners to `/onboarding`.
+3. Owner adds machines, workers, and payroll config.
+4. Owner starts a trial or subscription where required.
+5. Owner lands on `/owner/analytics`.
+6. Owner manages ongoing factory settings in `/owner/settings`.
+7. Supervisors join through `/join` using the current join code and land on the production log workspace.
 
 ### Pain Points Solved
 
-- **Deadline Blindness**: Owners get real-time alerts for orders at risk of missing their deadlines.
-- **Machine Under-utilization**: Clearly see which machines are assigned to which order and move them as needed.
-- **Speculative Risk**: Market Runs allow owners to keep the factory running even when customer orders are low, with full cost tracking.
+- New digital systems fail when master data is incomplete.
+- Supervisors need easy access without becoming owners.
+- Protected changes need owner approval without sharing owner credentials.
 
-### Old Workflow Translation
+### Digital Translation
 
-- **Old way**: A "Whiteboard" or "Chopdi" (register) listing active orders. Supervisors manually count rolls at the end of the day to estimate progress.
-- **Weavly way**: A digital dashboard showing `Progress %`, `Pace Index` (are we fast enough?), and `Days Remaining`. Progress is updated automatically as supervisors log production.
+- Register master lists become `machines`, `workers`, and `fixed_workers`.
+- Owner verbal approvals become one-time access codes.
+- WhatsApp opt-in and language choices become durable worker/profile settings.
 
-### Value Provided
+## 2. Estimator and Quotes
 
-- **Operational Clarity**: Real-time visibility into what the factory is currently "weaving".
-- **Customer Trust**: Provide accurate delivery estimates to Traders.
-- **Financial Control**: Track the "Total Order Value" and "Landed Cost" to ensure the order remains profitable throughout its lifecycle.
+### What It Is
 
-### User Interaction
+The costing engine for fabric. It models yarn, loom, process, overhead, commission, transport, and margin assumptions, then saves repeatable templates and quote snapshots.
 
-1. **Creation**: Converts an approved Quote into an Order by setting a `Target Quantity` and `Deadline`.
-2. **Machine Assignment**: Owner assigns specific machines to the order via a drag-and-drop or checklist interface.
-3. **Monitoring**: Tracks the "Progress Bar" and "Pace Index" on the Orders dashboard.
-4. **Completion**: When target is reached, the order is marked "Completed", freeing up machines for the next task.
+### User Workflow
 
-### Technical Logic
-
-- **Progress Tracking**: Calculated via an RPC that aggregates `production_logs` against the `total_target_meters` of the order.
-- **Pace Index**: A specialized calculation (`meters_produced / (meters_targeted / total_days) * days_elapsed`) to determine if the current speed will meet the deadline.
-- **Access Codes**: Sensitive edits (like changing the target quantity after production has started) require an "Owner Access Code" for security.
-
-### Relation to Other Features
-
-- **Estimator**: Every Order/Market Run must originate from a fabric estimate.
-- **Supervisor Dashboard**: Assignments made here dictate what the supervisor sees on the floor.
-- **Stock & Dispatches**: Finished fabric packages are linked to the Order for tracking.
-
-### Output/Result
-
-- **Order Progress Dashboard**: Visual cards with pace and deadline markers.
-- **Machine Assignments**: Linkages between looms and specific fabric qualities.
-- **Market Run Stock**: Fabric produced without a party is tagged as "Market Stock".
-
-## Feature Analysis: Floor Operations & Supervisor Dashboard
-
-### Overview
-
-The Supervisor Dashboard is the primary interface for the factory floor. It combines worker attendance, machine assignment, and production logging into a single, mobile-optimized "unified" view.
-
-### Why It's Needed
-
-Floor operations are chaotic. Workers change shifts, machines break down, and production data needs to be captured accurately twice a day. Supervisors need a tool that is fast, resilient to poor internet, and easy to use with one hand.
+1. Owner opens `/owner/estimator`.
+2. Owner chooses a saved fabric template or starts from defaults.
+3. Owner enters warp/weft rows and loom assumptions.
+4. Owner reviews cost stack, landed cost, quote price, and margin.
+5. Owner saves a template or quote.
+6. Owner manages quote status in `/owner/quotes`.
+7. Accepted quote becomes an order.
+8. Estimator market mode creates a market run.
 
 ### Pain Points Solved
 
-- **Paper Trail Lag**: No more waiting for the end of the shift to enter data from a notebook.
-- **Assignment Confusion**: Clearly shows which worker is on which machine and which fabric they should be weaving.
-- **Breakdown Downtime**: Instant status updates (Running/Idle/Maintenance) allow owners to see why a loom is stopped.
-- **Data Entry Errors**: Bulk logging with "Duplicate Guard" prevents supervisors from accidentally entering the same meters twice.
+- Fabric pricing often relies on mental math, old Excel files, and memory.
+- Yarn price, GST, crimp, shortage, and overhead omissions create hidden losses.
+- Repeat qualities are re-entered too often.
 
-### Old Workflow Translation
+### Digital Translation
 
-- **Old way**: Supervisor walks the floor with a "Hajiri" register and a "Production" register. At 6 PM, they hand these to the owner, who enters them into an Excel sheet.
-- **Weavly way**: Supervisor walks the floor with their phone. They tap to assign a worker, enter the "Closing Meters" from the loom, and tap "Submit". Data is instantly synced to the owner's dashboard.
+- Parchi costing becomes a structured estimator state.
+- Reusable qualities become estimator templates.
+- Party offers become quote records with snapshots.
 
-### Value Provided
+### Data and Code
 
-- **Real-time Oversight**: Owner can see floor activity from anywhere.
-- **Accurate Payroll**: Piece-rate wages are derived directly from these logs, eliminating disputes.
-- **Historical Context**: "Copy Previous Shift" saves 10 minutes of setup time every morning.
+- `lib/estimator.ts`
+- `lib/finance.ts`
+- `/owner/estimator`
+- `/owner/quotes`
+- `factory_cost_profile`
+- `estimator_templates`
+- `estimator_quotes`
 
-### User Interaction
+## 3. Orders and Market Runs
 
-1. **Shift Setup**: Select Date and Shift (Day/Night). Use "Copy Yest." to quickly fill assignments. Each loom assignment supports two worker slots: `Weaver` (`primary_worker_id`, required) and `Helper/Khadki` (`helper_worker_id`, optional).
-2. **Machine Check**: Tap machine cards to update status (e.g., mark as "Service" for a mechanical failure).
-3. **Logging**: Enter the loom counter reading for each loom. If the counter was reset during the shift, check "Counter was reset this shift"; production for that row becomes the closing reading and the opening reading is stored as null.
-4. **Submission**: Tap "Submit Shift Logs" to save all entries. Use "Submit & Pack" if physical fabric packages need to be created immediately.
+### What It Is
 
-### Technical Logic
+Orders are party-backed production commitments. Market runs are costed speculative production used to keep looms running for future sale.
 
-- **Unified State**: Manages a complex grid of machines, workers, and orders using a responsive client-side state.
-- **Offline Recovery**: Uses `localStorage` to cache meter entries. If the browser refreshes or internet drops, the numbers are preserved.
-- **Atomic Sync**: `upsertShiftAssignment` ensures that worker/order changes are saved instantly even before the final submission.
-- **Two-Worker Loom Assignment**: `shift_assignments` stores `primary_worker_id`/`worker_id` for the weaver and optional `helper_worker_id` for the helper/khadki. The supervisor dashboard displays both slots. If no helper is assigned, the single operator receives the full configured piece-rate.
-- **Payroll Split**: For a shift with both workers, payroll creates separate earnings:
-  - Weaver: `shift_meters * weaver_rate_per_meter`.
-  - Helper: `shift_meters * helper_rate_per_meter`.
-  The helper rate is snapshotted on the shift assignment so later worker rate edits do not rewrite historical payroll.
-- **Counter Reset Handling**: When `closing_reading < opening_reading`, the UI warns as before. If the supervisor marks "Counter was reset this shift", then `shift_meters = closing_reading` and `opening_reading = null` for that production log.
-- **Duplicate Guard**: A server-side check prevents logging the same (Machine, Date, Shift) combination unless an Owner Access Code is provided.
+### User Workflow
 
-### Relation to Other Features
-
-- **Orders**: The dashboard pulls active orders to link production to them.
-- **Payroll**: Production logs are the "source of truth" for piece-rate wage calculations.
-- **Machines & Workers**: Consumes the master lists managed by the owner.
-
-### Output/Result
-
-- **Production Logs**: Immutable records of meters produced per machine/worker/shift.
-- **Machine History**: A log of maintenance categories (Mechanical, Electrical, Warp Break) and notes.
-- **Real-time Dashboard**: Live "Running" vs "Idle" machine counts for the owner.
-
-## Feature Analysis: Production & Packing (Submit & Pack)
-
-### Overview
-
-While "Production Logging" records *how much* was woven, "Packing" records the *physical items* created. The "Submit & Pack" feature allows supervisors to turn a meter entry into a "Fabric Package" (roll or bale) in the inventory system with a single tap.
-
-### Why It's Needed
-
-In many factories, production is logged, but the physical rolls sit in a pile until someone manually counts them. This leads to "Ghost Inventory" - you know you produced 500 meters, but you don't know where it is or if it's been packed and graded.
+1. Owner marks a quote accepted.
+2. Owner converts it into an active order with target meters and deadline.
+3. Owner assigns machines and monitors pace.
+4. Alternatively, owner creates a market run from estimator mode.
+5. Supervisor logs production against the order or run.
+6. Owner sees produced meters, remaining meters, pace, godown state, sales, and profit.
 
 ### Pain Points Solved
 
-- **Inventory Mismatch**: Ensures that what is logged as produced is also logged as physical stock.
-- **Grading Lag**: Allows for immediate packing and quality tagging on the floor.
-- **Dispatch Delays**: You can't dispatch what isn't in stock. Packing creates the stock records needed for dispatches.
+- Owners often do not know whether an order is on pace until it is late.
+- Market production is treated informally even though it consumes loom time and working capital.
+- Machine assignment gets lost between owner and supervisor.
 
-### Old Workflow Translation
+### Digital Translation
 
-- **Old way**: Supervisor writes down meters. Later, a "Folder" or "Packer" manually creates a "Takka" (roll) list on paper. The owner then types this list into a ledger.
-- **Weavly way**: Supervisor logs 100 meters on Machine 5 and clicks "Submit & Pack". The system instantly creates a new "Fabric Package" in the `stock` table, ready for dispatch.
+- Whiteboard order tracking becomes order cards and progress/pace indicators.
+- Speculative stock production becomes market-run records.
+- Loom allocation becomes machine assignment.
 
-### Value Provided
+### Data and Code
 
-- **Physical Accountability**: Every meter produced is accounted for as a physical unit.
-- **Streamlined Workflow**: Combines two operational steps (Logging + Stock Entry) into one.
-- **Dispatch Readiness**: Stock is immediately available to be added to a dispatch invoice/challan.
+- `/owner/orders`
+- `/owner/market-runs`
+- `/owner/market-runs/[id]`
+- `/owner/estimator/actions.ts`
+- `/owner/orders/actions.ts`
+- `orders`
+- `market_runs`
+- `market_run_sales`
 
-### User Interaction
+## 4. Floor Operations and Supervisor Dashboard
 
-1. **Entry**: Supervisor enters meters for multiple machines.
-2. **Action**: Instead of "Submit Shift Logs", they click "Submit & Pack".
-3. **Outcome**: System logs the production and creates one "Bulk Package" per machine-order combination for that shift.
-4. **Refinement**: Owner can later go to the Stock module to split bulk packages into individual rolls or bales.
+### What It Is
 
-### Technical Logic
+The supervisor's primary shift workspace for assignments, machine status, and meter-based production logging.
 
-- **RPC Logic**: Uses `packProductionIntoBulkPackages` which takes the shift logs and performs a batch insert into the `fabric_packages` table.
-- **Order Linkage**: Each package is automatically linked to the `order_id` from the shift assignment, preserving the chain of custody.
-- **Tenant Scoping**: All packages are org-scoped to ensure factory data isolation.
+### User Workflow
 
-### Relation to Other Features
-
-- **Stock Management**: This is the primary "Inflow" for the Stock module.
-- **Dispatches**: Only "Packed" packages can be dispatched to a customer.
-- **Orders**: Updates the "Produced" vs "Packed" stats for the order.
-
-### Output/Result
-
-- **Fabric Packages**: New entries in the stock ledger with unique package numbers.
-- **Updated Inventory**: Increases the "Total Grey Stock" for the factory.
-- **Production Audit**: A link between the production log and the physical package ID.
-
-## Feature Analysis: Inventory & Stock Management
-
-### Overview
-
-Weavly tracks three critical layers of inventory:
-
-1. **Yarn Stock**: Raw material (cones/bags).
-2. **Beams**: Wound yarn ready for the loom.
-3. **Grey Stock**: Finished fabric packages (rolls/bales) ready for dispatch.
-
-### Why It's Needed
-
-Inventory is tied up capital. Knowing exactly how many bags of yarn are in the warehouse or how many meters of a specific quality are in stock prevents over-buying and helps in planning future production.
+1. Supervisor opens `/supervisor/dashboard` or `/supervisor/production`.
+2. Supervisor selects date and day/night shift.
+3. Supervisor copies previous shift setup if useful.
+4. Supervisor assigns worker and order/run to each machine.
+5. Supervisor updates running/idle/maintenance status and breakdown details.
+6. Supervisor enters closing readings.
+7. Supervisor submits shift logs.
+8. If a protected correction is needed, supervisor requests or enters an owner access code.
 
 ### Pain Points Solved
 
-- **Stock Outs**: Alerts when yarn for an active order is running low.
-- **Wastage Tracking**: Compare "Yarn Issued" vs "Fabric Produced" to identify excessive wastage.
-- **Warehouse Confusion**: Clearly see what is "Available" vs "In-Transit" vs "Dispatched".
+- Floor registers are delayed and error-prone.
+- Owners cannot see machine status until someone calls.
+- Payroll disputes happen when meters are copied manually.
 
-### Old Workflow Translation
+### Digital Translation
 
-- **Old way**: A "Godown" register where a clerk writes down every bag of yarn that arrives. Fabric rolls are counted manually once a week.
-- **Weavly way**: Digital ledgers for Yarn, Beams, and Fabric. Entries are made as soon as material arrives or fabric is packed.
+- Production register becomes a mobile shift grid.
+- Machine condition notes become status and breakdown records.
+- Meter readings become production logs with rate snapshots.
 
-### Value Provided
+### Data and Code
 
-- **Working Capital Efficiency**: Don't buy yarn you already have.
-- **Production Continuity**: Ensure beams are ready before a loom goes "Idle".
-- **Dispatch Accuracy**: Ensure you have enough packed stock to fulfill an upcoming dispatch.
+- `/supervisor/dashboard`
+- `/supervisor/workers`
+- `/supervisor/attendance`
+- `/supervisor/machines`
+- `app/(dashboard)/supervisor/actions.ts`
+- `shift_assignments`
+- `production_logs`
+- `machines`
 
-### User Interaction
+## 5. Production, Packing, and Stock
 
-1. **Yarn Inflow**: Owner records new yarn purchases (Inward).
-2. **Beam Inflow**: Supervisor/Owner records when yarn is wound onto a beam.
-3. **Grey Stock**: Auto-populated via "Submit & Pack" on the supervisor dashboard.
-4. **Inspection**: Owner can "Inspect" a fabric package to mark it as "A Grade" or "B Grade" before it is available for dispatch.
+### What It Is
 
-### Technical Logic
+The bridge between logged meters and physical goods. The codebase has both package-style stock (`fabric_packages`) and the newer Phase 1 taka/godown stock board (`fabric_stock_lots` and related tables).
 
-- **Package-level Tracking**: Grey stock is tracked as individual `fabric_packages`, each with its own ID, weight, and meter count.
-- **Atomic Operations**: Inventory increments and decrements are handled via server actions to ensure data integrity.
-- **Relationship Mapping**: Beams are linked to specific machines, and fabric packages are linked to specific orders.
+### User Workflow
 
-### Relation to Other Features
-
-- **Production & Packing**: The primary source of Grey Stock.
-- **Dispatches**: Dispatches remove items from "Grey Stock".
-- **Estimator**: Real-world inventory costs can be used to update estimator baselines.
-
-### Output/Result
-
-- **Inventory Dashboard**: Charts and tables showing current stock levels.
-- **Stock Audit**: A history of all movements (Inward, Internal, Outward).
-- **Grading List**: A list of packed fabric rolls categorized by quality grade.
-
-## Feature Analysis: Dispatches & Tracking
-
-### Overview
-
-The Dispatch module handles the physical movement of fabric from the factory to the Trader. For normal Surat grey fabric sales, dispatch is also the sale event, so the generated document is a **Tax Invoice cum Delivery Challan**, not a standalone Delivery Challan. It provides a compliant invoice, a movement document, and a public tracking link for the customer.
-
-### Why It's Needed
-
-Once fabric leaves the factory, it enters a "Black Box". Owners need to know if the Trader has received it, if there was a shortage, and when they can expect payment. Traders also appreciate being able to track their orders without calling the factory owner.
+1. Production logs establish that meters were woven.
+2. Output can become packages or inward draft suggestions.
+3. Owner confirms stock inward into taka lots.
+4. Owner records godown, unit count, meters per unit, cost per meter, and source.
+5. Owner adjusts stock when physical counts differ.
+6. Owner records stock sales and sees realized profit.
 
 ### Pain Points Solved
 
-- **The "Has it arrived?" Call**: Traders can check the status themselves via a secure link.
-- **Shortage Disputes**: Traders can log "Received Meters" on the tracking portal, allowing the owner to instantly see any discrepancies (Shortages).
-- **Manual Billing**: One-click generation of professional Tax Invoice cum Delivery Challans with QR codes.
-- **GST Compliance Risk**: Dispatch documents include GSTIN, HSN 5407, GST split, taxable value, and sequential invoice number for GSTR-1 filing.
+- Owners know meters were produced but not always what physically exists.
+- Godown stock is often tracked as loose memory or paper lists.
+- Stock profit is hard to compute once fabric leaves the original order context.
 
-### Old Workflow Translation
+### Digital Translation
 
-- **Old way**: A carbon-copy bill/challan book. One copy goes with the driver, one stays in the book. If the driver loses it, the record is gone.
-- **Weavly way**: A digital dispatch record. The Tax Invoice cum Delivery Challan is generated as a PDF, and a "Tracking Link" is sent to the Trader via WhatsApp.
+- Taka lists become stock lots.
+- Physical corrections become stock movements.
+- Godown sale notes become stock sale records with revenue, cost, and profit.
 
-### Value Provided
+### Data and Code
 
-- **Professional Image**: Factory looks tech-forward and reliable to the Trader.
-- **Instant Reconciliation**: Shortages are flagged immediately, not weeks later during payment.
-- **Logistical Control**: Track which "Transporter" or "Vehicle" was used for each batch.
+- `/owner/stock`
+- `app/(dashboard)/owner/stock/actions.ts`
+- `fabric_packages`
+- `fabric_stock_lots`
+- `fabric_stock_sales`
+- `fabric_stock_movements`
+- `fabric_stock_inward_drafts`
 
-### User Interaction
+## 6. Dispatches and Tracking
 
-1. **Creation**: Select an Order and pick specific "Available" fabric packages from stock.
-2. **Dispatch**: Click "Confirm Dispatch". System generates a Tax Invoice cum Delivery Challan PDF and a unique Tracking Token.
-3. **Sharing**: Send the "Tracking Link" to the Trader.
-4. **Trader Portal**: Trader opens the link, sees the roll list, and clicks "Confirm Receipt" (optionally entering received meters).
-5. **Shortage Adjustment**: If received meters are lower than sent meters, prompt the owner: "Create adjustment for {shortage_meters}m shortage?". On confirmation, create a linked credit note entry in the party ledger.
+### What It Is
 
-### Technical Logic
+The professional handoff layer for order output. Dispatches group sent meters and transport metadata and expose tracking to parties.
 
-- **Stock Integration**: Confirming a dispatch moves fabric packages from `available` to `in_transit` status.
-- **Invoice Document**: Dispatch generates a "Tax Invoice cum Delivery Challan" with:
-  - Factory GSTIN and Trader GSTIN.
-  - HSN Code `5407` for synthetic filament woven grey fabric.
-  - Taxable value as `meters * rate_per_meter`.
-  - GST at 5%.
-  - CGST 2.5% + SGST 2.5% when the Trader state matches the factory state, otherwise IGST 5%.
-  - Total invoice value including GST.
-  - Sequential invoice number suitable for GSTR-1 filing.
-- **Ledger Debit**: The automatic party ledger debit is the total invoice value including GST. The ledger stores base taxable value and GST amount separately for reconciliation.
-- **E-Way Bill Awareness**: If total invoice value exceeds `50000`, show a non-blocking banner: "This dispatch requires an E-Way Bill before the vehicle departs. Generate on the GST portal." Link to `https://ewaybillgst.gov.in`, and allow the owner to save an optional `eway_bill_number` on the dispatch record.
-- **Shortage Credit Note**: When a shortage is confirmed by the Trader portal or owner-side receipt entry, the owner can create a one-tap credit note for `shortage_meters * rate_per_meter + GST`. The credit note is linked to the original dispatch invoice and labelled with i18n key `ledger.creditNote.shortageAdjustment`.
-- **Public Portal**: A specialized Next.js route `/track/[token]` that provides a read-only (and receipt-confirmable) view of the dispatch without requiring a login.
-- **QR Codes**: Every invoice/challan includes a QR code that links directly to the public tracking portal.
+### User Workflow
 
-### Relation to Other Features
-
-- **Stock Management**: Dispatches consume items from the Grey Stock.
-- **Orders**: Updates the "Dispatched Quantity" for the order.
-- **Party Ledger**: Automatically creates a debit entry for the full invoice value, with taxable value and GST tracked separately.
-
-### Output/Result
-
-- **Tax Invoice cum Delivery Challan (PDF)**: A professional GST-compliant document with factory/party details and itemized roll list.
-- **Public Tracking Link**: A URL (e.g., `weavly.app/track/xyz`) for the Trader.
-- **Shortage Alert + Credit Note Prompt**: A notification if the Trader records fewer meters than sent, followed by an optional linked ledger credit note.
-
-## Feature Analysis: Party Ledger
-
-### Overview
-
-The Party Ledger is the financial record-keeping system for interactions with Traders (Parties). It tracks sales (dispatches), payments received, and the running balance for each customer.
-
-### Why It's Needed
-
-Factory owners often deal with dozens of Traders. Keeping track of who owes how much for which batch of fabric is a full-time job. A digital ledger ensures that no bill is missed and every payment is recorded.
+1. Owner opens `/owner/dispatches` or the dispatch section inside an order.
+2. Owner selects an order and available output.
+3. Owner creates a dispatch with quantities and transport/GST/e-way details.
+4. Owner shares tracking token/link.
+5. Party or owner records received meters.
+6. Shortage or extra received meters are visible for reconciliation.
 
 ### Pain Points Solved
 
-- **Payment Delays**: Clearly see "Overdue" balances and follow up with Traders.
-- **Billing Disputes**: Link every ledger entry to a specific Tax Invoice cum Delivery Challan or Invoice.
-- **Tax Readiness**: Export ledger data for accounting and GST filing.
+- Dispatch details are scattered across challans, calls, and WhatsApp.
+- Shortages are remembered late and become payment disputes.
+- Parties want confidence that goods are on the way.
 
-### Old Workflow Translation
+### Digital Translation
 
-- **Old way**: A massive physical ledger book where each page belongs to a Party. Bills are handwritten and stuck into the book.
-- **Weavly way**: A clean, digital ledger that auto-populates when a dispatch is confirmed and allows for quick entry of "Payment Received" notes.
+- Delivery/challan handoff becomes dispatch records.
+- Shortage notes become sent-versus-received variance.
+- Customer calls become a public tracking portal.
 
-### Value Provided
+### Data and Code
 
-- **Financial Health**: Instant view of "Total Receivables" (money owed to the factory).
-- **Professionalism**: Share professional-looking ledger statements with Traders via PDF or WhatsApp.
-- **Audit Accuracy**: Every entry is timestamped and linked to an order or dispatch.
+- `/owner/dispatches`
+- `/track/[token]`
+- `components/dispatches/DispatchModals.tsx`
+- `dispatches`
+- `dispatch_package_lines`
+- `party_dispatch_claims`
 
-### User Interaction
+## 7. Commercials and Ledger
 
-1. **Selection**: Select a Party to view their specific statement.
-2. **Transaction Entry**: Manually record a "Payment Received" (Cash, Bank, Cheque).
-3. **Automatic Entries**: Dispatch invoices automatically create a "Debit" entry (Party owes money) in the ledger for the total invoice value including GST.
-4. **Statement Sharing**: Export the ledger as a PDF to send to the Trader for reconciliation.
+### What It Is
 
-### Technical Logic
+Phase 1 keeps the active `/owner/commercials` route as a lightweight gross-profit view. The deeper `/owner/ledger` route exists but is archived for Phase 1.
 
-- **Tabbed Interface**: Organized into "Transactions", "Pending Invoices", and "Analytics" for a comprehensive view.
-- **Real-time Totals**: Summarizes debits and credits to show the "Net Balance" at the top of the page.
-- **GST Split**: Invoice debits store taxable value, GST percent, GST amount, and net invoice value separately. For Surat/Gujarat parties, GST is split into CGST 2.5% + SGST 2.5%; for out-of-state parties, it is IGST 5%.
-- **Receivables Aging**: Party summary and transaction list show aging buckets:
-  - Current `< 30 days` in normal text.
-  - Overdue `30-60 days` in amber.
-  - Overdue `> 60 days` in red with a "Follow up" badge.
-- **Shortage Credit Notes**: Shortage adjustments are stored as linked credit note entries against the original dispatch invoice, using i18n key `ledger.creditNote.shortageAdjustment`.
-- **Soft Deletion**: Ledger entries are carefully managed to ensure the audit trail is never broken.
+### User Workflow
 
-### Relation to Other Features
-
-- **Dispatches**: Tax Invoice cum Delivery Challans are the primary driver of ledger debits.
-- **Orders**: Ledger entries are often tagged with an Order ID for context.
-- **Settings**: Party profiles are managed in the central settings/parties area.
-
-### Output/Result
-
-- **Ledger Statement**: A list of all financial interactions.
-- **Net Balance**: The current amount owed by or to the Party.
-- **Aging Breakdown**: Current, 30-60 day overdue, and >60 day overdue receivables.
-- **PDF Export**: A formal financial document for reconciliation.
-
-## Feature Analysis: Payroll & Settlements
-
-### Overview
-
-Weavly's Payroll module automates the complex task of calculating and paying wages for both piece-rate (meter-based) weavers and fixed-salary staff. It handles statutory deductions, advance recoveries, and delivery of itemized payslips.
-
-### Why It's Needed
-
-Payroll is the biggest friction point in factory management. Disputes over meters, missing advances, and "over-payment" are common. Owners need a transparent, audit-ready system that the workers can trust.
+1. Owner opens `/owner/commercials`.
+2. Owner reviews realized revenue/profit and expected profit.
+3. Owner filters by source: orders, stock, market runs, expected quotes.
+4. Owner searches quality/reference/source and reviews revenue, cost, profit, and margin.
 
 ### Pain Points Solved
 
-- **Advance Recovery Stress**: Automatically calculates how much to deduct from a worker's salary to pay back their advances, while respecting the 50% legal cap.
-- **Meter Disputes**: Since wages are derived directly from the supervisor-logged meters, there is a single "Source of Truth".
-- **Statutory Compliance**: Automatically calculates PF (Provident Fund) and ESI (Insurance) for eligible workers.
-- **Messaging Overhead**: No more printing and handing out slips; every worker gets an itemized breakdown on WhatsApp.
+- Owners need profit visibility before full accounting is ready.
+- Market-run and stock sale profit should not disappear into informal notes.
 
-### Old Workflow Translation
+### Digital Translation
 
-- **Old way**: Owner sits with a "Parchi" list of meters and an "Advance" book. They manually subtract debts and write a total on a slip of paper.
-- **Weavly way**: Owner clicks "Settle" for a worker. The system pulls all meters for the month, calculates gross pay, subtracts advances (up to the cap), adds bonuses/fines, and generates a PDF payslip.
+- Rough margin memory becomes a source-tagged profit table.
+- Full accounting remains deferred until ledger polish returns to scope.
 
-### Value Provided
+### Data and Code
 
-- **Financial Precision**: Every paisa of wage and debt is tracked.
-- **Worker Retention**: Transparency and professional WhatsApp payslips build trust with the workforce.
-- **Legal Protection**: Adheres to wage deduction caps and provides an audit trail for all payments.
+- `/owner/commercials`
+- `/owner/ledger` archived
+- `app/(dashboard)/owner/commercials/actions.ts`
+- `party_*` and supplier tables are deferred
 
-### User Interaction
+## 8. Payroll and Settlements
 
-1. **Review**: Owner opens the Payroll dashboard and sees "Pending" settlements for the month.
-2. **Configuration**: Sets the "Cycle Start Day" (e.g., the 1st or 7th of every month).
-3. **Settlement**: Clicks "Settle". A drawer shows the itemized breakdown (Meters x Rate - Advances - PF/ESI + Bonuses).
-4. **Finalize**: Clicks "Confirm Payment". System creates a `payroll_settlements` record and fires a WhatsApp notification.
+### What It Is
 
-### Technical Logic
+The worker money layer. It converts production logs and attendance into pay, applies advances and deductions, records settlements, and sends payslips.
 
-- **Atomic RPC**: `settle_worker_payroll` ensures that the wage payment, advance deduction, and ledger update happen as a single database transaction (ACID compliant).
-- **Snapshot Rates**: Uses `worker_rate_snapshot` from production logs to ensure that if a rate changes mid-month, previous production is still paid at the old rate.
-- **Deduction Cap**: Logic in `lib/finance.ts` ensures that automatic advance deductions never exceed 50% of the gross wage, preventing worker hardship and legal issues.
-- **Edge Functions**: Uses Supabase Edge Functions to generate PDFs and interface with the Meta WhatsApp Cloud API.
+### User Workflow
 
-### Relation to Other Features
-
-- **Supervisor Dashboard**: Provides the meters used for piece-rate calculations.
-- **Advances**: Settlements are the primary way workers pay back their advances.
-- **Party Ledger**: Factory wage expenses are indirectly reflected in the overall business health.
-
-### Output/Result
-
-- **Payroll Settlement Record**: An immutable record of the payment.
-- **PDF Payslip**: A professional, itemized document.
-- **WhatsApp Summary**: A message sent to the worker with their take-home pay and a link to the breakdown.
-
-## Feature Analysis: Advances Management
-
-### Overview
-
-In the Indian textile industry, "Advances" are interest-free loans given to workers for personal needs. Weavly tracks these advances, provides receipts to workers, and manages the automatic recovery of these loans during payroll.
-
-### Why It's Needed
-
-Worker advances are a massive hidden liability. Owners often lose track of who owes what, leading to financial leakage. Workers also need clarity on their outstanding balance to avoid feelings of being "cheated" by the factory.
+1. Owner opens `/owner/payroll`.
+2. Owner chooses a month.
+3. Owner reviews meter workers and fixed workers.
+4. Owner expands worker details for machine/order breakdown, gross pay, advances, deductions, and net.
+5. Owner toggles final settlement where applicable.
+6. Owner records payment mode and settles.
+7. Owner generates PDF or sends WhatsApp payslip.
 
 ### Pain Points Solved
 
-- **Balance Confusion**: Both owner and worker can see the current "Outstanding Balance" at any time.
-- **Manual Deduction Errors**: No more forgetting to deduct an advance during the monthly settlement.
-- **Audit Trails**: Every advance given and every rupee recovered is logged with a timestamp and reason.
+- Workers dispute pay when meters and rates are not itemized.
+- Advance recovery is easy to over-deduct or under-document.
+- PF/ESI and payment mode need a record.
 
-### Old Workflow Translation
+### Digital Translation
 
-- **Old way**: A small notebook (Chopdi) where the owner writes "Rs 5000 given to Ramesh". When Ramesh gets paid, the owner tries to remember to subtract it and crosses it out.
-- **Weavly way**: Owner records a "New Advance" in the app. Ramesh gets a WhatsApp confirmation. During payroll, Weavly automatically calculates the deduction and updates the balance.
+- Payroll notebook becomes settlement records with itemization.
+- Oral payout explanation becomes a payslip.
+- Production logs become the wage source of truth.
 
-### Value Provided
+### Data and Code
 
-- **Cash Flow Control**: Real-time visibility into the total "Money on the Floor" (sum of all worker debts).
-- **Reduced Friction**: Automated deductions remove the need for "negotiation" during payday.
-- **Worker Stability**: Clear debt tracking helps workers manage their finances better.
+- `/owner/payroll`
+- `lib/finance.ts`
+- `lib/generate-payslip.ts`
+- `payroll_settlements`
+- `payroll_adjustments`
+- `payroll_payments`
 
-### User Interaction
+## 9. Advances Management
 
-1. **Issuance**: Owner enters worker name, amount, and category (e.g., "Medical", "Travel").
-2. **Notification**: System sends a WhatsApp "Advance Receipt" to the worker.
-3. **Recovery**: During the "Settle" action in the Payroll module, the system suggests a deduction amount.
-4. **Tracking**: Owner views the "Advances Ledger" to see a history of all loans and repayments for a specific worker.
+### What It Is
 
-### Technical Logic
+The Upaad ledger for meter and fixed workers. It records pending/deducted advances, shows debt load, and feeds payroll recovery.
 
-- **Ledger-based Tracking**: Advances are stored as debits in a worker-specific ledger.
-- **Settlement Bridge**: The `settle_worker_payroll` RPC looks up the current `total_outstanding` for the worker and applies the deduction logic.
-- **Reversal Safety**: If a payroll settlement is "Unsettled", the system automatically reverts the advance recovery, restoring the worker's debt balance.
+### User Workflow
 
-### Relation to Other Features
-
-- **Payroll**: The primary mechanism for advance recovery.
-- **Workers**: Advances are linked to the worker profile.
-- **WhatsApp Integration**: Sends instant receipts for every advance transaction.
-
-### Output/Result
-
-- **Advance Record**: Timestamped entry in the `worker_advances` table.
-- **WhatsApp Receipt**: Confirmation message sent to the worker.
-- **Outstanding Balance**: A real-time number shown on the worker's profile and payroll card.
-
-## Feature Analysis: Compliance & Admin Console
-
-### Overview
-
-The Admin Console is the "Governance" layer of Weavly. It manages sensitive legal and data requirements, such as Data Processing Agreements (DPAs), legal notices, and worker grievances.
-
-### Why It's Needed
-
-As factories scale, they face increasing regulatory pressure (e.g., DPDP Act, labor laws). Centralizing compliance documentation and response workflows ensures that the factory owner is protected against legal liabilities.
+1. Owner opens `/owner/advances`.
+2. Owner searches and selects a worker.
+3. Owner sees pending and deducted advances.
+4. Owner records a new advance with amount and description.
+5. Payroll later deducts pending advances within configured caps.
+6. Owner can delete or write off according to rules.
 
 ### Pain Points Solved
 
-- **Compliance Fragility**: No more losing paper DPAs or forgetting to respond to a legal notice.
-- **Audit Stress**: A single place to show regulators all signatures and grievance resolutions.
-- **Data Privacy**: Ensures that all factory-trader interactions are governed by a valid legal agreement.
+- Advance balances live in memory and cause disputes.
+- Deductions can exceed worker trust or legal comfort.
+- Final settlements need special handling.
 
-### Old Workflow Translation
+### Digital Translation
 
-- **Old way**: Physical folders for "Legal" and "Staff Issues". These are often disorganized and hard to search during an emergency.
-- **Weavly way**: A structured database of all notices, agreements, and grievances with expiration dates and priority levels.
+- Upaad register becomes `worker_advances`.
+- Payroll recovery becomes itemized deductions.
 
-### Value Provided
+## 10. WhatsApp
 
-- **Risk Mitigation**: Protects the factory from fines and legal disputes.
-- **Worker Harmony**: A formal grievance system shows workers that their issues are taken seriously.
-- **Centralized Oversight**: Owners (or their lawyers) can oversee multiple factories' compliance status from one screen.
+### What It Is
 
-### User Interaction
+The operational notification channel built on Meta WhatsApp Cloud API through Supabase Edge Functions.
 
-1. **DPA Management**: Admin creates a new DPA version and assigns it to factories.
-2. **Notice Registry**: Record incoming legal or government notices and track the "Response Deadline".
-3. **Grievance Handling**: Workers or supervisors can log a grievance, which the Admin then reviews and "Resolves".
-4. **Lockdown State**: In case of a major data or security breach, Admins can trigger a "Lockdown" to protect tenant data.
+### User Workflow
 
-### Technical Logic
+- Owner/supervisor triggers access-code request.
+- System sends daily and monthly briefs.
+- Payroll sends payslips.
+- Advances send receipts.
+- Deadline/pace alerts notify risk.
+- Delivery attempts are logged and retried when needed.
 
-- **Template Versioning**: DPAs are versioned to ensure that old signatures remain valid while new requirements are rolled out.
-- **Signed Proofs**: Uses Supabase Storage to store PDF/image proofs of physical signatures.
-- **Role-based Access**: Admin routes are strictly guarded to ensure only authorized personnel can see factory-wide compliance data.
+### Pain Points Solved
 
-### Relation to Other Features
+- Workers and owners already coordinate on WhatsApp.
+- Notifications need delivery visibility.
+- Messaging should support, not block, operational writes.
 
-- **Settings**: Factory profiles link to the compliance status.
-- **Workers**: Grievances are often linked to specific worker profiles.
-- **Audit Logs**: Every compliance action is recorded in the system-wide audit log.
+## 11. Billing and Referrals
 
-### Output/Result
+### What It Is
 
-- **Compliance Scorecard**: A bird's-eye view of which factories are "Compliant" vs "At Risk".
-- **Grievance Resolution Log**: An audit trail of how worker issues were addressed.
-- **Exportable Compliance Packs**: Bundles of documents for legal or regulatory review.
+The commercial SaaS layer for trial, subscription, payment history, auto-renew/cancel, and referral growth.
 
-## Master Notes
+### User Workflow
 
-- The feature documents are intentionally preserved as module-level references. This master document should be updated when a feature-level document changes materially.
-- The strongest product chain is `Estimator -> Quote -> Order/Market Run -> Supervisor Logging -> Packing -> Stock -> Dispatch -> Ledger -> Payroll/Advances -> Compliance/Audit`.
-- WhatsApp appears across operational trust surfaces: advance receipts, dispatch tracking links, payroll payslips, and business notifications.
-- Auditability is a repeated theme across finance, stock, payroll, dispatch, and compliance; any future feature should preserve tenant scoping, immutable history where appropriate, and clear reversal logic.
+1. Owner opens `/owner/billing`.
+2. Owner starts trial or subscribes to Base/Premium.
+3. Razorpay webhook updates subscription and payment state.
+4. Owner sees payment history and renewal/cancel state.
+5. Owner shares referral code and tracks referral stats.
+
+## 12. Compliance and Admin
+
+### What It Is
+
+Governance and legal infrastructure: notices, grievances, DPA, breach reports, exports, lockdowns, audit logs, compliance settings.
+
+### Phase 1 Status
+
+Implemented or partially implemented, but not launch-polish scope except where security or access control directly protects the core loop.
+
+### Data and Code
+
+- `/admin` archived
+- `/owner/settings/audit` archived
+- `/owner/settings/dpa` secondary/deferred
+- `lib/actions/compliance.ts`
+- `audit_log`
+- `notice_registry`
+- `grievances`
+- `dpas`
+- `organization_dpas`
+- `breach_reports`
+
+## Feature Readiness Principle
+
+If a feature helps the owner quote, run looms, log production, understand stock/profit, dispatch professionally, or settle workers, it belongs in Phase 1. If it mainly serves future ERP depth, accounting completeness, or compliance administration, it should stay present but quiet until the core loop is production-ready.
