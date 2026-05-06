@@ -9,6 +9,8 @@ import {
     Boxes,
     CalendarDays,
     CheckCircle2,
+    ChevronDown,
+    ChevronRight,
     IndianRupee,
     Loader2,
     PackagePlus,
@@ -52,6 +54,7 @@ import {
     type StockSourceOption,
     type TakaStockBoardData,
     type TakaStockLotSummary,
+    type TakaStockMovementRow,
 } from './actions'
 
 type SourceType = 'opening' | 'market_run' | 'order' | 'manual' | 'adjustment'
@@ -140,6 +143,21 @@ function stockBadge(status: TakaStockLotSummary['stock_status']) {
             return 'bg-amber-50 text-amber-700 border-amber-200'
         default:
             return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    }
+}
+
+function movementLabel(type: TakaStockMovementRow['movement_type']) {
+    switch (type) {
+        case 'inward':
+            return 'Stock inward'
+        case 'sale':
+            return 'Sale'
+        case 'adjustment_add':
+            return 'Adjustment add'
+        case 'adjustment_subtract':
+            return 'Adjustment subtract'
+        default:
+            return type.replace('_', ' ')
     }
 }
 
@@ -798,6 +816,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
     const [pendingDraft, setPendingDraft] = useState<StockInwardDraftRow | null>(null)
     const [saleLot, setSaleLot] = useState<TakaStockLotSummary | null>(null)
     const [adjustLot, setAdjustLot] = useState<TakaStockLotSummary | null>(null)
+    const [expandedLots, setExpandedLots] = useState<Record<string, boolean>>({})
 
     const godowns = useMemo(() => {
         return Array.from(new Set(initialData.lots.map((lot) => lot.godown))).sort()
@@ -811,6 +830,16 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
             return matchesGodown && (!needle || haystack.includes(needle))
         })
     }, [initialData.lots, godown, query])
+
+    const movementsByLot = useMemo(() => {
+        const grouped = new Map<string, TakaStockMovementRow[]>()
+        for (const movement of initialData.movements) {
+            const entries = grouped.get(movement.stock_lot_id) ?? []
+            entries.push(movement)
+            grouped.set(movement.stock_lot_id, entries)
+        }
+        return grouped
+    }, [initialData.movements])
 
     const refresh = () => router.refresh()
 
@@ -934,6 +963,8 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                 <div className="grid gap-4">
                     {filteredLots.map((lot) => {
                         const saleMargin = lot.total_revenue > 0 ? (lot.total_gross_profit / lot.total_revenue) * 100 : null
+                        const lotMovements = movementsByLot.get(lot.stock_lot_id) ?? []
+                        const expanded = Boolean(expandedLots[lot.stock_lot_id])
                         return (
                             <Card key={lot.stock_lot_id} className="border-border/60 shadow-sm">
                                 <CardContent className="p-5">
@@ -999,11 +1030,74 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                             <PencilLine className="h-4 w-4" />
                                             Adjust
                                         </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setExpandedLots((prev) => ({
+                                                ...prev,
+                                                [lot.stock_lot_id]: !prev[lot.stock_lot_id],
+                                            }))}
+                                            className="gap-2"
+                                        >
+                                            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                            Entries
+                                            <Badge variant="secondary" className="ml-1">
+                                                {lotMovements.length}
+                                            </Badge>
+                                        </Button>
                                         <div className="ml-auto flex items-center gap-1 text-xs font-semibold text-muted-foreground">
                                             <CalendarDays className="h-3.5 w-3.5" />
                                             {new Date(lot.received_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                         </div>
                                     </div>
+
+                                    {expanded && (
+                                        <div className="mt-4 overflow-hidden rounded-lg border border-border/60">
+                                            {lotMovements.length === 0 ? (
+                                                <div className="px-4 py-3 text-sm font-semibold text-muted-foreground">
+                                                    No movement entries found for this lot yet.
+                                                </div>
+                                            ) : (
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full text-sm">
+                                                        <thead className="border-b border-border/60 bg-muted/30 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                                                            <tr>
+                                                                <th className="px-4 py-3 font-bold">Date</th>
+                                                                <th className="px-4 py-3 font-bold">Entry</th>
+                                                                <th className="px-4 py-3 text-right font-bold">Units</th>
+                                                                <th className="px-4 py-3 text-right font-bold">Meters</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-border/40">
+                                                            {lotMovements.map((movement) => {
+                                                                const positive = Number(movement.taka_delta) > 0
+                                                                return (
+                                                                    <tr key={movement.id}>
+                                                                        <td className="whitespace-nowrap px-4 py-3 font-semibold text-muted-foreground">
+                                                                            {new Date(movement.movement_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                        </td>
+                                                                        <td className="min-w-52 px-4 py-3">
+                                                                            <p className="font-bold text-foreground">
+                                                                                {movement.reference || movementLabel(movement.movement_type)}
+                                                                            </p>
+                                                                            {movement.notes && (
+                                                                                <p className="mt-0.5 text-xs text-muted-foreground">{movement.notes}</p>
+                                                                            )}
+                                                                        </td>
+                                                                        <td className={cn('whitespace-nowrap px-4 py-3 text-right font-black', positive ? 'text-emerald-600' : 'text-rose-600')}>
+                                                                            {positive ? '+' : ''}{stockUnits(Number(movement.taka_delta), lot.unit_label)}
+                                                                        </td>
+                                                                        <td className={cn('whitespace-nowrap px-4 py-3 text-right font-semibold', positive ? 'text-emerald-600' : 'text-rose-600')}>
+                                                                            {positive ? '+' : ''}{meters(Number(movement.meters_delta))}
+                                                                        </td>
+                                                                    </tr>
+                                                                )
+                                                            })}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         )
