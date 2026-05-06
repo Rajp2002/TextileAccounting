@@ -81,6 +81,88 @@ function getRemainingCorrectionMinutes(expiresAt: string | null) {
     return Math.max(0, Math.ceil(remainingMs / 60000))
 }
 
+function formatShortDate(date: string | null | undefined) {
+    if (!date) return null
+    const parsed = new Date(`${date}T00:00:00`)
+    if (Number.isNaN(parsed.getTime())) return null
+    return format(parsed, 'dd MMM')
+}
+
+function formatMeters(value: number | null | undefined) {
+    const meters = Math.max(Number(value ?? 0), 0)
+    if (meters >= 1000) return `${(meters / 1000).toFixed(meters >= 10000 ? 0 : 1)}k m`
+    return `${Math.round(meters)} m`
+}
+
+interface ReadinessIssue {
+    id: string
+    label: string
+    count: number
+    tone: 'blocker' | 'warning'
+}
+
+function ShiftReadinessPanel({
+    issues,
+    validEntryCount,
+    machineCount,
+}: {
+    issues: ReadinessIssue[]
+    validEntryCount: number
+    machineCount: number
+}) {
+    const blockerCount = issues.filter((issue) => issue.tone === 'blocker').reduce((sum, issue) => sum + issue.count, 0)
+    const totalIssueCount = issues.reduce((sum, issue) => sum + issue.count, 0)
+
+    return (
+        <div className={cn(
+            "rounded-2xl border px-4 py-3 shadow-sm transition-colors",
+            issues.length === 0
+                ? "border-emerald-200 bg-emerald-50/80"
+                : blockerCount > 0
+                    ? "border-amber-200 bg-amber-50/80"
+                    : "border-sky-200 bg-sky-50/80"
+        )}>
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <p className={cn(
+                        "text-[10px] font-black uppercase tracking-widest",
+                        issues.length === 0 ? "text-emerald-700" : blockerCount > 0 ? "text-amber-800" : "text-sky-800"
+                    )}>
+                        Shift Readiness
+                    </p>
+                    <p className="mt-1 text-sm font-extrabold text-foreground">
+                        {issues.length === 0
+                            ? "Ready to submit when meter entries are done"
+                            : `${blockerCount || totalIssueCount} item${(blockerCount || totalIssueCount) === 1 ? '' : 's'} need attention`}
+                    </p>
+                </div>
+                <Badge variant="secondary" className="shrink-0 bg-white/80 text-[10px] font-black">
+                    {validEntryCount}/{machineCount} logs
+                </Badge>
+            </div>
+
+            {issues.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                    {issues.map((issue) => (
+                        <span
+                            key={issue.id}
+                            className={cn(
+                                "inline-flex items-center gap-1.5 rounded-full border bg-white/80 px-2.5 py-1 text-[10px] font-black",
+                                issue.tone === 'blocker'
+                                    ? "border-amber-200 text-amber-900"
+                                    : "border-sky-200 text-sky-900"
+                            )}
+                        >
+                            <AlertCircle className="h-3 w-3" />
+                            {issue.count} {issue.label}
+                        </span>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
 // ─── Status Badge Component ──────────────────────────────────────────────────
 
 function MachineStatusBadge({ status }: { status: 'running' | 'idle' | 'maintenance' }) {
@@ -148,6 +230,7 @@ function MachineUnifiedRow({
     const isMaintenance = status === 'maintenance'
     const shiftMeters = counterWasReset ? closingReading : closingReading - openingReading
     const readingWarning = !counterWasReset && closingReading > 0 && closingReading < openingReading
+    const deadlineLabel = selectedOrder ? formatShortDate(selectedOrder.deadline) : null
 
     return (
         <div className={cn(
@@ -236,6 +319,19 @@ function MachineUnifiedRow({
                         </SelectContent>
                     </Select>
                 </div>
+
+                {selectedOrder && (
+                    <div className="ml-8 flex flex-wrap items-center gap-1.5 text-[9px] font-black uppercase tracking-wide text-muted-foreground">
+                        <span className="rounded-full bg-muted/70 px-2 py-0.5">
+                            {formatMeters(selectedOrder.remaining_meters)} left
+                        </span>
+                        {deadlineLabel && (
+                            <span className="rounded-full bg-muted/70 px-2 py-0.5">
+                                Due {deadlineLabel}
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Production Input (The Quick Log) */}
@@ -809,6 +905,62 @@ export default function UnifiedDashboard() {
 
     const assignedCount = assignments.filter((a) => a.worker_id).length
     const loggedMetersCount = Object.keys(closingReadings).filter((machineId) => (closingReadings[machineId] ?? 0) > 0).length
+    const validEntryCount = machines.filter((machine) => {
+        const assignment = assignments.find((a) => a.machine_id === machine.id)
+        return Boolean(
+            assignment?.worker_id &&
+            assignment?.order_id &&
+            (closingReadings[machine.id] ?? 0) > 0
+        )
+    }).length
+    const readinessChecks: ReadinessIssue[] = [
+        {
+            id: 'missing-worker',
+            label: 'without worker',
+            count: machines.filter((machine) => {
+                const assignment = assignments.find((a) => a.machine_id === machine.id)
+                const hasReading = (closingReadings[machine.id] ?? 0) > 0
+                return (machine.machine_status === 'running' || hasReading) && !assignment?.worker_id
+            }).length,
+            tone: 'blocker',
+        },
+        {
+            id: 'missing-order',
+            label: 'without order',
+            count: machines.filter((machine) => {
+                const assignment = assignments.find((a) => a.machine_id === machine.id)
+                const hasReading = (closingReadings[machine.id] ?? 0) > 0
+                return (machine.machine_status === 'running' || hasReading) && !assignment?.order_id
+            }).length,
+            tone: 'blocker',
+        },
+        {
+            id: 'running-no-reading',
+            label: 'running no reading',
+            count: machines.filter((machine) => machine.machine_status === 'running' && (closingReadings[machine.id] ?? 0) <= 0).length,
+            tone: 'warning',
+        },
+        {
+            id: 'counter-warning',
+            label: 'counter below opening',
+            count: machines.filter((machine) => {
+                const closingReading = closingReadings[machine.id] ?? 0
+                return closingReading > 0 && !counterResets[machine.id] && closingReading < (openingReadings[machine.id] ?? 0)
+            }).length,
+            tone: 'blocker',
+        },
+        {
+            id: 'maintenance-note',
+            label: 'service no note',
+            count: machines.filter((machine) => {
+                if (machine.machine_status !== 'maintenance') return false
+                const assignment = assignments.find((a) => a.machine_id === machine.id)
+                return !assignment?.breakdown_category && !assignment?.breakdown_notes
+            }).length,
+            tone: 'warning',
+        },
+    ]
+    const readinessIssues = readinessChecks.filter((issue) => issue.count > 0)
     const remainingCorrectionMinutes = getRemainingCorrectionMinutes(correctionWindowExpiresAt)
     const correctionBannerText = remainingCorrectionMinutes > 0
         ? t('floor.correction.windowOpen').replace('{minutes}', remainingCorrectionMinutes.toString())
@@ -909,6 +1061,12 @@ export default function UnifiedDashboard() {
                     <p className="text-xs text-muted-foreground">
                         {t('floor.meter.counterHelper')}
                     </p>
+
+                    <ShiftReadinessPanel
+                        issues={readinessIssues}
+                        validEntryCount={validEntryCount}
+                        machineCount={machines.length}
+                    />
                 </div>
             </div>
 
@@ -962,14 +1120,14 @@ export default function UnifiedDashboard() {
                     <Button
                         className="h-14 flex-1 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-[0_12px_24px_-8px_#FF572280] gap-3 active:scale-[0.98] transition-all"
                         onClick={() => handleBulkSubmit()}
-                        disabled={submitting || loggedMetersCount === 0}
+                        disabled={submitting || validEntryCount === 0}
                     >
                         {submitting ? (
                             <Loader2 className="h-6 w-6 animate-spin" />
                         ) : (
                             <ClipboardList className="h-6 w-6" />
                         )}
-                        SUBMIT SHIFT LOGS {loggedMetersCount > 0 && `(${loggedMetersCount})`}
+                        SUBMIT SHIFT LOGS {validEntryCount > 0 && `(${validEntryCount})`}
                     </Button>
                 </div>
             </div>

@@ -922,6 +922,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
     ])
 
     const machineIds = (machinesRes.data ?? []).map((machine) => machine.id)
+    const orderIds = (ordersRes.data ?? []).map((order) => order.id)
     const orderRateById = new Map((ordersRes.data ?? []).map((order) => [order.id, Number(order.worker_rate_per_m)]))
     const standingWorkerByMachineId = new Map(
         (standingAssignmentsRes.data ?? []).map((assignment) => [assignment.machine_id, assignment.worker_id])
@@ -959,7 +960,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
         }]
     })
 
-    const [currentLogsRes, previousMeterReadings] = await Promise.all([
+    const [currentLogsRes, previousMeterReadings, orderProductionRes] = await Promise.all([
         machineIds.length === 0
             ? Promise.resolve({ data: [] as ProductionLogRow[] })
             : supabase
@@ -970,11 +971,34 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
                   .eq('shift', shift)
                   .in('machine_id', machineIds),
         getPreviousClosingReadingMap(supabase, orgId, machineIds, date, shift),
+        orderIds.length === 0
+            ? Promise.resolve({ data: [] as Array<{ order_id: string; meters: number | null }> })
+            : supabase
+                  .from('production_logs')
+                  .select('order_id, meters')
+                  .eq('org_id', orgId)
+                  .in('order_id', orderIds),
     ])
+
+    const producedMetersByOrderId = new Map<string, number>()
+    for (const row of orderProductionRes.data ?? []) {
+        if (!row.order_id) continue
+        producedMetersByOrderId.set(
+            row.order_id,
+            (producedMetersByOrderId.get(row.order_id) ?? 0) + Number(row.meters ?? 0)
+        )
+    }
 
     return {
         machines: machinesRes.data ?? [],
-        orders: ordersRes.data ?? [],
+        orders: (ordersRes.data ?? []).map((order) => ({
+            ...order,
+            produced_meters: producedMetersByOrderId.get(order.id) ?? 0,
+            remaining_meters: Math.max(
+                Number(order.total_target_meters ?? 0) - (producedMetersByOrderId.get(order.id) ?? 0),
+                0
+            ),
+        })),
         workers: workersRes.data ?? [],
         assignments,
         existingLogs: currentLogsRes.data ?? [],
