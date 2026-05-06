@@ -23,6 +23,7 @@ import {
     MessageSquare,
     AlertTriangle,
     KeyRound,
+    RotateCcw,
 } from 'lucide-react'
 import {
     Select,
@@ -114,7 +115,9 @@ interface MachineUnifiedRowProps {
     assignment: any
     closingReading: number
     openingReading: number
+    counterWasReset: boolean
     onClosingReadingChange: (v: number) => void
+    onCounterResetChange: (v: boolean) => void
     onStatusClick: (machine: any) => void
     onAssignmentChange: (machineId: string, workerId: number | null, orderId: string | null) => void
     isSyncing?: boolean
@@ -128,7 +131,9 @@ function MachineUnifiedRow({
     assignment,
     closingReading,
     openingReading,
+    counterWasReset,
     onClosingReadingChange,
+    onCounterResetChange,
     onStatusClick,
     onAssignmentChange,
     isSyncing,
@@ -141,8 +146,8 @@ function MachineUnifiedRow({
 
     const selectedOrder = orders.find((o) => o.id === orderId)
     const isMaintenance = status === 'maintenance'
-    const shiftMeters = closingReading - openingReading
-    const readingWarning = closingReading > 0 && closingReading < openingReading
+    const shiftMeters = counterWasReset ? closingReading : closingReading - openingReading
+    const readingWarning = !counterWasReset && closingReading > 0 && closingReading < openingReading
 
     return (
         <div className={cn(
@@ -266,8 +271,25 @@ function MachineUnifiedRow({
                                         {t('floor.meter.counterReading')}
                                     </span>
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={() => onCounterResetChange(!counterWasReset)}
+                                    className={cn(
+                                        "flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] xs:text-[10px] font-black leading-tight transition-all",
+                                        counterWasReset
+                                            ? "border-primary bg-primary/10 text-primary"
+                                            : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-primary"
+                                    )}
+                                    title={counterWasReset ? "Counter reset for this shift" : "Mark counter reset for this shift"}
+                                    aria-pressed={counterWasReset}
+                                >
+                                    <RotateCcw className="h-3 w-3" />
+                                    Counter reset
+                                </button>
                                 <div className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full bg-muted/40 px-2 py-0.5 text-center text-[9px] xs:text-[10px] font-bold leading-tight text-muted-foreground">
-                                    <span className="whitespace-nowrap">{t('floor.meter.openingReading')}: {openingReading}</span>
+                                    <span className="whitespace-nowrap">
+                                        {counterWasReset ? 'Opening counter: 0' : `${t('floor.meter.openingReading')}: ${openingReading}`}
+                                    </span>
                                     <span className="whitespace-nowrap">{t('floor.meter.shiftProduction')}: {shiftMeters}</span>
                                 </div>
                                 {readingWarning && (
@@ -482,6 +504,7 @@ export default function UnifiedDashboard() {
     // Bulk Entry state
     const [closingReadings, setClosingReadings] = useState<Record<string, number>>({})
     const [openingReadings, setOpeningReadings] = useState<Record<string, number>>({})
+    const [counterResets, setCounterResets] = useState<Record<string, boolean>>({})
     const [correctionWindowExpiresAt, setCorrectionWindowExpiresAt] = useState<string | null>(null)
     const [, setCountdownTick] = useState(0)
     
@@ -544,10 +567,16 @@ export default function UnifiedDashboard() {
 
     // Save to localStorage whenever closing readings change
     useEffect(() => {
-        if (Object.keys(closingReadings).length > 0) {
-            localStorage.setItem(`closing_readings_${date}_${shift}`, JSON.stringify(closingReadings))
-        }
+        const key = `closing_readings_${date}_${shift}`
+        if (Object.keys(closingReadings).length > 0) localStorage.setItem(key, JSON.stringify(closingReadings))
+        else localStorage.removeItem(key)
     }, [closingReadings, date, shift])
+
+    useEffect(() => {
+        const key = `counter_resets_${date}_${shift}`
+        if (Object.keys(counterResets).length > 0) localStorage.setItem(key, JSON.stringify(counterResets))
+        else localStorage.removeItem(key)
+    }, [counterResets, date, shift])
 
     useEffect(() => {
         if (!correctionWindowExpiresAt) return
@@ -579,6 +608,13 @@ export default function UnifiedDashboard() {
             return acc
         }, {})
 
+        const existingCounterResets = (data.existingLogs ?? []).reduce((acc: Record<string, boolean>, log: any) => {
+            if (log.counter_was_reset) {
+                acc[log.machine_id] = true
+            }
+            return acc
+        }, {})
+
         const cached = localStorage.getItem(`closing_readings_${date}_${shift}`)
         if (cached) {
             try {
@@ -589,6 +625,18 @@ export default function UnifiedDashboard() {
             }
         } else {
             setClosingReadings(existingClosingReadings)
+        }
+
+        const cachedCounterResets = localStorage.getItem(`counter_resets_${date}_${shift}`)
+        if (cachedCounterResets) {
+            try {
+                setCounterResets(JSON.parse(cachedCounterResets))
+            } catch (error) {
+                console.error('Failed to parse cached counter reset flags', error)
+                setCounterResets(existingCounterResets)
+            }
+        } else {
+            setCounterResets(existingCounterResets)
         }
         setLoading(false)
     }, [date, shift])
@@ -650,6 +698,11 @@ export default function UnifiedDashboard() {
                     delete next[machineId]
                     return next
                 })
+                setCounterResets(prev => {
+                    const next = { ...prev }
+                    delete next[machineId]
+                    return next
+                })
             }
         } else {
             // ROLLBACK on error
@@ -669,13 +722,15 @@ export default function UnifiedDashboard() {
                 const assignment = assignments.find((a) => a.machine_id === m.id)
                 const openingReading = openingReadings[m.id] ?? 0
                 const closingReading = closingReadings[m.id] ?? 0
+                const counterWasReset = counterResets[m.id] ?? false
                 return {
                     machine_id: m.id,
                     worker_id: assignment?.worker_id,
                     order_id: assignment?.order_id ?? null,
-                    meters: closingReading - openingReading,
-                    opening_meter_reading: openingReading,
+                    meters: counterWasReset ? closingReading : closingReading - openingReading,
+                    opening_meter_reading: counterWasReset ? 0 : openingReading,
                     closing_meter_reading: closingReading,
+                    counter_was_reset: counterWasReset,
                     shift,
                     date,
                     rate_per_m: assignment?.rate_per_m,
@@ -683,7 +738,7 @@ export default function UnifiedDashboard() {
             })
             .filter((e) => e.worker_id && e.order_id && e.closing_meter_reading > 0)
 
-        const negativeReadings = entries.filter((entry) => entry.closing_meter_reading < entry.opening_meter_reading)
+        const negativeReadings = entries.filter((entry) => !entry.counter_was_reset && entry.closing_meter_reading < entry.opening_meter_reading)
 
         if (negativeReadings.length > 0) {
             toast.error(`Cannot save ${negativeReadings.length} machine reading${negativeReadings.length === 1 ? '' : 's'}: closing meter is below opening meter.`)
@@ -710,7 +765,9 @@ export default function UnifiedDashboard() {
             toast.success(`Production logged (${res.logged} machines)`)
             setSubmitting(false)
             setClosingReadings({}) // Reset inputs after success
+            setCounterResets({})
             localStorage.removeItem(`closing_readings_${date}_${shift}`) // Clear cache
+            localStorage.removeItem(`counter_resets_${date}_${shift}`)
             setShowDuplicateDialog(false)
             setDuplicateAccessCode('')
             setCorrectionWindowExpiresAt(res.correctionWindowExpiresAt ?? null)
@@ -881,7 +938,14 @@ export default function UnifiedDashboard() {
                                 assignment={assignment}
                                 closingReading={closingReadings[machine.id] ?? 0}
                                 openingReading={openingReadings[machine.id] ?? 0}
+                                counterWasReset={counterResets[machine.id] ?? false}
                                 onClosingReadingChange={(v) => setClosingReadings(prev => ({ ...prev, [machine.id]: v }))}
+                                onCounterResetChange={(v) => setCounterResets(prev => {
+                                    const next = { ...prev }
+                                    if (v) next[machine.id] = true
+                                    else delete next[machine.id]
+                                    return next
+                                })}
                                 onStatusClick={setSelectedMachine}
                                 onAssignmentChange={handleAssignmentChange}
                                 isSyncing={syncingState[machine.id] === 'syncing'}
