@@ -739,6 +739,28 @@ export default function UnifiedDashboard() {
 
     useEffect(() => { fetchData() }, [fetchData])
 
+    const resetShiftDraftState = () => {
+        setLoading(true)
+        setClosingReadings({})
+        setOpeningReadings({})
+        setCounterResets({})
+        setCorrectionWindowExpiresAt(null)
+        setShowDuplicateDialog(false)
+        setDuplicateAccessCode('')
+    }
+
+    const handleDateChange = (nextDate: string) => {
+        if (nextDate === date) return
+        resetShiftDraftState()
+        setDate(nextDate)
+    }
+
+    const handleShiftChange = (nextShift: 'day' | 'night') => {
+        if (nextShift === shift) return
+        resetShiftDraftState()
+        setShift(nextShift)
+    }
+
     // Update assignment (optimistic)
     const handleAssignmentChange = async (machineId: string, workerId: number | null, orderId: string | null) => {
         // Mark as syncing
@@ -809,6 +831,11 @@ export default function UnifiedDashboard() {
     }
 
     const handleBulkSubmit = async (code: string = '') => {
+        if (loading) {
+            toast.error('Shift data is still loading. Please try again in a moment.')
+            return
+        }
+
         const assignedMachines = machines.filter((m) =>
             assignments.some((a) => a.machine_id === m.id && a.worker_id)
         )
@@ -1033,12 +1060,12 @@ export default function UnifiedDashboard() {
                         <Input
                             type="date"
                             value={date}
-                            onChange={(e) => setDate(e.target.value)}
+                            onChange={(e) => handleDateChange(e.target.value)}
                             className="flex-1 h-12 bg-muted/30 border-border text-sm font-bold rounded-xl focus:ring-primary/20"
                         />
                         <div className="flex p-1 bg-muted/40 rounded-2xl border border-border shrink-0 backdrop-blur-sm">
                             <button
-                                onClick={() => setShift('day')}
+                                onClick={() => handleShiftChange('day')}
                                 className={cn(
                                     "flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black transition-all duration-300",
                                     shift === 'day' ? "bg-white text-orange-500 shadow-md ring-1 ring-black/5" : "text-muted-foreground opacity-60 hover:opacity-100"
@@ -1047,7 +1074,7 @@ export default function UnifiedDashboard() {
                                 <Sun className={cn("h-4 w-4", shift === 'day' && "animate-pulse")} /> DAY
                             </button>
                             <button
-                                onClick={() => setShift('night')}
+                                onClick={() => handleShiftChange('night')}
                                 className={cn(
                                     "flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black transition-all duration-300",
                                     shift === 'night' ? "bg-[#1A1A1B] text-indigo-400 shadow-md ring-1 ring-white/5" : "text-muted-foreground opacity-60 hover:opacity-100"
@@ -1120,9 +1147,9 @@ export default function UnifiedDashboard() {
                     <Button
                         className="h-14 flex-1 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-[0_12px_24px_-8px_#FF572280] gap-3 active:scale-[0.98] transition-all"
                         onClick={() => handleBulkSubmit()}
-                        disabled={submitting || validEntryCount === 0}
+                        disabled={loading || submitting || validEntryCount === 0}
                     >
-                        {submitting ? (
+                        {loading || submitting ? (
                             <Loader2 className="h-6 w-6 animate-spin" />
                         ) : (
                             <ClipboardList className="h-6 w-6" />
@@ -1193,7 +1220,7 @@ export default function UnifiedDashboard() {
                     <DialogFooter>
                         <Button
                             className="w-full h-12 bg-primary hover:bg-primary/90 font-black rounded-xl"
-                            disabled={duplicateAccessCode.length < 6 || submitting}
+                            disabled={loading || duplicateAccessCode.length < 6 || submitting}
                             onClick={() => handleBulkSubmit(duplicateAccessCode)}
                         >
                             {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
