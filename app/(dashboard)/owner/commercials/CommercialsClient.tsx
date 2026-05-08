@@ -24,7 +24,12 @@ import type {
 } from './actions'
 
 type StageFilter = 'all' | CommercialStage
-type SourceFilter = 'all' | CommercialSourceKind
+type SourceFilter =
+    | 'all'
+    | CommercialSourceKind
+    | 'stock_sale_market_run'
+    | 'stock_sale_order'
+    | 'stock_sale_manual'
 
 function money(value: number, digits = 0) {
     return `₹${Number(value || 0).toLocaleString('en-IN', {
@@ -72,30 +77,57 @@ function stageBadge(stage: CommercialStage) {
         : 'bg-amber-50 text-amber-700 border-amber-200'
 }
 
-function sourceLabel(kind: CommercialSourceKind) {
-    switch (kind) {
+function stockSaleOrigin(entry: CommercialProfitEntry) {
+    if (entry.source_kind !== 'stock_sale') return null
+
+    const label = entry.source_label.toLowerCase()
+    if (label.includes('market run')) return 'market_run'
+    if (label.includes('order')) return 'order'
+    return 'manual'
+}
+
+function displaySourceLabel(entry: CommercialProfitEntry) {
+    if (entry.source_kind === 'stock_sale') {
+        const origin = stockSaleOrigin(entry)
+        if (origin === 'market_run') return 'Market-Run Stock'
+        if (origin === 'order') return 'Order Stock'
+        return 'Godown Stock'
+    }
+
+    switch (entry.source_kind) {
         case 'order_invoice':
-            return 'Order Sale'
+            return 'Order Invoice'
         case 'order_quote':
             return 'Expected Order'
         case 'market_run_sale':
-            return 'Market Run'
-        default:
-            return 'Stock Sale'
+            return 'Direct Market Sale'
     }
 }
 
-function sourceTone(kind: CommercialSourceKind) {
-    switch (kind) {
+function sourceTone(entry: CommercialProfitEntry) {
+    if (entry.source_kind === 'stock_sale') {
+        const origin = stockSaleOrigin(entry)
+        if (origin === 'market_run') return 'bg-violet-50 text-violet-700 border-violet-200'
+        if (origin === 'order') return 'bg-blue-50 text-blue-700 border-blue-200'
+        return 'bg-slate-50 text-slate-700 border-slate-200'
+    }
+
+    switch (entry.source_kind) {
         case 'order_invoice':
             return 'bg-blue-50 text-blue-700 border-blue-200'
         case 'order_quote':
             return 'bg-amber-50 text-amber-700 border-amber-200'
         case 'market_run_sale':
             return 'bg-violet-50 text-violet-700 border-violet-200'
-        default:
-            return 'bg-slate-50 text-slate-700 border-slate-200'
     }
+}
+
+function matchesSourceFilter(entry: CommercialProfitEntry, source: SourceFilter) {
+    if (source === 'all') return true
+    if (source === 'stock_sale_market_run') return entry.source_kind === 'stock_sale' && stockSaleOrigin(entry) === 'market_run'
+    if (source === 'stock_sale_order') return entry.source_kind === 'stock_sale' && stockSaleOrigin(entry) === 'order'
+    if (source === 'stock_sale_manual') return entry.source_kind === 'stock_sale' && stockSaleOrigin(entry) === 'manual'
+    return entry.source_kind === source
 }
 
 function EntryRow({ entry }: { entry: CommercialProfitEntry }) {
@@ -113,8 +145,8 @@ function EntryRow({ entry }: { entry: CommercialProfitEntry }) {
             </td>
             <td className="px-4 py-3 align-top">
                 <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge variant="outline" className={cn('font-bold', sourceTone(entry.source_kind))}>
-                        {sourceLabel(entry.source_kind)}
+                    <Badge variant="outline" className={cn('font-bold', sourceTone(entry))}>
+                        {displaySourceLabel(entry)}
                     </Badge>
                     <Badge variant="outline" className={cn('font-bold capitalize', stageBadge(entry.stage))}>
                         {entry.stage}
@@ -153,7 +185,7 @@ export default function CommercialsClient({ initialData }: { initialData: Commer
         const needle = query.trim().toLowerCase()
         return initialData.entries.filter((entry) => {
             const matchesStage = stage === 'all' || entry.stage === stage
-            const matchesSource = source === 'all' || entry.source_kind === source
+            const matchesSource = matchesSourceFilter(entry, source)
             const haystack = `${entry.quality_label} ${entry.source_label} ${entry.reference || ''}`.toLowerCase()
             return matchesStage && matchesSource && (!needle || haystack.includes(needle))
         })
@@ -170,10 +202,13 @@ export default function CommercialsClient({ initialData }: { initialData: Commer
 
     const sourceFilters: Array<{ key: SourceFilter; label: string }> = [
         { key: 'all', label: 'All' },
-        { key: 'order_invoice', label: 'Orders' },
-        { key: 'stock_sale', label: 'Stock' },
-        { key: 'market_run_sale', label: 'Market Runs' },
-        { key: 'order_quote', label: 'Expected' },
+        { key: 'order_invoice', label: 'Order Invoices' },
+        { key: 'stock_sale', label: 'All Stock Sales' },
+        { key: 'stock_sale_market_run', label: 'Market-Run Stock' },
+        { key: 'stock_sale_order', label: 'Order Stock' },
+        { key: 'stock_sale_manual', label: 'Manual Stock' },
+        { key: 'market_run_sale', label: 'Direct Market Sales' },
+        { key: 'order_quote', label: 'Expected Orders' },
     ]
 
     return (
@@ -181,7 +216,7 @@ export default function CommercialsClient({ initialData }: { initialData: Commer
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground">Commercials</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">Gross profit across orders, stock sales, and market runs.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Read-only gross profit across invoices, expected orders, direct market sales, and godown stock sales.</p>
                 </div>
             </div>
 

@@ -5,9 +5,9 @@ import { Activity, IndianRupee, WalletCards, Zap, Factory } from 'lucide-react'
 
 type KpiStripProps = {
   yesterday: {
-    total_meters: number
-    piece_rate_wages: number
-    fixed_payroll: number
+    total_meters: number | null
+    piece_rate_wages: number | null
+    fixed_payroll: number | null
     efficiency_pct: number | null
   } | null
   today: {

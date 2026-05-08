@@ -1282,6 +1282,7 @@ export async function bulkLogProduction(entries: {
     })))
 
     revalidatePath('/supervisor/production')
+    revalidatePath('/owner/analytics')
     revalidatePath('/owner/orders')
     revalidatePath('/owner/stock')
     return {

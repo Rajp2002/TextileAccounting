@@ -10,7 +10,7 @@ export const en = {
     "orders": "Orders",
     "ledger": "Ledger",
     "inventory": "Inventory",
-    "stock": "Stock",
+    "stock": "Godown Stock",
     "dispatches": "Dispatches",
     "settings": "Settings",
     "audit trail": "Audit Trail",

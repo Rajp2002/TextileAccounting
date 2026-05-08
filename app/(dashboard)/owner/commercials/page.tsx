@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata = {
     title: 'Commercials | Owner Dashboard',
-    description: 'Gross profit from order sales and market stock sales.',
+    description: 'Read-only gross profit from invoices, expected orders, direct market sales, and godown stock sales.',
 }
 
 export default async function CommercialsPage() {

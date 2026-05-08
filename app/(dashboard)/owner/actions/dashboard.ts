@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getSuratTodayString, getSuratYesterdayString, formatToSurat } from '@/lib/time'
 import { parseJWT } from '@/lib/auth'
-import { subDays, format, parseISO } from 'date-fns'
+import { getDaysInMonth, subDays, parseISO } from 'date-fns'
 
 export type WorkerBreakdownEntry = {
   worker_id: string
@@ -40,11 +40,41 @@ export type DailyMeterPoint = {
   total_meters: number
 }
 
+type KpiSnapshot = {
+  total_meters: number | null
+  piece_rate_wages: number | null
+  fixed_payroll: number | null
+  efficiency_pct: number | null
+}
+
+type TodayKpiSnapshot = {
+  total_meters: number
+  piece_rate_wages: number
+  active_machines: number
+}
+
+type ProductionLogKpiRow = {
+  meters: number | string | null
+  worker_rate_snapshot: number | string | null
+  yarn_batch_id: string | null
+}
+
+type FixedWorkerSalaryRow = {
+  monthly_salary: number | string | null
+}
+
+type YarnBatchKpiRow = {
+  id: string
+  total_weight_kg: number | string | null
+  leftover_weight_kg: number | string | null
+  qualities: { target_yield: number | string | null } | Array<{ target_yield: number | string | null }> | null
+}
+
 export type DashboardData = {
   yesterday: {
-    total_meters: number
-    piece_rate_wages: number
-    fixed_payroll: number
+    total_meters: number | null
+    piece_rate_wages: number | null
+    fixed_payroll: number | null
     efficiency_pct: number | null
   } | null
   today: {
@@ -66,6 +96,108 @@ export type DashboardData = {
   trend: DailyMeterPoint[] | null
 }
 
+function getResponseData<T>(value: unknown): T | null {
+  if (!value || typeof value !== 'object' || !('data' in value)) return null
+  return (value as { data: T | null }).data ?? null
+}
+
+function normalizeKpiSnapshot(data: unknown): KpiSnapshot | null {
+  if (!data || typeof data !== 'object') return null
+  const row = data as Record<string, unknown>
+
+  return {
+    total_meters: row.total_meters === null || row.total_meters === undefined ? null : Number(row.total_meters),
+    piece_rate_wages: row.piece_rate_wages === null || row.piece_rate_wages === undefined ? null : Number(row.piece_rate_wages),
+    fixed_payroll: row.fixed_payroll === null || row.fixed_payroll === undefined ? null : Number(row.fixed_payroll),
+    efficiency_pct: row.efficiency_pct === null || row.efficiency_pct === undefined ? null : Number(row.efficiency_pct),
+  }
+}
+
+async function getKpiForDate(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orgId: string,
+  date: string
+): Promise<KpiSnapshot | null> {
+  const rpcResult = await supabase.rpc('get_kpi_yesterday', { p_org_id: orgId, p_date: date })
+
+  if (!rpcResult.error && rpcResult.data && rpcResult.data.total_meters !== null) {
+    return normalizeKpiSnapshot(rpcResult.data)
+  }
+
+  if (rpcResult.error) {
+    console.error('[dashboard] get_kpi_yesterday failed; falling back to table aggregation:', rpcResult.error)
+  }
+
+  const [logsRes, fixedWorkersRes] = await Promise.all([
+    supabase
+      .from('production_logs')
+      .select('meters, worker_rate_snapshot, yarn_batch_id')
+      .eq('org_id', orgId)
+      .eq('date', date),
+    supabase
+      .from('fixed_workers')
+      .select('monthly_salary')
+      .eq('org_id', orgId)
+      .eq('is_active', true),
+  ])
+
+  if (logsRes.error) {
+    console.error('[dashboard] production log KPI fallback failed:', logsRes.error)
+    return normalizeKpiSnapshot(rpcResult.data)
+  }
+  if (fixedWorkersRes.error) {
+    console.error('[dashboard] fixed payroll KPI fallback failed:', fixedWorkersRes.error)
+  }
+
+  const logs = (logsRes.data ?? []) as ProductionLogKpiRow[]
+  const totalMeters = logs.length === 0
+    ? null
+    : logs.reduce((sum, log) => sum + Number(log.meters ?? 0), 0)
+  const pieceRateWages = logs.length === 0
+    ? null
+    : logs.reduce((sum, log) => sum + Number(log.meters ?? 0) * Number(log.worker_rate_snapshot ?? 0), 0)
+
+  const fixedSalaryTotal = ((fixedWorkersRes.data ?? []) as FixedWorkerSalaryRow[])
+    .reduce((sum, worker) => sum + Number(worker.monthly_salary ?? 0), 0)
+  const fixedPayroll = fixedSalaryTotal / getDaysInMonth(parseISO(date))
+
+  let efficiencyPct: number | null = null
+  const yarnBatchIds = [...new Set(logs.map((log) => log.yarn_batch_id).filter(Boolean))] as string[]
+
+  if (yarnBatchIds.length > 0) {
+    const { data: batches, error: batchesError } = await supabase
+      .from('yarn_batches')
+      .select('id, total_weight_kg, leftover_weight_kg, qualities(target_yield)')
+      .in('id', yarnBatchIds)
+      .eq('org_id', orgId)
+
+    if (batchesError) {
+      console.error('[dashboard] KPI efficiency fallback failed:', batchesError)
+    } else {
+      const expectedMeters = ((batches ?? []) as YarnBatchKpiRow[]).reduce((sum, batch) => {
+        const quality = Array.isArray(batch.qualities) ? batch.qualities[0] : batch.qualities
+        const netWeight = Number(batch.total_weight_kg ?? 0) - Number(batch.leftover_weight_kg ?? 0)
+        return sum + Math.max(netWeight, 0) * Number(quality?.target_yield ?? 0)
+      }, 0)
+
+      const batchMeters = logs
+        .filter((log) => log.yarn_batch_id && yarnBatchIds.includes(log.yarn_batch_id))
+        .reduce((sum, log) => sum + Number(log.meters ?? 0), 0)
+
+      if (expectedMeters > 0) {
+        efficiencyPct = Math.round((batchMeters / expectedMeters) * 1000) / 10
+      }
+    }
+  }
+
+  return {
+    total_meters: totalMeters,
+    piece_rate_wages: pieceRateWages,
+    fixed_payroll: fixedPayroll,
+    efficiency_pct: efficiencyPct,
+  }
+}
+
 export async function getDashboardData(): Promise<DashboardData> {
   const supabase = await createClient()
   const { data: { session } } = await supabase.auth.getSession()
@@ -82,7 +214,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   )
 
   const results = await Promise.allSettled([
-    supabase.rpc('get_kpi_yesterday',             { p_org_id: org_id, p_date: yesterday }),
+    getKpiForDate(supabase, org_id, yesterday),
     supabase.rpc('get_kpi_today_live',            { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_active_orders_with_pace',   { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_worker_breakdown_today',    { p_org_id: org_id, p_date: today }),
@@ -97,9 +229,15 @@ export async function getDashboardData(): Promise<DashboardData> {
       .order('date', { ascending: true }),
   ])
 
-  const [kpiYesterday, kpiToday, orders, workerBreakdown, machines, rawLogs] = results.map(r =>
-    r.status === 'fulfilled' ? r.value.data : null
+  const [kpiYesterdayResult, kpiTodayResult, ordersResult, workerBreakdownResult, machinesResult, rawLogsResult] = results.map(r =>
+    r.status === 'fulfilled' ? r.value : null
   )
+  const kpiYesterday = kpiYesterdayResult as KpiSnapshot | null
+  const kpiToday = getResponseData<TodayKpiSnapshot>(kpiTodayResult)
+  const orders = getResponseData<Order[]>(ordersResult)
+  const workerBreakdown = getResponseData<WorkerBreakdownEntry[]>(workerBreakdownResult)
+  const machines = getResponseData<Array<{ id: string, name: string, current_order_id: string | null }>>(machinesResult)
+  const rawLogs = getResponseData<Array<{ date: string; meters: number }>>(rawLogsResult)
 
   // Aggregate production_logs rows into a daily DailyMeterPoint array
   const trendMap = new Map<string, number>()
@@ -113,11 +251,11 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   return {
     yesterday:       kpiYesterday,
-    today:           kpiToday ? { ...(kpiToday as any), date: today } : null,
+    today:           kpiToday ? { ...kpiToday, date: today } : null,
     yieldAlert:      null,
-    orders:          (orders as any) || null,
-    workerBreakdown: (workerBreakdown as any) || null,
-    machines:        (machines as any) || null,
+    orders:          orders || null,
+    workerBreakdown: workerBreakdown || null,
+    machines:        machines || null,
     trend,
   }
 }
@@ -138,15 +276,19 @@ export async function refreshLiveDashboard() {
     supabase.from('machines').select('id, name, current_order_id').eq('org_id', org_id).eq('status', 'active'),
   ])
 
-  const [kpiToday, orders, workerBreakdown, machines] = results.map(r =>
-    r.status === 'fulfilled' ? r.value.data : null
+  const [kpiTodayResult, ordersResult, workerBreakdownResult, machinesResult] = results.map(r =>
+    r.status === 'fulfilled' ? r.value : null
   )
+  const kpiToday = getResponseData<TodayKpiSnapshot>(kpiTodayResult)
+  const orders = getResponseData<Order[]>(ordersResult)
+  const workerBreakdown = getResponseData<WorkerBreakdownEntry[]>(workerBreakdownResult)
+  const machines = getResponseData<Array<{ id: string, name: string, current_order_id: string | null }>>(machinesResult)
 
   return {
-    today:           kpiToday ? { ...(kpiToday as any), date: today } : null,
-    orders:          (orders as any) || null,
-    workerBreakdown: (workerBreakdown as any) || null,
-    machines:        (machines as any) || null,
+    today:           kpiToday ? { ...kpiToday, date: today } : null,
+    orders:          orders || null,
+    workerBreakdown: workerBreakdown || null,
+    machines:        machines || null,
   }
 }
 
@@ -159,16 +301,18 @@ export async function fetchHistoricalData(targetDate: string) {
   const { org_id } = parseJWT(session.access_token)
 
   const results = await Promise.allSettled([
-    supabase.rpc('get_kpi_yesterday',          { p_org_id: org_id, p_date: targetDate }),
+    getKpiForDate(supabase, org_id, targetDate),
     supabase.rpc('get_worker_breakdown_today', { p_org_id: org_id, p_date: targetDate }),
   ])
 
-  const [kpi, workerBreakdown] = results.map(r =>
-    r.status === 'fulfilled' ? r.value.data : null
+  const [kpiResult, workerBreakdownResult] = results.map(r =>
+    r.status === 'fulfilled' ? r.value : null
   )
+  const kpi = kpiResult as KpiSnapshot | null
+  const workerBreakdown = getResponseData<WorkerBreakdownEntry[]>(workerBreakdownResult)
 
   return {
     yesterday: kpi,
-    workerBreakdown: (workerBreakdown as any) || null,
+    workerBreakdown: workerBreakdown || null,
   }
 }
