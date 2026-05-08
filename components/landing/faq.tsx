@@ -27,23 +27,24 @@ const faqs = [
 
 export default function LandingFAQ() {
     return (
-        <section className="py-24 sm:py-32 relative overflow-hidden snap-start scroll-mt-28" id="faq">
+        <section className="py-20 sm:py-28 relative overflow-hidden snap-start scroll-mt-28" id="faq">
             <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
                 <div className="mx-auto max-w-3xl text-center">
-                    <p className="text-sm font-bold leading-7 text-amber-700 dark:text-amber-500 tracking-[0.22em] uppercase">FAQ</p>
-                    <h2 className="mt-2 text-4xl font-extrabold tracking-tight text-gray-950 sm:text-5xl dark:text-white">
+                    <p className="text-xs font-black leading-7 text-orange-700 dark:text-orange-500 tracking-[0.28em] uppercase">FAQ</p>
+                    <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-5xl dark:text-white">
                         Questions a factory owner should ask before switching.
                     </h2>
-                    <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300">
+                    <p className="mt-6 text-lg leading-8 text-zinc-600 dark:text-zinc-300">
                         Practical answers about adoption, floor usage, data, and what Weavly replaces.
                     </p>
                 </div>
 
-                <div className="mx-auto mt-12 grid max-w-6xl gap-4 md:grid-cols-2">
-                    {faqs.map((faq) => (
-                        <div key={faq.question} className="border border-gray-200 bg-white/85 p-6 shadow-sm backdrop-blur dark:border-white/10 dark:bg-zinc-950/70">
-                            <h3 className="text-lg font-bold leading-7 text-gray-950 dark:text-white">{faq.question}</h3>
-                            <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">{faq.answer}</p>
+                <div className="mx-auto mt-12 max-w-5xl border-y border-zinc-200 bg-white/70 backdrop-blur dark:border-white/10 dark:bg-zinc-950/60">
+                    {faqs.map((faq, index) => (
+                        <div key={faq.question} className="grid gap-3 border-b border-zinc-200 px-4 py-6 last:border-b-0 dark:border-white/10 md:grid-cols-[4rem_0.8fr_1.2fr] md:gap-6 md:px-6">
+                            <p className="text-xs font-black uppercase tracking-[0.22em] text-zinc-400">0{index + 1}</p>
+                            <h3 className="text-lg font-black leading-7 text-zinc-950 dark:text-white">{faq.question}</h3>
+                            <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">{faq.answer}</p>
                         </div>
                     ))}
                 </div>
