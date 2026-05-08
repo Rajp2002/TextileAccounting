@@ -60,10 +60,10 @@ export default function LandingFeatures() {
         <>
             <section className="relative z-10 py-20 sm:py-28 snap-start scroll-mt-28" id="problem">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+                    <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
                         <div className="lg:sticky lg:top-36">
-                            <p className="text-xs font-black uppercase tracking-[0.28em] text-orange-700 dark:text-orange-400">The daily pain</p>
-                            <h2 className="mt-4 text-4xl font-black tracking-tight text-zinc-950 sm:text-5xl dark:text-white">
+                            <p className="text-xs font-black uppercase tracking-[0.32em] text-orange-700 dark:text-orange-400">The daily pain</p>
+                            <h2 className="mt-4 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl dark:text-white">
                                 Stop running the factory from registers, memory, and missed calls.
                             </h2>
                             <p className="mt-5 text-lg leading-8 text-zinc-600 dark:text-zinc-300">
@@ -71,18 +71,27 @@ export default function LandingFeatures() {
                             </p>
                         </div>
 
-                        <div className="border border-zinc-200 bg-white/90 p-3 shadow-[0_24px_70px_rgba(154,52,18,0.08)] backdrop-blur dark:border-white/10 dark:bg-zinc-950/70 sm:p-4">
-                            <div className="grid gap-3">
+                        <div className="grid gap-4">
+                            <div className="border border-zinc-200 bg-white/92 shadow-[0_24px_70px_rgba(154,52,18,0.08)] backdrop-blur dark:border-white/10 dark:bg-zinc-950/70">
+                                <div className="grid border-b border-zinc-200 px-5 py-4 text-xs font-black uppercase tracking-[0.22em] text-zinc-400 dark:border-white/10 sm:grid-cols-[5rem_1fr_8rem]">
+                                    <span>Item</span>
+                                    <span>Operational leak</span>
+                                    <span className="hidden sm:block">Status</span>
+                                </div>
                                 {painPoints.map((point, index) => (
-                                    <div key={point} className="grid grid-cols-[3rem_1fr] items-start gap-4 border border-zinc-200 bg-zinc-50/80 px-4 py-4 dark:border-white/10 dark:bg-white/5">
-                                        <span className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">0{index + 1}</span>
-                                        <p className="text-base font-bold leading-6 text-zinc-800 dark:text-zinc-100">{point}</p>
+                                    <div key={point} className="grid gap-3 border-b border-zinc-200 px-5 py-5 last:border-b-0 dark:border-white/10 sm:grid-cols-[5rem_1fr_8rem] sm:items-center">
+                                        <span className="text-xs font-black uppercase tracking-[0.22em] text-zinc-400">0{index + 1}</span>
+                                        <p className="text-lg font-black leading-7 text-zinc-900 dark:text-zinc-50">{point}</p>
+                                        <span className="w-fit border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-300">
+                                            Recurring
+                                        </span>
                                     </div>
                                 ))}
                             </div>
-                            <div className="mt-4 border border-orange-200 bg-orange-50/70 p-5 dark:border-orange-500/20 dark:bg-orange-500/10">
-                                <p className="text-xs font-black uppercase tracking-[0.22em] text-orange-700 dark:text-orange-400">What Weavly replaces</p>
-                                <div className="mt-3 flex flex-wrap gap-2">
+
+                            <div className="grid gap-3 border border-orange-200 bg-orange-50/75 p-5 backdrop-blur dark:border-orange-500/20 dark:bg-orange-500/10 lg:grid-cols-[12rem_1fr]">
+                                <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-700 dark:text-orange-400">What Weavly replaces</p>
+                                <div className="flex flex-wrap gap-2">
                                     {replaces.map((item) => (
                                         <span key={item} className="border border-orange-200 bg-white px-3 py-1.5 text-xs font-black text-zinc-700 dark:border-orange-500/20 dark:bg-zinc-900 dark:text-zinc-200">
                                             {item}
@@ -97,31 +106,35 @@ export default function LandingFeatures() {
 
             <section className="relative z-10 py-20 sm:py-28 snap-start scroll-mt-28" id="workflow">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+                    <div className="grid gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
                         <div>
-                            <p className="text-xs font-black leading-7 text-orange-700 dark:text-orange-500 tracking-[0.28em] uppercase">Factory workflow</p>
-                            <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-5xl dark:text-white">
+                            <p className="text-xs font-black leading-7 text-orange-700 dark:text-orange-500 tracking-[0.32em] uppercase">Factory workflow</p>
+                            <h2 className="mt-2 text-4xl font-black tracking-tight text-zinc-950 sm:text-6xl dark:text-white">
                                 One operating loop from costing to settlement.
                             </h2>
                         </div>
-                        <p className="text-lg leading-8 text-zinc-600 dark:text-zinc-300">
+                        <p className="max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300 lg:ml-auto">
                             Weavly follows how a weaving unit actually moves work: quote the fabric, assign the floor, log meters, dispatch stock, and settle people correctly.
                         </p>
                     </div>
 
-                    <div className="mt-12 border border-zinc-200 bg-white/92 p-3 shadow-[0_28px_90px_rgba(154,52,18,0.1)] backdrop-blur dark:border-white/10 dark:bg-zinc-950/75">
-                        <div className="relative grid gap-3 lg:grid-cols-4">
+                    <div className="relative mt-14">
+                        <div className="absolute left-0 right-0 top-8 hidden h-px bg-gradient-to-r from-transparent via-orange-300 to-transparent lg:block" />
+                        <div className="grid gap-5 lg:grid-cols-4">
                             {workflow.map((step, index) => (
-                                <div key={step.title} className="relative border border-zinc-200 bg-zinc-50/70 p-6 dark:border-white/10 dark:bg-white/5">
+                                <div key={step.title} className="relative border border-zinc-200 bg-white/92 p-6 shadow-[0_20px_60px_rgba(154,52,18,0.07)] backdrop-blur dark:border-white/10 dark:bg-zinc-950/75">
                                     <div className="flex items-center justify-between gap-4">
-                                        <span className="text-xs font-black uppercase tracking-[0.24em] text-zinc-400">0{index + 1}</span>
+                                        <span className="flex h-16 w-16 items-center justify-center rounded-full border border-orange-200 bg-white text-sm font-black text-orange-700 shadow-sm dark:border-orange-500/20 dark:bg-zinc-900 dark:text-orange-300">
+                                            0{index + 1}
+                                        </span>
                                         <div className="flex h-11 w-11 items-center justify-center bg-zinc-950 text-white dark:bg-white dark:text-zinc-950">
                                             <step.icon className="h-5 w-5" aria-hidden="true" />
                                         </div>
                                     </div>
-                                    <h3 className="mt-7 text-xl font-black text-zinc-950 dark:text-white">{step.title}</h3>
+                                    <h3 className="mt-8 text-xl font-black text-zinc-950 dark:text-white">{step.title}</h3>
                                     <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{step.description}</p>
-                                    <p className="mt-5 border-l-2 border-orange-600 pl-3 text-sm font-bold leading-6 text-zinc-800 dark:text-zinc-100">
+                                    <p className="mt-6 border-t border-zinc-200 pt-5 text-sm font-bold leading-6 text-zinc-900 dark:border-white/10 dark:text-zinc-100">
+                                        <span className="mb-2 block text-[11px] font-black uppercase tracking-[0.2em] text-orange-700 dark:text-orange-400">Outcome</span>
                                         {step.outcome}
                                     </p>
                                 </div>
@@ -133,28 +146,28 @@ export default function LandingFeatures() {
 
             <section className="relative z-10 py-20 sm:py-28 snap-start scroll-mt-28" id="features">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="border-y border-zinc-200 bg-white/55 py-12 backdrop-blur dark:border-white/10 dark:bg-zinc-950/40">
-                    <div className="grid gap-8 px-4 lg:grid-cols-[0.95fr_1.05fr] lg:items-end sm:px-8">
-                        <div>
-                            <p className="text-xs font-black uppercase tracking-[0.28em] text-orange-700 dark:text-orange-400">FACTORY-FIRST, NOT ERP-RETROFITTED</p>
-                            <h2 className="mt-3 text-4xl font-black tracking-tight text-zinc-950 sm:text-5xl dark:text-white">
-                                Every term in the product is a term from your factory floor.
-                            </h2>
-                        </div>
-                        <p className="text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-                            The product vocabulary, mobile workflows, and WhatsApp touchpoints are designed around the operating reality of Indian weaving units.
-                        </p>
-                    </div>
-
-                    <div className="mt-10 grid gap-4 px-4 md:grid-cols-3 sm:px-8">
-                        {trustItems.map((item) => (
-                            <div key={item.title} className="border border-zinc-200 bg-white/90 p-6 shadow-sm backdrop-blur dark:border-white/10 dark:bg-zinc-950/70">
-                                <item.icon className="h-6 w-6 text-orange-600" aria-hidden="true" />
-                                <h3 className="mt-5 text-lg font-black text-zinc-950 dark:text-white">{item.title}</h3>
-                                <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{item.copy}</p>
+                    <div className="overflow-hidden border border-zinc-900 bg-zinc-950 text-white shadow-[0_28px_90px_rgba(24,24,27,0.18)]">
+                        <div className="grid gap-10 border-b border-white/10 p-6 sm:p-10 lg:grid-cols-[0.95fr_1.05fr] lg:p-12">
+                            <div>
+                                <p className="text-xs font-black uppercase tracking-[0.32em] text-orange-300">FACTORY-FIRST, NOT ERP-RETROFITTED</p>
+                                <h2 className="mt-4 text-4xl font-black tracking-tight sm:text-6xl">
+                                    Every term in the product is a term from your factory floor.
+                                </h2>
                             </div>
-                        ))}
-                    </div>
+                            <p className="text-lg leading-8 text-zinc-300 lg:pt-12">
+                                The product vocabulary, mobile workflows, and WhatsApp touchpoints are designed around the operating reality of Indian weaving units.
+                            </p>
+                        </div>
+
+                        <div className="grid divide-y divide-white/10 md:grid-cols-3 md:divide-x md:divide-y-0">
+                            {trustItems.map((item) => (
+                                <div key={item.title} className="p-6 sm:p-8">
+                                    <item.icon className="h-7 w-7 text-orange-300" aria-hidden="true" />
+                                    <h3 className="mt-6 text-xl font-black text-white">{item.title}</h3>
+                                    <p className="mt-4 text-sm leading-6 text-zinc-300">{item.copy}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </section>
