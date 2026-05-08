@@ -34,7 +34,7 @@ export default async function SupervisorLayout({ children }: { children: React.R
             {/*
              * Content area
              *
-             * md:pl-[260px]  — push content right of the persistent sidebar on desktop
+             * md:pl-[248px]  — push content right of the persistent sidebar on desktop
              *
              * pb-[...]:      — bottom padding clears the mobile bottom nav bar.
              *   calc(72px + env(safe-area-inset-bottom)) accounts for the iPhone
@@ -44,8 +44,8 @@ export default async function SupervisorLayout({ children }: { children: React.R
              * px-safe        — side clearance for iPhone landscape where the
              *   rounded screen corners / Dynamic Island eat into the sides.
              */}
-            <div className="relative z-10 md:pl-[260px] pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-0 px-safe md:px-0">
-                <main className="max-w-6xl mx-auto px-4 py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
+            <div className="relative z-10 md:pl-[248px] pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pb-0 px-safe md:px-0">
+                <main className="mx-auto min-h-screen max-w-7xl px-3 py-4 md:px-6 md:py-6 lg:px-8">
                     <OfflineSyncProvider>
                         {children}
                     </OfflineSyncProvider>

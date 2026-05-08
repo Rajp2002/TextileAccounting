@@ -17,27 +17,28 @@ export default function LoadingModal({ isOpen, message = 'Loading...' }: Loading
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-white/60 backdrop-blur-sm"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-canvas/70 backdrop-blur-sm"
                 >
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
-                        className="bg-white p-8 rounded-2xl shadow-2xl border border-amber-100 flex flex-col items-center max-w-xs w-full"
+                        className="flex w-full max-w-xs flex-col items-center rounded-2xl border border-hairline bg-surface p-8 shadow-[var(--shadow-modal)]"
                     >
                         <div className="relative h-16 w-32 mb-4">
                             <Image
                                 src="/images/WeavlyLogo.png"
                                 alt="Weavly Logo"
                                 fill
+                                sizes="8rem"
                                 className="object-contain animate-pulse"
                             />
                         </div>
-                        <div className="flex items-center gap-3 text-amber-900 font-medium">
-                            <Loader2 className="h-5 w-5 animate-spin text-amber-600" />
+                        <div className="flex items-center gap-3 font-medium text-ink">
+                            <Loader2 className="h-5 w-5 animate-spin text-saffron" />
                             <span>{message}</span>
                         </div>
-                        <p className="text-xs text-gray-400 mt-4 text-center">
+                        <p className="mt-4 text-center text-xs text-muted-foreground">
                             Please wait while we prepare your workspace
                         </p>
                     </motion.div>

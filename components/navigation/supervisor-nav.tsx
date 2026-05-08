@@ -10,6 +10,7 @@ import {
     Settings,
     Calendar,
     Menu,
+    Factory,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -44,7 +45,7 @@ const bottomNavItems = primaryNavItems
 export function SupervisorRoleLabel() {
     const { t } = useTranslation()
     return (
-        <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-saffron-deep">
             {t("common.supervisor")}
         </span>
     )
@@ -62,27 +63,31 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
     const { t } = useTranslation()
 
     return (
-        <div className="flex flex-col h-full bg-sidebar">
+        <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
             {/* Branding — extra top padding on iOS standalone for Dynamic Island */}
-            <div className="px-4 py-4 pt-safe border-b border-sidebar-border flex items-center justify-center">
-                <div className="flex flex-col items-center gap-2">
-                    <div className="relative h-20 w-36 shrink-0">
-                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain" priority />
+            <div className="border-b border-sidebar-border px-4 py-4 pt-safe">
+                <div className="flex items-center gap-3">
+                    <div className="relative h-11 w-28 shrink-0">
+                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="7rem" className="object-contain" priority />
                     </div>
-                    {factoryName && (
-                        <p className="max-w-full truncate text-center text-xs font-bold tracking-wide text-sidebar-foreground/70">
-                            {factoryName}
-                        </p>
-                    )}
                 </div>
+                {factoryName && (
+                    <div className="mt-3 flex items-center gap-2 rounded-lg border border-hairline bg-surface/70 px-3 py-2">
+                        <Factory className="h-4 w-4 shrink-0 text-saffron" />
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold leading-tight text-ink">{factoryName}</p>
+                            <p className="text-[11px] font-medium text-muted-foreground">Factory floor</p>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-4 px-3 space-y-4 overflow-y-auto">
+            <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
                 {/* Primary section */}
                 <div className="space-y-1">
                     <div className="px-3 mb-2">
-                        <p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70 font-extrabold">Main Pivot</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Daily work</p>
                     </div>
                     {primaryNavItems.map((item) => {
                         const Icon = item.icon
@@ -93,13 +98,13 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
                                 href={item.href}
                                 onClick={onLinkClick}
                                 className={cn(
-                                    "flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+                                    "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25",
                                     isActive
-                                        ? "bg-primary text-primary-foreground shadow-[0_4px_14px_0_rgba(255,87,34,0.3)]"
-                                        : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                                        ? "bg-saffron-soft text-ink shadow-sm"
+                                        : "text-body hover:bg-surface-soft hover:text-ink"
                                 )}
                             >
-                                <Icon className="h-[18px] w-[18px]" />
+                                <Icon className={cn("h-[18px] w-[18px]", isActive ? "text-saffron" : "text-muted-foreground")} />
                                 {t(`nav.${item.translationKey}`) || item.name}
                             </Link>
                         )
@@ -109,7 +114,7 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
                 {/* Secondary section */}
                 <div className="space-y-1">
                     <div className="px-3 mb-2">
-                        <p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70 font-extrabold">Management</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Setup</p>
                     </div>
                     {secondaryNavItems.map((item) => {
                         const Icon = item.icon
@@ -120,13 +125,13 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
                                 href={item.href}
                                 onClick={onLinkClick}
                                 className={cn(
-                                    "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                                    "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25",
                                     isActive
-                                        ? "bg-primary text-primary-foreground shadow-[0_4px_14px_0_oklch(0.65_0.20_40/0.3)]"
-                                        : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                                        ? "bg-saffron-soft text-ink shadow-sm"
+                                        : "text-body hover:bg-surface-soft hover:text-ink"
                                 )}
                             >
-                                <Icon className="h-4 w-4" />
+                                <Icon className={cn("h-[18px] w-[18px]", isActive ? "text-saffron" : "text-muted-foreground")} />
                                 {t(`nav.${item.translationKey}`) || item.name}
                             </Link>
                         )
@@ -137,7 +142,7 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
             {/* Footer — Language + Logout. pb-safe handles iPad landscape home indicator */}
             <div className="border-t border-sidebar-border p-4 pb-safe">
                 {userName && (
-                    <p className="text-xs text-muted-foreground mb-3 truncate">{userName}</p>
+                    <p className="mb-3 truncate text-xs font-medium text-muted-foreground">{userName}</p>
                 )}
                 <div className="flex flex-col gap-3">
                     <LanguageSwitcher />
@@ -180,7 +185,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
     return (
         <>
             {/* Desktop sidebar — persistent, full viewport height */}
-            <aside className="hidden md:flex md:w-[260px] md:flex-col md:fixed md:inset-y-0 bg-sidebar border-r border-sidebar-border z-30 pl-safe">
+            <aside className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-sidebar-border bg-sidebar/90 pl-safe shadow-[var(--shadow-card)] backdrop-blur-xl">
                 <NavContent factoryName={factoryName} userName={userName} />
             </aside>
 
@@ -189,10 +194,10 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
              * pt-safe: pushes content below the Dynamic Island / status-bar notch
              * on iOS standalone PWA mode and Android cutout displays.
              */}
-            <header className="md:hidden sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 py-2 pt-safe shadow-sm">
+            <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-canvas/92 px-4 py-2 pt-safe shadow-sm backdrop-blur-xl md:hidden">
                 <div className="flex items-center gap-2">
                     <div className="relative h-8 w-24 shrink-0 transition-transform active:scale-95">
-                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain" priority />
+                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="6rem" className="object-contain" priority />
                     </div>
                 </div>
 
@@ -202,7 +207,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                             variant="ghost" 
                             size="sm" 
                             onClick={handleInstall}
-                            className="h-8 gap-1.5 text-[10px] font-black uppercase text-primary bg-primary/5 hover:bg-primary/10 rounded-full border border-primary/20 px-3"
+                            className="h-8 gap-1.5 rounded-full border border-saffron-soft bg-saffron-soft/50 px-3 text-[10px] font-semibold uppercase text-saffron-deep hover:bg-saffron-soft"
                         >
                             <DownloadCloud className="h-3 w-3" />
                             Install App
@@ -210,7 +215,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                     )}
                     <Sheet open={isOpen} onOpenChange={setIsOpen}>
                         <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors">
+                            <Button variant="ghost" size="icon-sm" className="rounded-full text-ink">
                                 <Menu className="h-5 w-5" />
                                 <span className="sr-only">Open navigation</span>
                             </Button>
@@ -222,7 +227,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                      *   never fills the entire screen and the user can tap outside
                      *   to dismiss it.
                      */}
-                    <SheetContent side="left" className="w-[min(280px,85vw)] bg-sidebar border-sidebar-border">
+                    <SheetContent side="left" className="w-[min(280px,85vw)] border-sidebar-border bg-sidebar p-0">
                         <SheetHeader className="sr-only">
                             <SheetTitle>{t("common.navigation")}</SheetTitle>
                         </SheetHeader>
@@ -255,10 +260,10 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
              */}
             <div className={cn(
                 "md:hidden fixed bottom-0 left-0 right-0 z-50",
-                "bg-background/90 backdrop-blur-xl border-t border-border",
+                "bg-canvas/92 backdrop-blur-xl border-t border-border",
                 "flex justify-around items-stretch",
                 "pb-safe pt-2 pl-safe pr-safe",
-                "shadow-[0_-8px_24px_-4px_rgba(0,0,0,0.1)]",
+                "shadow-[0_-8px_24px_-4px_rgba(30,37,40,0.10)]",
                 "min-h-[64px] landscape:min-h-[52px] select-none"
             )}>
                 {bottomNavItems.map((item) => {
@@ -271,7 +276,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                             className={cn(
                                 "flex flex-col items-center justify-center min-w-0 w-full relative",
                                 "py-1 px-0.5 transition-all duration-300",
-                                isActive ? "text-primary" : "text-primary opacity-80"
+                                isActive ? "text-saffron-deep" : "text-body"
                             )}
                         >
                             {/* Active scale is applied to the icon pill only to avoid
@@ -280,8 +285,8 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                                 "py-1 px-3 rounded-xl mb-0.5 transition-all duration-300",
                                 "landscape:py-0.5 landscape:px-2",
                                 isActive
-                                    ? "bg-primary/15 scale-110"
-                                    : "hover:bg-black/5"
+                                    ? "bg-saffron-soft scale-105"
+                                    : "hover:bg-surface-soft"
                             )}>
                                 <Icon className={cn(
                                     "h-5 w-5 landscape:h-4 landscape:w-4",
@@ -289,13 +294,13 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                                 )} />
                             </div>
                             <span className={cn(
-                                "text-[10px] landscape:text-[9px] font-bold leading-none tracking-tight truncate max-w-full px-0.5",
+                                "text-[10px] landscape:text-[9px] font-semibold leading-none truncate max-w-full px-0.5",
                                 isActive ? "opacity-100" : "opacity-80"
                             )}>
                                 {t(`nav.${item.translationKey}`) || item.name}
                             </span>
                             {isActive && (
-                                <span className="absolute -top-px left-1/2 -translate-x-1/2 w-6 h-[2px] rounded-full bg-primary" />
+                                <span className="absolute -top-px left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-saffron" />
                             )}
                         </Link>
                     )
@@ -306,13 +311,13 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                     onClick={() => setIsOpen(true)}
                     className={cn(
                         "flex flex-col items-center justify-center min-w-0 w-full relative",
-                        "py-1 px-0.5 text-primary opacity-80"
+                        "py-1 px-0.5 text-body"
                     )}
                 >
-                    <div className="py-1 px-3 landscape:py-0.5 landscape:px-2 rounded-xl mb-0.5 hover:bg-black/5 transition-all">
+                    <div className="mb-0.5 rounded-xl px-3 py-1 transition-all hover:bg-surface-soft landscape:px-2 landscape:py-0.5">
                         <Menu className="h-5 w-5 landscape:h-4 landscape:w-4" />
                     </div>
-                    <span className="text-[10px] landscape:text-[9px] font-bold leading-none tracking-tight opacity-80">
+                    <span className="text-[10px] font-semibold leading-none opacity-80 landscape:text-[9px]">
                         {t("common.menu")}
                     </span>
                 </button>

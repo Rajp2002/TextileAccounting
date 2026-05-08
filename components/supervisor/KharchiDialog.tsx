@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -81,7 +80,7 @@ export function KharchiDialog({
                     supervisor_id: userProfile?.id,
                     timestamp: Date.now()
                 })
-                toast.success('Kharchi queued for sync (Offline) 📶')
+                toast.success('Kharchi queued for sync')
             }
             
             setAmount('')
@@ -99,9 +98,9 @@ export function KharchiDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[400px]">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-indigo-700">
+                    <DialogTitle className="flex items-center gap-2 text-saffron-deep">
                         <HandCoins className="h-5 w-5" />
-                        Disperse Kharchi
+                        Record Kharchi
                     </DialogTitle>
                     <DialogDescription>
                         Give a cash advance to {tl(workerName)}.
@@ -109,12 +108,12 @@ export function KharchiDialog({
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
-                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-indigo-700 text-xs font-bold">
+                    <div className="flex items-center justify-between rounded-lg border border-saffron-soft bg-saffron-soft/65 p-3">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-saffron-deep">
                             <Wallet className="h-4 w-4" />
-                            YOUR FLOAT BALANCE
+                            Float balance
                         </div>
-                        <div className="text-lg font-black text-indigo-700">
+                        <div className="text-lg font-semibold text-saffron-deep">
                             {balanceLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : formatINR(balance ?? 0)}
                         </div>
                     </div>
@@ -126,7 +125,7 @@ export function KharchiDialog({
                             placeholder="e.g. 500"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
-                            className="text-xl font-bold h-12 border-indigo-200 focus:border-indigo-500"
+                            className="h-12 text-xl font-semibold"
                         />
                     </div>
 
@@ -140,7 +139,7 @@ export function KharchiDialog({
                     </div>
 
                     {balance !== undefined && parseFloat(amount) > balance && (
-                        <div className="flex items-center gap-2 text-red-600 text-xs bg-red-50 p-2 rounded border border-red-100">
+                        <div className="flex items-center gap-2 rounded border border-risk-soft bg-risk-soft p-2 text-xs text-risk">
                             <AlertCircle className="h-4 w-4" />
                             Amount exceeds your available float.
                         </div>
@@ -150,7 +149,7 @@ export function KharchiDialog({
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
                     <Button
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
+                        className="font-semibold"
                         disabled={!amount || isSubmitting || (balance !== undefined && parseFloat(amount) > balance)}
                         onClick={handleDisperse}
                     >

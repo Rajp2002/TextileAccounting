@@ -1,29 +1,28 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
-import { useQuery } from '@tanstack/react-query'
 import { MachineManagement } from '@/components/MachineManagement'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function SupervisorMachinesPage() {
-    const supabase = createClient()
-
     const { data: userProfile, isLoading } = useUserProfile()
 
     if (isLoading) {
         return (
-            <div className="p-4 space-y-6 max-w-4xl mx-auto">
+            <div className="mx-auto max-w-5xl space-y-6">
                 <Skeleton className="h-8 w-48" />
-                <div className="h-[400px] w-full bg-gray-50 rounded-xl animate-pulse" />
+                <div className="h-[400px] w-full animate-pulse rounded-xl border border-hairline bg-surface/70" />
             </div>
         )
     }
-    if (!userProfile?.org_id) return <div className="p-8 text-center text-red-500">Error loading organization.</div>
+    if (!userProfile?.org_id) return <div className="p-8 text-center text-risk">Error loading organization.</div>
 
     return (
-        <div className="p-4 space-y-6 max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold text-gray-800">Manage Machines</h1>
+        <div className="mx-auto max-w-5xl space-y-6">
+            <div className="weavly-canvas rounded-xl p-4">
+                <h1 className="text-2xl font-semibold text-ink">Loom Board</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Review running, idle, and assigned looms for the factory floor.</p>
+            </div>
 
             {/* Supervisors get view-only access to machines */}
             <MachineManagement

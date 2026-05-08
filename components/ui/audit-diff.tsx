@@ -66,7 +66,7 @@ function formatValue(key: string, value: any) {
 }
 
 function AuditDiff({ oldData, newData }: AuditDiffProps) {
-  if (!oldData && !newData) return <span className="text-gray-400 italic">No data</span>
+  if (!oldData && !newData) return <span className="italic text-muted-foreground">No data</span>
 
   const allKeys = Array.from(new Set([
     ...Object.keys(oldData || {}),
@@ -99,31 +99,31 @@ function AuditDiff({ oldData, newData }: AuditDiffProps) {
   })
 
   if (changes.length === 0) {
-    return <span className="text-gray-500 text-xs">No user-visible changes</span>
+    return <span className="text-xs text-muted-foreground">No user-visible changes</span>
   }
 
   return (
-    <div className="space-y-2 text-xs font-mono bg-gray-50 p-2.5 rounded-lg border border-gray-150 shadow-sm max-w-sm overflow-x-auto">
+    <div className="max-w-sm space-y-2 overflow-x-auto rounded-lg border border-hairline bg-surface-soft p-2.5 font-mono text-xs shadow-sm">
       {changes.map((change) => (
         <div key={change.key} className="flex flex-col gap-1 whitespace-nowrap mb-1">
-          <span className="font-semibold text-gray-700 font-sans text-[11px] uppercase tracking-wider">{formatKey(change.key)}</span>
+          <span className="font-sans text-[11px] font-semibold uppercase tracking-wide text-body">{formatKey(change.key)}</span>
           {change.type === 'added' && (
-            <span className="text-emerald-700 bg-emerald-100/50 border border-emerald-200/50 px-2 py-0.5 rounded-md self-start">
+            <span className="self-start rounded-md border border-success-soft bg-success-soft px-2 py-0.5 text-success">
               + {formatValue(change.key, change.newVal)}
             </span>
           )}
           {change.type === 'removed' && (
-            <span className="text-red-700 bg-red-100/50 border border-red-200/50 px-2 py-0.5 rounded-md self-start line-through opacity-80">
+            <span className="self-start rounded-md border border-risk-soft bg-risk-soft px-2 py-0.5 text-risk line-through opacity-80">
               - {formatValue(change.key, change.oldVal)}
             </span>
           )}
           {change.type === 'changed' && (
             <div className="flex flex-wrap items-center gap-1.5 overflow-hidden">
-              <span className="text-rose-600 bg-rose-50/50 border border-rose-100/50 px-1.5 py-0.5 rounded text-[10px] line-through decoration-rose-300">
+              <span className="rounded border border-risk-soft bg-risk-soft px-1.5 py-0.5 text-[10px] text-risk line-through decoration-risk">
                 {formatValue(change.key, change.oldVal)}
               </span>
-              <span className="text-gray-300 font-sans mx-0.5">→</span>
-              <span className="text-emerald-700 bg-emerald-50/50 border border-emerald-100/50 px-1.5 py-0.5 rounded font-bold text-[10px]">
+              <span className="mx-0.5 font-sans text-muted-foreground">→</span>
+              <span className="rounded border border-success-soft bg-success-soft px-1.5 py-0.5 text-[10px] font-semibold text-success">
                 {formatValue(change.key, change.newVal)}
               </span>
             </div>

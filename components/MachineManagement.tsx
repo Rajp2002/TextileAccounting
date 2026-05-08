@@ -7,13 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import {
     Dialog,
     DialogContent,
     DialogDescription,
@@ -23,17 +16,16 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { toast } from 'sonner'
-import { 
-    Loader2, 
-    Plus, 
-    Trash2, 
-    KeyRound, 
-    Pencil, 
-    Power, 
-    Tag, 
-    Sun, 
-    Moon, 
-    CheckCircle2, 
+import {
+    Loader2,
+    Plus,
+    Trash2,
+    KeyRound,
+    Pencil,
+    Power,
+    Tag,
+    Sun,
+    Moon,
     AlertCircle,
     Activity,
     MoreVertical
@@ -54,7 +46,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { deleteMachineWithCode, requestAccessCode } from '@/app/(dashboard)/supervisor/actions'
 import {
     addMachine,
-    renameMachine,
     updateMachine,
     toggleMachineStatus as toggleMachineStatusAction,
     updateMachineAssignment,
@@ -91,17 +82,6 @@ interface Assignment {
     machine_id: string
     worker_id: number
     shift: 'day' | 'night'
-}
-
-interface YarnBatch {
-    id: string
-    name: string
-    current_machine_id: string | null
-    quality_id: string
-    quality: {
-        name: string
-        default_worker_rate_per_m: number
-    } | null
 }
 
 interface MachineManagementProps {
@@ -208,7 +188,7 @@ export function MachineManagement({
         enabled: !!orgId && (userProfile?.role === 'owner' || userProfile?.role === 'supervisor')
     })
 
-    const { data: assignments, isLoading: assignmentsLoading } = useQuery({
+    const { data: assignments } = useQuery({
         queryKey: ['machine_assignments', orgId],
         queryFn: async () => {
             const { data, error } = await supabase
@@ -224,7 +204,7 @@ export function MachineManagement({
         try {
             const res = await assignMachineOrder(machineId, orderId)
             if (res.error) throw new Error(res.error)
-            toast.success(t('machines.order_assigned') || 'Order linked to machine')
+            toast.success(t('machines.order_assigned') || 'Order linked to loom')
             queryClient.invalidateQueries({ queryKey: ['machines'] })
         } catch (error: any) {
             toast.error(error.message || t('machines.order_assign_failed'))
@@ -326,7 +306,7 @@ export function MachineManagement({
         const oldMachines = queryClient.getQueryData(['machines', orgId])
         queryClient.setQueryData(['machines', orgId], (old: Machine[] | undefined) => {
             if (!old) return old
-            return old.map(m => m.id === machine.id 
+            return old.map(m => m.id === machine.id
                 ? { ...m, status: m.status === 'active' ? 'inactive' : 'active' }
                 : m
             )
@@ -374,7 +354,7 @@ export function MachineManagement({
             </CardHeader>
             <CardContent className="space-y-6">
                 {[1, 2, 3].map(i => (
-                    <div key={i} className="p-4 border rounded-lg bg-gray-50/50 space-y-4">
+                    <div key={i} className="space-y-4 rounded-lg border border-hairline bg-surface-soft/50 p-4">
                         <div className="flex justify-between items-center">
                             <Skeleton className="h-6 w-32" />
                             <Skeleton className="h-8 w-24" />
@@ -426,12 +406,12 @@ export function MachineManagement({
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="loom-type-add">Loom Type <span className="text-slate-400 font-normal text-xs">(optional)</span></Label>
+                                        <Label htmlFor="loom-type-add">Loom Type <span className="text-xs font-normal text-muted-foreground">(optional)</span></Label>
                                         <select
                                             id="loom-type-add"
                                             value={newMachineLoomType}
                                             onChange={e => setNewMachineLoomType(e.target.value)}
-                                            className="w-full h-10 px-3 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
                                         >
                                             <option value="">— Select type —</option>
                                             <option value="jacquard_electronic">Jacquard (Electronic)</option>
@@ -445,9 +425,9 @@ export function MachineManagement({
                                         </select>
                                     </div>
                                     {/* Rate is now defined on the Quality, not the machine */}
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 bg-blue-50 border border-blue-100 rounded-md p-2.5">
-                                        <Tag className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                                        Worker rates are set per fabric quality in the Inventory tab. The machine's rate updates automatically when a beam is linked.
+                                    <p className="flex items-center gap-1.5 rounded-md border border-info-soft bg-info-soft p-2.5 text-xs text-info">
+                                        <Tag className="h-3.5 w-3.5 shrink-0 text-info" />
+                                        Worker rates are set per fabric quality. The loom rate updates automatically when a beam is linked.
                                     </p>
                                 </div>
                                 <DialogFooter>
@@ -483,37 +463,37 @@ export function MachineManagement({
                             <div
                                 key={machine.id}
                                 className={cn(
-                                    "relative flex flex-col justify-between p-5 border rounded-2xl transition-all duration-300 group",
-                                    isInactive 
-                                        ? "bg-gray-100/40 border-gray-200 grayscale opacity-70" 
-                                        : "bg-white border-slate-200 hover:border-teal-500/50 hover:shadow-xl hover:shadow-teal-500/5"
+                                    "group relative flex flex-col justify-between rounded-xl border p-5 transition-all duration-200",
+                                    isInactive
+                                        ? "border-hairline bg-surface-soft/60 opacity-70"
+                                        : "border-hairline bg-surface hover:border-hairline-strong hover:shadow-[var(--shadow-card)]"
                                 )}
                             >
                                 {/* Header: Machine ID & Status */}
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="flex items-center gap-3">
                                         <div className={cn(
-                                            "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-                                            isEffectivelyActive ? "bg-teal-50 text-teal-600" : "bg-slate-50 text-slate-400"
+                                            "flex h-10 w-10 items-center justify-center rounded-lg transition-colors",
+                                            isEffectivelyActive ? "bg-success-soft text-success" : "bg-surface-soft text-muted-foreground"
                                         )}>
-                                            <Activity className={cn("h-5 w-5", isEffectivelyActive && "animate-pulse")} />
+                                            <Activity className="h-5 w-5" />
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-slate-900">{machine.name}</h3>
+                                            <h3 className="font-semibold text-ink">{machine.name.replace(/^Machine\b/i, 'Loom')}</h3>
                                             <div className="flex items-center gap-1.5">
                                                 {isEffectivelyActive ? (
-                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-teal-600 uppercase tracking-wider">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+                                                    <span className="flex items-center gap-1 text-[11px] font-semibold text-success">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-success" />
                                                         {t('machines.active_status')}
                                                     </span>
                                                 ) : (
-                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                                                    <span className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-hairline-strong" />
                                                         {t('machines.inactive')}
                                                     </span>
                                                 )}
                                                 {machine.loom_type && (
-                                                    <span className="text-[9px] font-bold bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full border border-violet-200 uppercase tracking-wider">
+                                                    <span className="rounded-full border border-saffron-soft bg-saffron-soft px-1.5 py-0.5 text-[10px] font-semibold text-saffron-deep">
                                                         {machine.loom_type === 'jacquard_electronic' ? 'JAQ-E' :
                                                          machine.loom_type === 'jacquard_mechanical' ? 'JAQ-M' :
                                                          machine.loom_type === 'water_jet' ? 'WJ' :
@@ -531,7 +511,7 @@ export function MachineManagement({
                                         <div className="flex items-center">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
+                                                    <Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-ink">
                                                         <MoreVertical className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -539,7 +519,7 @@ export function MachineManagement({
                                                     {canRenameMachines && (
                                                         <>
                                                             <DropdownMenuItem onClick={() => toggleMachineStatus(machine)}>
-                                                                <Power className={cn("h-4 w-4 mr-2", isInactive ? "text-teal-600" : "text-amber-600")} />
+                                                                <Power className={cn("h-4 w-4 mr-2", isInactive ? "text-success" : "text-warning")} />
                                                                 {isInactive? t('machines.activate') : t('machines.deactivate')}
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem onClick={() => {
@@ -553,8 +533,8 @@ export function MachineManagement({
                                                         </>
                                                     )}
                                                     {canDeleteMachines && (
-                                                        <DropdownMenuItem 
-                                                            className="text-red-600 focus:text-red-600"
+                                                        <DropdownMenuItem
+                                                            className="text-risk focus:text-risk"
                                                             onClick={() => {
                                                                 if (userProfile?.role === 'owner') {
                                                                     confirmDelete(machine.id)
@@ -579,31 +559,31 @@ export function MachineManagement({
                                     <Popover>
                                         <PopoverTrigger asChild disabled={userProfile?.role !== 'owner' && userProfile?.role !== 'supervisor'}>
                                             <div className={cn(
-                                                "p-3 rounded-xl border transition-all",
-                                                machine.current_order_id 
-                                                    ? "bg-teal-50/30 border-teal-100" 
-                                                    : "bg-slate-50 border-slate-100",
-                                                (userProfile?.role === 'owner' || userProfile?.role === 'supervisor') && "cursor-pointer hover:border-teal-300 hover:bg-teal-50/50"
+                                                "rounded-lg border p-3 transition-all",
+                                                machine.current_order_id
+                                                    ? "border-success-soft bg-success-soft/45"
+                                                    : "border-hairline bg-surface-soft/60",
+                                                (userProfile?.role === 'owner' || userProfile?.role === 'supervisor') && "cursor-pointer hover:border-saffron-soft hover:bg-saffron-soft/30"
                                             )}>
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Active Requirement</span>
+                                                    <span className="text-[11px] font-semibold text-muted-foreground">Active quality</span>
                                                     {machine.current_order_id && (
-                                                        <Badge variant="outline" className="text-[10px] bg-white text-teal-700 border-teal-200">
+                                                        <Badge variant="success" className="text-[11px]">
                                                             ₹{activeRate ?? '—'}/m
                                                         </Badge>
                                                     )}
                                                 </div>
                                                 {machine.current_order_id ? (
                                                     <div className="flex items-center gap-2">
-                                                        <div className="p-1.5 bg-white rounded-lg border border-teal-100">
-                                                            <Tag className="h-3.5 w-3.5 text-teal-500" />
+                                                        <div className="rounded-md border border-success-soft bg-surface p-1.5">
+                                                            <Tag className="h-3.5 w-3.5 text-success" />
                                                         </div>
-                                                        <span className="text-sm font-semibold text-slate-800 truncate">
+                                                        <span className="truncate text-sm font-semibold text-ink">
                                                             {activeQualityName || "Custom Order"}
                                                         </span>
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center gap-2 text-slate-400 italic">
+                                                    <div className="flex items-center gap-2 text-muted-foreground">
                                                         <AlertCircle className="h-3.5 w-3.5" />
                                                         <span className="text-xs">No active order</span>
                                                     </div>
@@ -612,12 +592,12 @@ export function MachineManagement({
                                         </PopoverTrigger>
                                         <PopoverContent className="w-[280px] p-0" align="start">
                                             <div className="max-h-[300px] overflow-auto p-1">
-                                                <div className="px-2 py-1.5 text-[10px] font-bold text-slate-400 uppercase border-b mb-1 flex justify-between items-center">
-                                                    Assign New Order
+                                                <div className="mb-1 flex items-center justify-between border-b border-hairline px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">
+                                                    Assign order
                                                     {machine.current_order_id && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleOrderLink(machine.id, null)}
-                                                            className="text-red-500 hover:text-red-600 font-bold"
+                                                            className="font-semibold text-risk hover:text-risk/80"
                                                         >
                                                             Unlink
                                                         </button>
@@ -628,8 +608,8 @@ export function MachineManagement({
                                                         key={order.id}
                                                         type="button"
                                                         className={cn(
-                                                            "w-full text-left px-3 py-2.5 text-sm rounded-lg transition-colors hover:bg-slate-100 space-y-0.5",
-                                                            machine.current_order_id === order.id && "bg-teal-50 text-teal-700 font-medium border border-teal-100"
+                                                            "w-full space-y-0.5 rounded-md px-3 py-2.5 text-left text-sm transition-colors hover:bg-surface-soft",
+                                                            machine.current_order_id === order.id && "border border-saffron-soft bg-saffron-soft text-saffron-deep font-medium"
                                                         )}
                                                         onClick={() => {
                                                             handleOrderLink(machine.id, order.id)
@@ -640,7 +620,7 @@ export function MachineManagement({
                                                     </button>
                                                 ))}
                                                 {activeOrders?.length === 0 && (
-                                                    <div className="p-4 text-center text-xs text-slate-500 italic">
+                                                    <div className="p-4 text-center text-xs text-muted-foreground">
                                                         No active orders found.<br/>
                                                         Create one in the Orders tab.
                                                     </div>
@@ -653,18 +633,18 @@ export function MachineManagement({
                                     <div className="grid grid-cols-2 gap-3">
                                         {/* Day Shift */}
                                         <div className="space-y-1.5">
-                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                                                <Sun className="h-3 w-3 text-amber-500" />
+                                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+                                                <Sun className="h-3 w-3 text-saffron" />
                                                 Day
                                             </div>
                                             <Popover>
                                                 <PopoverTrigger asChild>
-                                                    <Button 
-                                                        variant="outline" 
-                                                        size="sm" 
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
                                                         className={cn(
-                                                            "w-full justify-start text-left font-normal h-9 px-3 rounded-xl border-dashed hover:border-solid transition-all",
-                                                            dayAssignment ? "text-slate-900 border-slate-200 bg-white" : "text-slate-400 border-slate-200 bg-slate-50/50"
+                                                            "h-9 w-full justify-start rounded-lg border-dashed px-3 text-left font-normal transition-all hover:border-solid",
+                                                            dayAssignment ? "border-hairline bg-surface text-ink" : "border-hairline bg-surface-soft/50 text-muted-foreground"
                                                         )}
                                                     >
                                                         <span className="truncate text-xs">
@@ -674,16 +654,16 @@ export function MachineManagement({
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-[200px] p-0" align="start">
                                                     <div className="max-h-[240px] overflow-auto p-1">
-                                                        <div className="px-2 py-1.5 text-[10px] font-bold text-slate-400 uppercase border-b mb-1">
-                                                            Select Day Worker
+                                                        <div className="mb-1 border-b border-hairline px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">
+                                                            Select day worker
                                                         </div>
                                                         {workers?.map(w => (
                                                             <button
                                                                 key={w.id}
                                                                 type="button"
                                                                 className={cn(
-                                                                    "w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-slate-100",
-                                                                    dayAssignment?.worker_id === w.id && "bg-teal-50 text-teal-700 font-medium"
+                                                                    "w-full rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-surface-soft",
+                                                                    dayAssignment?.worker_id === w.id && "bg-saffron-soft text-saffron-deep font-medium"
                                                                 )}
                                                                 onClick={() => {
                                                                     handleAssignment(machine.id, w.id.toString(), 'day')
@@ -693,7 +673,7 @@ export function MachineManagement({
                                                             </button>
                                                         ))}
                                                         {workers?.length === 0 && (
-                                                            <div className="p-3 text-center text-xs text-slate-500">No workers available</div>
+                                                            <div className="p-3 text-center text-xs text-muted-foreground">No workers available</div>
                                                         )}
                                                     </div>
                                                 </PopoverContent>
@@ -702,18 +682,18 @@ export function MachineManagement({
 
                                         {/* Night Shift */}
                                         <div className="space-y-1.5">
-                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                                                <Moon className="h-3 w-3 text-indigo-500" />
+                                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+                                                <Moon className="h-3 w-3 text-loom" />
                                                 Night
                                             </div>
                                             <Popover>
                                                 <PopoverTrigger asChild>
-                                                    <Button 
-                                                        variant="outline" 
-                                                        size="sm" 
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
                                                         className={cn(
-                                                            "w-full justify-start text-left font-normal h-9 px-3 rounded-xl border-dashed hover:border-solid transition-all",
-                                                            nightAssignment ? "text-slate-900 border-slate-200 bg-white" : "text-slate-400 border-slate-200 bg-slate-50/50"
+                                                            "h-9 w-full justify-start rounded-lg border-dashed px-3 text-left font-normal transition-all hover:border-solid",
+                                                            nightAssignment ? "border-hairline bg-surface text-ink" : "border-hairline bg-surface-soft/50 text-muted-foreground"
                                                         )}
                                                     >
                                                         <span className="truncate text-xs">
@@ -723,16 +703,16 @@ export function MachineManagement({
                                                 </PopoverTrigger>
                                                 <PopoverContent className="w-[200px] p-0" align="start">
                                                     <div className="max-h-[240px] overflow-auto p-1">
-                                                        <div className="px-2 py-1.5 text-[10px] font-bold text-slate-400 uppercase border-b mb-1">
-                                                            Select Night Worker
+                                                        <div className="mb-1 border-b border-hairline px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">
+                                                            Select night worker
                                                         </div>
                                                         {workers?.map(w => (
                                                             <button
                                                                 key={w.id}
                                                                 type="button"
                                                                 className={cn(
-                                                                    "w-full text-left px-3 py-2 text-sm rounded-lg transition-colors hover:bg-slate-100",
-                                                                    nightAssignment?.worker_id === w.id && "bg-teal-50 text-teal-700 font-medium"
+                                                                    "w-full rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-surface-soft",
+                                                                    nightAssignment?.worker_id === w.id && "bg-saffron-soft text-saffron-deep font-medium"
                                                                 )}
                                                                 onClick={() => {
                                                                     handleAssignment(machine.id, w.id.toString(), 'night')
@@ -742,7 +722,7 @@ export function MachineManagement({
                                                             </button>
                                                         ))}
                                                         {workers?.length === 0 && (
-                                                            <div className="p-3 text-center text-xs text-slate-500">No workers available</div>
+                                                            <div className="p-3 text-center text-xs text-muted-foreground">No workers available</div>
                                                         )}
                                                     </div>
                                                 </PopoverContent>
@@ -755,7 +735,7 @@ export function MachineManagement({
                     })}
 
                     {machines?.length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
+                        <div className="py-8 text-center text-muted-foreground">
                             {canAddMachines ? t('machines.no_machines_add') : t('machines.no_machines_contact')}
                         </div>
                     )}
@@ -766,8 +746,8 @@ export function MachineManagement({
             <Dialog open={machineToRename !== null} onOpenChange={(open) => !open && setMachineToRename(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Edit Machine</DialogTitle>
-                        <DialogDescription>Update the name or loom type for this machine.</DialogDescription>
+                        <DialogTitle>Edit Loom</DialogTitle>
+                        <DialogDescription>Update the name or loom type for this loom.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
@@ -784,7 +764,7 @@ export function MachineManagement({
                                 id="edit-loom-type"
                                 value={renameLoomType}
                                 onChange={e => setRenameLoomType(e.target.value)}
-                                className="w-full h-10 px-3 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                                className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
                             >
                                 <option value="">— Not set —</option>
                                 <option value="jacquard_electronic">Jacquard (Electronic) — 250 RPM</option>
@@ -797,8 +777,8 @@ export function MachineManagement({
                                 <option value="other">Other</option>
                             </select>
                             {!renameLoomType && (
-                                <p className="text-[10px] text-amber-600 font-medium">
-                                    Setting the loom type enables pace index forecasting for this machine.
+                                <p className="text-[11px] font-medium text-warning">
+                                    Setting the loom type enables pace index forecasting for this loom.
                                 </p>
                             )}
                         </div>
@@ -817,7 +797,7 @@ export function MachineManagement({
             <Dialog open={machineToDelete !== null} onOpenChange={(open) => !open && setMachineToDelete(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                        <DialogTitle className="flex items-center gap-2 text-risk">
                             <KeyRound className="h-5 w-5" /> {t('auth.owner_auth_req')}
                         </DialogTitle>
                         <DialogDescription>
@@ -831,18 +811,18 @@ export function MachineManagement({
                                 placeholder={t('machines.enter_code')}
                                 value={accessCode}
                                 onChange={(e) => setAccessCode(e.target.value)}
-                                className="font-mono uppercase tracking-widest text-lg"
+                                className="font-mono text-lg uppercase tracking-widest"
                                 maxLength={6}
                             />
                         </div>
                     </div>
                     <DialogFooter className="flex flex-col sm:flex-row gap-2">
                         {userProfile?.role !== 'owner' && (
-                            <Button 
+                            <Button
                                 type="button"
-                                variant="ghost" 
+                                variant="ghost"
                                 size="sm"
-                                className="text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                className="text-xs text-info hover:bg-info-soft hover:text-info"
                                 onClick={handleRequestCode}
                                 disabled={requestingCode}
                             >

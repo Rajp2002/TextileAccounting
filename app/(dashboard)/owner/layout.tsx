@@ -7,7 +7,6 @@ import { BrandBackground } from '@/components/brand-background'
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
     // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs
     const { profile } = await requireRole(['owner'])
-    const userRole = profile.role
     const userOrgId = profile.org_id
     const userFullName = profile.full_name
 
@@ -41,8 +40,8 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
             />
 
             {/* Content area — offset by sidebar on desktop, padding-bottom for bottom nav on mobile */}
-            <div className="relative z-10 md:pl-[260px] pb-[72px] md:pb-0">
-                <main className="max-w-6xl mx-auto px-4 py-5 md:px-6 md:py-6 lg:px-8 lg:py-8">
+            <div className="relative z-10 pb-[72px] md:pl-[248px] md:pb-0">
+                <main className="mx-auto min-h-screen max-w-7xl px-3 py-4 md:px-6 md:py-6 lg:px-8">
                     {children}
                 </main>
             </div>

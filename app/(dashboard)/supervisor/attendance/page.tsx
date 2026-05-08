@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
@@ -107,7 +106,7 @@ export default function AttendancePage() {
 
     const isLocked = attendanceRecords && attendanceRecords.length > 0 && !unlocked
 
-    const toggleAttendance = (workerId: number, workerName: string) => {
+    const toggleAttendance = (workerId: number) => {
         if (isLocked) {
             toast.error(t('attendance.already_saved'), { duration: 5000 })
             return
@@ -159,7 +158,7 @@ export default function AttendancePage() {
             }))
 
             if (codeToUse) {
-                // Secure server action bypass for verified supervisor 
+                // Secure server action bypass for verified supervisor
                 const result = await savePastAttendance(selectedDate, recordsToSave, codeToUse)
                 if (result.error) throw new Error(result.error)
 
@@ -202,20 +201,20 @@ export default function AttendancePage() {
     if (!selectedDate) return null
 
     return (
-        <div className="space-y-4 pb-28 max-w-2xl mx-auto">
-            <div className="bg-white/50 backdrop-blur-md p-4 rounded-3xl border border-white/20 shadow-sm">
+        <div className="mx-auto max-w-2xl space-y-4 pb-28">
+            <div className="weavly-canvas rounded-xl p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                            <CalendarDays className="h-5 w-5 text-indigo-600" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-saffron-soft">
+                            <CalendarDays className="h-5 w-5 text-saffron-deep" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-black text-foreground tracking-tight">{t('attendance.title')}</h1>
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mt-0.5">Fixed Salary Staff</p>
+                            <h1 className="text-xl font-semibold tracking-normal text-ink">{t('attendance.title')}</h1>
+                            <p className="mt-0.5 text-xs font-medium leading-none text-muted-foreground">Fixed salary staff</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto">
-                        <Button variant="outline" size="sm" onClick={setToday} className="h-10 px-4 text-[10px] font-black uppercase shrink-0 flex-1 sm:flex-none rounded-xl bg-white/80 hover:bg-white shadow-sm border-border active:scale-95 transition-all">
+                        <Button variant="outline" size="sm" onClick={setToday} className="h-10 flex-1 shrink-0 px-4 text-xs sm:flex-none">
                             <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
                             {t('attendance.today')}
                         </Button>
@@ -224,25 +223,25 @@ export default function AttendancePage() {
                             value={selectedDate}
                             max={new Date().toISOString().split('T')[0]} // Prevent future dates
                             onChange={(e) => setSelectedDate(e.target.value)}
-                            className="h-10 text-sm font-bold flex-1 sm:w-[150px] rounded-xl bg-white/80 shadow-sm border-border"
+                            className="h-10 flex-1 rounded-lg text-sm font-semibold sm:w-[150px]"
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="bg-card border border-border shadow-sm rounded-2xl p-4 overflow-hidden relative">
+            <div className="relative overflow-hidden rounded-xl border border-hairline bg-surface p-4 shadow-[var(--shadow-card)]">
                 <div className="flex justify-between items-center relative z-10">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t('attendance.present')}</span>
-                    <span className="text-xl font-black tracking-tight">
-                        <span className="text-emerald-600">{presentCount}</span>
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('attendance.present')}</span>
+                    <span className="text-xl font-semibold tracking-normal">
+                        <span className="text-success">{presentCount}</span>
                         <span className="text-muted-foreground/30 mx-1">/</span>
-                        <span className="text-slate-400">{totalCount}</span>
+                        <span className="text-muted-foreground">{totalCount}</span>
                     </span>
                 </div>
                 {/* Visual Progress Bar */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
-                    <div 
-                        className="h-full bg-emerald-500 transition-all duration-500 ease-out" 
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-soft">
+                    <div
+                        className="h-full bg-success transition-all duration-500 ease-out"
                         style={{ width: `${totalCount > 0 ? (presentCount / totalCount) * 100 : 0}%` }}
                     />
                 </div>
@@ -250,28 +249,29 @@ export default function AttendancePage() {
 
             {/* Show unlock banner if there are saved entries and not unlocked */}
             {attendanceRecords && attendanceRecords.length > 0 && !unlocked && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-amber-800 text-sm">
+                <div className="flex items-center justify-between rounded-lg border border-warning-soft bg-warning-soft p-3">
+                    <div className="flex items-center gap-2 text-sm text-warning">
                         <Lock className="h-4 w-4" />
                         <span>{t('attendance.locked_banner')}</span>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => { setVerificationMode('unlock'); setVerificationOpen(true); }} className="h-8 text-xs border-amber-300 text-amber-800 hover:bg-amber-100">
+                    <Button variant="outline" size="sm" onClick={() => { setVerificationMode('unlock'); setVerificationOpen(true); }} className="h-8 border-warning-soft text-xs text-warning hover:bg-warning-soft">
                         {t('attendance.unlock_edit')}
                     </Button>
                 </div>
             )}
 
             {attendanceLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{t('attendance.loading')}</p>
+                <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-hairline bg-surface/70 py-20">
+                    <Loader2 className="h-8 w-8 animate-spin text-saffron" />
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('attendance.loading')}</p>
                 </div>
             ) : !dailyWorkers || dailyWorkers.length === 0 ? (
-                <div className="py-16 text-center bg-muted/20 border-2 border-dashed border-border rounded-3xl">
-                    <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t('attendance.no_workers')}</p>
+                <div className="rounded-xl border border-dashed border-hairline bg-surface/70 py-16 text-center">
+                    <p className="text-sm font-semibold text-ink">{t('attendance.no_workers')}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Add daily workers to start attendance-linked payroll.</p>
                 </div>
             ) : (
-                <div className="bg-card border border-border shadow-sm rounded-3xl overflow-hidden">
+                <div className="overflow-hidden rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)]">
                     <div className="divide-y divide-border">
                         {dailyWorkers.map(worker => {
                             const isPresent = localAttendance[worker.id] ?? true
@@ -282,29 +282,29 @@ export default function AttendancePage() {
                                     key={worker.id}
                                     className={cn(
                                         'flex justify-between items-center py-4 px-4 min-h-[64px] cursor-pointer transition-all active:bg-muted/10',
-                                        isPresent ? 'hover:bg-emerald-50/30' : 'hover:bg-red-50/30 opacity-60'
+                                        isPresent ? 'hover:bg-success-soft/35' : 'hover:bg-risk-soft/40 opacity-65'
                                     )}
-                                    onClick={() => toggleAttendance(worker.id, worker.name)}
+                                    onClick={() => toggleAttendance(worker.id)}
                                 >
                                     <div className="flex items-center gap-4">
                                         <div className={cn(
-                                            'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm border-2',
-                                            isPresent ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-red-50 border-red-100 text-red-500'
+                                            'flex h-12 w-12 items-center justify-center rounded-lg border transition-all duration-300 shadow-sm',
+                                            isPresent ? 'border-success-soft bg-success-soft text-success' : 'border-risk-soft bg-risk-soft text-risk'
                                         )}>
                                             {isPresent ? <Check className="h-6 w-6 stroke-[3px] animate-in zoom-in duration-300" /> : <X className="h-6 w-6 stroke-[3px] animate-in zoom-in duration-300" />}
                                         </div>
                                         <div>
-                                            <span className={cn('font-black text-foreground tracking-tight block', !isPresent && 'line-through text-muted-foreground/50')}>
+                                            <span className={cn('block font-semibold tracking-normal text-ink', !isPresent && 'line-through text-muted-foreground/50')}>
                                                 {tl(worker.name)}
                                             </span>
-                                            <div className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mt-0.5">
+                                            <div className="mt-0.5 text-xs font-medium text-muted-foreground">
                                                 {formatINR(dailyRate)} {t('attendance.per_day')}
                                             </div>
                                         </div>
                                     </div>
                                     <span className={cn(
-                                        'text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border transition-colors',
-                                        isPresent ? 'bg-emerald-100 border-emerald-200 text-emerald-700' : 'bg-red-100 border-red-200 text-red-600'
+                                        'rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
+                                        isPresent ? 'border-success-soft bg-success-soft text-success' : 'border-risk-soft bg-risk-soft text-risk'
                                     )}>
                                         {isPresent ? t('attendance.present') : t('attendance.absent')}
                                     </span>
@@ -315,12 +315,12 @@ export default function AttendancePage() {
                 </div>
             )}
 
-            <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-background/40 backdrop-blur-xl border-t border-border flex justify-center z-40 pb-floating-button">
+            <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center border-t border-border bg-canvas/76 p-4 backdrop-blur-xl pb-floating-button md:left-[248px] md:p-6">
                 <div className="w-full max-w-2xl md:flex md:justify-end md:px-0">
                     <Button
                         onClick={prepareSaveFlow}
                         disabled={saving || totalCount === 0}
-                        className="w-full md:w-[240px] h-14 text-lg font-black shadow-[0_12px_24px_-8px_#0D948880] bg-teal-600 hover:bg-teal-700 text-white rounded-2xl transition-all active:scale-[0.98]"
+                        className="h-14 w-full rounded-xl text-base font-semibold md:w-[240px]"
                     >
                         {saving ? t('attendance.saving') : t('attendance.save')}
                     </Button>
@@ -331,7 +331,7 @@ export default function AttendancePage() {
             <Dialog open={verificationOpen} onOpenChange={setVerificationOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                        <DialogTitle className="flex items-center gap-2 text-risk">
                             <KeyRound className="h-5 w-5" /> {t('auth.owner_auth_req')}
                         </DialogTitle>
                         <DialogDescription>
@@ -345,7 +345,7 @@ export default function AttendancePage() {
                                 placeholder="Enter 6-character code"
                                 value={accessCode}
                                 onChange={(e) => setAccessCode(e.target.value)}
-                                className="font-mono uppercase tracking-widest text-lg"
+                                className="font-mono text-lg uppercase tracking-widest"
                                 maxLength={6}
                             />
                         </div>

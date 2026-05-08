@@ -29,9 +29,12 @@ import { useTransliterate } from '@/hooks/use-transliterate'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 
 const ROLE_COLORS: Record<string, string> = {
-    master: 'bg-purple-100 text-purple-700', supervisor: 'bg-blue-100 text-blue-700',
-    helper: 'bg-amber-100 text-amber-700', mender: 'bg-teal-100 text-teal-700',
-    sanitation: 'bg-green-100 text-green-700', daily: 'bg-orange-100 text-orange-700',
+    master: 'bg-saffron-soft text-saffron-deep',
+    supervisor: 'bg-info-soft text-info',
+    helper: 'bg-warning-soft text-warning',
+    mender: 'bg-success-soft text-success',
+    sanitation: 'bg-success-soft text-success',
+    daily: 'bg-surface-soft text-body',
 }
 
 export default function SupervisorWorkersPage() {
@@ -144,14 +147,14 @@ export default function SupervisorWorkersPage() {
         }
     }
 
-    if (!userProfile) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-gray-400" /></div>
+    if (!userProfile) return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-saffron" /></div>
 
     return (
-        <div className="p-4 space-y-6 max-w-4xl mx-auto pb-32">
-            <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-4 bg-white/50 backdrop-blur-md p-4 rounded-3xl border border-white/20 shadow-sm">
+        <div className="mx-auto max-w-4xl space-y-6 pb-32">
+            <div className="weavly-canvas flex flex-col items-start justify-between gap-4 rounded-xl p-4 xs:flex-row xs:items-center">
                 <div>
-                    <h1 className="text-2xl font-black text-foreground tracking-tight">{t('workers.manage_workers')}</h1>
-                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">Personnel Directory</p>
+                    <h1 className="text-2xl font-semibold tracking-normal text-ink">Worker Directory</h1>
+                    <p className="mt-1 text-xs font-medium text-muted-foreground">Meter workers, Upaad, and payroll records</p>
                 </div>
                 <AddWorkerDialog
                     orgId={userProfile.org_id}
@@ -161,43 +164,43 @@ export default function SupervisorWorkersPage() {
 
             {/* ── Meter Workers List ── */}
             <div className="mt-4">
-                <div className="flex items-center gap-2 mb-4">
-                    <h2 className="text-lg font-semibold text-gray-700">{t('workers.meter_workers')}</h2>
+                <div className="mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-semibold text-ink">{t('workers.meter_workers')}</h2>
                     {workers && workers.length > 0 && (
-                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-medium">
+                        <span className="rounded-full bg-surface-soft px-2 py-0.5 text-xs font-medium text-body">
                             {workers.length}
                         </span>
                     )}
                 </div>
 
                 {workersLoading ? (
-                    <div className="flex flex-col items-center justify-center p-20 gap-3">
-                        <Loader2 className="animate-spin text-primary h-8 w-8" />
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Syncing Personnel...</p>
+                    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-hairline bg-surface/70 p-20">
+                        <Loader2 className="h-8 w-8 animate-spin text-saffron" />
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Syncing workers...</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {workers?.map((worker: any) => (
-                            <div key={worker.id} className="relative bg-card border border-border shadow-sm rounded-2xl overflow-hidden group hover:shadow-md transition-all duration-300">
+                            <div key={worker.id} className="group relative overflow-hidden rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:border-hairline-strong">
                                 <div className="p-4 flex justify-between items-center">
                                     <div className="flex items-center gap-3">
                                         <div className={cn(
-                                            "w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shadow-inner",
+                                            "flex h-10 w-10 items-center justify-center rounded-lg text-sm font-semibold shadow-inner",
                                             ROLE_COLORS[worker.role || 'master'] || 'bg-muted text-muted-foreground'
                                         )}>
                                             {worker.name.charAt(0).toUpperCase()}
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="font-extrabold text-foreground tracking-tight">{tl(worker.name)}</span>
+                                            <span className="font-semibold tracking-normal text-ink">{tl(worker.name)}</span>
                                             <div className="flex items-center gap-1.5">
                                                 <span className={cn(
-                                                    "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md",
+                                                    "rounded-md px-1.5 py-0.5 text-[10px] font-semibold",
                                                     ROLE_COLORS[worker.role || 'master'] || 'bg-muted text-muted-foreground'
                                                 )}>
                                                     {worker.role || 'Worker'}
                                                 </span>
                                                 {(worker.pf_esi_enrolled ?? worker.pf_esi_eligible) && (
-                                                    <span className="text-[9px] font-black bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded-md border border-teal-100 uppercase tracking-widest">
+                                                    <span className="rounded-md border border-success-soft bg-success-soft px-1.5 py-0.5 text-[10px] font-semibold text-success">
                                                         {t('worker.pfEsi.enrolled')}
                                                     </span>
                                                 )}
@@ -208,21 +211,21 @@ export default function SupervisorWorkersPage() {
                                         {/* Active Toggle */}
                                         <div className="flex flex-col items-end gap-1">
                                             <span className={cn(
-                                                "text-[9px] font-black uppercase tracking-tighter",
-                                                worker.is_active ? "text-emerald-600" : "text-slate-400"
+                                                "text-[10px] font-semibold",
+                                                worker.is_active ? "text-success" : "text-muted-foreground"
                                             )}>
                                                 {worker.is_active ? t('workers.active') : t('workers.inactive')}
                                             </span>
                                             <Switch
                                                 checked={worker.is_active}
                                                 onCheckedChange={() => toggleWorkerActiveStatus(worker.id, worker.is_active, 'workers')}
-                                                className="scale-90 data-[state=checked]:bg-emerald-500"
+                                                className="scale-90 data-[state=checked]:bg-success"
                                             />
                                         </div>
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-9 w-9 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-90"
+                                            className="h-9 w-9 rounded-lg text-risk/70 hover:bg-risk-soft hover:text-risk"
                                             onClick={() => confirmDelete(worker.id)}
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -232,9 +235,10 @@ export default function SupervisorWorkersPage() {
                             </div>
                         ))}
                         {workers?.length === 0 && (
-                            <div className="col-span-full py-16 bg-muted/20 border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center gap-2">
+                            <div className="col-span-full flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-hairline bg-surface/70 py-16 text-center">
                                 <Users className="h-10 w-10 text-muted-foreground/30" />
-                                <p className="text-muted-foreground text-xs font-black uppercase tracking-widest">{t('workers.no_meter_workers')}</p>
+                                <p className="text-sm font-semibold text-ink">No meter workers yet.</p>
+                                <p className="max-w-sm text-xs text-muted-foreground">Add workers to start linking shift meters, Upaad, and payroll records.</p>
                             </div>
                         )}
                     </div>
@@ -245,7 +249,7 @@ export default function SupervisorWorkersPage() {
             <Dialog open={workerToDelete !== null && !confirmDeleteOpen} onOpenChange={(open) => !open && setWorkerToDelete(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                        <DialogTitle className="flex items-center gap-2 text-risk">
                             <KeyRound className="h-5 w-5" /> {t('workers.auth_req')}
                         </DialogTitle>
                         <DialogDescription>
@@ -254,12 +258,12 @@ export default function SupervisorWorkersPage() {
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         {workerDebt > 0 && (
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
-                                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                            <div className="flex items-start gap-3 rounded-lg border border-warning-soft bg-warning-soft p-3">
+                                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                                 <div>
-                                    <p className="text-sm font-bold text-amber-900">{t('workers.outstanding_adv')}</p>
-                                    <p className="text-xs text-amber-700 mt-0.5">
-                                        {t('workers.balance_warning')} <strong className="text-amber-900">{formatINR(workerDebt)}</strong>{t('workers.settle_warning')}
+                                    <p className="text-sm font-semibold text-warning">{t('workers.outstanding_adv')}</p>
+                                    <p className="mt-0.5 text-xs text-warning">
+                                        {t('workers.balance_warning')} <strong>{formatINR(workerDebt)}</strong>{t('workers.settle_warning')}
                                     </p>
                                 </div>
                             </div>
