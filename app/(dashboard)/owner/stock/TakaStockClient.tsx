@@ -846,7 +846,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground">Godown Stock</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">Taka stock, meter equivalent, and gross profit.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Physical takas, inward review, godown balance, and stock-sale entry.</p>
                 </div>
                 <Button onClick={() => setAddOpen(true)} className="gap-2">
                     <Plus className="h-4 w-4" />
@@ -870,16 +870,16 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                     tone="bg-amber-50 text-amber-700"
                 />
                 <MetricCard
-                    label="Sales Revenue"
+                    label="Stock Sales"
                     value={money(initialData.summary.realized_revenue)}
-                    helper="from stock sales"
+                    helper="recorded from godown"
                     icon={IndianRupee}
                     tone="bg-violet-50 text-violet-700"
                 />
                 <MetricCard
-                    label="Gross Profit"
+                    label="Sale Margin"
                     value={money(initialData.summary.realized_profit)}
-                    helper="from stock sales"
+                    helper="stock-sale context"
                     icon={TrendingUp}
                     tone="bg-emerald-50 text-emerald-700"
                 />
