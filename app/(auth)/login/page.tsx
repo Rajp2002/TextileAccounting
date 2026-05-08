@@ -49,7 +49,7 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="space-y-5" noValidate>
                 {/* Email */}
                 <div className="space-y-1.5">
-                    <Label htmlFor="email" className="text-gray-700 font-medium">
+                    <Label htmlFor="email" className="font-medium text-body">
                         Email
                     </Label>
                     <Input
@@ -60,7 +60,7 @@ export default function LoginPage() {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         autoComplete="email"
-                        className="h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all"
+                        className="h-12 transition-all focus:bg-surface"
                         disabled={loading}
                     />
                 </div>
@@ -68,7 +68,7 @@ export default function LoginPage() {
                 {/* Password */}
                 <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="password" className="text-gray-700 font-medium">
+                        <Label htmlFor="password" className="font-medium text-body">
                             Password
                         </Label>
                         {/* Placeholder for future forgot password */}
@@ -85,13 +85,13 @@ export default function LoginPage() {
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             autoComplete="current-password"
-                            className="h-12 bg-gray-50/50 border-gray-200 focus:bg-white transition-all pr-10"
+                            className="h-12 pr-10 transition-all focus:bg-surface"
                             disabled={loading}
                         />
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-ink"
                             tabIndex={-1}
                         >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -119,14 +119,14 @@ export default function LoginPage() {
                     )}
                 </Button>
 
-                <div className="space-y-2 text-center text-sm text-gray-500 pt-1">
+                <div className="space-y-2 pt-1 text-center text-sm text-muted-foreground">
                     <p>
                         Don't have an account?{' '}
-                        <Link href="/signup" className="text-amber-700 hover:underline font-medium">
+                        <Link href="/signup" className="font-medium text-saffron-deep hover:underline">
                             Start as owner
                         </Link>
                         {' '}or{' '}
-                        <Link href="/join" className="text-amber-700 hover:underline font-medium">
+                        <Link href="/join" className="font-medium text-saffron-deep hover:underline">
                             join with a code
                         </Link>
                     </p>

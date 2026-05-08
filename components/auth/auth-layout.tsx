@@ -14,7 +14,7 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
     return (
-        <div className="relative isolate min-h-[100svh] w-full overflow-hidden bg-background flex items-center justify-center p-4">
+        <div className="relative isolate flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-background p-4">
             <BrandBackground variant="auth" />
 
             <motion.div
@@ -23,7 +23,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 className="relative z-10 w-full max-w-[440px]"
             >
-                <div className="backdrop-blur-2xl bg-white/80 dark:bg-zinc-900/80 border border-white/50 dark:border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] dark:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] rounded-[2.5rem] overflow-hidden">
+                <div className="overflow-hidden rounded-2xl border border-hairline bg-surface/88 shadow-[var(--shadow-panel)] backdrop-blur-xl">
                     <div className="p-8 pb-4 text-center">
                         {/* App Logo */}
                         <div className="mx-auto mb-2 h-24 w-40 relative flex items-center justify-center group cursor-default">
@@ -33,7 +33,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                                 transition={{ delay: 0.2, duration: 0.5 }}
                                 className="relative h-full w-full"
                             >
-                                <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain transition-transform group-hover:scale-105 duration-500" priority />
+                                <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="10rem" className="object-contain transition-transform group-hover:scale-105 duration-500" priority />
                             </motion.div>
                         </div>
 
@@ -41,7 +41,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.3 }}
-                            className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-2"
+                            className="mb-2 text-2xl font-semibold tracking-normal text-ink"
                         >
                             {title}
                         </motion.h1>
@@ -49,7 +49,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.4 }}
-                            className="text-sm text-gray-500 dark:text-gray-400"
+                            className="text-sm text-muted-foreground"
                         >
                             {subtitle}
                         </motion.p>
@@ -72,7 +72,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
                     transition={{ delay: 0.6 }}
                     className="mt-8 text-center"
                 >
-                    <p className="text-xs text-gray-400 dark:text-gray-500 font-medium tracking-wide">
+                    <p className="text-xs font-medium tracking-wide text-muted-foreground">
                         Weavly &copy; {getSuratDate().getFullYear()} &bull; Built for India
                     </p>
                 </motion.div>

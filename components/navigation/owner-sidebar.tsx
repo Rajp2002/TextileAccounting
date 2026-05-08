@@ -19,6 +19,7 @@ import {
     Truck,
     Store,
     Warehouse,
+    Factory,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -29,7 +30,7 @@ import { useTranslation } from "@/lib/i18n/context"
 
 const navGroups = [
     {
-        label: "Main Pivot",
+        label: "Control",
         items: [
             { name: "Dashboard", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
             { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
@@ -37,7 +38,7 @@ const navGroups = [
         ]
     },
     {
-        label: "Production",
+        label: "Factory flow",
         items: [
             { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
             { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs" },
@@ -46,7 +47,7 @@ const navGroups = [
         ]
     },
     {
-        label: "Financials",
+        label: "Money",
         items: [
             { name: "Commercials", href: "/owner/commercials", icon: DollarSign, translationKey: "commercials" },
             { name: "Billing", href: "/owner/billing", icon: CreditCard, translationKey: "billing" },
@@ -61,9 +62,9 @@ const navGroups = [
         ]
     },
     {
-        label: "Operations",
+        label: "Looms",
         items: [
-            { name: "Machines", href: "/owner/machines", icon: Server, translationKey: "machines" },
+            { name: "Looms", href: "/owner/machines", icon: Server, translationKey: "machines" },
         ]
     },
     {
@@ -92,25 +93,29 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
     const { t } = useTranslation()
 
     return (
-        <div className="flex flex-col h-full bg-sidebar">
+        <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
             {/* Factory branding */}
-            <div className="px-4 py-4 border-b border-sidebar-border flex flex-col items-center justify-center gap-2">
-                <div className="relative h-20 w-36 shrink-0">
-                    <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain" priority />
+            <div className="border-b border-sidebar-border px-4 py-4">
+                <div className="relative h-11 w-28 shrink-0">
+                    <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="7rem" className="object-contain" priority />
                 </div>
                 {factoryName && (
-                    <p className="max-w-full truncate text-center text-xs font-bold tracking-wide text-sidebar-foreground/70">
-                        {factoryName}
-                    </p>
+                    <div className="mt-3 flex items-center gap-2 rounded-lg border border-hairline bg-surface/70 px-3 py-2">
+                        <Factory className="h-4 w-4 shrink-0 text-saffron" />
+                        <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold leading-tight text-ink">{factoryName}</p>
+                            <p className="text-[11px] font-medium text-muted-foreground">Owner control</p>
+                        </div>
+                    </div>
                 )}
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-4 px-3 space-y-4 overflow-y-auto">
+            <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
                 {navGroups.map((group, index) => (
                     <div key={group.label} className="space-y-1">
                         <div className={cn("px-3 mb-2", index > 0 && "mt-4")}>
-                            <p className="text-[11px] uppercase tracking-widest text-sidebar-foreground/70 font-extrabold">{group.label}</p>
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</p>
                         </div>
                         {group.items.map((item) => {
                             const Icon = item.icon
@@ -124,13 +129,13 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                                     href={item.href}
                                     onClick={onLinkClick}
                                     className={cn(
-                                        "flex items-center gap-3 px-3 py-2.5 text-sm font-bold rounded-lg transition-all duration-200",
+                                        "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25",
                                         isActive
-                                            ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(from_var(--primary)_l_c_h_/_0.3)]"
-                                            : "text-primary hover:text-sidebar-foreground hover:bg-black/5 dark:hover:bg-white/5"
+                                            ? "bg-saffron-soft text-ink shadow-sm"
+                                            : "text-body hover:bg-surface-soft hover:text-ink"
                                     )}
                                 >
-                                    <Icon className="h-[18px] w-[18px]" />
+                                    <Icon className={cn("h-[18px] w-[18px]", isActive ? "text-saffron" : "text-muted-foreground")} />
                                     {t(`nav.${item.translationKey}`) || item.name}
                                 </Link>
                             )
@@ -142,7 +147,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
             {/* User footer */}
             <div className="border-t border-sidebar-border p-4">
                 {userName && (
-                    <p className="text-xs text-muted-foreground mb-3 truncate">{userName}</p>
+                    <p className="mb-3 truncate text-xs font-medium text-muted-foreground">{userName}</p>
                 )}
                 <div className="flex flex-col gap-3">
                     <LanguageSwitcher />
@@ -161,28 +166,28 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
     return (
         <>
             {/* Desktop sidebar — persistent */}
-            <aside className="hidden md:flex md:w-[260px] md:flex-col md:fixed md:inset-y-0 bg-sidebar border-r border-sidebar-border z-30">
+            <aside className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-sidebar-border bg-sidebar/90 shadow-[var(--shadow-card)] backdrop-blur-xl">
                 <NavContent factoryName={factoryName} userName={userName} />
             </aside>
 
             {/* Mobile header bar */}
-            <header className="md:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 py-2">
+            <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-canvas/92 px-4 py-2 backdrop-blur-xl md:hidden">
                 <div className="flex items-center">
                     <div className="relative h-10 w-28 shrink-0">
-                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill className="object-contain" priority />
+                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="7rem" className="object-contain" priority />
                     </div>
                 </div>
 
                 <Sheet open={isOpen} onOpenChange={setIsOpen}>
                     <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-full">
+                        <Button variant="ghost" size="icon-sm" className="rounded-full text-ink">
                             <Menu className="h-5 w-5" />
                             <span className="sr-only">Open navigation</span>
                         </Button>
                     </SheetTrigger>
                     <SheetContent
                         side="left"
-                        className="w-[280px] bg-sidebar border-sidebar-border"
+                        className="w-[280px] border-sidebar-border bg-sidebar p-0"
                     >
                         <SheetHeader className="sr-only">
                             <SheetTitle>{t('common.navigation')}</SheetTitle>
@@ -199,9 +204,9 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
             {/* Mobile Bottom Navigation Form Factor */}
             <div className={cn(
                 "md:hidden fixed bottom-0 left-0 right-0 z-50",
-                "bg-background/80 backdrop-blur-lg border-t border-border",
+                "bg-canvas/92 backdrop-blur-lg border-t border-border",
                 "flex justify-around items-center px-2 pb-safe pt-2 pl-safe pr-safe",
-                "shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)]",
+                "shadow-[0_-8px_24px_-4px_rgba(30,37,40,0.10)]",
                 "min-h-[68px] select-none"
             )}>
                 {bottomNavItems.map((item) => {
@@ -214,23 +219,23 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                             href={item.href}
                             className={cn(
                                 "flex flex-col items-center justify-center py-1 px-1 min-w-0 w-full relative transition-all duration-300",
-                                isActive ? "text-primary scale-110" : "text-primary opacity-80"
+                                isActive ? "text-saffron-deep scale-105" : "text-body"
                             )}
                         >
                             <div className={cn(
                                 "py-1.5 px-4 rounded-xl mb-1 transition-all duration-300",
-                                isActive ? "bg-primary/15" : "hover:bg-black/5"
+                                isActive ? "bg-saffron-soft" : "hover:bg-surface-soft"
                             )}>
                                 <Icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
                             </div>
                             <span className={cn(
-                                "text-[10px] font-bold leading-none tracking-tight truncate max-w-full px-0.5",
+                                "text-[10px] font-semibold leading-none truncate max-w-full px-0.5",
                                 isActive ? "opacity-100" : "opacity-80"
                             )}>
                                 {t(`nav.${item.translationKey}`) || item.name}
                             </span>
                             {isActive && (
-                                <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                                <span className="absolute -top-px left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-saffron" />
                             )}
                         </Link>
                     )
@@ -239,12 +244,12 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                 {/* More button to trigger the sheet */}
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="flex flex-col items-center justify-center py-1 px-1 min-w-0 w-full relative text-primary opacity-80"
+                    className="relative flex w-full min-w-0 flex-col items-center justify-center px-1 py-1 text-body"
                 >
-                    <div className="py-1.5 px-4 rounded-xl mb-1 hover:bg-black/5 transition-all">
+                    <div className="mb-1 rounded-xl px-4 py-1.5 transition-all hover:bg-surface-soft">
                         <Menu className="h-5 w-5" />
                     </div>
-                    <span className="text-[10px] font-bold leading-none tracking-tight opacity-80">{t('common.menu')}</span>
+                    <span className="text-[10px] font-semibold leading-none opacity-80">{t('common.menu')}</span>
                 </button>
             </div>
         </>

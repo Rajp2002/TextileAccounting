@@ -17,8 +17,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
-import { formatINR } from '@/lib/finance'
 import { cn } from '@/lib/utils'
 import { addMeterWorker, addFixedWorker } from '@/app/(dashboard)/supervisor/actions'
 import { saveWorkerWhatsApp } from '@/app/(dashboard)/owner/actions'
@@ -90,7 +88,6 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
     const [whatsappLang, setWhatsappLang] = useState<'en' | 'hi' | 'gu'>('en')
     const [whatsappConsent, setWhatsappConsent] = useState(false)
     
-    const supabase = createClient()
     const queryClient = useQueryClient()
     const { t } = useTranslation()
     const { data: userProfile } = useUserProfile()
@@ -221,8 +218,8 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                                         className={cn(
                                             'flex-1 py-2.5 text-sm font-medium transition-colors',
                                             workerType === 'meter'
-                                                ? 'bg-gray-900 text-white'
-                                                : 'bg-white text-gray-600 hover:bg-gray-50'
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-surface text-body hover:bg-surface-soft'
                                         )}
                                         onClick={() => setValue('workerType', 'meter')}
                                     >
@@ -233,8 +230,8 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                                         className={cn(
                                             'flex-1 py-2.5 text-sm font-medium transition-colors border-l',
                                             workerType === 'fixed'
-                                                ? 'bg-gray-900 text-white'
-                                                : 'bg-white text-gray-600 hover:bg-gray-50'
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-surface text-body hover:bg-surface-soft'
                                         )}
                                         onClick={() => {
                                             setValue('workerType', 'fixed')
@@ -254,16 +251,16 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
 
                         <div className="grid gap-2">
                             <Label htmlFor="name">
-                                {t('workers.worker_name')} <span className="text-red-500">*</span>
+                                {t('workers.worker_name')} <span className="text-risk">*</span>
                             </Label>
                             <Input id="name" placeholder={t('workers.name_placeholder')} {...register('name')} autoFocus />
-                            {errors.name && <span className="text-xs text-red-500">{errors.name.message}</span>}
+                            {errors.name && <span className="text-xs text-risk">{errors.name.message}</span>}
                         </div>
 
                         {workerType === 'fixed' && (
                             <>
                                 <div className="grid gap-2">
-                                    <Label>{t('workers.role')} <span className="text-red-500">*</span></Label>
+                                    <Label>{t('workers.role')} <span className="text-risk">*</span></Label>
                                     <Controller
                                         name="role"
                                         control={control}
@@ -278,21 +275,21 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                                             </Select>
                                         )}
                                     />
-                                    {(errors as any).role && <span className="text-xs text-red-500">{(errors as any).role.message}</span>}
+                                    {(errors as any).role && <span className="text-xs text-risk">{(errors as any).role.message}</span>}
                                 </div>
                                 {selectedRole === 'other' && (
                                     <div className="grid gap-2">
-                                        <Label>{t('workers.custom_role_name')} <span className="text-red-500">*</span></Label>
+                                        <Label>{t('workers.custom_role_name')} <span className="text-risk">*</span></Label>
                                         <Input placeholder={t('workers.custom_role_placeholder')} {...register('customRole')} />
-                                        {(errors as any).customRole && <span className="text-xs text-red-500">{(errors as any).customRole.message}</span>}
+                                        {(errors as any).customRole && <span className="text-xs text-risk">{(errors as any).customRole.message}</span>}
                                     </div>
                                 )}
                                 <div className="grid gap-2">
-                                    <Label>{t('workers.monthly_salary')} <span className="text-red-500">*</span></Label>
+                                    <Label>{t('workers.monthly_salary')} <span className="text-risk">*</span></Label>
                                     <Input type="number" placeholder={t('workers.salary_placeholder')} {...register('salary')} />
-                                    {(errors as any).salary && <span className="text-xs text-red-500">{(errors as any).salary.message}</span>}
+                                    {(errors as any).salary && <span className="text-xs text-risk">{(errors as any).salary.message}</span>}
                                     {watchedSalary && Number(watchedSalary) > 0 && Number(watchedSalary) < MIN_WAGE_MONTHLY && (
-                                        <div className="flex items-center gap-1.5 text-amber-600 mt-1">
+                                        <div className="mt-1 flex items-center gap-1.5 text-warning">
                                             <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
                                             <span className="text-xs">Below Gujarat minimum wage (₹{MIN_WAGE_MONTHLY.toLocaleString()}/month)</span>
                                         </div>
@@ -301,20 +298,20 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                             </>
                         )}
                         
-                        <div className="border-t border-gray-100 pt-3 mt-1">
+                        <div className="mt-1 border-t border-hairline pt-3">
                             <div className="flex items-center gap-2 mb-3">
                                 <Controller
                                     name="pf_esi_enrolled"
                                     control={control}
                                     render={({ field }) => (
-                                        <input type="checkbox" id="pf_esi_enrolled" checked={field.value} onChange={(e) => field.onChange(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-teal-600 cursor-pointer" />
+                                        <input type="checkbox" id="pf_esi_enrolled" checked={field.value} onChange={(e) => field.onChange(e.target.checked)} className="h-4 w-4 cursor-pointer rounded border-hairline text-saffron" />
                                     )}
                                 />
-                                <Label htmlFor="pf_esi_enrolled" className="cursor-pointer font-medium text-gray-700">{t('worker.pfEsi.label')}</Label>
+                                <Label htmlFor="pf_esi_enrolled" className="cursor-pointer font-medium text-body">{t('worker.pfEsi.label')}</Label>
                             </div>
-                            <p className="text-xs text-gray-500 mb-3">{t('worker.pfEsi.helper')}</p>
+                            <p className="mb-3 text-xs text-muted-foreground">{t('worker.pfEsi.helper')}</p>
                             {watchedPfEsiEnrolled && (
-                                <div className="grid grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="grid grid-cols-2 gap-3 rounded-lg border border-hairline bg-surface-soft p-3">
                                     <div className="grid gap-1.5">
                                         <Label className="text-xs">{t('worker.pfEsi.esiNumber')}</Label>
                                         <Input className="h-8 text-sm" placeholder="Optional" {...register('esi_number')} />
@@ -327,13 +324,13 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                             )}
                         </div>
 
-                        <div className="border-t border-gray-100 pt-3 mt-1 space-y-3">
+                        <div className="mt-1 space-y-3 border-t border-hairline pt-3">
                             <div>
-                                <p className="text-xs font-medium text-gray-700 mb-0.5">WhatsApp Number <span className="text-gray-400 font-normal">(optional)</span></p>
+                                <p className="mb-0.5 text-xs font-medium text-body">WhatsApp Number <span className="font-normal text-muted-foreground">(optional)</span></p>
                                 <div className="flex gap-2">
-                                    <div className="flex items-center px-2.5 bg-gray-50 border border-gray-200 rounded-md text-xs text-gray-600 font-medium whitespace-nowrap">+91</div>
+                                    <div className="flex items-center whitespace-nowrap rounded-md border border-hairline bg-surface-soft px-2.5 text-xs font-medium text-body">+91</div>
                                     <Input type="tel" inputMode="numeric" placeholder="9898989898" value={whatsappPhone} onChange={(e) => setWhatsappPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} maxLength={10} className="font-mono flex-1" />
-                                    <select value={whatsappLang} onChange={(e) => setWhatsappLang(e.target.value as 'en' | 'hi' | 'gu')} className="border border-gray-200 rounded-md text-xs px-2 bg-white text-gray-700">
+                                    <select value={whatsappLang} onChange={(e) => setWhatsappLang(e.target.value as 'en' | 'hi' | 'gu')} className="rounded-md border border-hairline bg-surface px-2 text-xs text-body">
                                         <option value="en">EN</option>
                                         <option value="hi">HI</option>
                                         <option value="gu">GU</option>
@@ -342,23 +339,23 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                             </div>
                             {whatsappPhone.length === 10 && (
                                 <div className="flex items-start gap-2">
-                                    <input type="checkbox" id="wa-consent" checked={whatsappConsent} onChange={(e) => setWhatsappConsent(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 cursor-pointer" />
-                                    <label htmlFor="wa-consent" className="text-xs text-gray-500 leading-snug cursor-pointer">Worker has consented to WhatsApp messages</label>
+                                    <input type="checkbox" id="wa-consent" checked={whatsappConsent} onChange={(e) => setWhatsappConsent(e.target.checked)} className="mt-0.5 h-4 w-4 cursor-pointer rounded border-hairline text-saffron" />
+                                    <label htmlFor="wa-consent" className="cursor-pointer text-xs leading-snug text-muted-foreground">Worker has consented to WhatsApp messages</label>
                                 </div>
                             )}
                         </div>
 
-                        <div className="border-t border-gray-100 pt-4 mt-2">
+                        <div className="mt-2 border-t border-hairline pt-4">
                             <div className="flex items-start gap-2.5 px-1">
-                                <input type="checkbox" id="age-confirm" checked={ageConfirmed} onChange={(e) => setAgeConfirmed(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
-                                <label htmlFor="age-confirm" className="text-xs text-gray-500 leading-snug cursor-pointer">I confirm this worker is 18 years of age or older</label>
+                                <input type="checkbox" id="age-confirm" checked={ageConfirmed} onChange={(e) => setAgeConfirmed(e.target.checked)} className="mt-0.5 h-4 w-4 cursor-pointer rounded border-hairline text-saffron focus:ring-saffron" />
+                                <label htmlFor="age-confirm" className="cursor-pointer text-xs leading-snug text-muted-foreground">I confirm this worker is 18 years of age or older</label>
                             </div>
                         </div>
                     </div>
 
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={mutation.isPending}>{t('common.cancel')}</Button>
-                        <Button type="submit" disabled={mutation.isPending || !ageConfirmed} className={cn("transition-all", ageConfirmed ? "bg-blue-600 hover:bg-blue-700" : "")}>
+                        <Button type="submit" disabled={mutation.isPending || !ageConfirmed} className="transition-all">
                             {mutation.isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('workers.adding')}</>) : t('workers.add_worker')}
                         </Button>
                     </DialogFooter>

@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google"
+import { Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
 
-const jakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 })
@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 })
 
 export const viewport: Viewport = {
-  themeColor: "#fdf6e9",
+  themeColor: "#FFF8EA",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -47,7 +47,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${jakarta.variable} ${geistMono.variable} antialiased font-sans`}
+        className={`${inter.variable} ${geistMono.variable} antialiased font-sans`}
         suppressHydrationWarning
       >
         {/* Inline script: adds app-ready class to body as early as possible

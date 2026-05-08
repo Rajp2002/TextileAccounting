@@ -51,64 +51,113 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   --color-brand-accent: var(--brand-accent);
+  --color-app-bg: var(--weavly-app-bg);
+  --color-saffron: var(--weavly-saffron);
+  --color-saffron-deep: var(--weavly-saffron-deep);
+  --color-saffron-soft: var(--weavly-saffron-soft);
+  --color-amber-gold: var(--weavly-amber-gold);
+  --color-canvas: var(--weavly-canvas);
+  --color-surface: var(--weavly-surface);
+  --color-surface-soft: var(--weavly-surface-soft);
+  --color-surface-muted: var(--weavly-surface-muted);
+  --color-ledger: var(--weavly-ledger-cream);
+  --color-cotton: var(--weavly-cotton-beige);
+  --color-loom: var(--weavly-loom-navy);
+  --color-loom-elevated: var(--weavly-loom-navy-elevated);
+  --color-ink: var(--weavly-ink);
+  --color-body: var(--weavly-body);
+  --color-subtle: var(--weavly-subtle);
+  --color-hairline: var(--weavly-hairline);
+  --color-hairline-strong: var(--weavly-hairline-strong);
+  --color-success: var(--weavly-success);
+  --color-success-soft: var(--weavly-success-soft);
+  --color-warning: var(--weavly-warning);
+  --color-warning-soft: var(--weavly-warning-soft);
+  --color-risk: var(--weavly-risk);
+  --color-risk-soft: var(--weavly-risk-soft);
+  --color-info: var(--weavly-info);
+  --color-info-soft: var(--weavly-info-soft);
   --breakpoint-xs: 340px;
   --breakpoint-folding: 280px;
 }
 
 :root {
-  --radius: 1.25rem;
+  --radius: 0.625rem;
 
-  /* App Background - Soft, warm grid background color */
-  --background: oklch(0.985 0.005 85);
-  --foreground: oklch(0.2 0.05 35);
+  --weavly-primary: #1E2528;
+  --weavly-primary-active: #111719;
+  --weavly-saffron: #E27025;
+  --weavly-saffron-deep: #A94713;
+  --weavly-saffron-soft: #F9DFC8;
+  --weavly-amber-gold: #F59E0B;
 
-  /* Panels and Cards - Clean white with warm shadow */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.05 35);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.05 35);
+  --weavly-app-bg: #FFF8EA;
+  --weavly-canvas: #FFFDF7;
+  --weavly-surface: #FFFFFF;
+  --weavly-surface-soft: #FAF1E2;
+  --weavly-surface-muted: #F0DFC2;
+  --weavly-ledger-cream: #F6E8CF;
+  --weavly-cotton-beige: #EAD8B8;
+  --weavly-loom-navy: #18252E;
+  --weavly-loom-navy-elevated: #22313A;
 
-  /* Vibrant Weavly Orange */
-  --primary: #FF5722;
-  --primary-foreground: oklch(0.985 0 0);
+  --weavly-ink: #1E2528;
+  --weavly-body: #3F4542;
+  --weavly-muted: #74746A;
+  --weavly-subtle: #9A9587;
 
-  /* Secondary / Muted - Warm beige */
-  --secondary: oklch(0.96 0.02 85);
-  --secondary-foreground: oklch(0.3 0.05 45);
-  --muted: oklch(0.95 0.02 85);
-  --muted-foreground: oklch(0.55 0.04 65);
+  --weavly-hairline: #DED2BD;
+  --weavly-hairline-strong: #CBB894;
+  --weavly-focus-ring: #E27025;
 
-  /* Accent / Soft Orange */
-  --accent: oklch(0.94 0.05 60);
-  --accent-foreground: #FF5722;
+  --weavly-success: #2F6B43;
+  --weavly-success-soft: #E1F0E5;
+  --weavly-warning: #B87908;
+  --weavly-warning-soft: #F7E8C2;
+  --weavly-risk: #A6402D;
+  --weavly-risk-soft: #F2D8D1;
+  --weavly-info: #315C78;
+  --weavly-info-soft: #DDEAF0;
 
-  --destructive: oklch(0.577 0.245 27.325);
+  --shadow-card: 0 1px 2px rgba(30, 37, 40, 0.05), 0 8px 24px rgba(30, 37, 40, 0.04);
+  --shadow-panel: 0 12px 32px rgba(30, 37, 40, 0.08);
+  --shadow-modal: 0 20px 64px rgba(30, 37, 40, 0.18);
+  --shadow-button: 0 1px 2px rgba(30, 37, 40, 0.16);
 
-  /* Borders and Inputs - Warm border */
-  --border: oklch(0.92 0.02 85);
-  --input: oklch(0.92 0.02 85);
+  --background: var(--weavly-app-bg);
+  --foreground: var(--weavly-ink);
+  --card: var(--weavly-surface);
+  --card-foreground: var(--weavly-ink);
+  --popover: var(--weavly-surface);
+  --popover-foreground: var(--weavly-ink);
+  --primary: var(--weavly-primary);
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--weavly-surface-soft);
+  --secondary-foreground: var(--weavly-ink);
+  --muted: var(--weavly-surface-soft);
+  --muted-foreground: var(--weavly-muted);
+  --accent: var(--weavly-saffron-soft);
+  --accent-foreground: var(--weavly-saffron-deep);
+  --destructive: var(--weavly-risk);
+  --border: var(--weavly-hairline);
+  --input: var(--weavly-hairline);
+  --ring: var(--weavly-focus-ring);
+  --brand-accent: var(--weavly-saffron);
 
-  /* Focus Ring */
-  --ring: #FF5722;
+  --chart-1: var(--weavly-saffron);
+  --chart-2: var(--weavly-success);
+  --chart-3: var(--weavly-warning);
+  --chart-4: var(--weavly-info);
+  --chart-5: var(--weavly-risk);
 
-  --brand-accent: #FF5722;
-
-  /* Warm chart palette */
-  --chart-1: #FF5722;
-  --chart-2: oklch(0.85 0.05 60);
-  --chart-3: oklch(0.7 0.15 75);
-  --chart-4: oklch(0.6 0.15 140);
-  --chart-5: oklch(0.5 0.15 15);
-
-  /* Sidebar - Dark Ink */
-  --sidebar: #1A1A1B;
-  --sidebar-foreground: oklch(0.985 0.005 85);
-  --sidebar-primary: #FF5722;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.3 0.02 45);
-  --sidebar-accent-foreground: oklch(0.985 0.005 85);
-  --sidebar-border: oklch(0.25 0.02 45);
-  --sidebar-ring: #FF5722;
+  --sidebar: rgba(255, 253, 247, 0.82);
+  --sidebar-foreground: var(--weavly-body);
+  --sidebar-primary: var(--weavly-saffron);
+  --sidebar-primary-foreground: var(--weavly-saffron-deep);
+  --sidebar-accent: var(--weavly-saffron-soft);
+  --sidebar-accent-foreground: var(--weavly-ink);
+  --sidebar-border: var(--weavly-hairline);
+  --sidebar-ring: var(--weavly-focus-ring);
 }
 
 .dark {
@@ -163,23 +212,70 @@
     @apply bg-background text-foreground;
     overflow-x: hidden;
     touch-action: manipulation;
+    color: var(--color-body);
+    font-size: 14px;
   }
 
-  /* Prevent iOS auto-zoom on numeric inputs in the factory */
-  input[type="number"], 
-  input[type="text"], 
-  select, 
-  textarea {
-    font-size: 16px !important;
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--color-ink);
+    letter-spacing: 0;
+  }
+
+  ::selection {
+    background: rgba(226, 112, 37, 0.18);
+    color: var(--color-ink);
+  }
+
+  @media (max-width: 767px) {
+    /* Prevent iOS auto-zoom on factory inputs without enlarging desktop forms. */
+    input[type="number"],
+    input[type="text"],
+    input[type="date"],
+    input[type="tel"],
+    input[type="email"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 }
 
 @layer utilities {
+  .weavly-app-bg {
+    background-color: var(--color-app-bg);
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(226, 112, 37, 0.14), transparent 28%),
+      radial-gradient(circle at 88% 18%, rgba(245, 158, 11, 0.12), transparent 26%),
+      radial-gradient(circle at 72% 82%, rgba(226, 112, 37, 0.10), transparent 30%),
+      linear-gradient(rgba(126, 91, 47, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(126, 91, 47, 0.045) 1px, transparent 1px);
+    background-size:
+      auto,
+      auto,
+      auto,
+      36px 36px,
+      36px 36px;
+  }
+
+  .weavly-canvas {
+    background: color-mix(in srgb, var(--color-canvas) 94%, transparent);
+    border: 1px solid var(--color-hairline);
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-weavly-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-weavly-panel {
+    box-shadow: var(--shadow-panel);
+  }
+
   .bg-grid-pattern {
     background-size: 40px 40px;
     background-image:
-      linear-gradient(to right, oklch(0.85 0.05 60 / 0.15) 1px, transparent 1px),
-      linear-gradient(to bottom, oklch(0.85 0.05 60 / 0.15) 1px, transparent 1px);
+      linear-gradient(to right, rgba(126, 91, 47, 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(126, 91, 47, 0.045) 1px, transparent 1px);
   }
 
   /* Safe Area Padding Utilities for Mobile Apps */
@@ -228,7 +324,6 @@
   .text-tiny {
     font-size: 0.625rem;
     line-height: 0.75rem;
-    letter-spacing: -0.01em;
   }
 }
 
@@ -244,7 +339,7 @@
 @media (display-mode: standalone) {
   html, body {
     /* Match the manifest background_color exactly */
-    background-color: #fdf6e9;
+    background-color: #FFF8EA;
   }
 
   /* Once the app shell has mounted and React takes over, transition back to

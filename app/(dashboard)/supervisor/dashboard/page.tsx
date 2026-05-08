@@ -18,8 +18,6 @@ import {
     AlertCircle,
     Settings,
     ChevronRight,
-    ChevronUp,
-    ChevronDown,
     MessageSquare,
     AlertTriangle,
     KeyRound,
@@ -47,7 +45,6 @@ import {
     Sheet,
     SheetContent,
     SheetHeader,
-    SheetTitle,
     SheetFooter,
     SheetDescription,
 } from '@/components/ui/sheet'
@@ -94,6 +91,10 @@ function formatMeters(value: number | null | undefined) {
     return `${Math.round(meters)} m`
 }
 
+function formatLoomName(name: string) {
+    return name.replace(/^Machine\b/i, 'Loom')
+}
+
 interface ReadinessIssue {
     id: string
     label: string
@@ -115,28 +116,28 @@ function ShiftReadinessPanel({
 
     return (
         <div className={cn(
-            "rounded-2xl border px-4 py-3 shadow-sm transition-colors",
+            "rounded-xl border px-4 py-3 shadow-sm transition-colors",
             issues.length === 0
-                ? "border-emerald-200 bg-emerald-50/80"
+                ? "border-success-soft bg-success-soft"
                 : blockerCount > 0
-                    ? "border-amber-200 bg-amber-50/80"
-                    : "border-sky-200 bg-sky-50/80"
+                    ? "border-warning-soft bg-warning-soft"
+                    : "border-info-soft bg-info-soft"
         )}>
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <p className={cn(
-                        "text-[10px] font-black uppercase tracking-widest",
-                        issues.length === 0 ? "text-emerald-700" : blockerCount > 0 ? "text-amber-800" : "text-sky-800"
+                        "text-[11px] font-semibold uppercase tracking-wide",
+                        issues.length === 0 ? "text-success" : blockerCount > 0 ? "text-warning" : "text-info"
                     )}>
-                        Shift Readiness
+                        Shift readiness
                     </p>
-                    <p className="mt-1 text-sm font-extrabold text-foreground">
+                    <p className="mt-1 text-sm font-semibold text-ink">
                         {issues.length === 0
                             ? "Ready to submit when meter entries are done"
                             : `${blockerCount || totalIssueCount} item${(blockerCount || totalIssueCount) === 1 ? '' : 's'} need attention`}
                     </p>
                 </div>
-                <Badge variant="secondary" className="shrink-0 bg-white/80 text-[10px] font-black">
+                <Badge variant={issues.length === 0 ? "success" : blockerCount > 0 ? "warning" : "info"} className="shrink-0 text-[11px]">
                     {validEntryCount}/{machineCount} logs
                 </Badge>
             </div>
@@ -147,10 +148,10 @@ function ShiftReadinessPanel({
                         <span
                             key={issue.id}
                             className={cn(
-                                "inline-flex items-center gap-1.5 rounded-full border bg-white/80 px-2.5 py-1 text-[10px] font-black",
+                                "inline-flex items-center gap-1.5 rounded-full border bg-white/70 px-2.5 py-1 text-[11px] font-semibold",
                                 issue.tone === 'blocker'
-                                    ? "border-amber-200 text-amber-900"
-                                    : "border-sky-200 text-sky-900"
+                                    ? "border-warning-soft text-warning"
+                                    : "border-info-soft text-info"
                             )}
                         >
                             <AlertCircle className="h-3 w-3" />
@@ -169,19 +170,19 @@ function MachineStatusBadge({ status }: { status: 'running' | 'idle' | 'maintena
     switch (status) {
         case 'running':
             return (
-                <Badge className="bg-emerald-500 hover:bg-emerald-500 text-white border-none text-[9px] uppercase font-black tracking-tighter">
+                <Badge variant="success">
                     Running
                 </Badge>
             )
         case 'maintenance':
             return (
-                <Badge className="bg-amber-500 hover:bg-amber-500 text-black border-none text-[9px] uppercase font-black tracking-tighter">
-                    Service
+                <Badge variant="warning">
+                    Maintenance
                 </Badge>
             )
         default:
             return (
-                <Badge variant="outline" className="border-border text-muted-foreground text-[9px] uppercase font-black tracking-tighter">
+                <Badge variant="outline">
                     Idle
                 </Badge>
             )
@@ -234,42 +235,42 @@ function MachineUnifiedRow({
 
     return (
         <div className={cn(
-            "relative flex items-stretch gap-0 bg-card border border-border shadow-sm rounded-2xl overflow-hidden transition-all duration-200",
-            isMaintenance && "opacity-75 grayscale-[0.5]"
+            "relative flex items-stretch gap-0 overflow-hidden rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:border-hairline-strong",
+            isMaintenance && "opacity-75"
         )}>
             {/* Status Strip & Detail Trigger */}
-            <button 
+            <button
                 onClick={() => onStatusClick(machine)}
                 className={cn(
-                    "w-14 xs:w-16 shrink-0 flex flex-col items-center justify-center gap-1.5 border-r border-border hover:bg-muted/30 transition-all relative",
-                    status === 'running' ? "bg-emerald-50/40" : status === 'maintenance' ? "bg-amber-50/40" : "bg-muted/10",
+                    "relative flex w-14 shrink-0 flex-col items-center justify-center gap-1.5 border-r border-hairline transition-all hover:bg-surface-soft xs:w-16",
+                    status === 'running' ? "bg-success-soft/50" : status === 'maintenance' ? "bg-warning-soft/60" : "bg-surface-soft/50",
                     isSyncing && "animate-pulse"
                 )}
             >
                 {/* Left Status Bar */}
                 <div className={cn(
                     "absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full",
-                    status === 'running' ? "bg-emerald-500 shadow-[2px_0_10px_rgba(16,185,129,0.3)]" : 
-                    status === 'maintenance' ? "bg-amber-500 shadow-[2px_0_10px_rgba(245,158,11,0.3)]" : 
-                    "bg-slate-300"
+                    status === 'running' ? "bg-success" :
+                    status === 'maintenance' ? "bg-warning" :
+                    "bg-hairline-strong"
                 )} />
 
                 <div className="flex flex-col items-center px-1">
-                    <p className="text-[10px] xs:text-xs font-black tracking-tight text-foreground/80 leading-none mb-1">
-                        {machine.name.replace('Machine ', 'M-')}
+                    <p className="mb-1 text-[10px] font-semibold leading-none text-ink xs:text-xs">
+                        {formatLoomName(machine.name).replace('Loom ', 'L-')}
                     </p>
                     {isSyncing ? (
-                        <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                        <Loader2 className="h-3 w-3 animate-spin text-saffron" />
                     ) : isSaved ? (
-                        <div className="bg-emerald-500 rounded-full p-0.5 animate-in zoom-in duration-300 shadow-sm">
+                        <div className="rounded-full bg-success p-0.5 shadow-sm animate-in zoom-in duration-300">
                              <Check className="h-2.5 w-2.5 text-white stroke-[4px]" />
                         </div>
                     ) : (
                         <div className={cn(
                             "w-2 h-2 rounded-full",
-                            status === 'running' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : 
-                            status === 'maintenance' ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : 
-                            "bg-slate-300"
+                            status === 'running' ? "bg-success" :
+                            status === 'maintenance' ? "bg-warning" :
+                            "bg-hairline-strong"
                         )} />
                     )}
                 </div>
@@ -279,14 +280,14 @@ function MachineUnifiedRow({
             <div className="flex-1 min-w-0 p-3 py-4 flex flex-col justify-center gap-2">
                 {/* Worker Dropdown */}
                 <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                        <Users className="h-3.5 w-3.5 text-primary/70" />
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-saffron-soft/70">
+                        <Users className="h-3.5 w-3.5 text-saffron-deep" />
                     </div>
-                    <Select 
-                        value={workerId} 
+                    <Select
+                        value={workerId}
                         onValueChange={(val) => onAssignmentChange(machine.id, parseInt(val), orderId || null)}
                     >
-                        <SelectTrigger className="h-auto border-none bg-transparent p-0 text-[13px] font-extrabold shadow-none focus:ring-0 truncate max-w-full hover:text-primary transition-colors">
+                        <SelectTrigger className="h-auto max-w-full truncate border-none bg-transparent p-0 text-[13px] font-semibold shadow-none transition-colors hover:text-saffron-deep focus:ring-0">
                             <SelectValue placeholder={t('production.no_worker')} />
                         </SelectTrigger>
                         <SelectContent>
@@ -299,14 +300,14 @@ function MachineUnifiedRow({
 
                 {/* Order Dropdown */}
                 <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                        <Package className="h-3.5 w-3.5 text-muted-foreground/70" />
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface-soft">
+                        <Package className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
-                    <Select 
-                        value={orderId} 
+                    <Select
+                        value={orderId}
                         onValueChange={(val) => onAssignmentChange(machine.id, workerId ? parseInt(workerId) : null, val)}
                     >
-                        <SelectTrigger className="h-auto border-none bg-transparent p-0 text-[11px] font-bold text-muted-foreground shadow-none focus:ring-0 truncate max-w-full leading-tight hover:text-foreground transition-colors">
+                        <SelectTrigger className="h-auto max-w-full truncate border-none bg-transparent p-0 text-[12px] font-medium leading-tight text-muted-foreground shadow-none transition-colors hover:text-ink focus:ring-0">
                             <SelectValue placeholder={t('production.link_order')} />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
@@ -321,12 +322,12 @@ function MachineUnifiedRow({
                 </div>
 
                 {selectedOrder && (
-                    <div className="ml-8 flex flex-wrap items-center gap-1.5 text-[9px] font-black uppercase tracking-wide text-muted-foreground">
-                        <span className="rounded-full bg-muted/70 px-2 py-0.5">
+                    <div className="ml-8 flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                        <span className="rounded-full bg-surface-soft px-2 py-0.5">
                             {formatMeters(selectedOrder.remaining_meters)} left
                         </span>
                         {deadlineLabel && (
-                            <span className="rounded-full bg-muted/70 px-2 py-0.5">
+                            <span className="rounded-full bg-surface-soft px-2 py-0.5">
                                 Due {deadlineLabel}
                             </span>
                         )}
@@ -336,20 +337,20 @@ function MachineUnifiedRow({
 
             {/* Production Input (The Quick Log) */}
             <div className={cn(
-                "w-32 xs:w-36 sm:w-48 md:w-36 lg:w-44 shrink-0 flex items-center justify-center p-3 border-l border-border bg-muted/5",
-                (!workerId || !orderId) && "opacity-50 grayscale"
+                "flex w-32 shrink-0 items-center justify-center border-l border-hairline bg-surface-soft/35 p-3 xs:w-36 sm:w-48 md:w-36 lg:w-44",
+                (!workerId || !orderId) && "opacity-55"
             )}>
                 <div className="flex w-full flex-col items-center gap-2">
                     {(!workerId || !orderId) ? (
-                        <div className="flex flex-col items-center justify-center h-10 xs:h-12 text-[10px] font-black text-muted-foreground/60 leading-tight text-center px-1 animate-in fade-in duration-500">
+                        <div className="flex h-10 flex-col items-center justify-center px-1 text-center text-[11px] font-semibold leading-tight text-muted-foreground/70 animate-in fade-in duration-500 xs:h-12">
                              {!workerId ? t('production.no_worker') : t('production.link_order')}
                              <AlertCircle className="h-3 w-3 mt-1 opacity-40" />
                         </div>
                     ) : (
                         <>
                             <div className={cn(
-                                "flex items-center bg-background border-2 rounded-2xl overflow-hidden transition-all duration-300 group/input",
-                                closingReading > 0 ? "border-primary shadow-[0_8px_20px_-6px_rgba(255,87,34,0.25)] ring-4 ring-primary/5" : "border-border shadow-sm"
+                                "group/input flex items-center overflow-hidden rounded-lg border bg-surface transition-all duration-200",
+                                closingReading > 0 ? "border-saffron ring-4 ring-saffron/10" : "border-hairline shadow-sm"
                             )}>
                                 <Input
                                     type="number"
@@ -358,12 +359,12 @@ function MachineUnifiedRow({
                                     placeholder="0"
                                     value={closingReading || ''}
                                     onChange={(e) => onClosingReadingChange(Number(e.target.value))}
-                                    className="h-10 xs:h-12 flex-1 border-none bg-transparent text-lg xs:text-xl font-black text-center font-mono focus-visible:ring-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="h-10 flex-1 border-none bg-transparent p-0 text-center font-mono text-lg font-semibold xs:h-12 xs:text-xl focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                 />
                             </div>
                             <div className="flex w-full flex-col items-center gap-1">
-                                <div className="flex max-w-full items-center gap-1 bg-card border border-border px-2 py-0.5 rounded-full shadow-sm">
-                                    <span className="text-center text-[8px] xs:text-[9px] font-black text-primary uppercase tracking-wide leading-tight">
+                                <div className="flex max-w-full items-center gap-1 rounded-full border border-hairline bg-surface px-2 py-0.5 shadow-sm">
+                                    <span className="text-center text-[9px] font-semibold uppercase tracking-wide leading-tight text-saffron-deep xs:text-[10px]">
                                         {t('floor.meter.counterReading')}
                                     </span>
                                 </div>
@@ -371,10 +372,10 @@ function MachineUnifiedRow({
                                     type="button"
                                     onClick={() => onCounterResetChange(!counterWasReset)}
                                     className={cn(
-                                        "flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] xs:text-[10px] font-black leading-tight transition-all",
+                                        "flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-tight transition-all xs:text-[11px]",
                                         counterWasReset
-                                            ? "border-primary bg-primary/10 text-primary"
-                                            : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-primary"
+                                            ? "border-saffron-soft bg-saffron-soft text-saffron-deep"
+                                            : "border-hairline bg-surface text-muted-foreground hover:border-saffron-soft hover:text-saffron-deep"
                                     )}
                                     title={counterWasReset ? "Counter reset for this shift" : "Mark counter reset for this shift"}
                                     aria-pressed={counterWasReset}
@@ -382,14 +383,14 @@ function MachineUnifiedRow({
                                     <RotateCcw className="h-3 w-3" />
                                     Counter reset
                                 </button>
-                                <div className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full bg-muted/40 px-2 py-0.5 text-center text-[9px] xs:text-[10px] font-bold leading-tight text-muted-foreground">
+                                <div className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full bg-surface-soft px-2 py-0.5 text-center text-[10px] font-medium leading-tight text-muted-foreground xs:text-[11px]">
                                     <span className="whitespace-nowrap">
                                         {counterWasReset ? 'Opening counter: 0' : `${t('floor.meter.openingReading')}: ${openingReading}`}
                                     </span>
                                     <span className="whitespace-nowrap">{t('floor.meter.shiftProduction')}: {shiftMeters}</span>
                                 </div>
                                 {readingWarning && (
-                                    <span className="max-w-[11rem] text-center text-[9px] font-semibold text-red-600">
+                                    <span className="max-w-[11rem] text-center text-[10px] font-semibold text-risk">
                                         {t('floor.meter.counterWarning')}
                                     </span>
                                 )}
@@ -398,12 +399,12 @@ function MachineUnifiedRow({
                     )}
                 </div>
             </div>
-            
+
             {/* Detail Sheet Indicator */}
-            <button 
+            <button
                 onClick={() => onStatusClick(machine)}
-                className="absolute right-0 top-0 p-1 text-muted-foreground/30 hover:text-primary transition-colors"
-                title="Machine Details"
+                className="absolute right-0 top-0 p-1 text-muted-foreground/35 transition-colors hover:text-saffron-deep"
+                title="Loom details"
             >
                 <ChevronRight className="h-3 w-3" />
             </button>
@@ -413,19 +414,19 @@ function MachineUnifiedRow({
 
 // ─── Machine Detail Content (Slide-out) ─────────────────────────────────────────
 
-function MachineDetailSheet({ 
-    machine, 
+function MachineDetailSheet({
+    machine,
     date,
     shift,
-    onClose, 
+    onClose,
     onStatusChange,
     initialCategory,
     initialNotes,
-}: { 
-    machine: any, 
+}: {
+    machine: any,
     date: string,
     shift: 'day' | 'night',
-    onClose: () => void, 
+    onClose: () => void,
     onStatusChange: (status: 'running' | 'idle' | 'maintenance') => void,
     initialCategory?: string | null,
     initialNotes?: string
@@ -445,7 +446,7 @@ function MachineDetailSheet({
         const res = await updateMachineStatus(machine.id, status)
         if (res.success) {
             onStatusChange(status)
-            toast.success(`Machine status updated to ${status}`)
+            toast.success(`Loom status updated to ${status}`)
         } else {
             toast.error(res.error)
         }
@@ -474,61 +475,61 @@ function MachineDetailSheet({
         <>
             <SheetHeader>
                 <div className="flex items-center gap-3">
-                    <p className="text-2xl font-black text-foreground">{machine.name}</p>
+                    <p className="text-2xl font-semibold text-ink">{formatLoomName(machine.name)}</p>
                     <MachineStatusBadge status={machine.machine_status || 'idle'} />
                 </div>
                 <SheetDescription>
-                    Manage status and record detailed breakdown notes for this machine.
+                    Manage loom status and record breakdown notes for this shift.
                 </SheetDescription>
             </SheetHeader>
 
             <div className="py-6 space-y-8">
                 {/* Status Toggle Buttons */}
                 <div className="space-y-3">
-                    <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Change Status</Label>
+                    <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Change status</Label>
                     <div className="grid grid-cols-3 gap-2">
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className={cn(
-                                "h-16 flex flex-col gap-1 border-2 font-black",
-                                machine.machine_status === 'running' && "border-emerald-500 bg-emerald-50 text-emerald-700"
+                                "h-16 flex flex-col gap-1 border font-semibold",
+                                machine.machine_status === 'running' && "border-success-soft bg-success-soft text-success"
                             )}
                             onClick={() => handleStatusUpdate('running')}
                             disabled={saving}
                         >
                             <Check className="h-5 w-5" />
-                            <span className="text-[10px]">RUNNING</span>
+                            <span className="text-[11px]">Running</span>
                         </Button>
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className={cn(
-                                "h-16 flex flex-col gap-1 border-2 font-black",
-                                machine.machine_status === 'idle' && "border-slate-400 bg-slate-50 text-slate-700"
+                                "h-16 flex flex-col gap-1 border font-semibold",
+                                machine.machine_status === 'idle' && "border-hairline-strong bg-surface-soft text-ink"
                             )}
                             onClick={() => handleStatusUpdate('idle')}
                             disabled={saving}
                         >
                             <Moon className="h-5 w-5" />
-                            <span className="text-[10px]">IDLE</span>
+                            <span className="text-[11px]">Idle</span>
                         </Button>
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className={cn(
-                                "h-16 flex flex-col gap-1 border-2 font-black",
-                                machine.machine_status === 'maintenance' && "border-amber-500 bg-amber-50 text-amber-700"
+                                "h-16 flex flex-col gap-1 border font-semibold",
+                                machine.machine_status === 'maintenance' && "border-warning-soft bg-warning-soft text-warning"
                             )}
                             onClick={() => handleStatusUpdate('maintenance')}
                             disabled={saving}
                         >
                             <Settings className="h-5 w-5" />
-                            <span className="text-[10px]">SERVICE</span>
+                            <span className="text-[11px]">Service</span>
                         </Button>
                     </div>
                 </div>
 
                 {/* Categories Toggles */}
                 <div className="space-y-3">
-                    <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Breakdown Category</Label>
+                    <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Breakdown category</Label>
                     <div className="flex flex-wrap gap-2">
                         {categories.map((cat) => {
                             const Icon = cat.icon
@@ -538,10 +539,10 @@ function MachineDetailSheet({
                                     key={cat.id}
                                     onClick={() => setCategory(active ? null : cat.id)}
                                     className={cn(
-                                        "flex items-center gap-2 px-3 py-2 rounded-full border-2 text-xs font-bold transition-all",
-                                        active 
-                                            ? "bg-primary border-primary text-white shadow-lg" 
-                                            : "border-border text-muted-foreground hover:border-primary/50"
+                                        "flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition-all",
+                                        active
+                                            ? "border-saffron-soft bg-saffron-soft text-saffron-deep"
+                                            : "border-hairline text-muted-foreground hover:border-saffron-soft hover:text-saffron-deep"
                                     )}
                                 >
                                     <Icon className="h-3.5 w-3.5" />
@@ -554,10 +555,10 @@ function MachineDetailSheet({
 
                 {/* Notes Input */}
                 <div className="space-y-3">
-                    <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Other / Comments</Label>
+                    <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Reason / supervisor note</Label>
                     <div className="relative">
                         <textarea
-                            className="w-full h-32 p-3 bg-muted/50 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                            className="h-32 w-full resize-none rounded-lg border border-hairline bg-surface p-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-saffron/20"
                             placeholder="Add specific details (e.g., waiting for spare parts)..."
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
@@ -568,13 +569,13 @@ function MachineDetailSheet({
             </div>
 
             <SheetFooter>
-                <Button 
-                    className="w-full bg-primary hover:bg-primary/90 font-black h-12 gap-2" 
+                <Button
+                    className="h-12 w-full gap-2 font-semibold"
                     disabled={saving}
                     onClick={handleSaveBreakdown}
                 >
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    Save & Close
+                    Save and close
                 </Button>
             </SheetFooter>
         </>
@@ -603,10 +604,10 @@ export default function UnifiedDashboard() {
     const [counterResets, setCounterResets] = useState<Record<string, boolean>>({})
     const [correctionWindowExpiresAt, setCorrectionWindowExpiresAt] = useState<string | null>(null)
     const [, setCountdownTick] = useState(0)
-    
+
     // Optimistic / Sync markers
     const [syncingState, setSyncingState] = useState<Record<string, 'syncing' | 'saved' | null>>({})
-    
+
     // Detail Sheet state
     const [selectedMachine, setSelectedMachine] = useState<any | null>(null)
 
@@ -631,15 +632,15 @@ export default function UnifiedDashboard() {
         if (touchStartRef.current !== null && !isRefreshing) {
             const currentY = e.touches[0].clientY
             const distance = currentY - touchStartRef.current
-            
+
             if (distance > 0) {
                 // Resistance logic for the pull
                 const pull = Math.min(distance * 0.4, 80)
                 setPullDistance(pull)
-                
+
                 // If we've pulled enough, we can prevent default scrolling
                 if (pull > 20) {
-                    // Note: We can't actually preventDefault in passive listeners, 
+                    // Note: We can't actually preventDefault in passive listeners,
                     // but visual feedback is enough for this implementation.
                 }
             }
@@ -770,10 +771,10 @@ export default function UnifiedDashboard() {
         const existing = assignments.find(a => a.machine_id === machineId)
         const currentOrder = orders.find(o => o.id === orderId)
         const machine = machines.find(m => m.id === machineId)
-        
-        const rate = existing?.rate_per_m 
-            ?? currentOrder?.worker_rate_per_m 
-            ?? machine?.default_rate_per_m 
+
+        const rate = existing?.rate_per_m
+            ?? currentOrder?.worker_rate_per_m
+            ?? machine?.default_rate_per_m
             ?? 1.5
 
         // OPTIMISTIC UPDATE: Update the local assignments list immediately
@@ -781,10 +782,10 @@ export default function UnifiedDashboard() {
         setAssignments(prev => {
             const next = prev.filter(a => a.machine_id !== machineId)
             if (workerId || orderId) {
-                next.push({ 
-                    machine_id: machineId, 
-                    worker_id: workerId, 
-                    order_id: orderId, 
+                next.push({
+                    machine_id: machineId,
+                    worker_id: workerId,
+                    order_id: orderId,
                     rate_per_m: rate,
                     breakdown_category: existing?.breakdown_category,
                     breakdown_notes: existing?.breakdown_notes
@@ -864,20 +865,20 @@ export default function UnifiedDashboard() {
         const negativeReadings = entries.filter((entry) => !entry.counter_was_reset && entry.closing_meter_reading < entry.opening_meter_reading)
 
         if (negativeReadings.length > 0) {
-            toast.error(`Cannot save ${negativeReadings.length} machine reading${negativeReadings.length === 1 ? '' : 's'}: closing meter is below opening meter.`)
+            toast.error(`Cannot save ${negativeReadings.length} loom reading${negativeReadings.length === 1 ? '' : 's'}: closing meter is below opening meter.`)
             return
         }
 
         if (entries.length === 0) {
             // Check if any machines HAVE readings but were filtered out due to missing order
-            const machinesWithMetersButNoOrder = machines.filter(m => 
+            const machinesWithMetersButNoOrder = machines.filter(m =>
                 (closingReadings[m.id] ?? 0) > 0 && !assignments.find(a => a.machine_id === m.id)?.order_id
             )
 
             if (machinesWithMetersButNoOrder.length > 0) {
-                toast.error(`Cannot log production for ${machinesWithMetersButNoOrder.length} machines: No order assigned.`)
+                toast.error(`Cannot log production for ${machinesWithMetersButNoOrder.length} looms: no Market Run or order is assigned.`)
             } else {
-                toast.error('No valid counter readings found. Ensure both a worker and an order are assigned to each machine.')
+                toast.error('No valid counter readings found. Ensure both a worker and a Market Run/order are assigned to each loom.')
             }
             return
         }
@@ -885,7 +886,7 @@ export default function UnifiedDashboard() {
         setSubmitting(true)
         const res = await bulkLogProduction(entries, code)
         if (res.success) {
-            toast.success(`Production logged (${res.logged} machines)`)
+            toast.success(`Shift meters logged (${res.logged} looms)`)
             setSubmitting(false)
             setClosingReadings({}) // Reset inputs after success
             setCounterResets({})
@@ -994,26 +995,26 @@ export default function UnifiedDashboard() {
         : t('floor.correction.windowClosed')
 
     return (
-        <div 
+        <div
             ref={containerRef}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="flex flex-col min-h-[90vh] pb-32 select-none bg-grid-pattern"
+            className="flex min-h-[90vh] select-none flex-col pb-32"
         >
             {/* Pull to Refresh Indicator */}
-            <div 
+            <div
                 className="ptr-indicator overflow-hidden transition-[height] duration-200"
                 style={{ height: `${pullDistance}px`, opacity: pullDistance / 60 }}
             >
-                <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest">
+                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-saffron-deep">
                     <Loader2 className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-                    {isRefreshing ? 'Updating...' : 'Pull to Refresh'}
+                    {isRefreshing ? 'Updating...' : 'Pull to refresh'}
                 </div>
             </div>
 
             {/* Header - Sticky with safe padding */}
-            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border px-4 py-4 pt-safe shadow-sm">
+            <div className="sticky top-0 z-30 rounded-b-xl border border-t-0 border-hairline bg-canvas/95 px-4 py-4 pt-safe shadow-[var(--shadow-card)] backdrop-blur-md md:top-4 md:rounded-xl md:border">
                 <div className="max-w-6xl mx-auto space-y-4">
                     {userProfile?.role === 'owner' && (
                         <RoleBanner href="/owner/analytics" />
@@ -1021,10 +1022,10 @@ export default function UnifiedDashboard() {
 
                     {correctionWindowExpiresAt && (
                         <div className={cn(
-                            "rounded-2xl border px-4 py-3 text-sm font-medium shadow-sm",
+                            "rounded-xl border px-4 py-3 text-sm font-medium shadow-sm",
                             remainingCorrectionMinutes > 0
-                                ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                                : "border-amber-200 bg-amber-50 text-amber-900"
+                                ? "border-success-soft bg-success-soft text-success"
+                                : "border-warning-soft bg-warning-soft text-warning"
                         )}>
                             {correctionBannerText}
                         </div>
@@ -1032,14 +1033,14 @@ export default function UnifiedDashboard() {
 
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-xl font-black text-foreground tracking-tight">Production Log</h1>
+                            <h1 className="text-2xl font-semibold tracking-normal text-ink">Shift Meter Log</h1>
                             <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="secondary" className="text-[10px] font-bold h-5 bg-muted/50 border-none">
-                                    {assignedCount}/{machines.length} Assigned
+                                <Badge variant="secondary">
+                                    {assignedCount}/{machines.length} assigned
                                 </Badge>
                                 {loggedMetersCount > 0 && (
-                                    <Badge className="bg-primary text-white text-[10px] font-bold h-5 border-none shadow-sm animate-in fade-in zoom-in duration-300">
-                                        {loggedMetersCount} Meter Entries
+                                    <Badge variant="brand" className="shadow-sm animate-in fade-in zoom-in duration-300">
+                                        {loggedMetersCount} meter entries
                                     </Badge>
                                 )}
                             </div>
@@ -1047,12 +1048,12 @@ export default function UnifiedDashboard() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="h-10 border-border bg-white text-[10px] font-black gap-2 shadow-sm rounded-xl px-4 hover:bg-muted/50 hover:text-primary transition-all active:scale-95"
+                            className="h-10 gap-2 px-4 text-xs"
                             onClick={handleCopyPrevious}
                             disabled={copying || assignments.length > 0}
                         >
                             {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
-                            COPY YEST.
+                            Copy previous
                         </Button>
                     </div>
 
@@ -1061,26 +1062,26 @@ export default function UnifiedDashboard() {
                             type="date"
                             value={date}
                             onChange={(e) => handleDateChange(e.target.value)}
-                            className="flex-1 h-12 bg-muted/30 border-border text-sm font-bold rounded-xl focus:ring-primary/20"
+                            className="h-11 flex-1 rounded-lg bg-surface text-sm font-semibold"
                         />
-                        <div className="flex p-1 bg-muted/40 rounded-2xl border border-border shrink-0 backdrop-blur-sm">
+                        <div className="flex shrink-0 rounded-lg border border-hairline bg-surface-soft p-1">
                             <button
                                 onClick={() => handleShiftChange('day')}
                                 className={cn(
-                                    "flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black transition-all duration-300",
-                                    shift === 'day' ? "bg-white text-orange-500 shadow-md ring-1 ring-black/5" : "text-muted-foreground opacity-60 hover:opacity-100"
+                                    "flex items-center gap-1.5 rounded-md px-4 py-2 text-xs font-semibold transition-all duration-150",
+                                    shift === 'day' ? "bg-surface text-saffron-deep shadow-sm ring-1 ring-hairline" : "text-muted-foreground hover:text-ink"
                                 )}
                             >
-                                <Sun className={cn("h-4 w-4", shift === 'day' && "animate-pulse")} /> DAY
+                                <Sun className="h-4 w-4" /> Day
                             </button>
                             <button
                                 onClick={() => handleShiftChange('night')}
                                 className={cn(
-                                    "flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-black transition-all duration-300",
-                                    shift === 'night' ? "bg-[#1A1A1B] text-indigo-400 shadow-md ring-1 ring-white/5" : "text-muted-foreground opacity-60 hover:opacity-100"
+                                    "flex items-center gap-1.5 rounded-md px-4 py-2 text-xs font-semibold transition-all duration-150",
+                                    shift === 'night' ? "bg-loom text-white shadow-sm" : "text-muted-foreground hover:text-ink"
                                 )}
                             >
-                                <Moon className={cn("h-4 w-4", shift === 'night' && "animate-pulse")} /> NIGHT
+                                <Moon className="h-4 w-4" /> Night
                             </button>
                         </div>
                     </div>
@@ -1098,18 +1099,18 @@ export default function UnifiedDashboard() {
             </div>
 
             {/* Machine List - Responsive Grid */}
-            <div className="px-4 py-6 max-w-6xl mx-auto w-full">
+            <div className="mx-auto w-full max-w-6xl px-1 py-6 md:px-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-3">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-xs font-black text-muted-foreground uppercase">Syncing Floor Data...</p>
+                    <div className="col-span-full flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-hairline bg-surface/70 py-20">
+                        <Loader2 className="h-8 w-8 animate-spin text-saffron" />
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Syncing floor data...</p>
                     </div>
                 ) : machines.length === 0 ? (
-                    <div className="text-center py-20 bg-muted/20 border-2 border-dashed border-border rounded-3xl">
-                        <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                        <p className="text-foreground font-black uppercase">No Machines Found</p>
-                        <p className="text-muted-foreground text-xs mt-1">Activate machines in the Owner app first.</p>
+                    <div className="col-span-full rounded-xl border border-dashed border-hairline bg-surface/70 py-20 text-center">
+                        <AlertCircle className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+                        <p className="font-semibold text-ink">No looms found</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Activate looms in setup before logging shift meters.</p>
                     </div>
                 ) : (
                     machines.map((machine) => {
@@ -1142,10 +1143,10 @@ export default function UnifiedDashboard() {
                 </div>
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 md:left-[260px] p-4 md:p-6 bg-background/40 backdrop-blur-xl border-t border-border flex justify-center z-40 pb-floating-button">
+            <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center border-t border-border bg-canvas/76 p-4 backdrop-blur-xl pb-floating-button md:left-[248px] md:p-6">
                 <div className="flex w-full max-w-xl gap-3">
                     <Button
-                        className="h-14 flex-1 bg-primary hover:bg-primary/90 text-white font-black text-lg rounded-2xl shadow-[0_12px_24px_-8px_#FF572280] gap-3 active:scale-[0.98] transition-all"
+                        className="h-14 flex-1 gap-3 rounded-xl text-base font-semibold"
                         onClick={() => handleBulkSubmit()}
                         disabled={loading || submitting || validEntryCount === 0}
                     >
@@ -1154,19 +1155,19 @@ export default function UnifiedDashboard() {
                         ) : (
                             <ClipboardList className="h-6 w-6" />
                         )}
-                        SUBMIT SHIFT LOGS {validEntryCount > 0 && `(${validEntryCount})`}
+                        Save shift logs {validEntryCount > 0 && `(${validEntryCount})`}
                     </Button>
                 </div>
             </div>
 
             {/* Machine Detail Sheet */}
             <Sheet open={!!selectedMachine} onOpenChange={() => setSelectedMachine(null)}>
-                <SheetContent side="bottom" className="rounded-t-[32px] max-h-[95vh] overflow-y-auto border-t-2 border-primary/20 bg-background pt-8 px-6 pb-12">
+                <SheetContent side="bottom" className="max-h-[95vh] overflow-y-auto rounded-t-xl border-t border-hairline bg-surface px-6 pb-12 pt-8">
                     {selectedMachine && (() => {
                         const assignment = assignments.find(a => a.machine_id === selectedMachine.id)
                         return (
-                            <MachineDetailSheet 
-                                machine={selectedMachine} 
+                            <MachineDetailSheet
+                                machine={selectedMachine}
                                 date={date}
                                 shift={shift}
                                 onClose={() => setSelectedMachine(null)}
@@ -1174,7 +1175,7 @@ export default function UnifiedDashboard() {
                                 initialNotes={assignment?.breakdown_notes}
                                 onStatusChange={(status) => {
                                     // Update local machine status optimistically
-                                    setMachines(prev => prev.map(m => 
+                                    setMachines(prev => prev.map(m =>
                                         m.id === selectedMachine.id ? { ...m, machine_status: status } : m
                                     ))
                                 }}
@@ -1186,30 +1187,30 @@ export default function UnifiedDashboard() {
 
             {/* Duplicate Log Warning Dialog */}
             <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
-                <DialogContent className="rounded-3xl max-w-sm">
+                <DialogContent className="max-w-sm">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-amber-600">
-                            <AlertTriangle className="h-5 w-5" /> Existing Logs Found
+                        <DialogTitle className="flex items-center gap-2 text-warning">
+                            <AlertTriangle className="h-5 w-5" /> Existing logs found
                         </DialogTitle>
                         <DialogDescription>
-                            Some machines already have production logs for this shift. Overwriting them requires an owner's access code.
+                            Some looms already have production logs for this shift. Overwriting them requires an owner's access code.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-2">
-                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Access Code</Label>
+                            <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Access code</Label>
                             <Input
-                                placeholder="ENTER 6-DIGIT CODE"
+                                placeholder="Enter 6-digit code"
                                 value={duplicateAccessCode}
                                 onChange={(e) => setDuplicateAccessCode(e.target.value.toUpperCase())}
-                                className="h-12 text-center font-mono text-xl tracking-[0.5em] font-black rounded-xl border-2"
+                                className="h-12 rounded-lg text-center font-mono text-xl font-semibold tracking-[0.5em]"
                                 maxLength={6}
                             />
                         </div>
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="w-full text-primary font-bold gap-2 hover:bg-primary/5 h-10"
+                            className="h-10 w-full gap-2 font-semibold text-saffron-deep"
                             onClick={handleRequestCode}
                             disabled={requestingCode}
                         >
@@ -1219,12 +1220,12 @@ export default function UnifiedDashboard() {
                     </div>
                     <DialogFooter>
                         <Button
-                            className="w-full h-12 bg-primary hover:bg-primary/90 font-black rounded-xl"
+                            className="h-12 w-full rounded-lg font-semibold"
                             disabled={loading || duplicateAccessCode.length < 6 || submitting}
                             onClick={() => handleBulkSubmit(duplicateAccessCode)}
                         >
                             {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                            AUTHORIZE & OVERWRITE
+                            Authorize and overwrite
                         </Button>
                     </DialogFooter>
                 </DialogContent>
