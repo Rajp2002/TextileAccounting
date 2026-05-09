@@ -32,9 +32,10 @@ const navGroups = [
     {
         label: "Control",
         items: [
-            { name: "Dashboard", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
+            { name: "Factory Today", href: "/owner/today", icon: Factory, translationKey: "factory_today" },
             { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
             { name: "Quotes", href: "/owner/quotes", icon: FileText, translationKey: "quotes" },
+            { name: "Analytics", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
         ]
     },
     {
@@ -76,7 +77,7 @@ const navGroups = [
 ]
 
 const bottomNavItems = [
-    { name: "Dashboard", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
+    { name: "Today", href: "/owner/today", icon: Factory, translationKey: "factory_today" },
     { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
     { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock" },
     { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
@@ -121,8 +122,8 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                         </div>
                         {group.items.map((item) => {
                             const Icon = item.icon
-                            const isActive = item.name === 'Settings' 
-                                ? pathname === item.href 
+                            const isActive = (item.name === 'Settings' || item.name === 'Factory Today')
+                                ? pathname === item.href
                                 : pathname === item.href || pathname.startsWith(item.href + "/")
 
                             return (
