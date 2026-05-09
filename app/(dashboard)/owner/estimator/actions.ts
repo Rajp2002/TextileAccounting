@@ -488,43 +488,30 @@ export async function convertAcceptedQuoteToOrder(data: {
     if (quote.status !== 'accepted') return { error: 'Only accepted quotes can be converted into orders.' }
     if (quote.order_id) return { error: 'This quote has already been converted into an order.' }
 
-    const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-            org_id: profile.org_id,
-            party_name: quote.party_name,
-            quality_label: quote.quality_label,
-            warp_instruction: quote.warp_instruction ?? '',
-            weft_instruction: quote.weft_instruction ?? '',
-            total_target_meters: targetMeters,
-            start_date: new Date().toISOString().split('T')[0],
-            deadline: data.deadline,
-            status: 'active',
-            worker_rate_per_m: quote.worker_rate_per_m ?? null,
-            notes: data.notes?.trim() ?? '',
-            tracking_token: generateTrackingToken(),
-        })
-        .select('id')
-        .single()
+    const { data: conversionRows, error: conversionError } = await supabase.rpc(
+        'convert_accepted_quote_to_order',
+        {
+            p_quote_id: data.quoteId,
+            p_total_target_meters: targetMeters,
+            p_deadline: data.deadline,
+            p_notes: data.notes?.trim() ?? '',
+            p_tracking_token: generateTrackingToken(),
+        }
+    )
 
-    if (orderError || !order) return { error: orderError?.message ?? 'Failed to create order.' }
-
-    const { error: linkError } = await supabase
-        .from('estimator_quotes')
-        .update({ order_id: order.id })
-        .eq('id', quote.id)
-        .eq('org_id', profile.org_id)
-        .is('order_id', null)
-
-    if (linkError) {
-        await supabase
-            .from('orders')
-            .delete()
-            .eq('id', order.id)
-            .eq('org_id', profile.org_id)
-
-        return { error: linkError.message }
+    if (conversionError) {
+        const message = conversionError.message.includes('already been converted')
+            ? 'This quote has already been converted into an order.'
+            : conversionError.message
+        return { error: message }
     }
+
+    const conversionResult = Array.isArray(conversionRows) ? conversionRows[0] : conversionRows
+    if (!conversionResult?.success || !conversionResult.order_id) {
+        return { error: conversionResult?.error ?? 'Failed to create order.' }
+    }
+
+    const orderId = conversionResult.order_id as string
 
     const estimateForOrder = hydrateEstimateStateFromQuote(quote, targetMeters)
     const totals = calcFullTotals(estimateForOrder)
@@ -539,7 +526,7 @@ export async function convertAcceptedQuoteToOrder(data: {
         .from('order_yarn_requirements')
         .upsert({
             org_id: profile.org_id,
-            order_id: order.id,
+            order_id: orderId,
             quote_id: quote.id,
             warp_required_kg: Number(warpRequiredKg.toFixed(3)),
             weft_required_kg: Number(weftRequiredKg.toFixed(3)),
@@ -558,7 +545,7 @@ export async function convertAcceptedQuoteToOrder(data: {
     revalidatePath('/owner/orders')
     revalidatePath('/owner/analytics')
     revalidatePath('/owner/quotes')
-    return { success: true, orderId: order.id }
+    return { success: true, orderId }
 }
 
 // ─── Party Rate Memory ────────────────────────────────────────────────────────

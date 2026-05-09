@@ -130,54 +130,6 @@ async function getPreviousClosingReadingMap(
     return previousReadings
 }
 
-async function logShiftSelfCorrections(params: {
-    serviceClient: ReturnType<typeof getServiceClient>
-    userId: string
-    orgId: string
-    existingLogs: ProductionLogRow[]
-    replacementLogs: Array<{
-        machine_id: string
-        order_id: string
-        worker_id: number
-        meters: number
-        date: string
-        shift: ShiftType
-        opening_meter_reading: number
-        closing_meter_reading: number
-        counter_was_reset: boolean
-        submitted_at: string
-        created_by: string
-        updated_by: string
-        worker_rate_snapshot: number
-        client_ip: string
-    }>
-}) {
-    const auditRows = params.existingLogs.map((existingLog) => {
-        const replacementLog = params.replacementLogs.find((log) => log.machine_id === existingLog.machine_id)
-
-        return {
-            org_id: params.orgId,
-            table_name: 'production_logs',
-            record_id: existingLog.id.toString(),
-            action: 'shift_self_correction',
-            old_data: existingLog,
-            new_data: replacementLog ?? null,
-            changed_by: params.userId,
-            is_access_code_used: false,
-        }
-    })
-
-    if (auditRows.length === 0) return
-
-    const { error } = await params.serviceClient
-        .from('audit_log')
-        .insert(auditRows)
-
-    if (error) {
-        console.error('logShiftSelfCorrections error:', error)
-    }
-}
-
 import {
     checkAccessCodeRateLimit,
     checkAccessCodeLockout,
@@ -1182,9 +1134,12 @@ export async function bulkLogProduction(entries: {
         .eq('shift', logShift)
         .in('machine_id', machineIds)
 
-    if (existingLogs && existingLogs.length > 0) {
+    const hasExistingLogs = Boolean(existingLogs && existingLogs.length > 0)
+    let accessCodeUsedForOverwrite = false
+
+    if (hasExistingLogs) {
         const now = Date.now()
-        const correctionWindowOpenForAll = existingLogs.every((log) => {
+        const correctionWindowOpenForAll = existingLogs!.every((log) => {
             if (!log.submitted_at) return false
             return now - new Date(log.submitted_at).getTime() < 30 * 60 * 1000
         })
@@ -1194,7 +1149,7 @@ export async function bulkLogProduction(entries: {
                 return {
                     error: 'DUPLICATE_LOG_DETECTED',
                     message: 'Production logs already exist for some machines on this shift. This requires an owner access code to overwrite.',
-                    duplicateMachines: existingLogs.map((l) => l.machine_id),
+                    duplicateMachines: existingLogs!.map((l) => l.machine_id),
                 }
             }
 
@@ -1202,38 +1157,12 @@ export async function bulkLogProduction(entries: {
             let isCodeValid = false
             try {
                 isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
-            } catch (e: any) {
-                return { error: e.message }
+            } catch (e: unknown) {
+                return { error: e instanceof Error ? e.message : 'Invalid or expired access code' }
             }
 
             if (!isCodeValid) return { error: 'Invalid or expired access code' }
-        }
-
-        // If code is valid, delete existing logs for these machines/date/shift before inserting new ones
-        // We use the service client because supervisors don't have DELETE permission on production_logs
-        const serviceClient = getServiceClient()
-
-        if (correctionWindowOpenForAll) {
-            await logShiftSelfCorrections({
-                serviceClient,
-                userId: user.id,
-                orgId,
-                existingLogs: existingLogs as ProductionLogRow[],
-                replacementLogs: logs,
-            })
-        }
-
-        const { error: deleteError } = await serviceClient
-            .from('production_logs')
-            .delete()
-            .eq('org_id', orgId)
-            .eq('date', logDate)
-            .eq('shift', logShift)
-            .in('machine_id', machineIds)
-
-        if (deleteError) {
-            console.error('bulkLogProduction – delete error:', deleteError)
-            return { error: 'Failed to clear old logs. Please try again.' }
+            accessCodeUsedForOverwrite = true
         }
     }
 
@@ -1267,12 +1196,27 @@ export async function bulkLogProduction(entries: {
     }
     // ─────────────────────────────────────────────────────────────────────
 
-    const { error } = await supabase.from('production_logs').insert(logs)
+    const { data: replaceRows, error } = await supabase.rpc('replace_shift_production_logs', {
+        p_logs: logs,
+        p_allow_overwrite: hasExistingLogs,
+        p_access_code_used: accessCodeUsedForOverwrite,
+    })
 
     if (error) {
+        if (error.message.includes('DUPLICATE_LOG_DETECTED')) {
+            return {
+                error: 'DUPLICATE_LOG_DETECTED',
+                message: 'Production logs already exist for some machines on this shift. Please refresh before overwriting.',
+                duplicateMachines: machineIds,
+            }
+        }
+
         console.error('bulkLogProduction error:', error)
         return { error: error.message }
     }
+
+    const replaceResult = Array.isArray(replaceRows) ? replaceRows[0] : replaceRows
+    const loggedCount = Number(replaceResult?.inserted_count ?? logs.length)
 
     const producedOrderIds = [...new Set(logs.map((log) => log.order_id).filter((id): id is string => Boolean(id)))]
     await Promise.all(producedOrderIds.map((orderId) => supabase.rpc('create_or_refresh_stock_inward_draft', {
@@ -1287,7 +1231,7 @@ export async function bulkLogProduction(entries: {
     revalidatePath('/owner/stock')
     return {
         success: true,
-        logged: logs.length,
+        logged: loggedCount,
         correctionWindowExpiresAt: logs[0]?.submitted_at
             ? new Date(new Date(logs[0].submitted_at).getTime() + 30 * 60 * 1000).toISOString()
             : null,
