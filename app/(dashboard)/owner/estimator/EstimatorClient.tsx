@@ -33,6 +33,7 @@ import {
     Lock,
     AlertCircle,
     Zap,
+    Play,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
@@ -87,6 +88,7 @@ import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import FactoryCostWizard from './FactoryCostWizard'
+import { StartPartyOrderDialog } from '@/components/estimator/StartPartyOrderDialog'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -559,6 +561,7 @@ export default function EstimatorClient({
     const [templates, setTemplates] = useState<any[]>(initialTemplates ?? [])
     const [outputSuggestion, setOutputSuggestion] = useState<EstimateState['outputSuggestion'] | null>(null)
     const [isSuggestingOutput, setIsSuggestingOutput] = useState(false)
+    const [showStartPartyOrder, setShowStartPartyOrder] = useState(false)
 
     // Loom wage per meter input — bidirectional with perPickCostPaisa
     const [wagePerMInput, setWagePerMInput] = useState<string>('')
@@ -1070,43 +1073,98 @@ export default function EstimatorClient({
                             </>
                         )}
 
-                        {/* Actions */}
+                        {/* Actions — three-path hierarchy */}
                         <div className="flex flex-col sm:flex-row gap-2 ml-auto shrink-0 self-center w-full sm:w-auto mt-1 sm:mt-0 pt-2 sm:pt-0 border-t border-slate-100 sm:border-0 order-last sm:order-none justify-end">
-                            
-                            {/* Mode Toggle */}
-                            <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                                <button
-                                    onClick={() => setMode('quote')}
-                                    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
-                                        mode === 'quote' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                                >
-                                    Party Quote
-                                </button>
-                                <button
-                                    onClick={() => setMode('market')}
-                                    className={`px-3 py-1 text-[11px] font-bold rounded-md transition-all ${
-                                        mode === 'market' ? 'bg-brand-accent text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                                    }`}
-                                >
-                                    Market Run
-                                </button>
-                            </div>
 
-                            <Button
-                                size="sm"
-                                className={`flex-1 sm:flex-none h-9 px-3 sm:px-4 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg ${
-                                    mode === 'market' 
-                                        ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
-                                        : 'bg-brand-accent hover:bg-brand-accent/90 shadow-brand-accent/15'
-                                }`}
-                                onClick={handleSaveQuote}
-                                disabled={savingQuote}
-                            >
-                                {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : (mode === 'market' ? <Gauge className="h-3.5 w-3.5 shrink-0" /> : <Save className="h-3.5 w-3.5 shrink-0" />)}
-                                <span className="truncate">{mode === 'market' ? 'Start Market Run' : t('estimator.hud.order_btn')}</span>
-                            </Button>
+                            {mode === 'quote' ? (
+                                <>
+                                    {/* PRIMARY: Start Party Order */}
+                                    <Button
+                                        id="btn-start-party-order"
+                                        size="sm"
+                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-indigo-600/20"
+                                        onClick={() => setShowStartPartyOrder(true)}
+                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0}
+                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0)
+                                            ? 'Complete party, quality, quantity, and cost result first.'
+                                            : undefined
+                                        }
+                                    >
+                                        <Play className="h-3.5 w-3.5 shrink-0" />
+                                        <span className="truncate">Start Party Order</span>
+                                    </Button>
 
+                                    {/* SECONDARY: Save Quote */}
+                                    <Button
+                                        id="btn-save-quote"
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        onClick={handleSaveQuote}
+                                        disabled={savingQuote}
+                                    >
+                                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
+                                        <span className="truncate">{t('estimator.hud.order_btn')}</span>
+                                    </Button>
+
+                                    {/* TERTIARY: Switch to Market mode */}
+                                    <Button
+                                        id="btn-switch-market"
+                                        size="sm"
+                                        variant="ghost"
+                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 text-slate-500 hover:text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        onClick={() => setMode('market')}
+                                    >
+                                        <Gauge className="h-3.5 w-3.5 shrink-0" />
+                                        <span className="truncate">Market Maal</span>
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    {/* PRIMARY: Start Market Run */}
+                                    <Button
+                                        id="btn-start-market-run"
+                                        size="sm"
+                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-blue-600/20"
+                                        onClick={handleSaveQuote}
+                                        disabled={savingQuote}
+                                    >
+                                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Gauge className="h-3.5 w-3.5 shrink-0" />}
+                                        <span className="truncate">Start Market Run</span>
+                                    </Button>
+
+                                    {/* SECONDARY: Save Quote (draft) */}
+                                    <Button
+                                        id="btn-save-quote-market"
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 border-blue-200 text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        onClick={() => {
+                                            setMode('quote')
+                                            handleSaveQuote()
+                                        }}
+                                        disabled={savingQuote}
+                                    >
+                                        <Save className="h-3.5 w-3.5 shrink-0" />
+                                        <span className="truncate">Save Quote</span>
+                                    </Button>
+
+                                    {/* TERTIARY: Start Party Order */}
+                                    <Button
+                                        id="btn-start-party-order-market"
+                                        size="sm"
+                                        variant="ghost"
+                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        onClick={() => { setMode('quote'); setShowStartPartyOrder(true) }}
+                                        disabled={savingQuote}
+                                    >
+                                        <Play className="h-3.5 w-3.5 shrink-0" />
+                                        <span className="truncate">Party Order</span>
+                                    </Button>
+                                </>
+                            )}
+
+                            {/* Save / Update Quality template button */}
                             {appliedTemplate ? (
                                 <div className="flex items-center">
                                     <Button
@@ -1132,14 +1190,15 @@ export default function EstimatorClient({
                             ) : (
                                 <Button
                                     size="sm"
-                                    variant="outline"
-                                    className="flex-1 sm:flex-none h-9 px-3 sm:px-4 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 sm:gap-2 font-bold"
+                                    variant="ghost"
+                                    className="flex-none h-9 px-2 sm:px-3 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 font-bold"
                                     onClick={() => {
                                         setTemplateName(qualityLabel.trim())
                                         setShowSaveTemplate(true)
                                     }}
                                 >
-                                    <BookmarkPlus className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{t('estimator.quality.saveQuality')}</span>
+                                    <BookmarkPlus className="h-3.5 w-3.5 shrink-0" />
+                                    <span className="truncate hidden sm:inline">{t('estimator.quality.saveQuality')}</span>
                                 </Button>
                             )}
                         </div>
@@ -2461,6 +2520,21 @@ export default function EstimatorClient({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* ── START PARTY ORDER DIALOG ──────────────────────────────────── */}
+            {showStartPartyOrder && (
+                <StartPartyOrderDialog
+                    open={showStartPartyOrder}
+                    onOpenChange={setShowStartPartyOrder}
+                    estimatorState={state}
+                    estimatorTotals={totals}
+                    defaultPartyName={partyName}
+                    defaultQualityLabel={qualityLabel}
+                    defaultTargetMeters={state.orderQuantityM ?? undefined}
+                    defaultWarpInstruction={warpInstruction}
+                    defaultWeftInstruction={weftInstruction}
+                />
+            )}
         </div>
     )
 }

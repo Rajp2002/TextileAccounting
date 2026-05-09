@@ -180,14 +180,14 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
         })
         setUpdatingId(null)
 
-        if (res.error) {
+        if ('error' in res) {
             toast.error(res.error)
             return
         }
 
         toast.success('Accepted quote converted into an active order')
         setQuoteToConvert(null)
-        router.push('/owner/orders')
+        router.push(`/owner/orders?orderId=${res.orderId}`)
     }
 
     const handleReEstimate = (quote: QuoteRow) => {

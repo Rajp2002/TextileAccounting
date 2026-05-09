@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useTransition } from 'react'
+import { useState, useEffect, useCallback, useTransition, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1276,10 +1277,27 @@ function KanbanColumn({
 
 export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
     const { t } = useTranslation()
+    const searchParams = useSearchParams()
     const [loading, setLoading] = useState(false)
     const [orders, setOrders] = useState<any[]>(initialOrders)
 
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+
+    // Auto-open drawer if ?orderId= is in URL (e.g. from Start Party Order redirect)
+    const hasAutoOpened = useRef(false)
+    useEffect(() => {
+        if (hasAutoOpened.current) return
+        const urlOrderId = searchParams.get('orderId')
+        const wasCreated  = searchParams.get('created') === '1'
+        if (urlOrderId) {
+            hasAutoOpened.current = true
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            setSelectedOrderId(urlOrderId)
+            if (wasCreated) {
+                toast.success('Party order started! Assign machines to begin production.')
+            }
+        }
+    }, [searchParams])
 
     const fetchOrders = useCallback(async () => {
         // Suppress loading flicker if we already have data
