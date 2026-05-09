@@ -58,6 +58,18 @@ export async function processReferralConversion(refereeOrgId: string) {
 export async function issueReferralRefund(orgId: string, paymentId: string, amountPaise: number) {
     const supabase = createAdminClient();
     
+    // Idempotency check: Skip if refund already issued for this payment
+    const { data: existingRefund } = await supabase
+        .from('referral_refunds')
+        .select('id')
+        .eq('razorpay_payment_id', paymentId)
+        .maybeSingle()
+
+    if (existingRefund) {
+        console.log(`[referral] Refund already processed for payment ${paymentId} — skipping`)
+        return
+    }
+    
     // Check if they have active windows
     const now = new Date().toISOString();
     const { data: windows } = await supabase

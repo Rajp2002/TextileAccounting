@@ -122,6 +122,20 @@ export async function POST(req: NextRequest) {
             const payment = event.payload?.payment?.entity
             if (!sub?.id) break
 
+            // Idempotency check: Skip if payment already processed
+            if (payment?.id) {
+                const { data: existingPayment } = await supabase
+                    .from('subscription_payments')
+                    .select('id')
+                    .eq('razorpay_payment_id', payment.id)
+                    .maybeSingle()
+
+                if (existingPayment) {
+                    console.log(`[razorpay-webhook] Payment ${payment.id} already processed — skipping side effects`)
+                    break
+                }
+            }
+
             // Update billing period
             await supabase
                 .from('org_subscriptions')
@@ -145,7 +159,7 @@ export async function POST(req: NextRequest) {
                     .single()
 
                 if (orgSub) {
-                    await supabase.from('subscription_payments').insert({
+                    const { error: insertError } = await supabase.from('subscription_payments').insert({
                         org_id:              orgSub.org_id,
                         subscription_id:     orgSub.id,
                         razorpay_payment_id: payment.id,
@@ -155,9 +169,21 @@ export async function POST(req: NextRequest) {
                         method:              payment.method ?? null,
                         captured_at:         new Date().toISOString(),
                     })
-                    
-                    // Issue a referral refund if applicable
-                    await issueReferralRefund(orgSub.org_id, payment.id, payment.amount);
+
+                    if (insertError) {
+                        // Postgres unique_violation = 23505
+                        // This happens when a concurrent duplicate webhook beat us to the insert
+                        if (insertError.code === '23505') {
+                            console.log(`[razorpay-webhook] Payment ${payment.id} already inserted by concurrent delivery — skipping refund`)
+                        } else {
+                            console.error('[razorpay-webhook] Failed to insert subscription_payments:', insertError)
+                        }
+                        // Either way: do not issue a duplicate referral refund
+                        break
+                    }
+
+                    // Insert succeeded — now safe to issue referral refund
+                    await issueReferralRefund(orgSub.org_id, payment.id, payment.amount)
                 }
             }
             break
@@ -193,6 +219,18 @@ export async function POST(req: NextRequest) {
             const payment = event.payload?.payment?.entity
             if (!payment?.id || !payment?.subscription_id) break
 
+            // Idempotency check: skip if already logged
+            const { data: existingFailed } = await supabase
+                .from('subscription_payments')
+                .select('id')
+                .eq('razorpay_payment_id', payment.id)
+                .maybeSingle()
+
+            if (existingFailed) {
+                console.log(`[razorpay-webhook] Failed payment ${payment.id} already recorded — skipping`)
+                break
+            }
+
             const { data: orgSub } = await supabase
                 .from('org_subscriptions')
                 .select('id, org_id')
@@ -200,7 +238,7 @@ export async function POST(req: NextRequest) {
                 .single()
 
             if (orgSub) {
-                await supabase.from('subscription_payments').insert({
+                const { error: failedInsertError } = await supabase.from('subscription_payments').insert({
                     org_id:              orgSub.org_id,
                     subscription_id:     orgSub.id,
                     razorpay_payment_id: payment.id,
@@ -208,6 +246,12 @@ export async function POST(req: NextRequest) {
                     status:              'failed',
                     method:              payment.method ?? null,
                 })
+
+                if (failedInsertError && failedInsertError.code === '23505') {
+                    console.log(`[razorpay-webhook] Failed payment ${payment.id} inserted by concurrent delivery — ignoring`)
+                } else if (failedInsertError) {
+                    console.error('[razorpay-webhook] Failed to insert failed payment:', failedInsertError)
+                }
             }
             break
         }
