@@ -87,6 +87,7 @@ interface Assignment {
 interface MachineManagementProps {
     orgId: string
     canAddMachines?: boolean
+    canToggleMachineStatus?: boolean
     canRenameMachines?: boolean
     canDeleteMachines?: boolean
 }
@@ -94,6 +95,7 @@ interface MachineManagementProps {
 export function MachineManagement({
     orgId,
     canAddMachines = true,
+    canToggleMachineStatus = true,
     canRenameMachines = true,
     canDeleteMachines = true,
 }: MachineManagementProps) {
@@ -507,7 +509,7 @@ export function MachineManagement({
                                     </div>
 
                                     {/* Quick Actions Dropdown */}
-                                    {(canRenameMachines || canDeleteMachines) && (
+                                    {(canToggleMachineStatus || canRenameMachines || canDeleteMachines) && (
                                         <div className="flex items-center">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
@@ -516,21 +518,21 @@ export function MachineManagement({
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-40">
+                                                    {canToggleMachineStatus && (
+                                                        <DropdownMenuItem onClick={() => toggleMachineStatus(machine)}>
+                                                            <Power className={cn("h-4 w-4 mr-2", isInactive ? "text-success" : "text-warning")} />
+                                                            {isInactive ? t('machines.activate') : t('machines.deactivate')}
+                                                        </DropdownMenuItem>
+                                                    )}
                                                     {canRenameMachines && (
-                                                        <>
-                                                            <DropdownMenuItem onClick={() => toggleMachineStatus(machine)}>
-                                                                <Power className={cn("h-4 w-4 mr-2", isInactive ? "text-success" : "text-warning")} />
-                                                                {isInactive? t('machines.activate') : t('machines.deactivate')}
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => {
-                                                                setMachineToRename(machine)
-                                                                setRenameValue(machine.name)
-                                                                setRenameLoomType(machine.loom_type ?? '')
-                                                            }}>
-                                                                <Pencil className="h-4 w-4 mr-2" />
-                                                                {t('machines.rename_machine')}
-                                                            </DropdownMenuItem>
-                                                        </>
+                                                        <DropdownMenuItem onClick={() => {
+                                                            setMachineToRename(machine)
+                                                            setRenameValue(machine.name)
+                                                            setRenameLoomType(machine.loom_type ?? '')
+                                                        }}>
+                                                            <Pencil className="h-4 w-4 mr-2" />
+                                                            {t('machines.rename_machine')}
+                                                        </DropdownMenuItem>
                                                     )}
                                                     {canDeleteMachines && (
                                                         <DropdownMenuItem

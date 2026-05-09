@@ -355,6 +355,7 @@ export const gu = {
       risk: {
         high: "વધારે દેવાનું જોખમ",
         moderate: "મધ્યમ દેવું",
+        safe: "ઉપાડ સામાન્ય કમાણીની મર્યાદામાં છે",
         owes: "નો ઉપાડ બાકી છે, તેમની",
         against: "",
         typical_earnings: "મહિનાની કમાણીની સરખામણીમાં.",
@@ -375,6 +376,8 @@ export const gu = {
       list: {
         no_advances: "કોઈ ઉપાડ નોંધાયો નથી",
         click_to_add: "આ કારીગરને નવો ઉપાડ આપવા માટે 'ઉપાડ આપો' પર ક્લિક કરો",
+        ledger: "ઉપાડ લેજર",
+        delete_advance: "ઉપાડ કાઢી નાખો",
         no_reason: "કોઈ કારણ દર્શાવ્યું નથી",
         given: "આપ્યો:",
         settled_in: "ચૂકવાયો:",

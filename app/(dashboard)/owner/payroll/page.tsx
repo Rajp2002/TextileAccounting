@@ -287,7 +287,7 @@ function MeterWorkerRow({
                         )}
                     </div>
                 </button>
-                <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto bg-gray-50/50 sm:bg-transparent -mx-4 px-4 py-3 sm:p-0 border-t sm:border-0 border-gray-100">
+                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto bg-gray-50/50 sm:bg-transparent -mx-4 px-4 py-3 sm:mr-1 sm:p-0 border-t sm:border-0 border-gray-100">
                     <div className="text-left sm:text-right flex-1 sm:flex-none flex flex-col justify-center gap-1.5 sm:gap-1">
                         <div className={cn("font-black text-lg tracking-tight leading-none", isPaid ? "text-green-700" : "text-gray-900")}>
                             {formatINR(displayNet)}
@@ -307,7 +307,7 @@ function MeterWorkerRow({
                         size="sm"
                         variant={isPaid ? 'outline' : 'default'}
                         className={cn(
-                            'h-8 min-w-[112px] px-3.5 text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
+                            'h-8 w-[108px] px-3 text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
                             isPaid 
                                 ? 'border-green-200 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600' 
                                 : 'bg-indigo-600 hover:bg-indigo-700 shadow-sm hover:shadow-md active:scale-95'
@@ -584,7 +584,7 @@ function FixedWorkerRow({
                         )}
                     </div>
                 </button>
-                <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto bg-gray-50/50 sm:bg-transparent -mx-4 px-4 py-3 sm:p-0 border-t sm:border-0 border-gray-100">
+                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto bg-gray-50/50 sm:bg-transparent -mx-4 px-4 py-3 sm:mr-1 sm:p-0 border-t sm:border-0 border-gray-100">
                     <div className="text-left sm:text-right flex-1 sm:flex-none flex flex-col justify-center gap-1.5 sm:gap-1">
                         <div className={cn("font-black text-lg tracking-tight leading-none", isPaid ? "text-green-700" : "text-gray-900")}>
                             {formatINR(displayNet)}
@@ -604,7 +604,7 @@ function FixedWorkerRow({
                         size="sm"
                         variant={isPaid ? 'outline' : 'default'}
                         className={cn(
-                            'h-8 min-w-[112px] px-3.5 text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
+                            'h-8 w-[108px] px-3 text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
                             isPaid 
                                 ? 'border-green-200 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600' 
                                 : 'bg-indigo-600 hover:bg-indigo-700 shadow-sm hover:shadow-md active:scale-95'

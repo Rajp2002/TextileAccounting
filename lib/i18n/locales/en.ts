@@ -360,6 +360,7 @@ export const en = {
       risk: {
         high: "High Debt Risk",
         moderate: "Moderate Debt",
+        safe: "Advance balance is within typical earnings",
         owes: "owes",
         against: "against",
         typical_earnings: "typical earnings/month",
@@ -380,6 +381,8 @@ export const en = {
       list: {
         no_advances: "No advances recorded",
         click_to_add: "Click 'Give Advance' to record a new advance for this worker",
+        ledger: "Advance ledger",
+        delete_advance: "Delete advance",
         no_reason: "No reason specified",
         given: "Given",
         settled_in: "Settled in",
