@@ -90,3 +90,25 @@ describe('P1 Referral Refund Idempotency Guard', () => {
         }
     })
 })
+
+describe('P1 Referral Conversion Idempotency Guard', () => {
+    const helperContent = readProjectFile('lib/referral-webhook.ts')
+
+    it('app-level pre-check for existing discount window in processReferralConversion', () => {
+        expect(helperContent).toContain('Discount window already exists for referral use')
+        expect(helperContent).toContain('referral_use_id')
+    })
+
+    it('handles unique-violation (23505) from referral_discount_windows insert', () => {
+        expect(helperContent).toContain("insertError.code === '23505'")
+        expect(helperContent).toContain('Concurrent insert prevented by unique constraint')
+    })
+
+    it('confirms existing UNIQUE constraint on referral_use_id in migration', () => {
+        const referralMigration = readProjectFile(
+            'supabase/migrations/20260418000000_referral_scheme.sql'
+        )
+        expect(referralMigration).toContain('referral_use_id')
+        expect(referralMigration).toContain('UNIQUE')
+    })
+})

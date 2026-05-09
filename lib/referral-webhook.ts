@@ -18,6 +18,18 @@ export async function processReferralConversion(refereeOrgId: string) {
         
     if (!usage) return; // No pending referral found
     
+    // App-level idempotency check: Skip if discount window already exists for this referral use
+    const { data: existingWindow } = await supabase
+        .from('referral_discount_windows')
+        .select('id')
+        .eq('referral_use_id', usage.id)
+        .maybeSingle();
+
+    if (existingWindow) {
+        console.log(`[referral] Discount window already exists for referral use ${usage.id} — skipping`);
+        return;
+    }
+    
     // Type casting to handle the join return type
     const codeInfo = usage.referral_codes as any as { org_id: string };
     const referrerOrgId = codeInfo.org_id;
@@ -45,7 +57,7 @@ export async function processReferralConversion(refereeOrgId: string) {
     const validUntil = new Date(validFrom);
     validUntil.setMonth(validUntil.getMonth() + 3);
     
-    await supabase.from('referral_discount_windows')
+    const { error: insertError } = await supabase.from('referral_discount_windows')
         .insert({
             referrer_org_id: referrerOrgId,
             referral_use_id: usage.id,
@@ -53,6 +65,15 @@ export async function processReferralConversion(refereeOrgId: string) {
             valid_from: validFrom.toISOString(),
             valid_until: validUntil.toISOString()
         });
+
+    if (insertError) {
+        if (insertError.code === '23505') {
+            console.log(`[referral] Concurrent insert prevented by unique constraint for use ${usage.id}`);
+            return;
+        }
+        console.error("Failed to insert referral discount window:", insertError);
+        return;
+    }
 }
 
 export async function issueReferralRefund(orgId: string, paymentId: string, amountPaise: number) {
