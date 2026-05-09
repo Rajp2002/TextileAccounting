@@ -248,7 +248,7 @@ function MeterWorkerRow({
             'border rounded-xl overflow-hidden transition-all duration-300',
             isPaid ? 'border-green-200 bg-green-50/20 shadow-sm' : 'border-gray-200 bg-white hover:border-indigo-200'
         )}>
-            <div className="flex flex-col sm:flex-row sm:items-center p-4 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center p-4 sm:py-3.5 gap-3">
                 <button
                     onClick={() => setExpanded(e => !e)}
                     className="flex items-center gap-3 text-left flex-1 min-w-0 group w-full"
@@ -307,10 +307,10 @@ function MeterWorkerRow({
                         size="sm"
                         variant={isPaid ? 'outline' : 'default'}
                         className={cn(
-                            'h-9 px-4 text-xs font-bold rounded-lg transition-all whitespace-nowrap',
+                            'h-8 min-w-[112px] px-3.5 text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
                             isPaid 
                                 ? 'border-green-200 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600' 
-                                : 'bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg active:scale-95'
+                                : 'bg-indigo-600 hover:bg-indigo-700 shadow-sm hover:shadow-md active:scale-95'
                         )}
                         onClick={() => onToggle(false)}
                         disabled={isMutating}
@@ -550,7 +550,7 @@ function FixedWorkerRow({
             'border rounded-xl overflow-hidden transition-all duration-300',
             isPaid ? 'border-green-200 bg-green-50/20 shadow-sm' : 'border-gray-200 bg-white hover:border-indigo-200'
         )}>
-            <div className="flex flex-col sm:flex-row sm:items-center p-4 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center p-4 sm:py-3.5 gap-3">
                 <button
                     onClick={() => setExpanded(e => !e)}
                     className="flex items-start sm:items-center gap-3 text-left flex-1 min-w-0 group w-full"
@@ -604,10 +604,10 @@ function FixedWorkerRow({
                         size="sm"
                         variant={isPaid ? 'outline' : 'default'}
                         className={cn(
-                            'h-9 px-4 text-xs font-bold rounded-lg transition-all whitespace-nowrap',
+                            'h-8 min-w-[112px] px-3.5 text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
                             isPaid 
                                 ? 'border-green-200 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600' 
-                                : 'bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg active:scale-95'
+                                : 'bg-indigo-600 hover:bg-indigo-700 shadow-sm hover:shadow-md active:scale-95'
                         )}
                         onClick={() => onToggle(false)}
                         disabled={isMutating}
@@ -1785,7 +1785,7 @@ export default function PayrollPage() {
                         </Card>
                     ) : (
                         <>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">
+                            <p className="px-1 text-[10px] font-black leading-4 text-gray-400 uppercase tracking-widest">
                                 {t('payroll_ext.showing_results').replace('{count}', String(filteredMeterWorkers.length))}
                             </p>
                             {filteredMeterWorkers.map(w => (
@@ -1843,7 +1843,7 @@ export default function PayrollPage() {
                         </Card>
                     ) : (
                         <>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">
+                            <p className="px-1 text-[10px] font-black leading-4 text-gray-400 uppercase tracking-widest">
                                 {t('payroll_ext.showing_results').replace('{count}', String(filteredFixedWorkers.length))}
                             </p>
                             {filteredFixedWorkers.map((w: FixedWorkerPayroll) => (

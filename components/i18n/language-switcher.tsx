@@ -11,7 +11,11 @@ const LANGUAGES: { code: Language; label: string; short: string }[] = [
   { code: "gu", label: "ગુજ", short: "ગુ" },
 ]
 
-export function LanguageSwitcher() {
+interface LanguageSwitcherProps {
+  className?: string
+}
+
+export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const { language, setLanguage } = useTranslation()
   const [open, setOpen] = useState(false)
 
@@ -22,7 +26,10 @@ export function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setOpen(prev => !prev)}
-        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
+        className={cn(
+          "flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5",
+          className
+        )}
         aria-label="Switch language"
       >
         <Globe className="h-4 w-4 shrink-0" />

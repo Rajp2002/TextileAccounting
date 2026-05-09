@@ -93,18 +93,20 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
     const { t } = useTranslation()
 
     return (
-        <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+        <div className="flex h-full flex-col bg-[#111111] text-zinc-100">
             {/* Factory branding */}
-            <div className="border-b border-sidebar-border px-4 py-4">
-                <div className="relative h-11 w-28 shrink-0">
-                    <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="7rem" className="object-contain" priority />
+            <div className="border-b border-white/10 px-4 py-5">
+                <div className="flex items-center justify-center">
+                    <div className="relative h-20 w-44 shrink-0">
+                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="11rem" className="object-contain drop-shadow-[0_0_18px_rgba(244,137,53,0.18)]" priority />
+                    </div>
                 </div>
                 {factoryName && (
-                    <div className="mt-3 flex items-center gap-2 rounded-lg border border-hairline bg-surface/70 px-3 py-2">
+                    <div className="mt-4 flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2">
                         <Factory className="h-4 w-4 shrink-0 text-saffron" />
                         <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold leading-tight text-ink">{factoryName}</p>
-                            <p className="text-[11px] font-medium text-muted-foreground">Owner control</p>
+                            <p className="truncate text-sm font-semibold leading-tight text-white">{factoryName}</p>
+                            <p className="text-[11px] font-medium text-zinc-400">Owner control</p>
                         </div>
                     </div>
                 )}
@@ -115,7 +117,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                 {navGroups.map((group, index) => (
                     <div key={group.label} className="space-y-1">
                         <div className={cn("px-3 mb-2", index > 0 && "mt-4")}>
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{group.label}</p>
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{group.label}</p>
                         </div>
                         {group.items.map((item) => {
                             const Icon = item.icon
@@ -131,11 +133,11 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
                                     className={cn(
                                         "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25",
                                         isActive
-                                            ? "bg-saffron-soft text-ink shadow-sm"
-                                            : "text-body hover:bg-surface-soft hover:text-ink"
+                                            ? "bg-saffron-deep text-white shadow-sm shadow-saffron/20"
+                                            : "text-saffron hover:bg-saffron-deep hover:text-white"
                                     )}
                                 >
-                                    <Icon className={cn("h-[18px] w-[18px]", isActive ? "text-saffron" : "text-muted-foreground")} />
+                                    <Icon className="h-[18px] w-[18px]" />
                                     {t(`nav.${item.translationKey}`) || item.name}
                                 </Link>
                             )
@@ -145,13 +147,13 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
             </nav>
 
             {/* User footer */}
-            <div className="border-t border-sidebar-border p-4">
+            <div className="border-t border-white/10 p-4">
                 {userName && (
-                    <p className="mb-3 truncate text-xs font-medium text-muted-foreground">{userName}</p>
+                    <p className="mb-3 truncate text-xs font-medium text-zinc-400">{userName}</p>
                 )}
                 <div className="flex flex-col gap-3">
-                    <LanguageSwitcher />
-                    <LogoutButton />
+                    <LanguageSwitcher className="text-saffron hover:bg-saffron-deep hover:text-white" />
+                    <LogoutButton className="rounded-lg px-2 py-1.5 text-saffron hover:bg-saffron-deep hover:text-white" />
                 </div>
             </div>
         </div>
@@ -166,7 +168,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
     return (
         <>
             {/* Desktop sidebar — persistent */}
-            <aside className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-sidebar-border bg-sidebar/90 shadow-[var(--shadow-card)] backdrop-blur-xl">
+            <aside className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-white/10 bg-[#111111] shadow-[var(--shadow-card)]">
                 <NavContent factoryName={factoryName} userName={userName} />
             </aside>
 
@@ -187,7 +189,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                     </SheetTrigger>
                     <SheetContent
                         side="left"
-                        className="w-[280px] border-sidebar-border bg-sidebar p-0"
+                        className="w-[280px] border-white/10 bg-[#111111] p-0"
                     >
                         <SheetHeader className="sr-only">
                             <SheetTitle>{t('common.navigation')}</SheetTitle>

@@ -244,9 +244,9 @@
   .weavly-app-bg {
     background-color: var(--color-app-bg);
     background-image:
-      radial-gradient(circle at 12% 8%, rgba(226, 112, 37, 0.14), transparent 28%),
-      radial-gradient(circle at 88% 18%, rgba(245, 158, 11, 0.12), transparent 26%),
-      radial-gradient(circle at 72% 82%, rgba(226, 112, 37, 0.10), transparent 30%),
+      radial-gradient(circle at 12% 8%, rgba(226, 112, 37, 0.24), rgba(226, 112, 37, 0.08) 24%, transparent 36%),
+      radial-gradient(circle at 88% 18%, rgba(245, 158, 11, 0.20), rgba(245, 158, 11, 0.07) 22%, transparent 34%),
+      radial-gradient(circle at 72% 82%, rgba(226, 112, 37, 0.18), rgba(226, 112, 37, 0.06) 26%, transparent 38%),
       linear-gradient(rgba(126, 91, 47, 0.045) 1px, transparent 1px),
       linear-gradient(90deg, rgba(126, 91, 47, 0.045) 1px, transparent 1px);
     background-size:

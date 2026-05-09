@@ -17,7 +17,7 @@ export default async function AnalyticsPage() {
   const initialData = await getDashboardData()
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-7xl">
       <DashboardClient initialData={initialData} orgId={org_id} />
     </div>
   )
