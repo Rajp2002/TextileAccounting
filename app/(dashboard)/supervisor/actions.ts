@@ -17,6 +17,7 @@ import {
     PositiveIntSchema,
     safeParse,
 } from '@/lib/schemas'
+import { getCycleBoundsForDate } from '@/lib/payroll-cycle'
 
 type ShiftType = 'day' | 'night'
 
@@ -1175,14 +1176,8 @@ export async function bulkLogProduction(entries: {
 
     const cycleStartDay = payrollConfig?.cycle_start_day || 1
 
-    const { data: bounds } = await supabase
-        .rpc('get_cycle_bounds', {
-            p_date: logDate,
-            p_cycle_start_day: cycleStartDay,
-        })
-        .single()
-
-    const cycleStart = (bounds as any)?.cycle_start
+    const bounds = getCycleBoundsForDate(logDate, cycleStartDay)
+    const cycleStart = bounds.cycle_start
 
     if (cycleStart) {
         const workerIds = [...new Set([
@@ -1379,19 +1374,8 @@ export async function recordKharchi(params: {
     const cycleStartDay = config?.cycle_start_day || 1
 
     // 2. Derive Current Cycle Start Date (Postgres Helper)
-    const { data: bounds, error: boundsErr } = await supabase
-        .rpc('get_cycle_bounds', {
-            p_date: new Date().toISOString().split('T')[0],
-            p_cycle_start_day: cycleStartDay,
-        })
-        .single()
-
-    if (boundsErr) {
-        console.error('Failed to get cycle bounds:', boundsErr)
-        return { error: 'Failed to determine payroll cycle.' }
-    }
-
-    let cycleStartDate = (bounds as any).cycle_start
+    const bounds = getCycleBoundsForDate(new Date().toISOString().split('T')[0], cycleStartDay)
+    let cycleStartDate = bounds.cycle_start
 
     // 3. Late Sync Check: Is this specific worker's cycle already settled?
     const { data: existingSettlement } = await supabase
@@ -1405,15 +1389,11 @@ export async function recordKharchi(params: {
     let wasLateSync = false
     if (existingSettlement && existingSettlement.status === 'paid') {
         // Already paid! Roll to NEXT cycle
-        const { data: nextBounds } = await supabase
-            .rpc('get_cycle_bounds', {
-                p_date: new Date(new Date(cycleStartDate).getTime() + 32 * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split('T')[0],
-                p_cycle_start_day: cycleStartDay,
-            })
-            .single()
-        cycleStartDate = (nextBounds as any).cycle_start
+        const nextDateStr = new Date(new Date(cycleStartDate).getTime() + 32 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0]
+        const nextBounds = getCycleBoundsForDate(nextDateStr, cycleStartDay)
+        cycleStartDate = nextBounds.cycle_start
         wasLateSync = true
     }
 
