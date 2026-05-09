@@ -338,7 +338,7 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
                 quality_label,
                 landed_cost_per_meter,
                 meters,
-                orders (
+                orders!estimator_quotes_order_id_fkey (
                     id,
                     party_name,
                     quality_label,
