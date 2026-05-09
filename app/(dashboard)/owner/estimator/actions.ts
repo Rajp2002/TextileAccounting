@@ -647,7 +647,7 @@ export async function getEstimatorQuotes(filters?: { status?: string }) {
         .from('estimator_quotes')
         .select(`
             *,
-            orders ( id, status )
+            orders!estimator_quotes_order_id_fkey ( id, status )
         `)
         .eq('org_id', profile.org_id)
         .order('created_at', { ascending: false })
