@@ -24,10 +24,11 @@ export default function SupervisorMachinesPage() {
                 <p className="mt-1 text-sm text-muted-foreground">Review running, idle, and assigned looms for the factory floor.</p>
             </div>
 
-            {/* Supervisors get view-only access to machines */}
+            {/* Supervisors can pause/resume looms without owner-only edit controls. */}
             <MachineManagement
                 orgId={userProfile.org_id}
                 canAddMachines={false}
+                canToggleMachineStatus={true}
                 canRenameMachines={false}
                 canDeleteMachines={false}
             />

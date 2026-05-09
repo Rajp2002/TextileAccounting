@@ -106,7 +106,7 @@ async function ownerWorkerHasHistory(
 
 
 export async function toggleMachineStatus(machineId: string, currentStatus: string) {
-    const { profile } = await requireRole(['owner'])
+    const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(UuidSchema, machineId)
@@ -126,6 +126,8 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
     }
 
     revalidatePath('/owner/machines')
+    revalidatePath('/supervisor/machines')
+    revalidatePath('/supervisor/dashboard')
     return { success: true }
 }
 
