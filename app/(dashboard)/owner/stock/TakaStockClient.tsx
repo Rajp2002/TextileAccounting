@@ -20,6 +20,7 @@ import {
     Store,
     TrendingUp,
     Warehouse,
+    Send,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -56,6 +57,7 @@ import {
     type TakaStockLotSummary,
     type TakaStockMovementRow,
 } from './actions'
+import { SellAndDispatchDialog } from '@/components/dispatches/SellAndDispatchDialog'
 
 type SourceType = 'opening' | 'market_run' | 'order' | 'manual' | 'adjustment'
 type AdjustmentMode = 'add' | 'subtract'
@@ -815,6 +817,8 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
     const [saleLot, setSaleLot] = useState<TakaStockLotSummary | null>(null)
     const [adjustLot, setAdjustLot] = useState<TakaStockLotSummary | null>(null)
     const [expandedLots, setExpandedLots] = useState<Record<string, boolean>>({})
+    const [sellAndDispatchOpen, setSellAndDispatchOpen] = useState(false)
+    const [sellAndDispatchLotId, setSellAndDispatchLotId] = useState<string | undefined>()
 
     const godowns = useMemo(() => {
         return Array.from(new Set(initialData.lots.map((lot) => lot.godown))).sort()
@@ -848,10 +852,16 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                     <h1 className="text-3xl font-black tracking-tight text-foreground">Godown Stock</h1>
                     <p className="mt-1 text-sm text-muted-foreground">Physical takas, inward review, godown balance, and stock-sale entry.</p>
                 </div>
-                <Button onClick={() => setAddOpen(true)} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Stock
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button onClick={() => { setSellAndDispatchLotId(undefined); setSellAndDispatchOpen(true); }} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+                        <Send className="h-4 w-4" />
+                        Sell & Dispatch
+                    </Button>
+                    <Button onClick={() => setAddOpen(true)} className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add Stock
+                    </Button>
+                </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -1017,6 +1027,15 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
 
                                     <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/60 pt-4">
                                         <Button
+                                            onClick={() => { setSellAndDispatchLotId(lot.stock_lot_id); setSellAndDispatchOpen(true); }}
+                                            disabled={lot.available_taka_count <= 0}
+                                            className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                        >
+                                            <Send className="h-4 w-4" />
+                                            Sell & Dispatch
+                                        </Button>
+                                        <Button
+                                            variant="outline"
                                             onClick={() => setSaleLot(lot)}
                                             disabled={lot.available_taka_count <= 0}
                                             className="gap-2"
@@ -1198,6 +1217,17 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                 onOpenChange={(open) => !open && setAdjustLot(null)}
                 onSaved={refresh}
             />
+            {sellAndDispatchOpen && (
+                <SellAndDispatchDialog
+                    open={sellAndDispatchOpen}
+                    onOpenChange={setSellAndDispatchOpen}
+                    defaultStockLotId={sellAndDispatchLotId}
+                    onSuccess={(dispatchId) => {
+                        setSellAndDispatchOpen(false)
+                        router.push(`/owner/dispatches?dispatchId=${dispatchId}&created=1`)
+                    }}
+                />
+            )}
         </div>
     )
 }

@@ -77,6 +77,12 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
             {/* Footer */}
             <div className="flex items-center justify-end gap-2 border-t border-white/[0.06] px-4 py-3">
                 <Link
+                    href="/owner/stock"
+                    className="flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 px-3 py-1.5 text-xs font-semibold transition hover:bg-indigo-500/20"
+                >
+                    Sell & Dispatch
+                </Link>
+                <Link
                     href="/owner/dispatches"
                     className={cn(
                         'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition',
