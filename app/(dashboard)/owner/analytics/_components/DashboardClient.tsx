@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { KpiStrip } from './KpiStrip'
 import { OrderHealthSummary } from './OrderHealthSummary'
@@ -15,12 +16,58 @@ import { Input } from '@/components/ui/input'
 import { useTranslation } from '@/lib/i18n/context'
 import { CalendarDays, ClipboardList, DollarSign, Store, Wifi, WifiOff } from 'lucide-react'
 
+const quickActions = [
+  {
+    href: '/owner/orders',
+    label: 'Client Orders',
+    description: 'Check pace and assign production',
+    icon: ClipboardList,
+  },
+  {
+    href: '/owner/market-runs',
+    label: 'Market Runs',
+    description: 'Track speculative loom output',
+    icon: Store,
+  },
+  {
+    href: '/owner/payroll',
+    label: 'Payroll',
+    description: 'Review wage liability from logs',
+    icon: DollarSign,
+  },
+]
+
+function QuickActions({ className = '' }: { className?: string }) {
+  return (
+    <section className={className} aria-label="Quick actions">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">Quick actions</h2>
+      </div>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 xl:grid-cols-1">
+        {quickActions.map(({ href, label, description, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className="group rounded-xl border border-border bg-card/95 p-3 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5"
+          >
+            <div className="flex items-center gap-2">
+              <Icon className="h-4 w-4 shrink-0 text-primary" />
+              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">{label}</span>
+            </div>
+            <p className="mt-2 text-sm font-semibold leading-snug text-foreground">{description}</p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 export function DashboardClient({ initialData, orgId }: { initialData: DashboardData, orgId: string }) {
   const [data, setData] = useState(initialData)
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'reconnecting' | 'error' | 'offline' | 'historical'>('connecting')
   const [selectedDate, setSelectedDate] = useState<string>(getSuratTodayString())
   const supabase = createClient()
-  const channelRef = useRef<any>(null)
+  const channelRef = useRef<RealtimeChannel | null>(null)
   const debounceTimer = useRef<NodeJS.Timeout | null>(null)
   const { t } = useTranslation()
 
@@ -183,43 +230,25 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
       {/* KPI Strip */}
       <KpiStrip yesterday={data.yesterday} today={data.today} isConnected={connectionStatus === 'connected'} selectedDate={selectedDate} />
 
-      {isToday && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Link href="/owner/orders" className="group rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5">
-            <div className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4 text-primary" />
-              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">Client Orders</span>
-            </div>
-            <p className="mt-2 text-sm font-semibold text-foreground">Check pace and assign production</p>
-          </Link>
-          <Link href="/owner/market-runs" className="group rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5">
-            <div className="flex items-center gap-2">
-              <Store className="h-4 w-4 text-primary" />
-              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">Market Runs</span>
-            </div>
-            <p className="mt-2 text-sm font-semibold text-foreground">Track speculative loom output</p>
-          </Link>
-          <Link href="/owner/payroll" className="group rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary/40 hover:bg-primary/5">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-primary" />
-              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">Payroll</span>
-            </div>
-            <p className="mt-2 text-sm font-semibold text-foreground">Review wage liability from logs</p>
-          </Link>
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-start">
+        <div className="flex min-w-0 flex-col gap-5">
+          {isToday && <QuickActions className="xl:hidden" />}
+
+          {/* Analytics widgets — 2-col on md+ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <OrderHealthSummary orders={data.orders} />
+            <MachineUtilization machines={data.machines} />
+          </div>
+
+          {/* 7-day trend — full width */}
+          <ProductionTrend data={data.trend} />
+
+          {/* Worker breakdown */}
+          <WorkerBreakdown entries={data.workerBreakdown} />
         </div>
-      )}
 
-      {/* Analytics widgets — 2-col on md+ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <OrderHealthSummary orders={data.orders} />
-        <MachineUtilization machines={data.machines} />
+        {isToday && <QuickActions className="sticky top-6 hidden xl:block" />}
       </div>
-
-      {/* 7-day trend — full width */}
-      <ProductionTrend data={data.trend} />
-
-      {/* Worker breakdown */}
-      <WorkerBreakdown entries={data.workerBreakdown} />
     </div>
   )
 }

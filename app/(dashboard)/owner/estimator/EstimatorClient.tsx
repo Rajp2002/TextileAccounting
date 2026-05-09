@@ -360,12 +360,12 @@ function SectionHeader({ title, icon: Icon, accent = 'indigo', badgeContent }: {
     }
     const colorClass = variants[accent]
     return (
-        <div className={`px-4 py-3 flex items-center justify-between border-b ${colorClass.split(' ')[2]} ${colorClass.split(' ')[0]}`}>
+        <div className={`px-5 py-4 sm:px-6 flex items-center justify-between border-b ${colorClass.split(' ')[2]} ${colorClass.split(' ')[0]}`}>
             <div className="flex items-center gap-2.5">
                 <div className={`p-1.5 rounded-lg bg-white/80 shadow-sm`}>
                     <Icon className={`h-4 w-4 ${colorClass.split(' ')[1]}`} />
                 </div>
-                <span className="text-sm font-bold tracking-tight">{title}</span>
+                <span className="text-sm sm:text-base font-bold tracking-tight">{title}</span>
             </div>
             {badgeContent}
         </div>
@@ -452,7 +452,7 @@ function RowCard({
     }
     const c = colors[accent]
     return (
-        <div className={`rounded-xl border ${c.border} ${c.bg} p-3.5 space-y-3.5 relative overflow-hidden group`}>
+        <div className={`rounded-xl border ${c.border} ${c.bg} p-4 sm:p-5 space-y-4 relative overflow-hidden group`}>
             {/* Component label */}
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -474,7 +474,7 @@ function RowCard({
                     )}
                 </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 relative z-10">
+            <div className="grid [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))] gap-4 relative z-10">
                 {children}
             </div>
             {/* Subtle row indicator */}
@@ -1007,7 +1007,7 @@ export default function EstimatorClient({
 
             {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
             {hasDraft && draft && (
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-6xl mx-auto">
                     <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                         <RotateCcw className="h-4 w-4 text-amber-600 shrink-0" />
                         <p className="text-sm text-amber-800 flex-1">
@@ -1038,7 +1038,7 @@ export default function EstimatorClient({
 
             {/* ── STICKY HUD ───────────────────────────────────────── */}
             <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-border/50 shadow-sm -mt-6 pt-4 sm:pt-6 pb-3 sm:pb-4 px-4 mx-[-24px] sm:mx-[-32px] md:mx-[-40px]">
-                <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4">
+                <div className="max-w-6xl mx-auto space-y-3 sm:space-y-4">
 
                     <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4">
                         {/* Production Cost */}
@@ -1200,7 +1200,7 @@ export default function EstimatorClient({
             </div>
 
             {/* ── MAIN FORM ────────────────────────────────────────────── */}
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className="max-w-6xl mx-auto space-y-7">
                 {estimateWarnings.length > 0 && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3">
                         <div className="flex items-start gap-3">
@@ -1321,7 +1321,7 @@ export default function EstimatorClient({
                 {/* 1. Order Basics */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
                     <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="indigo" />
-                    <CardContent className="p-5 space-y-4">
+                    <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">
@@ -1385,7 +1385,7 @@ export default function EstimatorClient({
                         accent="indigo"
                         badgeContent={<div className="text-[11px] font-mono font-bold text-indigo-700 bg-white/60 px-2 py-0.5 rounded-md border border-indigo-100">₹{totals.warpCostPerM.toFixed(2)}/m</div>}
                     />
-                    <CardContent className="p-5 space-y-4">
+                    <CardContent className="p-5 sm:p-6 space-y-5">
                         {/* Global Defaults Block */}
                         <div className="border border-indigo-100 rounded-xl mb-6 bg-indigo-50/30 overflow-hidden">
                             <div className="flex gap-4 p-3 border-b border-indigo-100/50">
@@ -1547,7 +1547,7 @@ export default function EstimatorClient({
                         accent="emerald"
                         badgeContent={<div className="text-[11px] font-mono font-bold text-emerald-700 bg-white/60 px-2 py-0.5 rounded-md border border-emerald-100">₹{totals.weftCostPerM.toFixed(2)}/m</div>}
                     />
-                    <CardContent className="p-5 space-y-4">
+                    <CardContent className="p-5 sm:p-6 space-y-5">
                         {/* Global Defaults Sync Readout */}
                         <div className="border border-emerald-100 rounded-xl mb-6 bg-emerald-50/30 overflow-hidden">
                             <div className="bg-emerald-50/80 px-4 py-2 flex items-center justify-between">
@@ -1615,7 +1615,7 @@ export default function EstimatorClient({
                 {/* 4. Weave Cost */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
                     <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="amber" />
-                    <CardContent className="p-5 space-y-5">
+                    <CardContent className="p-5 sm:p-6 space-y-6">
 
                         {/* ── Loom Type Selector ── renders above Loom Wage ── */}
                         {(() => {
@@ -1720,8 +1720,8 @@ export default function EstimatorClient({
                 {/* 5. Warping & Sizing */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
                     <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="violet" />
-                    <CardContent className="p-4 space-y-4">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <CardContent className="p-5 sm:p-6 space-y-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <NumField label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} />
                         </div>
 
@@ -1812,7 +1812,7 @@ export default function EstimatorClient({
                             </div>
                         }
                     />
-                    <CardContent className="p-5 space-y-6">
+                    <CardContent className="p-5 sm:p-6 space-y-6">
                         
                         {/* A. Factory Capacity Section */}
                         <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-4">
@@ -2192,7 +2192,7 @@ export default function EstimatorClient({
                 {/* 6. Optional Sections */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
                     <SectionHeader title={t('estimator.post_processing.title')} icon={Palette} accent="orange" />
-                    <CardContent className="p-5 space-y-5">
+                    <CardContent className="p-5 sm:p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {state.enabledSections.winding ? (
                                 <NumField label={t('estimator.field_labels.winding_per_kg')} value={state.windingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'windingRatePerKg', value: v ?? 0 })} unit="₹/kg" />
@@ -2218,7 +2218,7 @@ export default function EstimatorClient({
                 {/* 7. Simulation / Order */}
                 <Card className="border-border/60 shadow-sm overflow-hidden bg-slate-50/20">
                     <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="emerald" />
-                    <CardContent className="p-5 space-y-4">
+                    <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <NumField 
                                 label={mode === 'market' ? t('estimator.field_labels.market_target') : t('estimator.field_labels.simulation_qty')} 
@@ -2242,7 +2242,7 @@ export default function EstimatorClient({
 
             {/* ── SCENARIO ANALYSIS (STRESS TESTS) ───────────────────────── */}
             {showAdvancedCosting && hasOrderQty && totals.orderQuote && (
-                <div className="max-w-4xl mx-auto space-y-2">
+                <div className="max-w-6xl mx-auto space-y-2">
                     <button
                         onClick={() => setShowScenarios(!showScenarios)}
                         className="flex items-center gap-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:border-indigo-200 transition-colors"
@@ -2255,7 +2255,7 @@ export default function EstimatorClient({
                     
                     {showScenarios && (
                         <Card className="border-indigo-100 shadow-sm overflow-hidden bg-indigo-50/20">
-                            <CardContent className="p-4 space-y-4">
+                            <CardContent className="p-5 sm:p-6 space-y-5">
                                 <div className="space-y-3">
                                     {scenarios.map(scen => (
                                         <div key={scen.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white border border-slate-100 rounded-lg shadow-sm gap-2">
