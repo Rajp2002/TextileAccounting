@@ -13,10 +13,11 @@ const LANGUAGES: { code: Language; label: string; short: string }[] = [
 
 interface LanguageSwitcherProps {
   className?: string
+  placement?: "top" | "bottom"
 }
 
-export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
-  const { language, setLanguage } = useTranslation()
+export function LanguageSwitcher({ className, placement = "top" }: LanguageSwitcherProps) {
+  const { language, setLanguage, tx } = useTranslation()
   const [open, setOpen] = useState(false)
 
   const current = LANGUAGES.find(l => l.code === language) ?? LANGUAGES[0]
@@ -30,7 +31,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
           "flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5",
           className
         )}
-        aria-label="Switch language"
+        aria-label={tx("Switch language")}
       >
         <Globe className="h-4 w-4 shrink-0" />
         <span className="font-medium">{current.label}</span>
@@ -43,7 +44,10 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
         <>
           {/* Backdrop to close on outside click */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute bottom-full mb-2 left-0 z-50 min-w-[130px] bg-background border border-border rounded-xl shadow-lg py-1 overflow-hidden">
+          <div className={cn(
+            "absolute left-0 z-50 min-w-[130px] overflow-hidden rounded-xl border border-border bg-background py-1 shadow-lg",
+            placement === "top" ? "bottom-full mb-2" : "top-full mt-2"
+          )}>
             {LANGUAGES.map(lang => (
               <button
                 key={lang.code}

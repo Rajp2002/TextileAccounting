@@ -5,6 +5,7 @@ import { ReactNode } from 'react'
 import Image from 'next/image'
 import { getSuratDate } from '@/lib/time'
 import { BrandBackground } from '@/components/brand-background'
+import { LanguageSwitcher } from '@/components/i18n/language-switcher'
 
 interface AuthLayoutProps {
     children: ReactNode
@@ -16,6 +17,9 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
     return (
         <div className="relative isolate flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-background p-4">
             <BrandBackground variant="auth" />
+            <div className="absolute right-4 top-4 z-20">
+                <LanguageSwitcher placement="bottom" className="bg-surface/80 text-ink shadow-sm backdrop-blur hover:bg-surface" />
+            </div>
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.98, y: 10 }}

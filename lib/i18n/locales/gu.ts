@@ -8,6 +8,7 @@ export const gu = {
     "dashboard": "ડેશબોર્ડ",
     "production_log": "પ્રોડક્શન લોગ",
     "orders": "ઑર્ડર",
+    "ledger": "લેજર",
     "inventory": "ઇન્વેન્ટરી",
     "stock": "ગોડાઉન સ્ટોક",
     "dispatches": "ડિસ્પેચ",
@@ -60,9 +61,12 @@ export const gu = {
     fill_all: "મહેરબાની કરીને બધી વિગતો ભરો",
     optional: "વૈકલ્પિક",
     saving: "સેવ થઈ રહ્યું છે...",
+    code_sent: "વેરિફિકેશન કોડ માલિકને મોકલાયો",
+    invalid_code: "ખોટો અથવા એક્સપાયર થયેલ એક્સેસ કોડ",
     updated: "સફળતાપૂર્વક અપડેટ થયું",
     added: "સફળતાપૂર્વક ઉમેરવામાં આવ્યું",
     removed: "સફળતાપૂર્વક હટાવવામાં આવ્યું",
+    remove: "હટાવો",
   },
   production: {
     log_production: "પ્રોડક્શન નોંધો (Log Prod)",
@@ -105,6 +109,10 @@ export const gu = {
     handover_complete: "પાળી હેન્ડોવર સફળ. કારીગર હટાવાયો.",
     handover_failed: "હેન્ડોવર નિષ્ફળ",
     enter_code: "6-અંકોનો કોડ દાખલ કરો",
+    add_beam: "નવી Beam ઉમેરો",
+    mark_consumed: "Mark Consumed",
+    unconsume: "Beam un-consume કરો",
+    unconsume_success: "Beam ફરી active થઈ ગઈ.",
     meters: "mtrs",
   },
   floor: {
@@ -169,6 +177,8 @@ export const gu = {
     inactive: "બંધ",
     status_updated: "મશીનનું સ્ટેટસ અપડેટ થયું",
     status_update_failed: "મશીનનું સ્ટેટસ અપડેટ કરવામાં નિષ્ફળતા",
+    order_assigned: "ઑર્ડર loom ને સોંપાયો",
+    order_assign_failed: "ઑર્ડર સોંપવામાં નિષ્ફળતા",
   },
   auth: {
     owner_auth_req: "માલિકની મંજૂરી જરૂરી છે",
@@ -573,7 +583,13 @@ export const gu = {
       close: "રિપોર્ટ બંધ કરો",
       mark_consumed: "માલ પૂરો થયો (બેચ ક્લોઝ કરો/Mark Consumed)",
       closing: "ક્લોઝ થાય છે...",
-      success: "બેચ સફળતાપૂર્વક ક્લોઝ અને ઓડિટ કરવામાં આવ્યો."
+      success: "બેચ સફળતાપૂર્વક ક્લોઝ અને ઓડિટ કરવામાં આવ્યો.",
+      settle: "Audit settle કરો",
+      dismiss: "Alert dismiss કરો",
+      settled_success: "Audit settled mark થયું.",
+      dismissed_success: "Alert dismiss થયું.",
+      unconsume: "Un-consume (ફરી active કરો)",
+      unconsume_desc: "Consumed Beam ને ફરી active કરવા માલિકનો access code જોઈએ."
     }
   },
   suppliers: {
@@ -794,6 +810,7 @@ export const gu = {
     edit_worker: "એડિટ કરો",
     add_title: "કારીગર ઉમેરો",
     name: "નામ",
+    name_ph: "કારીગરનું નામ",
     role: "ભૂમિકા (Role)",
     select_role: "ભૂમિકા પસંદ કરો",
     monthly_salary: "માસિક પગાર (₹)",
@@ -1039,7 +1056,9 @@ export const gu = {
   },
   dashboard: {
     date: "તારીખ",
-    reconnecting: "લાઇવ ડેટા સાથે ફરીથી જોડાવાનો પ્રયાસ થઈ રહ્યો છે..."
+    reconnecting: "લાઇવ ડેટા સાથે ફરીથી જોડાવાનો પ્રયાસ થઈ રહ્યો છે...",
+    connecting: "લાઇવ data સાથે જોડાઈ રહ્યું છે...",
+    sync_error: "Live updates અટક્યા છે (WiFi connected?)"
   },
   orders_page: {
     title: "ઑર્ડર",
