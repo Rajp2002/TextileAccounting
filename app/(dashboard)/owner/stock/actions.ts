@@ -458,26 +458,63 @@ export async function createTakaStockLot(input: unknown) {
 
     const supabase = await createServerClient()
     const sourceType = parsed.data.source_type
-    const marketRunId = sourceType === 'market_run' ? parsed.data.market_run_id || null : null
-    const quoteId = sourceType === 'order' ? parsed.data.quote_id || null : null
-    let orderId = sourceType === 'order' ? parsed.data.order_id || null : null
+    const marketRunId = parsed.data.market_run_id || null
+    const quoteId = parsed.data.quote_id || null
+    let orderId = parsed.data.order_id || null
 
-    if (sourceType === 'market_run' && !marketRunId) {
-        return { error: 'Select the market run this stock came from' }
+    // Reject source IDs that do not match the declared stock source type
+    if (sourceType !== 'market_run' && marketRunId) {
+        return { error: 'Market run ID provided for non-market-run source type' }
+    }
+    if (sourceType !== 'order' && (quoteId || orderId)) {
+        return { error: 'Order or Quote ID provided for non-order source type' }
     }
 
-    if (sourceType === 'order' && !quoteId && !orderId) {
-        return { error: 'Select the order or quote this stock came from' }
-    }
-
-    if (quoteId && !orderId) {
-        const { data: quote } = await supabase
-            .from('estimator_quotes')
-            .select('order_id')
-            .eq('id', quoteId)
+    if (sourceType === 'market_run') {
+        if (!marketRunId) return { error: 'Select the market run this stock came from' }
+        
+        const { data: marketRun } = await supabase
+            .from('market_run_summary')
+            .select('market_run_id')
+            .eq('market_run_id', marketRunId)
             .eq('org_id', profile.org_id)
             .maybeSingle()
-        orderId = quote?.order_id ?? null
+            
+        if (!marketRun) return { error: 'Invalid market run reference' }
+    }
+
+    if (sourceType === 'order') {
+        if (!quoteId && !orderId) return { error: 'Select the order or quote this stock came from' }
+        
+        if (quoteId) {
+            const { data: quote } = await supabase
+                .from('estimator_quotes')
+                .select('order_id')
+                .eq('id', quoteId)
+                .eq('org_id', profile.org_id)
+                .maybeSingle()
+                
+            if (!quote) return { error: 'Invalid quote reference' }
+            
+            if (orderId && quote.order_id !== orderId) {
+                return { error: 'Mismatched quote and order' }
+            }
+            
+            if (!orderId) {
+                orderId = quote.order_id
+            }
+        }
+        
+        if (orderId) {
+            const { data: order } = await supabase
+                .from('orders')
+                .select('id')
+                .eq('id', orderId)
+                .eq('org_id', profile.org_id)
+                .maybeSingle()
+                
+            if (!order) return { error: 'Invalid order reference' }
+        }
     }
 
     const { data: lot, error } = await supabase
