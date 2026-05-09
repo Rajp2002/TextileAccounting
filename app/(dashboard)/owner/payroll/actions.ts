@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { calculateTotalPay, calculateDailyPay } from '@/lib/finance'
 import { ToggleWorkerPaidSchema, PayrollConfigSchema, safeParse } from '@/lib/schemas'
 import { getPayrollCycleBounds } from '@/lib/payroll-cycle'
+import { validateAndConsumeAccessCode } from '@/lib/access-codes'
 
 export async function toggleWorkerPaid(
     workerType: 'meter' | 'fixed',
@@ -15,10 +16,21 @@ export async function toggleWorkerPaid(
     isFinalSettlement: boolean = false,
     manualDeductionOverride: number | null = null,
     cycleStartDate: string | null = null,
-    paymentMode: 'cash' | 'bank_transfer' | 'upi' | 'cheque' | null = null
+    paymentMode: 'cash' | 'bank_transfer' | 'upi' | 'cheque' | null = null,
+    accessCode?: string
 ) {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    if (currentPaid) {
+        if (!accessCode) {
+            return { error: 'Access code is required for reversal.' }
+        }
+        const isValid = await validateAndConsumeAccessCode(user.id, profile.org_id, accessCode)
+        if (!isValid) {
+            return { error: 'Invalid or expired access code.' }
+        }
+    }
 
     const newPaid = !currentPaid
 

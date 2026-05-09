@@ -1365,14 +1365,15 @@ export default function PayrollPage() {
 
     // ── Toggle paid with Optimistic UI ──────────────────────────────────────
     const mutation = useMutation({
-        mutationFn: async ({ workerType, workerId, currentPaid, targetMonth, isFinal, manualDeductionOverride, paymentMode }: {
+        mutationFn: async ({ workerType, workerId, currentPaid, targetMonth, isFinal, manualDeductionOverride, paymentMode, accessCode }: {
             workerType: 'meter' | 'fixed',
             workerId: number,
             currentPaid: boolean,
             targetMonth: string,
             isFinal: boolean,
-            manualDeductionOverride?: number | null
-            paymentMode?: PaymentMode | null
+            manualDeductionOverride?: number | null,
+            paymentMode?: PaymentMode | null,
+            accessCode?: string
         }) => {
             return await toggleWorkerPaid(
                 workerType,
@@ -1382,7 +1383,8 @@ export default function PayrollPage() {
                 isFinal,
                 manualDeductionOverride,
                 null,
-                paymentMode ?? null
+                paymentMode ?? null,
+                accessCode
             )
         },
         onMutate: async (variables) => {
@@ -1495,18 +1497,8 @@ export default function PayrollPage() {
     const confirmRevert = async () => {
         if (!pendingAction) return
         
-        // Check access code (in a real app, we'd verify hash, but for now we check against org config if loaded, 
-        // or just proceed if the UI allows it. The RPC will also benefit from server-side checks if implemented).
-        // For now, let's assume '1234' for stress testing or better, fetch from org.
-        
-        const { data: org } = await supabase
-            .from('organizations')
-            .select('last_code_plain')
-            .eq('id', userProfile?.org_id)
-            .single()
-            
-        if (org?.last_code_plain && accessCode !== org.last_code_plain) {
-        toast.error(t('payroll_ext.invalid_code'))
+        if (!accessCode) {
+            toast.error(t('payroll_ext.code_required') || 'Access code is required')
             return
         }
 
@@ -1515,7 +1507,8 @@ export default function PayrollPage() {
             workerId: pendingAction.workerId, 
             currentPaid: pendingAction.currentPaid, 
             targetMonth: selectedMonth, 
-            isFinal: false 
+            isFinal: false,
+            accessCode: accessCode
         })
         
         setShowAccessCodeDialog(false)
