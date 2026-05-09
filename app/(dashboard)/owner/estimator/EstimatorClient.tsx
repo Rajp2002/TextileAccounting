@@ -496,7 +496,7 @@ export default function EstimatorClient({
     initialTemplates?: any[]
     initialWorkers?: { id: number; name: string; role: string; monthly_salary: number }[]
 }) {
-    const { t } = useTranslation()
+    const { t, tx } = useTranslation()
     const searchParams = useSearchParams()
     const router = useRouter()
     
@@ -790,7 +790,7 @@ export default function EstimatorClient({
     }
 
     const handleResetEstimator = () => {
-        if (window.confirm('Reset estimator to standard profile defaults? All unsaved changes will be lost.')) {
+        if (window.confirm(tx('Reset estimator to standard profile defaults? All unsaved changes will be lost.'))) {
             dispatch({ 
                 type: 'RESET', 
                 data: { 
@@ -804,7 +804,7 @@ export default function EstimatorClient({
             setPartyName('')
             setCustomTargetPrice('')
             clearDraft()
-            toast.success('Estimator reset to profile defaults')
+            toast.success(tx('Estimator reset to profile defaults'))
         }
     }
 

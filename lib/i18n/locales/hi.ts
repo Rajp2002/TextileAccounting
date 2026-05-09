@@ -8,6 +8,7 @@ export const hi = {
     "dashboard": "डैशबोर्ड",
     "production_log": "प्रोडक्शन लॉग",
     "orders": "ऑर्डर",
+    "ledger": "लेजर",
     "inventory": "इन्वेंटरी",
     "stock": "गोदाम स्टॉक",
     "dispatches": "डिस्पैच",
@@ -65,6 +66,7 @@ export const hi = {
     updated: "सफलतापूर्वक अपडेट किया गया",
     added: "सफलतापूर्वक जोड़ा गया",
     removed: "सफलतापूर्वक हटाया गया",
+    remove: "हटाएं",
   },
   production: {
     log_production: "प्रोडक्शन दर्ज करें (Log Prod)",
@@ -107,6 +109,10 @@ export const hi = {
     handover_complete: "पाली हैंडोवर सफल। कारीगर हटाया गया।",
     handover_failed: "हैंडोवर विफल",
     enter_code: "6-अंकों का कोड दर्ज़ करें",
+    add_beam: "नई Beam जोड़ें",
+    mark_consumed: "Mark Consumed",
+    unconsume: "Beam un-consume करें",
+    unconsume_success: "Beam फिर active कर दी गई।",
     meters: "mtrs",
   },
   floor: {
@@ -171,6 +177,8 @@ export const hi = {
     inactive: "निष्क्रिय",
     status_updated: "मशीन की स्थिति अपडेट हो गई",
     status_update_failed: "मशीन की स्थिति अपडेट करने में विफल",
+    order_assigned: "ऑर्डर loom को सौंपा गया",
+    order_assign_failed: "ऑर्डर सौंपने में विफल",
   },
   auth: {
     owner_auth_req: "मालिक की अनुमति आवश्यक",
@@ -575,7 +583,13 @@ export const hi = {
       close: "रिपोर्ट बंद करें",
       mark_consumed: "माल पूरा हुआ (बैच क्लोज करें/Mark Consumed)",
       closing: "क्लोज किया जा रहा है...",
-      success: "बैच सफलतापूर्वक क्लोज और ऑडिट कर दिया गया।"
+      success: "बैच सफलतापूर्वक क्लोज और ऑडिट कर दिया गया।",
+      settle: "Audit settle करें",
+      dismiss: "Alert dismiss करें",
+      settled_success: "Audit settled mark हो गया।",
+      dismissed_success: "Alert dismiss हो गया।",
+      unconsume: "Un-consume (फिर active करें)",
+      unconsume_desc: "Consumed Beam को फिर active करने के लिए मालिक का access code चाहिए।"
     }
   },
   suppliers: {
@@ -796,6 +810,7 @@ export const hi = {
     edit_worker: "एडिट करें",
     add_title: "फिक्स्ड वर्कर जोड़ें",
     name: "नाम",
+    name_ph: "कारीगर का नाम",
     role: "पद (Role)",
     select_role: "पद चुनें",
     monthly_salary: "मासिक वेतन (₹)",
@@ -1041,7 +1056,9 @@ export const hi = {
   },
   dashboard: {
     date: "तारीख",
-    reconnecting: "लाइव डेटा के साथ फिर से जुड़ने की कोशिश हो रही है..."
+    reconnecting: "लाइव डेटा के साथ फिर से जुड़ने की कोशिश हो रही है...",
+    connecting: "लाइव डेटा से जुड़ रहा है...",
+    sync_error: "लाइव updates रुके हैं (WiFi connected?)"
   },
   orders_page: {
     title: "ऑर्डर",

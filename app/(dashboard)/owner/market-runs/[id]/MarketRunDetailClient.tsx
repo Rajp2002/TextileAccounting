@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { updateMarketRunStatus } from '../../estimator/actions'
+import { useTranslation } from '@/lib/i18n/context'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -72,6 +73,7 @@ export default function MarketRunDetailClient({
     run: MarketRunSummary
     initialSales: MarketRunSale[]
 }) {
+    const { tx } = useTranslation()
     const [submitting, setSubmitting] = useState(false)
 
     const status = STATUS_CONFIG[run.status] ?? STATUS_CONFIG.production
@@ -82,14 +84,14 @@ export default function MarketRunDetailClient({
     const availableGodown = Math.max(0, run.meters_in_godown)
 
     const handleCloseRun = async () => {
-        if (!confirm('Are you sure you want to mark this run as closed? It will be archived.')) return
+        if (!confirm(tx('Are you sure you want to mark this run as closed? It will be archived.'))) return
         
         setSubmitting(true)
         const res = await updateMarketRunStatus(run.market_run_id, 'closed')
         setSubmitting(false)
 
         if (res.error) toast.error(res.error)
-        else toast.success('Market run closed')
+        else toast.success(tx('Market run closed'))
     }
 
     return (
