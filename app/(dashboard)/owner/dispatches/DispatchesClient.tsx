@@ -34,6 +34,7 @@ import {
 } from '@/app/(dashboard)/owner/orders/actions'
 import { confirmDispatchReceiptByOwner } from '@/app/(dashboard)/owner/orders/actions'
 import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
+import { SellAndDispatchDialog } from '@/components/dispatches/SellAndDispatchDialog'
 import {
     Dialog,
     DialogContent,
@@ -626,6 +627,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<'all' | 'in_transit' | 'delivered' | 'disputed'>('all')
     const [pendingReceiptOnly, setPendingReceiptOnly] = useState(false)
+    const [sellAndDispatchOpen, setSellAndDispatchOpen] = useState(false)
 
     // Global Modal Flow State
     const [globalModalStep, setGlobalModalStep] = useState<'idle' | 'select_order' | 'loading_summary' | 'create_dispatch'>('idle')
@@ -750,13 +752,23 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
                     <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Dispatches</h1>
                     <p className="text-muted-foreground font-medium">Monitor fabric shipments grouped by order — track progress and verify trader confirmations.</p>
                 </div>
-                <Button 
-                    onClick={() => setGlobalModalStep('select_order')}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 shrink-0 h-11 px-6 rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
-                >
-                    <Plus className="h-5 w-5" />
-                    New Dispatch
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button 
+                        onClick={() => setSellAndDispatchOpen(true)}
+                        className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 shrink-0 h-11 px-6 rounded-xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
+                    >
+                        <Plus className="h-5 w-5" />
+                        New Sell & Dispatch
+                    </Button>
+                    <Button 
+                        variant="outline"
+                        onClick={() => setGlobalModalStep('select_order')}
+                        className="font-bold gap-2 shrink-0 h-11 px-6 rounded-xl shadow-sm transition-all active:scale-95"
+                    >
+                        <Plus className="h-5 w-5" />
+                        New Dispatch
+                    </Button>
+                </div>
             </div>
 
             {/* Stats Cards */}
@@ -909,6 +921,15 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
                     }))
                 }}
             />
+            {sellAndDispatchOpen && (
+                <SellAndDispatchDialog
+                    open={sellAndDispatchOpen}
+                    onOpenChange={setSellAndDispatchOpen}
+                    onSuccess={(dispatchId) => {
+                        setSellAndDispatchOpen(false)
+                    }}
+                />
+            )}
         </div>
     )
 }
