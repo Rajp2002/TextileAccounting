@@ -19,8 +19,8 @@ function functionBody(source: string, name: string) {
 describe('P0 quote-to-order atomicity guard', () => {
     const migration = readProjectFile('supabase/migrations/20260509140000_p0_atomic_quote_and_production.sql')
     const action = functionBody(
-        readProjectFile('app/(dashboard)/owner/estimator/actions.ts'),
-        'convertAcceptedQuoteToOrder'
+        readProjectFile('lib/quotes/convert-accepted-quote-to-order.ts'),
+        'executeQuoteConversion'
     )
 
     it('uses a row-locked RPC plus unique quote/order guards for concurrent conversion', () => {
