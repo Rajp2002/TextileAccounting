@@ -1128,7 +1128,7 @@ export async function bulkLogProduction(entries: {
 
     const { data: existingLogs } = await supabase
         .from('production_logs')
-        .select('id, machine_id, date, shift, meters, opening_meter_reading, closing_meter_reading, counter_was_reset, submitted_at')
+        .select('id, machine_id, worker_id, date, shift, meters, opening_meter_reading, closing_meter_reading, counter_was_reset, submitted_at')
         .eq('org_id', orgId)
         .eq('date', logDate)
         .eq('shift', logShift)
@@ -1163,6 +1163,48 @@ export async function bulkLogProduction(entries: {
 
             if (!isCodeValid) return { error: 'Invalid or expired access code' }
             accessCodeUsedForOverwrite = true
+        }
+    }
+
+    // ── Guard: check if payroll is already settled for this period ──
+    const { data: payrollConfig } = await supabase
+        .from('payroll_configs')
+        .select('cycle_start_day')
+        .eq('org_id', orgId)
+        .maybeSingle()
+
+    const cycleStartDay = payrollConfig?.cycle_start_day || 1
+
+    const { data: bounds } = await supabase
+        .rpc('get_cycle_bounds', {
+            p_date: logDate,
+            p_cycle_start_day: cycleStartDay,
+        })
+        .single()
+
+    const cycleStart = (bounds as any)?.cycle_start
+
+    if (cycleStart) {
+        const workerIds = [...new Set([
+            ...logs.map((l) => l.worker_id),
+            ...(existingLogs?.map((l) => (l as any).worker_id).filter(Boolean) || [])
+        ])]
+
+        if (workerIds.length > 0) {
+            const { data: settlements } = await supabase
+                .from('payroll_settlements')
+                .select('id')
+                .eq('org_id', orgId)
+                .eq('cycle_start_date', cycleStart)
+                .in('meter_worker_id', workerIds)
+                .eq('status', 'paid')
+
+            if (settlements && settlements.length > 0) {
+                return {
+                    error: 'PAYROLL_ALREADY_SETTLED',
+                    message: 'Production logs cannot be modified because payroll for this period is already settled for one or more workers.',
+                }
+            }
         }
     }
 
