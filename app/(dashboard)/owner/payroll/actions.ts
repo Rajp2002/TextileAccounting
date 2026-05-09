@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { calculateTotalPay, calculateDailyPay } from '@/lib/finance'
 import { ToggleWorkerPaidSchema, PayrollConfigSchema, safeParse } from '@/lib/schemas'
+import { getPayrollCycleBounds } from '@/lib/payroll-cycle'
 
 export async function toggleWorkerPaid(
     workerType: 'meter' | 'fixed',
@@ -21,31 +22,27 @@ export async function toggleWorkerPaid(
 
     const newPaid = !currentPaid
 
-    // 1. Get Cycle Config for server-side derivation if cycleStartDate is missing
+    // 1. Get Cycle Config and derive bounds
+    const { data: config } = await supabase
+        .from('payroll_configs')
+        .select('cycle_start_day')
+        .eq('org_id', profile.org_id)
+        .maybeSingle()
+    
+    const cycleStartDay = config?.cycle_start_day || 1
+    const bounds = getPayrollCycleBounds(month, cycleStartDay)
+    const monthStart = bounds.cycle_start
+    const monthEnd = bounds.cycle_end
+    
     let cycleStart = cycleStartDate
     if (newPaid && !cycleStart) {
-        const { data: config } = await supabase
-            .from('payroll_configs')
-            .select('cycle_start_day')
-            .eq('org_id', profile.org_id)
-            .maybeSingle()
-        
-        const cycleStartDay = config?.cycle_start_day || 1
-        const { data: bounds } = await supabase.rpc('get_cycle_bounds', {
-            p_date: `${month}-01`,
-            p_cycle_start_day: cycleStartDay
-        }).single()
-        cycleStart = (bounds as any).cycle_start
+        cycleStart = monthStart
     }
 
     // ── Calculate gross amount server-side ───────────────────────────────
     let calculatedAmountStr = '0'
 
     if (workerType === 'meter') {
-        const [year, m] = month.split('-')
-        const lastDay = new Date(Number(year), Number(m), 0).getDate()
-        const monthStart = `${month}-01`
-        const monthEnd = `${month}-${lastDay}`
 
         const { data: logs } = await supabase
             .from('production_logs')
@@ -72,15 +69,13 @@ export async function toggleWorkerPaid(
         if (workerError || !worker) return { error: 'Worker not found' }
 
         if (worker.role === 'daily') {
-            const [year, m] = month.split('-')
-            const lastDay = new Date(Number(year), Number(m), 0).getDate()
             const { count } = await supabase
                 .from('attendance')
                 .select('*', { count: 'exact', head: true })
                 .eq('org_id', profile.org_id)
                 .eq('fixed_worker_id', workerId)
-                .gte('date', `${month}-01`)
-                .lte('date', `${month}-${lastDay}`)
+                .gte('date', monthStart)
+                .lte('date', monthEnd)
                 .eq('present', true)
 
             const daysWorked = count || 0
@@ -188,21 +183,15 @@ export async function createPayrollAdjustment(input: {
         return { error: 'Valid category and amount are required.' }
     }
 
-    const { data: bounds, error: boundsError } = await supabase.rpc('get_cycle_bounds', {
-        p_date: `${input.month}-01`,
-        p_cycle_start_day: input.cycleStartDay,
-    }).single()
-
-    if (boundsError || !bounds) {
-        return { error: 'Failed to determine payroll cycle.' }
-    }
+    const bounds = getPayrollCycleBounds(input.month, input.cycleStartDay)
+    const cycleStart = bounds.cycle_start
 
     const payload: Record<string, string | number> = {
         org_id: profile.org_id,
         worker_type: input.workerType,
         category_id: input.categoryId,
         amount: input.amount,
-        cycle_start_date: (bounds as { cycle_start: string }).cycle_start,
+        cycle_start_date: cycleStart,
     }
 
     payload[input.workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id'] = input.workerId

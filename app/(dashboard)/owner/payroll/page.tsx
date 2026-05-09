@@ -45,6 +45,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { setWorkerActiveStatus } from '@/app/(dashboard)/owner/actions'
+import { getPayrollCycleBounds } from '@/lib/payroll-cycle'
 
 type PaymentMode = 'cash' | 'bank_transfer' | 'upi' | 'cheque'
 
@@ -1153,11 +1154,9 @@ export default function PayrollPage() {
         queryKey: ['payroll_meter', userProfile?.org_id, selectedMonth],
         enabled: !!userProfile?.org_id && !!selectedMonth,
         queryFn: async () => {
-            const monthStart = `${selectedMonth}-01`
-            
-            const [year, month] = selectedMonth.split('-')
-            const lastDay = new Date(Number(year), Number(month), 0).getDate()
-            const monthEnd = `${selectedMonth}-${lastDay}`
+            const bounds = getPayrollCycleBounds(selectedMonth, cycleStartDay)
+            const monthStart = bounds.cycle_start
+            const monthEnd = bounds.cycle_end
 
             const [logsRes, workersRes, machinesRes, settlementsRes, advancesRes, ordersRes] = await Promise.all([
                 // Fetch order_id too — needed for order attribution per wage line
@@ -1284,9 +1283,9 @@ export default function PayrollPage() {
         queryKey: ['payroll_fixed', userProfile?.org_id, selectedMonth],
         enabled: !!userProfile?.org_id && !!selectedMonth,
         queryFn: async () => {
-            const [fYear, fMonth] = selectedMonth.split('-')
-            const fLastDay = new Date(Number(fYear), Number(fMonth), 0).getDate()
-            const monthEnd = `${selectedMonth}-${String(fLastDay).padStart(2, '0')}`
+            const bounds = getPayrollCycleBounds(selectedMonth, cycleStartDay)
+            const monthStart = bounds.cycle_start
+            const monthEnd = bounds.cycle_end
 
             const workersRes = await supabase
                 .from('fixed_workers')
@@ -1304,8 +1303,8 @@ export default function PayrollPage() {
                         .select('fixed_worker_id, present')
                         .eq('org_id', userProfile!.org_id)
                         .in('fixed_worker_id', dailyIds)
-                        .gte('date', `${selectedMonth}-01`)
-                        .lte('date', `${selectedMonth}-${new Date(Number(selectedMonth.split('-')[0]), Number(selectedMonth.split('-')[1]), 0).getDate()}`)
+                        .gte('date', monthStart)
+                        .lte('date', monthEnd)
                         .eq('present', true)
                     : Promise.resolve({ data: [] }),
                 supabase.from('payroll_settlements')
