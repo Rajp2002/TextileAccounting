@@ -149,8 +149,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         supabase
             .from('machines')
             .select('id, name, status, current_order_id, loom_type')
-            .eq('org_id', orgId)
-            .eq('is_active', true),
+            .eq('org_id', orgId),
 
         // 3. Active orders with progress summary for pace calculation
         supabase
@@ -256,7 +255,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         .map((m) => ({ id: m.id, name: m.name, loomType: m.loom_type ?? null }))
 
     const machinesData: FactoryTodayData['machines'] = {
-        totalActive: machines.length,
+        totalActive: machines.filter((m) => m.status === 'active').length,
         assigned,
         unassigned: unassignedMachines.length,
         maintenance,
