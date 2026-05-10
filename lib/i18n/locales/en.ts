@@ -24,6 +24,7 @@ export const en = {
     "billing": "Billing",
     "system health": "WhatsApp Health",
     "market_runs": "Market Runs",
+    "factory_today": "Factory Today",
   },
   attendance: {
     title: "Daily Attendance",

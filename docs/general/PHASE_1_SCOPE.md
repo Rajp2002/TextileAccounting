@@ -29,8 +29,9 @@ Phase 1 starts before the first estimate. An owner must be able to create an org
 In scope:
 
 - Owner signup, login, onboarding checklist, and route guarding.
+- Factory Today as default owner action center and landing page.
 - Supervisor join flow through organization join code.
-- Role-aware redirects: owner to analytics, supervisor to production log, admin to admin.
+- Role-aware redirects: owner to Factory Today, supervisor to production log, admin to admin.
 - Machine creation and management with loom type where available.
 - Meter worker and fixed worker setup.
 - Payroll config baseline during onboarding.
@@ -61,6 +62,7 @@ In scope:
 - Quote status: draft, sent, accepted, rejected.
 - Restoring a quote snapshot into the estimator for re-estimation.
 - Accepted quote to active order conversion.
+- Start Party Order as a fast path from Estimator (wrapper over accepted quote conversion).
 - Market run creation from estimator mode.
 
 Readiness bar:
@@ -159,25 +161,29 @@ This scope has been extended beyond the original three pillars because productio
 
 In scope:
 
-- `/owner/stock` as the Phase 1 godown/taka stock board.
+- `/owner/stock` as the Phase 1 godown/taka stock board (physical inventory focus only).
 - Fabric stock lots from manual, opening, market-run, order, and adjustment sources.
 - Pending inward drafts from completed/produced order or market-run output.
 - Unit count, meters per unit, godown, cost per meter, and available meters.
 - Stock adjustment add/subtract.
-- Stock sale recording with price, cost, revenue, and gross profit.
+- Stock sale recording with price and quantity (profit dashboard moved to Commercials).
+- Sell & Dispatch guided workflow.
 - Stock movements history.
 - Dispatches for order-linked output.
 - Dispatch package/batch rows, transport/GST/e-way metadata, and receipt confirmation.
 - Shortage/extra received tracking.
 - Public `/track/[token]` portal.
-- `/owner/commercials` as a lightweight gross-profit view across order invoices, order quotes, stock sales, and market-run sales.
+- `/owner/commercials` as the source of truth for realized revenue, gross profit, expected profit, receivables, and payment tracking.
 
 Not in scope:
 
-- Full accounting replacement.
+- Full accounting replacement / Tally replacement.
 - Full supplier ledger readiness.
 - Deep yarn/beam inventory polish.
 - Complex logistics planning.
+- GST filing and Bank reconciliation.
+- Full CRM.
+- Automatic collection reminders.
 
 Readiness bar:
 
@@ -220,7 +226,10 @@ These modules may exist in code and may even be routable in some environments, b
 - DPA template/version management.
 - Grievance and language request workflows.
 - Deep DPDP export/delete polish beyond launch-critical controls.
-- Full CRM/accounting workflows.
+- Full CRM/accounting workflows, Tally replacement, GST filing, Bank reconciliation.
+- Returns and credit notes.
+- Complex broker commission.
+- Automatic collection reminders.
 
 ## Navigation Implication
 

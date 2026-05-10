@@ -6,19 +6,21 @@ Last analyzed from the active codebase on May 6, 2026.
 
 Split status:
 
-- `/owner/commercials` is active Phase 1 support for gross-profit visibility.
-- `/owner/ledger` is archived/deferred for Phase 1 and represents deeper receivables/accounting.
+- `/owner/commercials` is active Phase 1 support for gross-profit visibility, receivables, and payment tracking.
+- `/owner/ledger` is archived/deferred for Phase 1 and represents full accounting/Tally replacement.
 
 ## What Active Commercials Does
 
-Commercials gives the owner a source-tagged view of expected and realized profit across operational work:
+Commercials gives the owner a source-tagged view of expected and realized profit, as well as receivables and payments across operational work:
 
 - realized order sales/invoices
 - expected order quote profit
 - market-run sales
 - stock sales
+- receivables and money to collect
+- payment history and receipts
 
-It shows revenue, production cost, gross profit, and margin. It can filter by stage and source and search by quality/reference/source.
+It shows revenue, production cost, gross profit, margin, receivables, and payment status. It is the source of truth for "Paisa" in the factory.
 
 ## User Workflow
 
@@ -45,15 +47,7 @@ Weavly workflow:
 
 ## Deferred Party Ledger
 
-The archived ledger includes:
-
-- parties
-- party invoices
-- party receipts
-- party adjustments
-- payment allocations
-- suppliers
-- supplier ledger entries
+The archived ledger includes full party ledgers, supplier ledgers, and complex payment allocations. While Commercials handles basic receivables and payment receipts for sales, the full accounting depth of a ledger is deferred.
 
 This is important for future ERP depth but not required for Phase 1 launch readiness.
 

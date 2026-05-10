@@ -33,14 +33,16 @@ Routes currently redirected to `/feature-archived`:
 
 ## Kept in Phase 1
 
+- Factory Today as default owner action center.
 - Estimator and quote snapshots.
+- Start Party Order fast path.
 - Quote to order conversion.
 - Orders and market runs.
 - Supervisor production log.
 - Owner production analytics.
-- Godown/taka stock board.
-- Dispatches and public tracking.
-- Commercial gross-profit view.
+- Godown/taka stock board (physical inventory focus).
+- Dispatches and public tracking (Sell & Dispatch).
+- Commercials receivables and payment tracking.
 - Payroll and advances.
 - Workers, machines, attendance, settings, access codes.
 - Billing/subscription and referrals.
