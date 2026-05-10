@@ -58,7 +58,7 @@ export function QuickActionsCard() {
     return (
         <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
             <div className="border-b border-hairline px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Quick Actions</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink">Quick Actions</p>
                 <p className="text-sm font-bold text-ink">Jump to a workflow</p>
             </div>
 

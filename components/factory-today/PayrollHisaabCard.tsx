@@ -24,7 +24,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
             )}>
                 <DollarSign className={cn('h-4 w-4 shrink-0', color === 'amber' ? 'text-warning' : 'text-success')} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Payroll / Hisaab</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink">Payroll / Hisaab</p>
                     <p className={cn('text-sm font-bold', color === 'amber' ? 'text-warning' : 'text-success')}>
                         {payroll.currentCycleLabel}
                     </p>

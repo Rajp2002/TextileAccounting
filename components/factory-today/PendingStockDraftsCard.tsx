@@ -21,7 +21,7 @@ export function PendingStockDraftsCard({ drafts }: PendingStockDraftsCardProps) 
             )}>
                 <Package className={cn('h-4 w-4 shrink-0', hasDrafts ? 'text-warning' : 'text-success')} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Pending Stock Inward</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink">Pending Stock Inward</p>
                     <p className={cn('text-sm font-bold', hasDrafts ? 'text-warning' : 'text-success')}>
                         {hasDrafts
                             ? `${drafts.length} draft${drafts.length !== 1 ? 's' : ''} need confirmation`

@@ -31,7 +31,7 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
                     !hasRisk ? 'text-success' : criticalOrders.length > 0 ? 'text-risk' : 'text-warning'
                 )} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Work at Risk</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink">Work at Risk</p>
                     <p className={cn(
                         'text-sm font-bold',
                         !hasRisk ? 'text-success' : criticalOrders.length > 0 ? 'text-risk' : 'text-warning'
@@ -54,7 +54,7 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
                 <div>
                     <div className="flex items-center gap-2 px-4 pt-3 pb-2">
                         <Package className="h-3.5 w-3.5 text-muted" />
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Orders behind pace</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-ink">Orders behind pace</p>
                     </div>
                     <div className="divide-y divide-hairline px-4">
                         {ordersBehindPace.slice(0, 3).map((order) => (
@@ -89,7 +89,7 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
                 <div className={cn(ordersBehindPace.length > 0 && 'border-t border-hairline')}>
                     <div className="flex items-center gap-2 px-4 pt-3 pb-2">
                         <Store className="h-3.5 w-3.5 text-muted" />
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Inactive market runs</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-ink">Inactive market runs</p>
                     </div>
                     <div className="divide-y divide-hairline px-4">
                         {inactiveMarketRuns.slice(0, 3).map((run) => (
