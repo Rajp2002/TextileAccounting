@@ -26,7 +26,7 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
                     <div className="flex items-center gap-2">
                         <p className="text-xs font-semibold uppercase tracking-wide text-ink">Sold, Not Dispatched</p>
                         {hasSales && (
-                            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-risk text-[10px] font-bold text-white">
+                            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF3B30] text-[10px] font-bold text-white">
                                 {sales.length}
                             </span>
                         )}

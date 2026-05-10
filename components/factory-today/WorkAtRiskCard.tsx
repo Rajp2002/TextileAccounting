@@ -41,7 +41,7 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
                 </div>
                 {hasRisk && (
                     criticalOrders.length > 0 ? (
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-risk text-[11px] font-bold text-white">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FF3B30] text-[11px] font-bold text-white">
                             {criticalOrders.length}
                         </span>
                     ) : (

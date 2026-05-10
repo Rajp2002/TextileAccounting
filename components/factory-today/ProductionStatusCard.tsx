@@ -58,7 +58,7 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
                     <p className={cn('text-sm font-bold', statusColor)}>{statusLabel}</p>
                 </div>
                 {noneLogged && (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-risk text-[11px] font-bold text-white">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FF3B30] text-[11px] font-bold text-white">
                         1
                     </span>
                 )}
