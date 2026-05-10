@@ -16,25 +16,25 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
     const criticalOrders = ordersBehindPace.filter((o) => o.riskLevel === 'red')
 
     return (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden">
+        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
             {/* Header */}
             <div className={cn(
                 'flex items-center gap-3 border-b px-4 py-3',
                 !hasRisk
-                    ? 'border-emerald-500/20 bg-emerald-500/5'
+                    ? 'border-success/20 bg-success-soft'
                     : criticalOrders.length > 0
-                        ? 'border-rose-500/20 bg-rose-500/5'
-                        : 'border-amber-500/20 bg-amber-500/5'
+                        ? 'border-risk/20 bg-risk-soft'
+                        : 'border-warning/20 bg-warning-soft'
             )}>
                 <TrendingDown className={cn(
                     'h-4 w-4 shrink-0',
-                    !hasRisk ? 'text-emerald-400' : criticalOrders.length > 0 ? 'text-rose-400' : 'text-amber-400'
+                    !hasRisk ? 'text-success' : criticalOrders.length > 0 ? 'text-risk' : 'text-warning'
                 )} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Work at Risk</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Work at Risk</p>
                     <p className={cn(
                         'text-sm font-bold',
-                        !hasRisk ? 'text-emerald-400' : criticalOrders.length > 0 ? 'text-rose-400' : 'text-amber-400'
+                        !hasRisk ? 'text-success' : criticalOrders.length > 0 ? 'text-risk' : 'text-warning'
                     )}>
                         {!hasRisk ? 'All orders on track' : `${total} item${total !== 1 ? 's' : ''} need attention`}
                     </p>
@@ -42,7 +42,7 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
                 {hasRisk && (
                     <span className={cn(
                         'rounded-full px-2 py-0.5 text-[11px] font-bold',
-                        criticalOrders.length > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
+                        criticalOrders.length > 0 ? 'bg-risk-soft text-risk' : 'bg-warning-soft text-warning'
                     )}>
                         {criticalOrders.length > 0 ? `${criticalOrders.length} critical` : 'Warning'}
                     </span>
@@ -53,27 +53,27 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
             {ordersBehindPace.length > 0 && (
                 <div>
                     <div className="flex items-center gap-2 px-4 pt-3 pb-2">
-                        <Package className="h-3.5 w-3.5 text-zinc-500" />
-                        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Orders behind pace</p>
+                        <Package className="h-3.5 w-3.5 text-muted" />
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Orders behind pace</p>
                     </div>
-                    <div className="divide-y divide-white/[0.04] px-4">
+                    <div className="divide-y divide-hairline px-4">
                         {ordersBehindPace.slice(0, 3).map((order) => (
                             <div key={order.id} className="flex items-start gap-3 py-2.5">
                                 <span className={cn(
                                     'mt-0.5 h-2 w-2 shrink-0 rounded-full',
-                                    order.riskLevel === 'red' ? 'bg-rose-400' : 'bg-amber-400'
+                                    order.riskLevel === 'red' ? 'bg-risk' : 'bg-warning'
                                 )} />
                                 <div className="flex-1 min-w-0">
-                                    <p className="truncate text-sm font-semibold text-zinc-200">{order.partyName}</p>
+                                    <p className="truncate text-sm font-semibold text-ink">{order.partyName}</p>
                                     {order.qualityLabel && (
-                                        <p className="text-xs text-zinc-500">{order.qualityLabel}</p>
+                                        <p className="text-xs text-muted">{order.qualityLabel}</p>
                                     )}
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xs font-semibold text-zinc-300">
+                                    <p className="text-xs font-semibold text-body">
                                         {order.remainingMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m left
                                     </p>
-                                    <p className="flex items-center gap-1 text-[11px] text-zinc-500">
+                                    <p className="flex items-center gap-1 text-[11px] text-muted">
                                         <Calendar className="h-2.5 w-2.5" />
                                         {new Date(order.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                     </p>
@@ -86,17 +86,17 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
 
             {/* Inactive Market Runs */}
             {inactiveMarketRuns.length > 0 && (
-                <div className={cn(ordersBehindPace.length > 0 && 'border-t border-white/[0.06]')}>
+                <div className={cn(ordersBehindPace.length > 0 && 'border-t border-hairline')}>
                     <div className="flex items-center gap-2 px-4 pt-3 pb-2">
-                        <Store className="h-3.5 w-3.5 text-zinc-500" />
-                        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Inactive market runs</p>
+                        <Store className="h-3.5 w-3.5 text-muted" />
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Inactive market runs</p>
                     </div>
-                    <div className="divide-y divide-white/[0.04] px-4">
+                    <div className="divide-y divide-hairline px-4">
                         {inactiveMarketRuns.slice(0, 3).map((run) => (
                             <div key={run.id} className="flex items-center gap-3 py-2.5">
-                                <span className="h-2 w-2 shrink-0 rounded-full bg-amber-400" />
-                                <span className="flex-1 truncate text-sm font-medium text-zinc-300">{run.label}</span>
-                                <span className="text-[11px] text-zinc-500">No prod. 2+ days</span>
+                                <span className="h-2 w-2 shrink-0 rounded-full bg-warning" />
+                                <span className="flex-1 truncate text-sm font-medium text-body">{run.label}</span>
+                                <span className="text-[11px] text-muted">No prod. 2+ days</span>
                             </div>
                         ))}
                     </div>
@@ -105,22 +105,22 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
 
             {!hasRisk && (
                 <div className="flex items-center gap-2 px-4 py-4">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                    <p className="text-sm text-zinc-400">All orders and runs are on schedule.</p>
+                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    <p className="text-sm text-body">All orders and runs are on schedule.</p>
                 </div>
             )}
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 border-t border-white/[0.06] px-4 py-3">
+            <div className="flex items-center justify-end gap-2 border-t border-hairline px-4 py-3">
                 <Link
                     href="/owner/orders"
-                    className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition hover:bg-white/10"
+                    className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
                 >
                     View Orders
                 </Link>
                 <Link
                     href="/owner/market-runs"
-                    className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition hover:bg-white/10"
+                    className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
                 >
                     View Runs
                 </Link>

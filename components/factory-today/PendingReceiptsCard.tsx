@@ -25,7 +25,7 @@ function TrackingCopyButton({ token, dispatchNumber }: { token: string; dispatch
     return (
         <button
             onClick={handleCopy}
-            className="flex items-center gap-1 rounded border border-white/10 bg-white/5 px-2 py-1 text-[11px] font-medium text-zinc-400 transition hover:bg-white/10"
+            className="flex items-center gap-1 rounded border border-hairline bg-surface px-2 py-1 text-[11px] font-medium text-muted transition hover:bg-surface-soft"
             title={`Copy tracking link for Dispatch #${dispatchNumber}`}
         >
             <Copy className="h-2.5 w-2.5" />
@@ -39,25 +39,25 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
     const longPending = receipts.filter((r) => r.daysPending > 5)
 
     return (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden">
+        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
             {/* Header */}
             <div className={cn(
                 'flex items-center gap-3 border-b px-4 py-3',
                 !hasReceipts
-                    ? 'border-emerald-500/20 bg-emerald-500/5'
+                    ? 'border-success/20 bg-success-soft'
                     : longPending.length > 0
-                        ? 'border-rose-500/20 bg-rose-500/5'
-                        : 'border-amber-500/20 bg-amber-500/5'
+                        ? 'border-risk/20 bg-risk-soft'
+                        : 'border-warning/20 bg-warning-soft'
             )}>
                 <MapPin className={cn(
                     'h-4 w-4 shrink-0',
-                    !hasReceipts ? 'text-emerald-400' : longPending.length > 0 ? 'text-rose-400' : 'text-amber-400'
+                    !hasReceipts ? 'text-success' : longPending.length > 0 ? 'text-risk' : 'text-warning'
                 )} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Dispatches Pending Receipt</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Dispatches Pending Receipt</p>
                     <p className={cn(
                         'text-sm font-bold',
-                        !hasReceipts ? 'text-emerald-400' : longPending.length > 0 ? 'text-rose-400' : 'text-amber-400'
+                        !hasReceipts ? 'text-success' : longPending.length > 0 ? 'text-risk' : 'text-warning'
                     )}>
                         {!hasReceipts
                             ? 'All dispatches received'
@@ -66,7 +66,7 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
                     </p>
                 </div>
                 {longPending.length > 0 && (
-                    <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-[11px] font-bold text-rose-400">
+                    <span className="rounded-full bg-risk-soft px-2 py-0.5 text-[11px] font-bold text-risk">
                         {longPending.length} overdue
                     </span>
                 )}
@@ -74,23 +74,23 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
 
             {/* Receipts List */}
             {hasReceipts ? (
-                <div className="divide-y divide-white/[0.04] px-4">
+                <div className="divide-y divide-hairline px-4">
                     {receipts.slice(0, 5).map((r) => (
                         <div key={r.dispatchId} className="flex items-center gap-3 py-2.5">
                             <Clock className={cn(
                                 'h-3.5 w-3.5 shrink-0',
-                                r.daysPending > 5 ? 'text-rose-400' : 'text-amber-400'
+                                r.daysPending > 5 ? 'text-risk' : 'text-warning'
                             )} />
                             <div className="flex-1 min-w-0">
-                                <p className="truncate text-sm font-semibold text-zinc-200">{r.partyName}</p>
-                                <p className="text-[11px] text-zinc-500">
+                                <p className="truncate text-sm font-semibold text-ink">{r.partyName}</p>
+                                <p className="text-[11px] text-muted">
                                     Dispatch #{r.dispatchNumber} · {r.sentMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m sent
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className={cn(
                                     'text-[11px] font-semibold',
-                                    r.daysPending > 5 ? 'text-rose-400' : 'text-amber-400'
+                                    r.daysPending > 5 ? 'text-risk' : 'text-warning'
                                 )}>
                                     {r.daysPending}d ago
                                 </span>
@@ -101,21 +101,21 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
                         </div>
                     ))}
                     {receipts.length > 5 && (
-                        <p className="py-2 text-xs text-zinc-500">+{receipts.length - 5} more in transit</p>
+                        <p className="py-2 text-xs text-muted">+{receipts.length - 5} more in transit</p>
                     )}
                 </div>
             ) : (
                 <div className="flex items-center gap-2 px-4 py-4">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                    <p className="text-sm text-zinc-400">All dispatches have been confirmed received.</p>
+                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    <p className="text-sm text-body">All dispatches have been confirmed received.</p>
                 </div>
             )}
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 border-t border-white/[0.06] px-4 py-3">
+            <div className="flex items-center justify-end gap-2 border-t border-hairline px-4 py-3">
                 <Link
                     href="/owner/dispatches"
-                    className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition hover:bg-white/10"
+                    className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
                 >
                     View All Dispatches
                 </Link>

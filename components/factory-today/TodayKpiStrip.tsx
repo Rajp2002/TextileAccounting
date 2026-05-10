@@ -24,21 +24,21 @@ function KpiCard({
     color: 'green' | 'yellow' | 'red' | 'neutral'
 }) {
     const colorMap = {
-        green: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-        yellow: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-        red: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
-        neutral: 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20',
+        green: 'text-success bg-success-soft border-success/20',
+        yellow: 'text-warning bg-warning-soft border-warning/20',
+        red: 'text-risk bg-risk-soft border-risk/20',
+        neutral: 'text-subtle bg-surface-soft border-hairline',
     }
 
     return (
-        <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 backdrop-blur-sm min-w-[160px]">
+        <div className="flex items-center gap-3 rounded-xl border border-hairline bg-surface px-4 py-3 min-w-[160px]">
             <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border', colorMap[color])}>
                 <Icon className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">{label}</p>
-                <p className="text-lg font-bold leading-tight text-zinc-100">{value}</p>
-                {sub && <p className="text-[11px] text-zinc-500">{sub}</p>}
+                <p className="text-[11px] font-medium uppercase tracking-wide text-muted">{label}</p>
+                <p className="text-lg font-bold leading-tight text-ink">{value}</p>
+                {sub && <p className="text-[11px] text-muted">{sub}</p>}
             </div>
         </div>
     )
@@ -96,13 +96,13 @@ export function TodayKpiStrip({ production, machines, stock, dispatch, actionCou
             />
 
             {actionCounts.critical > 0 && (
-                <div className="flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 min-w-[160px]">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/20">
-                        <span className="text-base font-bold text-rose-400">{actionCounts.critical}</span>
+                <div className="flex items-center gap-2 rounded-xl border border-risk/30 bg-risk-soft px-4 py-3 min-w-[160px]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-risk/30 bg-risk/20">
+                        <span className="text-base font-bold text-risk">{actionCounts.critical}</span>
                     </div>
                     <div>
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-rose-500">Critical</p>
-                        <p className="text-sm font-semibold text-rose-300">Action needed</p>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-risk">Critical</p>
+                        <p className="text-sm font-semibold text-risk">Action needed</p>
                     </div>
                 </div>
             )}

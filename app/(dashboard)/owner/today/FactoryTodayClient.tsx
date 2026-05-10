@@ -18,12 +18,12 @@ interface FactoryTodayClientProps {
 
 function AllClearState() {
     return (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-6 py-12 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
-                <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-success/20 bg-success-soft px-6 py-12 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-success/30 bg-success/10">
+                <CheckCircle2 className="h-8 w-8 text-success" />
             </div>
-            <h2 className="mb-2 text-xl font-bold text-emerald-400">Factory is clear today.</h2>
-            <p className="max-w-sm text-sm text-zinc-400">
+            <h2 className="mb-2 text-xl font-bold text-success">Factory is clear today.</h2>
+            <p className="max-w-sm text-sm text-body">
                 Production has been logged, stock is confirmed, no dispatches pending, and payroll is up to date.
             </p>
         </div>
@@ -62,8 +62,8 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                         <Factory className="h-5 w-5 text-saffron" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-zinc-100">Factory Today</h1>
-                        <p className="text-sm text-zinc-500">{dateLabel}</p>
+                        <h1 className="text-xl font-bold text-ink">Factory Today</h1>
+                        <p className="text-sm text-muted">{dateLabel}</p>
                     </div>
                 </div>
 
@@ -71,12 +71,12 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                 {(actionCounts.critical > 0 || actionCounts.warning > 0) && (
                     <div className="flex items-center gap-2">
                         {actionCounts.critical > 0 && (
-                            <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs font-bold text-rose-400">
+                            <span className="rounded-full border border-risk/30 bg-risk-soft px-3 py-1 text-xs font-bold text-risk">
                                 {actionCounts.critical} critical
                             </span>
                         )}
                         {actionCounts.warning > 0 && (
-                            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-400">
+                            <span className="rounded-full border border-warning/30 bg-warning-soft px-3 py-1 text-xs font-bold text-warning">
                                 {actionCounts.warning} warnings
                             </span>
                         )}
