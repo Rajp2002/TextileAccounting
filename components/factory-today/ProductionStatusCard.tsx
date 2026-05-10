@@ -15,14 +15,14 @@ function ShiftBadge({ shift, logged }: { shift: 'Day' | 'Night'; logged: boolean
         <div className={cn(
             'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium',
             logged
-                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                : 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+                ? 'border-success/30 bg-success-soft text-success'
+                : 'border-warning/30 bg-warning-soft text-warning'
         )}>
             <Icon className="h-3.5 w-3.5" />
             <span>{shift} Shift</span>
             <span className={cn(
                 'ml-auto text-[11px] font-semibold',
-                logged ? 'text-emerald-500' : 'text-amber-500'
+                logged ? 'text-success' : 'text-warning'
             )}>
                 {logged ? 'Logged' : 'Pending'}
             </span>
@@ -35,12 +35,12 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
     const noneLogged = !production.hasLogsToday
 
     const StatusIcon = bothLogged ? CheckCircle2 : noneLogged ? XCircle : AlertCircle
-    const statusColor = bothLogged ? 'text-emerald-400' : noneLogged ? 'text-rose-400' : 'text-amber-400'
+    const statusColor = bothLogged ? 'text-success' : noneLogged ? 'text-risk' : 'text-warning'
     const headerColor = bothLogged
-        ? 'border-emerald-500/20 bg-emerald-500/5'
+        ? 'border-success/20 bg-success-soft'
         : noneLogged
-            ? 'border-rose-500/20 bg-rose-500/5'
-            : 'border-amber-500/20 bg-amber-500/5'
+            ? 'border-risk/20 bg-risk-soft'
+            : 'border-warning/20 bg-warning-soft'
 
     const statusLabel = bothLogged
         ? 'Production logged today'
@@ -49,17 +49,17 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
             : 'Shifts partially logged'
 
     return (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden">
+        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
             {/* Header */}
             <div className={cn('flex items-center gap-3 border-b px-4 py-3', headerColor)}>
                 <StatusIcon className={cn('h-4 w-4 shrink-0', statusColor)} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Production Status</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Production Status</p>
                     <p className={cn('text-sm font-bold', statusColor)}>{statusLabel}</p>
                 </div>
                 {production.hasLogsToday && (
-                    <p className="text-right text-xs text-zinc-500">
-                        <span className="text-lg font-bold text-zinc-200">
+                    <p className="text-right text-xs text-muted">
+                        <span className="text-lg font-bold text-ink">
                             {production.totalMetersToday.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                         </span>m
                     </p>
@@ -75,7 +75,7 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
             {/* Footer Actions */}
             <div className="flex items-center gap-2 border-t border-white/[0.06] px-4 py-3">
                 {production.lastLogAt && (
-                    <p className="flex-1 text-xs text-zinc-500">
+                    <p className="flex-1 text-xs text-muted">
                         Last log: {new Date(production.lastLogAt).toLocaleTimeString('en-IN', {
                             hour: '2-digit',
                             minute: '2-digit'
@@ -84,7 +84,7 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
                 )}
                 <Link
                     href="/owner/machines"
-                    className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition hover:bg-white/10"
+                    className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
                 >
                     <ExternalLink className="h-3 w-3" />
                     View Looms
