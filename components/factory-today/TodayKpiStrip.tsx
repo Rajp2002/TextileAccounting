@@ -38,7 +38,7 @@ function KpiCard({
             <div className="min-w-0">
                 <p className="text-[11px] font-medium uppercase tracking-wide text-ink">{label}</p>
                 <p className="text-lg font-bold leading-tight text-ink">{value}</p>
-                {sub && <p className="text-[11px] text-muted">{sub}</p>}
+                {sub && <p className="text-[11px] text-body">{sub}</p>}
             </div>
         </div>
     )
