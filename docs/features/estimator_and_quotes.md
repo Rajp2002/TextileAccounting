@@ -24,7 +24,7 @@ Quotes save both the final commercial values and the estimator state snapshot so
 8. Owner saves the quote.
 9. Owner manages quote status in `/owner/quotes`: draft, sent, accepted, rejected.
 10. Owner re-estimates an old quote by restoring its snapshot into local estimator draft state.
-11. Owner converts an accepted quote into an active order.
+11. Owner converts an accepted quote into an active order (or uses "Start Party Order" fast path).
 12. Owner can create a market run from estimator market mode.
 
 ## Existing Workflow Translation

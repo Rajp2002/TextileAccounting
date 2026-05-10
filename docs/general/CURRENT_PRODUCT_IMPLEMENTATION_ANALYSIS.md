@@ -10,8 +10,10 @@ It is written from the product outward, but grounded in the codebase: Next.js Ap
 
 Weavly is a multi-tenant textile operations SaaS for weaving factories. It is not implemented as a generic ERP. The current product is shaped around real factory workflows:
 
+- Factory Today as default owner action center
 - fabric costing before production starts
 - quotes and accepted party work
+- Start Party Order as estimator fast path preserving quote/order architecture
 - speculative market production when looms need to stay busy
 - day/night shift production logging by supervisors
 - meter readings on looms
@@ -19,9 +21,11 @@ Weavly is a multi-tenant textile operations SaaS for weaving factories. It is no
 - piece-rate payroll
 - fixed-worker attendance and salary payroll
 - worker advances and kharchi
-- takas and stock in godown
+- takas and stock in godown as physical inventory
+- Sell & Dispatch as guided sale+dispatch wrapper
 - dispatch batches, public tracking, and receipt reconciliation
-- gross profit visibility
+- Commercials receivables and payment tracking
+- gross profit visibility and money source of truth
 - WhatsApp-based operational messaging
 - owner access codes for protected actions
 - subscription, referral, and tenant controls
@@ -29,13 +33,14 @@ Weavly is a multi-tenant textile operations SaaS for weaving factories. It is no
 The product center is a production-to-money loop:
 
 1. Owner sets up the factory.
-2. Owner estimates fabric cost.
-3. Owner saves a quote or starts a market run.
-4. Accepted quotes become orders; market runs create speculative production anchors.
-5. Supervisor logs shift production against machines, workers, and orders/runs.
-6. Production feeds analytics, payroll, stock inward drafts, and progress tracking.
-7. Stock is confirmed into godown, sold, dispatched, and reconciled.
-8. Commercials and payroll turn operational events into money visibility.
+2. Owner accesses Factory Today for daily attention signals.
+3. Owner estimates fabric cost.
+4. Owner saves a quote or starts a market run.
+5. Accepted quotes become orders; market runs create speculative production anchors.
+6. Supervisor logs shift production against machines, workers, and orders/runs.
+7. Production feeds Factory Today, analytics, payroll, stock inward drafts, and progress tracking.
+8. Stock is confirmed into godown, sold & dispatched through guided workflows, and reconciled.
+9. Commercials and payroll turn operational events into money visibility and payment tracking.
 
 ## 2. Implementation Architecture
 
@@ -91,6 +96,7 @@ The middleware is a major product boundary. It handles:
 
 Active owner routes include:
 
+- `/owner/today` (default landing page)
 - `/owner/analytics`
 - `/owner/estimator`
 - `/owner/quotes`
@@ -188,14 +194,15 @@ The current implementation revolves around these records and relationships.
 | Auth and onboarding | `app/(auth)`, `/login`, `/signup`, `/join`, `/onboarding` | `middleware.ts`, `app/(auth)/actions/auth.ts`, `lib/auth.ts` |
 | Owner shell | `app/(dashboard)/owner/layout.tsx`, `components/navigation/owner-sidebar.tsx` | role guard through `requireRole(['owner'])` |
 | Supervisor shell | `app/(dashboard)/supervisor/layout.tsx`, `components/navigation/supervisor-nav.tsx` | role guard through `requireRole(['supervisor', 'owner'])` |
-| Estimator | `/owner/estimator`, `EstimatorClient.tsx` | `lib/estimator.ts`, `app/(dashboard)/owner/estimator/actions.ts` |
+| Factory Today | `/owner/today`, `FactoryTodayClient.tsx` | Daily action center aggregation, thin orchestration layer |
+| Estimator | `/owner/estimator`, `EstimatorClient.tsx` | `lib/estimator.ts`, `app/(dashboard)/owner/estimator/actions.ts`, Start Party Order fast path |
 | Quotes | `/owner/quotes`, `QuotesClient.tsx` | `getEstimatorQuotes`, `updateQuoteStatus`, `convertAcceptedQuoteToOrder` |
 | Orders | `/owner/orders`, `OrdersClient.tsx` | `app/(dashboard)/owner/orders/actions.ts`, `order_progress_summary`, `convert_accepted_quote_to_order` |
 | Market runs | `/owner/market-runs`, `/owner/market-runs/[id]` | `market_runs`, `market_run_summary`, `createMarketRunFromEstimator`, `create_market_run_sale` |
 | Supervisor production | `/supervisor/dashboard`, `/supervisor/production` | `getShiftSetupData`, `upsertShiftAssignment`, `bulkLogProduction`, `replace_shift_production_logs` |
-| Stock and godown | `/owner/stock`, `TakaStockClient.tsx` | `fabric_stock_lot_summary`, `fabric_stock_inward_drafts`, `confirm_stock_inward_draft`, `record_fabric_stock_sale` |
-| Dispatch and tracking | `/owner/dispatches`, order drawer dispatch UI, `/track/[token]` | `create_stock_sale_dispatch`, `get_order_tracking_data`, `confirm_fabric_dispatch_receipt` |
-| Commercials | `/owner/commercials` | `commercial_profit_entries`, `app/(dashboard)/owner/commercials/actions.ts` |
+| Stock and godown | `/owner/stock`, `TakaStockClient.tsx` | Physical inventory, `fabric_stock_lot_summary`, `fabric_stock_inward_drafts`, `confirm_stock_inward_draft` |
+| Dispatch and tracking | `/owner/dispatches`, Sell & Dispatch UI, `/track/[token]` | `sellAndDispatchTakas`, `create_stock_sale_dispatch`, `get_order_tracking_data` |
+| Commercials | `/owner/commercials` | Money source of truth, receivables, `lib/commercials/receivables.ts`, `record_commercial_payment_v1` |
 | Payroll | `/owner/payroll` | `toggleWorkerPaid`, `settle_worker_payroll`, `unsettle_worker_payroll`, `lib/payroll-cycle.ts` |
 | Advances and kharchi | `/owner/advances`, supervisor kharchi dialog | `worker_advances`, `recordKharchi`, supervisor float actions |
 | Workers and machines | `/owner/machines`, `/owner/fixed-workers`, `/supervisor/workers`, `/supervisor/attendance` | owner/supervisor actions, `machines`, `workers`, `fixed_workers`, attendance tables |
@@ -308,7 +315,7 @@ The owner can also re-estimate a quote. The client writes the quote snapshot int
 
 #### Logic and Output
 
-The direct estimator-to-order path is intentionally retired. `convertQuoteToOrder` returns an error telling the user to save, accept, and convert from Quote History.
+The direct estimator-to-order path is intentionally retired. However, a "Start Party Order" fast path is available from the Estimator, which acts as a wrapper over the accepted quote conversion flow, preserving the canonical backend model: estimator snapshot -> accepted quote -> convert accepted quote to order. It uses the shared conversion service `lib/quotes/convert-accepted-quote-to-order.ts`.
 
 `convertAcceptedQuoteToOrder` validates:
 
@@ -497,20 +504,20 @@ Analytics consumes production logs, orders, machines, workers, and dashboard RPC
 
 #### User Interaction
 
-The active stock module is `/owner/stock`. The UI is centered around taka/godown stock.
+The active stock module is `/owner/stock`. The UI is centered around physical taka/godown inventory.
 
 The owner can:
 
-- review available takas
-- review available meters
+- review available takas and meters
 - review stock value at cost
-- review realized revenue and profit
 - confirm pending inward drafts from production
 - add opening/manual/order/market-run stock lots
 - choose source, quality, godown, unit count, meters per unit, unit label, cost, received date, and notes
 - record sales from a stock lot
 - adjust stock for physical differences
 - inspect recent movements and recent sales
+
+Stock no longer acts as the profit dashboard. Revenue, gross profit, margins, receivables, and payment status belong to Commercials.
 
 Pending inward drafts are generated by supervisor production logs. The owner confirms them into physical stock lots after checking actual takas/meters.
 
@@ -562,9 +569,18 @@ The public tracking portal lives at `/track/[token]`. A party can open the link 
 
 #### Logic and Output
 
-The current dispatch path dispatches sold stock entries, not arbitrary unsold production. `getDispatchesForOrder` finds `fabric_stock_sales` without a `dispatch_id` that match the order by stock-lot order id or by quality when the lot is not order-specific.
+The current dispatch path dispatches sold stock entries, not arbitrary unsold production.
 
-`createDispatch` calls the RPC `create_stock_sale_dispatch` with selected stock sale ids. The RPC:
+A guided "Sell & Dispatch" workflow allows the owner to:
+- Select taka stock.
+- Choose/confirm order.
+- Enter sale rate.
+- Enter dispatch details.
+- Create sale + dispatch in one guided flow.
+
+This workflow uses the server action `sellAndDispatchTakas`. It preserves the backend model: stock sale first -> stock movement -> dispatch from sold stock entries. If the sale succeeds but dispatch fails, the sale remains valid and recoverable.
+
+Standard dispatch creation also exists where the owner selects pending sold stock entries for an order. The dispatch RPC `create_stock_sale_dispatch`:
 
 - validates owner/supervisor role and organization
 - locks selected sales
@@ -591,12 +607,14 @@ Dispatch connects orders, stock sales, packages, challans, tracking links, publi
 
 #### User Interaction
 
-The commercials dashboard lives at `/owner/commercials`. It is a read-only gross profit view.
+The commercials dashboard lives at `/owner/commercials`. It is the source of truth for realized revenue, gross profit, expected profit, receivables, and payment tracking.
 
 The owner can:
-
 - see realized revenue, cost, and profit
 - see expected profit from converted quotes/orders
+- track receivables and money to collect
+- record payments and view payment history
+- follow up on overdue amounts
 - filter by realized or expected stage
 - filter by source type
 - search by quality, reference, or source
@@ -766,6 +784,32 @@ The codebase contains compliance and admin capabilities:
 
 It also contains archived owner modules such as inventory, ledger, audit settings, system health, and admin. These modules remain valuable implementation assets, but the active Phase 1 middleware redirects them away from normal use.
 
+### 4.16 Factory Today
+
+#### User Interaction
+
+Factory Today is the default owner landing page at `/owner/today`. It serves as the daily action center that aggregates signals across the factory:
+- Production status and machine assignment signals.
+- Work at risk or off pace.
+- Pending stock inward drafts.
+- Sold but not dispatched items.
+- Dispatches pending receipt.
+- Payroll and advance signals.
+- Receivable signals.
+- Quick actions.
+
+#### Logic and Output
+
+Factory Today is a thin orchestration layer over existing Phase 1 workflows, not a new operational database model. It queries existing tables and aggregates status to present actionable items to the owner.
+
+#### Value Provided
+
+It gives the owner immediate visibility into what requires attention today, moving from a passive reporting model (Analytics) to an active task-oriented model.
+
+#### Connected Features
+
+Feeds from production logs, stock, dispatches, commercials, and payroll.
+
 ## 5. Order Pipeline: From Estimator to Closing
 
 This is the main party-backed pipeline. It begins with cost analysis and ends when the order is completed, dispatched, reconciled, paid through payroll where relevant, and reflected in commercials.
@@ -902,16 +946,12 @@ In `/owner/stock`, the owner reviews pending inward drafts and confirms actual p
 
 Confirmation creates `fabric_stock_lots` and `fabric_stock_movements`. This step separates "logged production" from "physically confirmed stock in godown."
 
-### Step 10: Stock Is Sold
+### Step 10: Stock Is Sold (or Sold & Dispatched)
 
-The owner records stock sales from available lots. A sale:
-
-- consumes whole units
-- calculates meters from units times meters per unit
-- records price per meter
-- calculates revenue, cost, and profit
-- decrements available stock
-- writes a sale movement
+The owner records stock sales from available lots or uses the guided "Sell & Dispatch" workflow.
+- A standard sale consumes whole units, calculates meters, revenue, cost, and profit, decrements available stock, and writes a sale movement. This creates a commercial receivable.
+- The "Sell & Dispatch" workflow creates a stock sale and receivable, and then creates a dispatch in one flow.
+- If a sale succeeds but dispatch fails, the sale remains valid and recoverable via "Sold Not Dispatched".
 
 For order-reserved stock, this creates sold stock entries that can be dispatched against the order.
 
@@ -947,7 +987,7 @@ If the owner later increases the target on a completed order, the implementation
 
 The order pipeline feeds two money surfaces:
 
-- Commercials: quote/order expected profit, invoices, stock sale profit.
+- Commercials: quote/order expected profit, receivables, payment tracking, and stock sale profit. Receivables can be unpaid, partial, or paid. Payments are recorded through payment receipts.
 - Payroll: meter workers are paid from production logs using worker rate snapshots.
 
 Worker advances can be deducted during payroll settlement. Payslips can be generated and sent over WhatsApp. Once payroll for a cycle is settled, production edits in that cycle are blocked to protect closed payroll.
@@ -1209,7 +1249,7 @@ Primary value: tenant access and growth loop are managed in-product.
 
 These points matter when using this document as a source of truth.
 
-1. Quote-to-order conversion is intentionally gated. Direct estimator-to-order conversion is retired. The implemented path is save quote, mark accepted, then convert from Quote History.
+1. Quote-to-order conversion is intentionally gated. Direct estimator-to-order conversion is retired. However, a "Start Party Order" fast path is available as a wrapper over accepted quote conversion.
 
 2. Market runs use backing orders. This is not accidental. It lets the supervisor log market production through the same order-based shift UI.
 
@@ -1217,25 +1257,31 @@ These points matter when using this document as a source of truth.
 
 4. Direct market-run sale logic exists in actions/RPCs and `market_run_sales`, but the active owner UI primarily sends the user to Stock to sell/adjust physical takas.
 
-5. Dispatch creation currently starts from sold stock entries. The owner records a stock sale first, then dispatches the sold stock. Dispatch is not a direct "send unsold production" workflow.
+5. Dispatch creation currently starts from sold stock entries. The "Sell & Dispatch" workflow combines sale and dispatch but still preserves this backend order. Dispatch is not a direct "send unsold production" workflow.
 
 6. Market-run status is not fully auto-derived from every stock sale path. Summary metrics update through views, while closing/status remains a manual action in the current UI.
 
 7. The app has both old package/inventory concepts and the newer taka stock model. The active Phase 1 stock surface is `/owner/stock`; `/owner/inventory` is archived by middleware.
 
-8. The party ledger, supplier ledger, admin, audit settings, and system health modules have code, but are not active Phase 1 routes.
+8. The Stock UI is no longer the profit dashboard. Stock is focused on physical inventory. Commercials is the visible source of truth for profit, receivables, and payments. Backend stock sale records still store revenue/cost/profit because they feed Commercials.
 
-9. The owner dashboard has a `yieldAlert` field, but the current dashboard action returns it as `null`.
+9. Receivable creation prioritizes `fabric_stock_sales` over overlapping `party_invoices`. Duplicate counting is prevented by ensuring one realized commercial event = one receivable.
 
-10. Offline support is partial. The app uses IndexedDB/local storage and some queueing patterns, especially around floor workflows, but the safest source of truth is still the server after sync.
+10. Direct SQL Editor tests of `record_commercial_payment_v1` may fail if JWT org/role claims are missing. App/server-action testing is the authoritative verification path.
 
-11. Payroll settlement protects production history. Once a worker's relevant cycle is settled, production corrections for that period are blocked.
+11. The party ledger, supplier ledger, admin, audit settings, and system health modules have code, but are not active Phase 1 routes. Ledger/accounting remains deferred.
 
-12. WhatsApp delivery is supportive and logged, but core operational writes should not depend on a WhatsApp send succeeding.
+12. The owner dashboard has a `yieldAlert` field, but the current dashboard action returns it as `null`.
 
-13. Cost snapshots matter. Later cost-profile edits should not be assumed to change historical quote/order economics.
+13. Offline support is partial. The app uses IndexedDB/local storage and some queueing patterns, especially around floor workflows, but the safest source of truth is still the server after sync.
 
-14. Access codes are part of the product control model. They are used for protected changes such as destructive actions, sensitive corrections, and reversal flows.
+14. Payroll settlement protects production history. Once a worker's relevant cycle is settled, production corrections for that period are blocked.
+
+15. WhatsApp delivery is supportive and logged, but core operational writes should not depend on a WhatsApp send succeeding.
+
+16. Cost snapshots matter. Later cost-profile edits should not be assumed to change historical quote/order economics.
+
+17. Access codes are part of the product control model. They are used for protected changes such as destructive actions, sensitive corrections, and reversal flows.
 
 ## 10. Practical Source-of-Truth Notes
 

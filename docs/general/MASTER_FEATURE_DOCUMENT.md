@@ -7,29 +7,31 @@ This document unifies the feature docs under `docs/features/`. It is organized a
 ## Unified Feature Loop
 
 1. Owner sets up the factory, plan, machines, workers, payroll baseline, cost profile, join codes, WhatsApp, and access-code controls.
-2. Owner estimates fabric cost and saves templates/quotes.
-3. Owner converts accepted quotes to orders or starts market runs for speculative stock production.
-4. Supervisor assigns workers and work to machines and logs shift production from meter readings.
-5. Owner watches analytics for pace, production, machine utilization, and worker output.
-6. Production becomes stock and dispatch-ready output.
-7. Stock sales, market-run sales, quotes, and invoices feed commercial gross-profit visibility.
-8. Owner settles payroll, recovers advances, records payment mode, and sends payslips/receipts over WhatsApp.
-9. Billing, referrals, settings, access codes, audit, and compliance support the operating loop.
+2. Owner accesses Factory Today for daily attention signals.
+3. Owner estimates fabric cost and saves templates/quotes.
+4. Owner converts accepted quotes to orders (or uses Start Party Order fast path) or starts market runs for speculative stock production.
+5. Supervisor assigns workers and work to machines and logs shift production from meter readings.
+6. Production feeds Factory Today, analytics, and becomes stock inward drafts.
+7. Stock is confirmed into godown, sold & dispatched through guided workflows (Sell & Dispatch).
+8. Commercials tracks revenue, profit, receivables, and payments.
+9. Owner settles payroll, recovers advances, records payment mode, and sends payslips/receipts over WhatsApp.
+10. Billing, referrals, settings, access codes, audit, and compliance support the operating loop.
 
 ## Cross-Feature Dependencies
 
 | Feature | Depends On | Feeds Into |
 | --- | --- | --- |
 | Onboarding and Settings | Auth, organizations, subscription, machines, workers | Estimator, production log, payroll, supervisor access |
+| Factory Today | Production logs, stock, dispatches, commercials, payroll | Owner daily decisions |
 | Estimator | Factory cost profile, fixed workers, loom assumptions | Templates, quotes, orders, market runs |
 | Quotes | Estimator snapshots | Orders, re-estimation, expected commercials |
 | Orders | Accepted quotes, machines, workers | Supervisor log, analytics, dispatches, commercials |
 | Market Runs | Estimator snapshots | Supervisor log, stock inward drafts, stock sales, commercials |
-| Supervisor Production Log | Machines, workers, orders/runs | Production logs, analytics, payroll, stock drafts |
+| Supervisor Production Log | Machines, workers, orders/runs | Production logs, analytics, payroll, stock drafts, Factory Today |
 | Analytics | Production logs, orders, machines | Owner decisions, order/run monitoring |
-| Stock | Production output, market runs, orders | Dispatch, stock sales, commercials |
-| Dispatches | Orders, packages/stock, parties | Tracking portal, receipt/shortage reconciliation |
-| Commercials | Quotes, invoices, stock sales, market-run sales | Owner profit visibility |
+| Stock | Production output, market runs, orders | Dispatch, stock sales, commercials (physical inventory focus) |
+| Dispatches | Orders, packages/stock, parties, Sell & Dispatch | Tracking portal, receipt/shortage reconciliation |
+| Commercials | Quotes, invoices, stock sales, market-run sales, payments | Owner profit visibility, receivables, payment tracking |
 | Payroll | Production logs, attendance, worker rates, advances | Settlements, payslips, debt recovery |
 | Advances | Workers, settlements | Payroll deductions, WhatsApp receipts |
 | WhatsApp | Worker/profile numbers, templates, edge functions | Operational communication logs |
@@ -194,19 +196,19 @@ The bridge between logged meters and physical goods. The codebase has both packa
 3. Owner confirms stock inward into taka lots.
 4. Owner records godown, unit count, meters per unit, cost per meter, and source.
 5. Owner adjusts stock when physical counts differ.
-6. Owner records stock sales and sees realized profit.
+6. Owner records stock sale (which feeds Commercials receivables).
 
 ### Pain Points Solved
 
 - Owners know meters were produced but not always what physically exists.
 - Godown stock is often tracked as loose memory or paper lists.
-- Stock profit is hard to compute once fabric leaves the original order context.
+- Profit and receivables are hard to compute manually once fabric leaves the original order context.
 
 ### Digital Translation
 
 - Taka lists become stock lots.
 - Physical corrections become stock movements.
-- Godown sale notes become stock sale records with revenue, cost, and profit.
+- Godown sale notes become stock sale records (profit moved to Commercials).
 
 ### Data and Code
 
@@ -258,23 +260,24 @@ The professional handoff layer for order output. Dispatches group sent meters an
 
 ### What It Is
 
-Phase 1 keeps the active `/owner/commercials` route as a lightweight gross-profit view. The deeper `/owner/ledger` route exists but is archived for Phase 1.
+Phase 1 keeps the active `/owner/commercials` route as the source of truth for revenue, profit, receivables, and payments. The deeper `/owner/ledger` route exists but is archived for Phase 1.
 
 ### User Workflow
 
 1. Owner opens `/owner/commercials`.
-2. Owner reviews realized revenue/profit and expected profit.
+2. Owner reviews realized revenue/profit, expected profit, receivables, and payments.
 3. Owner filters by source: orders, stock, market runs, expected quotes.
-4. Owner searches quality/reference/source and reviews revenue, cost, profit, and margin.
+4. Owner searches quality/reference/source and reviews revenue, cost, profit, margin, and payment status.
 
 ### Pain Points Solved
 
-- Owners need profit visibility before full accounting is ready.
+- Owners need profit and collection visibility before full accounting is ready.
 - Market-run and stock sale profit should not disappear into informal notes.
 
 ### Digital Translation
 
 - Rough margin memory becomes a source-tagged profit table.
+- Collection notebooks become receivables and payment records.
 - Full accounting remains deferred until ledger polish returns to scope.
 
 ### Data and Code

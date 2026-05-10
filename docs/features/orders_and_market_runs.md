@@ -8,13 +8,13 @@ Core Phase 1 pillar. Orders and market runs connect commercial intent to loom ex
 
 ## What It Does
 
-Orders represent committed party-backed production. Market runs represent speculative production for godown stock. Both are tracked through production logs, owner analytics, stock movement, and commercial profit visibility.
+Orders represent committed party-backed production. Market runs represent speculative production for godown stock. Both are tracked through production logs, owner analytics, stock movement, and commercial profit visibility (including receivables and payments).
 
 ## User Workflow: Order
 
 1. Owner saves a quote from the estimator.
 2. Owner marks the quote accepted in `/owner/quotes`.
-3. Owner converts it into an active order with target meters, deadline, and notes.
+3. Owner converts it into an active order with target meters, deadline, and notes (or uses "Start Party Order" fast path from Estimator).
 4. Owner opens `/owner/orders`.
 5. Owner reviews order cards by status, pace, progress, deadline, cost, and margin.
 6. Owner opens the order detail drawer.

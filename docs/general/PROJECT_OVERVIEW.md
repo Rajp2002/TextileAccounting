@@ -30,6 +30,7 @@ The owner is the commercial and control user. They care about price accuracy, lo
 
 Primary owner routes:
 
+- `/owner/today` (default landing page)
 - `/owner/analytics`
 - `/owner/estimator`
 - `/owner/quotes`
@@ -97,9 +98,9 @@ Pain point translated: the production register becomes a mobile shift screen tha
 
 ### Stock
 
-The active stock route focuses on taka/godown stock and inward drafts. It supports lots from manual, opening, order, and market-run sources; suggested inward drafts from completed production; unit counts; meters per unit; godown; cost per meter; adjustments; sales; movements; and gross profit. The older deep yarn/beam inventory route remains outside Phase 1.
+The active stock route focuses on physical taka/godown stock and inward drafts. It supports lots from manual, opening, order, and market-run sources; suggested inward drafts from completed production; unit counts; meters per unit; godown; cost per meter; adjustments; sales recording; and movements. The older deep yarn/beam inventory route remains outside Phase 1.
 
-Pain point translated: the owner can answer "what is in godown, how many takas, what did it cost, and what profit did we make when we sold it?"
+Pain point translated: the owner can answer "what is in godown, how many takas, and what did it cost?" Profit and receivables are tracked in Commercials.
 
 ### Dispatches
 
@@ -109,9 +110,9 @@ Pain point translated: informal transport handoff becomes a traceable dispatch w
 
 ### Commercials
 
-Commercials is a profit view across realized and expected sources: order invoices, stock sales, market-run sales, and expected order quotes. It is not a full accounting ledger; it is an operational gross-profit dashboard.
+Commercials is the source of truth for revenue, profit, receivables, and payment tracking across realized and expected sources: order invoices, stock sales, market-run sales, and expected order quotes. It is not a full accounting ledger; it is an operational gross-profit and collection dashboard.
 
-Pain point translated: the owner can see margin by source without waiting for a full accounting workflow.
+Pain point translated: the owner can answer "Paisa/profit kya hua?" and track receivables without waiting for a full accounting workflow.
 
 ### Payroll and Advances
 

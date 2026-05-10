@@ -24,6 +24,7 @@ export const hi = {
     "billing": "बिलिंग (Billing)",
     "system health": "सिस्टम हेल्थ",
     "market_runs": "मार्केट रन्स",
+    "factory_today": "फैक्ट्री आज",
   },
   attendance: {
     title: "दैनिक उपस्थिति (Daily Attendance)",

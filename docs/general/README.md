@@ -4,11 +4,18 @@ Last analyzed from the active codebase on May 6, 2026.
 
 Weavly is a multi-tenant operating system for Indian weaving factories. The current Phase 1 source of truth is the factory loop from estimating to quotes/orders/market runs, production logging, stock/dispatch/commercial visibility, and payroll/advances.
 
+## Documentation Source of Truth
+
+1. [CURRENT_PRODUCT_IMPLEMENTATION_ANALYSIS.md](./CURRENT_PRODUCT_IMPLEMENTATION_ANALYSIS.md) - **Read this first** for current implementation details.
+2. [PHASE_1_SCOPE.md](./PHASE_1_SCOPE.md) - Authoritative scope boundary for active/deferred features.
+3. [MASTER_PRODUCT_DOCUMENT.md](./MASTER_PRODUCT_DOCUMENT.md) - Product narrative and positioning.
+
+> [!WARNING]
+> Do not rely on archived or deprecated documents unless explicitly instructed.
+
 Start here:
 
 - [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md) - concise product and implementation overview.
-- [PHASE_1_SCOPE.md](./PHASE_1_SCOPE.md) - authoritative Phase 1 launch scope.
-- [MASTER_PRODUCT_DOCUMENT.md](./MASTER_PRODUCT_DOCUMENT.md) - comprehensive product, workflow, route, data, and pain-point reference.
 - [MASTER_FEATURE_DOCUMENT.md](./MASTER_FEATURE_DOCUMENT.md) - unified feature map across all module docs.
 - [PHASE_1_ARCHIVE.md](./PHASE_1_ARCHIVE.md) - routes and product areas deferred from Phase 1 polish.
 
@@ -35,14 +42,15 @@ Feature docs:
 
 ## Current Phase 1 Owner Surface
 
+- `/owner/today` - **Default landing page** and daily action center.
 - `/owner/analytics` - live production overview, historical date view, order health, machine utilization, trend, worker breakdown.
-- `/owner/estimator` - costing engine, templates, quotes, market-run creation.
+- `/owner/estimator` - costing engine, templates, quotes, market-run creation, Start Party Order.
 - `/owner/quotes` - quote history, status changes, re-estimate, accepted quote conversion.
 - `/owner/orders` - active order board, progress, pace, assignment, dispatch section.
 - `/owner/market-runs` - speculative production tracking.
-- `/owner/stock` - taka/godown stock board, inward drafts, sales, adjustments, movements.
-- `/owner/dispatches` - order-linked dispatches, receipt reconciliation, tracking links.
-- `/owner/commercials` - expected and realized gross-profit view.
+- `/owner/stock` - physical taka/godown stock board, inward drafts, adjustments, movements.
+- `/owner/dispatches` - order-linked dispatches, Sell & Dispatch, receipt reconciliation, tracking links.
+- `/owner/commercials` - source of truth for revenue, profit, receivables, and payment tracking.
 - `/owner/payroll` - meter and fixed payroll, settlements, WhatsApp payslips.
 - `/owner/advances` - worker Upaad tracking and recovery support.
 - `/owner/fixed-workers` - workforce setup and fixed staff management.

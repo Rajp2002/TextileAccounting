@@ -6,23 +6,22 @@ Last analyzed from the active codebase on May 6, 2026.
 
 Split status:
 
-- `/owner/stock` is active Phase 1 support for taka/godown stock, inward drafts, sales, movements, and profit.
+- `/owner/stock` is active Phase 1 support for physical taka/godown stock, inward drafts, adjustments, and movements.
 - `/owner/inventory` is archived/deferred for Phase 1 and covers deeper yarn/beam inventory.
 
 ## What Active Stock Does
 
-The active stock board helps owners track physical fabric in godown. It supports manual/opening stock, order-linked stock, market-run stock, inward drafts, adjustments, sales, and movement history.
+The active stock board helps owners track physical fabric in godown. It supports manual/opening stock, order-linked stock, market-run stock, inward drafts, adjustments, sales recording, and movement history. It is focused on "Maal kya pada hai?", while profit and receivables belong to Commercials.
 
 ## User Workflow
 
 1. Owner opens `/owner/stock`.
-2. Owner sees available takas/meters, stock value at cost, realized revenue, and realized profit.
+2. Owner sees available takas/meters and stock value at cost.
 3. Owner confirms pending inward drafts from order or market-run output.
 4. Owner adds stock lots manually when needed.
 5. Owner records source, quality, godown, units, meters per unit, unit label, cost per meter, and notes.
 6. Owner adjusts stock if physical counts differ.
-7. Owner records stock sale with taka count, meters, price per meter, and notes.
-8. Commercials reflects realized stock profit.
+7. Owner records stock sale (which feeds Commercials receivables).
 
 ## Existing Workflow Translation
 

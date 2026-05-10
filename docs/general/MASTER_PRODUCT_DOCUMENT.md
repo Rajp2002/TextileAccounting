@@ -10,14 +10,17 @@ For launch prioritization, `docs/general/PHASE_1_SCOPE.md` remains the most auth
 
 Weavly is a multi-tenant textile operations SaaS for Indian weaving factories. It is not a generic ERP. The product is shaped around weaving-factory realities: yarn and loom math, piece-rate workers, day/night shift logging, meter readings, speculative market production, takas in godown, worker advances, payroll settlement, dispatch shortages, and WhatsApp-based communication.
 
-Phase 1 has been refined and extended. The original center remains estimator, production logging/tracking, and payroll/advances. The active Phase 1 surface now also includes the supporting features needed to make that loop useful in a real factory:
+Phase 1 is a focused operating loop for Surat grey fabric manufacturers/traders. The active Phase 1 surface includes the supporting features needed to make that loop useful in a real factory:
 
+- Factory Today as default owner action center
 - quotes and orders
+- Start Party Order fast path
 - market runs
-- owner analytics
-- taka/godown stock
+- taka/godown stock (physical inventory focus)
+- Sell & Dispatch guided workflow
 - dispatches and public tracking
-- commercials gross-profit view
+- Commercials receivables and payment tracking
+- gross profit visibility and money source of truth
 - workers, machines, attendance, settings, access codes
 - WhatsApp notifications
 - billing/subscriptions and referrals
@@ -27,6 +30,13 @@ The broader codebase also includes deep inventory, party ledger, supplier ledger
 ## 2. Product Thesis
 
 Factories already have workflows. Weavly does not invent a new business process; it digitizes and tightens the process owners already run through registers, calculators, Excel, phone calls, and WhatsApp.
+
+The product can be understood through a simple mental model:
+- **Maal**: "Maal kya pada hai?" (Physical inventory and stock)
+- **Paisa**: "Paisa/profit kya hua?" (Commercials, profit, receivables, and payments)
+- **Delivery**: "Maal gaya ke nahi?" (Dispatch and tracking)
+- **Worker hisaab**: "Worker hisaab kya hai?" (Payroll and advances)
+- **Attention**: "Aaj kya attention chahiye?" (Daily action center)
 
 The core translation is:
 
@@ -50,17 +60,15 @@ The owner is responsible for pricing, production planning, money, and control.
 
 They ask:
 
-- What should I quote?
-- Which looms are producing what?
-- Are orders on pace?
-- How much stock is in godown?
-- What profit did this work create?
-- What do I owe workers?
-- Which supervisor actions need approval?
-- Is my subscription active?
+- **Maal**: "Maal kya pada hai?"
+- **Paisa**: "Paisa/profit kya hua?"
+- **Delivery**: "Maal gaya ke nahi?"
+- **Worker hisaab**: "Worker hisaab kya hai?"
+- **Attention**: "Aaj kya attention chahiye?"
 
 Owner routes:
 
+- `/owner/today` (default)
 - `/owner/analytics`
 - `/owner/estimator`
 - `/owner/quotes`
