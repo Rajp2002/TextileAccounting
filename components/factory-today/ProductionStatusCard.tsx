@@ -57,6 +57,11 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
                     <p className="text-xs font-semibold uppercase tracking-wide text-ink">Production Status</p>
                     <p className={cn('text-sm font-bold', statusColor)}>{statusLabel}</p>
                 </div>
+                {noneLogged && (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-risk text-[11px] font-bold text-white">
+                        1
+                    </span>
+                )}
                 {production.hasLogsToday && (
                     <p className="text-right text-xs text-muted">
                         <span className="text-lg font-bold text-ink">

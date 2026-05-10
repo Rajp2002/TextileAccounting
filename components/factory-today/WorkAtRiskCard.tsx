@@ -40,12 +40,15 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
                     </p>
                 </div>
                 {hasRisk && (
-                    <span className={cn(
-                        'rounded-full px-2 py-0.5 text-[11px] font-bold',
-                        criticalOrders.length > 0 ? 'bg-risk-soft text-risk' : 'bg-warning-soft text-warning'
-                    )}>
-                        {criticalOrders.length > 0 ? `${criticalOrders.length} critical` : 'Warning'}
-                    </span>
+                    criticalOrders.length > 0 ? (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-risk text-[11px] font-bold text-white">
+                            {criticalOrders.length}
+                        </span>
+                    ) : (
+                        <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-bold text-warning">
+                            Warning
+                        </span>
+                    )
                 )}
             </div>
 
