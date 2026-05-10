@@ -35,8 +35,8 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
             <div className="grid grid-cols-2 divide-x divide-hairline border-b border-hairline">
                 <div className="px-4 py-4">
                     <div className="mb-2 flex items-center gap-2">
-                        <Users className="h-3.5 w-3.5 text-muted" />
-                        <p className="text-xs text-muted">Active Workers</p>
+                        <Users className="h-3.5 w-3.5 text-body" />
+                        <p className="text-xs text-body">Active Workers</p>
                     </div>
                     <p className={cn(
                         'text-2xl font-bold',
@@ -44,12 +44,12 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                     )}>
                         {payroll.unsettledWorkerCount}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-muted">workers with logs this cycle</p>
+                    <p className="mt-0.5 text-[11px] text-body">workers with logs this cycle</p>
                 </div>
                 <div className="px-4 py-4">
                     <div className="mb-2 flex items-center gap-2">
-                        <HandCoins className="h-3.5 w-3.5 text-muted" />
-                        <p className="text-xs text-muted">Pending Advances</p>
+                        <HandCoins className="h-3.5 w-3.5 text-body" />
+                        <p className="text-xs text-body">Pending Advances</p>
                     </div>
                     <p className={cn(
                         'text-2xl font-bold',
@@ -60,7 +60,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                             : '—'
                         }
                     </p>
-                    <p className="mt-0.5 text-[11px] text-muted">
+                    <p className="mt-0.5 text-[11px] text-body">
                         {hasAdvances ? 'pending deduction' : 'No pending advances'}
                     </p>
                 </div>

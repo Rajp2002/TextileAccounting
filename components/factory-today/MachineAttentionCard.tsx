@@ -34,19 +34,19 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
             <div className="grid grid-cols-3 divide-x divide-hairline border-b border-hairline">
                 <div className="px-4 py-3 text-center">
                     <p className="text-lg font-bold text-success">{machines.assigned}</p>
-                    <p className="text-[11px] font-medium text-muted">Assigned</p>
+                    <p className="text-[11px] font-medium text-body">Assigned</p>
                 </div>
                 <div className="px-4 py-3 text-center">
-                    <p className={cn('text-lg font-bold', machines.unassigned > 0 ? 'text-warning' : 'text-subtle')}>
+                    <p className={cn('text-lg font-bold', machines.unassigned > 0 ? 'text-warning' : 'text-muted')}>
                         {machines.unassigned}
                     </p>
-                    <p className="text-[11px] font-medium text-muted">Unassigned</p>
+                    <p className="text-[11px] font-medium text-body">Unassigned</p>
                 </div>
                 <div className="px-4 py-3 text-center">
-                    <p className={cn('text-lg font-bold', machines.maintenance > 0 ? 'text-risk' : 'text-subtle')}>
+                    <p className={cn('text-lg font-bold', machines.maintenance > 0 ? 'text-risk' : 'text-muted')}>
                         {machines.maintenance}
                     </p>
-                    <p className="text-[11px] font-medium text-muted">Maintenance</p>
+                    <p className="text-[11px] font-medium text-body">Maintenance</p>
                 </div>
             </div>
 

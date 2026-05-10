@@ -25,7 +25,7 @@ function TrackingCopyButton({ token, dispatchNumber }: { token: string; dispatch
     return (
         <button
             onClick={handleCopy}
-            className="flex items-center gap-1 rounded border border-hairline bg-surface px-2 py-1 text-[11px] font-medium text-muted transition hover:bg-surface-soft"
+            className="flex items-center gap-1 rounded border border-hairline bg-surface px-2 py-1 text-[11px] font-medium text-body transition hover:bg-surface-soft"
             title={`Copy tracking link for Dispatch #${dispatchNumber}`}
         >
             <Copy className="h-2.5 w-2.5" />
@@ -83,7 +83,7 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
                             )} />
                             <div className="flex-1 min-w-0">
                                 <p className="truncate text-sm font-semibold text-ink">{r.partyName}</p>
-                                <p className="text-[11px] text-muted">
+                                <p className="text-[11px] text-body">
                                     Dispatch #{r.dispatchNumber} · {r.sentMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m sent
                                 </p>
                             </div>

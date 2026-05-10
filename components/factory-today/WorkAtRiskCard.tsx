@@ -66,14 +66,14 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
                                 <div className="flex-1 min-w-0">
                                     <p className="truncate text-sm font-semibold text-ink">{order.partyName}</p>
                                     {order.qualityLabel && (
-                                        <p className="text-xs text-muted">{order.qualityLabel}</p>
+                                        <p className="text-xs text-body">{order.qualityLabel}</p>
                                     )}
                                 </div>
                                 <div className="text-right">
                                     <p className="text-xs font-semibold text-body">
                                         {order.remainingMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m left
                                     </p>
-                                    <p className="flex items-center gap-1 text-[11px] text-muted">
+                                    <p className="flex items-center gap-1 text-[11px] text-body">
                                         <Calendar className="h-2.5 w-2.5" />
                                         {new Date(order.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                     </p>
@@ -96,7 +96,7 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
                             <div key={run.id} className="flex items-center gap-3 py-2.5">
                                 <span className="h-2 w-2 shrink-0 rounded-full bg-warning" />
                                 <span className="flex-1 truncate text-sm font-medium text-body">{run.label}</span>
-                                <span className="text-[11px] text-muted">No prod. 2+ days</span>
+                                <span className="text-[11px] text-body">No prod. 2+ days</span>
                             </div>
                         ))}
                     </div>

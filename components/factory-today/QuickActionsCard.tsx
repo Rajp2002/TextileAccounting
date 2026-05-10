@@ -79,7 +79,7 @@ export function QuickActionsCard() {
                                 <p className="text-xs font-bold text-ink group-hover:text-saffron transition-colors">
                                     {action.label}
                                 </p>
-                                <p className="text-[11px] text-muted">{action.description}</p>
+                                <p className="text-[11px] text-body">{action.description}</p>
                             </div>
                         </Link>
                     )

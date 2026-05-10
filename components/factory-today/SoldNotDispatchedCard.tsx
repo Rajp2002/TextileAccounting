@@ -36,7 +36,7 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
                         <p className="text-[11px] font-bold text-risk">
                             ₹{(totalValue / 1000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}k
                         </p>
-                        <p className="text-[10px] text-muted">{totalMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m</p>
+                        <p className="text-[10px] text-body">{totalMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m</p>
                     </div>
                 )}
             </div>
@@ -49,7 +49,7 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
                             <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-risk" />
                             <div className="flex-1 min-w-0">
                                 <p className="truncate text-sm font-semibold text-ink">{sale.qualityLabel}</p>
-                                <p className="text-[11px] text-muted">
+                                <p className="text-[11px] text-body">
                                     {new Date(sale.saleDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {sale.units} taka
                                 </p>
                             </div>
@@ -57,7 +57,7 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
                                 <p className="text-xs font-semibold text-body">
                                     {sale.meters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m
                                 </p>
-                                <p className="text-[11px] text-muted">
+                                <p className="text-[11px] text-body">
                                     ₹{sale.saleValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
