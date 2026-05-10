@@ -2,6 +2,8 @@
 
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { processCommercialPayment, RecordPaymentInput } from '@/lib/commercials/receivables'
+import { revalidatePath } from 'next/cache'
 
 export type CommercialStage = 'realized' | 'expected'
 export type CommercialSourceKind = 'stock_sale' | 'market_run_sale' | 'order_invoice' | 'order_quote'
@@ -107,4 +109,32 @@ export async function getCommercialsData(): Promise<{ data: CommercialsData } | 
         : null
 
     return { data: { entries, summary } }
+}
+
+export async function getCommercialReceivables(filters?: any) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    let query = supabase
+        .from('commercial_receivables')
+        .select('*')
+        .eq('org_id', profile.org_id)
+        .order('created_at', { ascending: false })
+
+    if (filters?.status) {
+        query = query.eq('payment_status', filters.status)
+    }
+
+    const { data, error } = await query
+
+    if (error) return { error: error.message }
+    return { data }
+}
+
+export async function recordCommercialPaymentAction(input: RecordPaymentInput) {
+    const result = await processCommercialPayment(input)
+    if ('success' in result) {
+        revalidatePath('/owner/commercials')
+    }
+    return result
 }

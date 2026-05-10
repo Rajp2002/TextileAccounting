@@ -851,6 +851,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground">Godown Stock</h1>
                     <p className="mt-1 text-sm text-muted-foreground">Physical takas, inward review, godown balance, and stock-sale entry.</p>
+                    <p className="mt-1 text-xs text-amber-600 font-semibold">Stock shows physical fabric and godown movement. For revenue, profit, and payment collection, use Commercials.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <Button onClick={() => { setSellAndDispatchLotId(undefined); setSellAndDispatchOpen(true); }} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
@@ -879,20 +880,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                     icon={Warehouse}
                     tone="bg-amber-50 text-amber-700"
                 />
-                <MetricCard
-                    label="Stock Sales"
-                    value={money(initialData.summary.realized_revenue)}
-                    helper="recorded from godown"
-                    icon={IndianRupee}
-                    tone="bg-violet-50 text-violet-700"
-                />
-                <MetricCard
-                    label="Sale Margin"
-                    value={money(initialData.summary.realized_profit)}
-                    helper="stock-sale context"
-                    icon={TrendingUp}
-                    tone="bg-emerald-50 text-emerald-700"
-                />
+                {/* Profit/Revenue cards removed - managed in Commercials */}
             </div>
 
             {initialData.pendingInwards.length > 0 && (
@@ -997,7 +985,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                             {lot.notes && <p className="text-sm text-muted-foreground">{lot.notes}</p>}
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3 text-right sm:grid-cols-4">
+                                        <div className="grid grid-cols-2 gap-3 text-right sm:grid-cols-3">
                                             <div>
                                                 <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Available</p>
                                                 <p className="font-black text-foreground">{stockUnits(lot.available_taka_count, lot.unit_label)}</p>
@@ -1012,15 +1000,6 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                 <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Cost</p>
                                                 <p className="font-black text-foreground">{money(lot.cost_per_meter, 2)}</p>
                                                 <p className="text-xs text-muted-foreground">per meter</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Profit</p>
-                                                <p className={cn('font-black', lot.total_gross_profit >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
-                                                    {money(lot.total_gross_profit)}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {saleMargin === null ? 'No sale' : `${saleMargin.toFixed(1)}%`}
-                                                </p>
                                             </div>
                                         </div>
                                     </div>

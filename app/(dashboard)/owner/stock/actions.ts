@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { ensureReceivableForCommercialEntry } from '@/lib/commercials/receivables'
 import {
     AdjustTakaStockLotSchema,
     ConfirmStockInwardDraftSchema,
@@ -633,9 +634,14 @@ export async function recordTakaStockSale(input: unknown) {
 
     if (error) return { error: error.message }
 
+    const result = data?.[0] ?? null
+    if (result?.sale_id) {
+        await ensureReceivableForCommercialEntry('fabric_stock_sale', result.sale_id)
+    }
+
     revalidatePath('/owner/stock')
     revalidatePath('/owner/commercials')
-    return { success: true, result: data?.[0] ?? null }
+    return { success: true, result }
 }
 
 export async function adjustTakaStockLot(input: unknown) {
