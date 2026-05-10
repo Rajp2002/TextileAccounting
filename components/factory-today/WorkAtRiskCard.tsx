@@ -64,7 +64,12 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
                                     order.riskLevel === 'red' ? 'bg-risk' : 'bg-warning'
                                 )} />
                                 <div className="flex-1 min-w-0">
-                                    <p className="truncate text-sm font-semibold text-ink">{order.partyName}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="truncate text-sm font-semibold text-ink">{order.partyName}</p>
+                                        {order.riskLevel === 'red' && (
+                                            <span className="rounded bg-risk-soft px-1.5 py-0.5 text-[10px] font-bold text-risk uppercase">Critical</span>
+                                        )}
+                                    </div>
                                     {order.qualityLabel && (
                                         <p className="text-xs text-body">{order.qualityLabel}</p>
                                     )}
