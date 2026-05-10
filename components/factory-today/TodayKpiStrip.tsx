@@ -27,7 +27,7 @@ function KpiCard({
         green: 'text-success bg-success-soft border-success/20',
         yellow: 'text-warning bg-warning-soft border-warning/20',
         red: 'text-risk bg-risk-soft border-risk/20',
-        neutral: 'text-subtle bg-surface-soft border-hairline',
+        neutral: 'text-muted bg-surface-soft border-hairline',
     }
 
     return (

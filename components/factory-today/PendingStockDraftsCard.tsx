@@ -46,7 +46,7 @@ export function PendingStockDraftsCard({ drafts }: PendingStockDraftsCardProps) 
                                 <ShiftIcon className="h-3.5 w-3.5 shrink-0 text-muted" />
                                 <div className="flex-1 min-w-0">
                                     <p className="truncate text-sm font-semibold text-ink">{draft.qualityLabel}</p>
-                                    <p className="text-[11px] text-muted">
+                                    <p className="text-[11px] text-body">
                                         {new Date(draft.productionDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {draft.shift} shift
                                     </p>
                                 </div>
@@ -54,7 +54,7 @@ export function PendingStockDraftsCard({ drafts }: PendingStockDraftsCardProps) 
                                     <p className="text-xs font-semibold text-body">
                                         {draft.producedMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m
                                     </p>
-                                    <p className="text-[11px] text-muted">
+                                    <p className="text-[11px] text-body">
                                         ₹{draft.costPerMeter.toLocaleString('en-IN', { maximumFractionDigits: 2 })}/m
                                     </p>
                                 </div>
