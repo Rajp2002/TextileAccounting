@@ -54,7 +54,7 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
             <div className={cn('flex items-center gap-3 border-b px-4 py-3', headerColor)}>
                 <StatusIcon className={cn('h-4 w-4 shrink-0', statusColor)} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Production Status</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink">Production Status</p>
                     <p className={cn('text-sm font-bold', statusColor)}>{statusLabel}</p>
                 </div>
                 {production.hasLogsToday && (

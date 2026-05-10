@@ -23,7 +23,7 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
             )}>
                 <Truck className={cn('h-4 w-4 shrink-0', hasSales ? 'text-risk' : 'text-success')} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Sold, Not Dispatched</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink">Sold, Not Dispatched</p>
                     <p className={cn('text-sm font-bold', hasSales ? 'text-risk' : 'text-success')}>
                         {hasSales
                             ? `${sales.length} sale${sales.length !== 1 ? 's' : ''} awaiting dispatch`

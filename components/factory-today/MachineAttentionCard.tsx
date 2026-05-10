@@ -23,7 +23,7 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
             )}>
                 <Server className={cn('h-4 w-4 shrink-0', allAssigned ? 'text-success' : 'text-warning')} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Looms</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink">Looms</p>
                     <p className={cn('text-sm font-bold', allAssigned ? 'text-success' : 'text-warning')}>
                         {allAssigned ? 'All looms assigned' : `${machines.unassigned} loom${machines.unassigned !== 1 ? 's' : ''} unassigned`}
                     </p>

@@ -54,7 +54,7 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
                     !hasReceipts ? 'text-success' : longPending.length > 0 ? 'text-risk' : 'text-warning'
                 )} />
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted">Dispatches Pending Receipt</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink">Dispatches Pending Receipt</p>
                     <p className={cn(
                         'text-sm font-bold',
                         !hasReceipts ? 'text-success' : longPending.length > 0 ? 'text-risk' : 'text-warning'
