@@ -10,27 +10,17 @@ interface PendingReceiptsCardProps {
     receipts: FactoryTodayData['dispatch']['pendingReceipts']
 }
 
-function TrackingCopyButton({ token, dispatchNumber }: { token: string; dispatchNumber: number }) {
-    const [copied, setCopied] = useState(false)
-
-    async function handleCopy() {
-        // Use the configured site URL (production-safe); fall back to current origin in dev
-        const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || window.location.origin
-        const url = `${base}/track/${token}`
-        await navigator.clipboard.writeText(url)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-    }
-
+function TrackingLink({ token, dispatchNumber }: { token: string; dispatchNumber: number }) {
     return (
-        <button
-            onClick={handleCopy}
+        <Link
+            href={`/track/${token}`}
+            target="_blank"
             className="flex items-center gap-1 rounded border border-hairline bg-surface px-2 py-1 text-[11px] font-medium text-body transition hover:bg-surface-soft"
-            title={`Copy tracking link for Dispatch #${dispatchNumber}`}
+            title={`Track Dispatch #${dispatchNumber}`}
         >
-            <Copy className="h-2.5 w-2.5" />
-            {copied ? 'Copied!' : 'Track'}
-        </button>
+            <MapPin className="h-2.5 w-2.5" />
+            Track
+        </Link>
     )
 }
 
@@ -100,7 +90,7 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
                                     {r.daysPending}d ago
                                 </span>
                                 {r.trackingToken && (
-                                    <TrackingCopyButton token={r.trackingToken} dispatchNumber={r.dispatchNumber} />
+                                    <TrackingLink token={r.trackingToken} dispatchNumber={r.dispatchNumber} />
                                 )}
                             </div>
                         </div>

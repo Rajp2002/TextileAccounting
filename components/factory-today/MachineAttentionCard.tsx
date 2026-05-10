@@ -37,13 +37,13 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
                     <p className="text-[11px] font-medium text-body">Assigned</p>
                 </div>
                 <div className="px-4 py-3 text-center">
-                    <p className={cn('text-lg font-bold', machines.unassigned > 0 ? 'text-warning' : 'text-muted')}>
+                    <p className={cn('text-lg font-bold', machines.unassigned > 0 ? 'text-warning' : 'text-muted-foreground')}>
                         {machines.unassigned}
                     </p>
                     <p className="text-[11px] font-medium text-body">Unassigned</p>
                 </div>
                 <div className="px-4 py-3 text-center">
-                    <p className={cn('text-lg font-bold', machines.maintenance > 0 ? 'text-risk' : 'text-muted')}>
+                    <p className={cn('text-lg font-bold', machines.maintenance > 0 ? 'text-risk' : 'text-muted-foreground')}>
                         {machines.maintenance}
                     </p>
                     <p className="text-[11px] font-medium text-body">Maintenance</p>

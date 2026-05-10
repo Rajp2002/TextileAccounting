@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import TrackingPortal from './TrackingPortal'
 import type { Metadata } from 'next'
+import { I18nProvider } from '@/lib/i18n/context'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -75,10 +76,12 @@ export default async function TrackingPage({ params }: { params: Promise<{ token
     const data = trackingData as TrackingData
 
     return (
-        <TrackingPortal
-            data={data}
-            trackingToken={token}
-            isPreview={isInternalUser}
-        />
+        <I18nProvider>
+            <TrackingPortal
+                data={data}
+                trackingToken={token}
+                isPreview={isInternalUser}
+            />
+        </I18nProvider>
     )
 }
