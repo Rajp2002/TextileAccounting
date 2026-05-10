@@ -69,9 +69,9 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
             {/* Cycle info */}
             {payroll.upcomingSettlementDate && (
                 <div className="px-4 py-3">
-                    <p className="text-xs text-muted">
+                    <p className="text-xs text-body">
                         Next cycle starts{' '}
-                        <span className="font-semibold text-body">
+                        <span className="font-semibold text-ink">
                             {new Date(payroll.upcomingSettlementDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                         </span>
                     </p>
