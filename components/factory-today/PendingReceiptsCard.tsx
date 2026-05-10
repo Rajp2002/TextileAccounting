@@ -66,8 +66,8 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
                     </p>
                 </div>
                 {longPending.length > 0 && (
-                    <span className="rounded-full bg-risk-soft px-2 py-0.5 text-[11px] font-bold text-risk">
-                        {longPending.length} overdue
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-risk text-[11px] font-bold text-white">
+                        {longPending.length}
                     </span>
                 )}
             </div>
@@ -82,7 +82,12 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
                                 r.daysPending > 5 ? 'text-risk' : 'text-warning'
                             )} />
                             <div className="flex-1 min-w-0">
-                                <p className="truncate text-sm font-semibold text-ink">{r.partyName}</p>
+                                <div className="flex items-center gap-2">
+                                    <p className="truncate text-sm font-semibold text-ink">{r.partyName}</p>
+                                    {r.daysPending > 5 && (
+                                        <span className="rounded bg-risk-soft px-1.5 py-0.5 text-[10px] font-bold text-risk uppercase">Critical</span>
+                                    )}
+                                </div>
                                 <p className="text-[11px] text-body">
                                     Dispatch #{r.dispatchNumber} · {r.sentMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m sent
                                 </p>
