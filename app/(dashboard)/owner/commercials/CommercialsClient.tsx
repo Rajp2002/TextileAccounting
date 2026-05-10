@@ -10,12 +10,15 @@ import {
     PackageCheck,
     Search,
     TrendingUp,
+    CalendarDays,
+    ArrowRight,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import type {
     CommercialProfitEntry,
     CommercialsData,
@@ -101,6 +104,8 @@ function displaySourceLabel(entry: CommercialProfitEntry) {
             return 'Expected Order'
         case 'market_run_sale':
             return 'Direct Market Sale'
+        default:
+            return entry.source_kind
     }
 }
 
@@ -119,6 +124,8 @@ function sourceTone(entry: CommercialProfitEntry) {
             return 'bg-amber-50 text-amber-700 border-amber-200'
         case 'market_run_sale':
             return 'bg-violet-50 text-violet-700 border-violet-200'
+        default:
+            return 'bg-slate-50 text-slate-700 border-slate-200'
     }
 }
 
@@ -176,10 +183,27 @@ function EntryRow({ entry }: { entry: CommercialProfitEntry }) {
     )
 }
 
-export default function CommercialsClient({ initialData }: { initialData: CommercialsData }) {
+interface Receivable {
+    id: string
+    party_name: string
+    quality_label: string
+    payment_status: 'unpaid' | 'partial' | 'paid'
+    total_amount: number
+    received_amount: number
+    balance_amount: number
+    due_date?: string | null
+}
+
+interface CommercialsClientProps {
+    initialData: CommercialsData
+    initialReceivables: Receivable[]
+}
+
+export default function CommercialsClient({ initialData, initialReceivables }: CommercialsClientProps) {
     const [query, setQuery] = useState('')
     const [stage, setStage] = useState<StageFilter>('all')
     const [source, setSource] = useState<SourceFilter>('all')
+    const [activeTab, setActiveTab] = useState('overview')
 
     const filtered = useMemo(() => {
         const needle = query.trim().toLowerCase()
@@ -211,144 +235,256 @@ export default function CommercialsClient({ initialData }: { initialData: Commer
         { key: 'order_quote', label: 'Expected Orders' },
     ]
 
+    // Calculate Receivables Summary
+    const receivablesSummary = useMemo(() => {
+        return initialReceivables.reduce((acc, rec) => {
+            acc.total += rec.total_amount
+            acc.received += rec.received_amount
+            acc.balance += rec.balance_amount
+            if (rec.payment_status === 'unpaid' || rec.payment_status === 'partial') {
+                acc.moneyToCollect += rec.balance_amount
+                // Check if overdue
+                if (rec.due_date && new Date(rec.due_date) < new Date()) {
+                    acc.overdue += rec.balance_amount
+                }
+            }
+            return acc
+        }, { total: 0, received: 0, balance: 0, moneyToCollect: 0, overdue: 0 })
+    }, [initialReceivables])
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground">Commercials</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">Read-only gross profit across invoices, expected orders, direct market sales, and godown stock sales.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Profit tracking, receivables, and payment collection.</p>
                 </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <MetricCard
-                    label="Realized Revenue"
-                    value={money(initialData.summary.realized_revenue)}
-                    helper={`${money(initialData.summary.realized_cost)} production cost`}
-                    icon={IndianRupee}
-                    tone="bg-blue-50 text-blue-600"
-                />
-                <MetricCard
-                    label="Realized Profit"
-                    value={money(initialData.summary.realized_profit)}
-                    helper={initialData.summary.realized_margin_pct == null ? 'No realized sales yet' : `${initialData.summary.realized_margin_pct.toFixed(1)}% gross margin`}
-                    icon={TrendingUp}
-                    tone="bg-emerald-50 text-emerald-700"
-                />
-                <MetricCard
-                    label="Expected Profit"
-                    value={money(initialData.summary.expected_profit)}
-                    helper={`${money(initialData.summary.expected_revenue)} expected revenue`}
-                    icon={FileText}
-                    tone="bg-amber-50 text-amber-700"
-                />
-                <MetricCard
-                    label="Filtered Profit"
-                    value={money(filteredSummary.profit)}
-                    helper={`${filtered.length} entries visible`}
-                    icon={BarChart3}
-                    tone="bg-violet-50 text-violet-700"
-                />
-            </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="mb-4">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="receivables">Receivables ({initialReceivables.length})</TabsTrigger>
+                    <TabsTrigger value="profit_entries">Profit Entries ({initialData.entries.length})</TabsTrigger>
+                </TabsList>
 
-            <div className="flex flex-col gap-3 lg:flex-row">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                        value={query}
-                        onChange={(event) => setQuery(event.target.value)}
-                        placeholder="Search quality, reference, source..."
-                        className="pl-10"
-                    />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {(['all', 'realized', 'expected'] as StageFilter[]).map((item) => (
-                        <Button
-                            key={item}
-                            variant={stage === item ? 'default' : 'outline'}
-                            onClick={() => setStage(item)}
-                            className="capitalize"
-                        >
-                            {item}
-                        </Button>
-                    ))}
-                </div>
-            </div>
+                <TabsContent value="overview" className="space-y-6">
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        <MetricCard
+                            label="Realized Revenue"
+                            value={money(initialData.summary.realized_revenue)}
+                            helper={`${money(initialData.summary.realized_cost)} production cost`}
+                            icon={IndianRupee}
+                            tone="bg-blue-50 text-blue-600"
+                        />
+                        <MetricCard
+                            label="Realized Profit"
+                            value={money(initialData.summary.realized_profit)}
+                            helper={initialData.summary.realized_margin_pct == null ? 'No realized sales yet' : `${initialData.summary.realized_margin_pct.toFixed(1)}% gross margin`}
+                            icon={TrendingUp}
+                            tone="bg-emerald-50 text-emerald-700"
+                        />
+                        <MetricCard
+                            label="Money to Collect"
+                            value={money(receivablesSummary.moneyToCollect)}
+                            helper={`${money(receivablesSummary.overdue)} overdue`}
+                            icon={BadgeIndianRupee}
+                            tone="bg-violet-50 text-violet-700"
+                        />
+                        <MetricCard
+                            label="Expected Profit"
+                            value={money(initialData.summary.expected_profit)}
+                            helper={`${money(initialData.summary.expected_revenue)} expected revenue`}
+                            icon={FileText}
+                            tone="bg-amber-50 text-amber-700"
+                        />
+                    </div>
 
-            <div className="flex flex-wrap gap-2">
-                {sourceFilters.map((item) => (
-                    <Button
-                        key={item.key}
-                        variant={source === item.key ? 'default' : 'outline'}
-                        onClick={() => setSource(item.key)}
-                    >
-                        {item.label}
-                    </Button>
-                ))}
-            </div>
+                    <Card className="border-border/60">
+                        <CardContent className="p-6 flex flex-col items-center justify-center text-center py-12">
+                            <BarChart3 className="mb-3 h-10 w-10 text-muted-foreground/70" />
+                            <p className="text-lg font-bold text-foreground">Commercials Dashboard</p>
+                            <p className="text-sm text-muted-foreground mt-1">Use the tabs above to view detailed Receivables and Profit Entries.</p>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
-            <Card className="border-border/60">
-                <CardContent className="p-0">
-                    {filtered.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <PackageCheck className="mb-3 h-10 w-10 text-muted-foreground/70" />
-                            <p className="text-lg font-bold text-foreground">No commercial entries found</p>
+                <TabsContent value="receivables" className="space-y-6">
+                    <div className="flex flex-col gap-3 lg:flex-row">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                placeholder="Search party, quality..."
+                                className="pl-10"
+                            />
                         </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="border-b border-border/60 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-                                    <tr>
-                                        <th className="px-4 py-3 font-bold">Date</th>
-                                        <th className="px-4 py-3 font-bold">Source</th>
-                                        <th className="px-4 py-3 text-right font-bold">Quantity</th>
-                                        <th className="px-4 py-3 text-right font-bold">Rate / m</th>
-                                        <th className="px-4 py-3 text-right font-bold">Revenue</th>
-                                        <th className="px-4 py-3 text-right font-bold">Gross Profit</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border/40">
-                                    {filtered.map((entry) => (
-                                        <EntryRow key={`${entry.source_kind}-${entry.source_id}`} entry={entry} />
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                    </div>
 
-            <div className="grid gap-3 md:grid-cols-3">
-                <Card className="border-border/60">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-2">
-                            <BadgeIndianRupee className="h-4 w-4 text-muted-foreground" />
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Filtered Revenue</p>
+                    <Card className="border-border/60">
+                        <CardContent className="p-0">
+                            {initialReceivables.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-16 text-center">
+                                    <BadgeIndianRupee className="mb-3 h-10 w-10 text-muted-foreground/70" />
+                                    <p className="text-lg font-bold text-foreground">No receivables found</p>
+                                    <p className="text-sm text-muted-foreground mt-1">Sales will automatically create receivables here.</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead className="border-b border-border/60 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                                            <tr>
+                                                <th className="px-4 py-3 font-bold">Party / Quality</th>
+                                                <th className="px-4 py-3 font-bold">Status</th>
+                                                <th className="px-4 py-3 text-right font-bold">Total</th>
+                                                <th className="px-4 py-3 text-right font-bold">Received</th>
+                                                <th className="px-4 py-3 text-right font-bold">Balance</th>
+                                                <th className="px-4 py-3 font-bold">Due Date</th>
+                                                <th className="px-4 py-3 text-right font-bold">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border/40">
+                                            {initialReceivables.map((rec) => (
+                                                <tr key={rec.id} className="hover:bg-muted/30">
+                                                    <td className="px-4 py-3">
+                                                        <p className="font-bold text-foreground">{rec.party_name}</p>
+                                                        <p className="text-xs text-muted-foreground">{rec.quality_label}</p>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <Badge variant="outline" className={cn('capitalize font-bold', 
+                                                            rec.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                            rec.payment_status === 'partial' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                            'bg-rose-50 text-rose-700 border-rose-200'
+                                                        )}>
+                                                            {rec.payment_status}
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right font-semibold">{money(rec.total_amount)}</td>
+                                                    <td className="px-4 py-3 text-right text-emerald-600">{money(rec.received_amount)}</td>
+                                                    <td className="px-4 py-3 text-right font-bold text-rose-600">{money(rec.balance_amount)}</td>
+                                                    <td className="px-4 py-3">
+                                                        {rec.due_date ? (
+                                                            <div className="flex items-center gap-1 text-xs font-semibold">
+                                                                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                {new Date(rec.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                            </div>
+                                                        ) : '—'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                                                            Record Payment <ArrowRight className="h-3 w-3" />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="profit_entries" className="space-y-6">
+                    <div className="flex flex-col gap-3 lg:flex-row">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                value={query}
+                                onChange={(event) => setQuery(event.target.value)}
+                                placeholder="Search quality, reference, source..."
+                                className="pl-10"
+                            />
                         </div>
-                        <p className="mt-3 text-xl font-black text-foreground">{money(filteredSummary.revenue)}</p>
-                    </CardContent>
-                </Card>
-                <Card className="border-border/60">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-2">
-                            <PackageCheck className="h-4 w-4 text-muted-foreground" />
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Filtered Cost</p>
+                        <div className="flex flex-wrap gap-2">
+                            {(['all', 'realized', 'expected'] as StageFilter[]).map((item) => (
+                                <Button
+                                    key={item}
+                                    variant={stage === item ? 'default' : 'outline'}
+                                    onClick={() => setStage(item)}
+                                    className="capitalize"
+                                >
+                                    {item}
+                                </Button>
+                            ))}
                         </div>
-                        <p className="mt-3 text-xl font-black text-foreground">{money(filteredSummary.cost)}</p>
-                    </CardContent>
-                </Card>
-                <Card className="border-border/60">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-2">
-                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Filtered Margin</p>
-                        </div>
-                        <p className={cn('mt-3 text-xl font-black', filteredSummary.profit >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
-                            {filteredSummary.revenue > 0 ? `${((filteredSummary.profit / filteredSummary.revenue) * 100).toFixed(1)}%` : '—'}
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        {sourceFilters.map((item) => (
+                            <Button
+                                key={item.key}
+                                variant={source === item.key ? 'default' : 'outline'}
+                                onClick={() => setSource(item.key)}
+                            >
+                                {item.label}
+                            </Button>
+                        ))}
+                    </div>
+
+                    <Card className="border-border/60">
+                        <CardContent className="p-0">
+                            {filtered.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-16 text-center">
+                                    <PackageCheck className="mb-3 h-10 w-10 text-muted-foreground/70" />
+                                    <p className="text-lg font-bold text-foreground">No commercial entries found</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead className="border-b border-border/60 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                                            <tr>
+                                                <th className="px-4 py-3 font-bold">Date</th>
+                                                <th className="px-4 py-3 font-bold">Source</th>
+                                                <th className="px-4 py-3 text-right font-bold">Quantity</th>
+                                                <th className="px-4 py-3 text-right font-bold">Rate / m</th>
+                                                <th className="px-4 py-3 text-right font-bold">Revenue</th>
+                                                <th className="px-4 py-3 text-right font-bold">Gross Profit</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border/40">
+                                            {filtered.map((entry) => (
+                                                <EntryRow key={`${entry.source_kind}-${entry.source_id}`} entry={entry} />
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <div className="grid gap-3 md:grid-cols-3">
+                        <Card className="border-border/60">
+                            <CardContent className="p-4">
+                                <div className="flex items-center gap-2">
+                                    <BadgeIndianRupee className="h-4 w-4 text-muted-foreground" />
+                                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Filtered Revenue</p>
+                                </div>
+                                <p className="mt-3 text-xl font-black text-foreground">{money(filteredSummary.revenue)}</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="border-border/60">
+                            <CardContent className="p-4">
+                                <div className="flex items-center gap-2">
+                                    <PackageCheck className="h-4 w-4 text-muted-foreground" />
+                                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Filtered Cost</p>
+                                </div>
+                                <p className="mt-3 text-xl font-black text-foreground">{money(filteredSummary.cost)}</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="border-border/60">
+                            <CardContent className="p-4">
+                                <div className="flex items-center gap-2">
+                                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Filtered Margin</p>
+                                </div>
+                                <p className={cn('mt-3 text-xl font-black', filteredSummary.profit >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
+                                    {filteredSummary.revenue > 0 ? `${((filteredSummary.profit / filteredSummary.revenue) * 100).toFixed(1)}%` : '—'}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </TabsContent>
+            </Tabs>
         </div>
     )
 }

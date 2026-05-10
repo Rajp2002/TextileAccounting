@@ -4,6 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import type { SellAndDispatchInput, SellAndDispatchResult } from '@/lib/dispatch/sell-and-dispatch-types'
+import { ensureReceivableForCommercialEntry } from '@/lib/commercials/receivables'
 
 export async function getSellAndDispatchOptions() {
     const { profile } = await requireRole(['owner', 'supervisor'])
@@ -113,6 +114,7 @@ export async function sellAndDispatchTakas(input: SellAndDispatchInput): Promise
         }
         
         saleIds.push(saleData[0].sale_id)
+        await ensureReceivableForCommercialEntry('fabric_stock_sale', saleData[0].sale_id)
     }
 
     // 3. Create Dispatch

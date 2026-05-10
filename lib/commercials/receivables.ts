@@ -1,0 +1,112 @@
+import { createClient as createServerClient } from '@/lib/supabase/server'
+import { requireRole } from '@/lib/auth'
+
+export async function ensureReceivableForCommercialEntry(
+    sourceType: 'fabric_stock_sale' | 'market_run_sale' | 'party_invoice',
+    sourceId: string
+) {
+    const { profile, user } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    if (sourceType === 'fabric_stock_sale') {
+        // Fetch sale details
+        const { data: sale, error: saleError } = await supabase
+            .from('fabric_stock_sales')
+            .select(`
+                id,
+                org_id,
+                sale_date,
+                revenue_amount,
+                created_by,
+                fabric_stock_lots (
+                    quality_label,
+                    order_id,
+                    orders (
+                        party_name
+                    )
+                )
+            `)
+            .eq('id', sourceId)
+            .eq('org_id', profile.org_id)
+            .single()
+
+        if (saleError || !sale) {
+            console.error('Failed to fetch sale for receivable:', saleError)
+            return { error: 'Sale not found' }
+        }
+
+        const lotRaw = sale.fabric_stock_lots
+        const lot = Array.isArray(lotRaw) ? lotRaw[0] : lotRaw
+        const orderRaw = lot?.orders
+        const order = Array.isArray(orderRaw) ? orderRaw[0] : orderRaw
+        
+        const partyName = order?.party_name || 'Anonymous'
+        const qualityLabel = lot?.quality_label || 'Unknown'
+        const orderId = lot?.order_id || null
+
+        // Upsert receivable
+        const { error: upsertError } = await supabase
+            .from('commercial_receivables')
+            .upsert({
+                org_id: profile.org_id,
+                source_type: sourceType,
+                source_id: sourceId,
+                source_date: sale.sale_date,
+                order_id: orderId,
+                party_name: partyName,
+                quality_label: qualityLabel,
+                total_amount: sale.revenue_amount,
+                payment_status: 'unpaid',
+                created_by: user.id,
+                updated_by: user.id,
+            }, {
+                onConflict: 'org_id,source_type,source_id'
+            })
+
+        if (upsertError) {
+            console.error('Failed to upsert receivable:', upsertError)
+            return { error: upsertError.message }
+        }
+
+        return { success: true }
+    }
+
+    // TODO: Implement other source types (market_run_sale, party_invoice)
+    return { error: `Source type ${sourceType} not implemented yet` }
+}
+
+export interface RecordPaymentInput {
+    receivableId: string
+    amount: number
+    paymentDate: string
+    paymentMode: string
+    referenceNumber?: string
+    chequeNumber?: string
+    chequeDate?: string
+    bankName?: string
+    notes?: string
+}
+
+export async function processCommercialPayment(input: RecordPaymentInput) {
+    await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { error } = await supabase.rpc('record_commercial_payment_v1', {
+        p_receivable_id: input.receivableId,
+        p_amount: input.amount,
+        p_payment_date: input.paymentDate,
+        p_payment_mode: input.paymentMode,
+        p_reference_number: input.referenceNumber || null,
+        p_cheque_number: input.chequeNumber || null,
+        p_cheque_date: input.chequeDate || null,
+        p_bank_name: input.bankName || null,
+        p_notes: input.notes || null,
+    })
+
+    if (error) {
+        console.error('Failed to record payment via RPC:', error)
+        return { error: error.message }
+    }
+
+    return { success: true }
+}

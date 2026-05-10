@@ -1,24 +1,29 @@
 import CommercialsClient from './CommercialsClient'
-import { getCommercialsData } from './actions'
+import { getCommercialsData, getCommercialReceivables } from './actions'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
     title: 'Commercials | Owner Dashboard',
-    description: 'Read-only gross profit from invoices, expected orders, direct market sales, and godown stock sales.',
+    description: 'Gross profit, receivables, and payment tracking.',
 }
 
 export default async function CommercialsPage() {
-    const result = await getCommercialsData()
+    const [commercialsRes, receivablesRes] = await Promise.all([
+        getCommercialsData(),
+        getCommercialReceivables()
+    ])
 
-    if ('error' in result) {
+    if ('error' in commercialsRes) {
         return (
             <div className="space-y-2">
                 <h1 className="text-2xl font-bold text-rose-600">Unable to load commercials</h1>
-                <p className="text-sm text-muted-foreground">{result.error}</p>
+                <p className="text-sm text-muted-foreground">{commercialsRes.error}</p>
             </div>
         )
     }
 
-    return <CommercialsClient initialData={result.data} />
+    const receivables = 'error' in receivablesRes ? [] : (receivablesRes.data ?? [])
+
+    return <CommercialsClient initialData={commercialsRes.data} initialReceivables={receivables} />
 }
