@@ -21,8 +21,7 @@ import {
     Warehouse,
     Factory,
 } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { useState } from "react"
 import LogoutButton from "@/components/auth/logout-button"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
@@ -174,7 +173,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
             </aside>
 
             {/* Mobile header bar */}
-            <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-canvas/92 px-4 py-2 backdrop-blur-xl md:hidden">
+            <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-canvas/92 px-4 py-2 pt-safe backdrop-blur-xl md:hidden">
                 <div className="flex items-center">
                     <div className="relative h-10 w-28 shrink-0">
                         <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="7rem" className="object-contain" priority />
@@ -182,12 +181,6 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                 </div>
 
                 <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" className="rounded-full text-ink">
-                            <Menu className="h-5 w-5" />
-                            <span className="sr-only">Open navigation</span>
-                        </Button>
-                    </SheetTrigger>
                     <SheetContent
                         side="left"
                         className="w-[280px] border-white/10 bg-[#111111] p-0"

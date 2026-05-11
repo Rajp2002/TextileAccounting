@@ -12,7 +12,7 @@ import {
     Menu,
     Factory,
 } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import LogoutButton from "@/components/auth/logout-button"
@@ -214,12 +214,6 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                         </Button>
                     )}
                     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon-sm" className="rounded-full text-ink">
-                                <Menu className="h-5 w-5" />
-                                <span className="sr-only">Open navigation</span>
-                            </Button>
-                        </SheetTrigger>
                     {/*
                      * Sheet width: min(280px, 85vw)
                      * — 280 px on normal phones
