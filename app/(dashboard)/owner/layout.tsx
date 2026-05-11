@@ -40,7 +40,7 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
             />
 
             {/* Content area — offset by sidebar on desktop, padding-bottom for bottom nav on mobile */}
-            <div className="relative z-10 pb-[72px] md:pl-[248px] md:pb-0">
+            <div className="relative z-10 pb-[calc(72px+env(safe-area-inset-bottom,0px))] md:pl-[248px] md:pb-0 px-safe md:px-0">
                 <main className="mx-auto min-h-screen max-w-7xl px-3 py-4 md:px-6 md:py-6 lg:px-8">
                     {children}
                 </main>
