@@ -252,6 +252,8 @@ export async function getDashboardData(): Promise<DashboardData> {
   return {
     yesterday:       kpiYesterday,
     today:           kpiToday ? { ...kpiToday, date: today } : null,
+    // Yield alerts are intentionally disabled for Phase 1.
+    // The lean production scope no longer includes yarn yield alerts, and the legacy RPC is not wired into the dashboard.
     yieldAlert:      null,
     orders:          orders || null,
     workerBreakdown: workerBreakdown || null,
