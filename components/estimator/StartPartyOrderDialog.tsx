@@ -218,24 +218,25 @@ export function StartPartyOrderDialog({
                     {/* Party & Quality */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">
+                            <Label className="text-xs uppercase font-black text-slate-500">
                                 Party Name <span className="text-rose-500">*</span>
                             </Label>
                             <Input
                                 value={partyName}
                                 onChange={(e) => setPartyName(e.target.value)}
                                 placeholder="e.g. Mehta Traders"
-                                className={missingPartyName && partyName !== defaultPartyName ? 'border-rose-300' : ''}
+                                className={`h-11 lg:h-10 ${missingPartyName && partyName !== defaultPartyName ? 'border-rose-300' : ''}`}
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">
+                            <Label className="text-xs uppercase font-black text-slate-500">
                                 Quality Label <span className="text-rose-500">*</span>
                             </Label>
                             <Input
                                 value={qualityLabel}
                                 onChange={(e) => setQualityLabel(e.target.value)}
                                 placeholder="e.g. Japan Satin 75D"
+                                className="h-11 lg:h-10"
                             />
                         </div>
                     </div>
@@ -243,7 +244,7 @@ export function StartPartyOrderDialog({
                     {/* Target Meters & Deadline */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">
+                            <Label className="text-xs uppercase font-black text-slate-500">
                                 Target Metres <span className="text-rose-500">*</span>
                             </Label>
                             <div className="relative">
@@ -254,16 +255,16 @@ export function StartPartyOrderDialog({
                                     value={targetMeters}
                                     onChange={(e) => setTargetMeters(e.target.value)}
                                     placeholder="e.g. 1000"
-                                    className="pr-6 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="h-11 lg:h-10 pr-6 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">m</span>
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">m</span>
                             </div>
                             {invalidMeters && targetMeters !== '' && (
-                                <p className="text-[10px] text-rose-600 font-bold">Must be greater than 0</p>
+                                <p className="text-xs text-rose-600 font-bold">Must be greater than 0</p>
                             )}
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">
+                            <Label className="text-xs uppercase font-black text-slate-500">
                                 Deadline
                                 {noDeadline && (
                                     <span className="ml-1 text-amber-500 font-medium normal-case">(optional)</span>
@@ -273,6 +274,7 @@ export function StartPartyOrderDialog({
                                 type="date"
                                 value={deadline}
                                 onChange={(e) => setDeadline(e.target.value)}
+                                className="h-11 lg:h-10"
                             />
                         </div>
                     </div>
@@ -281,13 +283,13 @@ export function StartPartyOrderDialog({
                     {(noDeadline || noWorkerRate) && (
                         <div className="space-y-1.5">
                             {noDeadline && (
-                                <div className="flex items-center gap-2 text-[11px] text-amber-700 font-medium bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                                <div className="flex items-center gap-2 text-xs text-amber-700 font-medium bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
                                     <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                                     No deadline set. This order may not appear in pace-risk warnings.
                                 </div>
                             )}
                             {noWorkerRate && (
-                                <div className="flex items-center gap-2 text-[11px] text-amber-700 font-medium bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                                <div className="flex items-center gap-2 text-xs text-amber-700 font-medium bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
                                     <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                                     Weaver wage not set. Add picks × per-pick cost in the estimator.
                                 </div>
@@ -297,7 +299,7 @@ export function StartPartyOrderDialog({
 
                     {/* Order notes */}
                     <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase font-black text-slate-500">
+                        <Label className="text-xs uppercase font-black text-slate-500">
                             Order Notes <span className="text-slate-400 font-normal normal-case">(optional)</span>
                         </Label>
                         <Textarea
@@ -309,7 +311,7 @@ export function StartPartyOrderDialog({
                     </div>
 
                     {/* Machine assignment note */}
-                    <p className="text-[10px] text-slate-400 font-medium text-center">
+                    <p className="text-xs text-slate-400 font-medium text-center">
                         You can assign machines after creating the order from the order board.
                     </p>
                 </div>
@@ -319,14 +321,14 @@ export function StartPartyOrderDialog({
                         variant="ghost"
                         onClick={() => onOpenChange(false)}
                         disabled={submitting}
-                        className="sm:mr-auto"
+                        className="h-11 lg:h-10 sm:mr-auto"
                     >
                         Cancel
                     </Button>
                     <Button
                         disabled={!canSubmit || submitting}
                         onClick={handleSubmit}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2 min-w-[160px]"
+                        className="h-11 lg:h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2 min-w-[160px]"
                     >
                         {submitting ? (
                             <>
