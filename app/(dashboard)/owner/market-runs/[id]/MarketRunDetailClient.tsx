@@ -121,7 +121,7 @@ export default function MarketRunDetailClient({
                     <div className="flex items-center gap-2">
                         {run.order_id && (
                             <Button variant="outline" size="sm" asChild className="gap-2">
-                                <Link href={`/owner/orders/${run.order_id}`}>
+                                <Link href={`/owner/orders?orderId=${run.order_id}`}>
                                     <Package className="h-4 w-4" />
                                     Floor Order
                                 </Link>
