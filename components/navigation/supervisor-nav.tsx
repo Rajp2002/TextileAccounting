@@ -83,7 +83,7 @@ function NavContent({ factoryName, userName, onLinkClick }: SupervisorSidebarPro
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+            <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4 no-scrollbar">
                 {/* Primary section */}
                 <div className="space-y-1">
                     <div className="px-3 mb-2">
