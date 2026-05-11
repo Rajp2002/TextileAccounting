@@ -114,7 +114,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+            <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4 no-scrollbar">
                 {navGroups.map((group, index) => (
                     <div key={group.label} className="space-y-1">
                         <div className={cn("px-3 mb-2", index > 0 && "mt-4")}>
