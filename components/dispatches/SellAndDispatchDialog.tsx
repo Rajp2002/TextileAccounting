@@ -70,6 +70,7 @@ export function SellAndDispatchDialog({
 
     useEffect(() => {
         if (open) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setStep(1)
             setSelectedOrderId(defaultOrderId || '')
             setSelectedLotIds(defaultStockLotId ? [defaultStockLotId] : [])
@@ -180,7 +181,7 @@ export function SellAndDispatchDialog({
                     <div className="space-y-2">
                         <Label>Who is this dispatch for?</Label>
                         <select
-                            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm h-11 lg:h-9"
                             value={selectedOrderId}
                             onChange={(e) => setSelectedOrderId(e.target.value)}
                         >
@@ -209,15 +210,15 @@ export function SellAndDispatchDialog({
                                 const isExactOrder = lot.order_id === selectedOrderId
                                 const isSelected = selectedLotIds.includes(lot.stock_lot_id)
                                 return (
-                                    <div key={lot.stock_lot_id} className={cn("border rounded-xl p-3 flex flex-col gap-2 transition-all", isSelected ? "border-indigo-400 bg-indigo-50" : "bg-white")}>
+                                    <div key={lot.stock_lot_id} className={cn("border rounded-xl p-4 flex flex-col gap-3 transition-all", isSelected ? "border-indigo-400 bg-indigo-50" : "bg-white")}>
                                         <div className="flex items-start justify-between">
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <p className="font-bold text-sm text-slate-900">{lot.quality_label}</p>
                                                     {isExactOrder ? (
-                                                        <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">Order Stock</span>
+                                                        <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">Order Stock</span>
                                                     ) : (
-                                                        <span className="text-[9px] font-bold uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">Same Quality</span>
+                                                        <span className="text-xs font-bold uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">Same Quality</span>
                                                     )}
                                                 </div>
                                                 <p className="text-xs text-slate-500 mt-1">{lot.godown} · Avg {(lot.available_meters / lot.available_taka_count).toFixed(1)}m / {lot.unit_label}</p>
@@ -254,7 +255,7 @@ export function SellAndDispatchDialog({
                                                         max={lot.available_taka_count}
                                                         value={lotUnits[lot.stock_lot_id] || ''}
                                                         onChange={(e) => setLotUnits(p => ({...p, [lot.stock_lot_id]: parseInt(e.target.value) || 0}))}
-                                                        className="w-20 h-8 text-xs" 
+                                                        className="w-24 h-11 lg:h-8 text-sm" 
                                                     />
                                                 </div>
                                             )}
@@ -274,8 +275,8 @@ export function SellAndDispatchDialog({
                                     onChange={e => setConfirmedSameQuality(e.target.checked)}
                                     className="mt-1 rounded border-amber-300 text-amber-600 focus:ring-amber-600"
                                 />
-                                <span className="text-[11px] text-amber-800 font-medium">
-                                    I confirm I want to dispatch "Same Quality" stock that is not explicitly reserved for this order.
+                                <span className="text-xs text-amber-800 font-medium">
+                                    I confirm I want to dispatch &quot;Same Quality&quot; stock that is not explicitly reserved for this order.
                                 </span>
                             </label>
                         </div>
@@ -298,7 +299,7 @@ export function SellAndDispatchDialog({
                                 value={saleRate}
                                 onChange={e => setSaleRate(e.target.value)}
                                 placeholder="0.00"
-                                className="pl-9 text-slate-900 border-slate-200"
+                                className="pl-9 text-slate-900 border-slate-200 h-11 lg:h-9"
                             />
                         </div>
                     </div>
@@ -308,7 +309,7 @@ export function SellAndDispatchDialog({
                             type="date"
                             value={saleDate}
                             onChange={e => setSaleDate(e.target.value)}
-                            className="text-slate-900 border-slate-200"
+                            className="text-slate-900 border-slate-200 h-11 lg:h-9"
                         />
                     </div>
                     
@@ -377,6 +378,7 @@ export function SellAndDispatchDialog({
                                 value={ewayNumber}
                                 onChange={e => setEwayNumber(e.target.value)}
                                 placeholder="Optional"
+                                className="h-11 lg:h-9"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -385,6 +387,7 @@ export function SellAndDispatchDialog({
                                 value={vehicleNumber}
                                 onChange={e => setVehicleNumber(e.target.value.toUpperCase())}
                                 placeholder="GJ01AB1234"
+                                className="h-11 lg:h-9"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -393,6 +396,7 @@ export function SellAndDispatchDialog({
                                 value={transporterName}
                                 onChange={e => setTransporterName(e.target.value)}
                                 placeholder="Transport name"
+                                className="h-11 lg:h-9"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -404,6 +408,7 @@ export function SellAndDispatchDialog({
                                 value={distanceKm}
                                 onChange={e => setDistanceKm(e.target.value)}
                                 placeholder="Used for EWB validity"
+                                className="h-11 lg:h-9"
                             />
                         </div>
                     </div>
@@ -417,6 +422,7 @@ export function SellAndDispatchDialog({
                             value={notes}
                             onChange={e => setNotes(e.target.value)}
                             placeholder="Invoice #, truck number, etc."
+                            className="h-11 lg:h-9"
                         />
                     </div>
                 </div>
@@ -426,7 +432,7 @@ export function SellAndDispatchDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Package className="h-5 w-5 text-indigo-600" /> 
@@ -446,10 +452,10 @@ export function SellAndDispatchDialog({
                         { num: 4, label: 'Dispatch' },
                     ].map((s) => (
                         <div key={s.num} className={cn("flex flex-col items-center gap-1", step >= s.num ? "opacity-100" : "opacity-40")}>
-                            <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white", step >= s.num ? "bg-indigo-600" : "bg-slate-300")}>
+                            <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white", step >= s.num ? "bg-indigo-600" : "bg-slate-300")}>
                                 {s.num}
                             </div>
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{s.label}</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{s.label}</span>
                         </div>
                     ))}
                 </div>
@@ -457,12 +463,12 @@ export function SellAndDispatchDialog({
                 {renderStep()}
 
                 <DialogFooter className="gap-2 sm:justify-between items-center w-full">
-                    <Button variant="ghost" className="text-xs" onClick={() => step > 1 ? setStep(step - 1) : onOpenChange(false)} disabled={pending}>
+                    <Button variant="ghost" className="text-sm h-11 lg:h-9" onClick={() => step > 1 ? setStep(step - 1) : onOpenChange(false)} disabled={pending}>
                         {step === 1 ? 'Cancel' : 'Back'}
                     </Button>
                     {step < 4 ? (
                         <Button 
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 h-11 lg:h-9"
                             onClick={() => setStep(step + 1)}
                             disabled={
                                 (step === 1 && !selectedOrderId) || 
@@ -476,7 +482,7 @@ export function SellAndDispatchDialog({
                         <Button
                             onClick={handleSubmit}
                             disabled={pending}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2"
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 h-11 lg:h-9"
                         >
                             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                             {pending ? 'Processing…' : 'Sell & Create Dispatch'}
