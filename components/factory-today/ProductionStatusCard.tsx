@@ -21,7 +21,7 @@ function ShiftBadge({ shift, logged }: { shift: 'Day' | 'Night'; logged: boolean
             <Icon className="h-3.5 w-3.5" />
             <span>{shift} Shift</span>
             <span className={cn(
-                'ml-auto text-[11px] font-semibold',
+                'ml-auto text-xs font-semibold',
                 logged ? 'text-success' : 'text-warning'
             )}>
                 {logged ? 'Logged' : 'Pending'}
@@ -58,7 +58,7 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
                     <p className={cn('text-sm font-bold', statusColor)}>{statusLabel}</p>
                 </div>
                 {noneLogged && (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FF3B30] text-[11px] font-bold text-white">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FF3B30] text-xs font-bold text-white">
                         1
                     </span>
                 )}
@@ -89,9 +89,9 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
                 )}
                 <Link
                     href="/owner/machines"
-                    className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
+                    className="flex h-11 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink transition hover:bg-surface-soft lg:h-9 lg:text-xs"
                 >
-                    <ExternalLink className="h-3 w-3" />
+                    <ExternalLink className="h-4 w-4 lg:h-3 lg:w-3" />
                     View Looms
                 </Link>
             </div>
