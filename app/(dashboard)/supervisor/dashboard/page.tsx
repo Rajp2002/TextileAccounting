@@ -137,7 +137,7 @@ function ShiftReadinessPanel({
                             : `${blockerCount || totalIssueCount} item${(blockerCount || totalIssueCount) === 1 ? '' : 's'} need attention`}
                     </p>
                 </div>
-                <Badge variant={issues.length === 0 ? "success" : blockerCount > 0 ? "warning" : "info"} className="shrink-0 text-[11px]">
+                <Badge variant={issues.length === 0 ? "success" : blockerCount > 0 ? "warning" : "info"} className="shrink-0 text-xs">
                     {validEntryCount}/{machineCount} logs
                 </Badge>
             </div>
@@ -148,7 +148,7 @@ function ShiftReadinessPanel({
                         <span
                             key={issue.id}
                             className={cn(
-                                "inline-flex items-center gap-1.5 rounded-full border bg-white/70 px-2.5 py-1 text-[11px] font-semibold",
+                                "inline-flex items-center gap-1.5 rounded-full border bg-white/70 px-2.5 py-1 text-xs font-semibold",
                                 issue.tone === 'blocker'
                                     ? "border-warning-soft text-warning"
                                     : "border-info-soft text-info"
@@ -235,59 +235,68 @@ function MachineUnifiedRow({
 
     return (
         <div className={cn(
-            "relative flex items-stretch gap-0 overflow-hidden rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:border-hairline-strong",
+            "relative flex flex-col lg:flex-row items-stretch gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:border-hairline-strong",
             isMaintenance && "opacity-75"
         )}>
-            {/* Status Strip & Detail Trigger */}
+            {/* Status Strip & Detail Trigger (Header on mobile, side strip on desktop) */}
             <button
                 onClick={() => onStatusClick(machine)}
                 className={cn(
-                    "relative flex w-14 shrink-0 flex-col items-center justify-center gap-1.5 border-r border-hairline transition-all hover:bg-surface-soft xs:w-16",
+                    "relative flex flex-row lg:flex-col w-full lg:w-16 shrink-0 items-center justify-between lg:justify-center gap-1.5 border-b lg:border-b-0 lg:border-r border-hairline transition-all hover:bg-surface-soft p-3 lg:p-1",
                     status === 'running' ? "bg-success-soft/50" : status === 'maintenance' ? "bg-warning-soft/60" : "bg-surface-soft/50",
                     isSyncing && "animate-pulse"
                 )}
             >
-                {/* Left Status Bar */}
+                {/* Left Status Bar (Desktop only) */}
                 <div className={cn(
-                    "absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full",
+                    "absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full hidden lg:block",
                     status === 'running' ? "bg-success" :
                     status === 'maintenance' ? "bg-warning" :
                     "bg-hairline-strong"
                 )} />
 
-                <div className="flex flex-col items-center px-1">
-                    <p className="mb-1 text-[10px] font-semibold leading-none text-ink xs:text-xs">
-                        {formatLoomName(machine.name).replace('Loom ', 'L-')}
-                    </p>
-                    {isSyncing ? (
-                        <Loader2 className="h-3 w-3 animate-spin text-saffron" />
-                    ) : isSaved ? (
-                        <div className="rounded-full bg-success p-0.5 shadow-sm animate-in zoom-in duration-300">
-                             <Check className="h-2.5 w-2.5 text-white stroke-[4px]" />
+                <div className="flex flex-row lg:flex-col items-center justify-between lg:justify-center w-full px-1">
+                    <div className="flex items-center gap-2 lg:flex-col lg:gap-1">
+                        <p className="text-sm font-semibold leading-none text-ink lg:text-[10px]">
+                            {formatLoomName(machine.name)}
+                        </p>
+                        <div className="lg:hidden">
+                            <MachineStatusBadge status={status} />
                         </div>
-                    ) : (
-                        <div className={cn(
-                            "w-2 h-2 rounded-full",
-                            status === 'running' ? "bg-success" :
-                            status === 'maintenance' ? "bg-warning" :
-                            "bg-hairline-strong"
-                        )} />
-                    )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                        {isSyncing ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-saffron" />
+                        ) : isSaved ? (
+                            <div className="rounded-full bg-success p-0.5 shadow-sm animate-in zoom-in duration-300">
+                                 <Check className="h-3 w-3 text-white stroke-[4px]" />
+                            </div>
+                        ) : (
+                            <div className={cn(
+                                "w-2.5 h-2.5 rounded-full hidden lg:block",
+                                status === 'running' ? "bg-success" :
+                                status === 'maintenance' ? "bg-warning" :
+                                "bg-hairline-strong"
+                            )} />
+                        )}
+                        <ChevronRight className="h-4 w-4 text-muted-foreground/35 lg:hidden" />
+                    </div>
                 </div>
             </button>
 
             {/* Assignments Section */}
-            <div className="flex-1 min-w-0 p-3 py-4 flex flex-col justify-center gap-2">
+            <div className="flex-1 min-w-0 p-4 lg:p-3 py-4 flex flex-col justify-center gap-3 lg:gap-2">
                 {/* Worker Dropdown */}
                 <div className="flex items-center gap-2 min-w-0">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-saffron-soft/70">
-                        <Users className="h-3.5 w-3.5 text-saffron-deep" />
+                    <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-saffron-soft/70">
+                        <Users className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-saffron-deep" />
                     </div>
                     <Select
                         value={workerId}
                         onValueChange={(val) => onAssignmentChange(machine.id, parseInt(val), orderId || null)}
                     >
-                        <SelectTrigger className="h-auto max-w-full truncate border-none bg-transparent p-0 text-[13px] font-semibold shadow-none transition-colors hover:text-saffron-deep focus:ring-0">
+                        <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline lg:border-none bg-surface lg:bg-transparent px-3 lg:p-0 text-sm font-semibold shadow-none transition-colors hover:text-saffron-deep focus:ring-0">
                             <SelectValue placeholder={t('production.no_worker')} />
                         </SelectTrigger>
                         <SelectContent>
@@ -300,14 +309,14 @@ function MachineUnifiedRow({
 
                 {/* Order Dropdown */}
                 <div className="flex items-center gap-2 min-w-0">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface-soft">
-                        <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                    <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-surface-soft">
+                        <Package className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-muted-foreground" />
                     </div>
                     <Select
                         value={orderId}
                         onValueChange={(val) => onAssignmentChange(machine.id, workerId ? parseInt(workerId) : null, val)}
                     >
-                        <SelectTrigger className="h-auto max-w-full truncate border-none bg-transparent p-0 text-[12px] font-medium leading-tight text-muted-foreground shadow-none transition-colors hover:text-ink focus:ring-0">
+                        <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline lg:border-none bg-surface lg:bg-transparent px-3 lg:p-0 text-sm font-medium leading-tight text-muted-foreground shadow-none transition-colors hover:text-ink focus:ring-0">
                             <SelectValue placeholder={t('production.link_order')} />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
@@ -322,12 +331,12 @@ function MachineUnifiedRow({
                 </div>
 
                 {selectedOrder && (
-                    <div className="ml-8 flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-                        <span className="rounded-full bg-surface-soft px-2 py-0.5">
+                    <div className="ml-10 lg:ml-8 flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                        <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
                             {formatMeters(selectedOrder.remaining_meters)} left
                         </span>
                         {deadlineLabel && (
-                            <span className="rounded-full bg-surface-soft px-2 py-0.5">
+                            <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
                                 Due {deadlineLabel}
                             </span>
                         )}
@@ -337,19 +346,19 @@ function MachineUnifiedRow({
 
             {/* Production Input (The Quick Log) */}
             <div className={cn(
-                "flex w-32 shrink-0 items-center justify-center border-l border-hairline bg-surface-soft/35 p-3 xs:w-36 sm:w-48 md:w-36 lg:w-44",
+                "flex flex-col lg:flex-row w-full lg:w-auto items-center justify-center border-t lg:border-t-0 lg:border-l border-hairline bg-surface-soft/35 p-4 lg:p-3",
                 (!workerId || !orderId) && "opacity-55"
             )}>
-                <div className="flex w-full flex-col items-center gap-2">
+                <div className="flex w-full flex-col items-center gap-3 lg:gap-2">
                     {(!workerId || !orderId) ? (
-                        <div className="flex h-10 flex-col items-center justify-center px-1 text-center text-[11px] font-semibold leading-tight text-muted-foreground/70 animate-in fade-in duration-500 xs:h-12">
+                        <div className="flex h-11 lg:h-12 flex-col items-center justify-center px-1 text-center text-xs font-semibold leading-tight text-muted-foreground/70 animate-in fade-in duration-500">
                              {!workerId ? t('production.no_worker') : t('production.link_order')}
-                             <AlertCircle className="h-3 w-3 mt-1 opacity-40" />
+                             <AlertCircle className="h-4 w-4 mt-1 opacity-40" />
                         </div>
                     ) : (
                         <>
                             <div className={cn(
-                                "group/input flex items-center overflow-hidden rounded-lg border bg-surface transition-all duration-200",
+                                "group/input flex items-center overflow-hidden rounded-lg border bg-surface transition-all duration-200 w-full lg:w-auto h-11 lg:h-9",
                                 closingReading > 0 ? "border-saffron ring-4 ring-saffron/10" : "border-hairline shadow-sm"
                             )}>
                                 <Input
@@ -359,12 +368,12 @@ function MachineUnifiedRow({
                                     placeholder="0"
                                     value={closingReading || ''}
                                     onChange={(e) => onClosingReadingChange(Number(e.target.value))}
-                                    className="h-10 flex-1 border-none bg-transparent p-0 text-center font-mono text-lg font-semibold xs:h-12 xs:text-xl focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                    className="h-full flex-1 border-none bg-transparent p-0 text-center font-mono text-lg font-semibold focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                 />
                             </div>
-                            <div className="flex w-full flex-col items-center gap-1">
-                                <div className="flex max-w-full items-center gap-1 rounded-full border border-hairline bg-surface px-2 py-0.5 shadow-sm">
-                                    <span className="text-center text-[9px] font-semibold uppercase tracking-wide leading-tight text-saffron-deep xs:text-[10px]">
+                            <div className="flex w-full flex-col items-center gap-2 lg:gap-1">
+                                <div className="flex max-w-full items-center gap-1 rounded-full border border-hairline bg-surface px-2.5 py-1 lg:py-0.5 shadow-sm">
+                                    <span className="text-center text-xs font-semibold uppercase tracking-wide leading-tight text-saffron-deep">
                                         {t('floor.meter.counterReading')}
                                     </span>
                                 </div>
@@ -372,7 +381,7 @@ function MachineUnifiedRow({
                                     type="button"
                                     onClick={() => onCounterResetChange(!counterWasReset)}
                                     className={cn(
-                                        "flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold leading-tight transition-all xs:text-[11px]",
+                                        "flex h-11 lg:h-9 max-w-full items-center gap-1 rounded-full border px-4 lg:px-2 py-0.5 text-xs font-semibold leading-tight transition-all",
                                         counterWasReset
                                             ? "border-saffron-soft bg-saffron-soft text-saffron-deep"
                                             : "border-hairline bg-surface text-muted-foreground hover:border-saffron-soft hover:text-saffron-deep"
@@ -380,17 +389,17 @@ function MachineUnifiedRow({
                                     title={counterWasReset ? "Counter reset for this shift" : "Mark counter reset for this shift"}
                                     aria-pressed={counterWasReset}
                                 >
-                                    <RotateCcw className="h-3 w-3" />
+                                    <RotateCcw className="h-4 w-4 lg:h-3.5 lg:w-3.5" />
                                     Counter reset
                                 </button>
-                                <div className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full bg-surface-soft px-2 py-0.5 text-center text-[10px] font-medium leading-tight text-muted-foreground xs:text-[11px]">
+                                <div className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5 text-center text-xs font-medium leading-tight text-muted-foreground">
                                     <span className="whitespace-nowrap">
                                         {counterWasReset ? 'Opening counter: 0' : `${t('floor.meter.openingReading')}: ${openingReading}`}
                                     </span>
                                     <span className="whitespace-nowrap">{t('floor.meter.shiftProduction')}: {shiftMeters}</span>
                                 </div>
                                 {readingWarning && (
-                                    <span className="max-w-[11rem] text-center text-[10px] font-semibold text-risk">
+                                    <span className="max-w-[11rem] text-center text-xs font-semibold text-risk">
                                         {t('floor.meter.counterWarning')}
                                     </span>
                                 )}
@@ -400,13 +409,13 @@ function MachineUnifiedRow({
                 </div>
             </div>
 
-            {/* Detail Sheet Indicator */}
+            {/* Detail Sheet Indicator (Desktop only) */}
             <button
                 onClick={() => onStatusClick(machine)}
-                className="absolute right-0 top-0 p-1 text-muted-foreground/35 transition-colors hover:text-saffron-deep"
+                className="absolute right-2 top-2 p-1 text-muted-foreground/35 transition-colors hover:text-saffron-deep hidden lg:block"
                 title="Loom details"
             >
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-4 w-4" />
             </button>
         </div>
     )
@@ -498,7 +507,7 @@ function MachineDetailSheet({
                             disabled={saving}
                         >
                             <Check className="h-5 w-5" />
-                            <span className="text-[11px]">Running</span>
+                            <span className="text-xs">Running</span>
                         </Button>
                         <Button
                             variant="outline"
@@ -510,7 +519,7 @@ function MachineDetailSheet({
                             disabled={saving}
                         >
                             <Moon className="h-5 w-5" />
-                            <span className="text-[11px]">Idle</span>
+                            <span className="text-xs">Idle</span>
                         </Button>
                         <Button
                             variant="outline"
@@ -522,7 +531,7 @@ function MachineDetailSheet({
                             disabled={saving}
                         >
                             <Settings className="h-5 w-5" />
-                            <span className="text-[11px]">Service</span>
+                            <span className="text-xs">Service</span>
                         </Button>
                     </div>
                 </div>
@@ -1021,7 +1030,7 @@ export default function UnifiedDashboard() {
                 className="ptr-indicator overflow-hidden transition-[height] duration-200"
                 style={{ height: `${pullDistance}px`, opacity: pullDistance / 60 }}
             >
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-saffron-deep">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-saffron-deep">
                     <Loader2 className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
                     {isRefreshing ? 'Updating...' : 'Pull to refresh'}
                 </div>
