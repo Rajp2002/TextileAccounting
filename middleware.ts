@@ -4,7 +4,7 @@ import { checkAuthRateLimit } from '@/lib/rate-limit'
 import { PHASE_1_ARCHIVE_REDIRECT, isPhase1ArchivedRoute } from '@/lib/phase1-scope'
 
 function getRoleHomePath(role?: string): string {
-    if (role === 'owner') return '/owner/analytics'
+    if (role === 'owner') return '/owner/today'
     if (role === 'supervisor') return '/supervisor/dashboard'
     if (role === 'admin') return '/admin'
     return '/login'
@@ -223,9 +223,9 @@ export async function updateSession(request: NextRequest) {
             if (!onboardingComplete) {
                 return NextResponse.redirect(new URL('/onboarding', request.url))
             }
-            return NextResponse.redirect(new URL('/owner/analytics', request.url))
+            return NextResponse.redirect(new URL('/owner/today', request.url))
         } else if (role === 'supervisor') {
-            return NextResponse.redirect(new URL('/supervisor/production', request.url))
+            return NextResponse.redirect(new URL('/supervisor/dashboard', request.url))
         } else if (role === 'admin') {
             return NextResponse.redirect(new URL('/admin', request.url))
         }
@@ -272,6 +272,10 @@ export async function updateSession(request: NextRequest) {
 
         if (!pathname.startsWith('/api/') && isPhase1ArchivedRoute(pathname)) {
             return NextResponse.redirect(new URL(PHASE_1_ARCHIVE_REDIRECT, request.url))
+        }
+
+        if (pathname === '/owner') {
+            return NextResponse.redirect(new URL('/owner/today', request.url))
         }
 
         let resolvedOrgId = orgId
@@ -361,7 +365,7 @@ export async function updateSession(request: NextRequest) {
         }
 
         if (role === 'owner' && resolvedOnboarding && pathname === '/onboarding') {
-            return NextResponse.redirect(new URL('/owner/analytics', request.url))
+            return NextResponse.redirect(new URL('/owner/today', request.url))
         }
 
         if (pathname.startsWith('/admin')) {

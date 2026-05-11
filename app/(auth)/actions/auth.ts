@@ -402,9 +402,9 @@ export async function signIn(input: { email: string; password: string }) {
         if (!onboardingComplete) {
             redirect('/onboarding')
         }
-        redirect('/owner/analytics')
+        redirect('/owner/today')
     } else if (userRole === 'supervisor') {
-        redirect('/supervisor/production')
+        redirect('/supervisor/dashboard')
     } else if (userRole === 'admin') {
         redirect('/admin')
     } else {
