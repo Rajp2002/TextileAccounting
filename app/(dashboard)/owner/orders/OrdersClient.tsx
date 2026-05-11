@@ -174,7 +174,7 @@ function MachineAssignInline({
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-slate-900 truncate">{m.name}</p>
                                 {linkedToOther && (
-                                    <p className="text-[10px] text-amber-600 font-medium">{t('orders_page.on_another_order')}</p>
+                                    <p className="text-xs text-amber-600 font-medium">{t('orders_page.on_another_order')}</p>
                                 )}
                             </div>
                         </div>
@@ -209,31 +209,31 @@ function QuoteCostBreakdown({ quote, targetMeters }: { quote: any; targetMeters:
             {/* Key metrics */}
             <div className="grid grid-cols-2 gap-2">
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Production Cost</p>
+                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-1">Production Cost</p>
                     <p className="text-lg font-black font-mono text-slate-900">₹{landedCost.toFixed(2)}<span className="text-xs text-slate-500 font-normal">/m</span></p>
                 </div>
                 <div className="bg-primary/5 border border-primary/20 rounded-xl p-3">
-                    <p className="text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Quote Price</p>
+                    <p className="text-xs uppercase tracking-widest text-primary font-bold mb-1">Quote Price</p>
                     <p className="text-lg font-black font-mono text-primary">₹{quotePrice.toFixed(2)}<span className="text-xs text-primary/60 font-normal">/m</span></p>
                 </div>
             </div>
 
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
                 <div>
-                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-0.5">Total Order Value</p>
+                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-0.5">Total Order Value</p>
                     <p className="text-xl font-black font-mono text-emerald-600">
                         ₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                     </p>
                 </div>
                 <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-0.5">Margin</p>
+                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-0.5">Margin</p>
                     <p className="text-lg font-black text-amber-600">{marginPct.toFixed(1)}%</p>
                 </div>
             </div>
 
             {/* Cost stack pills */}
             <div className="space-y-1.5">
-                <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Cost Stack</p>
+                <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">Cost Stack</p>
                 {quote.warp_rows?.length > 0 && (
                     <div className="flex items-center justify-between text-xs py-1 border-b border-slate-100">
                         <span className="text-primary font-medium">🧶 Warp Yarn</span>
@@ -315,7 +315,7 @@ function DispatchItemRow({
                         <p className="text-sm font-black text-slate-900">
                             Batch #{dispatch.dispatch_number}
                         </p>
-                        <p className="text-[10px] text-slate-500 font-mono">
+                        <p className="text-xs text-slate-500 font-mono">
                             {format(new Date(dispatch.dispatched_at), 'dd MMM yyyy')}
                         </p>
                     </div>
@@ -325,19 +325,19 @@ function DispatchItemRow({
                         {Number(dispatch.qty_meters_sent).toFixed(2)} m sent
                     </p>
                     {isDelivered && dispatch.qty_meters_received !== null && (
-                        <p className="text-[11px] font-mono text-emerald-700 font-semibold">
+                        <p className="text-xs font-mono text-emerald-700 font-semibold">
                             {Number(dispatch.qty_meters_received).toFixed(2)} m received
                         </p>
                     )}
                     {isInTransit && (
-                        <p className="text-[10px] text-amber-600 font-semibold">In Transit</p>
+                        <p className="text-xs text-amber-600 font-semibold">In Transit</p>
                     )}
                 </div>
             </div>
             {dispatch.package_lines.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                     {dispatch.package_lines.map((line) => (
-                        <Badge key={line.id} variant="outline" className="bg-white/70 text-[10px] font-bold text-slate-700">
+                        <Badge key={line.id} variant="outline" className="bg-white/70 text-xs font-bold text-slate-700">
                             {line.package_no} · {Number(line.qty_meters_sent).toFixed(0)}m
                         </Badge>
                     ))}
@@ -345,7 +345,7 @@ function DispatchItemRow({
             )}
             <button
                 onClick={() => onReprint(dispatch)}
-                className="text-[10px] text-slate-400 hover:text-indigo-600 flex items-center gap-1 transition-colors"
+                className="text-xs text-slate-400 hover:text-indigo-600 flex items-center gap-1 transition-colors"
             >
                 <QrCode className="h-3 w-3" /> Re-print Invoice
             </button>
@@ -466,7 +466,7 @@ function DispatchSection({
 
             {/* Remaining to dispatch hint */}
             {!isCompleted && summary && (
-                <div className="space-y-1 text-[10px] text-slate-500 font-mono">
+                <div className="space-y-1 text-xs text-slate-500 font-mono">
                     <p>
                         {summary.remaining_to_dispatch.toFixed(2)} m packed and available across {summary.available_packages.length} package{summary.available_packages.length !== 1 ? 's' : ''}
                     </p>
@@ -519,7 +519,7 @@ function DispatchSection({
                                 <p className="text-xs font-black text-rose-700">
                                     Shortage: {summary.shortage_meters.toFixed(2)} m
                                 </p>
-                                <p className="text-[10px] text-rose-500">
+                                <p className="text-xs text-rose-500">
                                     Sent {summary.total_sent.toFixed(2)} m · Received {summary.total_received.toFixed(2)} m
                                 </p>
                             </div>
@@ -527,7 +527,7 @@ function DispatchSection({
                     )}
 
                     {/* Summary row */}
-                    <div className="flex justify-between text-[10px] font-mono text-slate-500 px-1 pt-1 border-t border-slate-100">
+                    <div className="flex justify-between text-xs font-mono text-slate-500 px-1 pt-1 border-t border-slate-100">
                         <span>Total sent: {summary.total_sent.toFixed(2)} m</span>
                         {summary.total_received > 0 && (
                             <span className="text-emerald-600">Received: {summary.total_received.toFixed(2)} m</span>
@@ -539,7 +539,7 @@ function DispatchSection({
                     <Truck className="h-6 w-6 text-slate-400 mx-auto mb-2" />
                     <p className="text-xs text-slate-500 font-medium">No dispatches yet</p>
                     {!isCompleted && (
-                        <p className="text-[10px] text-slate-400 mt-1">
+                        <p className="text-xs text-slate-400 mt-1">
                             {(summary?.remaining_to_dispatch ?? 0) > 0
                                 ? `${summary?.remaining_to_dispatch.toFixed(2)} m ready in packed stock`
                                 : 'Create or inspect packages in Stock before dispatching'}
@@ -635,9 +635,9 @@ function OwnerAccessCodeDialog({
 
                     {generatedCode && (
                         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center space-y-1">
-                            <p className="text-[10px] uppercase tracking-widest text-amber-600 font-bold">Your Access Code</p>
+                            <p className="text-xs uppercase tracking-widest text-amber-600 font-bold">Your Access Code</p>
                             <p className="text-3xl font-black font-mono tracking-[0.3em] text-amber-700">{generatedCode}</p>
-                            <p className="text-[10px] text-amber-500">Valid for 15 minutes · Single use</p>
+                            <p className="text-xs text-amber-500">Valid for 15 minutes · Single use</p>
                         </div>
                     )}
 
@@ -827,12 +827,12 @@ function OrderDetailDrawer({
                             {(order.warp_instruction || order.weft_instruction) && (
                                 <div className="flex gap-2 flex-wrap pt-1">
                                     {order.warp_instruction && (
-                                        <span className="text-[10px] bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-full font-mono">
+                                        <span className="text-xs bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-full font-mono">
                                             Warp: {order.warp_instruction}
                                         </span>
                                     )}
                                     {order.weft_instruction && (
-                                        <span className="text-[10px] bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-0.5 rounded-full font-mono">
+                                        <span className="text-xs bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-0.5 rounded-full font-mono">
                                             Weft: {order.weft_instruction}
                                         </span>
                                     )}
@@ -858,10 +858,10 @@ function OrderDetailDrawer({
                                         style={{ width: `${Math.min(100, progress)}%` }}
                                     />
                                 </div>
-                                <div className="flex items-center justify-between text-[10px] text-slate-500">
+                                <div className="flex items-center justify-between text-xs text-slate-500">
                                     <span>{progress.toFixed(1)}% complete</span>
                                     {metersProduced === 0 ? (
-                                        <span className="text-[10px] font-medium text-slate-400">
+                                        <span className="text-xs font-medium text-slate-400">
                                             {t('analytics.orders.card.tracking_starts')}
                                         </span>
                                     ) : paceIndex !== null && (
@@ -874,29 +874,29 @@ function OrderDetailDrawer({
 
                             {/* Order details — editable */}
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1.5">
+                                <p className="text-xs uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1.5">
                                     <Target className="h-3 w-3" /> Order Details
                                 </p>
 
                                 {/* Target Meters */}
                                 <div className={cn("border rounded-xl p-3 flex items-center justify-between gap-2", isCompleted ? "bg-emerald-50 border-emerald-200" : "bg-slate-50 border-slate-200")}>
                                     <div className="min-w-0">
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Target Meters</p>
+                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5">Target Meters</p>
                                         {editingTarget ? (
                                             <div className="flex items-center gap-2 mt-1">
                                                 <Input
                                                     type="number"
                                                     value={targetVal}
                                                     onChange={e => setTargetVal(e.target.value)}
-                                                    className="h-7 w-28 text-xs font-mono bg-white border-slate-200 text-slate-900"
+                                                    className="h-11 lg:h-7 w-28 text-xs font-mono bg-white border-slate-200 text-slate-900"
                                                     autoFocus
                                                     min={Number(order?.total_meters_produced ?? 0) + 1}
                                                 />
-                                                <button onClick={handleSaveTarget} disabled={savingEdit} className="text-emerald-500 hover:text-emerald-600">
-                                                    {savingEdit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                                                <button onClick={handleSaveTarget} disabled={savingEdit} className="flex items-center justify-center h-11 w-11 lg:h-7 lg:w-7 text-emerald-500 hover:text-emerald-600" aria-label="Save target">
+                                                    {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                                 </button>
-                                                <button onClick={() => setEditingTarget(false)} className="text-slate-400 hover:text-slate-900">
-                                                    <X className="h-3.5 w-3.5" />
+                                                <button onClick={() => setEditingTarget(false)} className="flex items-center justify-center h-11 w-11 lg:h-7 lg:w-7 text-slate-400 hover:text-slate-900" aria-label="Cancel edit">
+                                                    <X className="h-4 w-4" />
                                                 </button>
                                             </div>
                                         ) : (
@@ -905,16 +905,17 @@ function OrderDetailDrawer({
                                             </p>
                                         )}
                                         {isCompleted && !editingTarget && (
-                                            <p className="text-[10px] text-emerald-600 font-medium mt-0.5">Increase to reactivate order</p>
+                                            <p className="text-xs text-emerald-600 font-medium mt-0.5">Increase to reactivate order</p>
                                         )}
                                     </div>
                                     {!editingTarget && (
                                         <button
                                             onClick={() => setEditingTarget(true)}
-                                            className="text-slate-400 hover:text-amber-500 transition-colors"
+                                            className="flex items-center justify-center h-11 w-11 lg:h-7 lg:w-7 text-slate-400 hover:text-amber-500 transition-colors"
                                             title="Requires access code"
+                                            aria-label="Edit target"
                                         >
-                                            <Pencil className="h-3.5 w-3.5" />
+                                            <Pencil className="h-4 w-4" />
                                         </button>
                                     )}
                                 </div>
@@ -922,7 +923,7 @@ function OrderDetailDrawer({
                                 {/* Deadline */}
                                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-2">
                                     <div className="min-w-0">
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1">
                                             <Calendar className="h-3 w-3" /> Deadline
                                         </p>
                                         {editingDeadline ? (
@@ -931,14 +932,14 @@ function OrderDetailDrawer({
                                                     type="date"
                                                     value={deadlineVal}
                                                     onChange={e => setDeadlineVal(e.target.value)}
-                                                    className="h-7 text-xs bg-white border-slate-200 text-slate-900"
+                                                    className="h-11 lg:h-7 text-xs bg-white border-slate-200 text-slate-900"
                                                     autoFocus
                                                 />
-                                                <button onClick={handleSaveDeadline} disabled={savingEdit} className="text-emerald-500 hover:text-emerald-600">
-                                                    {savingEdit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                                                <button onClick={handleSaveDeadline} disabled={savingEdit} className="flex items-center justify-center h-11 w-11 lg:h-7 lg:w-7 text-emerald-500 hover:text-emerald-600" aria-label="Save deadline">
+                                                    {savingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                                 </button>
-                                                <button onClick={() => setEditingDeadline(false)} className="text-slate-400 hover:text-slate-900">
-                                                    <X className="h-3.5 w-3.5" />
+                                                <button onClick={() => setEditingDeadline(false)} className="flex items-center justify-center h-11 w-11 lg:h-7 lg:w-7 text-slate-400 hover:text-slate-900" aria-label="Cancel edit">
+                                                    <X className="h-4 w-4" />
                                                 </button>
                                             </div>
                                         ) : (
@@ -950,10 +951,11 @@ function OrderDetailDrawer({
                                     {!editingDeadline && (
                                         <button
                                             onClick={() => setEditingDeadline(true)}
-                                            className="text-slate-400 hover:text-amber-500 transition-colors"
+                                            className="flex items-center justify-center h-11 w-11 lg:h-7 lg:w-7 text-slate-400 hover:text-amber-500 transition-colors"
                                             title="Requires access code"
+                                            aria-label="Edit deadline"
                                         >
-                                            <Pencil className="h-3.5 w-3.5" />
+                                            <Pencil className="h-4 w-4" />
                                         </button>
                                     )}
                                 </div>
@@ -962,7 +964,7 @@ function OrderDetailDrawer({
                                 {order.worker_rate_per_m !== null && (
                                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-2">
                                         <div className="min-w-0">
-                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                                            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1">
                                                 <CircleDollarSign className="h-3 w-3" /> Worker Wage
                                             </p>
                                             <p className="text-base font-black font-mono text-slate-900">
@@ -975,7 +977,7 @@ function OrderDetailDrawer({
 
                             {/* Dispatch Bridge Section */}
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1.5">
+                                <p className="text-xs uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1.5">
                                     <Truck className="h-3 w-3" /> Dispatches
                                 </p>
                                 <DispatchSection
@@ -1012,7 +1014,7 @@ function OrderDetailDrawer({
 
                             {/* Machine Assignment */}
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1.5">
+                                <p className="text-xs uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1.5">
                                     <Server className="h-3 w-3" /> Machine Assignment
                                     {currentMachineIds.length > 0 && !isCompleted && (
                                         <span className="text-emerald-400">
@@ -1025,7 +1027,7 @@ function OrderDetailDrawer({
                                         <Lock className="h-5 w-5 text-slate-400 shrink-0" />
                                         <div>
                                             <p className="text-xs font-semibold text-slate-700">Order Completed</p>
-                                            <p className="text-[10px] text-slate-500 mt-0.5">Increase the target above to reactivate this order and reassign machines.</p>
+                                            <p className="text-xs text-slate-500 mt-0.5">Increase the target above to reactivate this order and reassign machines.</p>
                                         </div>
                                     </div>
                                 ) : (
@@ -1040,7 +1042,7 @@ function OrderDetailDrawer({
 
                             {/* Estimator Quote Cost Breakdown */}
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1.5">
+                                <p className="text-xs uppercase tracking-widest text-slate-500 font-bold flex items-center gap-1.5">
                                     <Calculator className="h-3 w-3" /> Estimator Cost Breakdown
                                 </p>
                                 {quote ? (
@@ -1049,12 +1051,12 @@ function OrderDetailDrawer({
                                     <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-4 text-center">
                                         <Calculator className="h-6 w-6 text-slate-400 mx-auto mb-2" />
                                         <p className="text-xs text-slate-500 font-medium">No estimator quote linked</p>
-                                        <p className="text-[10px] text-slate-400 mt-1">
+                                        <p className="text-xs text-slate-400 mt-1">
                                             Save the quote in Estimator, accept it in Quote History, then convert it into a live order
                                         </p>
                                         <a
                                             href="/owner/estimator"
-                                            className="mt-2 inline-flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 font-semibold"
+                                            className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-semibold"
                                         >
                                             Go to Estimator <ArrowUpRight className="h-3 w-3" />
                                         </a>
@@ -1069,15 +1071,13 @@ function OrderDetailDrawer({
                                 <>
                                     <Button
                                         variant="outline"
-                                        size="sm"
-                                        className="flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-bold"
+                                        className="h-11 lg:h-9 flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-bold"
                                         onClick={handleCancel}
                                     >
                                         <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel Order
                                     </Button>
                                     <Button
-                                        size="sm"
-                                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                                        className="h-11 lg:h-9 flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                                         onClick={handleComplete}
                                     >
                                         <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Mark Complete
@@ -1141,13 +1141,13 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                     {metersProduced === 0 ? (
-                        <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-400 font-medium whitespace-nowrap">
+                        <Badge variant="outline" className="text-xs border-slate-200 text-slate-400 font-medium whitespace-nowrap">
                             {t('analytics.orders.card.tracking_starts')}
                         </Badge>
                     ) : paceIndex !== null && (
                         <Badge
                             variant="outline"
-                            className={`text-[10px] border-current font-mono ${paceColor(paceIndex)}`}
+                            className={`text-xs border-current font-mono ${paceColor(paceIndex)}`}
                         >
                             ⚡ {paceIndex.toFixed(2)}×
                         </Badge>
@@ -1157,10 +1157,11 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7 text-slate-400 hover:text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-11 w-11 lg:h-7 lg:w-7 text-slate-400 hover:text-slate-700 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                                 onClick={(e) => e.stopPropagation()}
+                                aria-label="Order actions"
                             >
-                                <MoreVertical className="h-4 w-4" />
+                                <MoreVertical className="h-5 w-5 lg:h-4 lg:w-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-white border-slate-200 text-slate-900 shadow-md">
@@ -1185,7 +1186,7 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
 
             {/* Floor Instructions */}
             {(order.warp_instruction || order.weft_instruction) && (
-                <div className="bg-slate-50 rounded-lg p-2 border border-slate-100 text-[11px] font-mono space-y-0.5">
+                <div className="bg-slate-50 rounded-lg p-2 border border-slate-100 text-xs font-mono space-y-0.5">
                     {order.warp_instruction && (
                         <div className="flex gap-2">
                             <span className="text-slate-500 shrink-0">Warp:</span>
@@ -1216,7 +1217,7 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
                         style={{ width: `${Math.min(100, progress)}%` }}
                     />
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500">
+                <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>{progress.toFixed(1)}% complete</span>
                     <span className="flex items-center gap-1">
                         <Target className="h-3 w-3" />
@@ -1228,12 +1229,12 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
             {/* Footer: machines + open arrow */}
             <div className="flex items-center justify-between">
                 {order.assigned_machines_count > 0 ? (
-                    <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                    <div className="text-xs text-slate-500 flex items-center gap-1">
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         {order.assigned_machines_count} machine{order.assigned_machines_count > 1 ? 's' : ''} running
                     </div>
                 ) : (
-                    <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                    <div className="text-xs text-slate-400 flex items-center gap-1">
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-300" />
                         No machines assigned
                     </div>
@@ -1264,7 +1265,7 @@ function KanbanColumn({
             <div className={`flex items-center gap-2 mb-3 px-1`}>
                 <Icon className={`h-4 w-4 ${accent}`} />
                 <h2 className="text-sm font-bold text-slate-900">{title}</h2>
-                <Badge variant="secondary" className="bg-slate-100 text-slate-600 text-[10px] border-slate-200">
+                <Badge variant="secondary" className="bg-slate-100 text-slate-600 text-xs border-slate-200">
                     {count}
                 </Badge>
             </div>

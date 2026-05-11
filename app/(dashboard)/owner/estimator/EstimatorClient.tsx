@@ -383,7 +383,7 @@ function NumField({
 }) {
     return (
         <div className="space-y-1.5 min-w-0">
-            <Label className="block text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold text-slate-500 whitespace-nowrap overflow-visible">{label}</Label>
+            <Label className="block text-xs uppercase tracking-wider font-semibold text-slate-500 whitespace-nowrap overflow-visible">{label}</Label>
             <div className="relative group">
                 <Input
                     type="number"
@@ -395,10 +395,10 @@ function NumField({
                         const val = e.target.value === '' ? null : Number(e.target.value)
                         onChange(val)
                     }}
-                    className="h-9 sm:h-10 text-xs sm:text-sm font-mono font-black text-center pr-10 sm:pr-14 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full text-orange-600"
+                    className="h-11 lg:h-9 text-xs sm:text-sm font-mono font-black text-center pr-10 sm:pr-14 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full text-orange-600"
                 />
                 {unit && (
-                    <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-[9px] sm:text-[10px] text-slate-400 font-bold pointer-events-none">
+                    <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
                         {unit}
                     </span>
                 )}
@@ -407,19 +407,19 @@ function NumField({
                 <div className="flex flex-col gap-0.5 mt-1">
                     <div className="flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
-                        <p className="text-[9.5px] font-bold text-amber-600 truncate">{warning}</p>
+                        <p className="text-xs font-bold text-amber-600 truncate">{warning}</p>
                     </div>
                     {onDismissWarning && (
                         <button 
                             onClick={onDismissWarning}
-                            className="text-[8px] text-slate-400 hover:text-slate-600 underline text-left pl-4"
+                            className="text-xs text-slate-400 hover:text-slate-600 underline text-left pl-4"
                         >
                             Dismiss
                         </button>
                     )}
                 </div>
             ) : hint ? (
-                <p className="text-[9px] sm:text-[10px] text-slate-400 font-medium leading-tight mt-1">{hint}</p>
+                <p className="text-xs text-slate-400 font-medium leading-tight mt-1">{hint}</p>
             ) : null}
         </div>
     )
@@ -427,7 +427,7 @@ function NumField({
 
 function CostPill({ label, value, type = 'default' }: { label: string; value: number; type?: 'default' | 'warp' | 'weft' | 'weave' | 'primary' }) {
     if (value <= 0) return null
-    const base = "shrink-0 text-[10px] rounded-full px-2.5 py-0.5 font-mono font-bold border transition-all"
+    const base = "shrink-0 text-xs rounded-full px-2.5 py-0.5 font-mono font-bold border transition-all"
     const variants: Record<string, string> = {
         default: "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300",
         warp:    "bg-indigo-50 text-indigo-700 border-indigo-100 hover:border-indigo-200",

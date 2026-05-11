@@ -228,7 +228,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                 setFilterStatus(s)
                                 router.replace(`/owner/quotes${s !== 'all' ? `?status=${s}` : ''}`)
                             }}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-md capitalize whitespace-nowrap transition-all ${
+                            className={`px-4 lg:px-3 h-11 lg:h-8 flex items-center justify-center text-xs font-bold rounded-md capitalize whitespace-nowrap transition-all ${
                                 filterStatus === s
                                     ? 'bg-slate-900 text-white shadow-md'
                                     : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
@@ -284,21 +284,21 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
 
                                     <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
-                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Quoted Cost</p>
+                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">Quoted Cost</p>
                                             <p className="text-base font-black font-mono text-indigo-600">₹{Number(quote.quote_price_per_meter).toFixed(2)}/m</p>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Margin</p>
+                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">Margin</p>
                                             <p className="text-base font-black font-mono text-emerald-600">
                                                 {Number(quote.intended_margin_percent).toFixed(1)}%
                                             </p>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Production Cost</p>
+                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">Production Cost</p>
                                             <p className="text-xs font-bold font-mono text-slate-600 mt-0.5">₹{Number(quote.landed_cost_per_meter).toFixed(2)}/m</p>
                                         </div>
                                         <div>
-                                            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Date</p>
+                                            <p className="text-xs uppercase font-bold text-slate-400 tracking-wider">Date</p>
                                             <p className="text-xs font-bold text-slate-600 mt-0.5">{format(new Date(quote.created_at), 'MMM d, yyyy')}</p>
                                         </div>
                                     </div>
@@ -311,17 +311,17 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                                 ) : (
                                                     <>
                                                         {quote.status === 'draft' && (
-                                                            <button onClick={() => handleStatusChange(quote.id, 'sent')} className="p-1.5 rounded-md hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors" title="Mark as Sent">
-                                                                <Send className="h-4 w-4" />
+                                                            <button onClick={() => handleStatusChange(quote.id, 'sent')} className="flex items-center justify-center h-11 w-11 lg:h-8 lg:w-8 rounded-md hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors" title="Mark as Sent" aria-label="Mark as Sent">
+                                                                <Send className="h-5 w-5 lg:h-4 lg:w-4" />
                                                             </button>
                                                         )}
                                                         {quote.status === 'sent' && (
                                                             <>
-                                                                <button onClick={() => handleStatusChange(quote.id, 'accepted')} className="p-1.5 rounded-md hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition-colors" title="Mark as Accepted">
-                                                                    <CheckCircle2 className="h-4 w-4" />
+                                                                <button onClick={() => handleStatusChange(quote.id, 'accepted')} className="flex items-center justify-center h-11 w-11 lg:h-8 lg:w-8 rounded-md hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition-colors" title="Mark as Accepted" aria-label="Mark as Accepted">
+                                                                    <CheckCircle2 className="h-5 w-5 lg:h-4 lg:w-4" />
                                                                 </button>
-                                                                <button onClick={() => handleStatusChange(quote.id, 'rejected')} className="p-1.5 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors" title="Mark as Rejected">
-                                                                    <XCircle className="h-4 w-4" />
+                                                                <button onClick={() => handleStatusChange(quote.id, 'rejected')} className="flex items-center justify-center h-11 w-11 lg:h-8 lg:w-8 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors" title="Mark as Rejected" aria-label="Mark as Rejected">
+                                                                    <XCircle className="h-5 w-5 lg:h-4 lg:w-4" />
                                                                 </button>
                                                             </>
                                                         )}
@@ -335,13 +335,12 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                                 </Badge>
                                             )}
                                             <Button
-                                                size="sm"
                                                 variant="ghost"
-                                                className="h-7 text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2 ml-auto"
+                                                className="h-11 lg:h-7 text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-3 lg:px-2 ml-auto"
                                                 onClick={() => handleReEstimate(quote)}
                                             >
                                                 Re-estimate
-                                                <ArrowRight className="h-3 w-3 ml-1" />
+                                                <ArrowRight className="h-4 w-4 lg:h-3 lg:w-3 ml-1" />
                                             </Button>
                                         </div>
 
@@ -394,7 +393,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
-                                    <Label className="text-[10px] uppercase font-black text-slate-500">Total metres</Label>
+                                    <Label className="text-xs uppercase font-black text-slate-500">Total metres</Label>
                                     <Input
                                         type="number"
                                         min="1"
@@ -405,7 +404,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label className="text-[10px] uppercase font-black text-slate-500">Deadline</Label>
+                                    <Label className="text-xs uppercase font-black text-slate-500">Deadline</Label>
                                     <Input
                                         type="date"
                                         value={convertDeadline}
@@ -415,7 +414,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label className="text-[10px] uppercase font-black text-slate-500">Order notes</Label>
+                                <Label className="text-xs uppercase font-black text-slate-500">Order notes</Label>
                                 <Textarea
                                     value={convertNotes}
                                     onChange={event => setConvertNotes(event.target.value)}
