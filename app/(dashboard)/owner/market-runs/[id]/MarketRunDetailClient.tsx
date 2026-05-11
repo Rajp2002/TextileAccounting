@@ -114,7 +114,7 @@ export default function MarketRunDetailClient({
                             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
                                 {run.fabric_label}
                             </h1>
-                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${status.color}`}>
+                            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${status.color}`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                                 {status.label}
                             </span>
@@ -127,7 +127,7 @@ export default function MarketRunDetailClient({
 
                     <div className="flex items-center gap-2">
                         {run.order_id && (
-                            <Button variant="outline" size="sm" asChild className="gap-2">
+                            <Button variant="outline" asChild className="h-11 gap-2 lg:h-9">
                                 <Link href={`/owner/orders?orderId=${run.order_id}`}>
                                     <Package className="h-4 w-4" />
                                     Floor Order
@@ -135,11 +135,11 @@ export default function MarketRunDetailClient({
                             </Button>
                         )}
                         {run.status !== 'closed' && (
-                            <Button variant="secondary" size="sm" onClick={handleCloseRun} disabled={submitting}>
+                            <Button variant="secondary" onClick={handleCloseRun} disabled={submitting} className="h-11 lg:h-9">
                                 Mark Closed
                             </Button>
                         )}
-                        <Button asChild className="gap-2 shadow-md shadow-primary/20">
+                        <Button asChild className="h-11 gap-2 shadow-md shadow-primary/20 lg:h-9">
                             <Link href="/owner/stock">
                                 <Store className="h-4 w-4" />
                                 Manage Stock
@@ -232,20 +232,20 @@ export default function MarketRunDetailClient({
             </div>
 
             {/* Guidance Card */}
-            <Card className="border-indigo-100 bg-indigo-50/50">
+            <Card className="border-orange-100 bg-orange-50/70">
                 <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-indigo-100 rounded-full">
-                            <Store className="h-5 w-5 text-indigo-600" />
+                        <div className="p-2 bg-orange-100 rounded-full">
+                            <Store className="h-5 w-5 text-orange-600" />
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-indigo-900">Selling & Dispatching This Fabric</p>
-                            <p className="text-xs text-indigo-700 max-w-2xl">
+                            <p className="text-sm font-bold text-orange-800">Selling & Dispatching This Fabric</p>
+                            <p className="text-xs text-stone-700 max-w-2xl">
                                 Fabric produced from this Market Run is managed in Stock/Godown. To sell or dispatch it, open Stock and use Sell & Dispatch on the produced taka. Commercials will update from the completed sale.
                             </p>
                         </div>
                     </div>
-                    <Button asChild className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0">
+                    <Button asChild className="h-11 gap-2 bg-orange-600 hover:bg-orange-700 text-white shrink-0 lg:h-9">
                         <Link href="/owner/stock">
                             <Store className="h-4 w-4" />
                             View Stock
@@ -274,64 +274,118 @@ export default function MarketRunDetailClient({
                         </Button>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold border-b border-border">
-                                <tr>
-                                    <th className="px-4 py-3 font-semibold">Date</th>
-                                    <th className="px-4 py-3 font-semibold">Direct Trader Invoice</th>
-                                    <th className="px-4 py-3 font-semibold text-right">Meters</th>
-                                    <th className="px-4 py-3 font-semibold text-right">Price/m</th>
-                                    <th className="px-4 py-3 font-semibold text-right">Profit/m</th>
-                                    <th className="px-4 py-3 font-semibold text-right">Total Profit</th>
-                                    <th className="px-4 py-3 font-semibold text-right">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border/50">
-                                {initialSales.map((sale) => {
-                                    const profitPerM = sale.price_per_meter - sale.cost_per_meter
-                                    const totalProfit = profitPerM * sale.meters_sold
-                                    return (
-                                        <tr key={sale.id} className="hover:bg-muted/30 transition-colors">
-                                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                                                {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap font-bold text-foreground">
-                                                {sale.parties.name}
-                                                {sale.invoice_id && (
-                                                    <span className="block text-[10px] text-muted-foreground font-normal mt-0.5">
-                                                        Ledger Linked
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-right font-medium">
-                                                {fmtM(sale.meters_sold)}
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-foreground">
-                                                ₹{Number(sale.price_per_meter).toFixed(2)}
-                                            </td>
-                                            <td className={`px-4 py-3 whitespace-nowrap text-right font-semibold ${profitPerM >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                                {profitPerM > 0 ? '+' : ''}₹{profitPerM.toFixed(2)}
-                                            </td>
-                                            <td className={`px-4 py-3 whitespace-nowrap text-right font-bold ${totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                                {totalProfit > 0 ? '+' : ''}{fmt(totalProfit)}
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-right">
-                                                <Badge variant="outline" className={
-                                                    sale.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                                    sale.status === 'dispatched' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                    'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                                }>
-                                                    {sale.status === 'pending' ? 'Pending' : 
-                                                     sale.status === 'dispatched' ? 'Dispatched' : 'Settled'}
-                                                </Badge>
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                    <>
+                        {/* Mobile Card List */}
+                        <div className="md:hidden space-y-3">
+                            {initialSales.map((sale) => {
+                                const profitPerM = sale.price_per_meter - sale.cost_per_meter
+                                const totalProfit = profitPerM * sale.meters_sold
+                                return (
+                                    <div key={sale.id} className="border border-border/60 rounded-xl p-4 bg-surface space-y-3">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p className="text-sm font-bold text-foreground">{sale.parties.name}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                    {sale.invoice_id && ' · Ledger Linked'}
+                                                </p>
+                                            </div>
+                                            <Badge variant="outline" className={
+                                                sale.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                sale.status === 'dispatched' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                            }>
+                                                {sale.status === 'pending' ? 'Pending' : 
+                                                 sale.status === 'dispatched' ? 'Dispatched' : 'Settled'}
+                                            </Badge>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                                            <div>
+                                                <p className="text-muted-foreground font-medium mb-0.5">Meters</p>
+                                                <p className="font-bold text-foreground">{fmtM(sale.meters_sold)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-muted-foreground font-medium mb-0.5">Price/m</p>
+                                                <p className="font-bold text-foreground">₹{Number(sale.price_per_meter).toFixed(2)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-muted-foreground font-medium mb-0.5">Profit/m</p>
+                                                <p className={`font-bold ${profitPerM >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                    {profitPerM > 0 ? '+' : ''}₹{profitPerM.toFixed(2)}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-muted-foreground font-medium mb-0.5">Total Profit</p>
+                                                <p className={`font-bold ${totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                    {totalProfit > 0 ? '+' : ''}{fmt(totalProfit)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+
+                        {/* Desktop Table */}
+                        <div className="hidden md:block overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="text-xs uppercase tracking-wider text-muted-foreground font-bold border-b border-border">
+                                    <tr>
+                                        <th className="px-4 py-3 font-semibold">Date</th>
+                                        <th className="px-4 py-3 font-semibold">Direct Trader Invoice</th>
+                                        <th className="px-4 py-3 font-semibold text-right">Meters</th>
+                                        <th className="px-4 py-3 font-semibold text-right">Price/m</th>
+                                        <th className="px-4 py-3 font-semibold text-right">Profit/m</th>
+                                        <th className="px-4 py-3 font-semibold text-right">Total Profit</th>
+                                        <th className="px-4 py-3 font-semibold text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/50">
+                                    {initialSales.map((sale) => {
+                                        const profitPerM = sale.price_per_meter - sale.cost_per_meter
+                                        const totalProfit = profitPerM * sale.meters_sold
+                                        return (
+                                            <tr key={sale.id} className="hover:bg-muted/30 transition-colors">
+                                                <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                                                    {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap font-bold text-foreground">
+                                                    {sale.parties.name}
+                                                    {sale.invoice_id && (
+                                                        <span className="block text-xs text-muted-foreground font-normal mt-0.5">
+                                                            Ledger Linked
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-right font-medium">
+                                                    {fmtM(sale.meters_sold)}
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-foreground">
+                                                    ₹{Number(sale.price_per_meter).toFixed(2)}
+                                                </td>
+                                                <td className={`px-4 py-3 whitespace-nowrap text-right font-semibold ${profitPerM >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                    {profitPerM > 0 ? '+' : ''}₹{profitPerM.toFixed(2)}
+                                                </td>
+                                                <td className={`px-4 py-3 whitespace-nowrap text-right font-bold ${totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                                    {totalProfit > 0 ? '+' : ''}{fmt(totalProfit)}
+                                                </td>
+                                                <td className="px-4 py-3 whitespace-nowrap text-right">
+                                                    <Badge variant="outline" className={
+                                                        sale.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                        sale.status === 'dispatched' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                        'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                    }>
+                                                        {sale.status === 'pending' ? 'Pending' : 
+                                                         sale.status === 'dispatched' ? 'Dispatched' : 'Settled'}
+                                                    </Badge>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
                 )}
             </div>
 

@@ -81,7 +81,7 @@ function RunCard({ run }: { run: MarketRunSummary }) {
                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                     <span className="text-sm font-bold text-foreground truncate">{run.fabric_label}</span>
                                     {run.quality_label && (
-                                        <span className="text-[10px] font-semibold text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full">
+                                        <span className="text-xs font-semibold text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full">
                                             {run.quality_label}
                                         </span>
                                     )}
@@ -92,7 +92,7 @@ function RunCard({ run }: { run: MarketRunSummary }) {
                                 </p>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                                <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${status.color}`}>
+                                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${status.color}`}>
                                     <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
                                     {status.label}
                                 </span>
@@ -101,10 +101,10 @@ function RunCard({ run }: { run: MarketRunSummary }) {
                         </div>
 
                         {/* Metrics row */}
-                        <div className="px-5 py-3 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2">
+                        <div className="px-5 py-3 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2">
                             {/* Production */}
                             <div>
-                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Produced</p>
+                                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Produced</p>
                                 <p className="text-sm font-bold text-foreground">{fmtM(run.total_meters_produced)}</p>
                                 <div className="mt-1.5 h-1 rounded-full bg-slate-100 overflow-hidden">
                                     <div
@@ -116,7 +116,7 @@ function RunCard({ run }: { run: MarketRunSummary }) {
 
                             {/* In Godown */}
                             <div>
-                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">In Godown</p>
+                                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">In Godown</p>
                                 <p className="text-sm font-bold text-amber-600">{fmtM(Math.max(0, run.meters_in_godown))}</p>
                                 <div className="mt-1.5 h-1 rounded-full bg-slate-100 overflow-hidden">
                                     <div
@@ -128,20 +128,20 @@ function RunCard({ run }: { run: MarketRunSummary }) {
 
                             {/* Profit */}
                             <div>
-                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Total Profit</p>
+                                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Total Profit</p>
                                 <p className={`text-sm font-bold ${run.total_profit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                     {fmt(run.total_profit)}
                                 </p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                <p className="text-xs text-muted-foreground mt-0.5">
                                     {marginPct !== '—' ? `${marginPct}% margin` : 'No sales yet'}
                                 </p>
                             </div>
 
                             {/* Sales */}
                             <div>
-                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Sales</p>
+                                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Sales</p>
                                 <p className="text-sm font-bold text-foreground">{run.sales_count}</p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                <p className="text-xs text-muted-foreground mt-0.5">
                                     {fmtM(run.total_meters_sold)} sold
                                 </p>
                             </div>
@@ -250,10 +250,10 @@ export default function MarketRunsClient({
                                 <div className="p-1.5 rounded-lg bg-blue-50">
                                     <BarChart3 className="h-3.5 w-3.5 text-blue-600" />
                                 </div>
-                                <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Active</span>
+                                <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Active</span>
                             </div>
                             <p className="text-2xl font-black text-foreground">{activeRuns}</p>
-                            <p className="text-[11px] text-muted-foreground">loom runs in production</p>
+                            <p className="text-xs text-muted-foreground">loom runs in production</p>
                         </CardContent>
                     </Card>
                     <Card className="border-border/50">
@@ -262,10 +262,10 @@ export default function MarketRunsClient({
                                 <div className="p-1.5 rounded-lg bg-amber-50">
                                     <Warehouse className="h-3.5 w-3.5 text-amber-600" />
                                 </div>
-                                <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Godown</span>
+                                <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Godown</span>
                             </div>
                             <p className="text-2xl font-black text-foreground">{fmtM(inGodown)}</p>
-                            <p className="text-[11px] text-muted-foreground">tracked in Stock</p>
+                            <p className="text-xs text-muted-foreground">tracked in Stock</p>
                         </CardContent>
                     </Card>
                     <Card className="border-border/50 col-span-2 sm:col-span-1">
@@ -274,12 +274,12 @@ export default function MarketRunsClient({
                                 <div className="p-1.5 rounded-lg bg-emerald-50">
                                     <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
                                 </div>
-                                <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Profit</span>
+                                <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Profit</span>
                             </div>
                             <p className={`text-2xl font-black ${totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                 {fmt(totalProfit)}
                             </p>
-                            <p className="text-[11px] text-muted-foreground">total across all runs</p>
+                            <p className="text-xs text-muted-foreground">total across all runs</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -300,7 +300,7 @@ export default function MarketRunsClient({
                         <button
                             key={f.key}
                             onClick={() => setFilter(f.key)}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-150 ${
+                            className={`flex h-11 items-center px-4 text-sm font-bold rounded-lg transition-all duration-150 lg:h-9 lg:text-xs ${
                                 filter === f.key
                                     ? 'bg-white text-foreground shadow-sm'
                                     : 'text-muted-foreground hover:text-foreground'

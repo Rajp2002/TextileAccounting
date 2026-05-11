@@ -34,19 +34,19 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
             <div className="grid grid-cols-3 divide-x divide-hairline border-b border-hairline">
                 <div className="px-4 py-3 text-center">
                     <p className="text-lg font-bold text-success">{machines.assigned}</p>
-                    <p className="text-[11px] font-medium text-body">Assigned</p>
+                    <p className="text-xs font-medium text-body">Assigned</p>
                 </div>
                 <div className="px-4 py-3 text-center">
                     <p className={cn('text-lg font-bold', machines.unassigned > 0 ? 'text-warning' : 'text-muted-foreground')}>
                         {machines.unassigned}
                     </p>
-                    <p className="text-[11px] font-medium text-body">Unassigned</p>
+                    <p className="text-xs font-medium text-body">Unassigned</p>
                 </div>
                 <div className="px-4 py-3 text-center">
                     <p className={cn('text-lg font-bold', machines.maintenance > 0 ? 'text-risk' : 'text-muted-foreground')}>
                         {machines.maintenance}
                     </p>
-                    <p className="text-[11px] font-medium text-body">Maintenance</p>
+                    <p className="text-xs font-medium text-body">Maintenance</p>
                 </div>
             </div>
 
@@ -58,7 +58,7 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
                             <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
                             <span className="flex-1 text-sm font-medium text-body">{m.name}</span>
                             {m.loomType && (
-                                <span className="text-[11px] text-muted">{m.loomType}</span>
+                                <span className="text-xs text-muted">{m.loomType}</span>
                             )}
                         </div>
                     ))}
@@ -81,9 +81,9 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
             <div className="flex items-center justify-end gap-2 border-t border-hairline px-4 py-3">
                 <Link
                     href="/owner/machines"
-                    className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
+                    className="flex h-11 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink transition hover:bg-surface-soft lg:h-9 lg:text-xs"
                 >
-                    <Wrench className="h-3 w-3" />
+                    <Wrench className="h-4 w-4 lg:h-3 lg:w-3" />
                     Manage Looms
                 </Link>
             </div>
