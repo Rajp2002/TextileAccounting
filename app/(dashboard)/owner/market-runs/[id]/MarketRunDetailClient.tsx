@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { updateMarketRunStatus } from '../../estimator/actions'
+import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 import { useTranslation } from '@/lib/i18n/context'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -76,7 +77,13 @@ export default function MarketRunDetailClient({
     const { tx } = useTranslation()
     const [submitting, setSubmitting] = useState(false)
 
-    const status = STATUS_CONFIG[run.status] ?? STATUS_CONFIG.production
+    const derivedStatus = getMarketRunDisplayStatus({
+        storedStatus: run.status,
+        producedQuantity: run.total_meters_produced,
+        availableQuantity: run.meters_in_godown,
+        soldQuantity: run.total_meters_sold
+    })
+    const status = STATUS_CONFIG[derivedStatus] ?? STATUS_CONFIG.production
     const marginPct = run.total_revenue > 0
         ? ((run.total_profit / run.total_revenue) * 100).toFixed(1)
         : '0.0'
@@ -141,6 +148,23 @@ export default function MarketRunDetailClient({
                     </div>
                 </div>
             </div>
+
+            {derivedStatus === 'sold_out' && run.status !== 'closed' && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-100 rounded-full">
+                            <Store className="h-5 w-5 text-emerald-600" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-emerald-800">All stock from this market run has been sold.</p>
+                            <p className="text-xs text-emerald-700">Mark this market run as closed?</p>
+                        </div>
+                    </div>
+                    <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0" onClick={handleCloseRun} disabled={submitting}>
+                        Mark Closed
+                    </Button>
+                </div>
+            )}
 
             {/* Metrics Overview */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

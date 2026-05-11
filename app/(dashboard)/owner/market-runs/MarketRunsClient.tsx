@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,7 +49,13 @@ function fmtM(n: number) { return `${n.toLocaleString('en-IN', { maximumFraction
 // ─── Run Card ─────────────────────────────────────────────────────────────────
 
 function RunCard({ run }: { run: MarketRunSummary }) {
-    const status = STATUS_CONFIG[run.status] ?? STATUS_CONFIG.production
+    const derivedStatus = getMarketRunDisplayStatus({
+        storedStatus: run.status,
+        producedQuantity: run.total_meters_produced,
+        availableQuantity: run.meters_in_godown,
+        soldQuantity: run.total_meters_sold
+    })
+    const status = STATUS_CONFIG[derivedStatus] ?? STATUS_CONFIG.production
     const productionPct = run.target_meters > 0
         ? Math.min(100, (run.total_meters_produced / run.target_meters) * 100)
         : 0
@@ -192,17 +199,31 @@ export default function MarketRunsClient({
     ] as const
 
     const filtered = initialRuns.filter(r => {
+        const derivedStatus = getMarketRunDisplayStatus({
+            storedStatus: r.status,
+            producedQuantity: r.total_meters_produced,
+            availableQuantity: r.meters_in_godown,
+            soldQuantity: r.total_meters_sold
+        })
         if (filter === 'all')     return true
-        if (filter === 'active')  return r.status === 'production'
-        if (filter === 'selling') return ['in_godown', 'partially_sold'].includes(r.status)
-        if (filter === 'done')    return ['sold_out', 'closed'].includes(r.status)
+        if (filter === 'active')  return derivedStatus === 'production'
+        if (filter === 'selling') return ['in_godown', 'partially_sold'].includes(derivedStatus)
+        if (filter === 'done')    return ['sold_out', 'closed'].includes(derivedStatus)
         return true
     })
 
     // Summary stats
     const totalProfit   = initialRuns.reduce((s, r) => s + Number(r.total_profit ?? 0), 0)
     const inGodown      = initialRuns.reduce((s, r) => s + Math.max(0, Number(r.meters_in_godown ?? 0)), 0)
-    const activeRuns    = initialRuns.filter(r => r.status === 'production').length
+    const activeRuns    = initialRuns.filter(r => {
+        const derivedStatus = getMarketRunDisplayStatus({
+            storedStatus: r.status,
+            producedQuantity: r.total_meters_produced,
+            availableQuantity: r.meters_in_godown,
+            soldQuantity: r.total_meters_sold
+        })
+        return derivedStatus === 'production'
+    }).length
 
     return (
         <div className="space-y-6">
