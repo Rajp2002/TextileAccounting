@@ -592,6 +592,7 @@ export default function UnifiedDashboard() {
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [copying, setCopying] = useState(false)
+    const submitLockRef = useRef(false)
 
     const [machines, setMachines] = useState<any[]>([])
     const [workers, setWorkers] = useState<any[]>([])
@@ -664,16 +665,18 @@ export default function UnifiedDashboard() {
 
     // Save to localStorage whenever closing readings change
     useEffect(() => {
+        if (loading) return // Prevent overwriting drafts during transitions
         const key = `closing_readings_${date}_${shift}`
         if (Object.keys(closingReadings).length > 0) localStorage.setItem(key, JSON.stringify(closingReadings))
         else localStorage.removeItem(key)
-    }, [closingReadings, date, shift])
+    }, [closingReadings, date, shift, loading])
 
     useEffect(() => {
+        if (loading) return // Prevent overwriting drafts during transitions
         const key = `counter_resets_${date}_${shift}`
         if (Object.keys(counterResets).length > 0) localStorage.setItem(key, JSON.stringify(counterResets))
         else localStorage.removeItem(key)
-    }, [counterResets, date, shift])
+    }, [counterResets, date, shift, loading])
 
     useEffect(() => {
         if (!correctionWindowExpiresAt) return
@@ -832,6 +835,8 @@ export default function UnifiedDashboard() {
     }
 
     const handleBulkSubmit = async (code: string = '') => {
+        if (submitLockRef.current || submitting) return
+
         if (loading) {
             toast.error('Shift data is still loading. Please try again in a moment.')
             return
@@ -883,11 +888,16 @@ export default function UnifiedDashboard() {
             return
         }
 
+        submitLockRef.current = true
         setSubmitting(true)
-        const res = await bulkLogProduction(entries, code)
-        if (res.success) {
+        try {
+            const res = await bulkLogProduction(entries, code)
+
+            if (!res?.success) {
+                throw new Error(res?.error || "Could not save production log.")
+            }
+
             toast.success(`Shift meters logged (${res.logged} looms)`)
-            setSubmitting(false)
             setClosingReadings({}) // Reset inputs after success
             setCounterResets({})
             localStorage.removeItem(`closing_readings_${date}_${shift}`) // Clear cache
@@ -896,12 +906,16 @@ export default function UnifiedDashboard() {
             setDuplicateAccessCode('')
             setCorrectionWindowExpiresAt(res.correctionWindowExpiresAt ?? null)
             fetchData()
-        } else if (res.error === 'DUPLICATE_LOG_DETECTED') {
+        } catch (error: any) {
+            console.error('Failed to submit production logs:', error)
+            if (error.message === 'DUPLICATE_LOG_DETECTED') {
+                setShowDuplicateDialog(true)
+            } else {
+                toast.error('Could not save production log. Your entry is still saved as a draft. Check your connection and try again.')
+            }
+        } finally {
             setSubmitting(false)
-            setShowDuplicateDialog(true)
-        } else {
-            setSubmitting(false)
-            toast.error(res.error)
+            submitLockRef.current = false
         }
     }
 
