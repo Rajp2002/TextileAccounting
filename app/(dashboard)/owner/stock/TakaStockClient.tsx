@@ -113,7 +113,7 @@ function MetricCard({
                     <div className={cn('rounded-lg p-1.5', tone)}>
                         <Icon className="h-3.5 w-3.5" />
                     </div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
                 </div>
                 <p className="mt-3 text-2xl font-black tabular-nums text-foreground">{value}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{helper}</p>
@@ -485,7 +485,7 @@ function PendingInwardDialog({
 
                 <div className="grid gap-4 py-2 sm:grid-cols-2">
                     <div className="rounded-lg border bg-muted/30 p-3 sm:col-span-2">
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Produced this shift</p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Produced this shift</p>
                         <p className="mt-1 text-lg font-black text-foreground">
                             {stockQuantity(draft.suggested_unit_count, draft.suggested_meters, draft.unit_label)}
                         </p>
@@ -648,7 +648,7 @@ function SaleDialog({
                             }}
                             placeholder={`Max ${lot.available_taka_count}`}
                         />
-                        <p className="text-[10px] font-semibold text-muted-foreground">
+                        <p className="text-xs font-semibold text-muted-foreground">
                             Available: {stockQuantity(lot.available_taka_count, lot.available_meters, lot.unit_label)}
                         </p>
                     </div>
@@ -663,7 +663,7 @@ function SaleDialog({
                             onChange={(event) => setForm((prev) => ({ ...prev, price_per_meter: event.target.value }))}
                             placeholder={`Cost ${money(lot.cost_per_meter, 2)}`}
                         />
-                        <p className={cn('text-[10px] font-semibold', price >= lot.cost_per_meter ? 'text-emerald-600' : 'text-rose-600')}>
+                        <p className={cn('text-xs font-semibold', price >= lot.cost_per_meter ? 'text-emerald-600' : 'text-rose-600')}>
                             {form.price_per_meter ? `${money(price - lot.cost_per_meter, 2)}/m margin` : ' '}
                         </p>
                     </div>
@@ -690,15 +690,15 @@ function SaleDialog({
 
                 <div className="grid grid-cols-3 gap-2 rounded-lg border bg-muted/30 p-3 text-center">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Meters</p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Meters</p>
                         <p className="font-black text-foreground">{meters(metersSold)}</p>
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Revenue</p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Revenue</p>
                         <p className="font-black text-foreground">{money(revenue)}</p>
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Profit</p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Profit</p>
                         <p className={cn('font-black', profit >= 0 ? 'text-emerald-600' : 'text-rose-600')}>{money(profit)}</p>
                     </div>
                 </div>
@@ -854,11 +854,11 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                     <p className="mt-1 text-xs text-amber-600 font-semibold">Stock shows physical fabric and godown movement. For revenue, profit, and payment collection, use Commercials.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button onClick={() => { setSellAndDispatchLotId(undefined); setSellAndDispatchOpen(true); }} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+                    <Button onClick={() => { setSellAndDispatchLotId(undefined); setSellAndDispatchOpen(true); }} className="gap-2 bg-indigo-600 hover:bg-indigo-700 h-11 lg:h-9">
                         <Send className="h-4 w-4" />
                         Sell & Dispatch
                     </Button>
-                    <Button onClick={() => setAddOpen(true)} className="gap-2">
+                    <Button onClick={() => setAddOpen(true)} className="gap-2 h-11 lg:h-9">
                         <Plus className="h-4 w-4" />
                         Add Stock
                     </Button>
@@ -932,11 +932,11 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                         value={query}
                         onChange={(event) => setQuery(event.target.value)}
                         placeholder="Search quality, godown, note..."
-                        className="pl-10"
+                        className="pl-10 h-11 lg:h-9"
                     />
                 </div>
                 <Select value={godown} onValueChange={setGodown}>
-                    <SelectTrigger className="w-full lg:w-56">
+                    <SelectTrigger className="w-full lg:w-56 h-11 lg:h-9">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -962,7 +962,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                         const lotMovements = movementsByLot.get(lot.stock_lot_id) ?? []
                         const expanded = Boolean(expandedLots[lot.stock_lot_id])
                         return (
-                            <Card key={lot.stock_lot_id} className="border-border/60 shadow-sm">
+                            <Card key={lot.stock_lot_id} className="border-border/60 shadow-sm rounded-2xl bg-stone-50/50">
                                 <CardContent className="p-5">
                                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                         <div className="min-w-0 space-y-2">
@@ -986,18 +986,18 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3 text-right sm:grid-cols-3">
-                                            <div>
-                                                <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Available</p>
-                                                <p className="font-black text-foreground">{stockUnits(lot.available_taka_count, lot.unit_label)}</p>
-                                                <p className="text-xs text-muted-foreground">{meters(lot.available_meters)}</p>
+                                            <div className="flex flex-col items-end justify-center bg-white/80 rounded-xl p-2 border border-amber-100 shadow-sm col-span-2 sm:col-span-1">
+                                                <p className="text-xs font-bold uppercase tracking-wider text-amber-700">Available</p>
+                                                <p className="text-2xl font-black text-foreground">{meters(lot.available_meters)}</p>
+                                                <p className="text-sm font-semibold text-muted-foreground">{stockUnits(lot.available_taka_count, lot.unit_label)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Unit Size</p>
+                                                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Unit Size</p>
                                                 <p className="font-black text-foreground">{meters(lot.meters_per_taka)}</p>
                                                 <p className="text-xs text-muted-foreground">per {lot.unit_label}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Cost</p>
+                                                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cost</p>
                                                 <p className="font-black text-foreground">{money(lot.cost_per_meter, 2)}</p>
                                                 <p className="text-xs text-muted-foreground">per meter</p>
                                             </div>
@@ -1008,7 +1008,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                         <Button
                                             onClick={() => { setSellAndDispatchLotId(lot.stock_lot_id); setSellAndDispatchOpen(true); }}
                                             disabled={lot.available_taka_count <= 0}
-                                            className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                            className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white h-11 lg:h-9"
                                         >
                                             <Send className="h-4 w-4" />
                                             Sell & Dispatch
@@ -1017,12 +1017,12 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                             variant="outline"
                                             onClick={() => setSaleLot(lot)}
                                             disabled={lot.available_taka_count <= 0}
-                                            className="gap-2"
+                                            className="gap-2 h-11 lg:h-9"
                                         >
                                             <Store className="h-4 w-4" />
                                             Record Sale
                                         </Button>
-                                        <Button variant="outline" onClick={() => setAdjustLot(lot)} className="gap-2">
+                                        <Button variant="outline" onClick={() => setAdjustLot(lot)} className="gap-2 h-11 lg:h-9">
                                             <PencilLine className="h-4 w-4" />
                                             Adjust
                                         </Button>
@@ -1032,7 +1032,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                 ...prev,
                                                 [lot.stock_lot_id]: !prev[lot.stock_lot_id],
                                             }))}
-                                            className="gap-2"
+                                            className="gap-2 h-11 lg:h-9"
                                         >
                                             {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                                             Entries
@@ -1053,43 +1053,81 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                     No movement entries found for this lot yet.
                                                 </div>
                                             ) : (
-                                                <div className="overflow-x-auto">
-                                                    <table className="w-full text-sm">
-                                                        <thead className="border-b border-border/60 bg-muted/30 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-                                                            <tr>
-                                                                <th className="px-4 py-3 font-bold">Date</th>
-                                                                <th className="px-4 py-3 font-bold">Entry</th>
-                                                                <th className="px-4 py-3 text-right font-bold">Units</th>
-                                                                <th className="px-4 py-3 text-right font-bold">Meters</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody className="divide-y divide-border/40">
-                                                            {lotMovements.map((movement) => {
-                                                                const positive = Number(movement.taka_delta) > 0
-                                                                return (
-                                                                    <tr key={movement.id}>
-                                                                        <td className="whitespace-nowrap px-4 py-3 font-semibold text-muted-foreground">
-                                                                            {new Date(movement.movement_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                                                        </td>
-                                                                        <td className="min-w-52 px-4 py-3">
+                                                <div>
+                                                    {/* Desktop Table */}
+                                                    <div className="hidden lg:block overflow-x-auto">
+                                                        <table className="w-full text-sm">
+                                                            <thead className="border-b border-border/60 bg-muted/30 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                                                                <tr>
+                                                                    <th className="px-4 py-3 font-bold">Date</th>
+                                                                    <th className="px-4 py-3 font-bold">Entry</th>
+                                                                    <th className="px-4 py-3 text-right font-bold">Units</th>
+                                                                    <th className="px-4 py-3 text-right font-bold">Meters</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-border/40">
+                                                                {lotMovements.map((movement) => {
+                                                                    const positive = Number(movement.taka_delta) > 0
+                                                                    return (
+                                                                        <tr key={movement.id}>
+                                                                            <td className="whitespace-nowrap px-4 py-3 font-semibold text-muted-foreground">
+                                                                                {new Date(movement.movement_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                            </td>
+                                                                            <td className="min-w-52 px-4 py-3">
+                                                                                <p className="font-bold text-foreground">
+                                                                                    {movement.reference || movementLabel(movement.movement_type)}
+                                                                                </p>
+                                                                                {movement.notes && (
+                                                                                    <p className="mt-0.5 text-xs text-muted-foreground">{movement.notes}</p>
+                                                                                )}
+                                                                            </td>
+                                                                            <td className={cn('whitespace-nowrap px-4 py-3 text-right font-black', positive ? 'text-emerald-600' : 'text-rose-600')}>
+                                                                                {positive ? '+' : ''}{stockUnits(Number(movement.taka_delta), lot.unit_label)}
+                                                                            </td>
+                                                                            <td className={cn('whitespace-nowrap px-4 py-3 text-right font-semibold', positive ? 'text-emerald-600' : 'text-rose-600')}>
+                                                                                {positive ? '+' : ''}{meters(Number(movement.meters_delta))}
+                                                                            </td>
+                                                                        </tr>
+                                                                    )
+                                                                })}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    
+                                                    {/* Mobile Cards */}
+                                                    <div className="lg:hidden space-y-2 p-2 bg-stone-50/50">
+                                                        {lotMovements.map((movement) => {
+                                                            const positive = Number(movement.taka_delta) > 0
+                                                            return (
+                                                                <div key={movement.id} className="p-3 border border-border/40 rounded-lg bg-white space-y-1">
+                                                                    <div className="flex justify-between items-start">
+                                                                        <div>
                                                                             <p className="font-bold text-foreground">
                                                                                 {movement.reference || movementLabel(movement.movement_type)}
                                                                             </p>
-                                                                            {movement.notes && (
-                                                                                <p className="mt-0.5 text-xs text-muted-foreground">{movement.notes}</p>
-                                                                            )}
-                                                                        </td>
-                                                                        <td className={cn('whitespace-nowrap px-4 py-3 text-right font-black', positive ? 'text-emerald-600' : 'text-rose-600')}>
-                                                                            {positive ? '+' : ''}{stockUnits(Number(movement.taka_delta), lot.unit_label)}
-                                                                        </td>
-                                                                        <td className={cn('whitespace-nowrap px-4 py-3 text-right font-semibold', positive ? 'text-emerald-600' : 'text-rose-600')}>
-                                                                            {positive ? '+' : ''}{meters(Number(movement.meters_delta))}
-                                                                        </td>
-                                                                    </tr>
-                                                                )
-                                                            })}
-                                                        </tbody>
-                                                    </table>
+                                                                            <p className="text-xs text-muted-foreground">
+                                                                                {new Date(movement.movement_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div className="text-right">
+                                                                            <p className={cn('font-black text-sm', positive ? 'text-emerald-600' : 'text-rose-600')}>
+                                                                                {positive ? '+' : ''}{stockUnits(Number(movement.taka_delta), lot.unit_label)}
+                                                                            </p>
+                                                                            <p className={cn('text-xs font-semibold', positive ? 'text-emerald-600' : 'text-rose-600')}>
+                                                                                {positive ? '+' : ''}{meters(Number(movement.meters_delta))}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                    {movement.notes && (
+                                                                        <p className="text-xs text-muted-foreground mt-1">{movement.notes}</p>
+                                                                    )}
+                                                                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                                                        <Warehouse className="h-3 w-3" /> {lot.godown}
+                                                                    </p>
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -1107,40 +1145,83 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                         <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
                             <h2 className="text-sm font-black uppercase tracking-wider text-muted-foreground">Recent Stock Sales</h2>
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="border-b border-border/60 text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-                                    <tr>
-                                        <th className="px-4 py-3 font-bold">Date</th>
-                                        <th className="px-4 py-3 font-bold">Quality</th>
-                                        <th className="px-4 py-3 text-right font-bold">Units</th>
-                                        <th className="px-4 py-3 text-right font-bold">Meters</th>
-                                        <th className="px-4 py-3 text-right font-bold">Sale / m</th>
-                                        <th className="px-4 py-3 text-right font-bold">Profit</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border/40">
-                                    {initialData.sales.slice(0, 8).map((sale) => (
-                                        <tr key={sale.id}>
-                                            <td className="px-4 py-3 text-muted-foreground">
-                                                {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                            </td>
-                                            <td className="px-4 py-3 font-bold text-foreground">
-                                                {sale.fabric_stock_lots.quality_label}
-                                                <span className="block text-[10px] font-semibold text-muted-foreground">{sale.fabric_stock_lots.godown}</span>
-                                            </td>
-                                            <td className="px-4 py-3 text-right font-semibold">
-                                                {stockUnits(Number(sale.taka_sold), sale.fabric_stock_lots.unit_label)}
-                                            </td>
-                                            <td className="px-4 py-3 text-right font-semibold">{meters(Number(sale.meters_sold))}</td>
-                                            <td className="px-4 py-3 text-right font-semibold">{money(Number(sale.price_per_meter), 2)}</td>
-                                            <td className={cn('px-4 py-3 text-right font-black', Number(sale.gross_profit_amount) >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
-                                                {Number(sale.gross_profit_amount) >= 0 ? '+' : ''}{money(Number(sale.gross_profit_amount))}
-                                            </td>
+                        <div>
+                            {/* Desktop Table */}
+                            <div className="hidden lg:block overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead className="border-b border-border/60 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                                        <tr>
+                                            <th className="px-4 py-3 font-bold">Date</th>
+                                            <th className="px-4 py-3 font-bold">Quality</th>
+                                            <th className="px-4 py-3 text-right font-bold">Units</th>
+                                            <th className="px-4 py-3 text-right font-bold">Meters</th>
+                                            <th className="px-4 py-3 text-right font-bold">Sale / m</th>
+                                            <th className="px-4 py-3 text-right font-bold">Profit</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-border/40">
+                                        {initialData.sales.slice(0, 8).map((sale) => (
+                                            <tr key={sale.id}>
+                                                <td className="px-4 py-3 text-muted-foreground">
+                                                    {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                </td>
+                                                <td className="px-4 py-3 font-bold text-foreground">
+                                                    {sale.fabric_stock_lots.quality_label}
+                                                    <span className="block text-xs font-semibold text-muted-foreground">{sale.fabric_stock_lots.godown}</span>
+                                                </td>
+                                                <td className="px-4 py-3 text-right font-semibold">
+                                                    {stockUnits(Number(sale.taka_sold), sale.fabric_stock_lots.unit_label)}
+                                                </td>
+                                                <td className="px-4 py-3 text-right font-semibold">{meters(Number(sale.meters_sold))}</td>
+                                                <td className="px-4 py-3 text-right font-semibold">{money(Number(sale.price_per_meter), 2)}</td>
+                                                <td className={cn('px-4 py-3 text-right font-black', Number(sale.gross_profit_amount) >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
+                                                    {Number(sale.gross_profit_amount) >= 0 ? '+' : ''}{money(Number(sale.gross_profit_amount))}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            {/* Mobile Cards */}
+                            <div className="lg:hidden divide-y divide-border/40">
+                                {initialData.sales.slice(0, 8).map((sale) => (
+                                    <div key={sale.id} className="p-4 space-y-2">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="font-bold text-foreground">
+                                                    {sale.fabric_stock_lots.quality_label}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                                    <Warehouse className="h-3 w-3" /> {sale.fabric_stock_lots.godown}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs text-muted-foreground">
+                                                    {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                </p>
+                                                <p className={cn('font-black text-sm', Number(sale.gross_profit_amount) >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
+                                                    {Number(sale.gross_profit_amount) >= 0 ? '+' : ''}{money(Number(sale.gross_profit_amount))}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2 text-sm pt-1">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Units</p>
+                                                <p className="font-semibold">{stockUnits(Number(sale.taka_sold), sale.fabric_stock_lots.unit_label)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Meters</p>
+                                                <p className="font-semibold">{meters(Number(sale.meters_sold))}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Rate</p>
+                                                <p className="font-semibold">{money(Number(sale.price_per_meter), 2)}/m</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
