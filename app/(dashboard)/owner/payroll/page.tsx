@@ -246,15 +246,15 @@ function MeterWorkerRow({
 
     return (
         <div className={cn(
-            'border rounded-xl overflow-hidden transition-all duration-300',
-            isPaid ? 'border-green-200 bg-green-50/20 shadow-sm' : 'border-gray-200 bg-white hover:border-indigo-200'
+            'border rounded-2xl overflow-hidden transition-all duration-300',
+            isPaid ? 'border-green-200 bg-green-50/20 shadow-sm' : 'border-gray-200 bg-white hover:border-saffron-soft'
         )}>
             <div className="flex flex-col sm:flex-row sm:items-center p-4 sm:py-3.5 gap-3">
                 <button
                     onClick={() => setExpanded(e => !e)}
                     className="flex items-center gap-3 text-left flex-1 min-w-0 group w-full"
                 >
-                    <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-base flex-shrink-0 group-hover:bg-indigo-100 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-saffron-soft text-saffron-deep flex items-center justify-center font-bold text-base flex-shrink-0 group-hover:bg-saffron-soft/80 transition-colors">
                         {tl(worker.name)[0]}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -308,10 +308,10 @@ function MeterWorkerRow({
                         size="sm"
                         variant={isPaid ? 'outline' : 'default'}
                         className={cn(
-                            'h-8 w-[108px] px-3 text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
+                            'h-11 lg:h-9 w-[108px] px-3 text-sm lg:text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
                             isPaid 
                                 ? 'border-green-200 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600' 
-                                : 'bg-indigo-600 hover:bg-indigo-700 shadow-sm hover:shadow-md active:scale-95'
+                                : 'bg-saffron hover:bg-saffron-deep text-white shadow-sm hover:shadow-md active:scale-95'
                         )}
                         onClick={() => onToggle(false)}
                         disabled={isMutating}
@@ -340,9 +340,10 @@ function MeterWorkerRow({
                             {/* Calculation Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Earnings Breakdown</h4>
+                                    <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest">Earnings Breakdown</h4>
                                     <div className="bg-white border rounded-lg overflow-hidden">
-                                        <table className="w-full text-xs">
+                                        {/* Desktop Table */}
+                                        <table className="hidden lg:table w-full text-xs">
                                             <thead className="bg-gray-50 text-gray-500">
                                                 <tr>
                                                     <th className="px-3 py-2 text-left font-bold">Machine</th>
@@ -356,7 +357,7 @@ function MeterWorkerRow({
                                                         <td className="px-3 py-2">
                                                             <span className="font-medium">{m.machineName}</span>
                                                             {m.orderLabel && (
-                                                                <span className="block text-[10px] text-indigo-500/80 font-medium truncate max-w-[120px]" title={m.orderLabel}>
+                                                                <span className="block text-xs text-saffron-deep/80 font-medium truncate max-w-[120px]" title={m.orderLabel}>
                                                                     {m.orderLabel}
                                                                 </span>
                                                             )}
@@ -367,10 +368,35 @@ function MeterWorkerRow({
                                                 ))}
                                                 <tr className="bg-gray-50/50 font-bold">
                                                     <td className="px-3 py-2">Gross Total</td>
-                                                    <td colSpan={2} className="px-3 py-2 text-right text-indigo-600">{formatINR(worker.totalPay)}</td>
+                                                    <td colSpan={2} className="px-3 py-2 text-right text-saffron-deep">{formatINR(worker.totalPay)}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
+
+                                        {/* Mobile Cards */}
+                                        <div className="lg:hidden divide-y divide-gray-100">
+                                            {worker.machines.map((m, i) => (
+                                                <div key={i} className="p-3 space-y-1.5">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="font-bold text-gray-900">{m.machineName}</span>
+                                                        <span className="font-semibold text-gray-900">{formatINR(m.pay)}</span>
+                                                    </div>
+                                                    {m.orderLabel && (
+                                                        <div className="text-xs text-gray-500 truncate" title={m.orderLabel}>
+                                                            {m.orderLabel}
+                                                        </div>
+                                                    )}
+                                                    <div className="text-xs text-gray-500 flex justify-between">
+                                                        <span>Meters</span>
+                                                        <span>{m.meters.toFixed(1)} @ ₹{m.rate}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <div className="flex justify-between items-center bg-gray-50/50 p-3 font-bold text-sm">
+                                                <span>Gross Total</span>
+                                                <span className="text-saffron-deep">{formatINR(worker.totalPay)}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
@@ -548,8 +574,8 @@ function FixedWorkerRow({
 
     return (
         <div className={cn(
-            'border rounded-xl overflow-hidden transition-all duration-300',
-            isPaid ? 'border-green-200 bg-green-50/20 shadow-sm' : 'border-gray-200 bg-white hover:border-indigo-200'
+            'border rounded-2xl overflow-hidden transition-all duration-300',
+            isPaid ? 'border-green-200 bg-green-50/20 shadow-sm' : 'border-gray-200 bg-white hover:border-saffron-soft'
         )}>
             <div className="flex flex-col sm:flex-row sm:items-center p-4 sm:py-3.5 gap-3">
                 <button
@@ -558,7 +584,7 @@ function FixedWorkerRow({
                 >
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className={cn('text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider', ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700')}>
+                            <span className={cn('text-xs px-2 py-0.5 rounded-full font-black uppercase tracking-wider', ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700')}>
                                 {t(`workers.roles.${worker.role}`) || worker.role}
                             </span>
                             {isPaid && <Check className="h-3 w-3 text-green-500" />}
@@ -605,10 +631,10 @@ function FixedWorkerRow({
                         size="sm"
                         variant={isPaid ? 'outline' : 'default'}
                         className={cn(
-                            'h-8 w-[108px] px-3 text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
+                            'h-11 lg:h-9 w-[108px] px-3 text-sm lg:text-[11px] font-bold rounded-md leading-none transition-all whitespace-nowrap',
                             isPaid 
                                 ? 'border-green-200 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-600' 
-                                : 'bg-indigo-600 hover:bg-indigo-700 shadow-sm hover:shadow-md active:scale-95'
+                                : 'bg-saffron hover:bg-saffron-deep text-white shadow-sm hover:shadow-md active:scale-95'
                         )}
                         onClick={() => onToggle(false)}
                         disabled={isMutating}
@@ -636,7 +662,7 @@ function FixedWorkerRow({
                         <div className="border-t bg-gray-50/50 px-4 py-4 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Calculations</h4>
+                                    <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest">Calculations</h4>
                                     <div className="bg-white border rounded-lg p-3 space-y-2 text-sm">
                                         {isDaily ? (
                                             <>
@@ -648,7 +674,7 @@ function FixedWorkerRow({
                                                     <span className="text-gray-500">Days Present</span>
                                                     <span className="font-bold">{worker.daysWorked ?? 0} / 30</span>
                                                 </div>
-                                                <div className="flex justify-between text-[11px] text-indigo-600 italic border-t pt-2">
+                                                <div className="flex justify-between text-xs text-saffron-deep italic border-t pt-2">
                                                     <span>Earned Gross</span>
                                                     <span className="font-black">{formatINR(worker.earnedPay)}</span>
                                                 </div>
@@ -656,7 +682,7 @@ function FixedWorkerRow({
                                         ) : (
                                             <div className="flex justify-between font-bold">
                                                 <span className="text-gray-500">Monthly Salary</span>
-                                                <span className="text-indigo-600">{formatINR(worker.monthly_salary)}</span>
+                                                <span className="text-saffron-deep">{formatINR(worker.monthly_salary)}</span>
                                             </div>
                                         )}
                                     </div>
@@ -909,12 +935,12 @@ function SettlementDialog({
         <>
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-none shadow-2xl flex flex-col max-h-[96dvh] sm:max-h-[90vh]">
-                <div className="bg-indigo-600 p-4 sm:p-6 text-white shrink-0 relative">
+                <div className="bg-saffron p-4 sm:p-6 text-white shrink-0 relative">
                     <DialogTitle className="text-lg sm:text-xl font-black uppercase tracking-tight flex items-center gap-3 pr-8">
                         <HandCoins className="h-5 w-5 sm:h-6 sm:w-6" />
                         <span className="truncate">{tl(worker.name)}</span>
                     </DialogTitle>
-                    <DialogDescription className="text-indigo-100 mt-1 text-xs sm:text-sm font-medium italic opacity-90">
+                    <DialogDescription className="text-white/80 mt-1 text-xs sm:text-sm font-medium italic opacity-90">
                         Finalizing payroll for {monthLabel(selectedMonth)} cycle
                     </DialogDescription>
                 </div>
@@ -939,7 +965,7 @@ function SettlementDialog({
 
                     {/* Adjustment Section */}
                     <div className="space-y-2.5 sm:space-y-3">
-                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Quick Adjustments (Inam / Kapaat)</h4>
+                        <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest px-1">Quick Adjustments (Inam / Kapaat)</h4>
                         <div className="bg-gray-50/50 rounded-xl p-3 sm:p-4 border border-gray-200 border-dashed space-y-3 sm:space-y-4">
                             <div className="flex gap-2">
                                 <Select value={adjCategoryId} onValueChange={setAdjCategoryId}>
@@ -963,7 +989,7 @@ function SettlementDialog({
                                 />
                                 <Button
                                     size="sm"
-                                    className="h-9 sm:h-10 px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700"
+                                    className="h-9 sm:h-10 px-3 sm:px-4 bg-saffron hover:bg-saffron-deep text-white"
                                     onClick={() => setShowAdjustmentConfirm(true)}
                                     disabled={addingAdjustment || !adjAmount || !adjCategoryId}
                                 >
@@ -1056,7 +1082,7 @@ function SettlementDialog({
                             Cancel
                         </Button>
                         <Button 
-                            className="flex-[2] h-10 sm:h-12 text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-700 font-black uppercase tracking-widest shadow-lg shadow-indigo-100 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all" 
+                            className="flex-[2] h-10 sm:h-12 text-xs sm:text-sm bg-saffron hover:bg-saffron-deep text-white font-black uppercase tracking-widest shadow-lg shadow-saffron-soft disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all" 
                             disabled={!confirmed || isMutating || netPayout < 0 || !paymentMode}
                             onClick={() => {
                                 if (shouldConfirmAdvanceAdjustment) {
@@ -1638,21 +1664,21 @@ export default function PayrollPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <Card className="border-none shadow-sm bg-indigo-50/50">
+                <Card className="border-none shadow-sm bg-saffron-soft/50">
                     <CardContent className="pt-4 pb-3">
-                        <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{t('payroll_ext.gross_target')}</div>
-                        <div className="text-xl font-black text-indigo-700 tracking-tight">{formatINR(summary.totalGross)}</div>
+                        <div className="text-xs font-black text-saffron-deep uppercase tracking-widest mb-1">{t('payroll_ext.gross_target')}</div>
+                        <div className="text-xl font-black text-saffron-deep tracking-tight">{formatINR(summary.totalGross)}</div>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-green-50/50">
                     <CardContent className="pt-4 pb-3">
-                        <div className="text-[10px] font-black text-green-400 uppercase tracking-widest mb-1">{t('payroll_ext.net_paid')}</div>
+                        <div className="text-xs font-black text-green-600 uppercase tracking-widest mb-1">{t('payroll_ext.net_paid')}</div>
                         <div className="text-xl font-black text-green-700 tracking-tight">{formatINR(summary.totalPaidNet)}</div>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-amber-50/50">
                     <CardContent className="pt-4 pb-3">
-                        <div className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <div className="text-xs font-black text-amber-600 uppercase tracking-widest mb-1 flex items-center gap-1">
                             <HandCoins className="h-3 w-3" />
                             {t('payroll_ext.recovered')}
                         </div>
@@ -1661,7 +1687,7 @@ export default function PayrollPage() {
                 </Card>
                 <Card className="border-none shadow-sm bg-red-50/50">
                     <CardContent className="pt-4 pb-3">
-                        <div className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">{t('payroll_ext.outstanding')}</div>
+                        <div className="text-xs font-black text-red-600 uppercase tracking-widest mb-1">{t('payroll_ext.outstanding')}</div>
                         <div className="text-xl font-black text-red-700 tracking-tight">{formatINR(summary.outstanding)}</div>
                     </CardContent>
                 </Card>
@@ -1682,8 +1708,8 @@ export default function PayrollPage() {
                 <div className="flex bg-white p-1 rounded-xl border border-gray-200 w-full md:w-auto">
                     <button
                         className={cn(
-                            'flex-1 md:min-w-[200px] px-1.5 sm:px-4 py-2.5 text-[9px] sm:text-xs font-black uppercase tracking-tighter sm:tracking-widest flex items-center justify-center gap-1 sm:gap-3 transition-all rounded-lg min-w-0',
-                            activeTab === 'meter' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'
+                            'flex-1 md:min-w-[200px] px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-black uppercase tracking-tighter sm:tracking-widest flex items-center justify-center gap-1 sm:gap-3 transition-all rounded-lg min-w-0',
+                            activeTab === 'meter' ? 'bg-saffron text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'
                         )}
                         onClick={() => setActiveTab('meter')}
                     >
@@ -1691,7 +1717,7 @@ export default function PayrollPage() {
                         <span className="truncate">{t('payroll_ext.piece_rate_tab')}</span>
                         {meterWorkers && (
                             <span className={cn(
-                                'text-[10px] px-2 py-0.5 rounded-full font-bold ml-2 shrink-0',
+                                'text-xs px-2 py-0.5 rounded-full font-bold ml-2 shrink-0',
                                 activeTab === 'meter' ? 'bg-white/25' : 'bg-gray-100'
                             )}>
                                 {meterWorkers.filter((w: MeterWorkerPayroll) => !w.settlement).length}
@@ -1700,8 +1726,8 @@ export default function PayrollPage() {
                     </button>
                     <button
                         className={cn(
-                            'flex-1 md:min-w-[200px] px-1.5 sm:px-4 py-2.5 text-[9px] sm:text-xs font-black uppercase tracking-tighter sm:tracking-widest flex items-center justify-center gap-1 sm:gap-3 transition-all rounded-lg min-w-0',
-                            activeTab === 'fixed' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'
+                            'flex-1 md:min-w-[200px] px-1.5 sm:px-4 py-2.5 text-xs sm:text-sm font-black uppercase tracking-tighter sm:tracking-widest flex items-center justify-center gap-1 sm:gap-3 transition-all rounded-lg min-w-0',
+                            activeTab === 'fixed' ? 'bg-saffron text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'
                         )}
                         onClick={() => setActiveTab('fixed')}
                     >
@@ -1709,7 +1735,7 @@ export default function PayrollPage() {
                         <span className="truncate">{t('payroll_ext.monthly_daily_tab')}</span>
                         {fixedWorkers && (
                             <span className={cn(
-                                'text-[10px] px-2 py-0.5 rounded-full font-bold ml-2 shrink-0',
+                                'text-xs px-2 py-0.5 rounded-full font-bold ml-2 shrink-0',
                                 activeTab === 'fixed' ? 'bg-white/25' : 'bg-gray-100'
                             )}>
                                 {fixedWorkers.filter((w: FixedWorkerPayroll) => !w.settlement).length}
