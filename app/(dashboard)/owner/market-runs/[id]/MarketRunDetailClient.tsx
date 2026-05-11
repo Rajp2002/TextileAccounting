@@ -231,6 +231,29 @@ export default function MarketRunDetailClient({
                 </Card>
             </div>
 
+            {/* Guidance Card */}
+            <Card className="border-indigo-100 bg-indigo-50/50">
+                <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-100 rounded-full">
+                            <Store className="h-5 w-5 text-indigo-600" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-indigo-900">Selling & Dispatching This Fabric</p>
+                            <p className="text-xs text-indigo-700 max-w-2xl">
+                                Fabric produced from this Market Run is managed in Stock/Godown. To sell or dispatch it, open Stock and use Sell & Dispatch on the produced taka. Commercials will update from the completed sale.
+                            </p>
+                        </div>
+                    </div>
+                    <Button asChild className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0">
+                        <Link href="/owner/stock">
+                            <Store className="h-4 w-4" />
+                            View Stock
+                        </Link>
+                    </Button>
+                </CardContent>
+            </Card>
+
             {/* Sales List */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
