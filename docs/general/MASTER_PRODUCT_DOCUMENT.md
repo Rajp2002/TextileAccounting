@@ -198,6 +198,10 @@ Advances tracks pending and deducted Upaad for both meter and fixed workers, est
 
 WhatsApp supports the workflows with access-code messages, daily briefs, deadline alerts, advance receipts, payslips, monthly briefs, and delivery logging. Message delivery is logged and retryable, but core writes should not depend on messaging success.
 
+> [!IMPORTANT]
+> **WhatsApp status:** Required before pilot. Direct Meta WhatsApp Cloud API is the selected provider. Currently pending Meta Business setup / Indian payment method dependency for live credentials. This is a pilot-readiness blocker, not a scope-removal issue.
+> Simulation mode is available for local/dev testing. Core workflows function without live WhatsApp credentials. WhatsApp failures will not block core writes.
+
 Billing manages trial and Razorpay subscription state. Referrals support lightweight growth through referral codes and billing-page stats.
 
 ## 5. Feature Map

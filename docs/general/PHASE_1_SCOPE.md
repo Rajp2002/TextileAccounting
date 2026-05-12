@@ -194,6 +194,10 @@ Readiness bar:
 
 These are kept because they make the core loop usable and sellable in the target market.
 
+> [!IMPORTANT]
+> **WhatsApp status:** Required before pilot. Direct Meta WhatsApp Cloud API is the selected provider. Currently pending Meta Business setup / Indian payment method dependency for live credentials. This is a pilot-readiness blocker, not a scope-removal issue.
+> Simulation mode is available for local/dev testing. Core workflows function without live WhatsApp credentials. WhatsApp failures will not block core writes.
+
 In scope:
 
 - Meta WhatsApp Cloud API send path.
@@ -201,8 +205,8 @@ In scope:
 - Access code notifications.
 - Daily production briefs.
 - Deadline alerts.
-- Advance receipts.
-- Payslips and itemized follow-up.
+- Advance receipts (with manual fallback).
+- Payslips and itemized follow-up (with manual fallback).
 - Monthly briefs.
 - Lockdown alerts where governance is active.
 - Razorpay Base/Premium subscription plans, trial, payment history, renewal/cancel state, webhook processing.
@@ -211,6 +215,7 @@ In scope:
 Readiness bar:
 
 - WhatsApp failure should never block core writes.
+- Manual fallback available for key notifications (payslips, advances).
 - Billing should be transparent enough for launch without becoming a billing analytics project.
 - Referrals should stay lightweight.
 
@@ -272,7 +277,14 @@ Archived routes are documented in `docs/general/PHASE_1_ARCHIVE.md`; the active 
 - Advance recovery, final settlement, PF/ESI, payment mode, and payslip send are tested.
 - Stock inward drafts, lot creation, adjustment, sale, and commercials aggregation are tested.
 - Dispatch creation, receipt confirmation, shortage, and public tracking are tested.
-- WhatsApp failures are logged and retryable without blocking writes.
+- WhatsApp failures are logged and retryable without blocking writes (failure fallback exists so app workflows do not crash).
+- **WhatsApp Pre-Pilot Checklist:**
+  - [ ] Meta Business account configured
+  - [ ] WhatsApp Business API access approved/configured
+  - [ ] Phone number connected
+  - [ ] Templates created/approved if needed
+  - [ ] Environment variables added
+  - [ ] Test messages sent successfully
 - Billing/trial/subscription states are clear.
 - Archived routes do not distract from the core loop.
 - Lint/build pass before release.

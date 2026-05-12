@@ -1,6 +1,6 @@
 // ─── send-payslip ─────────────────────────────────────────────────────────────
 // Event-driven: called from toggleWorkerPaid() server action after settlement.
-// Sends a personalised payslip to the worker's WhatsApp number via Interakt.
+// Sends a personalised payslip to the worker's WhatsApp number via Meta WhatsApp Cloud API.
 // Multi-machine breakdown is newline-joined into a single template variable.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -11,14 +11,14 @@ import {
   makeCallbackData,
 } from "../_shared/whatsapp.ts";
 
-// Template names must match exactly what is approved in Interakt
+// Template names must match exactly what is approved in Meta
 const TEMPLATES: Record<string, string> = {
   en: "worker_payslips",
   hi: "worker_payslips",   // use same template until hi/gu variants are approved
   gu: "worker_payslips",
 };
 
-// Language codes for Interakt API
+// Language codes for Meta API
 const LANG_CODES: Record<string, string> = {
   en: "en",
   hi: "hi",
@@ -38,8 +38,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
-    const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
+    const metaAccessToken = Deno.env.get("META_WHATSAPP_TOKEN") ?? Deno.env.get("META_ACCESS_TOKEN");
+    const metaPhoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID") ?? Deno.env.get("META_PHONE_NUMBER_ID");
 
     // 1. Fetch the payroll settlement record
     const { data: settlement, error: settlementError } = await supabase

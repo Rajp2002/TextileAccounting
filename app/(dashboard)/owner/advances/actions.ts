@@ -28,7 +28,7 @@ export async function createAdvance(
     if ('error' in parsed) return { error: parsed.error }
     const data = parsed.data
 
-    const record: any = {
+    const record = {
         org_id: profile.org_id,
         amount: data.amount,
         description: data.description || null,
@@ -48,31 +48,72 @@ export async function createAdvance(
         return { error: 'Failed to create advance. Please try again.' }
     }
 
-    // ── Fire-and-forget: send advance receipt to worker's WhatsApp ───────────
-    // Non-blocking — advance creation is not gated on notification delivery.
+    const notification: { attempted: boolean; sent: boolean; reason: string; balance?: number } = { attempted: false, sent: false, reason: "unknown" }
+    
     if (inserted?.id) {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        
         if (supabaseUrl && serviceRoleKey) {
-            fetch(`${supabaseUrl}/functions/v1/send-advance-receipt`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${serviceRoleKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    org_id: profile.org_id,
-                    advance_id: inserted.id,
-                    worker_id: data.workerId,
-                    worker_type: data.workerType,
-                }),
-            }).catch((err) => console.error('[advance-receipt] Notification failed:', err))
+            notification.attempted = true
+            
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 3000)
+            
+            try {
+                const res = await fetch(`${supabaseUrl}/functions/v1/send-advance-receipt`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${serviceRoleKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        org_id: profile.org_id,
+                        advance_id: inserted.id,
+                        worker_id: data.workerId,
+                        worker_type: data.workerType,
+                    }),
+                    signal: controller.signal
+                })
+                clearTimeout(timeoutId)
+                
+                const result = await res.json().catch(() => ({}))
+                
+                if (res.ok) {
+                    if (result.skipped) {
+                        notification.reason = result.reason === "worker has no WhatsApp number" ? "no_phone" : "opted_out"
+                    } else if (result.success) {
+                        notification.sent = true
+                        notification.reason = "success"
+                        notification.balance = result.balance
+                    } else {
+                        notification.reason = "provider_error"
+                    }
+                } else {
+                    notification.reason = "provider_error"
+                }
+            } catch (err) {
+                clearTimeout(timeoutId)
+                if (err instanceof Error && err.name === 'AbortError') {
+                    notification.reason = "timeout"
+                } else {
+                    notification.reason = "provider_error"
+                    console.error('[advance-receipt] Notification failed:', err)
+                }
+            }
+        } else {
+            notification.reason = "missing_env"
         }
     }
-
+    
     revalidatePath('/owner/advances')
     revalidatePath('/owner/payroll')
-    return { success: true }
+    
+    return { 
+        success: true, 
+        advance: { id: inserted?.id, amount: data.amount, description: data.description },
+        notification 
+    }
 }
 
 /**

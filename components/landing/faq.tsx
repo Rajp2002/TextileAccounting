@@ -9,7 +9,7 @@ const faqs = [
     },
     {
         question: 'What happens if the factory internet is unreliable?',
-        answer: 'The production flow is built for patchy internet. Meter entries can be captured locally and synced when the connection returns, so the floor is not blocked by network issues.',
+        answer: 'The production flow is designed for quick mobile entry in patchy factory conditions. While offline queueing is supported for expenses, offline production logging for meter readings is planned for a future update.',
     },
     {
         question: 'What does Weavly replace?',
