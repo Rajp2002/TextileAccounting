@@ -65,6 +65,34 @@ Deno.serve(async (req) => {
       );
     }
 
+    // 3.5 Check Consent
+    const { checkWhatsAppConsent } = await import("../_shared/whatsapp.ts");
+    const consentResult = await checkWhatsAppConsent(
+      supabase,
+      org_id,
+      'worker',
+      worker_id,
+      worker.whatsapp_number
+    );
+
+    if (!consentResult.allowed) {
+      await logDelivery(supabase, {
+        orgId: org_id,
+        recipientPhone: worker.whatsapp_number,
+        templateName: TEMPLATE_NAME,
+        notificationType: "advance_receipt",
+        callbackData: makeCallbackData("advance", org_id),
+        status: `skipped_${consentResult.reason}` as "skipped_opted_out" | "skipped_missing_consent" | "skipped_missing_phone",
+        errorMessage: `Skipped: ${consentResult.reason}`,
+        payloadSnapshot: { worker_id, advance_id },
+      });
+
+      return new Response(
+        JSON.stringify({ skipped: true, reason: consentResult.reason }),
+        { status: 200 },
+      );
+    }
+
     // 4. Calculate total running pending balance (all pending advances for this worker)
     const idField = worker_type === "meter" ? "meter_worker_id" : "fixed_worker_id";
     const { data: pendingAdvances } = await supabase

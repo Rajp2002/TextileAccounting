@@ -154,7 +154,7 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
             queryClient.invalidateQueries({ queryKey: ['fixed_payroll'] })
             queryClient.invalidateQueries({ queryKey: ['daily_workers'] })
 
-            if (whatsappPhone.length === 10 && whatsappConsent && data.workerId) {
+            if (whatsappPhone.length === 10 && data.workerId) {
                 saveWorkerWhatsApp({
                     workerId: data.workerId,
                     workerType: data.workerType as 'meter' | 'fixed',

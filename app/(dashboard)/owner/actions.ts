@@ -180,28 +180,43 @@ export async function upsertFixedWorker(data: {
     name: string
     role: string
     monthly_salary: number
-    start_date?: string   // 'YYYY-MM-DD' — used for payroll month filtering
+    start_date?: string
     pf_esi_enrolled?: boolean
     esi_number?: string | null
     pf_number?: string | null
+    phone?: string
+    language?: 'en' | 'hi' | 'gu'
+    consentGiven?: boolean
 }) {
-    const { profile } = await requireRole(['owner'])
+    const { profile, user } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const name = data.name.trim()
     if (!name || !data.role || !data.monthly_salary) return { error: 'All fields are required.' }
 
-    if (data.id) {
-        const updatePayload: Record<string, any> = {
-            name,
-            role: data.role,
-            monthly_salary: data.monthly_salary,
-            pf_esi_enrolled: !!data.pf_esi_enrolled,
-            pf_esi_eligible: !!data.pf_esi_enrolled,
-            esi_number: data.esi_number?.trim() || null,
-            pf_number: data.pf_number?.trim() || null,
+    const updatePayload: Record<string, any> = {
+        name,
+        role: data.role,
+        monthly_salary: data.monthly_salary,
+        pf_esi_enrolled: !!data.pf_esi_enrolled,
+        pf_esi_eligible: !!data.pf_esi_enrolled,
+        esi_number: data.esi_number?.trim() || null,
+        pf_number: data.pf_number?.trim() || null,
+    }
+    if (data.start_date) updatePayload.start_date = data.start_date
+
+    if (data.phone !== undefined) {
+        const cleanPhone = data.phone.replace(/\D/g, '')
+        if (cleanPhone && cleanPhone.length !== 10) {
+            return { error: 'Please enter a valid 10-digit mobile number.' }
         }
-        if (data.start_date) updatePayload.start_date = data.start_date
+        updatePayload.whatsapp_number = cleanPhone || null
+        if (data.language) updatePayload.whatsapp_language = data.language
+    }
+
+    let workerId = data.id;
+
+    if (data.id) {
         const { error } = await supabase
             .from('fixed_workers')
             .update(updatePayload)
@@ -209,22 +224,50 @@ export async function upsertFixedWorker(data: {
             .eq('org_id', profile.org_id)
         if (error) { console.error(error); return { error: 'Failed to update worker.' } }
     } else {
-        const insertPayload: Record<string, any> = {
-            name,
-            role: data.role,
-            monthly_salary: data.monthly_salary,
-            pf_esi_enrolled: !!data.pf_esi_enrolled,
-            pf_esi_eligible: !!data.pf_esi_enrolled,
-            esi_number: data.esi_number?.trim() || null,
-            pf_number: data.pf_number?.trim() || null,
-            org_id: profile.org_id,
-        }
-        // If a start_date is provided use it; otherwise DB default (CURRENT_DATE) applies
-        if (data.start_date) insertPayload.start_date = data.start_date
-        const { error } = await supabase
+        updatePayload.org_id = profile.org_id;
+        const { data: inserted, error } = await supabase
             .from('fixed_workers')
-            .insert(insertPayload)
+            .insert(updatePayload)
+            .select('id')
+            .single();
         if (error) { console.error(error); return { error: 'Failed to add worker.' } }
+        workerId = inserted.id;
+    }
+
+    // Save consent to notification_consents
+    if (data.phone !== undefined && workerId) {
+        const cleanPhone = data.phone.replace(/\D/g, '')
+        if (cleanPhone) {
+            // Fetch existing consent to preserve consented_at if opting out
+            const { data: existingConsent } = await supabase
+                .from('notification_consents')
+                .select('consented_at')
+                .eq('org_id', profile.org_id)
+                .eq('person_type', 'worker')
+                .eq('person_id', String(workerId))
+                .eq('channel', 'whatsapp')
+                .maybeSingle();
+
+            const isOptIn = !!data.consentGiven;
+            
+            const { error: consentError } = await supabase
+                .from('notification_consents')
+                .upsert({
+                    org_id: profile.org_id,
+                    person_type: 'worker',
+                    person_id: String(workerId),
+                    phone: cleanPhone,
+                    consent_status: isOptIn ? 'opted_in' : 'opted_out',
+                    consent_source: 'owner_worker_form',
+                    consented_at: isOptIn ? (existingConsent?.consented_at || new Date().toISOString()) : existingConsent?.consented_at,
+                    withdrawn_at: isOptIn ? null : new Date().toISOString(),
+                    captured_by_user_id: user.id,
+                }, { onConflict: 'org_id, person_type, person_id, channel' });
+
+            if (consentError) {
+                console.error('Failed to save consent:', consentError);
+            }
+        }
     }
 
     revalidatePath('/owner/fixed-workers')
@@ -269,7 +312,7 @@ export async function updateMeterWorker(data: {
     esi_number?: string | null
     pf_number?: string | null
 }) {
-    const { profile } = await requireRole(['owner'])
+    const { profile, user } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(PositiveIntSchema, data.id)
@@ -286,14 +329,10 @@ export async function updateMeterWorker(data: {
         pf_number: data.pf_number?.trim() || null,
     }
 
-    // Only update WhatsApp fields if phone provided and consent given
     if (data.phone !== undefined) {
         const cleanPhone = data.phone.replace(/\D/g, '')
         if (cleanPhone && cleanPhone.length !== 10) {
             return { error: 'Please enter a valid 10-digit mobile number.' }
-        }
-        if (cleanPhone && !data.consentGiven) {
-            return { error: 'Worker consent must be confirmed before saving WhatsApp number.' }
         }
         updatePayload.whatsapp_number = cleanPhone || null
         if (data.language) updatePayload.whatsapp_language = data.language
@@ -308,6 +347,42 @@ export async function updateMeterWorker(data: {
     if (error) {
         console.error('Failed to update meter worker:', error)
         return { error: 'Failed to update worker. Please try again.' }
+    }
+
+    // Save consent to notification_consents
+    if (data.phone !== undefined) {
+        const cleanPhone = data.phone.replace(/\D/g, '')
+        if (cleanPhone) {
+            // Fetch existing consent to preserve consented_at if opting out
+            const { data: existingConsent } = await supabase
+                .from('notification_consents')
+                .select('consented_at')
+                .eq('org_id', profile.org_id)
+                .eq('person_type', 'worker')
+                .eq('person_id', String(parsed.data))
+                .eq('channel', 'whatsapp')
+                .maybeSingle();
+
+            const isOptIn = !!data.consentGiven;
+            
+            const { error: consentError } = await supabase
+                .from('notification_consents')
+                .upsert({
+                    org_id: profile.org_id,
+                    person_type: 'worker',
+                    person_id: String(parsed.data),
+                    phone: cleanPhone,
+                    consent_status: isOptIn ? 'opted_in' : 'opted_out',
+                    consent_source: 'owner_worker_form',
+                    consented_at: isOptIn ? (existingConsent?.consented_at || new Date().toISOString()) : existingConsent?.consented_at,
+                    withdrawn_at: isOptIn ? null : new Date().toISOString(),
+                    captured_by_user_id: user.id,
+                }, { onConflict: 'org_id, person_type, person_id, channel' });
+
+            if (consentError) {
+                console.error('Failed to save consent:', consentError);
+            }
+        }
     }
 
     revalidatePath('/owner/fixed-workers')
@@ -1029,13 +1104,8 @@ export async function saveWorkerWhatsApp(data: {
     language: 'en' | 'hi' | 'gu'
     consentGiven: boolean
 }) {
-    const { profile } = await requireRole(['owner'])
+    const { profile, user } = await requireRole(['owner'])
     const supabase = await createServerClient()
-
-    // Hard block if consent not explicitly confirmed
-    if (!data.consentGiven) {
-        return { error: 'Worker consent must be confirmed before saving WhatsApp number.' }
-    }
 
     const cleanPhone = data.phone.replace(/\D/g, '')
     if (cleanPhone && cleanPhone.length !== 10) {
@@ -1059,6 +1129,39 @@ export async function saveWorkerWhatsApp(data: {
     if (error) {
         console.error('Failed to save worker WhatsApp:', error)
         return { error: 'Failed to save worker WhatsApp details.' }
+    }
+
+    // Save consent to notification_consents
+    if (cleanPhone) {
+        // Fetch existing consent to preserve consented_at if opting out
+        const { data: existingConsent } = await supabase
+            .from('notification_consents')
+            .select('consented_at')
+            .eq('org_id', profile.org_id)
+            .eq('person_type', 'worker')
+            .eq('person_id', String(parsedId.data))
+            .eq('channel', 'whatsapp')
+            .maybeSingle();
+
+        const isOptIn = !!data.consentGiven;
+        
+        const { error: consentError } = await supabase
+            .from('notification_consents')
+            .upsert({
+                org_id: profile.org_id,
+                person_type: 'worker',
+                person_id: String(parsedId.data),
+                phone: cleanPhone,
+                consent_status: isOptIn ? 'opted_in' : 'opted_out',
+                consent_source: 'owner_worker_form',
+                consented_at: isOptIn ? (existingConsent?.consented_at || new Date().toISOString()) : existingConsent?.consented_at,
+                withdrawn_at: isOptIn ? null : new Date().toISOString(),
+                captured_by_user_id: user.id,
+            }, { onConflict: 'org_id, person_type, person_id, channel' });
+
+        if (consentError) {
+            console.error('Failed to save consent:', consentError);
+        }
     }
 
     revalidatePath('/owner/payroll')

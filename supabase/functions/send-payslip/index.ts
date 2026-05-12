@@ -79,6 +79,34 @@ Deno.serve(async (req) => {
       );
     }
 
+    // 3.5 Check Consent
+    const { checkWhatsAppConsent } = await import("../_shared/whatsapp.ts");
+    const consentResult = await checkWhatsAppConsent(
+      supabase,
+      org_id,
+      'worker',
+      worker_id,
+      worker.whatsapp_number
+    );
+
+    if (!consentResult.allowed) {
+      await logDelivery(supabase, {
+        orgId: org_id,
+        recipientPhone: worker.whatsapp_number,
+        templateName: TEMPLATES[worker.whatsapp_language ?? "en"] ?? TEMPLATES["en"],
+        notificationType: "payslip",
+        callbackData: makeCallbackData("payslip", org_id),
+        status: `skipped_${consentResult.reason}` as "skipped_opted_out" | "skipped_missing_consent" | "skipped_missing_phone",
+        errorMessage: `Skipped: ${consentResult.reason}`,
+        payloadSnapshot: { worker_id, settlement_id },
+      });
+
+      return new Response(
+        JSON.stringify({ skipped: true, reason: consentResult.reason }),
+        { status: 200 },
+      );
+    }
+
     // 4. Build Itemized Breakdown (For the second message)
     // We use the JSONB snapshot from the settlement to ensure 100% accuracy with what was actually paid.
     let detailMessage = `📋 *Payment Breakdown* (${settlement.month})\n\n`;

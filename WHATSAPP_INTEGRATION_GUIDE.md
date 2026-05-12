@@ -70,28 +70,51 @@ Governance/deferred:
 ## Consent / Opt-in
 
 > [!IMPORTANT]
-> **TODO**: Before pilot, Weavly must record WhatsApp opt-in/opt-out for owners, supervisors, workers, and customers where applicable.
+> **Consent Model**: Automated WhatsApp messages require explicit opt-in.
+> - **Owners/Supervisors**: Use `profiles.whatsapp_opted_in`.
+> - **Workers**: Use `notification_consents` table.
+> - **Parties/Customers**: Not wired yet unless active Phase 1 flow needs them.
 
-Currently, `whatsapp_opted_in` is supported in the `profiles` table for owners and supervisors. However, it is not yet implemented for workers in `workers` or `fixed_workers` tables.
+Missing consent means the message is skipped (logged as `skipped_*`), not sent. Opt-out records are retained to respect user choice.
 
-Recommended minimal future table for centralized consent management:
+### notification_consents Schema
 
 ```sql
 CREATE TABLE notification_consents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id UUID REFERENCES organizations(id),
-    person_type TEXT, -- 'owner', 'supervisor', 'worker', 'customer'
-    person_id TEXT, -- ID in respective table
+    person_type TEXT, -- 'owner', 'supervisor', 'worker', 'party'
+    person_id TEXT, -- ID in respective table (cast to string)
     phone TEXT,
     channel TEXT DEFAULT 'whatsapp',
-    consent_status TEXT, -- 'opt_in', 'opt_out'
-    consent_source TEXT, -- 'web', 'sms', 'manual'
+    consent_status TEXT CHECK (consent_status IN ('opted_in', 'opted_out')),
+    consent_source TEXT, -- 'owner_worker_form', etc.
     consent_text_version TEXT,
     consented_at TIMESTAMPTZ DEFAULT now(),
     withdrawn_at TIMESTAMPTZ,
-    captured_by_user_id UUID REFERENCES profiles(id)
+    captured_by_user_id UUID REFERENCES profiles(id),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE (org_id, person_type, person_id, channel)
 );
 ```
+
+### Consent Check Helper
+
+`supabase/functions/_shared/whatsapp.ts` provides `checkWhatsAppConsent`:
+
+```typescript
+export async function checkWhatsAppConsent(
+  supabase: SupabaseClient,
+  orgId: string,
+  personType: 'owner' | 'supervisor' | 'worker' | 'party',
+  personId: string,
+  phone?: string | null
+): Promise<ConsentCheckResult>
+```
+
+It returns `{ allowed: boolean, reason: ... }`. If not allowed, edge functions skip sending and log the specific reason (e.g., `skipped_opted_out`).
+
 
 ## Message Logging
 

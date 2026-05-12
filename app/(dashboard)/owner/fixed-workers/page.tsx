@@ -45,6 +45,8 @@ interface FixedWorker {
     pf_esi_eligible?: boolean
     esi_number?: string
     pf_number?: string
+    whatsapp_number?: string
+    whatsapp_language?: string
 }
 
 interface MeterWorker {
@@ -640,6 +642,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const [formEsiNumber, setFormEsiNumber] = useState('')
     const [formPfNumber, setFormPfNumber] = useState('')
     const [saving, setSaving] = useState(false)
+    const [formPhone, setFormPhone] = useState('')
+    const [formLang, setFormLang] = useState<'en' | 'hi' | 'gu'>('en')
+    const [formConsent, setFormConsent] = useState(false)
 
     const [workerToDelete, setWorkerToDelete] = useState<FixedWorker | null>(null)
     const [exitWorker, setExitWorker] = useState<FixedWorker | null>(null)
@@ -697,10 +702,13 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormPfEsiEnrolled(false)
         setFormEsiNumber('')
         setFormPfNumber('')
+        setFormPhone('')
+        setFormLang('en')
+        setFormConsent(false)
         setDialogOpen(true)
     }
 
-    const openEditDialog = (worker: FixedWorker) => {
+    const openEditDialog = async (worker: FixedWorker) => {
         setEditingWorker(worker)
         setFormName(worker.name)
         setFormRole(worker.role)
@@ -709,6 +717,19 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormPfEsiEnrolled(worker.pf_esi_enrolled ?? worker.pf_esi_eligible ?? false)
         setFormEsiNumber(worker.esi_number || '')
         setFormPfNumber(worker.pf_number || '')
+        setFormPhone(worker.whatsapp_number || '')
+        setFormLang((worker.whatsapp_language as 'en' | 'hi' | 'gu') || 'en')
+        
+        const { data: consent } = await supabase
+            .from('notification_consents')
+            .select('consent_status')
+            .eq('org_id', orgId)
+            .eq('person_type', 'worker')
+            .eq('person_id', String(worker.id))
+            .eq('channel', 'whatsapp')
+            .maybeSingle();
+        
+        setFormConsent(consent?.consent_status === 'opted_in');
         setDialogOpen(true)
     }
 
@@ -736,6 +757,9 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                 pf_esi_enrolled: formPfEsiEnrolled,
                 esi_number: formEsiNumber,
                 pf_number: formPfNumber,
+                phone: formPhone || undefined,
+                language: formLang,
+                consentGiven: formConsent,
             })
             if (result.error) throw new Error(result.error)
             toast.success(editingWorker ? t('common.updated') : t('common.added'))
@@ -929,6 +953,55 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                     max={new Date().toISOString().substring(0, 10)}
                                 />
                             </div>
+
+                            <div className="border-t border-gray-100 pt-3 space-y-2">
+                                <p className="text-xs font-medium text-gray-700">
+                                    WhatsApp Number <span className="text-gray-400 font-normal">(optional)</span>
+                                </p>
+                                <p className="text-xs text-gray-400">Send payslips, advance receipts, and operational updates on WhatsApp.</p>
+                                <div className="flex gap-2">
+                                    <div className="flex items-center px-2.5 bg-gray-50 border border-gray-200 rounded-md text-xs text-gray-600 font-medium whitespace-nowrap">
+                                        +91
+                                    </div>
+                                    <Input
+                                        type="tel"
+                                        inputMode="numeric"
+                                        placeholder="9898989898"
+                                        value={formPhone}
+                                        onChange={(e) => {
+                                            setFormPhone(e.target.value.replace(/\D/g, '').slice(0, 10))
+                                            if (e.target.value.length === 0) setFormConsent(false)
+                                        }}
+                                        maxLength={10}
+                                        className="font-mono"
+                                    />
+                                    <select
+                                        value={formLang}
+                                        onChange={(e) => setFormLang(e.target.value as 'en' | 'hi' | 'gu')}
+                                        className="border border-gray-200 rounded-md text-xs px-2 bg-white text-gray-700"
+                                    >
+                                        <option value="en">English</option>
+                                        <option value="hi">हिंदी</option>
+                                        <option value="gu">ગુજરાતી</option>
+                                    </select>
+                                </div>
+
+                                {formPhone.length === 10 && (
+                                    <div className="flex items-start gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id="fixed-consent"
+                                            checked={formConsent}
+                                            onChange={(e) => setFormConsent(e.target.checked)}
+                                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 cursor-pointer"
+                                        />
+                                        <label htmlFor="fixed-consent" className="text-xs text-gray-500 leading-snug cursor-pointer">
+                                            I confirm this worker has consented to receive WhatsApp payroll messages on this number
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="space-y-3 border-t border-gray-100 pt-3">
                                 <div className="flex items-center gap-2">
                                     <input
