@@ -198,6 +198,15 @@ These are kept because they make the core loop usable and sellable in the target
 > **WhatsApp status:** Required before pilot. Direct Meta WhatsApp Cloud API is the selected provider. Currently pending Meta Business setup / Indian payment method dependency for live credentials. This is a pilot-readiness blocker, not a scope-removal issue.
 > Simulation mode is available for local/dev testing. Core workflows function without live WhatsApp credentials. WhatsApp failures will not block core writes.
 
+> [!IMPORTANT]
+> **WhatsApp Consent (Phase 1):** Automated WhatsApp messages require explicit opt-in.
+> - Owners and supervisors use `profiles.whatsapp_opted_in`.
+> - Workers use the `notification_consents` table.
+> - Parties/customers are not wired yet unless an active Phase 1 flow needs them.
+> - Missing consent means the message is skipped (logged as `skipped_*`), not sent.
+> - Opt-out records are retained to respect user choice.
+> - WhatsApp failures or skips never block core business workflows (like payroll or advances).
+
 In scope:
 
 - Meta WhatsApp Cloud API send path.

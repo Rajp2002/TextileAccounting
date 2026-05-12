@@ -21,11 +21,77 @@ export interface LogDeliveryParams {
   templateName: string;
   notificationType: string;
   callbackData: string;
-  status: "sent" | "failed";
+  status: "sent" | "failed" | "skipped_opted_out" | "skipped_missing_consent" | "skipped_missing_phone";
   errorMessage?: string | null;
   payloadSnapshot: Record<string, unknown>;
   /** Meta's message ID from the send response */
   messageId?: string | null;
+}
+
+// ─── Consent Logic ───────────────────────────────────────────────────────────
+
+export interface ConsentCheckResult {
+  allowed: boolean;
+  reason: "opted_in" | "opted_out" | "missing_consent" | "missing_phone" | "unsupported_person_type";
+}
+
+export async function checkWhatsAppConsent(
+  supabase: SupabaseClient,
+  orgId: string,
+  personType: 'owner' | 'supervisor' | 'worker' | 'party',
+  personId: string,
+  phone?: string | null
+): Promise<ConsentCheckResult> {
+  if (!phone) {
+    return { allowed: false, reason: "missing_phone" };
+  }
+
+  if (personType === 'owner' || personType === 'supervisor') {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('whatsapp_opted_in')
+      .eq('id', personId)
+      .single();
+
+    if (error) {
+      console.error("[checkWhatsAppConsent] Error fetching profile:", error);
+      return { allowed: false, reason: "missing_consent" };
+    }
+
+    if (data?.whatsapp_opted_in) {
+      return { allowed: true, reason: "opted_in" };
+    } else {
+      return { allowed: false, reason: "opted_out" };
+    }
+  }
+
+  if (personType === 'worker' || personType === 'party') {
+    const { data, error } = await supabase
+      .from('notification_consents')
+      .select('consent_status')
+      .eq('org_id', orgId)
+      .eq('person_type', personType)
+      .eq('person_id', personId)
+      .eq('channel', 'whatsapp')
+      .maybeSingle();
+
+    if (error) {
+      console.error("[checkWhatsAppConsent] Error fetching consent:", error);
+      return { allowed: false, reason: "missing_consent" };
+    }
+
+    if (!data) {
+      return { allowed: false, reason: "missing_consent" };
+    }
+
+    if (data.consent_status === 'opted_in') {
+      return { allowed: true, reason: "opted_in" };
+    } else {
+      return { allowed: false, reason: "opted_out" };
+    }
+  }
+
+  return { allowed: false, reason: "unsupported_person_type" };
 }
 
 // ─── Core Send Function ───────────────────────────────────────────────────────
