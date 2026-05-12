@@ -132,6 +132,10 @@ Pain point translated: the factory gets a usable operating baseline before logs 
 
 Billing uses Razorpay subscription plans, trial state, renewal/cancel state, and payment history. Referrals are go-to-market infrastructure. WhatsApp is the market-native notification channel for access codes, daily briefs, deadline alerts, advance receipts, payslips, monthly briefs, lockdown alerts, and delivery-status logging.
 
+> [!IMPORTANT]
+> **WhatsApp status:** Required before pilot. Direct Meta WhatsApp Cloud API is the selected provider. Currently pending Meta Business setup / Indian payment method dependency for live credentials. This is a pilot-readiness blocker, not a scope-removal issue.
+> Simulation mode is available for local/dev testing. Core workflows function without live WhatsApp credentials. WhatsApp failures will not block core writes.
+
 Pain point translated: customer onboarding, monetization, and worker communication happen in the tools the market already trusts.
 
 ## Technical Shape

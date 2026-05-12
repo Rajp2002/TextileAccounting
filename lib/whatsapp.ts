@@ -30,3 +30,28 @@ _Thank you for your hard work!_`
     
     window.open(url, '_blank')
 }
+
+interface AdvancePayload {
+    phone: string
+    workerName: string
+    amount: number
+    date: string
+    reason?: string
+    balance?: number
+    factoryName: string
+}
+
+export function sendWhatsAppAdvanceReceipt(data: AdvancePayload) {
+    const message = `Advance recorded for ${data.workerName}
+Amount: ${formatINR(data.amount)}
+Date: ${data.date}
+Reason: ${data.reason || 'General'}
+Balance after advance: ${data.balance !== undefined ? formatINR(data.balance) : 'N/A'}
+- ${data.factoryName}
+(Receipt via Weavly)`
+
+    const encodedMessage = encodeURIComponent(message)
+    const url = `https://wa.me/${data.phone.replace(/\D/g, '')}?text=${encodedMessage}`
+    
+    window.open(url, '_blank')
+}

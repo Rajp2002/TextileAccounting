@@ -26,8 +26,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
-    const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
+    const metaAccessToken = Deno.env.get("META_WHATSAPP_TOKEN") ?? Deno.env.get("META_ACCESS_TOKEN");
+    const metaPhoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID") ?? Deno.env.get("META_PHONE_NUMBER_ID");
 
     // 1. Fetch factory name
     const { data: org } = await supabase
@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
     });
 
     return new Response(
-      JSON.stringify({ success: result.success, worker: worker.name }),
+      JSON.stringify({ success: result.success, worker: worker.name, balance: runningBalance }),
       { status: 200 },
     );
   } catch (err) {

@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     const challenge = url.searchParams.get("hub.challenge");
 
     // The VERIFY_TOKEN should match what you enter in the Meta Developer Console.
-    const VERIFY_TOKEN = Deno.env.get("META_WEBHOOK_VERIFY_TOKEN") || "weavly_webhook_verify";
+    const VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") ?? Deno.env.get("META_WEBHOOK_VERIFY_TOKEN") ?? "weavly_webhook_verify";
 
     if (mode === "subscribe" && token === VERIFY_TOKEN) {
       console.log("[whatsapp-webhook] Verification successful");
@@ -41,8 +41,49 @@ Deno.serve(async (req) => {
     return new Response("Method Not Allowed", { status: 405 });
   }
 
+  const rawBody = await req.text();
+
+  // Signature verification
+  const appSecret = Deno.env.get("META_APP_SECRET");
+  if (appSecret) {
+    const signature = req.headers.get("x-hub-signature-256");
+    if (!signature) {
+      console.warn("[whatsapp-webhook] Missing signature header");
+      return new Response("Missing signature", { status: 401 });
+    }
+    const parts = signature.split("=");
+    if (parts.length !== 2 || parts[0] !== "sha256") {
+      console.warn("[whatsapp-webhook] Invalid signature format");
+      return new Response("Invalid signature format", { status: 401 });
+    }
+    const expectedSignature = parts[1];
+    
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(appSecret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const signatureBuffer = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      encoder.encode(rawBody)
+    );
+    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+    const actualSignature = signatureArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    
+    if (actualSignature !== expectedSignature) {
+      console.warn("[whatsapp-webhook] Invalid signature");
+      return new Response("Invalid signature", { status: 401 });
+    }
+  } else {
+    console.log("[whatsapp-webhook] META_APP_SECRET not set, signature verification disabled");
+  }
+
   try {
-    const body = await req.json();
+    const body = JSON.parse(rawBody);
 
     // Meta webhooks follow a nested structure: entry[] -> changes[] -> value
     const entry = body.entry?.[0];

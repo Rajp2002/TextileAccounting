@@ -25,7 +25,7 @@ const workflow = [
     },
     {
         title: 'Log every shift',
-        description: 'Supervisors enter opening and closing meter readings from the floor, with offline-safe capture for patchy internet.',
+        description: 'Supervisors enter opening and closing meter readings from the floor. Designed for quick mobile entry in patchy factory conditions.',
         outcome: 'Create one source of truth for production, payroll, and order progress.',
         icon: ClipboardList,
     },
@@ -45,7 +45,7 @@ const trustItems = [
     },
     {
         title: 'Built for the floor, not just the office',
-        copy: 'Supervisors can log shift production from mobile screens designed for repeated daily use and unreliable internet.',
+        copy: 'Built for repeated supervisor use in patchy factory conditions. Mobile screens are designed for quick daily entry.',
         icon: ClipboardList,
     },
     {

@@ -4,11 +4,11 @@ Last analyzed from the active codebase on May 6, 2026.
 
 ## Provider
 
-Weavly currently sends operational WhatsApp messages through the Meta WhatsApp Cloud API using:
+Weavly currently sends operational WhatsApp messages through the direct Meta WhatsApp Cloud API using:
 
 - `supabase/functions/_shared/whatsapp.ts`
 
-Some legacy comments may still mention Interakt. The implemented send path is Meta.
+The implementation has been hardened to use direct Meta API. Legacy references to Interakt have been cleaned up.
 
 ## Role in Phase 1
 
@@ -31,9 +31,10 @@ WhatsApp supports the factory loop but should not block it. A production log, pa
 
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `META_ACCESS_TOKEN`
-- `META_PHONE_NUMBER_ID`
-- `META_WEBHOOK_VERIFY_TOKEN`
+- `META_WHATSAPP_TOKEN` (Preferred) or `META_ACCESS_TOKEN` (Legacy)
+- `META_WHATSAPP_PHONE_NUMBER_ID` (Preferred) or `META_PHONE_NUMBER_ID` (Legacy)
+- `WHATSAPP_VERIFY_TOKEN` (Preferred) or `META_WEBHOOK_VERIFY_TOKEN` (Legacy)
+- `META_APP_SECRET` (Optional, for webhook signature verification)
 - `WHATSAPP_PROVIDER`
 
 `WHATSAPP_PROVIDER` defaults to `meta`. Use `simulate` for test runs that should log success without sending real messages.
@@ -66,6 +67,32 @@ Governance/deferred:
 - tenant lockdown alerts
 - compliance/admin notifications where enabled
 
+## Consent / Opt-in
+
+> [!IMPORTANT]
+> **TODO**: Before pilot, Weavly must record WhatsApp opt-in/opt-out for owners, supervisors, workers, and customers where applicable.
+
+Currently, `whatsapp_opted_in` is supported in the `profiles` table for owners and supervisors. However, it is not yet implemented for workers in `workers` or `fixed_workers` tables.
+
+Recommended minimal future table for centralized consent management:
+
+```sql
+CREATE TABLE notification_consents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id UUID REFERENCES organizations(id),
+    person_type TEXT, -- 'owner', 'supervisor', 'worker', 'customer'
+    person_id TEXT, -- ID in respective table
+    phone TEXT,
+    channel TEXT DEFAULT 'whatsapp',
+    consent_status TEXT, -- 'opt_in', 'opt_out'
+    consent_source TEXT, -- 'web', 'sms', 'manual'
+    consent_text_version TEXT,
+    consented_at TIMESTAMPTZ DEFAULT now(),
+    withdrawn_at TIMESTAMPTZ,
+    captured_by_user_id UUID REFERENCES profiles(id)
+);
+```
+
 ## Message Logging
 
 Every send attempt should write to `whatsapp_delivery_log`.
@@ -80,6 +107,9 @@ The log stores:
 - payload snapshot
 - provider response/callback data
 - Meta message ID where available
+
+> [!NOTE]
+> `source_type` and `source_id` are currently missing from `whatsapp_delivery_log`. It is recommended to add them in future hardening to link logs directly to business records (e.g., `source_type: 'advance'`, `source_id: <advance_id>`).
 
 `/owner/system-health` contains owner-facing log/retry concepts but is archived from Phase 1 polish in the current route gate.
 

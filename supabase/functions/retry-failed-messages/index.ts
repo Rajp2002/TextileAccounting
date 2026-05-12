@@ -29,8 +29,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       serviceRoleKey,
     );
-    const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
-    const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
+    const metaAccessToken = Deno.env.get("META_WHATSAPP_TOKEN") ?? Deno.env.get("META_ACCESS_TOKEN");
+    const metaPhoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID") ?? Deno.env.get("META_PHONE_NUMBER_ID");
 
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 

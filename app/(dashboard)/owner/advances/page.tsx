@@ -18,6 +18,7 @@ import { formatINR, sumAdvances } from '@/lib/finance'
 import { createAdvance, deleteAdvance } from './actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { cn } from '@/lib/utils'
+import { sendWhatsAppAdvanceReceipt } from '@/lib/whatsapp'
 import {
     HandCoins, Plus, Trash2, Search,
     Clock, CheckCircle2, AlertTriangle, TrendingUp, Loader2,
@@ -33,6 +34,7 @@ interface Worker {
     type: 'meter' | 'fixed'
     role?: string
     monthly_salary?: number
+    whatsapp_number?: string
 }
 
 interface Advance {
@@ -115,25 +117,26 @@ export default function AdvancesPage() {
             const [{ data: meterWorkers }, { data: fixedWorkers }] = await Promise.all([
                 supabase
                     .from('workers')
-                    .select('id, name')
+                    .select('id, name, whatsapp_number')
                     .eq('org_id', userProfile!.org_id)
                     .eq('is_active', true)
                     .order('name'),
                 supabase
                     .from('fixed_workers')
-                    .select('id, name, role, monthly_salary')
+                    .select('id, name, role, monthly_salary, whatsapp_number')
                     .eq('org_id', userProfile!.org_id)
                     .eq('is_active', true)
                     .order('name'),
             ])
 
-            const typedMeterWorkers = (meterWorkers || []) as MeterWorkerRow[]
-            const typedFixedWorkers = (fixedWorkers || []) as FixedWorkerRow[]
+            const typedMeterWorkers = (meterWorkers || []) as (MeterWorkerRow & { whatsapp_number?: string })[]
+            const typedFixedWorkers = (fixedWorkers || []) as (FixedWorkerRow & { whatsapp_number?: string })[]
             const all: Worker[] = [
-                ...typedMeterWorkers.map((w) => ({ id: w.id, name: w.name, type: 'meter' as const })),
+                ...typedMeterWorkers.map((w) => ({ id: w.id, name: w.name, type: 'meter' as const, whatsapp_number: w.whatsapp_number })),
                 ...typedFixedWorkers.map((w) => ({
                     id: w.id, name: w.name, type: 'fixed' as const,
-                    role: w.role || undefined, monthly_salary: w.monthly_salary || undefined
+                    role: w.role || undefined, monthly_salary: w.monthly_salary || undefined,
+                    whatsapp_number: w.whatsapp_number
                 })),
             ]
             return all.sort((a, b) => a.name.localeCompare(b.name))
@@ -213,8 +216,39 @@ export default function AdvancesPage() {
             if (isNaN(amount) || amount <= 0) throw new Error('Invalid amount')
             return await createAdvance(selectedWorker.type, selectedWorker.id, amount, newDescription)
         },
-        onSuccess: () => {
-            toast.success('Advance recorded')
+        onSuccess: (data) => {
+            if (data.success) {
+                const notification = data.notification;
+                if (notification?.sent) {
+                    toast.success('Advance recorded and receipt sent via WhatsApp')
+                } else if (notification?.reason === 'no_phone') {
+                    toast.success('Advance recorded (Worker has no WhatsApp number)')
+                } else {
+                    // WhatsApp failed or timed out
+                    toast.warning('Advance saved. WhatsApp receipt not sent.', {
+                        action: {
+                            label: 'Send Manually',
+                            onClick: () => {
+                                if (selectedWorker && selectedWorker.whatsapp_number) {
+                                    sendWhatsAppAdvanceReceipt({
+                                        phone: selectedWorker.whatsapp_number,
+                                        workerName: selectedWorker.name,
+                                        amount: parseFloat(newAmount),
+                                        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+                                        reason: newDescription,
+                                        balance: notification?.balance,
+                                        factoryName: 'Your Factory'
+                                    })
+                                } else {
+                                    toast.error('Worker has no WhatsApp number for manual sending')
+                                }
+                            }
+                        }
+                    })
+                }
+            } else {
+                toast.error('Failed to create advance')
+            }
             setShowAddDialog(false)
             setNewAmount('')
             setNewDescription('')

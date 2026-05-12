@@ -189,7 +189,7 @@ Billing uses Razorpay:
 ## Known Technical Realities
 
 - Documentation must distinguish active `/owner/stock` from archived `/owner/inventory`.
-- Some old comments/docs may still mention Interakt; implemented send path is Meta.
+- The implementation has been hardened to use direct Meta API. Legacy references to Interakt have been cleaned up.
 - Automated tests are thin relative to workflow complexity.
 - `lib/time.ts` centralizes Surat date helpers, but some client code still uses browser `new Date()` for current shift/date.
 - Large migration history means runtime code and latest migrations should be treated as authoritative.

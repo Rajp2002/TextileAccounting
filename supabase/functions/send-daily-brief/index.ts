@@ -22,8 +22,8 @@ Deno.serve(async (_req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
-    const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
+    const metaAccessToken = Deno.env.get("META_WHATSAPP_TOKEN") ?? Deno.env.get("META_ACCESS_TOKEN");
+    const metaPhoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID") ?? Deno.env.get("META_PHONE_NUMBER_ID");
     const todayStr = getSuratTodayString();
     const dateLabel = getSuratDateLabel();
 
@@ -135,7 +135,7 @@ async function processOwner(
   });
 
   if (!result.success) {
-    throw new Error(`Interakt error for org ${orgId}: ${JSON.stringify(result.responseBody)}`);
+    throw new Error(`Meta API error for org ${orgId}: ${JSON.stringify(result.responseBody)}`);
   }
 
   // 5. Check active orders pace and send deadline risk alerts
