@@ -23,7 +23,7 @@ import { eraseWorkerPII } from './actions/compliance'
 // These run server-side so auth.uid() is always set in the audit trigger,
 // giving the owner a complete actor trail for every machine change.
 
-export async function addMachine(name: string, loomType?: string) {
+export async function addMachine(name: string, loomType?: string, customLabel?: string) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
@@ -31,7 +31,19 @@ export async function addMachine(name: string, loomType?: string) {
     if (!trimmedName) return { error: 'Machine name is required.' }
 
     const insertData: Record<string, any> = { name: trimmedName, org_id: profile.org_id, status: 'active' }
-    if (loomType) insertData.loom_type = loomType
+    
+    if (loomType) {
+        insertData.loom_type = loomType
+        
+        if (loomType === 'other') {
+            if (!customLabel || !customLabel.trim()) {
+                return { error: 'Custom label is required when loom type is Other.' }
+            }
+            insertData.loom_type_custom_label = customLabel.trim()
+        } else {
+            insertData.loom_type_custom_label = null
+        }
+    }
 
     const { error } = await supabase
         .from('machines')
@@ -47,7 +59,7 @@ export async function addMachine(name: string, loomType?: string) {
 }
 
 
-export async function updateMachine(machineId: string, name: string, loomType?: string | null) {
+export async function updateMachine(machineId: string, name: string, loomType?: string | null, customLabel?: string | null) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
@@ -60,7 +72,19 @@ export async function updateMachine(machineId: string, name: string, loomType?: 
     // Build update object — always update name; loom_type only when explicitly passed
     // (undefined = caller didn't touch it; null = caller explicitly cleared it)
     const updateData: Record<string, any> = { name: trimmedName }
-    if (loomType !== undefined) updateData.loom_type = loomType ?? null
+    
+    if (loomType !== undefined) {
+        updateData.loom_type = loomType ?? null
+        
+        if (loomType === 'other') {
+            if (!customLabel || !customLabel.trim()) {
+                return { error: 'Custom label is required when loom type is Other.' }
+            }
+            updateData.loom_type_custom_label = customLabel.trim()
+        } else {
+            updateData.loom_type_custom_label = null
+        }
+    }
 
     const { error } = await supabase
         .from('machines')
