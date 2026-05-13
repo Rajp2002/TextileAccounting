@@ -34,7 +34,7 @@ function ConfirmContent() {
             if (!onboardingComplete) {
                 router.push('/onboarding')
             } else {
-                router.push('/owner/analytics')
+                router.push('/owner/today')
             }
         } else if (role === 'supervisor') {
             router.push('/supervisor/production')

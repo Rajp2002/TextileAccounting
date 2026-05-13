@@ -10,6 +10,7 @@ import { SoldNotDispatchedCard } from '@/components/factory-today/SoldNotDispatc
 import { PendingReceiptsCard } from '@/components/factory-today/PendingReceiptsCard'
 import { PayrollHisaabCard } from '@/components/factory-today/PayrollHisaabCard'
 import { QuickActionsCard } from '@/components/factory-today/QuickActionsCard'
+import { ActivationChecklistCard } from '@/components/factory-today/ActivationChecklistCard'
 import { CheckCircle2, Factory } from 'lucide-react'
 
 interface FactoryTodayClientProps {
@@ -52,6 +53,16 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
         data.dispatch.soldNotDispatched.length === 0 &&
         data.dispatch.pendingReceipts.length === 0 &&
         data.payroll.pendingAdvanceTotal === 0
+    const checklist = data.activationChecklist || {
+        hasEstimate: false,
+        hasQuality: false,
+        hasOrder: false,
+        hasProductionLog: false,
+        hasStockEntry: false,
+    }
+
+    const isCollapsed = checklist.hasEstimate && checklist.hasQuality
+    const isHidden = checklist.hasEstimate && checklist.hasQuality && (checklist.hasOrder || checklist.hasProductionLog)
 
     return (
         <div className="space-y-6">
@@ -83,6 +94,11 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                     </div>
                 )}
             </div>
+
+            {/* Activation Checklist */}
+            {!isHidden && (
+                <ActivationChecklistCard checklist={checklist} isCollapsed={isCollapsed} />
+            )}
 
             {/* KPI Strip */}
             <TodayKpiStrip

@@ -806,6 +806,24 @@ export async function writeOffWorkerAdvanceBalance(
 
 // ─── Inventory Actions ────────────────────────────────────────────────────────
 
+export async function getQualities() {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('qualities')
+        .select('id, name, target_yield, avg_sale_price_per_m, default_worker_rate_per_m')
+        .eq('org_id', profile.org_id)
+        .order('name', { ascending: true })
+
+    if (error) {
+        console.error('Failed to fetch qualities:', error)
+        return []
+    }
+
+    return data || []
+}
+
 export async function addQuality(data: {
     name: string
     target_yield: number
