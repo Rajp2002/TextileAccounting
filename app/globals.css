@@ -132,6 +132,7 @@
   --popover-foreground: var(--weavly-ink);
   --primary: var(--weavly-primary);
   --primary-foreground: #FFFFFF;
+  --color-primary-active: var(--weavly-primary-active);
   --secondary: var(--weavly-surface-soft);
   --secondary-foreground: var(--weavly-ink);
   --muted: var(--weavly-surface-soft);
