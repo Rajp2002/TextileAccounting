@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
             if (role === 'owner') {
                 if (!onboardingComplete) return NextResponse.redirect(`${base}/onboarding`)
-                return NextResponse.redirect(`${base}/owner/analytics`)
+                return NextResponse.redirect(`${base}/owner/today`)
             } else if (role === 'supervisor') {
                 return NextResponse.redirect(`${base}/supervisor/production`)
             }

@@ -37,6 +37,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
+import { getQualities, addQuality } from '@/app/(dashboard)/owner/actions'
 import {
     calcFullTotals,
     runScenarios,
@@ -493,10 +494,12 @@ export default function EstimatorClient({
     initialProfile,
     initialTemplates,
     initialWorkers,
+    initialQualities = [],
 }: {
     initialProfile?: any
     initialTemplates?: any[]
     initialWorkers?: { id: number; name: string; role: string; monthly_salary: number }[]
+    initialQualities?: { id: string; name: string; target_yield: number; avg_sale_price_per_m: number; default_worker_rate_per_m: number }[]
 }) {
     const { t, tx } = useTranslation()
     const searchParams = useSearchParams()
@@ -559,6 +562,7 @@ export default function EstimatorClient({
     const [savingQuote, setSavingQuote] = useState(false)
     const [savingTemplate, setSavingTemplate] = useState(false)
     const [templates, setTemplates] = useState<any[]>(initialTemplates ?? [])
+    const [qualities, setQualities] = useState<any[]>(initialQualities)
     const [outputSuggestion, setOutputSuggestion] = useState<EstimateState['outputSuggestion'] | null>(null)
     const [isSuggestingOutput, setIsSuggestingOutput] = useState(false)
     const [showStartPartyOrder, setShowStartPartyOrder] = useState(false)
@@ -573,6 +577,10 @@ export default function EstimatorClient({
 
     const [showSaveTemplate, setShowSaveTemplate] = useState(false)
     const [templateName,     setTemplateName]     = useState('')
+
+    const [showCreateQuality, setShowCreateQuality] = useState(false)
+    const [newQualityName, setNewQualityName] = useState('')
+    const [newQualityTargetYield, setNewQualityTargetYield] = useState('')
 
     // Template management — "edit rates" sheet
     const [editRatesTpl,     setEditRatesTpl]     = useState<any | null>(null)
@@ -757,6 +765,33 @@ export default function EstimatorClient({
             toast.success(t('estimator.quality.saved'))
         } else {
             toast.error(res.error ?? t('estimator.quality.saveFailed'))
+        }
+    }
+
+    const handleCreateQuality = async () => {
+        if (!newQualityName.trim()) return toast.error('Quality name is required')
+        const targetYield = parseFloat(newQualityTargetYield)
+        if (isNaN(targetYield) || targetYield <= 0) {
+            return toast.error('Target yield must be positive')
+        }
+        setSaving(true)
+        const res = await addQuality({
+            name: newQualityName.trim(),
+            target_yield: targetYield,
+            avg_sale_price_per_m: 0,
+            default_worker_rate_per_m: 0,
+        })
+        setSaving(false)
+        if (res.success) {
+            toast.success('Quality created successfully!')
+            const qRes = await getQualities()
+            setQualities(qRes)
+            setQualityLabel(newQualityName.trim())
+            setShowCreateQuality(false)
+            setNewQualityName('')
+            setNewQualityTargetYield('')
+        } else {
+            toast.error(res.error || 'Failed to create quality')
         }
     }
 
@@ -1405,12 +1440,44 @@ export default function EstimatorClient({
 
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.quality_label')}</Label>
-                                <Input
-                                    value={qualityLabel}
-                                    onChange={e => setQualityLabel(e.target.value)}
-                                    placeholder="Japan Satin, Canvas Shine"
-                                    className="font-bold border-slate-200 h-11"
-                                />
+                                {qualities.length > 0 || qualityLabel ? (
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={qualityLabel}
+                                            onChange={e => setQualityLabel(e.target.value)}
+                                            className="font-bold border-slate-200 h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent"
+                                        >
+                                            <option value="" disabled>Select a quality</option>
+                                            {qualityLabel && !qualities.some(q => q.name === qualityLabel) && (
+                                                <option value={qualityLabel}>Existing value: {qualityLabel}</option>
+                                            )}
+                                            {qualities.map(q => (
+                                                <option key={q.id} value={q.name}>{q.name}</option>
+                                            ))}
+                                        </select>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                setNewQualityName(qualityLabel)
+                                                setShowCreateQuality(true)
+                                            }}
+                                            className="h-11 border-slate-200 hover:bg-slate-50"
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                                        <p className="text-xs text-slate-600">{t('estimator.quality.noQualities')}</p>
+                                        <Button
+                                            size="sm"
+                                            className="bg-brand-accent text-white hover:bg-brand-accent/90 self-start"
+                                            onClick={() => setShowCreateQuality(true)}
+                                        >
+                                            {t('estimator.quality.addFirstQuality')}
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2395,6 +2462,45 @@ export default function EstimatorClient({
                         <Button className="bg-brand-accent text-white" onClick={handleSaveTemplate} disabled={savingTemplate}>
                             {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                             {t('estimator.quality.confirmSave')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Create Quality Dialog */}
+            <Dialog open={showCreateQuality} onOpenChange={setShowCreateQuality}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{t('estimator.quality.newQuality')}</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-1.5">
+                            <Label className="text-[10px] uppercase font-black text-slate-500">Quality Name</Label>
+                            <Input
+                                placeholder="Japan Satin, Canvas Shine"
+                                value={newQualityName}
+                                onChange={e => setNewQualityName(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleCreateQuality()}
+                                autoFocus
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[10px] uppercase font-black text-slate-500">Target Yield (m/kg)</Label>
+                            <Input
+                                type="number"
+                                placeholder="e.g. 9.5"
+                                value={newQualityTargetYield}
+                                onChange={e => setNewQualityTargetYield(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleCreateQuality()}
+                            />
+                            <p className="text-[10px] text-slate-400">Target yield helps Weavly estimate expected production/output. You can adjust this later.</p>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setShowCreateQuality(false)}>Cancel</Button>
+                        <Button className="bg-brand-accent text-white" onClick={handleCreateQuality} disabled={saving}>
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                            Create Quality
                         </Button>
                     </DialogFooter>
                 </DialogContent>

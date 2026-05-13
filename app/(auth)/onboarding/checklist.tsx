@@ -36,36 +36,65 @@ interface Props { initialStatus: OnboardingStatus }
 // ─── Machine Form ────────────────────────────────────────────────────────────────
 
 function MachineForm({ onDone }: { onDone: () => void }) {
-    const [machines, setMachines] = useState([{ name: '' }])
+    const [machines, setMachines] = useState([{ name: '', loomType: '', customLabel: '' }])
     const [bulkText, setBulkText] = useState('')
     const [bulkMode, setBulkMode] = useState(false)
+    const [bulkLoomType, setBulkLoomType] = useState('')
+    const [bulkCustomLabel, setBulkCustomLabel] = useState('')
     const [saving, setSaving] = useState(false)
 
-    const addRow = () => setMachines(m => [...m, { name: '' }])
+    const addRow = () => setMachines(m => [...m, { name: '', loomType: '', customLabel: '' }])
     const removeRow = (i: number) => setMachines(m => m.filter((_, idx) => idx !== i))
-    const updateRow = (i: number, val: string) =>
-        setMachines(m => m.map((r, idx) => idx === i ? { name: val } : r))
+    const updateRow = (i: number, field: string, val: string) =>
+        setMachines(m => m.map((r, idx) => {
+            if (idx === i) {
+                const updated = { ...r, [field]: val }
+                if (field === 'loomType' && val !== 'other') {
+                    updated.customLabel = ''
+                }
+                return updated
+            }
+            return r
+        }))
 
     const parseBulk = () => {
         const lines = bulkText.split('\n').map(l => l.trim()).filter(Boolean)
         if (lines.length === 0) { toast.error('No machine names found'); return }
-        setMachines(lines.map(name => ({ name })))
+        if (!bulkLoomType) { toast.error('Please select a loom type for these machines'); return }
+        if (bulkLoomType === 'other' && !bulkCustomLabel.trim()) { toast.error('Custom label is required for Other loom type'); return }
+        
+        setMachines(lines.map(name => ({
+            name,
+            loomType: bulkLoomType,
+            customLabel: bulkLoomType === 'other' ? bulkCustomLabel.trim() : ''
+        })))
         setBulkMode(false)
         toast.success(`Parsed ${lines.length} machine names`)
     }
 
     const handleSave = async () => {
-        const names = machines.map(m => m.name.trim()).filter(Boolean)
-        if (names.length === 0) { toast.error('Enter at least one machine name'); return }
+        const validMachines = machines.map(m => ({
+            name: m.name.trim(),
+            loomType: m.loomType,
+            customLabel: m.customLabel.trim()
+        })).filter(m => m.name)
+
+        if (validMachines.length === 0) { toast.error('Enter at least one machine name'); return }
+
+        for (const m of validMachines) {
+            if (!m.loomType) { toast.error(`Please select a loom type for "${m.name}"`); return }
+            if (m.loomType === 'other' && !m.customLabel) { toast.error(`Custom label is required for "${m.name}"`); return }
+        }
+
         setSaving(true)
         let allOk = true
-        for (const name of names) {
-            const res = await addMachine(name)
-            if (res?.error) { toast.error(`"${name}": ${res.error}`); allOk = false }
+        for (const m of validMachines) {
+            const res = await addMachine(m.name, m.loomType, m.customLabel)
+            if (res?.error) { toast.error(`"${m.name}": ${res.error}`); allOk = false }
         }
         setSaving(false)
         if (allOk) {
-            toast.success(`${names.length} machine${names.length > 1 ? 's' : ''} added!`)
+            toast.success(`${validMachines.length} machine${validMachines.length > 1 ? 's' : ''} added!`)
             onDone()
         }
     }
@@ -98,6 +127,30 @@ function MachineForm({ onDone }: { onDone: () => void }) {
                             placeholder={"Machine 1\nMachine 2\nMachine 3"}
                             className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none"
                         />
+                        <div className="flex gap-2">
+                            <select
+                                value={bulkLoomType}
+                                onChange={e => setBulkLoomType(e.target.value)}
+                                className="h-9 text-sm rounded-lg border border-gray-200 bg-gray-50 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent flex-1"
+                            >
+                                <option value="">Select Loom Type for All</option>
+                                <option value="jacquard">Jacquard</option>
+                                <option value="rapier">Rapier</option>
+                                <option value="water_jet">Water Jet</option>
+                                <option value="air_jet">Air Jet</option>
+                                <option value="power_loom">Power Loom</option>
+                                <option value="shuttle">Shuttle</option>
+                                <option value="other">Other</option>
+                            </select>
+                            {bulkLoomType === 'other' && (
+                                <Input
+                                    value={bulkCustomLabel}
+                                    placeholder="Custom label"
+                                    onChange={e => setBulkCustomLabel(e.target.value)}
+                                    className="h-9 text-sm flex-1"
+                                />
+                            )}
+                        </div>
                         <Button type="button" size="sm" onClick={parseBulk}
                             className="bg-amber-600 hover:bg-amber-700 text-white">
                             Parse list
@@ -106,22 +159,48 @@ function MachineForm({ onDone }: { onDone: () => void }) {
                 ) : (
                     <motion.div key="manual"
                         initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }} className="space-y-2"
+                        exit={{ opacity: 0, y: -8 }} className="space-y-3"
                     >
                         {machines.map((m, i) => (
-                            <div key={i} className="flex gap-2">
-                                <Input
-                                    value={m.name}
-                                    placeholder={`e.g. Machine ${i + 1}`}
-                                    onChange={e => updateRow(i, e.target.value)}
-                                    className="h-9 text-sm"
-                                />
-                                {machines.length > 1 && (
-                                    <button type="button" onClick={() => removeRow(i)}
-                                        className="text-gray-300 hover:text-red-400 transition-colors">
-                                        <Trash2 className="h-4 w-4" />
-                                    </button>
-                                )}
+                            <div key={i} className="flex flex-col gap-2 p-3 border border-gray-100 rounded-lg">
+                                <div className="flex gap-2">
+                                    <Input
+                                        value={m.name}
+                                        placeholder={`e.g. Machine ${i + 1}`}
+                                        onChange={e => updateRow(i, 'name', e.target.value)}
+                                        className="h-9 text-sm flex-1"
+                                    />
+                                    {machines.length > 1 && (
+                                        <button type="button" onClick={() => removeRow(i)}
+                                            className="text-gray-300 hover:text-red-400 transition-colors">
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
+                                    <select
+                                        value={m.loomType}
+                                        onChange={e => updateRow(i, 'loomType', e.target.value)}
+                                        className="h-9 text-sm rounded-lg border border-gray-200 bg-gray-50 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent flex-1"
+                                    >
+                                        <option value="">Select Loom Type</option>
+                                        <option value="jacquard">Jacquard</option>
+                                        <option value="rapier">Rapier</option>
+                                        <option value="water_jet">Water Jet</option>
+                                        <option value="air_jet">Air Jet</option>
+                                        <option value="power_loom">Power Loom</option>
+                                        <option value="shuttle">Shuttle</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    {m.loomType === 'other' && (
+                                        <Input
+                                            value={m.customLabel}
+                                            placeholder="Custom label"
+                                            onChange={e => updateRow(i, 'customLabel', e.target.value)}
+                                            className="h-9 text-sm flex-1"
+                                        />
+                                    )}
+                                </div>
                             </div>
                         ))}
                         <button type="button" onClick={addRow}
@@ -665,7 +744,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
 
         // Step 3: Hard navigation — gives middleware a fresh full-page request
         // so the DB fallback (reading onboarding_complete from DB) runs correctly.
-        window.location.href = '/owner/analytics'
+        window.location.href = '/owner/today'
     }
 
     return (

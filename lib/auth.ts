@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export function getRoleHomePath(role?: string) {
-    if (role === 'owner') return '/owner/analytics'
+    if (role === 'owner') return '/owner/today'
     if (role === 'supervisor') return '/supervisor/dashboard'
     if (role === 'admin') return '/admin'
     return '/login'

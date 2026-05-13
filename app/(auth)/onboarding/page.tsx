@@ -28,7 +28,7 @@ export default async function OnboardingPage() {
 
     // Fast path: JWT already has claims — use them directly
     if (jwtPayload.onboarding_complete === true) {
-        redirect('/owner/analytics')
+        redirect('/owner/today')
     }
 
     // Determine role: prefer JWT claim, fall back to DB (handles JWT race condition

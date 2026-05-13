@@ -96,6 +96,14 @@ export type FactoryTodayData = {
         warning: number
         info: number
     }
+
+    activationChecklist?: {
+        hasEstimate: boolean
+        hasQuality: boolean
+        hasOrder: boolean
+        hasProductionLog: boolean
+        hasStockEntry: boolean
+    }
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -137,6 +145,11 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         payrollConfigRes,
         advancesRes,
         settlementsRes,
+        hasEstimateRes,
+        hasQualityRes,
+        hasOrderRes,
+        hasProductionRes,
+        hasStockRes,
     ] = await Promise.all([
         // 1. Production logs today
         supabase
@@ -223,7 +236,63 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             .eq('org_id', orgId)
             .gte('date', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
             .not('worker_id', 'is', null),
+
+        // 12. Activation Checklist: Has Estimate
+        (async () => {
+            try {
+                const { count } = await supabase.from('estimator_quotes').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                return { count }
+            } catch {
+                return { count: 0 }
+            }
+        })(),
+        
+        // 13. Activation Checklist: Has Quality
+        (async () => {
+            try {
+                const { count } = await supabase.from('qualities').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                return { count }
+            } catch {
+                return { count: 0 }
+            }
+        })(),
+
+        // 14. Activation Checklist: Has Order
+        (async () => {
+            try {
+                const { count } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                return { count }
+            } catch {
+                return { count: 0 }
+            }
+        })(),
+
+        // 15. Activation Checklist: Has Production Log
+        (async () => {
+            try {
+                const { count } = await supabase.from('production_logs').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                return { count }
+            } catch {
+                return { count: 0 }
+            }
+        })(),
+
+        // 16. Activation Checklist: Has Stock Entry
+        (async () => {
+            try {
+                const { count } = await supabase.from('fabric_stock_lots').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                return { count }
+            } catch {
+                return { count: 0 }
+            }
+        })(),
     ])
+
+    const hasEstimate = !!(hasEstimateRes as any)?.count && (hasEstimateRes as any).count > 0
+    const hasQuality = !!(hasQualityRes as any)?.count && (hasQualityRes as any).count > 0
+    const hasOrder = !!(hasOrderRes as any)?.count && (hasOrderRes as any).count > 0
+    const hasProductionLog = !!(hasProductionRes as any)?.count && (hasProductionRes as any).count > 0
+    const hasStockEntry = !!(hasStockRes as any)?.count && (hasStockRes as any).count > 0
 
     // ── 1. Production ──────────────────────────────────────────────────────────
     const logs = productionRes.data ?? []
@@ -467,5 +536,12 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         dispatch,
         payroll,
         actionCounts: { critical, warning, info },
+        activationChecklist: {
+            hasEstimate,
+            hasQuality,
+            hasOrder,
+            hasProductionLog,
+            hasStockEntry,
+        },
     }
 }

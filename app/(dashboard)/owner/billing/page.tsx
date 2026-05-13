@@ -185,7 +185,7 @@ function PlanCards({ label }: { label: string }) {
 
 export default async function BillingPage() {
     const { profile } = await requireRole(['owner'])
-    if (!profile.org_id) redirect('/owner/analytics')
+    if (!profile.org_id) redirect('/owner/today')
 
     const supabase = await createClient()
     const { tier, subscription } = await getSubscriptionDetail(profile.org_id)

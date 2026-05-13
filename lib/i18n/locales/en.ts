@@ -845,6 +845,9 @@ export const en = {
       order_btn: "Save Quote"
     },
     quality: {
+      noQualities: "No qualities yet. Add your first fabric quality to continue your estimate.",
+      addFirstQuality: "Add first quality",
+      qualitiesHelp: "Qualities help Weavly calculate costing, expected yield, and profitability.",
       myQualities: "My Qualities",
       newQuality: "New Quality",
       editQuality: "Edit Quality",

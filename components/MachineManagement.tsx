@@ -395,7 +395,12 @@ export function MachineManagement({
     const sortOrder = ['jacquard', 'rapier', 'water_jet', 'air_jet', 'power_loom', 'shuttle', 'other', 'uncategorized']
 
     const groupedMachines = machines?.reduce((acc, machine) => {
-        const type = machine.loom_type || 'uncategorized'
+        let type = machine.loom_type || 'uncategorized'
+        // Normalize old tags to new keys
+        if (type === 'JAC') type = 'jacquard'
+        if (type === 'RAP') type = 'rapier'
+        if (type === 'WJ') type = 'water_jet'
+        
         if (!acc[type]) acc[type] = []
         acc[type].push(machine)
         return acc

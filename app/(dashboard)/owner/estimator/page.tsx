@@ -1,13 +1,15 @@
 import { getFactoryCostProfile, getEstimatorTemplates, getFixedWorkersForOverhead } from './actions'
+import { getQualities } from '../actions'
 import EstimatorClient from './EstimatorClient'
 import { Suspense } from 'react'
 
 export default async function EstimatorPage() {
     // Parallelize server-side data fetching for zero-latency initial load
-    const [profileRes, templatesRes, workersRes] = await Promise.all([
+    const [profileRes, templatesRes, workersRes, qualities] = await Promise.all([
         getFactoryCostProfile(),
         getEstimatorTemplates(),
         getFixedWorkersForOverhead(),
+        getQualities(),
     ])
 
     return (
@@ -16,6 +18,7 @@ export default async function EstimatorPage() {
                 initialProfile={profileRes.data}
                 initialTemplates={templatesRes.data}
                 initialWorkers={workersRes.data}
+                initialQualities={qualities}
             />
         </Suspense>
     )
