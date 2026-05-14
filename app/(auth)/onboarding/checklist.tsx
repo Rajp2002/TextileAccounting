@@ -438,13 +438,16 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
 function PayrollCycleForm({ onDone }: { onDone: () => void }) {
     const [day, setDay] = useState<number | null>(null)
     const [saving, setSaving] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     const handleSave = async () => {
         if (!day) { toast.error('Please select a start day'); return }
+        setError(null)
         setSaving(true)
         const res = await savePayrollConfig(day)
         setSaving(false)
         if (res?.error) {
+            setError(res.error)
             toast.error(res.error)
         } else {
             toast.success('Payroll cycle configured!')
@@ -512,8 +515,13 @@ function PayrollCycleForm({ onDone }: { onDone: () => void }) {
                 disabled={saving || !day}
                 className="w-full bg-violet-600 hover:bg-violet-700 text-white h-12 font-black uppercase tracking-widest shadow-lg shadow-violet-100"
             >
-                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : 'Save Payroll Config'}
+                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : error ? 'Retry Payroll Config' : 'Save Payroll Config'}
             </Button>
+            {error && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                    {error}
+                </div>
+            )}
         </div>
     )
 }
@@ -558,7 +566,7 @@ function PlanSelectionForm({ onDone }: { onDone: () => void }) {
 
     return (
         <div className="pt-4 border-t border-gray-100 space-y-4">
-            <p className="text-sm text-gray-500">Choose how you'd like to get started</p>
+            <p className="text-sm text-gray-500">Choose how you&apos;d like to get started</p>
 
             {/* Free trial option */}
             <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-4 space-y-3">

@@ -872,9 +872,10 @@ export default function UnifiedDashboard() {
                     shift,
                     date,
                     rate_per_m: assignment?.rate_per_m,
+                    zero_meter_reason: [assignment?.breakdown_category, assignment?.breakdown_notes].filter(Boolean).join(': ') || null,
                 }
             })
-            .filter((e) => e.worker_id && e.order_id && e.closing_meter_reading > 0)
+            .filter((e) => e.worker_id && e.order_id && (e.closing_meter_reading > 0 || Boolean(e.zero_meter_reason)))
 
         const negativeReadings = entries.filter((entry) => !entry.counter_was_reset && entry.closing_meter_reading < entry.opening_meter_reading)
 
@@ -903,7 +904,10 @@ export default function UnifiedDashboard() {
             const res = await bulkLogProduction(entries, code)
 
             if (!res?.success) {
-                throw new Error(res?.error || "Could not save production log.")
+                const message = res?.message || res?.error || "Could not save production log."
+                const err = new Error(message) as Error & { code?: string }
+                err.code = res?.error
+                throw err
             }
 
             toast.success(`Shift meters logged (${res.logged} looms)`)
@@ -915,12 +919,14 @@ export default function UnifiedDashboard() {
             setDuplicateAccessCode('')
             setCorrectionWindowExpiresAt(res.correctionWindowExpiresAt ?? null)
             fetchData()
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Failed to submit production logs:', error)
-            if (error.message === 'DUPLICATE_LOG_DETECTED') {
+            const message = error instanceof Error ? error.message : ''
+            const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined
+            if (code === 'DUPLICATE_LOG_DETECTED' || message === 'DUPLICATE_LOG_DETECTED') {
                 setShowDuplicateDialog(true)
             } else {
-                toast.error('Could not save production log. Your entry is still saved as a draft. Check your connection and try again.')
+                toast.error(message || 'Could not save production log. Your entry is still saved as a draft. Check your connection and try again.')
             }
         } finally {
             setSubmitting(false)
