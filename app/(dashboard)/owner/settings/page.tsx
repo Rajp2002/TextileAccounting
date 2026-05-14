@@ -9,7 +9,7 @@ import {
     Dialog, DialogContent, DialogDescription, DialogFooter,
     DialogHeader, DialogTitle, DialogTrigger
 } from '@/components/ui/dialog'
-import { Factory, User, ShieldCheck, Loader2, AlertTriangle, Copy, RefreshCw, MessageSquare, Smartphone } from 'lucide-react'
+import { Factory, User, ShieldCheck, Loader2, AlertTriangle, Copy, RefreshCw, MessageSquare, Smartphone, SlidersHorizontal } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { AccessCodeGenerator } from '@/components/AccessCodeGenerator'
@@ -21,8 +21,10 @@ import { toast } from 'sonner'
 import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
 import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
-import { updateOrganizationName } from '@/app/(dashboard)/owner/actions'
+import { updateOrganizationName, updateOrganizationProductionMode } from '@/app/(dashboard)/owner/actions'
 import { SupervisorFloatManager } from '@/components/settings/supervisor-float-manager'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { PRODUCTION_MODE_OPTIONS, getProductionModeOption, normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -30,6 +32,7 @@ type OrganizationSettings = {
     name: string
     join_code: string | null
     join_code_expires_at: string | null
+    production_mode: ProductionMode | null
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -67,7 +70,7 @@ export default function SettingsPage() {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('organizations')
-                .select('name, join_code, join_code_expires_at')
+                .select('name, join_code, join_code_expires_at, production_mode')
                 .eq('id', userProfile!.org_id)
                 .single()
             if (error) throw error
@@ -112,6 +115,24 @@ export default function SettingsPage() {
         },
         onError: (err: unknown) => {
             toast.error(getErrorMessage(err, 'Failed to regenerate code'))
+        }
+    })
+
+    const updateProductionModeMutation = useMutation({
+        mutationFn: async (productionMode: ProductionMode) => {
+            const result = await updateOrganizationProductionMode(productionMode)
+            if (result.error) throw new Error(result.error)
+            return result
+        },
+        onSuccess: (_result, productionMode) => {
+            queryClient.setQueryData(['organization', userProfile?.org_id], (old: OrganizationSettings | undefined) =>
+                old ? { ...old, production_mode: productionMode } : old
+            )
+            queryClient.invalidateQueries({ queryKey: ['organization'] })
+            toast.success('Production mode updated')
+        },
+        onError: (err: unknown) => {
+            toast.error(getErrorMessage(err, 'Failed to update production mode'))
         }
     })
 
@@ -304,12 +325,55 @@ export default function SettingsPage() {
             </SettingsCategory>
 
             {/* Section 2: Security & Operations */}
+            <SettingsCategory title="Business Preferences" icon={SlidersHorizontal}>
+                <Card className="shadow-sm border-gray-200 h-full">
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <SlidersHorizontal className="h-5 w-5 text-amber-600" />
+                            <CardTitle>Production Mode</CardTitle>
+                        </div>
+                        <CardDescription>Choose which workflows Weavly shows first for this factory.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Production workflow</Label>
+                            <Select
+                                value={normalizeProductionMode(org?.production_mode)}
+                                onValueChange={(value) => updateProductionModeMutation.mutate(value as ProductionMode)}
+                                disabled={updateProductionModeMutation.isPending}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select production mode" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {PRODUCTION_MODE_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.settingsLabel}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-sm text-gray-500">
+                                {getProductionModeOption(org?.production_mode).description}
+                            </p>
+                        </div>
+
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                            Changing this only adjusts which workflows are shown. Existing quotes, orders, market runs, stock, and dispatches will not be deleted.
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="hidden lg:block" />
+            </SettingsCategory>
+
+            {/* Section 3: Security & Operations */}
             <SettingsCategory title="Account Security & Team" icon={ShieldCheck}>
                 <AccessCodeGenerator />
                 <SupervisorFloatManager />
             </SettingsCategory>
 
-            {/* Section 3: Communications */}
+            {/* Section 4: Communications */}
             <SettingsCategory title="Communications & Automation" icon={MessageSquare}>
                 <WhatsAppOptIn />
                 <div className="p-6 rounded-xl border border-dashed border-gray-200 flex flex-col items-center justify-center text-center space-y-2 h-full">
@@ -321,7 +385,7 @@ export default function SettingsPage() {
                 </div>
             </SettingsCategory>
 
-            {/* Section 4: Configuration (Full Width Categories) */}
+            {/* Section 5: Configuration (Full Width Categories) */}
             <SettingsCategory title="Production Costing & Templates" icon={Factory}>
                 <div className="lg:col-span-2 space-y-6">
                     <FactoryCostProfile />

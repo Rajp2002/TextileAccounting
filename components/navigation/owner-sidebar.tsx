@@ -26,71 +26,81 @@ import { useState } from "react"
 import LogoutButton from "@/components/auth/logout-button"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { useTranslation } from "@/lib/i18n/context"
+import { isWorkflowVisible, normalizeProductionMode, type ProductionMode, type WorkflowKey } from "@/lib/production-mode"
 
 const navGroups = [
     {
         label: "Control",
         items: [
-            { name: "Factory Today", href: "/owner/today", icon: Factory, translationKey: "factory_today" },
-            { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
-            { name: "Quotes", href: "/owner/quotes", icon: FileText, translationKey: "quotes" },
-            { name: "Analytics", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard" },
+            { name: "Factory Today", href: "/owner/today", icon: Factory, translationKey: "factory_today", workflow: "productionLogging" },
+            { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
+            { name: "Quotes", href: "/owner/quotes", icon: FileText, translationKey: "quotes", workflow: "quotes" },
+            { name: "Analytics", href: "/owner/analytics", icon: BarChart3, translationKey: "dashboard", workflow: "ownerAnalytics" },
         ]
     },
     {
         label: "Factory flow",
         items: [
-            { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
-            { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs" },
-            { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock" },
-            { name: "Dispatches", href: "/owner/dispatches", icon: Truck, translationKey: "dispatches" },
+            { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders", workflow: "orders" },
+            { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs", workflow: "marketRuns" },
+            { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock", workflow: "stock" },
+            { name: "Dispatches", href: "/owner/dispatches", icon: Truck, translationKey: "dispatches", workflow: "dispatches" },
         ]
     },
     {
         label: "Money",
         items: [
-            { name: "Commercials", href: "/owner/commercials", icon: DollarSign, translationKey: "commercials" },
-            { name: "Billing", href: "/owner/billing", icon: CreditCard, translationKey: "billing" },
+            { name: "Commercials", href: "/owner/commercials", icon: DollarSign, translationKey: "commercials", workflow: "commercials" },
+            { name: "Billing", href: "/owner/billing", icon: CreditCard, translationKey: "billing", workflow: "billing" },
         ]
     },
     {
         label: "Workforce",
         items: [
-            { name: "Workers", href: "/owner/fixed-workers", icon: Users, translationKey: "workers" },
-            { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll" },
-            { name: "Advances", href: "/owner/advances", icon: HandCoins, translationKey: "advances" },
+            { name: "Workers", href: "/owner/fixed-workers", icon: Users, translationKey: "workers", workflow: "workers" },
+            { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
+            { name: "Advances", href: "/owner/advances", icon: HandCoins, translationKey: "advances", workflow: "advances" },
         ]
     },
     {
         label: "Looms",
         items: [
-            { name: "Looms", href: "/owner/machines", icon: Server, translationKey: "machines" },
+            { name: "Looms", href: "/owner/machines", icon: Server, translationKey: "machines", workflow: "looms" },
         ]
     },
     {
         label: "System",
         items: [
-            { name: "Settings", href: "/owner/settings", icon: Settings, translationKey: "settings" },
+            { name: "Settings", href: "/owner/settings", icon: Settings, translationKey: "settings", workflow: "settings" },
         ]
     }
 ]
 
 const bottomNavItems = [
-    { name: "Today", href: "/owner/today", icon: Factory, translationKey: "factory_today" },
-    { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders" },
-    { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock" },
-    { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator" },
-    { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll" },
+    { name: "Today", href: "/owner/today", icon: Factory, translationKey: "factory_today", workflow: "productionLogging" },
+    { name: "Orders", href: "/owner/orders", icon: Package, translationKey: "orders", workflow: "orders" },
+    { name: "Market Runs", href: "/owner/market-runs", icon: Store, translationKey: "market_runs", workflow: "marketRuns" },
+    { name: "Stock", href: "/owner/stock", icon: Warehouse, translationKey: "stock", workflow: "stock" },
+    { name: "Estimator", href: "/owner/estimator", icon: Calculator, translationKey: "estimator", workflow: "estimator" },
+    { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
 ]
 
 interface OwnerSidebarProps {
     factoryName?: string
     userName?: string
+    productionMode?: ProductionMode | null
 }
 
-function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & { onLinkClick?: () => void }) {
+function NavContent({ factoryName, userName, productionMode: rawProductionMode, onLinkClick }: OwnerSidebarProps & { onLinkClick?: () => void }) {
     const pathname = usePathname()
     const { t } = useTranslation()
+    const productionMode = normalizeProductionMode(rawProductionMode)
+    const visibleGroups = navGroups
+        .map((group) => ({
+            ...group,
+            items: group.items.filter((item) => isWorkflowVisible(productionMode, item.workflow as WorkflowKey)),
+        }))
+        .filter((group) => group.items.length > 0)
 
     return (
         <div className="flex h-full flex-col bg-[#111111] text-zinc-100">
@@ -114,7 +124,7 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
 
             {/* Navigation */}
             <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4 no-scrollbar">
-                {navGroups.map((group, index) => (
+                {visibleGroups.map((group, index) => (
                     <div key={group.label} className="space-y-1">
                         <div className={cn("px-3 mb-2", index > 0 && "mt-4")}>
                             <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">{group.label}</p>
@@ -160,16 +170,20 @@ function NavContent({ factoryName, userName, onLinkClick }: OwnerSidebarProps & 
     )
 }
 
-export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
+export function OwnerSidebar({ factoryName, userName, productionMode }: OwnerSidebarProps) {
     const [isOpen, setIsOpen] = useState(false)
     const pathname = usePathname()
     const { t } = useTranslation()
+    const normalizedProductionMode = normalizeProductionMode(productionMode)
+    const visibleBottomNavItems = bottomNavItems
+        .filter((item) => isWorkflowVisible(normalizedProductionMode, item.workflow as WorkflowKey))
+        .slice(0, 5)
 
     return (
         <>
             {/* Desktop sidebar — persistent */}
             <aside className="hidden md:fixed md:inset-y-0 md:z-30 md:flex md:w-[248px] md:flex-col border-r border-white/10 bg-[#111111] shadow-[var(--shadow-card)]">
-                <NavContent factoryName={factoryName} userName={userName} />
+                <NavContent factoryName={factoryName} userName={userName} productionMode={normalizedProductionMode} />
             </aside>
 
             {/* Mobile header bar */}
@@ -191,6 +205,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                         <NavContent
                             factoryName={factoryName}
                             userName={userName}
+                            productionMode={normalizedProductionMode}
                             onLinkClick={() => setIsOpen(false)}
                         />
                     </SheetContent>
@@ -206,7 +221,7 @@ export function OwnerSidebar({ factoryName, userName }: OwnerSidebarProps) {
                 "shadow-[0_-8px_24px_-4px_rgba(30,37,40,0.10)]",
                 "min-h-[64px] landscape:min-h-[52px] select-none"
             )}>
-                {bottomNavItems.map((item) => {
+                {visibleBottomNavItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
 
