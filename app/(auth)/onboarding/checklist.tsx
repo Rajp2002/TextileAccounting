@@ -8,22 +8,25 @@ import { toast } from 'sonner'
 import {
     CheckCircle2, ArrowRight, Loader2,
     Cpu, Layers, Users, Plus, Trash2, Upload,
-    ChevronDown, ChevronUp, CreditCard, Sparkles, Star, Zap, Calendar,
+    ChevronDown, ChevronUp, CreditCard, Sparkles, Star, Zap, Calendar, Store,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { addMachine, saveWorkerWhatsApp } from '@/app/(dashboard)/owner/actions'
+import { updateOrganizationProductionMode } from '@/app/(dashboard)/owner/actions'
 import { addMeterWorker } from '@/app/(dashboard)/supervisor/actions'
 import { savePayrollConfig } from '@/app/(dashboard)/owner/payroll/actions'
 import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/actions/auth'
 import { TrialButton } from '@/components/billing/TrialButton'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { BrandBackground } from '@/components/brand-background'
+import { PRODUCTION_MODE_OPTIONS, type ProductionMode } from '@/lib/production-mode'
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
 interface OnboardingStatus {
+    hasProductionMode: boolean
     hasMachine: boolean
     hasWorker: boolean
     hasPayrollConfig: boolean
@@ -32,6 +35,57 @@ interface OnboardingStatus {
 }
 
 interface Props { initialStatus: OnboardingStatus }
+
+function ProductionModeForm({ onDone }: { onDone: () => void }) {
+    const [selected, setSelected] = useState<ProductionMode>('market_run')
+    const [saving, setSaving] = useState(false)
+
+    const handleSave = async () => {
+        setSaving(true)
+        const res = await updateOrganizationProductionMode(selected)
+        setSaving(false)
+
+        if (res?.error) {
+            toast.error(res.error)
+            return
+        }
+
+        toast.success('Production mode saved')
+        onDone()
+    }
+
+    return (
+        <div className="space-y-4 pt-4 border-t border-gray-100">
+            <div className="space-y-2">
+                <p className="text-sm font-semibold text-gray-900">How do you usually produce fabric?</p>
+                <p className="text-sm text-gray-500">This only changes which workflows Weavly shows first. You can change it later.</p>
+            </div>
+
+            <div className="grid gap-3">
+                {PRODUCTION_MODE_OPTIONS.map((option) => (
+                    <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setSelected(option.value)}
+                        className={cn(
+                            'rounded-xl border p-4 text-left transition-all',
+                            selected === option.value
+                                ? 'border-amber-400 bg-amber-50 shadow-sm'
+                                : 'border-gray-200 bg-white hover:border-amber-200 hover:bg-amber-50/40'
+                        )}
+                    >
+                        <span className="block text-sm font-bold text-gray-900">{option.label}</span>
+                        <span className="mt-1 block text-xs leading-relaxed text-gray-500">{option.description}</span>
+                    </button>
+                ))}
+            </div>
+
+            <Button onClick={handleSave} disabled={saving} className="w-full bg-amber-600 hover:bg-amber-700 text-white h-10 font-semibold">
+                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : 'Save production mode'}
+            </Button>
+        </div>
+    )
+}
 
 // ─── Machine Form ────────────────────────────────────────────────────────────────
 
@@ -637,6 +691,14 @@ function PlanSelectionForm({ onDone }: { onDone: () => void }) {
 
 const STEPS = [
     {
+        key: 'hasProductionMode' as keyof OnboardingStatus,
+        icon: Store,
+        title: 'Choose production mode',
+        description: 'Tell Weavly whether you produce for market stock, orders, or both.',
+        accentColor: 'amber',
+        form: ProductionModeForm,
+    },
+    {
         key: 'hasMachine' as keyof OnboardingStatus,
         icon: Cpu,
         title: 'Add your machines',
@@ -681,8 +743,8 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
     const [refreshing, setRefreshing] = useState(false)
     const [completing, setCompleting] = useState(false)
 
-    const completedCount = [status.hasMachine, status.hasWorker, status.hasPayrollConfig, status.hasPlan].filter(Boolean).length
-    const progressPct = (completedCount / 4) * 100
+    const completedCount = [status.hasProductionMode, status.hasMachine, status.hasWorker, status.hasPayrollConfig, status.hasPlan].filter(Boolean).length
+    const progressPct = (completedCount / 5) * 100
 
     const refresh = async () => {
         setRefreshing(true)
@@ -707,7 +769,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
         // blank-page issue. Local state is sufficient: each form only calls
         // this after its own save succeeds, so we know that step is complete.
         const newStatus = { ...status, [key]: true }
-        newStatus.isComplete = newStatus.hasMachine && newStatus.hasWorker && newStatus.hasPayrollConfig && newStatus.hasPlan
+        newStatus.isComplete = newStatus.hasProductionMode && newStatus.hasMachine && newStatus.hasWorker && newStatus.hasPayrollConfig && newStatus.hasPlan
         setStatus(newStatus)
         if (newStatus.isComplete) {
             toast.success('All done! 🎉 Click "Go to dashboard" to continue.')
@@ -769,7 +831,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                         <Layers className="h-7 w-7 text-amber-700" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Set up your factory</h1>
-                    <p className="text-gray-500 mt-1 text-sm">Complete these 4 steps to start tracking production</p>
+                    <p className="text-gray-500 mt-1 text-sm">Complete these 5 steps to start tracking production</p>
 
                     {/* Progress */}
                     <div className="mt-5 flex items-center gap-3">
@@ -782,7 +844,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                             />
                         </div>
                         <span className="text-sm font-semibold text-gray-700 tabular-nums w-12 text-right">
-                            {completedCount}/4
+                            {completedCount}/5
                         </span>
                     </div>
                 </div>

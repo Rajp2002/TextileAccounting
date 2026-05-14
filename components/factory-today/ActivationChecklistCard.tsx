@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { CheckCircle2, Circle, ArrowRight, Calculator, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getWorkflowVisibility, normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 
 interface ActivationChecklistCardProps {
     checklist: {
@@ -11,12 +12,27 @@ interface ActivationChecklistCardProps {
         hasOrder: boolean
         hasProductionLog: boolean
         hasStockEntry: boolean
+        hasMarketRun: boolean
     }
     isCollapsed: boolean
+    productionMode?: ProductionMode | null
 }
 
-export function ActivationChecklistCard({ checklist, isCollapsed }: ActivationChecklistCardProps) {
+export function ActivationChecklistCard({ checklist, isCollapsed, productionMode }: ActivationChecklistCardProps) {
+    const normalizedMode = normalizeProductionMode(productionMode)
+    const visibility = getWorkflowVisibility(normalizedMode)
+    const marketRunFirst = normalizedMode === 'market_run'
+
     const items = [
+        {
+            id: 'market-run',
+            label: 'Start first market run',
+            description: 'Plan fabric that will move into taka/godown stock.',
+            completed: checklist.hasMarketRun,
+            href: '/owner/market-runs',
+            priority: 'High',
+            workflow: 'marketRuns',
+        },
         {
             id: 'estimate',
             label: 'Create first estimate',
@@ -24,6 +40,7 @@ export function ActivationChecklistCard({ checklist, isCollapsed }: ActivationCh
             completed: checklist.hasEstimate,
             href: '/owner/estimator',
             priority: 'High',
+            workflow: 'estimator',
         },
         {
             id: 'quality',
@@ -32,6 +49,7 @@ export function ActivationChecklistCard({ checklist, isCollapsed }: ActivationCh
             completed: checklist.hasQuality,
             href: '/owner/estimator',
             priority: 'High',
+            workflow: 'estimator',
         },
         {
             id: 'order',
@@ -40,6 +58,7 @@ export function ActivationChecklistCard({ checklist, isCollapsed }: ActivationCh
             completed: checklist.hasOrder,
             href: '/owner/quotes',
             priority: 'Medium',
+            workflow: 'orders',
         },
         {
             id: 'production',
@@ -48,6 +67,7 @@ export function ActivationChecklistCard({ checklist, isCollapsed }: ActivationCh
             completed: checklist.hasProductionLog,
             href: '/supervisor/production',
             priority: 'High',
+            workflow: 'productionLogging',
         },
         {
             id: 'stock',
@@ -56,10 +76,13 @@ export function ActivationChecklistCard({ checklist, isCollapsed }: ActivationCh
             completed: checklist.hasStockEntry,
             href: '/owner/stock',
             priority: 'Medium',
+            workflow: 'stock',
         },
-    ]
+    ].filter((item) => visibility[item.workflow as keyof typeof visibility])
 
     const allCompleted = items.every((item) => item.completed)
+    const primaryHref = marketRunFirst ? '/owner/market-runs' : '/owner/estimator'
+    const primaryLabel = marketRunFirst ? 'Start market run' : 'Create first estimate'
 
     if (allCompleted) return null
 
@@ -71,19 +94,23 @@ export function ActivationChecklistCard({ checklist, isCollapsed }: ActivationCh
             {!isCollapsed ? (
                 <>
                     <div className="mb-4">
-                        <h2 className="text-xl font-bold text-ink">Your factory is ready. Start with your first estimate.</h2>
+                        <h2 className="text-xl font-bold text-ink">
+                            {marketRunFirst ? 'Your factory is ready. Start with your first market run.' : 'Your factory is ready. Start with your first estimate.'}
+                        </h2>
                         <p className="mt-1 text-sm text-body">
-                            Create your first estimate to add a fabric quality, calculate pricing, and see expected profit.
+                            {marketRunFirst
+                                ? 'Produce fabric into taka/godown stock first, then sell or dispatch from stock.'
+                                : 'Create your first estimate to add a fabric quality, calculate pricing, and see expected profit.'}
                         </p>
                     </div>
 
                     <div className="mb-6 flex flex-wrap gap-3">
                         <Link
-                            href="/owner/estimator"
+                            href={primaryHref}
                             className="inline-flex h-11 items-center gap-2 rounded-lg bg-saffron px-4 text-sm font-semibold text-white transition hover:bg-saffron-deep"
                         >
                             <Calculator className="h-4 w-4" />
-                            Create first estimate
+                            {primaryLabel}
                             <ArrowRight className="h-4 w-4" />
                         </Link>
                     </div>
@@ -94,13 +121,13 @@ export function ActivationChecklistCard({ checklist, isCollapsed }: ActivationCh
                         <h2 className="text-lg font-bold text-ink">Activation Checklist</h2>
                         <p className="text-xs text-body">Complete these steps to get the most out of Weavly.</p>
                     </div>
-                    {!checklist.hasEstimate && (
+                    {items.some((item) => !item.completed && item.priority === 'High') && (
                         <Link
-                            href="/owner/estimator"
+                            href={primaryHref}
                             className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-saffron px-3 text-xs font-semibold text-white transition hover:bg-saffron-deep"
                         >
                             <Calculator className="h-3.5 w-3.5" />
-                            Create Estimate
+                            {primaryLabel}
                         </Link>
                     )}
                 </div>

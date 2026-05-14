@@ -15,6 +15,7 @@ import {
     PositiveIntSchema,
     AccessCodeSchema,
     UpdateOrgNameSchema,
+    ProductionModeSchema,
     safeParse,
 } from '@/lib/schemas'
 import { eraseWorkerPII } from './actions/compliance'
@@ -481,6 +482,30 @@ export async function updateOrganizationName(newName: string) {
 
     revalidatePath('/owner/settings')
     return { success: true }
+}
+
+export async function updateOrganizationProductionMode(productionMode: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(ProductionModeSchema, productionMode)
+    if ('error' in parsed) return { error: parsed.error }
+
+    const { error } = await supabase
+        .from('organizations')
+        .update({ production_mode: parsed.data })
+        .eq('id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to update production mode:', error)
+        return { error: 'Failed to update production mode. Please try again.' }
+    }
+
+    revalidatePath('/onboarding')
+    revalidatePath('/owner')
+    revalidatePath('/owner/settings')
+    revalidatePath('/owner/today')
+    return { success: true, productionMode: parsed.data }
 }
 
 export async function setBeamTrackingEnabled(enabled: boolean) {

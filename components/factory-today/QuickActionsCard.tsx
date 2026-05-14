@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Calculator, Package, Truck, DollarSign, Store, Zap } from 'lucide-react'
+import { getWorkflowVisibility, type ProductionMode, type WorkflowKey } from '@/lib/production-mode'
 
 const actions = [
     {
@@ -11,6 +12,7 @@ const actions = [
         href: '/owner/estimator',
         icon: Calculator,
         color: 'text-saffron bg-saffron/10 border-saffron/20',
+        workflow: 'estimator',
     },
     {
         id: 'start-order',
@@ -19,6 +21,7 @@ const actions = [
         href: '/owner/quotes',
         icon: Package,
         color: 'text-saffron bg-saffron/10 border-saffron/20',
+        workflow: 'orders',
     },
     {
         id: 'start-market-maal',
@@ -27,6 +30,7 @@ const actions = [
         href: '/owner/estimator?mode=market',
         icon: Store,
         color: 'text-warning bg-warning-soft border-warning/20',
+        workflow: 'marketRuns',
     },
     {
         id: 'confirm-taka',
@@ -35,6 +39,7 @@ const actions = [
         href: '/owner/stock?tab=pending',
         icon: Zap,
         color: 'text-success bg-success-soft border-success/20',
+        workflow: 'stock',
     },
     {
         id: 'create-dispatch',
@@ -43,6 +48,7 @@ const actions = [
         href: '/owner/dispatches',
         icon: Truck,
         color: 'text-risk bg-risk-soft border-risk/20',
+        workflow: 'dispatches',
     },
     {
         id: 'settle-hisaab',
@@ -51,10 +57,14 @@ const actions = [
         href: '/owner/payroll',
         icon: DollarSign,
         color: 'text-success bg-success-soft border-success/20',
+        workflow: 'payroll',
     },
 ]
 
-export function QuickActionsCard() {
+export function QuickActionsCard({ productionMode }: { productionMode?: ProductionMode | null }) {
+    const visibility = getWorkflowVisibility(productionMode)
+    const visibleActions = actions.filter((action) => visibility[action.workflow as WorkflowKey])
+
     return (
         <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
             <div className="border-b border-hairline px-4 py-3">
@@ -63,7 +73,7 @@ export function QuickActionsCard() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3">
-                {actions.map((action) => {
+                {visibleActions.map((action) => {
                     const Icon = action.icon
                     return (
                         <Link

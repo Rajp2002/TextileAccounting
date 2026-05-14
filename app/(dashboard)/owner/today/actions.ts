@@ -3,11 +3,13 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { getPayrollCycleBounds } from '@/lib/payroll-cycle'
+import { normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 export type FactoryTodayData = {
     date: string
+    productionMode: ProductionMode
 
     production: {
         hasLogsToday: boolean
@@ -103,6 +105,7 @@ export type FactoryTodayData = {
         hasOrder: boolean
         hasProductionLog: boolean
         hasStockEntry: boolean
+        hasMarketRun: boolean
     }
 }
 
@@ -121,6 +124,12 @@ function daysBetween(a: string, b: string): number {
 function getCurrentMonth(): string {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+function hasAnyCount(result: unknown): boolean {
+    if (!result || typeof result !== 'object' || !('count' in result)) return false
+    const count = (result as { count?: number | null }).count
+    return typeof count === 'number' && count > 0
 }
 
 // ─── Main Aggregation ─────────────────────────────────────────────────────────
@@ -150,6 +159,8 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         hasOrderRes,
         hasProductionRes,
         hasStockRes,
+        hasMarketRunRes,
+        orgSettingsRes,
     ] = await Promise.all([
         // 1. Production logs today
         supabase
@@ -286,13 +297,30 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
                 return { count: 0 }
             }
         })(),
+
+        (async () => {
+            try {
+                const { count } = await supabase.from('market_runs').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                return { count }
+            } catch {
+                return { count: 0 }
+            }
+        })(),
+
+        supabase
+            .from('organizations')
+            .select('production_mode')
+            .eq('id', orgId)
+            .maybeSingle(),
     ])
 
-    const hasEstimate = !!(hasEstimateRes as any)?.count && (hasEstimateRes as any).count > 0
-    const hasQuality = !!(hasQualityRes as any)?.count && (hasQualityRes as any).count > 0
-    const hasOrder = !!(hasOrderRes as any)?.count && (hasOrderRes as any).count > 0
-    const hasProductionLog = !!(hasProductionRes as any)?.count && (hasProductionRes as any).count > 0
-    const hasStockEntry = !!(hasStockRes as any)?.count && (hasStockRes as any).count > 0
+    const hasEstimate = hasAnyCount(hasEstimateRes)
+    const hasQuality = hasAnyCount(hasQualityRes)
+    const hasOrder = hasAnyCount(hasOrderRes)
+    const hasProductionLog = hasAnyCount(hasProductionRes)
+    const hasStockEntry = hasAnyCount(hasStockRes)
+    const hasMarketRun = hasAnyCount(hasMarketRunRes)
+    const productionMode = normalizeProductionMode(orgSettingsRes.data?.production_mode)
 
     // ── 1. Production ──────────────────────────────────────────────────────────
     const logs = productionRes.data ?? []
@@ -529,6 +557,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
 
     return {
         date: today,
+        productionMode,
         production,
         machines: machinesData,
         workAtRisk,
@@ -542,6 +571,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             hasOrder,
             hasProductionLog,
             hasStockEntry,
+            hasMarketRun,
         },
     }
 }

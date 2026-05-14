@@ -4,13 +4,16 @@ import Link from 'next/link'
 import type { FactoryTodayData } from '@/app/(dashboard)/owner/today/actions'
 import { TrendingDown, Calendar, Package, Store, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getWorkflowVisibility, type ProductionMode } from '@/lib/production-mode'
 
 interface WorkAtRiskCardProps {
     workAtRisk: FactoryTodayData['workAtRisk']
+    productionMode?: ProductionMode | null
 }
 
-export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
+export function WorkAtRiskCard({ workAtRisk, productionMode }: WorkAtRiskCardProps) {
     const { ordersBehindPace, inactiveMarketRuns } = workAtRisk
+    const visibility = getWorkflowVisibility(productionMode)
     const total = ordersBehindPace.length + inactiveMarketRuns.length
     const hasRisk = total > 0
     const criticalOrders = ordersBehindPace.filter((o) => o.riskLevel === 'red')
@@ -36,7 +39,7 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
                         'text-sm font-bold',
                         !hasRisk ? 'text-success' : criticalOrders.length > 0 ? 'text-risk' : 'text-warning'
                     )}>
-                        {!hasRisk ? 'All orders on track' : `${total} item${total !== 1 ? 's' : ''} need attention`}
+                        {!hasRisk ? (visibility.orders ? 'All orders and runs on track' : 'All market runs on track') : `${total} item${total !== 1 ? 's' : ''} need attention`}
                     </p>
                 </div>
                 {hasRisk && (
@@ -120,18 +123,22 @@ export function WorkAtRiskCard({ workAtRisk }: WorkAtRiskCardProps) {
 
             {/* Footer */}
             <div className="flex items-center justify-end gap-2 border-t border-hairline px-4 py-3">
-                <Link
-                    href="/owner/orders"
-                    className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
-                >
-                    View Orders
-                </Link>
-                <Link
-                    href="/owner/market-runs"
-                    className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
-                >
-                    View Runs
-                </Link>
+                {visibility.orders && (
+                    <Link
+                        href="/owner/orders"
+                        className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
+                    >
+                        View Orders
+                    </Link>
+                )}
+                {visibility.marketRuns && (
+                    <Link
+                        href="/owner/market-runs"
+                        className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
+                    >
+                        View Runs
+                    </Link>
+                )}
             </div>
         </div>
     )

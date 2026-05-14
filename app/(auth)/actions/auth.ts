@@ -15,6 +15,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { CreateOrgSchema, JoinOrgSchema, SignInSchema, safeParse } from '@/lib/schemas'
+import { hasExplicitProductionMode } from '@/lib/production-mode'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -27,19 +28,6 @@ function generateJoinCode(): string {
     return Array.from({ length: 8 }, () =>
         chars[Math.floor(Math.random() * chars.length)]
     ).join('')
-}
-
-/**
- * Decodes a JWT without verification (safe — we only use it for claims
- * that Supabase Auth already validated server-side).
- */
-function parseJWT(token: string): Record<string, any> {
-    try {
-        const payload = token.split('.')[1]
-        return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'))
-    } catch {
-        return {}
-    }
 }
 
 // ─── createOrganization ────────────────────────────────────────────────────────
@@ -393,7 +381,7 @@ export async function signIn(input: { email: string; password: string }) {
             userRole = profile.role
 
             if (profile.organizations && typeof profile.organizations === 'object' && !Array.isArray(profile.organizations)) {
-                onboardingComplete = (profile.organizations as any).onboarding_complete ?? false
+                onboardingComplete = (profile.organizations as { onboarding_complete?: boolean | null }).onboarding_complete ?? false
             }
         }
     }
@@ -475,6 +463,7 @@ export async function regenerateJoinCode() {
  * Owners can define qualities anytime from settings/inventory.
  */
 export async function getOnboardingStatus(): Promise<{
+    hasProductionMode: boolean
     hasMachine: boolean
     hasWorker: boolean
     hasPayrollConfig: boolean
@@ -516,6 +505,17 @@ export async function getOnboardingStatus(): Promise<{
             .maybeSingle(),
     ])
 
+    const { data: orgSettings } = await supabase
+        .from('organizations')
+        .select('production_mode, onboarding_complete')
+        .eq('id', orgId)
+        .maybeSingle()
+
+    // Existing onboarded orgs may predate production_mode. Keep them complete
+    // and let app-level normalization treat NULL as market_run.
+    const hasProductionMode = orgSettings?.onboarding_complete === true
+        ? true
+        : hasExplicitProductionMode(orgSettings?.production_mode)
     const hasMachine = (machines.count ?? 0) > 0
     const hasWorker  = (workers.count  ?? 0) > 0
     const hasPayrollConfig = !!payrollConfig.data
@@ -531,7 +531,7 @@ export async function getOnboardingStatus(): Promise<{
         }
     }
 
-    const isComplete = hasMachine && hasWorker && hasPayrollConfig && hasPlan
+    const isComplete = hasProductionMode && hasMachine && hasWorker && hasPayrollConfig && hasPlan
 
     if (isComplete) {
         // Flip the flag so future middleware checks use JWT cache, not DB.
@@ -542,7 +542,7 @@ export async function getOnboardingStatus(): Promise<{
             .eq('id', orgId)
     }
 
-    return { hasMachine, hasWorker, hasPayrollConfig, hasPlan, isComplete }
+    return { hasProductionMode, hasMachine, hasWorker, hasPayrollConfig, hasPlan, isComplete }
 }
 
 /**

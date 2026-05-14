@@ -12,6 +12,7 @@ import { PayrollHisaabCard } from '@/components/factory-today/PayrollHisaabCard'
 import { QuickActionsCard } from '@/components/factory-today/QuickActionsCard'
 import { ActivationChecklistCard } from '@/components/factory-today/ActivationChecklistCard'
 import { CheckCircle2, Factory } from 'lucide-react'
+import { getWorkflowVisibility } from '@/lib/production-mode'
 
 interface FactoryTodayClientProps {
     initialData: FactoryTodayData
@@ -34,6 +35,7 @@ function AllClearState() {
 export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
     const data = initialData
     const { actionCounts } = data
+    const visibility = getWorkflowVisibility(data.productionMode)
 
     const dateLabel = new Date(data.date).toLocaleDateString('en-IN', {
         weekday: 'long',
@@ -59,10 +61,15 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
         hasOrder: false,
         hasProductionLog: false,
         hasStockEntry: false,
+        hasMarketRun: false,
     }
 
-    const isCollapsed = checklist.hasEstimate && checklist.hasQuality
-    const isHidden = checklist.hasEstimate && checklist.hasQuality && (checklist.hasOrder || checklist.hasProductionLog)
+    const isCollapsed = visibility.estimator
+        ? checklist.hasEstimate && checklist.hasQuality
+        : checklist.hasMarketRun || checklist.hasStockEntry
+    const isHidden = visibility.estimator
+        ? checklist.hasEstimate && checklist.hasQuality && (checklist.hasOrder || checklist.hasProductionLog)
+        : (checklist.hasMarketRun || checklist.hasStockEntry) && checklist.hasProductionLog
 
     return (
         <div className="space-y-6">
@@ -97,7 +104,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
 
             {/* Activation Checklist */}
             {!isHidden && (
-                <ActivationChecklistCard checklist={checklist} isCollapsed={isCollapsed} />
+                <ActivationChecklistCard checklist={checklist} isCollapsed={isCollapsed} productionMode={data.productionMode} />
             )}
 
             {/* KPI Strip */}
@@ -119,7 +126,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                     <div className="space-y-4">
                         <ProductionStatusCard production={data.production} />
                         <MachineAttentionCard machines={data.machines} />
-                        <WorkAtRiskCard workAtRisk={data.workAtRisk} />
+                        <WorkAtRiskCard workAtRisk={data.workAtRisk} productionMode={data.productionMode} />
                         <PendingStockDraftsCard drafts={data.stock.pendingInwardDrafts} />
                     </div>
 
@@ -128,14 +135,14 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                         <SoldNotDispatchedCard sales={data.dispatch.soldNotDispatched} />
                         <PendingReceiptsCard receipts={data.dispatch.pendingReceipts} />
                         <PayrollHisaabCard payroll={data.payroll} />
-                        <QuickActionsCard />
+                        <QuickActionsCard productionMode={data.productionMode} />
                     </div>
                 </div>
             )}
 
             {/* Quick Actions always visible on all-clear */}
             {isAllClear && (
-                <QuickActionsCard />
+                <QuickActionsCard productionMode={data.productionMode} />
             )}
         </div>
     )

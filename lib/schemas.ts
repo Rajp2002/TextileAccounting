@@ -80,6 +80,8 @@ export const UpdateOrgNameSchema = z.object({
     name: z.string().trim().min(2, 'Factory name required').max(120, 'Factory name too long'),
 })
 
+export const ProductionModeSchema = z.enum(['market_run', 'order_based', 'both'])
+
 /**
  * JoinOrgSchema — supervisor join form (F1 spec §4)
  * Used by joinOrganization() server action.
