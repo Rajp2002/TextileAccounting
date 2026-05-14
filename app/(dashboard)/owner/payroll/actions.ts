@@ -221,11 +221,17 @@ export async function createPayrollAdjustment(input: {
 }
 
 export async function savePayrollConfig(cycleStartDay: number) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(PayrollConfigSchema, { cycleStartDay })
     if ('error' in parsed) return { error: parsed.error }
+
+    try {
+        await supabase.rpc('set_actor_for_audit', { p_actor_id: user.id })
+    } catch {
+        // Non-fatal: the trigger falls back to auth.uid() when the helper is unavailable.
+    }
 
     const { error } = await supabase
         .from('payroll_configs')
@@ -233,11 +239,15 @@ export async function savePayrollConfig(cycleStartDay: number) {
             org_id: profile.org_id,
             cycle_start_day: parsed.data.cycleStartDay,
             updated_at: new Date().toISOString()
-        })
+        }, { onConflict: 'org_id' })
 
     if (error) {
         console.error('Failed to save payroll config:', error)
-        return { error: 'Failed to save payroll settings. Please try again.' }
+        return {
+            error: error.message?.includes('record "new" has no field "id"')
+                ? 'Payroll settings could not be audited because the database trigger is outdated. Please retry after the latest migration is applied.'
+                : error.message || 'Failed to save payroll settings. Please try again.',
+        }
     }
 
     revalidatePath('/owner/payroll')

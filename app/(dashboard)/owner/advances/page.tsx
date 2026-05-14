@@ -47,6 +47,11 @@ interface Advance {
     deducted_in_month: string | null
 }
 
+interface PendingAdvanceOverview extends Advance {
+    workerName: string
+    workerType: 'meter' | 'fixed'
+}
+
 interface MeterWorkerRow {
     id: number
     name: string
@@ -62,6 +67,13 @@ interface FixedWorkerRow {
 interface ProductionLogRow {
     meters: string | number | null
     worker_rate_snapshot: number | null
+}
+
+interface PendingAdvanceRow extends Advance {
+    meter_worker_id: number | null
+    fixed_worker_id: number | null
+    workers: { name: string } | null
+    fixed_workers: { name: string } | null
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -157,6 +169,32 @@ export default function AdvancesPage() {
 
             if (error) throw error
             return (data || []) as Advance[]
+        }
+    })
+
+    const { data: allPendingAdvances, isLoading: allPendingLoading } = useQuery({
+        queryKey: ['all_pending_advances', userProfile?.org_id],
+        enabled: !!userProfile?.org_id && !selectedWorker,
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('worker_advances')
+                .select('id, amount, description, status, created_at, deducted_at, deducted_in_month, meter_worker_id, fixed_worker_id, workers(name), fixed_workers(name)')
+                .eq('org_id', userProfile!.org_id)
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false })
+
+            if (error) throw error
+            return ((data || []) as PendingAdvanceRow[]).map((advance) => ({
+                id: advance.id,
+                amount: advance.amount,
+                description: advance.description,
+                status: advance.status,
+                created_at: advance.created_at,
+                deducted_at: advance.deducted_at,
+                deducted_in_month: advance.deducted_in_month,
+                workerName: advance.workers?.name || advance.fixed_workers?.name || 'Unknown worker',
+                workerType: advance.meter_worker_id ? 'meter' : 'fixed',
+            })) as PendingAdvanceOverview[]
         }
     })
 
@@ -703,31 +741,60 @@ export default function AdvancesPage() {
                         </>
                     ) : (
                         <CardContent className="flex min-h-[560px] items-center justify-center p-6">
-                            <div className="max-w-md text-center">
-                                <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-saffron-soft text-saffron-deep shadow-xs">
-                                    <UserRound className="size-8" />
-                                </div>
-                                <h2 className="mt-5 text-xl font-semibold text-ink">{t('emptyState.advances.title')}</h2>
-                                <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('payroll.advances.list.select_above')}</p>
-                                <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-                                    <Button
-                                        onClick={() => {
-                                            if (workers && workers.length > 0) {
-                                                setSelectedWorker(workers[0])
-                                                setShowAddDialog(true)
-                                            }
-                                        }}
-                                        disabled={!workers || workers.length === 0}
-                                    >
-                                        <Plus className="size-4" />
-                                        {t('emptyState.advances.cta')}
-                                    </Button>
-                                    {(!workers || workers.length === 0) && (
-                                        <Button variant="outline" asChild>
-                                            <Link href="/owner/fixed-workers">{t('workers.add_worker')}</Link>
-                                        </Button>
-                                    )}
-                                </div>
+                            <div className="w-full max-w-2xl">
+                                {allPendingLoading ? (
+                                    <div className="flex justify-center py-10">
+                                        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                                    </div>
+                                ) : allPendingAdvances && allPendingAdvances.length > 0 ? (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h2 className="text-xl font-semibold text-ink">Pending advances</h2>
+                                            <p className="mt-1 text-sm text-muted-foreground">Select a worker on the left to manage recoveries or add another advance.</p>
+                                        </div>
+                                        <div className="overflow-hidden rounded-2xl border border-hairline bg-surface">
+                                            {allPendingAdvances.map((adv) => (
+                                                <div key={adv.id} className="grid gap-3 border-b border-hairline p-4 last:border-b-0 sm:grid-cols-[1fr_auto] sm:items-center">
+                                                    <div className="min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <p className="font-semibold text-ink">{tl(adv.workerName)}</p>
+                                                            <Badge variant="warning">{t('payroll.status.pending')}</Badge>
+                                                        </div>
+                                                        <p className="mt-1 text-sm text-body">{formatINR(adv.amount)} · {adv.description || t('payroll.advances.list.no_reason')}</p>
+                                                        <p className="mt-1 text-xs text-muted-foreground">{formatAdvanceDate(adv.created_at)}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center">
+                                        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-saffron-soft text-saffron-deep shadow-xs">
+                                            <UserRound className="size-8" />
+                                        </div>
+                                        <h2 className="mt-5 text-xl font-semibold text-ink">{t('emptyState.advances.title')}</h2>
+                                        <p className="mt-2 text-sm leading-6 text-muted-foreground">{t('payroll.advances.list.select_above')}</p>
+                                        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+                                            <Button
+                                                onClick={() => {
+                                                    if (workers && workers.length > 0) {
+                                                        setSelectedWorker(workers[0])
+                                                        setShowAddDialog(true)
+                                                    }
+                                                }}
+                                                disabled={!workers || workers.length === 0}
+                                            >
+                                                <Plus className="size-4" />
+                                                {t('emptyState.advances.cta')}
+                                            </Button>
+                                            {(!workers || workers.length === 0) && (
+                                                <Button variant="outline" asChild>
+                                                    <Link href="/owner/fixed-workers">{t('workers.add_worker')}</Link>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     )}

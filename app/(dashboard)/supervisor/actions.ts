@@ -1004,6 +1004,7 @@ export async function bulkLogProduction(entries: {
     shift: 'day' | 'night'
     date: string
     rate_per_m?: number
+    zero_meter_reason?: string | null
 }[], accessCode?: string) {
     const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
@@ -1026,7 +1027,7 @@ export async function bulkLogProduction(entries: {
     }
 
     const logs = entries
-        .filter((e) => e.meters !== 0) // We already know e.order_id exists from the guard above
+        .filter((e) => e.meters !== 0 || Boolean(e.zero_meter_reason?.trim()))
         .map((e) => ({
             org_id: orgId,
             machine_id: e.machine_id,
@@ -1042,7 +1043,8 @@ export async function bulkLogProduction(entries: {
             created_by: user.id,
             updated_by: user.id,
             submitted_at: new Date().toISOString(),
-            client_ip: clientIp
+            client_ip: clientIp,
+            zero_meter_reason: e.meters === 0 ? e.zero_meter_reason?.trim() || null : null,
         }))
 
     if (logs.length === 0) return { success: true, logged: 0 }

@@ -153,6 +153,6 @@ export async function sellAndDispatchTakas(input: SellAndDispatchInput): Promise
         saleIds,
         dispatchId: dispatchMeta.dispatch_id,
         dispatchNumber: dispatchMeta.dispatch_number,
-        trackingUrl: dispatchMeta.tracking_token ? `/tracking/${dispatchMeta.tracking_token}` : null
+        trackingUrl: dispatchMeta.tracking_token ? `/track/${dispatchMeta.tracking_token}` : null
     }
 }
