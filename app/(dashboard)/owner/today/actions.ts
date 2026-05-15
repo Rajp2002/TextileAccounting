@@ -52,19 +52,6 @@ export type FactoryTodayData = {
         }>
     }
 
-    stock: {
-        pendingInwardDrafts: Array<{
-            id: string
-            sourceType: 'order' | 'market_run'
-            sourceLabel: string
-            qualityLabel: string
-            producedMeters: number
-            costPerMeter: number
-            productionDate: string
-            shift: string
-        }>
-    }
-
     dispatch: {
         soldNotDispatched: Array<{
             saleId: string
@@ -148,7 +135,6 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         ordersRes,
         marketRunsRes,
         recentProdForRunsRes,
-        draftsRes,
         salesRes,
         dispatchesRes,
         payrollConfigRes,
@@ -198,16 +184,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             .gte('date', twoDaysAgo)
             .not('market_run_id', 'is', null),
 
-        // 6. Pending stock inward drafts
-        supabase
-            .from('fabric_stock_inward_drafts')
-            .select('id, source_type, market_run_id, order_id, quality_label, source_date, source_shift, suggested_meters, cost_per_meter, notes')
-            .eq('org_id', orgId)
-            .eq('status', 'pending')
-            .order('source_date', { ascending: false })
-            .limit(20),
-
-        // 7. Sold stock not yet dispatched
+        // 6. Sold stock not yet dispatched
         supabase
             .from('fabric_stock_sales')
             .select('id, taka_sold, meters_sold, revenue_amount, sale_date, fabric_stock_lots!inner(quality_label)')
@@ -216,7 +193,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             .order('sale_date', { ascending: false })
             .limit(20),
 
-        // 8. In-transit dispatches (pending receipt)
+        // 7. In-transit dispatches (pending receipt)
         supabase
             .from('dispatches')
             .select('id, dispatch_number, qty_meters_sent, dispatched_at, orders!inner(party_name, tracking_token)')
@@ -449,24 +426,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         inactiveMarketRuns,
     }
 
-    // ── 4. Stock ───────────────────────────────────────────────────────────────
-    const pendingInwardDrafts = (draftsRes.data ?? []).map((d) => {
-        const raw = d as Record<string, unknown>
-        return {
-            id: String(raw.id),
-            sourceType: String(raw.source_type) as 'order' | 'market_run',
-            sourceLabel: String(raw.quality_label || 'Stock'),
-            qualityLabel: String(raw.quality_label || ''),
-            producedMeters: toNum(raw.suggested_meters),
-            costPerMeter: toNum(raw.cost_per_meter),
-            productionDate: String(raw.source_date || today),
-            shift: String(raw.source_shift || 'day'),
-        }
-    })
-
-    const stock: FactoryTodayData['stock'] = { pendingInwardDrafts }
-
-    // ── 5. Dispatch ────────────────────────────────────────────────────────────
+    // ── 4. Dispatch ────────────────────────────────────────────────────────────
     const soldNotDispatched = (salesRes.data ?? [])
         .filter((s) => {
             // Only include sales with actual meters > 0 (guard against reversed/zero-value entries)
@@ -505,7 +465,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
 
     const dispatch: FactoryTodayData['dispatch'] = { soldNotDispatched, pendingReceipts }
 
-    // ── 6. Payroll ─────────────────────────────────────────────────────────────
+    // ── 5. Payroll ─────────────────────────────────────────────────────────────
     const cycleStartDay = payrollConfigRes.data?.cycle_start_day ?? 1
     const currentMonth = getCurrentMonth()
     const bounds = getPayrollCycleBounds(currentMonth, cycleStartDay)
@@ -543,7 +503,6 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
     ].reduce((a, b) => a + b, 0)
 
     const warning = [
-        pendingInwardDrafts.length > 0 ? 1 : 0,
         machinesData.unassigned > 0 ? 1 : 0,
         inactiveMarketRuns.length > 0 ? 1 : 0,
         ordersBehindPace.filter((o) => o.riskLevel === 'yellow').length,
@@ -561,7 +520,6 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         production,
         machines: machinesData,
         workAtRisk,
-        stock,
         dispatch,
         payroll,
         actionCounts: { critical, warning, info },
