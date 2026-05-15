@@ -83,7 +83,7 @@ export function PendingStockDraftsCard({ drafts }: PendingStockDraftsCardProps) 
                             : 'border-hairline bg-surface text-ink hover:bg-surface-soft'
                     )}
                 >
-                    {hasDrafts ? 'Confirm Takas →' : 'View Stock'}
+                    {hasDrafts ? 'Review Drafts ->' : 'View Stock'}
                 </Link>
             </div>
         </div>

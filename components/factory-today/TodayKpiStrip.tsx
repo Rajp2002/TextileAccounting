@@ -3,6 +3,7 @@ import { Activity, Server, Package, Truck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface TodayKpiStripProps {
+    productionMode: FactoryTodayData['productionMode']
     production: FactoryTodayData['production']
     machines: FactoryTodayData['machines']
     stock: FactoryTodayData['stock']
@@ -44,7 +45,7 @@ function KpiCard({
     )
 }
 
-export function TodayKpiStrip({ production, machines, stock, dispatch, actionCounts }: TodayKpiStripProps) {
+export function TodayKpiStrip({ productionMode, production, machines, stock, dispatch, actionCounts }: TodayKpiStripProps) {
     const prodColor = production.hasLogsToday
         ? (production.dayShiftLogged && production.nightShiftLogged ? 'green' : 'yellow')
         : 'red'
@@ -52,7 +53,8 @@ export function TodayKpiStrip({ production, machines, stock, dispatch, actionCou
     const machineColor = machines.unassigned > 0 ? 'yellow' : 'green'
 
     const pendingDrafts = stock.pendingInwardDrafts.length
-    const stockColor = pendingDrafts > 0 ? 'yellow' : 'green'
+    const marketRunOnly = productionMode === 'market_run'
+    const stockColor = !marketRunOnly && pendingDrafts > 0 ? 'yellow' : 'green'
 
     const notDispatched = dispatch.soldNotDispatched.length
     const dispatchColor = notDispatched > 0 ? 'red' : 'green'
@@ -97,9 +99,9 @@ export function TodayKpiStrip({ production, machines, stock, dispatch, actionCou
                 />
                 <KpiCard
                     icon={Package}
-                    label="Stock Drafts"
-                    value={pendingDrafts}
-                    sub={pendingDrafts > 0 ? 'Need confirmation' : 'All confirmed'}
+                    label={marketRunOnly ? 'Godown Ledger' : 'Stock Drafts'}
+                    value={marketRunOnly ? 'Expected' : pendingDrafts}
+                    sub={marketRunOnly ? 'As per production' : pendingDrafts > 0 ? 'Need confirmation' : 'All confirmed'}
                     color={stockColor}
                 />
                 <KpiCard

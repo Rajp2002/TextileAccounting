@@ -40,7 +40,7 @@ Routes currently redirected to `/feature-archived`:
 - Orders and market runs.
 - Supervisor production log.
 - Owner production analytics.
-- Godown/taka stock board (physical inventory focus).
+- Godown/taka stock board (expected ledger and dispatch reconciliation focus).
 - Dispatches and public tracking (Sell & Dispatch).
 - Commercials receivables and payment tracking.
 - Payroll and advances.

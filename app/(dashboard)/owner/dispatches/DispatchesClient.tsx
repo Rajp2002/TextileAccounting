@@ -797,11 +797,13 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
                     tone={ewayAttention.length > 0 ? 'rose' : 'emerald'}
                 />
                 <MetricCard
-                    label="Shortage / Disputes"
-                    value={shortageTotal > 0 ? `-${shortageTotal.toFixed(2)} m` : 'Clear'}
-                    helper={shortageBatches > 0 ? `${shortageBatches} batch${shortageBatches !== 1 ? 'es' : ''} short` : 'No confirmed shortages'}
+                    label="Stock Differences"
+                    value={overview.open_discrepancy_count > 0 ? `${overview.open_discrepancy_count} review` : shortageTotal > 0 ? `-${shortageTotal.toFixed(2)} m` : 'Clear'}
+                    helper={overview.open_discrepancy_count > 0
+                        ? `${overview.open_discrepancy_meters.toFixed(2)} m shortage/excess needs review`
+                        : shortageBatches > 0 ? `${shortageBatches} batch${shortageBatches !== 1 ? 'es' : ''} short` : 'No dispatch differences'}
                     icon={AlertTriangle}
-                    tone={shortageTotal > 0 ? 'rose' : 'emerald'}
+                    tone={overview.open_discrepancy_count > 0 || shortageTotal > 0 ? 'rose' : 'emerald'}
                 />
             </div>
 

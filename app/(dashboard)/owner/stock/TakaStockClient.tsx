@@ -58,6 +58,7 @@ import {
     type TakaStockMovementRow,
 } from './actions'
 import { SellAndDispatchDialog } from '@/components/dispatches/SellAndDispatchDialog'
+import { isMarketRunOnlyMode } from '@/lib/production-mode'
 
 type SourceType = 'opening' | 'market_run' | 'order' | 'manual' | 'adjustment'
 type AdjustmentMode = 'add' | 'subtract'
@@ -819,6 +820,9 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
     const [expandedLots, setExpandedLots] = useState<Record<string, boolean>>({})
     const [sellAndDispatchOpen, setSellAndDispatchOpen] = useState(false)
     const [sellAndDispatchLotId, setSellAndDispatchLotId] = useState<string | undefined>()
+    const marketRunOnly = isMarketRunOnlyMode(initialData.productionMode)
+    const stockLabel = marketRunOnly ? 'Godown Ledger' : 'Godown Stock'
+    const availableLabel = marketRunOnly ? 'Expected Available' : 'Ledger Available'
 
     const godowns = useMemo(() => {
         return Array.from(new Set(initialData.lots.map((lot) => lot.godown))).sort()
@@ -849,9 +853,17 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
         <div className="space-y-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-foreground">Godown Stock</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">Physical takas, inward review, godown balance, and stock-sale entry.</p>
-                    <p className="mt-1 text-xs text-amber-600 font-semibold">Stock shows physical fabric and godown movement. For revenue, profit, and payment collection, use Commercials.</p>
+                    <h1 className="text-3xl font-black tracking-tight text-foreground">{stockLabel}</h1>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        {marketRunOnly
+                            ? 'Expected stock as per production ledger, with reality checked during dispatch.'
+                            : 'Ledger stock, godown balance, optional inward review, and stock-sale entry.'}
+                    </p>
+                    <p className="mt-1 text-xs text-amber-600 font-semibold">
+                        {marketRunOnly
+                            ? 'These meters are not a daily physical confirmation. Shortage or excess found during dispatch is tracked for owner review.'
+                            : 'Use Commercials for revenue, profit, and payment collection.'}
+                    </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <Button onClick={() => { setSellAndDispatchLotId(undefined); setSellAndDispatchOpen(true); }} className="gap-2 bg-indigo-600 hover:bg-indigo-700 h-11 lg:h-9">
@@ -869,21 +881,21 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                 <MetricCard
                     label="Available Units"
                     value={stockUnits(initialData.summary.available_taka)}
-                    helper={meters(initialData.summary.available_meters)}
+                    helper={`${availableLabel}: ${meters(initialData.summary.available_meters)}`}
                     icon={Boxes}
                     tone="bg-blue-50 text-blue-600"
                 />
                 <MetricCard
                     label="Stock Cost"
                     value={money(initialData.summary.stock_value_at_cost)}
-                    helper="available stock value"
+                    helper={marketRunOnly ? 'as per production ledger' : 'available stock value'}
                     icon={Warehouse}
                     tone="bg-amber-50 text-amber-700"
                 />
                 {/* Profit/Revenue cards removed - managed in Commercials */}
             </div>
 
-            {initialData.pendingInwards.length > 0 && (
+            {initialData.pendingInwards.length > 0 && !marketRunOnly && (
                 <Card className="border-amber-200 bg-amber-50/40">
                     <CardContent className="p-4">
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -987,7 +999,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
 
                                         <div className="grid grid-cols-2 gap-3 text-right sm:grid-cols-3">
                                             <div className="flex flex-col items-end justify-center bg-white/80 rounded-xl p-2 border border-amber-100 shadow-sm col-span-2 sm:col-span-1">
-                                                <p className="text-xs font-bold uppercase tracking-wider text-amber-700">Available</p>
+                                                <p className="text-xs font-bold uppercase tracking-wider text-amber-700">{availableLabel}</p>
                                                 <p className="text-2xl font-black text-foreground">{meters(lot.available_meters)}</p>
                                                 <p className="text-sm font-semibold text-muted-foreground">{stockUnits(lot.available_taka_count, lot.unit_label)}</p>
                                             </div>

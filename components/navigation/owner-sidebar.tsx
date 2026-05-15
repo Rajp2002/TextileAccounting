@@ -85,6 +85,11 @@ const bottomNavItems = [
     { name: "Payroll", href: "/owner/payroll", icon: DollarSign, translationKey: "payroll", workflow: "payroll" },
 ]
 
+function getNavLabel(item: { name: string; translationKey: string }, productionMode: ProductionMode, t: (key: string) => string) {
+    if (productionMode === 'market_run' && item.name === 'Stock') return 'Godown Ledger'
+    return t(`nav.${item.translationKey}`) || item.name
+}
+
 interface OwnerSidebarProps {
     factoryName?: string
     userName?: string
@@ -148,7 +153,7 @@ function NavContent({ factoryName, userName, productionMode: rawProductionMode, 
                                     )}
                                 >
                                     <Icon className="h-[18px] w-[18px]" />
-                                    {t(`nav.${item.translationKey}`) || item.name}
+                                    {getNavLabel(item, productionMode, t)}
                                 </Link>
                             )
                         })}
@@ -246,7 +251,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode }: OwnerSid
                                 "text-[10px] landscape:text-[9px] font-semibold leading-none truncate max-w-full px-0.5",
                                 isActive ? "opacity-100" : "opacity-80"
                             )}>
-                                {t(`nav.${item.translationKey}`) || item.name}
+                                {getNavLabel(item, normalizedProductionMode, t)}
                             </span>
                             {isActive && (
                                 <span className="absolute -top-px left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-saffron" />

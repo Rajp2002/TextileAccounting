@@ -27,7 +27,7 @@ export function ActivationChecklistCard({ checklist, isCollapsed, productionMode
         {
             id: 'market-run',
             label: 'Start first market run',
-            description: 'Plan fabric that will move into taka/godown stock.',
+            description: 'Plan fabric that will create expected godown stock.',
             completed: checklist.hasMarketRun,
             href: '/owner/market-runs',
             priority: 'High',
@@ -71,8 +71,8 @@ export function ActivationChecklistCard({ checklist, isCollapsed, productionMode
         },
         {
             id: 'stock',
-            label: 'Add opening stock',
-            description: 'Add existing stock to godown.',
+            label: marketRunFirst ? 'Review godown ledger' : 'Add opening stock',
+            description: marketRunFirst ? 'Expected stock will come from production records.' : 'Add existing stock to godown.',
             completed: checklist.hasStockEntry,
             href: '/owner/stock',
             priority: 'Medium',
@@ -99,7 +99,7 @@ export function ActivationChecklistCard({ checklist, isCollapsed, productionMode
                         </h2>
                         <p className="mt-1 text-sm text-body">
                             {marketRunFirst
-                                ? 'Produce fabric into taka/godown stock first, then sell or dispatch from stock.'
+                                ? 'Log market-run production first. Weavly builds expected stock and reconciles reality at dispatch.'
                                 : 'Create your first estimate to add a fabric quality, calculate pricing, and see expected profit.'}
                         </p>
                     </div>

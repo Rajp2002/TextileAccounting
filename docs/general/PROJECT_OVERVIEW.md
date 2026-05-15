@@ -18,7 +18,7 @@ The loop is:
 4. Move accepted quotes into active orders, or start a market run when the factory is producing for stock rather than a committed party.
 5. Assign machines, workers, and order/run work on the supervisor production log screen.
 6. Capture day/night shift production from loom readings, including opening/closing meter readings, correction windows, duplicate protection, rate snapshots, and machine status.
-7. Convert production into analytics, order progress, market-run progress, stock inward drafts, payroll earnings, and dispatch readiness.
+7. Convert production into analytics, order progress, market-run progress, expected godown stock, payroll earnings, and dispatch readiness.
 8. Settle payroll and advances with deduction caps, PF/ESI fields, final settlement behavior, payment modes, payslip generation, and WhatsApp communication.
 9. Use dispatch, stock, commercials, billing, referrals, and settings as supporting surfaces where they make the core loop more professional and monetizable.
 
@@ -86,7 +86,7 @@ Pain point translated: the whiteboard/order diary becomes a progress board with 
 
 ### Market Runs
 
-Market runs are speculative production. They are created from the estimator when the factory wants to keep looms running for godown stock instead of a party-backed order. They track target meters, produced meters, godown meters, sold meters, realized profit, and status from production through stock and sale.
+Market runs are speculative production. They are created from the estimator when the factory wants to keep looms running for godown stock instead of a party-backed order. They track target meters, produced meters, expected godown meters, sold meters, realized profit, and status from production through stock, dispatch, and sale.
 
 Pain point translated: speculative production stops being invisible "market maal" and becomes costed, tracked, and sellable stock.
 
@@ -96,11 +96,11 @@ The supervisor dashboard is the active production log workspace. Supervisors sel
 
 Pain point translated: the production register becomes a mobile shift screen that feeds owner analytics and payroll directly.
 
-### Stock
+### Stock / Godown Ledger
 
-The active stock route focuses on physical taka/godown stock and inward drafts. It supports lots from manual, opening, order, and market-run sources; suggested inward drafts from completed production; unit counts; meters per unit; godown; cost per meter; adjustments; sales recording; and movements. The older deep yarn/beam inventory route remains outside Phase 1.
+The active stock route is the godown ledger. For market-run factories, it shows expected stock as per production and commercial records, not a promise that every meter was physically confirmed at inward. Production creates expected availability; sale/dispatch is where actual availability is checked. Shortage or excess becomes a stock discrepancy for owner review. Manual/opening stock, adjustments, sales, and movements remain available, while Stock Inward is optional/de-emphasized for market-run Phase 1.
 
-Pain point translated: the owner can answer "what is in godown, how many takas, and what did it cost?" Profit and receivables are tracked in Commercials.
+Pain point translated: the owner can answer "what should be in godown, what was actually dispatched, and what difference needs review?" Profit and receivables are tracked in Commercials.
 
 ### Dispatches
 
@@ -153,6 +153,6 @@ Pain point translated: customer onboarding, monetization, and worker communicati
 
 ## Important Product Boundaries
 
-- Phase 1 is estimator, production logging/tracking, payroll/advances, market runs, dispatch professionalism, stock/commercials support, WhatsApp communication, billing/referrals, and the setup/settings needed for those flows.
+- Phase 1 is estimator, production logging/tracking, payroll/advances, market runs, dispatch professionalism, expected stock/commercials support, WhatsApp communication, billing/referrals, and the setup/settings needed for those flows.
 - Deep yarn/beam inventory, party ledger, supplier ledger, audit registry, system health, DPA, grievances, language requests, and admin governance are implemented or partially implemented but should not drive Phase 1 polish unless they unblock a core workflow.
 - If documentation and code disagree, the active route tree, server actions, schema migrations, and `lib/phase1-scope.ts` should be treated as the current implementation.
