@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { ensureReceivableForCommercialEntry } from '@/lib/commercials/receivables'
-import { normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
+import { getOrganizationProductionMode, type ProductionMode } from '@/lib/production-mode'
 import {
     AdjustTakaStockLotSchema,
     ConfirmStockInwardDraftSchema,
@@ -267,7 +267,7 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const [lotsRes, salesRes, movementsRes, draftsRes, runsRes, quotesRes, orgRes] = await Promise.all([
+    const [lotsRes, salesRes, movementsRes, draftsRes, runsRes, quotesRes, productionModeRes] = await Promise.all([
         supabase
             .from('fabric_stock_lot_summary')
             .select('*')
@@ -353,11 +353,7 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
             .not('order_id', 'is', null)
             .order('created_at', { ascending: false })
             .limit(80),
-        supabase
-            .from('organizations')
-            .select('production_mode')
-            .eq('id', profile.org_id)
-            .maybeSingle(),
+        getOrganizationProductionMode(supabase, profile.org_id),
     ])
 
     if (lotsRes.error) return { error: lotsRes.error.message }
@@ -366,9 +362,9 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
     if (draftsRes.error) return { error: draftsRes.error.message }
     if (runsRes.error) return { error: runsRes.error.message }
     if (quotesRes.error) return { error: quotesRes.error.message }
-    if (orgRes.error) return { error: orgRes.error.message }
+    if (productionModeRes.error) return { error: productionModeRes.error.message ?? 'Unable to load production mode' }
 
-    const productionMode = normalizeProductionMode(orgRes.data?.production_mode)
+    const productionMode = productionModeRes.productionMode
 
     const lots = ((lotsRes.data ?? []) as unknown[]).map((row) => {
         const item = row as Record<string, unknown>

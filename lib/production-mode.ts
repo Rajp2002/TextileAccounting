@@ -111,6 +111,51 @@ export function normalizeProductionMode(mode: unknown): ProductionMode {
         : DEFAULT_PRODUCTION_MODE
 }
 
+type MaybeSupabaseError = {
+    code?: string
+    message?: string
+}
+
+type ProductionModeQueryClient = {
+    from: (table: 'organizations') => {
+        select: (columns: string) => {
+            eq: (column: string, value: string) => {
+                maybeSingle: () => PromiseLike<{
+                    data: { production_mode?: string | null } | null
+                    error: MaybeSupabaseError | null
+                }>
+            }
+        }
+    }
+}
+
+function isMissingProductionModeColumn(error: MaybeSupabaseError | null | undefined) {
+    return error?.code === '42703'
+        || error?.code === 'PGRST204'
+        || /production_mode/i.test(error?.message ?? '') && /does not exist|schema cache|could not find/i.test(error?.message ?? '')
+}
+
+export async function getOrganizationProductionMode(
+    supabase: unknown,
+    orgId: string
+): Promise<{ productionMode: ProductionMode; error: MaybeSupabaseError | null }> {
+    const client = supabase as ProductionModeQueryClient
+    const { data, error } = await client
+        .from('organizations')
+        .select('production_mode')
+        .eq('id', orgId)
+        .maybeSingle()
+
+    if (isMissingProductionModeColumn(error)) {
+        return { productionMode: DEFAULT_PRODUCTION_MODE, error: null }
+    }
+
+    return {
+        productionMode: normalizeProductionMode(data?.production_mode),
+        error,
+    }
+}
+
 export function hasExplicitProductionMode(mode: unknown): mode is ProductionMode {
     return PRODUCTION_MODES.includes(mode as ProductionMode)
 }
