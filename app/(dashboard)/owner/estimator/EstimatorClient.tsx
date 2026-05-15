@@ -443,6 +443,46 @@ function CostPill({ label, value, type = 'default' }: { label: string; value: nu
     )
 }
 
+function LayerNameField({
+    label,
+    value,
+    placeholder,
+    onChange,
+}: {
+    label: string
+    value: string
+    placeholder: string
+    onChange: (value: string) => void
+}) {
+    return (
+        <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4 space-y-1.5">
+            <Label className="block text-xs uppercase tracking-wider font-semibold text-slate-500">
+                {label}
+            </Label>
+            <Input
+                value={value}
+                placeholder={placeholder}
+                onChange={e => onChange(e.target.value)}
+                className="h-10 bg-white/80 border-slate-200 focus:border-brand-accent focus:ring-brand-accent/10 rounded-lg font-semibold"
+            />
+        </div>
+    )
+}
+
+function findMissingLayerLabel(warpRows: WarpRow[], weftRows: WeftRow[]) {
+    const missingWarpIndex = warpRows.findIndex(row => !row.label?.trim())
+    if (missingWarpIndex >= 0) return `Warp ${missingWarpIndex + 1}`
+
+    const missingWeftIndex = weftRows.findIndex(row => !row.label?.trim())
+    if (missingWeftIndex >= 0) return `Weft ${missingWeftIndex + 1}`
+
+    return null
+}
+
+function trimLayerLabels<T extends WarpRow | WeftRow>(rows: T[]) {
+    return rows.map(row => ({ ...row, label: row.label?.trim() }))
+}
+
 function RowCard({
     title, index, onRemove, canRemove, kgPer100m, costPer100m, children, accent = 'indigo'
 }: {
@@ -739,11 +779,19 @@ export default function EstimatorClient({
 
     const handleSaveTemplate = async () => {
         if (!templateName.trim()) return toast.error(t('estimator.quality.nameRequired'))
+        const missingLayer = findMissingLayerLabel(state.warpRows, state.weftRows)
+        if (missingLayer) {
+            return toast.error(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer))
+        }
+
+        const warpRows = trimLayerLabels(state.warpRows)
+        const weftRows = trimLayerLabels(state.weftRows)
+
         setSavingTemplate(true)
         const res = await saveAsFabricTemplate({
             name:             templateName.trim(),
-            warpRows:         state.warpRows,
-            weftRows:         state.weftRows,
+            warpRows,
+            weftRows,
             tapeLengthM:      state.tapeLengthM,
             warpCrimpPct:     state.warpCrimpPct,
             perPickCostPaisa: state.perPickCostPaisa,
@@ -797,13 +845,21 @@ export default function EstimatorClient({
 
     const handleUpdateTemplate = async () => {
         if (!appliedTemplate) return
+        const missingLayer = findMissingLayerLabel(state.warpRows, state.weftRows)
+        if (missingLayer) {
+            return toast.error(t('estimator.quality.layerNameRequired').replace('{layer}', missingLayer))
+        }
+
+        const warpRows = trimLayerLabels(state.warpRows)
+        const weftRows = trimLayerLabels(state.weftRows)
+
         setSavingTemplate(true)
         const updatedName = qualityLabel.trim() || appliedTemplate.name
         const res = await updateFabricTemplate({
             id:               appliedTemplate.id,
             name:             updatedName,
-            warpRows:         state.warpRows,
-            weftRows:         state.weftRows,
+            warpRows,
+            weftRows,
             tapeLengthM:      state.tapeLengthM,
             warpCrimpPct:     state.warpCrimpPct,
             perPickCostPaisa: state.perPickCostPaisa,
@@ -1568,6 +1624,12 @@ export default function EstimatorClient({
                                     kgPer100m={totals.warpRows[i]?.kgPer100m ?? 0}
                                     costPer100m={totals.warpRows[i]?.costPer100m ?? 0}
                                 >
+                                    <LayerNameField
+                                        label={t('estimator.field_labels.layer_name')}
+                                        value={row.label ?? ''}
+                                        placeholder={`${t('estimator.warp.layer')} ${i + 1}`}
+                                        onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'label', value })}
+                                    />
                                     <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.5} />
                                     <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} />
                                     <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`or ${state.yarnShortagePct}% default`} warning={row.shortagePct !== null && (row.shortagePct > 15 || (row.shortagePct === 0 && state.yarnShortagePct > 15)) ? 'High waste %' : undefined} />
@@ -1703,6 +1765,12 @@ export default function EstimatorClient({
                                     kgPer100m={totals.weftRows[i]?.kgPer100m ?? 0}
                                     costPer100m={totals.weftRows[i]?.costPer100m ?? 0}
                                 >
+                                    <LayerNameField
+                                        label={t('estimator.field_labels.layer_name')}
+                                        value={row.label ?? ''}
+                                        placeholder={`${t('estimator.weft.layer')} ${i + 1}`}
+                                        onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
+                                    />
                                     <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} />
                                     <NumField label={t('estimator.field_labels.cloth_width')} value={row.reedSpace} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v ?? 0 })} unit="cm" hint={t('estimator.weft.cloth_width_hint')} />
                                     <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.5} />
@@ -2535,7 +2603,7 @@ export default function EstimatorClient({
                                 {(editRatesTpl?.warp_rows ?? []).map((row: WarpRow, i: number) => (
                                     <div key={row.id} className="flex items-center gap-4 bg-indigo-50/50 border border-indigo-100/50 rounded-2xl px-4 py-3 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50">
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[12px] font-bold text-slate-700 tracking-tight">{row.label ?? `Warp ${i + 1}`}</p>
+                                            <p className="text-[12px] font-bold text-slate-700 tracking-tight">{row.label?.trim() || `Warp ${i + 1}`}</p>
                                             <p className="text-[10px] text-slate-500 font-medium font-mono">{row.calcDenier}D · {row.beamEnds} ends · {row.gstPct}% GST</p>
                                         </div>
                                         <div className="relative shrink-0 w-36">
@@ -2564,7 +2632,7 @@ export default function EstimatorClient({
                                 {(editRatesTpl?.weft_rows ?? []).map((row: WeftRow, i: number) => (
                                     <div key={row.id} className="flex items-center gap-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl px-4 py-3 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50">
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[12px] font-bold text-slate-700 tracking-tight">{row.label ?? `Weft ${i + 1}`}</p>
+                                            <p className="text-[12px] font-bold text-slate-700 tracking-tight">{row.label?.trim() || `Weft ${i + 1}`}</p>
                                             <p className="text-[10px] text-slate-500 font-medium font-mono">{row.calcDenier}D · {row.picks} PPI · {row.gstPct}% GST</p>
                                         </div>
                                         <div className="relative shrink-0 w-36">

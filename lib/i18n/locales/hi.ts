@@ -883,6 +883,7 @@ export const hi = {
       saved: "क्वालिटी सहेज ली गई!",
       deleted: "क्वालिटी हटाई गई",
       nameRequired: "कृपया क्वालिटी का नाम दर्ज करें",
+      layerNameRequired: "इस क्वालिटी को सेव करने से पहले {layer} का नाम दें",
       saveFailed: "क्वालिटी सहेजने में विफल",
       updateFailed: "क्वालिटी अपडेट करने में विफल",
       settingsTitle: "मेरी क्वालिटी",
@@ -989,6 +990,7 @@ export const hi = {
       start_production: "प्रोडक्शन शुरू करें"
     },
     field_labels: {
+      layer_name: "लेयर नाम",
       calc_denier: "डेनियर",
       beam_ends: "बीम एंड्स",
       rate_kg: "दर (₹/किलो)",

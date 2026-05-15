@@ -886,6 +886,7 @@ export const en = {
       saved: "Quality saved!",
       deleted: "Quality deleted",
       nameRequired: "Please enter a quality name",
+      layerNameRequired: "Please label {layer} before saving this quality",
       saveFailed: "Failed to save quality",
       updateFailed: "Failed to update quality",
       settingsTitle: "My Qualities",
@@ -992,6 +993,7 @@ export const en = {
       start_production: "Start Production"
     },
     field_labels: {
+      layer_name: "Layer Name",
       calc_denier: "Calc Denier",
       beam_ends: "Beam Ends",
       rate_kg: "Rate (₹/kg)",
