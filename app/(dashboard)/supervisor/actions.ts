@@ -430,6 +430,19 @@ export async function linkOrderToMachine(orderId: string, machineId: string) {
         return { error: 'A server error occurred. Please try again later.' }
     }
 
+    const { data: order, error: orderError } = await serviceClient
+        .from('orders')
+        .select('id')
+        .eq('id', orderParsed.data)
+        .eq('org_id', orgId)
+        .eq('status', 'active')
+        .single()
+
+    if (orderError || !order) {
+        if (orderError) console.error('Error verifying active order:', orderError)
+        return { error: 'Only active orders can be assigned to a machine.' }
+    }
+
     // Set audit actor before service-role DML
     await serviceClient.rpc('set_actor_for_audit', { p_actor_id: user.id })
 
@@ -796,21 +809,38 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             .from('machine_assignments')
             .select('machine_id, worker_id, shift')
             .eq('org_id', orgId)
-            .eq('shift', shift),
     ])
 
-    const machineIds = (machinesRes.data ?? []).map((machine) => machine.id)
+    const activeOrderIds = new Set((ordersRes.data ?? []).map((order) => order.id))
+    const activeWorkerIds = new Set((workersRes.data ?? []).map((worker) => worker.id))
+    const standingAssignmentsByMachineId = new Map<string, { day?: number; night?: number }>()
+    for (const assignment of standingAssignmentsRes.data ?? []) {
+        if (!activeWorkerIds.has(assignment.worker_id)) continue
+        const current = standingAssignmentsByMachineId.get(assignment.machine_id) ?? {}
+        current[assignment.shift as 'day' | 'night'] = assignment.worker_id
+        standingAssignmentsByMachineId.set(assignment.machine_id, current)
+    }
+
+    const eligibleMachines = (machinesRes.data ?? []).filter((machine) => {
+        const standingAssignments = standingAssignmentsByMachineId.get(machine.id)
+        return Boolean(
+            machine.current_order_id &&
+            activeOrderIds.has(machine.current_order_id) &&
+            standingAssignments?.day &&
+            standingAssignments?.night
+        )
+    })
+
+    const machineIds = eligibleMachines.map((machine) => machine.id)
     const orderIds = (ordersRes.data ?? []).map((order) => order.id)
     const orderRateById = new Map((ordersRes.data ?? []).map((order) => [order.id, Number(order.worker_rate_per_m)]))
-    const standingWorkerByMachineId = new Map(
-        (standingAssignmentsRes.data ?? []).map((assignment) => [assignment.machine_id, assignment.worker_id])
-    )
     const datedAssignmentByMachineId = new Map(
         (assignmentsRes.data ?? []).map((assignment) => [assignment.machine_id, assignment])
     )
-    const assignments = (machinesRes.data ?? []).flatMap((machine) => {
+    const assignments = eligibleMachines.flatMap((machine) => {
         const existing = datedAssignmentByMachineId.get(machine.id)
-        const workerId = standingWorkerByMachineId.get(machine.id) ?? null
+        const standingAssignments = standingAssignmentsByMachineId.get(machine.id)
+        const workerId = standingAssignments?.[shift] ?? null
         const orderId = machine.current_order_id ?? null
 
         if (existing) {
@@ -868,7 +898,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
     }
 
     return {
-        machines: machinesRes.data ?? [],
+        machines: eligibleMachines,
         orders: (ordersRes.data ?? []).map((order) => ({
             ...order,
             produced_meters: producedMetersByOrderId.get(order.id) ?? 0,
@@ -905,6 +935,24 @@ export async function upsertShiftAssignment(data: {
     ]
     if ('error' in machineParsed) return { error: machineParsed.error }
     if ('error' in shiftParsed) return { error: shiftParsed.error }
+
+    if (data.order_id !== null) {
+        const orderParsed = safeParse(UuidSchema, data.order_id)
+        if ('error' in orderParsed) return { error: orderParsed.error }
+
+        const { data: order, error: orderError } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('id', orderParsed.data)
+            .eq('org_id', profile.org_id)
+            .eq('status', 'active')
+            .single()
+
+        if (orderError || !order) {
+            if (orderError) console.error('upsertShiftAssignment active order check error:', orderError)
+            return { error: 'Only active orders can be assigned to a loom.' }
+        }
+    }
 
     const { error } = await supabase
         .from('shift_assignments')
@@ -1049,11 +1097,86 @@ export async function bulkLogProduction(entries: {
 
     if (logs.length === 0) return { success: true, logged: 0 }
 
-    // ── Guard: check for existing logs for the same machine, date, and shift ──
     const machineIds = [...new Set(logs.map((l) => l.machine_id))]
     const logDate = logs[0].date
     const logShift = logs[0].shift
 
+    // ── Guard: production can only be saved for looms that are fully active ──
+    const [machinesRes, standingAssignmentsRes] = await Promise.all([
+        supabase
+            .from('machines')
+            .select('id, name, status, current_order_id, orders(status)')
+            .eq('org_id', orgId)
+            .in('id', machineIds),
+        supabase
+            .from('machine_assignments')
+            .select('machine_id, worker_id, shift')
+            .eq('org_id', orgId)
+            .in('machine_id', machineIds)
+            .in('shift', ['day', 'night']),
+    ])
+
+    if (machinesRes.error) {
+        console.error('bulkLogProduction – machine eligibility lookup error:', machinesRes.error)
+        return { error: 'Failed to validate loom setup. Please try again.' }
+    }
+
+    if (standingAssignmentsRes.error) {
+        console.error('bulkLogProduction – standing assignment lookup error:', standingAssignmentsRes.error)
+        return { error: 'Failed to validate worker assignments. Please try again.' }
+    }
+
+    const workerIds = [...new Set((standingAssignmentsRes.data ?? []).map((assignment) => assignment.worker_id))]
+    const activeWorkerIds = new Set<number>()
+    if (workerIds.length > 0) {
+        const { data: activeWorkers, error: activeWorkersError } = await supabase
+            .from('workers')
+            .select('id')
+            .eq('org_id', orgId)
+            .eq('is_active', true)
+            .in('id', workerIds)
+
+        if (activeWorkersError) {
+            console.error('bulkLogProduction – active worker lookup error:', activeWorkersError)
+            return { error: 'Failed to validate worker assignments. Please try again.' }
+        }
+
+        for (const worker of activeWorkers ?? []) activeWorkerIds.add(worker.id)
+    }
+
+    const machineById = new Map((machinesRes.data ?? []).map((machine) => [machine.id, machine]))
+    const standingByMachineId = new Map<string, { day?: number; night?: number }>()
+    for (const assignment of standingAssignmentsRes.data ?? []) {
+        if (!activeWorkerIds.has(assignment.worker_id)) continue
+        const current = standingByMachineId.get(assignment.machine_id) ?? {}
+        current[assignment.shift as 'day' | 'night'] = assignment.worker_id
+        standingByMachineId.set(assignment.machine_id, current)
+    }
+
+    for (const log of logs) {
+        const machine = machineById.get(log.machine_id)
+        const activeOrder = Array.isArray(machine?.orders) ? machine?.orders[0] : machine?.orders
+        const standingAssignments = standingByMachineId.get(log.machine_id)
+        const expectedShiftWorkerId = standingAssignments?.[log.shift]
+
+        if (
+            !machine ||
+            machine.status !== 'active' ||
+            !machine.current_order_id ||
+            machine.current_order_id !== log.order_id ||
+            activeOrder?.status !== 'active' ||
+            !standingAssignments?.day ||
+            !standingAssignments?.night ||
+            expectedShiftWorkerId !== log.worker_id
+        ) {
+            return {
+                error: 'LOOM_SETUP_INCOMPLETE',
+                message: `${machine?.name ?? 'This loom'} needs day and night workers assigned and an active linked order before production can be saved.`,
+            }
+        }
+    }
+
+    // ── Guard: check for existing logs for the same machine, date, and shift ──
     const { data: existingLogs } = await supabase
         .from('production_logs')
         .select('id, machine_id, worker_id, date, shift, meters, opening_meter_reading, closing_meter_reading, counter_was_reset, submitted_at')
@@ -1107,18 +1230,18 @@ export async function bulkLogProduction(entries: {
     const cycleStart = bounds.cycle_start
 
     if (cycleStart) {
-        const workerIds = [...new Set([
+        const payrollWorkerIds = [...new Set([
             ...logs.map((l) => l.worker_id),
             ...(existingLogs?.map((l) => (l as any).worker_id).filter(Boolean) || [])
         ])]
 
-        if (workerIds.length > 0) {
+        if (payrollWorkerIds.length > 0) {
             const { data: settlements } = await supabase
                 .from('payroll_settlements')
                 .select('id')
                 .eq('org_id', orgId)
                 .eq('cycle_start_date', cycleStart)
-                .in('meter_worker_id', workerIds)
+                .in('meter_worker_id', payrollWorkerIds)
                 .eq('status', 'paid')
 
             if (settlements && settlements.length > 0) {

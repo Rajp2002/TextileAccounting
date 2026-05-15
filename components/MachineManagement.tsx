@@ -76,6 +76,7 @@ interface Machine {
     orders?: {
         worker_rate_per_m: number
         quality_label: string
+        status: string
     } | null
 }
 
@@ -135,7 +136,7 @@ export function MachineManagement({
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('machines')
-                .select('*, orders(worker_rate_per_m, quality_label)')
+                .select('*, orders(worker_rate_per_m, quality_label, status)')
                 .eq('org_id', orgId)
                 .order('name')
             if (error) throw error
@@ -314,6 +315,22 @@ export function MachineManagement({
 
     // ── Toggle Machine Status (activate / deactivate) ──
     const toggleMachineStatus = async (machine: Machine) => {
+        const isActivating = machine.status !== 'active'
+        if (isActivating) {
+            const hasDayWorker = assignments?.some(a => a.machine_id === machine.id && a.shift === 'day')
+            const hasNightWorker = assignments?.some(a => a.machine_id === machine.id && a.shift === 'night')
+
+            if (!hasDayWorker || !hasNightWorker) {
+                toast.error('Assign workers for both day and night shifts before activating this loom.')
+                return
+            }
+
+            if (!machine.current_order_id || machine.orders?.status !== 'active') {
+                toast.error('Assign an active order before activating this loom.')
+                return
+            }
+        }
+
         // Optimistic Update
         const oldMachines = queryClient.getQueryData(['machines', orgId])
         queryClient.setQueryData(['machines', orgId], (old: Machine[] | undefined) => {
@@ -328,8 +345,8 @@ export function MachineManagement({
             const result = await toggleMachineStatusAction(machine.id, machine.status)
             if (result.error) throw new Error(result.error)
             toast.success(t('machines.status_updated'))
-        } catch {
-            toast.error(t('machines.status_update_failed'))
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : t('machines.status_update_failed'))
             // Rollback on error
             queryClient.setQueryData(['machines', orgId], oldMachines)
         } finally {
@@ -508,8 +525,9 @@ export function MachineManagement({
                                         const nightAssignment = assignments?.find(a => a.machine_id === machine.id && a.shift === 'night')
                                         const isInactive = machine.status === 'inactive'
 
-                                        const hasAssignments = !!dayAssignment || !!nightAssignment
-                                        const isEffectivelyActive = !isInactive && hasAssignments
+                                        const hasRequiredAssignments = !!dayAssignment && !!nightAssignment
+                                        const hasActiveOrder = !!machine.current_order_id && machine.orders?.status === 'active'
+                                        const isEffectivelyActive = !isInactive && hasRequiredAssignments && hasActiveOrder
 
                                         // Derive rate from the active order
                                         const activeRate = machine.orders?.worker_rate_per_m
