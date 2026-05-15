@@ -123,12 +123,12 @@ export const en = {
       switch: "Switch to Owner View"
     },
     meter: {
-      counterReading: "Loom Counter Reading",
-      counterHelper: "Enter the number shown on your loom's meter display right now",
+      counterReading: "Total metres produced",
+      counterHelper: "Enter the total metres produced on each loom for this shift.",
       openingReading: "Opening (previous shift)",
-      shiftProduction: "Meters this shift",
-      counterWarning: "Reading is less than opening. Please verify.",
-      counterConfirm: "One or more closing readings are below the opening value. Please confirm before saving this shift."
+      shiftProduction: "Total metres this shift",
+      counterWarning: "Metres cannot be negative. Please verify.",
+      counterConfirm: "One or more metre entries look incorrect. Please confirm before saving this shift."
     },
     correction: {
       windowOpen: "You can edit this entry for {minutes} more minutes",

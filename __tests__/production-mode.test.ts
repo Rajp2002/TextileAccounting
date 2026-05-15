@@ -14,10 +14,10 @@ describe('production mode workflow visibility', () => {
         expect(normalizeProductionMode(null)).toBe('market_run')
     })
 
-    it('hides order-first workflows for market run factories', () => {
+    it('keeps estimator available while hiding order-first workflows for market run factories', () => {
         const visibility = getWorkflowVisibility('market_run')
 
-        expect(visibility.estimator).toBe(false)
+        expect(visibility.estimator).toBe(true)
         expect(visibility.quotes).toBe(false)
         expect(visibility.orders).toBe(false)
         expect(visibility.marketRuns).toBe(true)

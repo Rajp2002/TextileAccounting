@@ -54,7 +54,7 @@ export const PRODUCTION_MODE_OPTIONS: Array<{
 
 export const workflowVisibility: Record<ProductionMode, Record<WorkflowKey, boolean>> = {
     market_run: {
-        estimator: false,
+        estimator: true,
         quotes: false,
         orders: false,
         marketRuns: true,

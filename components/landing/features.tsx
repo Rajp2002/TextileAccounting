@@ -25,7 +25,7 @@ const workflow = [
     },
     {
         title: 'Log every shift',
-        description: 'Supervisors enter opening and closing meter readings from the floor. Designed for quick mobile entry in patchy factory conditions.',
+        description: 'Supervisors enter total metres produced per shift from the floor. Designed for quick mobile entry in patchy factory conditions.',
         outcome: 'Create one source of truth for production, payroll, and order progress.',
         icon: ClipboardList,
     },
