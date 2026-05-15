@@ -1001,7 +1001,7 @@ export default function EstimatorClient({
     ].filter((warning): warning is string => Boolean(warning))
 
     return (
-        <div className="space-y-6 pb-20 relative">
+        <div className="space-y-5 pb-floating-button md:pb-20 relative">
             {!state.isConfigured && (
                 <FactoryCostWizard 
                     initialState={state}
@@ -1075,12 +1075,12 @@ export default function EstimatorClient({
             )}
 
             {/* ── STICKY HUD ───────────────────────────────────────── */}
-            <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-border/50 shadow-sm -mt-6 pt-4 sm:pt-6 pb-3 sm:pb-4 px-4 mx-[-24px] sm:mx-[-32px] md:mx-[-40px]">
-                <div className="max-w-6xl mx-auto space-y-3 sm:space-y-4">
+            <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-border/60 shadow-sm -mt-5 pt-3 sm:pt-6 pb-3 sm:pb-4 px-3 sm:px-4 mx-[-12px] sm:mx-[-32px] md:mx-[-40px]">
+                <div className="max-w-6xl mx-auto space-y-2.5 sm:space-y-4">
 
-                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-4">
                         {/* Production Cost */}
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1 sm:flex-none">
                             <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">{t('estimator.hud.prod_cost')}</p>
                             <p className="text-xl sm:text-2xl font-black font-mono text-slate-900 leading-none">
                                 ₹{totals.totalProductionCostPerM.toFixed(2)}
@@ -1109,7 +1109,7 @@ export default function EstimatorClient({
                         )}
 
                         {/* Actions — three-path hierarchy */}
-                        <div className="flex flex-col sm:flex-row gap-2 ml-auto shrink-0 self-center w-full sm:w-auto mt-1 sm:mt-0 pt-2 sm:pt-0 border-t border-slate-100 sm:border-0 order-last sm:order-none justify-end">
+                        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 ml-auto shrink-0 self-center w-full sm:w-auto mt-1 sm:mt-0 pt-2.5 sm:pt-0 border-t border-slate-100 sm:border-0 order-last sm:order-none justify-end">
 
                             {mode === 'quote' ? (
                                 <>
@@ -1117,7 +1117,7 @@ export default function EstimatorClient({
                                     <Button
                                         id="btn-start-party-order"
                                         size="sm"
-                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-indigo-600/20"
+                                        className="col-span-2 sm:col-span-1 flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-indigo-600/20"
                                         onClick={() => setShowStartPartyOrder(true)}
                                         disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0}
                                         title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0)
@@ -1134,7 +1134,7 @@ export default function EstimatorClient({
                                         id="btn-save-quote"
                                         size="sm"
                                         variant="outline"
-                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50 font-bold text-xs gap-1.5 sm:gap-2"
                                         onClick={handleSaveQuote}
                                         disabled={savingQuote}
                                     >
@@ -1147,7 +1147,7 @@ export default function EstimatorClient({
                                         id="btn-switch-market"
                                         size="sm"
                                         variant="ghost"
-                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 text-slate-500 hover:text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 sm:gap-2"
                                         onClick={() => setMode('market')}
                                     >
                                         <Gauge className="h-3.5 w-3.5 shrink-0" />
@@ -1160,7 +1160,7 @@ export default function EstimatorClient({
                                     <Button
                                         id="btn-start-market-run"
                                         size="sm"
-                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-blue-600/20"
+                                        className="col-span-2 sm:col-span-1 flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-blue-600/20"
                                         onClick={handleSaveQuote}
                                         disabled={savingQuote}
                                     >
@@ -1173,7 +1173,7 @@ export default function EstimatorClient({
                                         id="btn-save-quote-market"
                                         size="sm"
                                         variant="outline"
-                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 border-blue-200 text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border-blue-200 bg-white text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 sm:gap-2"
                                         onClick={() => {
                                             setMode('quote')
                                             handleSaveQuote()
@@ -1189,7 +1189,7 @@ export default function EstimatorClient({
                                         id="btn-start-party-order-market"
                                         size="sm"
                                         variant="ghost"
-                                        className="flex-1 sm:flex-none h-9 px-3 sm:px-4 text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold text-xs gap-1.5 sm:gap-2"
                                         onClick={() => { setMode('quote'); setShowStartPartyOrder(true) }}
                                         disabled={savingQuote}
                                     >
@@ -1226,7 +1226,7 @@ export default function EstimatorClient({
                                 <Button
                                     size="sm"
                                     variant="ghost"
-                                    className="flex-none h-9 px-2 sm:px-3 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 font-bold"
+                                    className="hidden sm:flex flex-none h-9 px-3 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 font-bold"
                                     onClick={() => {
                                         setTemplateName(qualityLabel.trim())
                                         setShowSaveTemplate(true)
@@ -1296,12 +1296,12 @@ export default function EstimatorClient({
             {/* ── MAIN FORM ────────────────────────────────────────────── */}
             <div className="max-w-6xl mx-auto space-y-7">
                 {estimateWarnings.length > 0 && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3">
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-3 sm:px-4 shadow-sm shadow-amber-200/20">
                         <div className="flex items-start gap-3">
                             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                             <div className="min-w-0">
-                                <p className="text-xs font-black uppercase tracking-wider text-amber-800">Before saving, check these costing inputs</p>
-                                <p className="mt-1 text-xs font-medium text-amber-700">
+                                <p className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-amber-800">Before saving, check these costing inputs</p>
+                                <p className="mt-1 text-xs font-medium leading-relaxed text-amber-700">
                                     {estimateWarnings.join(' · ')}
                                 </p>
                             </div>
@@ -1311,11 +1311,11 @@ export default function EstimatorClient({
 
                 {/* Saved Qualities Row */}
                 {templates.length > 0 && (
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
+                    <div className="space-y-2.5">
+                        <div className="flex flex-wrap items-center gap-2">
                             <History className="h-3.5 w-3.5 text-slate-400" />
                             <p className="text-[11px] uppercase tracking-widest text-slate-500 font-bold">{t('estimator.quality.myQualities')}</p>
-                            <span className="ml-auto text-[10px] text-slate-400 font-medium">{t('estimator.quality.hint')}</span>
+                            <span className="ml-auto text-[10px] text-slate-400 font-medium hidden xs:inline">{t('estimator.quality.hint')}</span>
                         </div>
                         {/* Search — only shown when there are more than 5 qualities */}
                         {templates.length > 5 && (
@@ -1345,12 +1345,12 @@ export default function EstimatorClient({
                                 )}
                             </div>
                         )}
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 snap-x">
                              <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={handleResetEstimator}
-                                className="shrink-0 rounded-xl px-3 h-[38px] border-dashed border-slate-300 text-slate-400 hover:text-brand-accent hover:border-brand-accent hover:bg-brand-accent/5 transition-all gap-1.5 font-bold"
+                                className="shrink-0 snap-start rounded-xl px-3 h-10 border-dashed border-slate-300 bg-white/80 text-slate-500 hover:text-brand-accent hover:border-brand-accent hover:bg-brand-accent/5 transition-all gap-1.5 font-bold"
                              >
                                 <RotateCcw className="h-3.5 w-3.5" />
                                 {t('estimator.quality.resetBtn')}
@@ -1363,17 +1363,17 @@ export default function EstimatorClient({
                                     setTemplateName(qualityLabel.trim() || appliedTemplate?.name || '')
                                     setShowSaveTemplate(true)
                                 }}
-                                className="shrink-0 rounded-xl px-4 h-[38px] border-indigo-200 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-100/50 hover:border-indigo-300 transition-all gap-1.5 font-bold shadow-sm"
+                                className="shrink-0 snap-start rounded-xl px-4 h-10 border-indigo-200 bg-indigo-50/50 text-indigo-600 hover:bg-indigo-100/50 hover:border-indigo-300 transition-all gap-1.5 font-bold shadow-sm"
                              >
                                 <Plus className="h-3.5 w-3.5" />
                                 {t('estimator.quality.newQuality')}
                              </Button>
                             {filteredTemplates.map(tpl => (
-                                <div key={tpl.id} className="relative shrink-0 group flex items-center">
+                                <div key={tpl.id} className="relative shrink-0 snap-start group flex items-center">
                                     <button
                                         onClick={() => applyTemplate(tpl)}
                                         onContextMenu={e => { e.preventDefault(); openEditRates(tpl) }}
-                                        className={`rounded-xl px-4 py-2 text-xs font-bold border transition-all shadow-sm ${
+                                        className={`min-w-28 rounded-xl px-4 py-2.5 text-xs font-bold border transition-all shadow-sm ${
                                             qualityLabel === tpl.name
                                                 ? 'bg-brand-accent border-brand-accent text-white shadow-brand-accent/20'
                                                 : 'bg-white border-slate-200 text-slate-600 group-hover:border-brand-accent/50 group-hover:bg-slate-50'
@@ -1415,7 +1415,7 @@ export default function EstimatorClient({
                 {/* 1. Order Basics */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
                     <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="indigo" />
-                    <CardContent className="p-5 sm:p-6 space-y-5">
+                    <CardContent className="p-4 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">
