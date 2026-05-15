@@ -116,9 +116,9 @@ Keep looms productive when client orders are light while still knowing cost, sto
 1. Owner starts a market run from the estimator.
 2. Owner sets the target meters and cost assumptions.
 3. Supervisor logs production against the market-run production anchor.
-4. Owner tracks produced meters, in-godown meters, sold meters, revenue, cost, and profit.
-5. Output is confirmed into stock lots or inward drafts.
-6. Owner records sale when stock is sold.
+4. Owner tracks produced meters, expected in-godown meters, sold meters, revenue, cost, and profit.
+5. Production creates expected stock in the godown ledger; this is not physical inward confirmation.
+6. Owner records sale/dispatch when stock is sold and reviews any shortage or excess.
 7. Owner closes the run when done.
 
 ### Pain Point Replaced
@@ -131,6 +131,7 @@ Informal "market maal" becomes costed speculative production with measurable pro
 - `production_logs`
 - `fabric_stock_inward_drafts`
 - `fabric_stock_lots`
+- `stock_discrepancies`
 - `market_run_sales`
 
 ## 5. Supervisor Production Log Workflow
@@ -201,22 +202,22 @@ Entry point: `/owner/stock`
 
 ### Goal
 
-Know what physical fabric exists in godown, what it cost, and what profit it creates when sold.
+Know what fabric should exist in godown, what is actually dispatched, and which differences need owner review.
 
 ### Flow
 
 1. Owner opens Stock.
-2. Owner reviews available takas, meters, stock value at cost, realized revenue, and realized profit.
-3. Owner confirms pending inward drafts from order or market-run output.
-4. Owner adds manual/opening/order/market-run stock lots.
-5. Owner records quality, godown, unit count, meters per unit, unit label, received date, cost per meter, and notes.
-6. Owner adjusts stock for physical differences.
-7. Owner records stock sale.
+2. Owner reviews expected available takas/meters and stock value at cost.
+3. Market-run production contributes expected stock automatically from production records.
+4. Owner adds manual/opening/order stock lots where needed.
+5. Owner records sale/dispatch and actual dispatched meters.
+6. Any shortage or excess becomes a stock discrepancy with Needs Review status.
+7. Owner adjustments remain traceable and owner-only.
 8. Commercials reflects realized stock profit.
 
 ### Pain Point Replaced
 
-Loose godown memory becomes a lot-based stock board with cost and sale profit.
+Loose godown memory becomes an expected ledger reconciled against dispatch reality.
 
 ### Outputs
 

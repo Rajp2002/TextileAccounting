@@ -48,7 +48,7 @@ Feature docs:
 - `/owner/quotes` - quote history, status changes, re-estimate, accepted quote conversion.
 - `/owner/orders` - active order board, progress, pace, assignment, dispatch section.
 - `/owner/market-runs` - speculative production tracking.
-- `/owner/stock` - physical taka/godown stock board, inward drafts, adjustments, movements.
+- `/owner/stock` - expected godown ledger, adjustments, dispatch stock differences, movements.
 - `/owner/dispatches` - order-linked dispatches, Sell & Dispatch, receipt reconciliation, tracking links.
 - `/owner/commercials` - source of truth for revenue, profit, receivables, and payment tracking.
 - `/owner/payroll` - meter and fixed payroll, settlements, WhatsApp payslips.

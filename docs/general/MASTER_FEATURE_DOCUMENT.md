@@ -11,8 +11,8 @@ This document unifies the feature docs under `docs/features/`. It is organized a
 3. Owner estimates fabric cost and saves templates/quotes.
 4. Owner converts accepted quotes to orders (or uses Start Party Order fast path) or starts market runs for speculative stock production.
 5. Supervisor assigns workers and work to machines and logs shift production from meter readings.
-6. Production feeds Factory Today, analytics, and becomes stock inward drafts.
-7. Stock is confirmed into godown, sold & dispatched through guided workflows (Sell & Dispatch).
+6. Production feeds Factory Today, analytics, and expected godown stock.
+7. Stock is reconciled at sale/dispatch through guided workflows (Sell & Dispatch), with differences sent to owner review.
 8. Commercials tracks revenue, profit, receivables, and payments.
 9. Owner settles payroll, recovers advances, records payment mode, and sends payslips/receipts over WhatsApp.
 10. Billing, referrals, settings, access codes, audit, and compliance support the operating loop.
@@ -26,10 +26,10 @@ This document unifies the feature docs under `docs/features/`. It is organized a
 | Estimator | Factory cost profile, fixed workers, loom assumptions | Templates, quotes, orders, market runs |
 | Quotes | Estimator snapshots | Orders, re-estimation, expected commercials |
 | Orders | Accepted quotes, machines, workers | Supervisor log, analytics, dispatches, commercials |
-| Market Runs | Estimator snapshots | Supervisor log, stock inward drafts, stock sales, commercials |
-| Supervisor Production Log | Machines, workers, orders/runs | Production logs, analytics, payroll, stock drafts, Factory Today |
+| Market Runs | Estimator snapshots | Supervisor log, expected stock, stock sales, commercials |
+| Supervisor Production Log | Machines, workers, orders/runs | Production logs, analytics, payroll, expected stock, Factory Today |
 | Analytics | Production logs, orders, machines | Owner decisions, order/run monitoring |
-| Stock | Production output, market runs, orders | Dispatch, stock sales, commercials (physical inventory focus) |
+| Stock | Production output, market runs, orders | Dispatch, stock differences, stock sales, commercials (expected ledger focus) |
 | Dispatches | Orders, packages/stock, parties, Sell & Dispatch | Tracking portal, receipt/shortage reconciliation |
 | Commercials | Quotes, invoices, stock sales, market-run sales, payments | Owner profit visibility, receivables, payment tracking |
 | Payroll | Production logs, attendance, worker rates, advances | Settlements, payslips, debt recovery |
@@ -192,10 +192,10 @@ The bridge between logged meters and physical goods. The codebase has both packa
 ### User Workflow
 
 1. Production logs establish that meters were woven.
-2. Output can become packages or inward draft suggestions.
-3. Owner confirms stock inward into taka lots.
+2. Market-run output becomes expected godown stock from production records.
+3. Optional/order-based inward draft suggestions can still become taka lots.
 4. Owner records godown, unit count, meters per unit, cost per meter, and source.
-5. Owner adjusts stock when physical counts differ.
+5. Owner checks actual stock at sale/dispatch and reviews shortage/excess discrepancies.
 6. Owner records stock sale (which feeds Commercials receivables).
 
 ### Pain Points Solved

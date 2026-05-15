@@ -10,6 +10,7 @@ export type SellAndDispatchInput = {
     notes?: string | null
   }
   dispatch: {
+    actualDispatchedMeters?: number | null
     dispatchDate: string
     transporterName?: string | null
     vehicleNumber?: string | null

@@ -26,7 +26,7 @@ function AllClearState() {
             </div>
             <h2 className="mb-2 text-xl font-bold text-success">Factory is clear today.</h2>
             <p className="max-w-sm text-sm text-body">
-                Production has been logged, stock is confirmed, no dispatches pending, and payroll is up to date.
+                Production has been logged, the ledger is current, no dispatches pending, and payroll is up to date.
             </p>
         </div>
     )
@@ -36,6 +36,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
     const data = initialData
     const { actionCounts } = data
     const visibility = getWorkflowVisibility(data.productionMode)
+    const marketRunOnly = data.productionMode === 'market_run'
 
     const dateLabel = new Date(data.date).toLocaleDateString('en-IN', {
         weekday: 'long',
@@ -51,7 +52,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
         data.machines.unassigned === 0 &&
         data.workAtRisk.ordersBehindPace.length === 0 &&
         data.workAtRisk.inactiveMarketRuns.length === 0 &&
-        data.stock.pendingInwardDrafts.length === 0 &&
+        (marketRunOnly || data.stock.pendingInwardDrafts.length === 0) &&
         data.dispatch.soldNotDispatched.length === 0 &&
         data.dispatch.pendingReceipts.length === 0 &&
         data.payroll.pendingAdvanceTotal === 0
@@ -109,6 +110,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
 
             {/* KPI Strip */}
             <TodayKpiStrip
+                productionMode={data.productionMode}
                 production={data.production}
                 machines={data.machines}
                 stock={data.stock}
@@ -127,7 +129,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                         <ProductionStatusCard production={data.production} />
                         <MachineAttentionCard machines={data.machines} />
                         <WorkAtRiskCard workAtRisk={data.workAtRisk} productionMode={data.productionMode} />
-                        <PendingStockDraftsCard drafts={data.stock.pendingInwardDrafts} />
+                        {!marketRunOnly && <PendingStockDraftsCard drafts={data.stock.pendingInwardDrafts} />}
                     </div>
 
                     {/* Right Column */}

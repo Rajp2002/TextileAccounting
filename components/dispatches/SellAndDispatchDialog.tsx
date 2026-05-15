@@ -65,6 +65,7 @@ export function SellAndDispatchDialog({
     const [transporterName, setTransporterName] = useState('')
     const [distanceKm, setDistanceKm] = useState('')
     const [notes, setNotes] = useState('')
+    const [actualDispatchedMeters, setActualDispatchedMeters] = useState('')
 
     const [confirmedSameQuality, setConfirmedSameQuality] = useState(false)
 
@@ -75,6 +76,7 @@ export function SellAndDispatchDialog({
             setSelectedOrderId(defaultOrderId || '')
             setSelectedLotIds(defaultStockLotId ? [defaultStockLotId] : [])
             setConfirmedSameQuality(false)
+            setActualDispatchedMeters('')
             setLoadingData(true)
             getSellAndDispatchOptions().then(data => {
                 setOrders(data.orders as OrderOption[])
@@ -129,6 +131,12 @@ export function SellAndDispatchDialog({
         return sum + ((lotUnits[id] || 0) * mpt * lot.cost_per_meter)
     }, 0)
     const grossProfit = totalRevenue - totalCost
+    const actualDispatchValue = actualDispatchedMeters.trim() === ''
+        ? totalSelectedMeters
+        : Number(actualDispatchedMeters)
+    const dispatchDifference = Number.isFinite(actualDispatchValue)
+        ? actualDispatchValue - totalSelectedMeters
+        : 0
 
     const estimatedGst = totalRevenue * 0.05
     const estimatedConsignmentValue = totalRevenue + estimatedGst
@@ -145,6 +153,7 @@ export function SellAndDispatchDialog({
                     notes: null
                 },
                 dispatch: {
+                    actualDispatchedMeters: actualDispatchValue,
                     dispatchDate: new Date().toISOString(),
                     ewayBillNumber: ewayNumber,
                     vehicleNumber,
@@ -370,6 +379,27 @@ export function SellAndDispatchDialog({
                             </div>
                         </div>
                     </div>
+                    <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-700">Actual Dispatched Meters</Label>
+                        <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={actualDispatchedMeters}
+                            onChange={e => setActualDispatchedMeters(e.target.value)}
+                            placeholder={totalSelectedMeters.toFixed(2)}
+                            className="h-11 lg:h-9"
+                        />
+                        <p className={cn(
+                            'text-[11px] font-semibold',
+                            Math.abs(dispatchDifference) > 0.01 ? 'text-amber-700' : 'text-slate-500'
+                        )}>
+                            Expected ledger dispatch: {totalSelectedMeters.toFixed(2)} m
+                            {Math.abs(dispatchDifference) > 0.01
+                                ? ` · Stock difference ${dispatchDifference > 0 ? '+' : ''}${dispatchDifference.toFixed(2)} m will need owner review`
+                                : ''}
+                        </p>
+                    </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1.5">
@@ -481,7 +511,7 @@ export function SellAndDispatchDialog({
                     ) : (
                         <Button
                             onClick={handleSubmit}
-                            disabled={pending}
+                            disabled={pending || !Number.isFinite(actualDispatchValue) || actualDispatchValue < 0}
                             className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 h-11 lg:h-9"
                         >
                             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

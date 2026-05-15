@@ -450,6 +450,8 @@ export interface DispatchOverviewStats {
     pending_sales_count: number
     pending_dispatch_meters: number
     pending_dispatch_value: number
+    open_discrepancy_count: number
+    open_discrepancy_meters: number
 }
 
 type DispatchesResult =
@@ -835,20 +837,31 @@ export async function getDispatchOverviewStats(): Promise<DispatchOverviewResult
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
-    const { data, error } = await supabase
-        .from('fabric_stock_sales')
-        .select('meters_sold, revenue_amount')
-        .eq('org_id', profile.org_id)
-        .is('dispatch_id', null)
+    const [salesRes, discrepanciesRes] = await Promise.all([
+        supabase
+            .from('fabric_stock_sales')
+            .select('meters_sold, revenue_amount')
+            .eq('org_id', profile.org_id)
+            .is('dispatch_id', null),
+        supabase
+            .from('stock_discrepancies')
+            .select('difference_meters')
+            .eq('org_id', profile.org_id)
+            .eq('status', 'needs_review'),
+    ])
 
-    if (error) return { error: error.message }
+    if (salesRes.error) return { error: salesRes.error.message }
+    if (discrepanciesRes.error) return { error: discrepanciesRes.error.message }
 
-    const rows = data ?? []
+    const rows = salesRes.data ?? []
+    const discrepancies = discrepanciesRes.data ?? []
     return {
         data: {
             pending_sales_count: rows.length,
             pending_dispatch_meters: rows.reduce((sum, row) => sum + Number(row.meters_sold ?? 0), 0),
             pending_dispatch_value: rows.reduce((sum, row) => sum + Number(row.revenue_amount ?? 0), 0),
+            open_discrepancy_count: discrepancies.length,
+            open_discrepancy_meters: discrepancies.reduce((sum, row) => sum + Math.abs(Number(row.difference_meters ?? 0)), 0),
         },
     }
 }

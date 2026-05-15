@@ -34,9 +34,9 @@ const actions = [
     },
     {
         id: 'confirm-taka',
-        label: 'Confirm Takas',
-        description: 'Confirm inward drafts',
-        href: '/owner/stock?tab=pending',
+        label: 'Godown Ledger',
+        description: 'Review expected stock',
+        href: '/owner/stock',
         icon: Zap,
         color: 'text-success bg-success-soft border-success/20',
         workflow: 'stock',

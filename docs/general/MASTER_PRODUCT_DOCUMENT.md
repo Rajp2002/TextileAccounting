@@ -16,7 +16,7 @@ Phase 1 is a focused operating loop for Surat grey fabric manufacturers/traders.
 - quotes and orders
 - Start Party Order fast path
 - market runs
-- taka/godown stock (physical inventory focus)
+- expected taka/godown ledger for market-run stock
 - Sell & Dispatch guided workflow
 - dispatches and public tracking
 - Commercials receivables and payment tracking
@@ -45,7 +45,7 @@ The core translation is:
 - whiteboard orders become progress and pace dashboards
 - speculative market production becomes market runs
 - floor registers become supervisor shift logs
-- takas in godown become stock lots, inward drafts, movements, and sales
+- production records become expected godown stock; dispatch checks reality and differences become owner-reviewed discrepancies
 - dispatch handoffs become tracked batches and receipt reconciliation
 - payroll notebooks become itemized settlements and payslips
 - Upaad memory becomes pending/deducted advance records
@@ -149,7 +149,7 @@ The owner saves a quote. The quote stores the commercial values and the estimato
 
 If a party commits, the accepted quote becomes an order with target meters, deadline, instructions, tracking token, and quote-derived worker-rate snapshots.
 
-If the factory is producing for stock, the owner creates a market run from estimator mode. Market runs track produced meters, in-godown meters, sold meters, revenue, cost, profit, and status.
+If the factory is producing for stock, the owner creates a market run from estimator mode. Market runs track produced meters, expected in-godown meters, sold meters, revenue, cost, profit, and status.
 
 ### 4.5 Assign and Log Production
 
@@ -171,9 +171,11 @@ The owner dashboard reads the live and historical production state:
 
 The dashboard is operational, not a broad executive BI suite.
 
-### 4.7 Stock and Dispatch
+### 4.7 Expected Stock and Dispatch
 
-Production can become stock through package-style flows and newer taka/godown flows. `/owner/stock` is active Phase 1 support for stock lots, inward drafts, adjustments, sales, movements, and cost/profit visibility. The older `/owner/inventory` deep yarn/beam module is archived.
+For market-run factories, production creates expected stock in the godown ledger. This is a production/commercial expectation, not a daily physical inward confirmation. `/owner/stock` shows expected available or ledger available meters, stock lots, adjustments, sales, movements, and cost visibility. Physical stock is reconciled at sale/dispatch; shortage or excess becomes a `needs_review` stock discrepancy for the owner.
+
+Stock Inward is not a mandatory Phase 1 workflow for market-run mode. It may remain available for legacy/direct-access or order-based support, but the core market-run journey is production ledger -> dispatch check -> discrepancy review. The older `/owner/inventory` deep yarn/beam module is archived.
 
 Dispatches turn order output into a tracked shipment with transport/GST/e-way metadata, batch/package rows, sent meters, received meters, shortage/extra variance, owner receipt confirmation, and public token tracking.
 
@@ -214,8 +216,8 @@ Billing manages trial and Razorpay subscription state. Referrals support lightwe
 | Market Runs | Loom utilization and stock production | Select speculative work to log | `market_runs`, `market_run_sales`, `production_logs`, `fabric_stock_lots` |
 | Production Log | Live factory truth | Primary daily workspace | `shift_assignments`, `production_logs`, `machines` |
 | Analytics | Progress, pace, worker and machine signals | Indirect | Dashboard RPCs, realtime production inserts |
-| Stock | Godown quantity, cost, sale and profit | Optional packaging support | `fabric_stock_lots`, `fabric_stock_sales`, `fabric_stock_movements`, `fabric_stock_inward_drafts` |
-| Dispatch | Professional handoff and shortage control | Indirect | `dispatches`, `dispatch_package_lines`, `fabric_packages`, tracking token |
+| Stock | Expected godown quantity, cost, sale, dispatch difference review | Optional packaging support | `fabric_stock_lots`, `fabric_stock_sales`, `fabric_stock_movements`, `fabric_stock_inward_drafts`, `stock_discrepancies` |
+| Dispatch | Professional handoff, actual stock check, shortage/excess control | Indirect | `dispatches`, `dispatch_package_lines`, `fabric_packages`, tracking token |
 | Commercials | Realized/expected gross profit | None | order/quote/stock/market-run aggregates |
 | Payroll | Trustworthy settlement | Production logs become wages | `payroll_settlements`, `payroll_adjustments`, `production_logs`, `attendance` |
 | Advances | Upaad visibility and recovery | Worker trust | `worker_advances`, payroll RPCs |

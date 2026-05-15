@@ -29,9 +29,9 @@ Orders represent committed party-backed production. Market runs represent specul
 1. Owner opens estimator in market mode or clicks New Run from `/owner/market-runs`.
 2. Owner uses the same costing engine but creates a speculative run instead of a party quote.
 3. Supervisor logs production against the run/order anchor.
-4. Output moves toward godown stock.
-5. Owner reviews produced meters, in-godown meters, sold meters, revenue, cost, profit, and status.
-6. Owner records market-run sales and closes runs when appropriate.
+4. Production creates expected godown stock from the production ledger.
+5. Owner reviews produced meters, expected in-godown meters, sold meters, revenue, cost, profit, and status.
+6. Owner sells/dispatches market-run stock and reviews any dispatch stock difference.
 
 ## Existing Workflow Translation
 
@@ -84,7 +84,8 @@ Weavly workflow:
 
 - Supervisor production log pulls active orders/runs.
 - Owner analytics summarizes order health.
-- Stock inward drafts and stock lots can originate from completed production.
+- Market-run production contributes to expected stock without requiring daily Stock Inward confirmation.
+- Order-based/direct workflows may still use inward drafts where needed.
 - Dispatches and public tracking attach to orders.
 - Commercials aggregates expected and realized profit.
 

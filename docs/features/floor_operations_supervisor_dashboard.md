@@ -74,7 +74,7 @@ Weavly workflow:
 - Owner analytics refreshes from production logs.
 - Payroll uses production logs and rate snapshots.
 - Orders and market runs update progress.
-- Stock inward drafts can be created from production output.
+- Market-run production creates expected godown stock; optional/order-based inward drafts can still be created from production output.
 - Machine status contributes to utilization signals.
 
 ## Readiness Notes

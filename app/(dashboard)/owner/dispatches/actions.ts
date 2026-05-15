@@ -94,6 +94,7 @@ export async function sellAndDispatchTakas(input: SellAndDispatchInput): Promise
 
     // 2. Perform Sales sequentially to avoid partial state ambiguity in case of RPC crash midway
     const saleIds: string[] = []
+    let expectedDispatchMeters = 0
     for (const lotReq of input.selectedLots) {
         const { data: saleData, error: saleError } = await supabase.rpc('record_fabric_stock_sale', {
             p_stock_lot_id: lotReq.stockLotId,
@@ -114,6 +115,7 @@ export async function sellAndDispatchTakas(input: SellAndDispatchInput): Promise
         }
         
         saleIds.push(saleData[0].sale_id)
+        expectedDispatchMeters += Number(saleData[0].meters_sold ?? 0)
         await ensureReceivableForCommercialEntry('fabric_stock_sale', saleData[0].sale_id)
     }
 
@@ -143,6 +145,25 @@ export async function sellAndDispatchTakas(input: SellAndDispatchInput): Promise
     }
 
     const dispatchMeta = Array.isArray(dispatchData) ? dispatchData[0] : dispatchData
+    const actualDispatchedMeters = Number(input.dispatch.actualDispatchedMeters ?? expectedDispatchMeters)
+    const differenceMeters = actualDispatchedMeters - expectedDispatchMeters
+
+    if (Number.isFinite(actualDispatchedMeters) && Math.abs(differenceMeters) > 0.01) {
+        await supabase
+            .from('stock_discrepancies')
+            .insert({
+                org_id: profile.org_id,
+                dispatch_id: dispatchMeta.dispatch_id,
+                quality_label: order.quality_label || null,
+                expected_meters: expectedDispatchMeters,
+                actual_dispatched_meters: actualDispatchedMeters,
+                difference_meters: differenceMeters,
+                discrepancy_type: differenceMeters < 0 ? 'shortage' : 'excess',
+                status: 'needs_review',
+                notes: input.dispatch.notes || input.sale.notes || null,
+                created_by: user.id,
+            })
+    }
 
     revalidatePath('/owner/dispatches')
     revalidatePath('/owner/stock')

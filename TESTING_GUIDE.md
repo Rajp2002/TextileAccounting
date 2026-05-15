@@ -68,7 +68,7 @@ Scenarios:
 - complete/cancel order
 - create market run
 - production updates market-run produced meters
-- stock inward/sale updates market-run status and profit
+- expected stock/sale updates market-run status and profit
 
 ### 4. Stock and Commercials
 
@@ -77,11 +77,13 @@ Scenarios:
 - create stock lot manually
 - create stock lot from market run
 - create stock lot from order source
-- confirm inward draft
+- market-run production creates expected ledger stock without mandatory inward confirmation
+- confirm inward draft where optional/order-based flow still exists
 - adjust stock up
 - adjust stock down
 - prevent invalid negative stock
 - record stock sale
+- record actual dispatched meters and stock difference on shortage/excess
 - verify revenue/cost/gross profit
 - verify Commercials filtering and summary totals
 
@@ -155,7 +157,7 @@ Minimum release smoke:
 6. Owner analytics updates.
 7. Payroll previews worker earnings.
 8. Advance is recorded and deducted.
-9. Stock lot or inward draft is created/confirmed.
+9. Market-run production creates expected stock, or optional/order-based inward flow still works.
 10. Stock sale appears in Commercials.
 11. Dispatch is created and tracking link opens.
 12. Billing page shows plan/trial state.

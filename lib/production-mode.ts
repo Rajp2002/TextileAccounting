@@ -21,6 +21,10 @@ export type WorkflowKey =
 
 export const DEFAULT_PRODUCTION_MODE: ProductionMode = 'market_run'
 
+export function isMarketRunOnlyMode(mode: unknown) {
+    return normalizeProductionMode(mode) === 'market_run'
+}
+
 export const PRODUCTION_MODE_OPTIONS: Array<{
     value: ProductionMode
     label: string

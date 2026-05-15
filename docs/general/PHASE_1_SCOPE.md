@@ -12,7 +12,7 @@ Weavly Phase 1 must help an owner answer seven daily questions:
 2. Which client orders or market runs are my looms producing today?
 3. Did the supervisor record the shift correctly?
 4. Are orders or market runs on pace?
-5. What stock or takas do I now have in godown?
+5. What stock should be available in godown according to production and commercial records?
 6. What did I earn or expect to earn from this work?
 7. What do I owe workers after production, advances, and deductions?
 
@@ -155,16 +155,20 @@ Readiness bar:
 - Itemized payout must be explainable to an owner and worker.
 - Advance deduction caps and final settlement behavior require focused tests.
 
-### 6. Stock, Dispatches, and Commercials
+### 6. Expected Stock, Dispatches, and Commercials
 
 This scope has been extended beyond the original three pillars because production value is incomplete if output cannot be seen, moved, or valued.
 
 In scope:
 
-- `/owner/stock` as the Phase 1 godown/taka stock board (physical inventory focus only).
+- `/owner/stock` as the Phase 1 expected godown ledger for market-run factories.
+- For market-run mode, production creates expected stock from production records. This is not daily physical inward confirmation.
+- Physical stock is checked when fabric is sold or dispatch-ready.
+- Dispatch reconciliation compares expected available meters, sale/dispatch quantity, and actual dispatched/received meters.
+- Shortage or excess is tracked as a stock discrepancy with `needs_review` status for owner follow-up.
 - Fabric stock lots from manual, opening, market-run, order, and adjustment sources.
-- Pending inward drafts from completed/produced order or market-run output.
-- Unit count, meters per unit, godown, cost per meter, and available meters.
+- Pending inward drafts remain optional/legacy support and should not be a required market-run Phase 1 workflow.
+- Unit count, meters per unit, godown, cost per meter, expected available meters, and ledger movements.
 - Stock adjustment add/subtract.
 - Stock sale recording with price and quantity (profit dashboard moved to Commercials).
 - Sell & Dispatch guided workflow.
@@ -188,6 +192,7 @@ Not in scope:
 Readiness bar:
 
 - Stock and commercials should support owner decision-making without dragging Phase 1 into a full ERP.
+- Market-run stock accuracy should not depend on a new daily manual Stock Inward process.
 - Dispatch should feel professional but lightweight.
 
 ### 7. WhatsApp, Billing, and Referrals
@@ -279,13 +284,13 @@ Archived routes are documented in `docs/general/PHASE_1_ARCHIVE.md`; the active 
 - Estimator formulas are validated with real factory examples.
 - Quote snapshots preserve historical assumptions.
 - Accepted quote to order flow is tested.
-- Market run creation, production, inward stock, sale, and profit flow are tested.
+- Market run creation, production, expected stock, sale, and profit flow are tested.
 - Supervisor production logging covers happy path, duplicate path, missing assignment, past date, correction, and meter-reading edge cases.
 - Owner analytics reflects live production and historical date selection.
 - Payroll preview matches final settlement.
 - Advance recovery, final settlement, PF/ESI, payment mode, and payslip send are tested.
-- Stock inward drafts, lot creation, adjustment, sale, and commercials aggregation are tested.
-- Dispatch creation, receipt confirmation, shortage, and public tracking are tested.
+- Expected stock, optional inward drafts, lot creation, adjustment, sale, and commercials aggregation are tested.
+- Dispatch creation, actual dispatch check, receipt confirmation, shortage/excess discrepancy, and public tracking are tested.
 - WhatsApp failures are logged and retryable without blocking writes (failure fallback exists so app workflows do not crash).
 - **WhatsApp Pre-Pilot Checklist:**
   - [ ] Meta Business account configured
