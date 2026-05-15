@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getWorkflowVisibility, hasExplicitProductionMode, normalizeProductionMode } from '../lib/production-mode'
+import { getOrganizationProductionMode, getWorkflowVisibility, hasExplicitProductionMode, normalizeProductionMode } from '../lib/production-mode'
 
 describe('production mode workflow visibility', () => {
     it('defaults missing or invalid production modes to market_run', () => {
@@ -42,5 +42,28 @@ describe('production mode workflow visibility', () => {
         expect(visibility.orders).toBe(true)
         expect(visibility.marketRuns).toBe(true)
         expect(visibility.stock).toBe(true)
+    })
+
+    it('defaults organization production mode when older databases lack the column', async () => {
+        const client = {
+            from: () => ({
+                select: () => ({
+                    eq: () => ({
+                        maybeSingle: async () => ({
+                            data: null,
+                            error: {
+                                code: '42703',
+                                message: 'column organizations.production_mode does not exist',
+                            },
+                        }),
+                    }),
+                }),
+            }),
+        }
+
+        await expect(getOrganizationProductionMode(client, 'org-1')).resolves.toEqual({
+            productionMode: 'market_run',
+            error: null,
+        })
     })
 })
