@@ -1078,7 +1078,7 @@ export default function EstimatorClient({
             <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-border/60 shadow-sm -mt-5 pt-3 sm:pt-6 pb-3 sm:pb-4 px-3 sm:px-4 mx-[-12px] sm:mx-[-32px] md:mx-[-40px]">
                 <div className="max-w-6xl mx-auto space-y-2.5 sm:space-y-4">
 
-                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-4">
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-4 rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
                         {/* Production Cost */}
                         <div className="min-w-0 flex-1 sm:flex-none">
                             <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">{t('estimator.hud.prod_cost')}</p>
