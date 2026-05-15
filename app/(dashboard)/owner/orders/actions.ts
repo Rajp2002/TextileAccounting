@@ -470,11 +470,22 @@ type RawDispatchRow = Omit<DispatchRow, 'package_lines'> & {
     dispatch_package_lines?: DispatchPackageLine[] | null
 }
 
+type MaybeSupabaseError = {
+    code?: string
+    message?: string
+}
+
 function normalizeDispatchRow(row: RawDispatchRow): DispatchRow {
     return {
         ...row,
         package_lines: row.dispatch_package_lines ?? [],
     }
+}
+
+function isMissingStockDiscrepanciesTable(error: MaybeSupabaseError | null | undefined) {
+    return error?.code === '42P01'
+        || error?.code === 'PGRST205'
+        || /stock_discrepancies/i.test(error?.message ?? '') && /does not exist|schema cache|could not find/i.test(error?.message ?? '')
 }
 
 /**
@@ -851,10 +862,12 @@ export async function getDispatchOverviewStats(): Promise<DispatchOverviewResult
     ])
 
     if (salesRes.error) return { error: salesRes.error.message }
-    if (discrepanciesRes.error) return { error: discrepanciesRes.error.message }
+    if (discrepanciesRes.error && !isMissingStockDiscrepanciesTable(discrepanciesRes.error)) {
+        return { error: discrepanciesRes.error.message }
+    }
 
     const rows = salesRes.data ?? []
-    const discrepancies = discrepanciesRes.data ?? []
+    const discrepancies = discrepanciesRes.error ? [] : discrepanciesRes.data ?? []
     return {
         data: {
             pending_sales_count: rows.length,
