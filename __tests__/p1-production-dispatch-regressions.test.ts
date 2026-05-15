@@ -21,4 +21,12 @@ describe('P1 production and dispatch regressions', () => {
         expect(action).toContain('`/track/${dispatchMeta.tracking_token}`')
         expect(action).not.toContain('/tracking/${dispatchMeta.tracking_token}')
     })
+
+    it('keeps dispatches page usable when stock discrepancy migration is pending', () => {
+        const action = readProjectFile('app/(dashboard)/owner/orders/actions.ts')
+        expect(action).toContain('isMissingStockDiscrepanciesTable')
+        expect(action).toContain("error?.code === '42P01'")
+        expect(action).toContain("error?.code === 'PGRST205'")
+        expect(action).toContain('const discrepancies = discrepanciesRes.error ? []')
+    })
 })

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
     ArrowLeft,
@@ -10,10 +11,20 @@ import {
     Warehouse,
     Store,
     Tag,
+    Archive,
+    Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
 import { updateMarketRunStatus } from '../../estimator/actions'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 import { useTranslation } from '@/lib/i18n/context'
@@ -75,7 +86,9 @@ export default function MarketRunDetailClient({
     initialSales: MarketRunSale[]
 }) {
     const { tx } = useTranslation()
+    const router = useRouter()
     const [submitting, setSubmitting] = useState(false)
+    const [closeDialogOpen, setCloseDialogOpen] = useState(false)
 
     const derivedStatus = getMarketRunDisplayStatus({
         storedStatus: run.status,
@@ -91,14 +104,16 @@ export default function MarketRunDetailClient({
     const availableGodown = Math.max(0, run.meters_in_godown)
 
     const handleCloseRun = async () => {
-        if (!confirm(tx('Are you sure you want to mark this run as closed? It will be archived.'))) return
-        
         setSubmitting(true)
         const res = await updateMarketRunStatus(run.market_run_id, 'closed')
         setSubmitting(false)
 
         if (res.error) toast.error(res.error)
-        else toast.success(tx('Market run closed'))
+        else {
+            setCloseDialogOpen(false)
+            toast.success(tx('Market run closed'))
+            router.refresh()
+        }
     }
 
     return (
@@ -135,7 +150,7 @@ export default function MarketRunDetailClient({
                             </Button>
                         )}
                         {run.status !== 'closed' && (
-                            <Button variant="secondary" onClick={handleCloseRun} disabled={submitting} className="h-11 lg:h-9">
+                            <Button variant="secondary" onClick={() => setCloseDialogOpen(true)} disabled={submitting} className="h-11 lg:h-9">
                                 Mark Closed
                             </Button>
                         )}
@@ -160,11 +175,55 @@ export default function MarketRunDetailClient({
                             <p className="text-xs text-emerald-700">Mark this market run as closed?</p>
                         </div>
                     </div>
-                    <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0" onClick={handleCloseRun} disabled={submitting}>
+                    <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0" onClick={() => setCloseDialogOpen(true)} disabled={submitting}>
                         Mark Closed
                     </Button>
                 </div>
             )}
+
+            <Dialog open={closeDialogOpen} onOpenChange={(open) => !submitting && setCloseDialogOpen(open)}>
+                <DialogContent className="max-w-[calc(100%-2rem)] rounded-[1.35rem] p-0 sm:max-w-md" showCloseButton={false}>
+                    <div className="border-b border-hairline bg-surface-soft/55 px-5 py-4">
+                        <DialogHeader className="text-left">
+                            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-saffron-soft text-saffron-deep">
+                                <Archive className="h-5 w-5" />
+                            </div>
+                            <DialogTitle className="text-xl font-black tracking-tight">
+                                Close market run?
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-body">
+                                This will archive {run.fabric_label} and remove it from active market run work.
+                            </DialogDescription>
+                        </DialogHeader>
+                    </div>
+
+                    <div className="space-y-3 px-5 py-4">
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="rounded-xl border border-hairline bg-canvas px-3 py-2">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Produced</p>
+                                <p className="mt-1 text-lg font-black text-ink">{fmtM(run.total_meters_produced)}</p>
+                            </div>
+                            <div className="rounded-xl border border-hairline bg-canvas px-3 py-2">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Stock Left</p>
+                                <p className="mt-1 text-lg font-black text-saffron-deep">{fmtM(availableGodown)}</p>
+                            </div>
+                        </div>
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                            The run history, sales, and profit trail stay available for review after closing.
+                        </p>
+                    </div>
+
+                    <DialogFooter className="grid grid-cols-2 gap-2 border-t border-hairline bg-canvas px-5 py-4 sm:grid-cols-2">
+                        <Button variant="outline" onClick={() => setCloseDialogOpen(false)} disabled={submitting} className="h-11">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleCloseRun} disabled={submitting} className="h-11 bg-ink text-white hover:bg-loom-elevated">
+                            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />}
+                            Close Run
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Metrics Overview */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
