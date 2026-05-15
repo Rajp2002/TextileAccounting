@@ -883,6 +883,7 @@ export const gu = {
       saved: "ક્વોલિટી સાચવાઈ ગઈ!",
       deleted: "ક્વોલિટી ડિલીટ થઈ ગઈ",
       nameRequired: "કૃપા કરીને ક્વોલિટીનું નામ દાખલ કરો",
+      layerNameRequired: "આ ક્વોલિટી સેવ કરતા પહેલાં {layer} ને નામ આપો",
       saveFailed: "ક્વોલિટી સાચવવામાં નિષ્ફળ",
       updateFailed: "ક્વોલિટી અપડેટ કરવામાં નિષ્ફળ",
       settingsTitle: "મારી ક્વોલિટી",
@@ -989,6 +990,7 @@ export const gu = {
       start_production: "પ્રોડક્શન શરૂ કરો"
     },
     field_labels: {
+      layer_name: "લેયર નામ",
       calc_denier: "ડેનિયર",
       beam_ends: "બીમ એન્ડ્સ",
       rate_kg: "ભાવ (₹/કિલો)",
