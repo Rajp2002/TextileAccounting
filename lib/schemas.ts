@@ -488,20 +488,6 @@ export const CreateTakaStockLotSchema = z.object({
     notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
 })
 
-export const ConfirmStockInwardDraftSchema = z.object({
-    draft_id: UuidSchema,
-    actual_unit_count: z.number().positive('Unit count must be greater than zero').max(1_000_000, 'Unit count too high'),
-    meters_per_unit: z.number().positive('Meters per unit must be greater than zero').max(1_000_000, 'Meters per unit too high'),
-    unit_label: z.string().trim().min(1, 'Unit label is required').max(40, 'Unit label too long').default('taka'),
-    godown: z.string().trim().min(1, 'Godown is required').max(120, 'Godown name too long').default('Main Godown'),
-    notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
-})
-
-export const DismissStockInwardDraftSchema = z.object({
-    draft_id: UuidSchema,
-    notes: z.string().trim().max(500, 'Notes too long').optional().or(z.literal('')),
-})
-
 export const RecordTakaStockSaleSchema = z.object({
     stock_lot_id: UuidSchema,
     taka_sold: z.number().int('Takas sold must be a whole number').positive('Takas sold must be greater than zero').max(1_000_000, 'Takas sold too high'),

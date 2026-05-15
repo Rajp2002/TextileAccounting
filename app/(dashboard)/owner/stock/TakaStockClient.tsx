@@ -8,17 +8,14 @@ import {
     ArrowUpCircle,
     Boxes,
     CalendarDays,
-    CheckCircle2,
     ChevronDown,
     ChevronRight,
-    IndianRupee,
     Loader2,
     PackagePlus,
     PencilLine,
     Plus,
     Search,
     Store,
-    TrendingUp,
     Warehouse,
     Send,
 } from 'lucide-react'
@@ -47,11 +44,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import {
     adjustTakaStockLot,
-    confirmStockInwardDraft,
     createTakaStockLot,
-    dismissStockInwardDraft,
     recordTakaStockSale,
-    type StockInwardDraftRow,
     type StockSourceOption,
     type TakaStockBoardData,
     type TakaStockLotSummary,
@@ -391,174 +385,6 @@ function AddStockDialog({
     )
 }
 
-function PendingInwardDialog({
-    draft,
-    open,
-    onOpenChange,
-    onSaved,
-}: {
-    draft: StockInwardDraftRow | null
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    onSaved: () => void
-}) {
-    const [pending, startTransition] = useTransition()
-    const [form, setForm] = useState({
-        actual_unit_count: '',
-        meters_per_unit: '',
-        unit_label: '',
-        godown: '',
-        notes: '',
-    })
-
-    if (!draft) return null
-
-    const actualUnits = Number(form.actual_unit_count || draft.suggested_unit_count || 0)
-    const metersPerUnit = Number(form.meters_per_unit || draft.meters_per_unit || 0)
-    const totalMeters = actualUnits * metersPerUnit
-    const unitLabel = form.unit_label || draft.unit_label || 'taka'
-
-    const ensureDefaults = () => {
-        if (form.actual_unit_count) return
-        setForm({
-            actual_unit_count: String(Number(draft.suggested_unit_count || 0)),
-            meters_per_unit: String(Number(draft.meters_per_unit || 0)),
-            unit_label: draft.unit_label || 'taka',
-            godown: draft.suggested_godown || 'Main Godown',
-            notes: draft.notes || '',
-        })
-    }
-
-    const handleConfirm = () => {
-        startTransition(async () => {
-            const res = await confirmStockInwardDraft({
-                draft_id: draft.id,
-                actual_unit_count: Number(form.actual_unit_count || draft.suggested_unit_count),
-                meters_per_unit: Number(form.meters_per_unit || draft.meters_per_unit),
-                unit_label: unitLabel,
-                godown: form.godown || draft.suggested_godown,
-                notes: form.notes,
-            })
-
-            if ('error' in res) {
-                toast.error(res.error)
-                return
-            }
-
-            toast.success('Stock inward confirmed')
-            setForm({ actual_unit_count: '', meters_per_unit: '', unit_label: '', godown: '', notes: '' })
-            onOpenChange(false)
-            onSaved()
-        })
-    }
-
-    const handleDismiss = () => {
-        startTransition(async () => {
-            const res = await dismissStockInwardDraft({
-                draft_id: draft.id,
-                notes: form.notes,
-            })
-
-            if ('error' in res) {
-                toast.error(res.error)
-                return
-            }
-
-            toast.success('Pending inward dismissed')
-            setForm({ actual_unit_count: '', meters_per_unit: '', unit_label: '', godown: '', notes: '' })
-            onOpenChange(false)
-            onSaved()
-        })
-    }
-
-    return (
-        <Dialog open={open} onOpenChange={(nextOpen) => {
-            if (nextOpen) ensureDefaults()
-            onOpenChange(nextOpen)
-        }}>
-            <DialogContent className="max-w-xl">
-                <DialogHeader>
-                    <DialogTitle>Add Produced Fabric to Stock</DialogTitle>
-                    <DialogDescription>
-                        {draft.quality_label} · {draft.source_type === 'market_run' ? 'Market run' : 'Order'} · {draft.source_shift} shift
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div className="grid gap-4 py-2 sm:grid-cols-2">
-                    <div className="rounded-lg border bg-muted/30 p-3 sm:col-span-2">
-                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Produced this shift</p>
-                        <p className="mt-1 text-lg font-black text-foreground">
-                            {stockQuantity(draft.suggested_unit_count, draft.suggested_meters, draft.unit_label)}
-                        </p>
-                        <p className="text-xs font-semibold text-muted-foreground">Cost locked at {money(draft.cost_per_meter, 2)}/m</p>
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <Label>Actual Units</Label>
-                        <Input
-                            type="number"
-                            min="0.01"
-                            step="0.01"
-                            value={form.actual_unit_count || String(draft.suggested_unit_count)}
-                            onChange={(event) => setForm((prev) => ({ ...prev, actual_unit_count: event.target.value }))}
-                        />
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <Label>Meters / Unit</Label>
-                        <Input
-                            type="number"
-                            min="0.01"
-                            step="0.01"
-                            value={form.meters_per_unit || String(draft.meters_per_unit)}
-                            onChange={(event) => setForm((prev) => ({ ...prev, meters_per_unit: event.target.value }))}
-                        />
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <Label>Unit Label</Label>
-                        <Input
-                            value={form.unit_label || draft.unit_label}
-                            onChange={(event) => setForm((prev) => ({ ...prev, unit_label: event.target.value }))}
-                        />
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <Label>Godown</Label>
-                        <Input
-                            value={form.godown || draft.suggested_godown}
-                            onChange={(event) => setForm((prev) => ({ ...prev, godown: event.target.value }))}
-                        />
-                    </div>
-
-                    <div className="space-y-1.5 sm:col-span-2">
-                        <Label>Notes</Label>
-                        <Textarea
-                            value={form.notes}
-                            onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
-                            placeholder="Rack, holdback, shortage, or packing note"
-                            className="min-h-16 resize-none"
-                        />
-                    </div>
-                </div>
-
-                <div className="rounded-lg border bg-muted/30 px-3 py-2 text-sm font-semibold text-muted-foreground">
-                    Confirming: <span className="text-foreground">{stockQuantity(actualUnits, totalMeters, unitLabel)}</span>
-                </div>
-
-                <DialogFooter className="gap-2 sm:gap-0">
-                    <Button variant="ghost" onClick={handleDismiss} disabled={pending}>Dismiss</Button>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={handleConfirm} disabled={pending}>
-                        {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-                        Confirm Stock
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
-}
-
 function SaleDialog({
     lot,
     open,
@@ -814,7 +640,6 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
     const [query, setQuery] = useState('')
     const [godown, setGodown] = useState('all')
     const [addOpen, setAddOpen] = useState(false)
-    const [pendingDraft, setPendingDraft] = useState<StockInwardDraftRow | null>(null)
     const [saleLot, setSaleLot] = useState<TakaStockLotSummary | null>(null)
     const [adjustLot, setAdjustLot] = useState<TakaStockLotSummary | null>(null)
     const [expandedLots, setExpandedLots] = useState<Record<string, boolean>>({})
@@ -895,48 +720,6 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                 {/* Profit/Revenue cards removed - managed in Commercials */}
             </div>
 
-            {initialData.pendingInwards.length > 0 && !marketRunOnly && (
-                <Card className="border-amber-200 bg-amber-50/40">
-                    <CardContent className="p-4">
-                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                            <div>
-                                <h2 className="text-sm font-black uppercase tracking-wider text-amber-800">Pending Stock Inward</h2>
-                                <p className="mt-1 text-sm text-amber-800/80">
-                                    Confirm produced shift fabric before it becomes live godown stock.
-                                </p>
-                            </div>
-                            <Badge variant="outline" className="w-fit border-amber-300 bg-background text-amber-800">
-                                {initialData.pendingInwards.length} pending
-                            </Badge>
-                        </div>
-                        <div className="mt-4 grid gap-3">
-                            {initialData.pendingInwards.slice(0, 6).map((draft) => (
-                                <div key={draft.id} className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-background p-3 lg:flex-row lg:items-center lg:justify-between">
-                                    <div className="min-w-0">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <p className="font-black text-foreground">{draft.quality_label}</p>
-                                            <Badge variant="outline" className={cn('capitalize', sourceBadge(draft.source_type))}>
-                                                {draft.source_type.replace('_', ' ')}
-                                            </Badge>
-                                        </div>
-                                        <p className="mt-1 text-sm font-semibold text-muted-foreground">
-                                            {stockQuantity(draft.suggested_unit_count, draft.suggested_meters, draft.unit_label)} · {money(draft.cost_per_meter, 2)}/m · {draft.suggested_godown}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {new Date(draft.source_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} · {draft.source_shift} shift
-                                        </p>
-                                    </div>
-                                    <Button onClick={() => setPendingDraft(draft)} className="gap-2">
-                                        <PackagePlus className="h-4 w-4" />
-                                        Review & Add
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-
             <div className="flex flex-col gap-3 lg:flex-row">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -970,7 +753,6 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
             ) : (
                 <div className="grid gap-4">
                     {filteredLots.map((lot) => {
-                        const saleMargin = lot.total_revenue > 0 ? (lot.total_gross_profit / lot.total_revenue) * 100 : null
                         const lotMovements = movementsByLot.get(lot.stock_lot_id) ?? []
                         const expanded = Boolean(expandedLots[lot.stock_lot_id])
                         return (
@@ -1269,12 +1051,6 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                 open={addOpen}
                 onOpenChange={setAddOpen}
                 sourceOptions={initialData.sourceOptions}
-                onSaved={refresh}
-            />
-            <PendingInwardDialog
-                draft={pendingDraft}
-                open={Boolean(pendingDraft)}
-                onOpenChange={(open) => !open && setPendingDraft(null)}
                 onSaved={refresh}
             />
             <SaleDialog

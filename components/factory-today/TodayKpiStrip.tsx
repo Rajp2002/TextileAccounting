@@ -6,7 +6,6 @@ interface TodayKpiStripProps {
     productionMode: FactoryTodayData['productionMode']
     production: FactoryTodayData['production']
     machines: FactoryTodayData['machines']
-    stock: FactoryTodayData['stock']
     dispatch: FactoryTodayData['dispatch']
     actionCounts: FactoryTodayData['actionCounts']
 }
@@ -45,16 +44,15 @@ function KpiCard({
     )
 }
 
-export function TodayKpiStrip({ productionMode, production, machines, stock, dispatch, actionCounts }: TodayKpiStripProps) {
+export function TodayKpiStrip({ productionMode, production, machines, dispatch, actionCounts }: TodayKpiStripProps) {
     const prodColor = production.hasLogsToday
         ? (production.dayShiftLogged && production.nightShiftLogged ? 'green' : 'yellow')
         : 'red'
 
     const machineColor = machines.unassigned > 0 ? 'yellow' : 'green'
 
-    const pendingDrafts = stock.pendingInwardDrafts.length
     const marketRunOnly = productionMode === 'market_run'
-    const stockColor = !marketRunOnly && pendingDrafts > 0 ? 'yellow' : 'green'
+    const stockColor = 'green'
 
     const notDispatched = dispatch.soldNotDispatched.length
     const dispatchColor = notDispatched > 0 ? 'red' : 'green'
@@ -99,9 +97,9 @@ export function TodayKpiStrip({ productionMode, production, machines, stock, dis
                 />
                 <KpiCard
                     icon={Package}
-                    label={marketRunOnly ? 'Godown Ledger' : 'Stock Drafts'}
-                    value={marketRunOnly ? 'Expected' : pendingDrafts}
-                    sub={marketRunOnly ? 'As per production' : pendingDrafts > 0 ? 'Need confirmation' : 'All confirmed'}
+                    label={marketRunOnly ? 'Godown Ledger' : 'Godown Stock'}
+                    value={marketRunOnly ? 'Expected' : 'Live'}
+                    sub={marketRunOnly ? 'As per production' : 'Current ledger'}
                     color={stockColor}
                 />
                 <KpiCard

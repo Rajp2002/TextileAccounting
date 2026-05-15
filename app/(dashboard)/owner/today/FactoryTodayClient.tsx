@@ -5,7 +5,6 @@ import { TodayKpiStrip } from '@/components/factory-today/TodayKpiStrip'
 import { ProductionStatusCard } from '@/components/factory-today/ProductionStatusCard'
 import { MachineAttentionCard } from '@/components/factory-today/MachineAttentionCard'
 import { WorkAtRiskCard } from '@/components/factory-today/WorkAtRiskCard'
-import { PendingStockDraftsCard } from '@/components/factory-today/PendingStockDraftsCard'
 import { SoldNotDispatchedCard } from '@/components/factory-today/SoldNotDispatchedCard'
 import { PendingReceiptsCard } from '@/components/factory-today/PendingReceiptsCard'
 import { PayrollHisaabCard } from '@/components/factory-today/PayrollHisaabCard'
@@ -36,7 +35,6 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
     const data = initialData
     const { actionCounts } = data
     const visibility = getWorkflowVisibility(data.productionMode)
-    const marketRunOnly = data.productionMode === 'market_run'
 
     const dateLabel = new Date(data.date).toLocaleDateString('en-IN', {
         weekday: 'long',
@@ -46,13 +44,12 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
 
     // All-clear: every actionable item must be resolved.
     // Adding night shift to the check would be too strict (many factories run day-only).
-    // We check: production logged, all looms assigned, no risks, no pending stock/dispatch, no pending advances.
+    // We check: production logged, all looms assigned, no risks, no pending dispatch, no pending advances.
     const isAllClear =
         data.production.hasLogsToday &&
         data.machines.unassigned === 0 &&
         data.workAtRisk.ordersBehindPace.length === 0 &&
         data.workAtRisk.inactiveMarketRuns.length === 0 &&
-        (marketRunOnly || data.stock.pendingInwardDrafts.length === 0) &&
         data.dispatch.soldNotDispatched.length === 0 &&
         data.dispatch.pendingReceipts.length === 0 &&
         data.payroll.pendingAdvanceTotal === 0
@@ -113,7 +110,6 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                 productionMode={data.productionMode}
                 production={data.production}
                 machines={data.machines}
-                stock={data.stock}
                 dispatch={data.dispatch}
                 actionCounts={data.actionCounts}
             />
@@ -129,7 +125,6 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                         <ProductionStatusCard production={data.production} />
                         <MachineAttentionCard machines={data.machines} />
                         <WorkAtRiskCard workAtRisk={data.workAtRisk} productionMode={data.productionMode} />
-                        {!marketRunOnly && <PendingStockDraftsCard drafts={data.stock.pendingInwardDrafts} />}
                     </div>
 
                     {/* Right Column */}
