@@ -123,12 +123,12 @@ export const gu = {
       switch: "માલિક દૃશ્ય પર જાઓ"
     },
     meter: {
-      counterReading: "લૂમ કાઉન્ટર રીડિંગ",
-      counterHelper: "હમણાં તમારા લૂમના મીટર ડિસ્પ્લે પર બતાવેલ નંબર દાખલ કરો",
+      counterReading: "કુલ બનેલા મીટર",
+      counterHelper: "આ પાળીમાં દરેક લૂમ પર બનેલા કુલ મીટર દાખલ કરો.",
       openingReading: "શરૂઆત (પાછળની પાળી)",
-      shiftProduction: "આ પાળીના મીટર",
-      counterWarning: "રીડિંગ શરૂઆત કરતાં ઓછું છે. કૃ. ચકાસો.",
-      counterConfirm: "એક અથવા વધુ ક્લોઝિંગ રીડિંગ શરૂઆત કરતાં ઓછાં છે. આ પાળી સેવ કરતા પહેલા ખાતરી કરો."
+      shiftProduction: "આ પાળીના કુલ મીટર",
+      counterWarning: "મીટર નકારાત્મક હોઈ શકતા નથી. કૃ. ચકાસો.",
+      counterConfirm: "એક અથવા વધુ મીટર એન્ટ્રી ખોટી લાગે છે. આ પાળી સેવ કરતા પહેલા ખાતરી કરો."
     },
     correction: {
       windowOpen: "તમે આ {minutes} મિનિટ સુધી સુધારી શકો છો",

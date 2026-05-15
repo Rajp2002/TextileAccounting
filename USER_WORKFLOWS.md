@@ -150,8 +150,8 @@ Capture the shift's real production in the moment, with enough structure to powe
 4. Supervisor assigns worker and order/run to each machine.
 5. Supervisor sets machine status: running, idle, maintenance.
 6. Supervisor adds breakdown notes if a loom is under service.
-7. Supervisor enters closing meter readings.
-8. System compares against previous closing/opening readings.
+7. Supervisor enters total metres produced for each loom in the shift.
+8. System validates each production entry has a worker and order/run.
 9. Supervisor submits logs.
 10. Duplicate/correction cases require protected handling and may use owner access codes.
 

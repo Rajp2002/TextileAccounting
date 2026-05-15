@@ -8,7 +8,7 @@ Core Phase 1 pillar. `/supervisor/dashboard` is the primary floor workspace, and
 
 ## What It Does
 
-The supervisor dashboard combines shift selection, machine assignment, worker selection, order/run selection, machine status, opening/closing meter readings, duplicate protection, and bulk production submission into one mobile-first workflow.
+The supervisor dashboard combines shift selection, machine assignment, worker selection, order/run selection, machine status, total metres produced per shift, duplicate protection, and bulk production submission into one mobile-first workflow.
 
 ## User Workflow
 
@@ -19,8 +19,8 @@ The supervisor dashboard combines shift selection, machine assignment, worker se
 5. Supervisor can copy previous shift assignments.
 6. Supervisor updates machine status: running, idle, maintenance.
 7. Supervisor records breakdown notes/categories when a machine is under service.
-8. Supervisor enters closing meter readings.
-9. System derives shift meters from latest prior opening reading and the entered closing reading.
+8. Supervisor enters total metres produced for the shift.
+9. System saves the entered metres as the shift production total.
 10. Supervisor submits shift logs.
 11. If a correction or protected action is required, supervisor requests or enters an owner access code.
 

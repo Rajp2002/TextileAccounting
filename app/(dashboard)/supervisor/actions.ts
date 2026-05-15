@@ -51,17 +51,6 @@ function getServiceClient() {
     })
 }
 
-function isEarlierShift(
-    candidateDate: string,
-    candidateShift: ShiftType,
-    targetDate: string,
-    targetShift: ShiftType
-) {
-    if (candidateDate < targetDate) return true
-    if (candidateDate > targetDate) return false
-    return candidateShift === 'day' && targetShift === 'night'
-}
-
 function getLatestSubmittedAt(logs: Array<{ submitted_at: string | null }>) {
     const validTimestamps = logs
         .map((log) => log.submitted_at)
@@ -87,48 +76,6 @@ async function supervisorWorkerHasHistory(
     if (advancesRes.error) throw advancesRes.error
 
     return (settlementsRes.data?.length ?? 0) > 0 || (advancesRes.data?.length ?? 0) > 0
-}
-
-async function getPreviousClosingReadingMap(
-    supabase: Awaited<ReturnType<typeof createServerClient>>,
-    orgId: string,
-    machineIds: string[],
-    date: string,
-    shift: ShiftType
-) {
-    if (machineIds.length === 0) return {}
-
-    const { data, error } = await supabase
-        .from('production_logs')
-        .select('machine_id, date, shift, closing_meter_reading, submitted_at')
-        .eq('org_id', orgId)
-        .in('machine_id', machineIds)
-        .not('closing_meter_reading', 'is', null)
-
-    if (error) {
-        console.error('getPreviousClosingReadingMap error:', error)
-        return {}
-    }
-
-    const previousReadings: Record<string, number> = {}
-
-    for (const machineId of machineIds) {
-        const latestLog = (data ?? [])
-            .filter(
-                (log) =>
-                    log.machine_id === machineId &&
-                    isEarlierShift(log.date, log.shift as ShiftType, date, shift)
-            )
-            .sort((a, b) => {
-                if (a.date !== b.date) return b.date.localeCompare(a.date)
-                if (a.shift !== b.shift) return a.shift === 'night' ? 1 : -1
-                return (b.submitted_at ?? '').localeCompare(a.submitted_at ?? '')
-            })[0]
-
-        previousReadings[machineId] = Number(latestLog?.closing_meter_reading ?? 0)
-    }
-
-    return previousReadings
 }
 
 import { validateAndConsumeAccessCode } from '@/lib/access-codes'
@@ -868,7 +815,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
         }]
     })
 
-    const [currentLogsRes, previousMeterReadings, orderProductionRes] = await Promise.all([
+    const [currentLogsRes, orderProductionRes] = await Promise.all([
         machineIds.length === 0
             ? Promise.resolve({ data: [] as ProductionLogRow[] })
             : supabase
@@ -878,7 +825,6 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
                   .eq('date', date)
                   .eq('shift', shift)
                   .in('machine_id', machineIds),
-        getPreviousClosingReadingMap(supabase, orgId, machineIds, date, shift),
         orderIds.length === 0
             ? Promise.resolve({ data: [] as Array<{ order_id: string; meters: number | null }> })
             : supabase
@@ -910,7 +856,6 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
         workers: workersRes.data ?? [],
         assignments,
         existingLogs: currentLogsRes.data ?? [],
-        previousMeterReadings,
         latestSubmittedAt: getLatestSubmittedAt((currentLogsRes.data ?? []) as Array<{ submitted_at: string | null }>),
     }
 }

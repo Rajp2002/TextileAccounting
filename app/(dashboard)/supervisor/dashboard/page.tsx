@@ -21,7 +21,6 @@ import {
     MessageSquare,
     AlertTriangle,
     KeyRound,
-    RotateCcw,
 } from 'lucide-react'
 import {
     Select,
@@ -196,11 +195,8 @@ interface MachineUnifiedRowProps {
     workers: any[]
     orders: any[]
     assignment: any
-    closingReading: number
-    openingReading: number
-    counterWasReset: boolean
-    onClosingReadingChange: (v: number) => void
-    onCounterResetChange: (v: boolean) => void
+    producedMeters: number
+    onProducedMetersChange: (v: number) => void
     onStatusClick: (machine: any) => void
     onAssignmentChange: (machineId: string, workerId: number | null, orderId: string | null) => void
     isSyncing?: boolean
@@ -212,11 +208,8 @@ function MachineUnifiedRow({
     workers,
     orders,
     assignment,
-    closingReading,
-    openingReading,
-    counterWasReset,
-    onClosingReadingChange,
-    onCounterResetChange,
+    producedMeters,
+    onProducedMetersChange,
     onStatusClick,
     onAssignmentChange,
     isSyncing,
@@ -229,8 +222,6 @@ function MachineUnifiedRow({
 
     const selectedOrder = orders.find((o) => o.id === orderId)
     const isMaintenance = status === 'maintenance'
-    const shiftMeters = counterWasReset ? closingReading : closingReading - openingReading
-    const readingWarning = !counterWasReset && closingReading > 0 && closingReading < openingReading
     const deadlineLabel = selectedOrder ? formatShortDate(selectedOrder.deadline) : null
 
     return (
@@ -359,50 +350,24 @@ function MachineUnifiedRow({
                         <>
                             <div className={cn(
                                 "group/input flex items-center overflow-hidden rounded-lg border bg-surface transition-all duration-200 w-full lg:w-auto h-11 lg:h-9",
-                                closingReading > 0 ? "border-saffron ring-4 ring-saffron/10" : "border-hairline shadow-sm"
+                                producedMeters > 0 ? "border-saffron ring-4 ring-saffron/10" : "border-hairline shadow-sm"
                             )}>
                                 <Input
                                     type="number"
                                     inputMode="decimal"
                                     pattern="[0-9]*"
                                     placeholder="0"
-                                    value={closingReading || ''}
-                                    onChange={(e) => onClosingReadingChange(Number(e.target.value))}
+                                    value={producedMeters || ''}
+                                    onChange={(e) => onProducedMetersChange(Number(e.target.value))}
                                     className="h-full flex-1 border-none bg-transparent p-0 text-center font-mono text-lg font-semibold focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                 />
                             </div>
                             <div className="flex w-full flex-col items-center gap-2 lg:gap-1">
                                 <div className="flex max-w-full items-center gap-1 rounded-full border border-hairline bg-surface px-2.5 py-1 lg:py-0.5 shadow-sm">
                                     <span className="text-center text-xs font-semibold uppercase tracking-wide leading-tight text-saffron-deep">
-                                        {t('floor.meter.counterReading')}
+                                        {t('floor.meter.shiftProduction')}
                                     </span>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => onCounterResetChange(!counterWasReset)}
-                                    className={cn(
-                                        "flex h-11 lg:h-9 max-w-full items-center gap-1 rounded-full border px-4 lg:px-2 py-0.5 text-xs font-semibold leading-tight transition-all",
-                                        counterWasReset
-                                            ? "border-saffron-soft bg-saffron-soft text-saffron-deep"
-                                            : "border-hairline bg-surface text-muted-foreground hover:border-saffron-soft hover:text-saffron-deep"
-                                    )}
-                                    title={counterWasReset ? "Counter reset for this shift" : "Mark counter reset for this shift"}
-                                    aria-pressed={counterWasReset}
-                                >
-                                    <RotateCcw className="h-4 w-4 lg:h-3.5 lg:w-3.5" />
-                                    Counter reset
-                                </button>
-                                <div className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5 text-center text-xs font-medium leading-tight text-muted-foreground">
-                                    <span className="whitespace-nowrap">
-                                        {counterWasReset ? 'Opening counter: 0' : `${t('floor.meter.openingReading')}: ${openingReading}`}
-                                    </span>
-                                    <span className="whitespace-nowrap">{t('floor.meter.shiftProduction')}: {shiftMeters}</span>
-                                </div>
-                                {readingWarning && (
-                                    <span className="max-w-[11rem] text-center text-xs font-semibold text-risk">
-                                        {t('floor.meter.counterWarning')}
-                                    </span>
-                                )}
                             </div>
                         </>
                     )}
@@ -609,9 +574,7 @@ export default function UnifiedDashboard() {
     const [assignments, setAssignments] = useState<any[]>([])
 
     // Bulk Entry state
-    const [closingReadings, setClosingReadings] = useState<Record<string, number>>({})
-    const [openingReadings, setOpeningReadings] = useState<Record<string, number>>({})
-    const [counterResets, setCounterResets] = useState<Record<string, boolean>>({})
+    const [productionMeters, setProductionMeters] = useState<Record<string, number>>({})
     const [correctionWindowExpiresAt, setCorrectionWindowExpiresAt] = useState<string | null>(null)
     const [, setCountdownTick] = useState(0)
 
@@ -672,20 +635,13 @@ export default function UnifiedDashboard() {
         touchStartRef.current = null
     }
 
-    // Save to localStorage whenever closing readings change
+    // Save to localStorage whenever production metre drafts change
     useEffect(() => {
         if (loading) return // Prevent overwriting drafts during transitions
-        const key = `closing_readings_${date}_${shift}`
-        if (Object.keys(closingReadings).length > 0) localStorage.setItem(key, JSON.stringify(closingReadings))
+        const key = `production_meters_${date}_${shift}`
+        if (Object.keys(productionMeters).length > 0) localStorage.setItem(key, JSON.stringify(productionMeters))
         else localStorage.removeItem(key)
-    }, [closingReadings, date, shift, loading])
-
-    useEffect(() => {
-        if (loading) return // Prevent overwriting drafts during transitions
-        const key = `counter_resets_${date}_${shift}`
-        if (Object.keys(counterResets).length > 0) localStorage.setItem(key, JSON.stringify(counterResets))
-        else localStorage.removeItem(key)
-    }, [counterResets, date, shift, loading])
+    }, [productionMeters, date, shift, loading])
 
     useEffect(() => {
         if (!correctionWindowExpiresAt) return
@@ -704,48 +660,28 @@ export default function UnifiedDashboard() {
         setWorkers(data.workers)
         setOrders(data.orders)
         setAssignments(data.assignments)
-        setOpeningReadings(data.previousMeterReadings ?? {})
         setCorrectionWindowExpiresAt(data.latestSubmittedAt
             ? new Date(new Date(data.latestSubmittedAt).getTime() + 30 * 60 * 1000).toISOString()
             : null
         )
 
-        const existingClosingReadings = (data.existingLogs ?? []).reduce((acc: Record<string, number>, log: any) => {
-            if (typeof log.closing_meter_reading === 'number') {
-                acc[log.machine_id] = log.closing_meter_reading
+        const existingProductionMeters = (data.existingLogs ?? []).reduce((acc: Record<string, number>, log: any) => {
+            if (typeof log.meters === 'number') {
+                acc[log.machine_id] = log.meters
             }
             return acc
         }, {})
 
-        const existingCounterResets = (data.existingLogs ?? []).reduce((acc: Record<string, boolean>, log: any) => {
-            if (log.counter_was_reset) {
-                acc[log.machine_id] = true
-            }
-            return acc
-        }, {})
-
-        const cached = localStorage.getItem(`closing_readings_${date}_${shift}`)
+        const cached = localStorage.getItem(`production_meters_${date}_${shift}`)
         if (cached) {
             try {
-                setClosingReadings(JSON.parse(cached))
+                setProductionMeters(JSON.parse(cached))
             } catch (error) {
-                console.error('Failed to parse cached counter readings', error)
-                setClosingReadings(existingClosingReadings)
+                console.error('Failed to parse cached production metre drafts', error)
+                setProductionMeters(existingProductionMeters)
             }
         } else {
-            setClosingReadings(existingClosingReadings)
-        }
-
-        const cachedCounterResets = localStorage.getItem(`counter_resets_${date}_${shift}`)
-        if (cachedCounterResets) {
-            try {
-                setCounterResets(JSON.parse(cachedCounterResets))
-            } catch (error) {
-                console.error('Failed to parse cached counter reset flags', error)
-                setCounterResets(existingCounterResets)
-            }
-        } else {
-            setCounterResets(existingCounterResets)
+            setProductionMeters(existingProductionMeters)
         }
         setLoading(false)
     }, [date, shift])
@@ -754,9 +690,7 @@ export default function UnifiedDashboard() {
 
     const resetShiftDraftState = () => {
         setLoading(true)
-        setClosingReadings({})
-        setOpeningReadings({})
-        setCounterResets({})
+        setProductionMeters({})
         setCorrectionWindowExpiresAt(null)
         setShowDuplicateDialog(false)
         setDuplicateAccessCode('')
@@ -824,12 +758,7 @@ export default function UnifiedDashboard() {
 
             // Clear meters locally if worker or order was unassigned
             if (!workerId || !orderId) {
-                setClosingReadings(prev => {
-                    const next = { ...prev }
-                    delete next[machineId]
-                    return next
-                })
-                setCounterResets(prev => {
+                setProductionMeters(prev => {
                     const next = { ...prev }
                     delete next[machineId]
                     return next
@@ -858,42 +787,39 @@ export default function UnifiedDashboard() {
         const entries = assignedMachines
             .map((m) => {
                 const assignment = assignments.find((a) => a.machine_id === m.id)
-                const openingReading = openingReadings[m.id] ?? 0
-                const closingReading = closingReadings[m.id] ?? 0
-                const counterWasReset = counterResets[m.id] ?? false
+                const metersProduced = productionMeters[m.id] ?? 0
                 return {
                     machine_id: m.id,
                     worker_id: assignment?.worker_id,
                     order_id: assignment?.order_id ?? null,
-                    meters: counterWasReset ? closingReading : closingReading - openingReading,
-                    opening_meter_reading: counterWasReset ? 0 : openingReading,
-                    closing_meter_reading: closingReading,
-                    counter_was_reset: counterWasReset,
+                    meters: metersProduced,
+                    opening_meter_reading: 0,
+                    closing_meter_reading: metersProduced,
+                    counter_was_reset: false,
                     shift,
                     date,
                     rate_per_m: assignment?.rate_per_m,
                     zero_meter_reason: [assignment?.breakdown_category, assignment?.breakdown_notes].filter(Boolean).join(': ') || null,
                 }
             })
-            .filter((e) => e.worker_id && e.order_id && (e.closing_meter_reading > 0 || Boolean(e.zero_meter_reason)))
+            .filter((e) => e.worker_id && e.order_id && (e.meters > 0 || Boolean(e.zero_meter_reason)))
 
-        const negativeReadings = entries.filter((entry) => !entry.counter_was_reset && entry.closing_meter_reading < entry.opening_meter_reading)
-
-        if (negativeReadings.length > 0) {
-            toast.error(`Cannot save ${negativeReadings.length} loom reading${negativeReadings.length === 1 ? '' : 's'}: closing meter is below opening meter.`)
+        const negativeMeters = Object.values(productionMeters).filter((meters) => meters < 0)
+        if (negativeMeters.length > 0) {
+            toast.error('Production metres cannot be negative.')
             return
         }
 
         if (entries.length === 0) {
             // Check if any machines HAVE readings but were filtered out due to missing order
             const machinesWithMetersButNoOrder = machines.filter(m =>
-                (closingReadings[m.id] ?? 0) > 0 && !assignments.find(a => a.machine_id === m.id)?.order_id
+                (productionMeters[m.id] ?? 0) > 0 && !assignments.find(a => a.machine_id === m.id)?.order_id
             )
 
             if (machinesWithMetersButNoOrder.length > 0) {
                 toast.error(`Cannot log production for ${machinesWithMetersButNoOrder.length} looms: no Market Run or order is assigned.`)
             } else {
-                toast.error('No valid counter readings found. Ensure both a worker and a Market Run/order are assigned to each loom.')
+                toast.error('No valid production metres found. Ensure both a worker and a Market Run/order are assigned to each loom.')
             }
             return
         }
@@ -911,10 +837,8 @@ export default function UnifiedDashboard() {
             }
 
             toast.success(`Shift meters logged (${res.logged} looms)`)
-            setClosingReadings({}) // Reset inputs after success
-            setCounterResets({})
-            localStorage.removeItem(`closing_readings_${date}_${shift}`) // Clear cache
-            localStorage.removeItem(`counter_resets_${date}_${shift}`)
+            setProductionMeters({}) // Reset inputs after success
+            localStorage.removeItem(`production_meters_${date}_${shift}`) // Clear cache
             setShowDuplicateDialog(false)
             setDuplicateAccessCode('')
             setCorrectionWindowExpiresAt(res.correctionWindowExpiresAt ?? null)
@@ -961,13 +885,13 @@ export default function UnifiedDashboard() {
     }
 
     const assignedCount = assignments.filter((a) => a.worker_id).length
-    const loggedMetersCount = Object.keys(closingReadings).filter((machineId) => (closingReadings[machineId] ?? 0) > 0).length
+    const loggedMetersCount = Object.keys(productionMeters).filter((machineId) => (productionMeters[machineId] ?? 0) > 0).length
     const validEntryCount = machines.filter((machine) => {
         const assignment = assignments.find((a) => a.machine_id === machine.id)
         return Boolean(
             assignment?.worker_id &&
             assignment?.order_id &&
-            (closingReadings[machine.id] ?? 0) > 0
+            (productionMeters[machine.id] ?? 0) > 0
         )
     }).length
     const readinessChecks: ReadinessIssue[] = [
@@ -976,8 +900,8 @@ export default function UnifiedDashboard() {
             label: 'without worker',
             count: machines.filter((machine) => {
                 const assignment = assignments.find((a) => a.machine_id === machine.id)
-                const hasReading = (closingReadings[machine.id] ?? 0) > 0
-                return (machine.machine_status === 'running' || hasReading) && !assignment?.worker_id
+                const hasMeters = (productionMeters[machine.id] ?? 0) > 0
+                return (machine.machine_status === 'running' || hasMeters) && !assignment?.worker_id
             }).length,
             tone: 'blocker',
         },
@@ -986,25 +910,16 @@ export default function UnifiedDashboard() {
             label: 'without order',
             count: machines.filter((machine) => {
                 const assignment = assignments.find((a) => a.machine_id === machine.id)
-                const hasReading = (closingReadings[machine.id] ?? 0) > 0
-                return (machine.machine_status === 'running' || hasReading) && !assignment?.order_id
+                const hasMeters = (productionMeters[machine.id] ?? 0) > 0
+                return (machine.machine_status === 'running' || hasMeters) && !assignment?.order_id
             }).length,
             tone: 'blocker',
         },
         {
             id: 'running-no-reading',
-            label: 'running no reading',
-            count: machines.filter((machine) => machine.machine_status === 'running' && (closingReadings[machine.id] ?? 0) <= 0).length,
+            label: 'running no metres',
+            count: machines.filter((machine) => machine.machine_status === 'running' && (productionMeters[machine.id] ?? 0) <= 0).length,
             tone: 'warning',
-        },
-        {
-            id: 'counter-warning',
-            label: 'counter below opening',
-            count: machines.filter((machine) => {
-                const closingReading = closingReadings[machine.id] ?? 0
-                return closingReading > 0 && !counterResets[machine.id] && closingReading < (openingReadings[machine.id] ?? 0)
-            }).length,
-            tone: 'blocker',
         },
         {
             id: 'maintenance-note',
@@ -1151,16 +1066,8 @@ export default function UnifiedDashboard() {
                                 workers={workers}
                                 orders={orders}
                                 assignment={assignment}
-                                closingReading={closingReadings[machine.id] ?? 0}
-                                openingReading={openingReadings[machine.id] ?? 0}
-                                counterWasReset={counterResets[machine.id] ?? false}
-                                onClosingReadingChange={(v) => setClosingReadings(prev => ({ ...prev, [machine.id]: v }))}
-                                onCounterResetChange={(v) => setCounterResets(prev => {
-                                    const next = { ...prev }
-                                    if (v) next[machine.id] = true
-                                    else delete next[machine.id]
-                                    return next
-                                })}
+                                producedMeters={productionMeters[machine.id] ?? 0}
+                                onProducedMetersChange={(v) => setProductionMeters(prev => ({ ...prev, [machine.id]: v }))}
                                 onStatusClick={setSelectedMachine}
                                 onAssignmentChange={handleAssignmentChange}
                                 isSyncing={syncingState[machine.id] === 'syncing'}
@@ -1222,7 +1129,7 @@ export default function UnifiedDashboard() {
                             <AlertTriangle className="h-5 w-5" /> Existing logs found
                         </DialogTitle>
                         <DialogDescription>
-                            Some looms already have production logs for this shift. Overwriting them requires an owner's access code.
+                            Some looms already have production logs for this shift. Overwriting them requires an owner access code.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
