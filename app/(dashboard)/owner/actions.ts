@@ -31,7 +31,7 @@ export async function addMachine(name: string, loomType?: string, customLabel?: 
     const trimmedName = name.trim()
     if (!trimmedName) return { error: 'Machine name is required.' }
 
-    const insertData: Record<string, any> = { name: trimmedName, org_id: profile.org_id, status: 'active' }
+    const insertData: Record<string, any> = { name: trimmedName, org_id: profile.org_id, status: 'inactive' }
     
     if (loomType) {
         insertData.loom_type = loomType
@@ -138,6 +138,46 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
     if ('error' in parsed) return { error: parsed.error }
 
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
+
+    if (newStatus === 'active') {
+        const [machineRes, assignmentsRes] = await Promise.all([
+            supabase
+                .from('machines')
+                .select('current_order_id, orders(status)')
+                .eq('id', parsed.data)
+                .eq('org_id', profile.org_id)
+                .single(),
+            supabase
+                .from('machine_assignments')
+                .select('shift')
+                .eq('machine_id', parsed.data)
+                .eq('org_id', profile.org_id)
+                .in('shift', ['day', 'night']),
+        ])
+
+        if (machineRes.error) {
+            console.error('Failed to verify machine activation requirements:', machineRes.error)
+            return { error: 'Failed to check loom setup. Please try again.' }
+        }
+
+        if (assignmentsRes.error) {
+            console.error('Failed to verify machine shift assignments:', assignmentsRes.error)
+            return { error: 'Failed to check worker assignments. Please try again.' }
+        }
+
+        const assignedShifts = new Set((assignmentsRes.data ?? []).map((assignment) => assignment.shift))
+        const activeOrder = Array.isArray(machineRes.data.orders)
+            ? machineRes.data.orders[0]
+            : machineRes.data.orders
+
+        if (!assignedShifts.has('day') || !assignedShifts.has('night')) {
+            return { error: 'Assign workers for both day and night shifts before activating this loom.' }
+        }
+
+        if (!machineRes.data.current_order_id || activeOrder?.status !== 'active') {
+            return { error: 'Assign an active order before activating this loom.' }
+        }
+    }
 
     const { error } = await supabase
         .from('machines')
@@ -1314,10 +1354,36 @@ export async function assignMachineOrder(machineId: string, orderId: string | nu
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
+    const machineParsed = safeParse(UuidSchema, machineId)
+    if ('error' in machineParsed) return { error: machineParsed.error }
+
+    let parsedOrderId: string | null = null
+    if (orderId) {
+        const orderParsed = safeParse(UuidSchema, orderId)
+        if ('error' in orderParsed) return { error: orderParsed.error }
+        parsedOrderId = orderParsed.data
+
+        const { data: order, error: orderError } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('id', parsedOrderId)
+            .eq('org_id', profile.org_id)
+            .eq('status', 'active')
+            .single()
+
+        if (orderError || !order) {
+            if (orderError) console.error('Failed to verify active order:', orderError)
+            return { error: 'Only active orders can be assigned to a loom.' }
+        }
+    }
+
     const { error } = await supabase
         .from('machines')
-        .update({ current_order_id: orderId })
-        .eq('id', machineId)
+        .update({
+            current_order_id: parsedOrderId,
+            ...(parsedOrderId === null ? { status: 'inactive' } : {}),
+        })
+        .eq('id', machineParsed.data)
         .eq('org_id', profile.org_id)
 
     if (error) {

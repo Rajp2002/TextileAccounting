@@ -4,6 +4,7 @@ export type AssignmentResult = { success: true; error?: never } | { success?: fa
 
 interface OrderQualityRow {
     quality_id: string | null
+    status: string
 }
 
 interface MachineNameRow {
@@ -19,12 +20,13 @@ export async function assignMachinesToOrderForOrg(
 ): Promise<AssignmentResult> {
     const { data: order, error: orderError } = await supabase
         .from('orders')
-        .select('quality_id')
+        .select('quality_id, status')
         .eq('id', orderId)
         .eq('org_id', orgId)
         .single<OrderQualityRow>()
 
     if (orderError || !order) return { error: 'Order not found' }
+    if (order.status !== 'active') return { error: 'Only active orders can be assigned to looms' }
 
     if (machineIds.length > 0) {
         const { data: machines, error: machineFetchError } = await supabase
@@ -55,7 +57,7 @@ export async function assignMachinesToOrderForOrg(
 
     const { error: unlinkError } = await supabase
         .from('machines')
-        .update({ current_order_id: null })
+        .update({ current_order_id: null, status: 'inactive' })
         .eq('current_order_id', orderId)
         .eq('org_id', orgId)
 
