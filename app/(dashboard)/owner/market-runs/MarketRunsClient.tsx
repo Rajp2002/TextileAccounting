@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     TrendingUp, Warehouse, ArrowRight, Plus,
-    AlertCircle, BarChart3, Layers,
+    AlertCircle, BarChart3, Layers, Archive,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -187,7 +187,7 @@ export default function MarketRunsClient({
     fetchError?: string
 }) {
     const router = useRouter()
-    const [filter, setFilter] = useState<'all' | 'active' | 'selling' | 'done'>('all')
+    const [filter, setFilter] = useState<'all' | 'active' | 'selling'>('all')
 
     const goToEstimator = () => router.push('/owner/estimator?mode=market')
 
@@ -195,7 +195,6 @@ export default function MarketRunsClient({
         { key: 'all',     label: 'All' },
         { key: 'active',  label: 'In Production' },
         { key: 'selling', label: 'In Stock' },
-        { key: 'done',    label: 'Completed' },
     ] as const
 
     const filtered = initialRuns.filter(r => {
@@ -208,7 +207,6 @@ export default function MarketRunsClient({
         if (filter === 'all')     return true
         if (filter === 'active')  return derivedStatus === 'production'
         if (filter === 'selling') return ['in_godown', 'partially_sold'].includes(derivedStatus)
-        if (filter === 'done')    return ['sold_out', 'closed'].includes(derivedStatus)
         return true
     })
 
@@ -235,10 +233,18 @@ export default function MarketRunsClient({
                         Plan speculative grey fabric production, then manage finished takas from Stock
                     </p>
                 </div>
-                <Button onClick={goToEstimator} className="gap-2 shrink-0">
-                    <Plus className="h-4 w-4" />
-                    New Run
-                </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                    <Button asChild variant="outline" className="gap-2 hidden sm:flex">
+                        <Link href="/owner/archive">
+                            <Archive className="h-4 w-4" />
+                            Archive
+                        </Link>
+                    </Button>
+                    <Button onClick={goToEstimator} className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        New Run
+                    </Button>
+                </div>
             </div>
 
             {/* Summary cards */}

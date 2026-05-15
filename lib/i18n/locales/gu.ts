@@ -25,6 +25,7 @@ export const gu = {
     "system health": "સિસ્ટમ હેલ્થ",
     "market_runs": "માર્કેટ રન્સ",
     "factory_today": "ફેક્ટરી આજે",
+    "archive": "આર્કાઇવ",
   },
   attendance: {
     title: "દૈનિક હાજરી (Daily Attendance)",

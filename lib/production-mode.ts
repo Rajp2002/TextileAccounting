@@ -18,6 +18,7 @@ export type WorkflowKey =
     | 'looms'
     | 'settings'
     | 'billing'
+    | 'archive'
 
 export const DEFAULT_PRODUCTION_MODE: ProductionMode = 'market_run'
 
@@ -68,6 +69,7 @@ export const workflowVisibility: Record<ProductionMode, Record<WorkflowKey, bool
         looms: true,
         settings: true,
         billing: true,
+        archive: true,
     },
     order_based: {
         estimator: true,
@@ -85,6 +87,7 @@ export const workflowVisibility: Record<ProductionMode, Record<WorkflowKey, bool
         looms: true,
         settings: true,
         billing: true,
+        archive: true,
     },
     both: {
         estimator: true,
@@ -102,6 +105,7 @@ export const workflowVisibility: Record<ProductionMode, Record<WorkflowKey, bool
         looms: true,
         settings: true,
         billing: true,
+        archive: true,
     },
 }
 

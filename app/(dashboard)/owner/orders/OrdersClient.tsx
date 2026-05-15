@@ -34,6 +34,7 @@ import {
     QrCode,
     Copy,
     Truck,
+    Archive,
 } from 'lucide-react'
 import {
     Sheet,
@@ -76,6 +77,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { QRCodeSVG } from 'qrcode.react'
+import { CostAnalysisDetails } from '@/components/cost-analysis-details'
 
 // ─── Utility helpers ─────────────────────────────────────────────────────────
 
@@ -198,88 +200,9 @@ function MachineAssignInline({
 
 // ─── Cost Breakdown (from linked estimator quote) ─────────────────────────────
 
-function QuoteCostBreakdown({ quote, targetMeters }: { quote: any; targetMeters: number }) {
-    const landedCost = Number(quote.landed_cost_per_meter ?? 0)
-    const quotePrice = Number(quote.quote_price_per_meter ?? 0)
-    const marginPct  = Number(quote.intended_margin_percent ?? 0)
-    const totalValue = quotePrice * targetMeters
-
+function QuoteCostBreakdown({ quote, targetMeters }: { quote: Record<string, unknown>; targetMeters: number }) {
     return (
-        <div className="space-y-3">
-            {/* Key metrics */}
-            <div className="grid grid-cols-2 gap-2">
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-1">Production Cost</p>
-                    <p className="text-lg font-black font-mono text-slate-900">₹{landedCost.toFixed(2)}<span className="text-xs text-slate-500 font-normal">/m</span></p>
-                </div>
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3">
-                    <p className="text-xs uppercase tracking-widest text-primary font-bold mb-1">Quote Price</p>
-                    <p className="text-lg font-black font-mono text-primary">₹{quotePrice.toFixed(2)}<span className="text-xs text-primary/60 font-normal">/m</span></p>
-                </div>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
-                <div>
-                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-0.5">Total Order Value</p>
-                    <p className="text-xl font-black font-mono text-emerald-600">
-                        ₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                    </p>
-                </div>
-                <div className="text-right">
-                    <p className="text-xs uppercase tracking-widest text-slate-500 font-bold mb-0.5">Margin</p>
-                    <p className="text-lg font-black text-amber-600">{marginPct.toFixed(1)}%</p>
-                </div>
-            </div>
-
-            {/* Cost stack pills */}
-            <div className="space-y-1.5">
-                <p className="text-xs uppercase tracking-widest text-slate-500 font-bold">Cost Stack</p>
-                {quote.warp_rows?.length > 0 && (
-                    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-100">
-                        <span className="text-primary font-medium">🧶 Warp Yarn</span>
-                        <span className="font-mono text-slate-900">
-                            ₹{((quote.warp_rows as any[]).reduce((acc: number, r: any) => {
-                                const kgPer100m = (r.calcDenier * r.beamEnds) / (9000 * 1000)
-                                const costPer100m = kgPer100m * r.yarnRate * (1 + r.gstPct / 100)
-                                return acc + costPer100m
-                            }, 0) / 100).toFixed(2)}/m
-                        </span>
-                    </div>
-                )}
-                {quote.weft_rows?.length > 0 && (
-                    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-100">
-                        <span className="text-emerald-600 font-medium">🧵 Weft Yarn</span>
-                        <span className="font-mono text-slate-900">
-                            ₹{((quote.weft_rows as any[]).reduce((acc: number, r: any) => {
-                                const kgPer100m = (r.picks * r.reedSpace * r.calcDenier) / (9000 * 100 * 100)
-                                const costPer100m = kgPer100m * r.yarnRate * (1 + r.gstPct / 100)
-                                return acc + costPer100m
-                            }, 0) / 100).toFixed(2)}/m
-                        </span>
-                    </div>
-                )}
-                {quote.overhead_pct > 0 && (
-                    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-100">
-                        <span className="text-rose-500 font-medium">🏭 Overhead</span>
-                        <span className="font-mono text-slate-900">{Number(quote.overhead_pct).toFixed(1)}% effective</span>
-                    </div>
-                )}
-                {quote.worker_rate_per_m > 0 && (
-                    <div className="flex items-center justify-between text-xs py-1 border-b border-slate-100">
-                        <span className="text-amber-500 font-medium">👷 Weaver Wage</span>
-                        <span className="font-mono text-slate-900">
-                            ₹{Number(quote.worker_rate_per_m).toFixed(2)}/m
-                        </span>
-                    </div>
-                )}
-                {quote.commission_pct > 0 && (
-                    <div className="flex items-center justify-between text-xs py-1">
-                        <span className="text-amber-600 font-medium">💼 Commission</span>
-                        <span className="font-mono text-slate-900">{Number(quote.commission_pct).toFixed(1)}%</span>
-                    </div>
-                )}
-            </div>
-        </div>
+        <CostAnalysisDetails quote={quote} targetMeters={targetMeters} title="Estimator Cost Stack" />
     )
 }
 
@@ -1341,8 +1264,6 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
     const activeOrders = orders.filter(
         (o) => o.status === 'active' && (o.assigned_machines_count > 0 || Number(o.total_meters_produced) > 0)
     )
-    const completedOrders = orders.filter((o) => o.status === 'completed')
-
     if (loading) {
         return (
             <div className="min-h-[50vh] flex items-center justify-center">
@@ -1358,10 +1279,19 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">{t('orders_page.title')}</h1>
                     <p className="text-sm font-medium text-slate-500 mt-1">
-                        {activeOrders.length + pendingOrders.length} {t('orders_page.active_summary')} · {completedOrders.length} {t('orders_page.completed_summary')}
+                        {activeOrders.length + pendingOrders.length} {t('orders_page.active_summary')}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <a href="/owner/archive">
+                        <Button
+                            variant="outline"
+                            className="border-slate-200 text-slate-600 hover:bg-slate-50 font-bold gap-2 hidden sm:flex"
+                        >
+                            <Archive className="h-4 w-4 text-slate-500" />
+                            Archive
+                        </Button>
+                    </a>
                     <a href="/owner/estimator">
                         <Button
                             variant="outline"
@@ -1409,7 +1339,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                         </div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Pending Setup */}
                         <KanbanColumn title={t('orders_page.pending_setup')} icon={Clock} count={pendingOrders.length} accent="text-slate-500">
                             {pendingOrders.length === 0 ? (
@@ -1448,24 +1378,6 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
                             )}
                         </KanbanColumn>
 
-                        {/* Completed */}
-                        <KanbanColumn title={t('orders_page.completed_col')} icon={CheckCircle2} count={completedOrders.length} accent="text-emerald-600">
-                            {completedOrders.length === 0 ? (
-                                <div className="border border-dashed border-slate-300 rounded-2xl p-6 text-center">
-                                    <p className="text-xs text-slate-500">{t('orders_page.no_completed')}</p>
-                                </div>
-                            ) : (
-                                completedOrders.slice(0, 5).map((order) => (
-                                    <OrderCard
-                                        key={order.order_id}
-                                        order={order}
-                                        onSelect={setSelectedOrderId}
-                                        onComplete={handleComplete}
-                                        onCancel={handleCancel}
-                                    />
-                                ))
-                            )}
-                        </KanbanColumn>
                     </div>
                 )}
             </div>

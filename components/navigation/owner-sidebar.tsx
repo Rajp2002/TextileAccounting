@@ -20,6 +20,7 @@ import {
     Store,
     Warehouse,
     Factory,
+    Archive,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { useState } from "react"
@@ -71,6 +72,7 @@ const navGroups = [
     {
         label: "System",
         items: [
+            { name: "Archive", href: "/owner/archive", icon: Archive, translationKey: "archive", workflow: "archive" },
             { name: "Settings", href: "/owner/settings", icon: Settings, translationKey: "settings", workflow: "settings" },
         ]
     }
