@@ -28,6 +28,7 @@ import {
 import { updateMarketRunStatus } from '../../estimator/actions'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 import { useTranslation } from '@/lib/i18n/context'
+import { CostAnalysisDetails } from '@/components/cost-analysis-details'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -65,6 +66,8 @@ type MarketRunSale = {
     parties:         { id: string; name: string; phone: string | null }
 }
 
+type QuoteSnapshot = Record<string, unknown> | null
+
 const STATUS_CONFIG: Record<MarketRunSummary['status'], { label: string; color: string; dot: string }> = {
     production:     { label: 'In Production', color: 'bg-blue-50 text-blue-700 border-blue-200',   dot: 'bg-blue-500' },
     in_godown:      { label: 'In Godown',     color: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
@@ -80,9 +83,11 @@ function fmtM(n: number) { return `${n.toLocaleString('en-IN', { maximumFraction
 
 export default function MarketRunDetailClient({
     run,
+    quote,
     initialSales,
 }: {
     run: MarketRunSummary
+    quote: QuoteSnapshot
     initialSales: MarketRunSale[]
 }) {
     const { tx } = useTranslation()
@@ -289,6 +294,18 @@ export default function MarketRunDetailClient({
                     </CardContent>
                 </Card>
             </div>
+
+            {quote && (
+                <Card className="border-border/50">
+                    <CardContent className="p-4">
+                        <CostAnalysisDetails
+                            quote={quote}
+                            targetMeters={Number(run.target_meters || 0)}
+                            title="Market Run Cost Stack"
+                        />
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Guidance Card */}
             <Card className="border-orange-100 bg-orange-50/70">

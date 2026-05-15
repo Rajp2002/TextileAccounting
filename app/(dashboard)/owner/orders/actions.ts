@@ -50,8 +50,23 @@ export async function getOrdersWithProgress() {
         .from('order_progress_summary')
         .select('*')
         .eq('org_id', profile.org_id)
-        .in('status', ['active', 'completed'])
+        .eq('status', 'active')
         .order('deadline', { ascending: true })
+
+    if (error) return { error: error.message }
+    return { data: data ?? [] }
+}
+
+export async function getArchivedOrders() {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('order_progress_summary')
+        .select('*')
+        .eq('org_id', profile.org_id)
+        .eq('status', 'completed')
+        .order('deadline', { ascending: false })
 
     if (error) return { error: error.message }
     return { data: data ?? [] }
@@ -98,6 +113,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
     }
 
     revalidatePath('/owner/orders')
+    revalidatePath('/owner/archive')
     revalidatePath('/owner/analytics')
     return { success: true }
 }
@@ -221,6 +237,7 @@ export async function updateOrderDetails(orderId: string, data: {
     if (error) return { error: error.message }
 
     revalidatePath('/owner/orders')
+    revalidatePath('/owner/archive')
     revalidatePath('/owner/analytics')
     return { success: true, reactivated: updatePayload.status === 'active' }
 }
@@ -268,11 +285,7 @@ export async function getOrderWithQuote(orderId: string) {
     // Fetch linked quote (if any) — joined via estimator_quotes.order_id
     const { data: quote } = await supabase
         .from('estimator_quotes')
-        .select(
-            'id, quote_price_per_meter, landed_cost_per_meter, intended_margin_percent, meters, ' +
-            'warp_rows, weft_rows, overhead_pct, commission_pct, transport_per_m, ' +
-            'warping_rate_per_kg, sizing_rate_per_kg, overhead_items, monthly_output_m, worker_rate_per_m'
-        )
+        .select('*')
         .eq('order_id', orderId)
         .eq('org_id', profile.org_id)
         .order('created_at', { ascending: false })

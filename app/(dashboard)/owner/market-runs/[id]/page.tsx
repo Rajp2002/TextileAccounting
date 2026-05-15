@@ -25,6 +25,7 @@ export default async function MarketRunDetailPage({ params }: { params: Promise<
         }>
             <MarketRunDetailClient 
                 run={data.run} 
+                quote={data.quote}
                 initialSales={data.sales} 
             />
         </Suspense>

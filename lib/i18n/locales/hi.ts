@@ -25,6 +25,7 @@ export const hi = {
     "system health": "सिस्टम हेल्थ",
     "market_runs": "मार्केट रन्स",
     "factory_today": "फैक्ट्री आज",
+    "archive": "आर्काइव",
   },
   attendance: {
     title: "दैनिक उपस्थिति (Daily Attendance)",

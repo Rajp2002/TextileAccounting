@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
+import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 
 /**
  * Generates a 12-character URL-safe tracking token for orders.
@@ -941,7 +942,7 @@ export async function createMarketRunFromEstimator(params: {
 
 // ─── Market Run — Read ────────────────────────────────────────────────────────
 
-export async function getMarketRuns() {
+export async function getMarketRuns(options: { includeArchived?: boolean } = {}) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
@@ -952,7 +953,20 @@ export async function getMarketRuns() {
         .order('created_at', { ascending: false })
 
     if (error) return { error: error.message }
-    return { data: data ?? [] }
+    const rows = data ?? []
+    if (options.includeArchived) return { data: rows }
+
+    return {
+        data: rows.filter((run) => {
+            const displayStatus = getMarketRunDisplayStatus({
+                storedStatus: run.status,
+                producedQuantity: run.total_meters_produced,
+                availableQuantity: run.meters_in_godown,
+                soldQuantity: run.total_meters_sold,
+            })
+            return !['sold_out', 'closed'].includes(displayStatus)
+        }),
+    }
 }
 
 export async function getMarketRunDetail(marketRunId: string) {
@@ -968,6 +982,15 @@ export async function getMarketRunDetail(marketRunId: string) {
 
     if (error || !run) return { error: error?.message ?? 'Market run not found.' }
 
+    const { data: quote, error: quoteError } = await supabase
+        .from('estimator_quotes')
+        .select('*')
+        .eq('id', run.quote_id)
+        .eq('org_id', profile.org_id)
+        .maybeSingle()
+
+    if (quoteError) return { error: quoteError.message }
+
     // Fetch sales with party name
     const { data: sales, error: salesError } = await supabase
         .from('market_run_sales')
@@ -981,7 +1004,7 @@ export async function getMarketRunDetail(marketRunId: string) {
 
     if (salesError) return { error: salesError.message }
 
-    return { data: { run, sales: sales ?? [] } }
+    return { data: { run, quote: quote ?? null, sales: sales ?? [] } }
 }
 
 // ─── Market Run — Record a Sale ───────────────────────────────────────────────
@@ -996,7 +1019,7 @@ export async function createMarketRunSaleAction(params: {
     dueDays?:      number     // days from sale date → due date
     notes?:        string
 }) {
-    const { profile } = await requireRole(['owner'])
+    await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const metersSold = Number(params.metersSold)
@@ -1047,5 +1070,6 @@ export async function updateMarketRunStatus(
 
     revalidatePath(`/owner/market-runs/${marketRunId}`)
     revalidatePath('/owner/market-runs')
+    revalidatePath('/owner/archive')
     return { success: true }
 }
