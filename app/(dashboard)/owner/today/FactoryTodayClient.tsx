@@ -12,9 +12,45 @@ import { QuickActionsCard } from '@/components/factory-today/QuickActionsCard'
 import { ActivationChecklistCard } from '@/components/factory-today/ActivationChecklistCard'
 import { CheckCircle2, Factory } from 'lucide-react'
 import { getWorkflowVisibility } from '@/lib/production-mode'
+import { cn } from '@/lib/utils'
 
 interface FactoryTodayClientProps {
     initialData: FactoryTodayData
+}
+
+function getDisplayDate(date: string) {
+    const [year, month, day] = date.split('-').map(Number)
+
+    if ([year, month, day].every(Number.isFinite)) {
+        return new Date(year, month - 1, day)
+    }
+
+    return new Date(date)
+}
+
+function HeaderDateBadge({
+    weekdayLabel,
+    dayMonthLabel,
+    fullDateLabel,
+    className,
+}: {
+    weekdayLabel: string
+    dayMonthLabel: string
+    fullDateLabel: string
+    className?: string
+}) {
+    return (
+        <div
+            className={cn(
+                'shrink-0 rounded-xl border border-saffron/20 bg-canvas/85 px-3 py-2 text-right shadow-sm backdrop-blur-sm',
+                className
+            )}
+            aria-label={fullDateLabel}
+        >
+            <p className="text-[11px] font-bold uppercase leading-none text-saffron-deep">{weekdayLabel}</p>
+            <p className="mt-1 text-lg font-bold leading-none text-ink">{dayMonthLabel}</p>
+        </div>
+    )
 }
 
 function AllClearState() {
@@ -36,10 +72,16 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
     const { actionCounts } = data
     const visibility = getWorkflowVisibility(data.productionMode)
 
-    const dateLabel = new Date(data.date).toLocaleDateString('en-IN', {
+    const displayDate = getDisplayDate(data.date)
+    const dateLabel = displayDate.toLocaleDateString('en-IN', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
+    })
+    const weekdayLabel = displayDate.toLocaleDateString('en-IN', { weekday: 'long' })
+    const dayMonthLabel = displayDate.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
     })
 
     // All-clear: every actionable item must be resolved.
@@ -72,32 +114,46 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
     return (
         <div className="space-y-6">
             {/* Page Header */}
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-saffron/30 bg-saffron/10">
-                        <Factory className="h-5 w-5 text-saffron" />
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-saffron/30 bg-saffron/10">
+                            <Factory className="h-5 w-5 text-saffron" />
+                        </div>
+                        <h1 className="min-w-0 text-xl font-bold leading-tight text-ink">Factory Today</h1>
                     </div>
-                    <div>
-                        <h1 className="text-xl font-bold text-ink">Factory Today</h1>
-                        <p className="text-sm text-muted">{dateLabel}</p>
-                    </div>
+                    <HeaderDateBadge
+                        weekdayLabel={weekdayLabel}
+                        dayMonthLabel={dayMonthLabel}
+                        fullDateLabel={dateLabel}
+                        className="sm:hidden"
+                    />
                 </div>
 
-                {/* Action summary pill */}
-                {(actionCounts.critical > 0 || actionCounts.warning > 0) && (
-                    <div className="flex items-center gap-2">
-                        {actionCounts.critical > 0 && (
-                            <span className="rounded-full border border-risk/30 bg-risk-soft px-3 py-1 text-xs font-bold text-risk">
-                                {actionCounts.critical} critical
-                            </span>
-                        )}
-                        {actionCounts.warning > 0 && (
-                            <span className="rounded-full border border-warning/30 bg-warning-soft px-3 py-1 text-xs font-bold text-warning">
-                                {actionCounts.warning} warnings
-                            </span>
-                        )}
-                    </div>
-                )}
+                <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
+                    <HeaderDateBadge
+                        weekdayLabel={weekdayLabel}
+                        dayMonthLabel={dayMonthLabel}
+                        fullDateLabel={dateLabel}
+                        className="hidden sm:block"
+                    />
+
+                    {/* Action summary pill */}
+                    {(actionCounts.critical > 0 || actionCounts.warning > 0) && (
+                        <div className="flex items-center gap-2">
+                            {actionCounts.critical > 0 && (
+                                <span className="rounded-full border border-risk/30 bg-risk-soft px-3 py-1 text-xs font-bold text-risk">
+                                    {actionCounts.critical} critical
+                                </span>
+                            )}
+                            {actionCounts.warning > 0 && (
+                                <span className="rounded-full border border-warning/30 bg-warning-soft px-3 py-1 text-xs font-bold text-warning">
+                                    {actionCounts.warning} warnings
+                                </span>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Activation Checklist */}
