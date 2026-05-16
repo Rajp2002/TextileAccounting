@@ -1,18 +1,7 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
-import {
-    Send,
-    Loader2,
-    Package,
-    AlertTriangle,
-    IndianRupee,
-    ChevronRight,
-    Building2,
-    Truck,
-    Info,
-    ExternalLink
-} from 'lucide-react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
+import { CalendarDays, ChevronRight, IndianRupee, Loader2, Package, Send, Truck, UserRound } from 'lucide-react'
 import {
     Dialog,
     DialogContent,
@@ -26,7 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { getSellAndDispatchOptions, sellAndDispatchTakas } from '@/app/(dashboard)/owner/dispatches/actions'
+import { createPartyStockSaleAndOptionalDispatch, getSellAndDispatchOptions } from '@/app/(dashboard)/owner/dispatches/actions'
 
 export type SellAndDispatchDialogProps = {
     open: boolean
@@ -37,172 +26,221 @@ export type SellAndDispatchDialogProps = {
 }
 
 type OrderOption = { id: string; party_name: string; quality_label: string | null; status: string; total_target_meters: number }
-type LotOption = { stock_lot_id: string; quality_label: string; godown: string; available_taka_count: number; available_meters: number; cost_per_meter: number; order_id: string | null; unit_label: string }
+type LotOption = {
+    stock_lot_id: string
+    quality_label: string
+    godown: string
+    source_type?: string | null
+    market_run_id?: string | null
+    available_taka_count: number
+    available_meters: number
+    meters_per_taka: number
+    cost_per_meter: number
+    order_id: string | null
+    unit_label: string
+}
+
+function todayDate() {
+    return new Date().toISOString().slice(0, 10)
+}
+
+function addDays(dateString: string, days: number) {
+    const date = new Date(`${dateString}T00:00:00.000Z`)
+    date.setUTCDate(date.getUTCDate() + days)
+    return date.toISOString().slice(0, 10)
+}
+
+function money(value: number) {
+    return `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+}
 
 export function SellAndDispatchDialog({
     open,
     onOpenChange,
     defaultOrderId,
     defaultStockLotId,
-    onSuccess
+    onSuccess,
 }: SellAndDispatchDialogProps) {
     const [step, setStep] = useState(1)
     const [loadingData, setLoadingData] = useState(true)
     const [pending, startTransition] = useTransition()
-    
+
     const [orders, setOrders] = useState<OrderOption[]>([])
     const [lots, setLots] = useState<LotOption[]>([])
 
-    // Form State
-    const [selectedOrderId, setSelectedOrderId] = useState<string>(defaultOrderId || '')
-    const [selectedLotIds, setSelectedLotIds] = useState<string[]>(defaultStockLotId ? [defaultStockLotId] : [])
-    const [lotUnits, setLotUnits] = useState<Record<string, number>>({})
-    const [saleRate, setSaleRate] = useState<string>('')
-    const [saleDate, setSaleDate] = useState<string>(new Date().toISOString().split('T')[0])
-    
-    const [ewayNumber, setEwayNumber] = useState('')
-    const [vehicleNumber, setVehicleNumber] = useState('')
-    const [transporterName, setTransporterName] = useState('')
-    const [distanceKm, setDistanceKm] = useState('')
-    const [notes, setNotes] = useState('')
+    const [sourceId, setSourceId] = useState(defaultStockLotId || '')
+    const [partyName, setPartyName] = useState('')
+    const [partyPhone, setPartyPhone] = useState('')
+    const [partyCity, setPartyCity] = useState('')
+    const [partyGstin, setPartyGstin] = useState('')
+    const [soldMeters, setSoldMeters] = useState('')
+    const [soldTakas, setSoldTakas] = useState('')
+    const [saleRate, setSaleRate] = useState('')
+    const [creditDays, setCreditDays] = useState('0')
+    const [saleDate, setSaleDate] = useState(todayDate())
+    const [dispatchNow, setDispatchNow] = useState(true)
     const [actualDispatchedMeters, setActualDispatchedMeters] = useState('')
-
-    const [confirmedSameQuality, setConfirmedSameQuality] = useState(false)
+    const [dispatchDate, setDispatchDate] = useState(todayDate())
+    const [transportName, setTransportName] = useState('')
+    const [vehicleNumber, setVehicleNumber] = useState('')
+    const [challanNumber, setChallanNumber] = useState('')
+    const [notes, setNotes] = useState('')
 
     useEffect(() => {
-        if (open) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setStep(1)
-            setSelectedOrderId(defaultOrderId || '')
-            setSelectedLotIds(defaultStockLotId ? [defaultStockLotId] : [])
-            setConfirmedSameQuality(false)
-            setActualDispatchedMeters('')
-            setLoadingData(true)
-            getSellAndDispatchOptions().then(data => {
-                setOrders(data.orders as OrderOption[])
-                setLots(data.lots as LotOption[])
-                setLoadingData(false)
-                
-                // Pre-fill lot units to max available if a default lot is passed
-                if (defaultStockLotId) {
-                    const lot = data.lots.find((l: LotOption) => l.stock_lot_id === defaultStockLotId)
-                    if (lot) {
-                        setLotUnits({ [defaultStockLotId]: lot.available_taka_count })
-                        // Auto-select order if lot has one
-                        if (lot.order_id && !defaultOrderId) {
-                            setSelectedOrderId(lot.order_id)
-                        }
-                    }
-                }
-            })
-        }
+        if (!open) return
+
+        setStep(1)
+        setLoadingData(true)
+        setSourceId(defaultStockLotId || '')
+        setPartyName('')
+        setPartyPhone('')
+        setPartyCity('')
+        setPartyGstin('')
+        setSoldMeters('')
+        setSoldTakas('')
+        setSaleRate('')
+        setCreditDays('0')
+        setSaleDate(todayDate())
+        setDispatchNow(true)
+        setActualDispatchedMeters('')
+        setDispatchDate(todayDate())
+        setTransportName('')
+        setVehicleNumber('')
+        setChallanNumber('')
+        setNotes('')
+
+        getSellAndDispatchOptions().then((data) => {
+            const loadedOrders = data.orders as OrderOption[]
+            const loadedLots = data.lots as LotOption[]
+            setOrders(loadedOrders)
+            setLots(loadedLots)
+
+            const defaultLot = loadedLots.find((lot) => lot.stock_lot_id === defaultStockLotId)
+            const defaultOrder = loadedOrders.find((order) => order.id === (defaultOrderId || defaultLot?.order_id || ''))
+            if (defaultLot) {
+                setSourceId(defaultLot.stock_lot_id)
+                setSoldMeters(String(Number(defaultLot.available_meters || 0).toFixed(2)))
+                setActualDispatchedMeters(String(Number(defaultLot.available_meters || 0).toFixed(2)))
+            }
+            if (defaultOrder) {
+                setPartyName(defaultOrder.party_name)
+            }
+            setLoadingData(false)
+        })
     }, [open, defaultOrderId, defaultStockLotId])
 
-    const selectedOrder = orders.find(o => o.id === selectedOrderId)
-    
-    // Filter lots based on selected order
-    const compatibleLots = lots.filter(lot => {
-        if (!selectedOrder) return true // Show all if no order selected
-        if (lot.order_id === selectedOrder.id) return true
-        if (!lot.order_id && lot.quality_label && selectedOrder.quality_label && 
-            lot.quality_label.toLowerCase() === selectedOrder.quality_label.toLowerCase()) return true
-        return false
-    })
+    const selectedLot = lots.find((lot) => lot.stock_lot_id === sourceId)
+    const selectedOrder = selectedLot?.order_id ? orders.find((order) => order.id === selectedLot.order_id) : null
 
-    const hasSameQualityUnlinkedLot = selectedLotIds.some(id => {
-        const l = lots.find(x => x.stock_lot_id === id)
-        return l && l.order_id !== selectedOrderId
-    })
+    useEffect(() => {
+        if (!selectedLot) return
+        if (!soldMeters) setSoldMeters(String(Number(selectedLot.available_meters || 0).toFixed(2)))
+        if (!actualDispatchedMeters) setActualDispatchedMeters(String(Number(selectedLot.available_meters || 0).toFixed(2)))
+        if (!partyName && selectedOrder?.party_name) setPartyName(selectedOrder.party_name)
+    }, [actualDispatchedMeters, partyName, selectedLot, selectedOrder, soldMeters, soldTakas])
 
-    const totalSelectedTakas = selectedLotIds.reduce((sum, id) => sum + (lotUnits[id] || 0), 0)
-    const totalSelectedMeters = selectedLotIds.reduce((sum, id) => {
-        const lot = lots.find(l => l.stock_lot_id === id)
-        if (!lot || lot.available_taka_count === 0) return sum
-        const mpt = lot.available_meters / lot.available_taka_count
-        return sum + ((lotUnits[id] || 0) * mpt)
-    }, 0)
-    
-    const parsedSaleRate = parseFloat(saleRate) || 0
-    const totalRevenue = totalSelectedMeters * parsedSaleRate
-    const totalCost = selectedLotIds.reduce((sum, id) => {
-        const lot = lots.find(l => l.stock_lot_id === id)
-        if (!lot || lot.available_taka_count === 0) return sum
-        const mpt = lot.available_meters / lot.available_taka_count
-        return sum + ((lotUnits[id] || 0) * mpt * lot.cost_per_meter)
-    }, 0)
-    const grossProfit = totalRevenue - totalCost
-    const actualDispatchValue = actualDispatchedMeters.trim() === ''
-        ? totalSelectedMeters
-        : Number(actualDispatchedMeters)
-    const dispatchDifference = Number.isFinite(actualDispatchValue)
-        ? actualDispatchValue - totalSelectedMeters
-        : 0
+    const soldMetersNum = Number(soldMeters) || 0
+    const soldTakasNum = Number(soldTakas) || 0
+    const hasSoldTakas = soldTakas.trim().length > 0
+    const saleRateNum = Number(saleRate) || 0
+    const creditDaysNum = Math.max(0, Math.trunc(Number(creditDays) || 0))
+    const dispatchMetersNum = dispatchNow ? (Number(actualDispatchedMeters) || 0) : 0
+    const totalSaleValue = soldMetersNum * saleRateNum
+    const costPerMeter = Number(selectedLot?.cost_per_meter || 0)
+    const grossCost = soldMetersNum * costPerMeter
+    const grossProfit = totalSaleValue - grossCost
+    const grossMargin = totalSaleValue > 0 ? (grossProfit / totalSaleValue) * 100 : 0
+    const dueDate = useMemo(() => addDays(saleDate, creditDaysNum), [saleDate, creditDaysNum])
+    const dispatchStatus = !dispatchNow
+        ? 'Not dispatched'
+        : dispatchMetersNum + 0.01 >= soldMetersNum
+            ? 'Dispatched'
+            : 'Partially dispatched'
+    const pendingDispatch = Math.max(soldMetersNum - dispatchMetersNum, 0)
 
-    const estimatedGst = totalRevenue * 0.05
-    const estimatedConsignmentValue = totalRevenue + estimatedGst
-    const ewayLikelyRequired = estimatedConsignmentValue > 50000
+    const sourceType = selectedLot?.source_type === 'market_run'
+        ? 'market_run'
+        : selectedLot?.source_type === 'order'
+            ? 'order'
+            : 'stock_lot'
 
     const handleSubmit = () => {
         startTransition(async () => {
-            const result = await sellAndDispatchTakas({
-                orderId: selectedOrderId,
-                selectedLots: selectedLotIds.map(id => ({ stockLotId: id, unitsToSell: lotUnits[id] || 0 })),
-                sale: {
-                    saleRatePerMeter: parsedSaleRate,
-                    saleDate,
-                    notes: null
-                },
-                dispatch: {
-                    actualDispatchedMeters: actualDispatchValue,
-                    dispatchDate: new Date().toISOString(),
-                    ewayBillNumber: ewayNumber,
-                    vehicleNumber,
-                    transporterName,
-                    approximateDistanceKm: distanceKm.trim() ? Number(distanceKm) : null,
-                    notes,
-                    ewayBillDate: ewayNumber.trim() ? new Date().toISOString() : null
-                }
+            const result = await createPartyStockSaleAndOptionalDispatch({
+                sourceType,
+                sourceId,
+                partyName,
+                partyPhone,
+                partyCity,
+                partyGstin,
+                soldMeters: soldMetersNum,
+                soldTakas: soldTakasNum || null,
+                saleRatePerMeter: saleRateNum,
+                creditDays: creditDaysNum,
+                saleDate,
+                dispatchNow,
+                actualDispatchedMeters: dispatchNow ? dispatchMetersNum : null,
+                dispatchDate: dispatchNow ? dispatchDate : null,
+                transportName,
+                vehicleNumber,
+                challanNumber,
+                notes,
             })
 
             if (result.success) {
-                toast.success('Takas sold and dispatch created!')
+                toast.success(dispatchNow ? 'Stock sale and dispatch saved' : 'Stock sale saved')
                 onOpenChange(false)
-                onSuccess?.(result.dispatchId, result.trackingUrl)
+                if (result.dispatchId) onSuccess?.(result.dispatchId, result.trackingUrl)
             } else {
-                if (result.recoverable) {
-                    toast.warning(result.message, { duration: 8000 })
-                    onOpenChange(false) // Close anyway since it's recoverable
-                } else {
-                    toast.error(result.message)
-                }
+                const notify = result.recoverable ? toast.warning : toast.error
+                notify(result.message, { duration: 7000 })
+                if (result.recoverable) onOpenChange(false)
             }
         })
     }
 
+    const renderMetric = (label: string, value: string, accent = false) => (
+        <div className={cn('flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm', accent ? 'bg-indigo-50 text-indigo-800' : 'bg-slate-50 text-slate-700')}>
+            <span>{label}</span>
+            <span className="font-bold text-slate-950">{value}</span>
+        </div>
+    )
+
     const renderStep = () => {
         if (loadingData) {
-            return <div className="py-12 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-indigo-500" /></div>
+            return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-indigo-500" /></div>
         }
 
         if (step === 1) {
             return (
                 <div className="space-y-4 py-2">
-                    <div className="space-y-2">
-                        <Label>Who is this dispatch for?</Label>
+                    <div className="space-y-1.5">
+                        <Label>Source stock</Label>
                         <select
-                            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm h-11 lg:h-9"
-                            value={selectedOrderId}
-                            onChange={(e) => setSelectedOrderId(e.target.value)}
+                            className="h-11 w-full rounded-md border border-slate-300 px-3 text-sm lg:h-9"
+                            value={sourceId}
+                            onChange={(event) => setSourceId(event.target.value)}
                         >
-                            <option value="">-- Select Party Order --</option>
-                            {orders.map(o => (
-                                <option key={o.id} value={o.id}>
-                                    {o.party_name} · {o.quality_label || 'Unspecified'} · {o.total_target_meters}m
+                            <option value="">Select godown or expected stock</option>
+                            {lots.map((lot) => (
+                                <option key={lot.stock_lot_id} value={lot.stock_lot_id}>
+                                    {lot.quality_label} · {lot.godown} · {Number(lot.available_meters).toFixed(0)}m · {Number(lot.available_taka_count).toFixed(0)} {lot.unit_label}
                                 </option>
                             ))}
                         </select>
-                        <p className="text-[11px] text-slate-500">Phase 1: Dispatch tracking currently requires an active order.</p>
                     </div>
+                    {selectedLot && (
+                        <div className="rounded-lg border border-slate-200 p-3 text-sm">
+                            <div className="font-bold text-slate-950">{selectedLot.quality_label}</div>
+                            <div className="mt-1 text-slate-500">
+                                {selectedLot.godown} · available for sale {Number(selectedLot.available_meters).toFixed(2)}m / {Number(selectedLot.available_taka_count).toFixed(2)} {selectedLot.unit_label}
+                            </div>
+                            <div className="mt-2 text-xs font-semibold text-slate-600">
+                                Cost snapshot: {money(costPerMeter)} per meter
+                                {selectedOrder ? ` · linked order party: ${selectedOrder.party_name}` : ''}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )
         }
@@ -210,86 +248,53 @@ export function SellAndDispatchDialog({
         if (step === 2) {
             return (
                 <div className="space-y-4 py-2">
-                    <Label>Select takas to send</Label>
-                    {compatibleLots.length === 0 ? (
-                        <p className="text-sm text-slate-500 text-center py-4">No matching stock found for this order.</p>
-                    ) : (
-                        <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2">
-                            {compatibleLots.map(lot => {
-                                const isExactOrder = lot.order_id === selectedOrderId
-                                const isSelected = selectedLotIds.includes(lot.stock_lot_id)
-                                return (
-                                    <div key={lot.stock_lot_id} className={cn("border rounded-xl p-4 flex flex-col gap-3 transition-all", isSelected ? "border-indigo-400 bg-indigo-50" : "bg-white")}>
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <p className="font-bold text-sm text-slate-900">{lot.quality_label}</p>
-                                                    {isExactOrder ? (
-                                                        <span className="text-xs font-bold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">Order Stock</span>
-                                                    ) : (
-                                                        <span className="text-xs font-bold uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">Same Quality</span>
-                                                    )}
-                                                </div>
-                                                <p className="text-xs text-slate-500 mt-1">{lot.godown} · Avg {(lot.available_meters / lot.available_taka_count).toFixed(1)}m / {lot.unit_label}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-sm font-bold text-slate-900">{lot.available_taka_count} {lot.unit_label}s</p>
-                                                <p className="text-xs text-slate-500">Available</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200">
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={isSelected}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setSelectedLotIds(p => [...p, lot.stock_lot_id])
-                                                            setLotUnits(p => ({ ...p, [lot.stock_lot_id]: lot.available_taka_count }))
-                                                        } else {
-                                                            setSelectedLotIds(p => p.filter(id => id !== lot.stock_lot_id))
-                                                            setLotUnits(p => { const nv = {...p}; delete nv[lot.stock_lot_id]; return nv })
-                                                        }
-                                                    }}
-                                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600"
-                                                />
-                                                <span className="text-xs font-semibold">Select</span>
-                                            </label>
-                                            {isSelected && (
-                                                <div className="flex items-center gap-2">
-                                                    <Label className="text-xs">Send:</Label>
-                                                    <Input 
-                                                        type="number" 
-                                                        min="1" 
-                                                        max={lot.available_taka_count}
-                                                        value={lotUnits[lot.stock_lot_id] || ''}
-                                                        onChange={(e) => setLotUnits(p => ({...p, [lot.stock_lot_id]: parseInt(e.target.value) || 0}))}
-                                                        className="w-24 h-11 lg:h-8 text-sm" 
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )
-                            })}
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-1.5 sm:col-span-2">
+                            <Label>Party name</Label>
+                            <Input value={partyName} onChange={(event) => setPartyName(event.target.value)} className="h-11 lg:h-9" />
                         </div>
-                    )}
-                    
-                    {hasSameQualityUnlinkedLot && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                            <label className="flex items-start gap-2 cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    checked={confirmedSameQuality}
-                                    onChange={e => setConfirmedSameQuality(e.target.checked)}
-                                    className="mt-1 rounded border-amber-300 text-amber-600 focus:ring-amber-600"
-                                />
-                                <span className="text-xs text-amber-800 font-medium">
-                                    I confirm I want to dispatch &quot;Same Quality&quot; stock that is not explicitly reserved for this order.
-                                </span>
-                            </label>
+                        <div className="space-y-1.5">
+                            <Label>Phone</Label>
+                            <Input value={partyPhone} onChange={(event) => setPartyPhone(event.target.value)} className="h-11 lg:h-9" />
                         </div>
-                    )}
+                        <div className="space-y-1.5">
+                            <Label>City</Label>
+                            <Input value={partyCity} onChange={(event) => setPartyCity(event.target.value)} className="h-11 lg:h-9" />
+                        </div>
+                        <div className="space-y-1.5 sm:col-span-2">
+                            <Label>GSTIN</Label>
+                            <Input value={partyGstin} onChange={(event) => setPartyGstin(event.target.value.toUpperCase())} className="h-11 lg:h-9" />
+                        </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                            <Label>Sold meters</Label>
+                            <Input type="number" min="0" step="0.01" value={soldMeters} onChange={(event) => setSoldMeters(event.target.value)} className="h-11 lg:h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label>Sold takas <span className="font-normal text-slate-400">(optional)</span></Label>
+                            <Input type="number" min="0" step="0.01" value={soldTakas} onChange={(event) => setSoldTakas(event.target.value)} placeholder="Leave blank if unknown" className="h-11 lg:h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label>Sale rate per meter</Label>
+                            <div className="relative">
+                                <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                <Input type="number" min="0" step="0.01" value={saleRate} onChange={(event) => setSaleRate(event.target.value)} className="h-11 pl-9 lg:h-9" />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label>Credit days</Label>
+                            <Input type="number" min="0" step="1" value={creditDays} onChange={(event) => setCreditDays(event.target.value)} className="h-11 lg:h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label>Sale date</Label>
+                            <Input type="date" value={saleDate} onChange={(event) => setSaleDate(event.target.value)} className="h-11 lg:h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label>Due date based on sale date</Label>
+                            <Input value={dueDate} readOnly className="h-11 bg-slate-50 lg:h-9" />
+                        </div>
+                    </div>
                 </div>
             )
         }
@@ -297,225 +302,122 @@ export function SellAndDispatchDialog({
         if (step === 3) {
             return (
                 <div className="space-y-4 py-2">
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-slate-700">Sale Rate (per meter)</Label>
-                        <div className="relative">
-                            <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                            <Input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={saleRate}
-                                onChange={e => setSaleRate(e.target.value)}
-                                placeholder="0.00"
-                                className="pl-9 text-slate-900 border-slate-200 h-11 lg:h-9"
-                            />
-                        </div>
+                    <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1">
+                        <button type="button" onClick={() => setDispatchNow(true)} className={cn('rounded-md px-3 py-2 text-sm font-bold', dispatchNow ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500')}>
+                            Dispatch now
+                        </button>
+                        <button type="button" onClick={() => setDispatchNow(false)} className={cn('rounded-md px-3 py-2 text-sm font-bold', !dispatchNow ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500')}>
+                            Save sale only
+                        </button>
                     </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-slate-700">Sale Date</Label>
-                        <Input
-                            type="date"
-                            value={saleDate}
-                            onChange={e => setSaleDate(e.target.value)}
-                            className="text-slate-900 border-slate-200 h-11 lg:h-9"
-                        />
-                    </div>
-                    
-                    {/* Financial Preview */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 mt-4">
-                        <p className="text-xs font-bold text-slate-700 mb-2">Sale Preview</p>
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-500">Selected Takas</span>
-                            <span className="font-semibold text-slate-900">{totalSelectedTakas}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-500">Estimated Meters</span>
-                            <span className="font-semibold text-slate-900">{totalSelectedMeters.toFixed(2)} m</span>
-                        </div>
-                        <div className="flex justify-between text-xs border-t border-slate-200 pt-2 mt-2">
-                            <span className="text-slate-500">Revenue</span>
-                            <span className="font-semibold text-slate-900">₹{totalRevenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                            <span className="text-slate-500">Estimated Cost</span>
-                            <span className="font-semibold text-slate-900">₹{totalCost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                        </div>
-                        <div className="flex justify-between text-xs bg-indigo-50 p-1.5 rounded border border-indigo-100">
-                            <span className="text-indigo-700 font-bold">Estimated Gross Profit</span>
-                            <span className="font-bold text-indigo-700">₹{grossProfit.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
-                        </div>
-                    </div>
-                </div>
-            )
-        }
-
-        if (step === 4) {
-            return (
-                <div className="space-y-4 py-2">
-                     <div className={cn(
-                        'rounded-xl border px-3 py-2.5 text-[11px]',
-                        ewayLikelyRequired
-                            ? 'border-amber-200 bg-amber-50 text-amber-800'
-                            : 'border-emerald-100 bg-emerald-50 text-emerald-800'
-                    )}>
-                        <div className="flex items-start gap-2">
-                            <AlertTriangle className={cn('mt-0.5 h-3.5 w-3.5 shrink-0', ewayLikelyRequired ? 'text-amber-600' : 'text-emerald-600')} />
-                            <div className="space-y-1">
-                                <p className="font-bold">
-                                    {ewayLikelyRequired ? 'E-way bill may be required. Please confirm before dispatch.' : 'E-way bill likely not required by value'}
-                                </p>
-                                <p>
-                                    Estimated consignment value is ₹{estimatedConsignmentValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}.
-                                </p>
-                                <a
-                                    href="https://ewaybillgst.gov.in"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 font-bold underline underline-offset-2"
-                                >
-                                    Open E-Way Bill Portal <ExternalLink className="h-3 w-3" />
-                                </a>
+                    {dispatchNow && (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="space-y-1.5">
+                                <Label>Actual dispatched meters</Label>
+                                <Input type="number" min="0" step="0.01" value={actualDispatchedMeters} onChange={(event) => setActualDispatchedMeters(event.target.value)} className="h-11 lg:h-9" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label>Dispatch date</Label>
+                                <Input type="date" value={dispatchDate} onChange={(event) => setDispatchDate(event.target.value)} className="h-11 lg:h-9" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label>Transport</Label>
+                                <Input value={transportName} onChange={(event) => setTransportName(event.target.value)} className="h-11 lg:h-9" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label>Vehicle number</Label>
+                                <Input value={vehicleNumber} onChange={(event) => setVehicleNumber(event.target.value.toUpperCase())} className="h-11 lg:h-9" />
+                            </div>
+                            <div className="space-y-1.5 sm:col-span-2">
+                                <Label>Challan number</Label>
+                                <Input value={challanNumber} onChange={(event) => setChallanNumber(event.target.value)} className="h-11 lg:h-9" />
                             </div>
                         </div>
-                    </div>
+                    )}
                     <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-slate-700">Actual Dispatched Meters</Label>
-                        <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={actualDispatchedMeters}
-                            onChange={e => setActualDispatchedMeters(e.target.value)}
-                            placeholder={totalSelectedMeters.toFixed(2)}
-                            className="h-11 lg:h-9"
-                        />
-                        <p className={cn(
-                            'text-[11px] font-semibold',
-                            Math.abs(dispatchDifference) > 0.01 ? 'text-amber-700' : 'text-slate-500'
-                        )}>
-                            Expected ledger dispatch: {totalSelectedMeters.toFixed(2)} m
-                            {Math.abs(dispatchDifference) > 0.01
-                                ? ` · Stock difference ${dispatchDifference > 0 ? '+' : ''}${dispatchDifference.toFixed(2)} m will need owner review`
-                                : ''}
-                        </p>
+                        <Label>Notes</Label>
+                        <Input value={notes} onChange={(event) => setNotes(event.target.value)} className="h-11 lg:h-9" />
                     </div>
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold text-slate-700">E-way Bill No.</Label>
-                            <Input
-                                value={ewayNumber}
-                                onChange={e => setEwayNumber(e.target.value)}
-                                placeholder="Optional"
-                                className="h-11 lg:h-9"
-                            />
+                    {dispatchNow && pendingDispatch > 0.01 && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+                            {pendingDispatch.toFixed(2)}m will remain pending dispatch for this sale.
                         </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold text-slate-700">Vehicle No.</Label>
-                            <Input
-                                value={vehicleNumber}
-                                onChange={e => setVehicleNumber(e.target.value.toUpperCase())}
-                                placeholder="GJ01AB1234"
-                                className="h-11 lg:h-9"
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold text-slate-700">Transporter</Label>
-                            <Input
-                                value={transporterName}
-                                onChange={e => setTransporterName(e.target.value)}
-                                placeholder="Transport name"
-                                className="h-11 lg:h-9"
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold text-slate-700">Approx. Distance (km)</Label>
-                            <Input
-                                type="number"
-                                min="0"
-                                step="1"
-                                value={distanceKm}
-                                onChange={e => setDistanceKm(e.target.value)}
-                                placeholder="Used for EWB validity"
-                                className="h-11 lg:h-9"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold text-slate-700">
-                            Notes / Reference
-                            <span className="text-slate-400 font-normal ml-1">(optional)</span>
-                        </Label>
-                        <Input
-                            value={notes}
-                            onChange={e => setNotes(e.target.value)}
-                            placeholder="Invoice #, truck number, etc."
-                            className="h-11 lg:h-9"
-                        />
-                    </div>
+                    )}
                 </div>
             )
         }
+
+        return (
+            <div className="space-y-4 py-2">
+                <div className="grid gap-2">
+                    {renderMetric('Party', partyName || 'Missing')}
+                    {renderMetric('Sold meters', `${soldMetersNum.toFixed(2)} m`)}
+                    {renderMetric('Sale rate', `${money(saleRateNum)} / m`)}
+                    {renderMetric('Total sale value', money(totalSaleValue), true)}
+                    {renderMetric('Cost per meter', `${money(costPerMeter)} / m`)}
+                    {renderMetric('Gross cost', money(grossCost))}
+                    {renderMetric('Booked gross profit', money(grossProfit), true)}
+                    {renderMetric('Gross margin', `${grossMargin.toFixed(1)}%`)}
+                    {renderMetric('Due date based on sale date', dueDate)}
+                    {renderMetric('Dispatch status', dispatchStatus)}
+                    {renderMetric('Sold pending dispatch', `${pendingDispatch.toFixed(2)} m`)}
+                </div>
+            </div>
+        )
     }
+
+    const canContinue = step === 1
+        ? Boolean(sourceId)
+        : step === 2
+            ? Boolean(partyName.trim()) && soldMetersNum > 0 && saleRateNum > 0 && creditDaysNum >= 0 && Boolean(selectedLot) && soldMetersNum <= Number(selectedLot?.available_meters || 0) + 0.01 && (!hasSoldTakas || (soldTakasNum > 0 && soldTakasNum <= Number(selectedLot?.available_taka_count || 0) + 0.01))
+            : step === 3
+                ? !dispatchNow || (dispatchMetersNum > 0 && dispatchMetersNum <= soldMetersNum)
+                : true
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Package className="h-5 w-5 text-indigo-600" /> 
+                        <Package className="h-5 w-5 text-indigo-600" />
                         Sell & Dispatch
                     </DialogTitle>
                     <DialogDescription>
-                        Sell selected takas and create a dispatch in one step.
+                        Sell stock to a named party, then dispatch now or keep the sale pending.
                     </DialogDescription>
                 </DialogHeader>
-                
-                {/* Progress Indicators */}
-                <div className="flex items-center justify-between mt-2 mb-2">
+
+                <div className="mt-2 grid grid-cols-4 gap-2">
                     {[
-                        { num: 1, label: 'Order' },
-                        { num: 2, label: 'Lots' },
-                        { num: 3, label: 'Sale' },
-                        { num: 4, label: 'Dispatch' },
-                    ].map((s) => (
-                        <div key={s.num} className={cn("flex flex-col items-center gap-1", step >= s.num ? "opacity-100" : "opacity-40")}>
-                            <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white", step >= s.num ? "bg-indigo-600" : "bg-slate-300")}>
-                                {s.num}
+                        { num: 1, label: 'Stock', icon: Package },
+                        { num: 2, label: 'Party', icon: UserRound },
+                        { num: 3, label: 'Dispatch', icon: Truck },
+                        { num: 4, label: 'Preview', icon: CalendarDays },
+                    ].map((item) => {
+                        const Icon = item.icon
+                        return (
+                            <div key={item.num} className={cn('flex flex-col items-center gap-1 rounded-md py-2 text-xs font-bold', step >= item.num ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-50 text-slate-400')}>
+                                <Icon className="h-4 w-4" />
+                                <span>{item.label}</span>
                             </div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{s.label}</span>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
 
                 {renderStep()}
 
-                <DialogFooter className="gap-2 sm:justify-between items-center w-full">
-                    <Button variant="ghost" className="text-sm h-11 lg:h-9" onClick={() => step > 1 ? setStep(step - 1) : onOpenChange(false)} disabled={pending}>
+                <DialogFooter className="gap-2 sm:justify-between">
+                    <Button variant="ghost" className="h-11 text-sm lg:h-9" onClick={() => step > 1 ? setStep(step - 1) : onOpenChange(false)} disabled={pending}>
                         {step === 1 ? 'Cancel' : 'Back'}
                     </Button>
                     {step < 4 ? (
-                        <Button 
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 h-11 lg:h-9"
-                            onClick={() => setStep(step + 1)}
-                            disabled={
-                                (step === 1 && !selectedOrderId) || 
-                                (step === 2 && (selectedLotIds.length === 0 || (hasSameQualityUnlinkedLot && !confirmedSameQuality) || selectedLotIds.some(id => (lotUnits[id] || 0) <= 0))) ||
-                                (step === 3 && parsedSaleRate <= 0)
-                            }
-                        >
+                        <Button className="h-11 gap-2 bg-indigo-600 text-white hover:bg-indigo-700 lg:h-9" onClick={() => setStep(step + 1)} disabled={!canContinue}>
                             Next <ChevronRight className="h-4 w-4" />
                         </Button>
                     ) : (
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={pending || !Number.isFinite(actualDispatchValue) || actualDispatchValue < 0}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 h-11 lg:h-9"
-                        >
+                        <Button onClick={handleSubmit} disabled={pending || !canContinue} className="h-11 gap-2 bg-indigo-600 font-bold text-white hover:bg-indigo-500 lg:h-9">
                             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                            {pending ? 'Processing…' : 'Sell & Create Dispatch'}
+                            {pending ? 'Saving...' : dispatchNow ? 'Sell & Dispatch' : 'Save Sale Only'}
                         </Button>
                     )}
                 </DialogFooter>

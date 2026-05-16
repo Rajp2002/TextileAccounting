@@ -16,8 +16,12 @@ export async function ensureReceivableForCommercialEntry(
                 id,
                 org_id,
                 sale_date,
+                party_name,
+                credit_days,
+                due_date,
                 revenue_amount,
                 created_by,
+                dispatch_id,
                 fabric_stock_lots (
                     quality_label,
                     order_id,
@@ -40,7 +44,10 @@ export async function ensureReceivableForCommercialEntry(
         const orderRaw = lot?.orders
         const order = Array.isArray(orderRaw) ? orderRaw[0] : orderRaw
         
-        const partyName = order?.party_name || 'Anonymous'
+        const partyName = sale.party_name || order?.party_name
+        if (!partyName || partyName.trim().length === 0) {
+            return { error: 'Party name is required for stock sale receivables' }
+        }
         const qualityLabel = lot?.quality_label || 'Unknown'
         const orderId = lot?.order_id || null
 
@@ -53,10 +60,13 @@ export async function ensureReceivableForCommercialEntry(
                 source_id: sourceId,
                 source_date: sale.sale_date,
                 order_id: orderId,
+                dispatch_id: sale.dispatch_id || null,
                 party_name: partyName,
                 quality_label: qualityLabel,
                 total_amount: sale.revenue_amount,
                 payment_status: 'unpaid',
+                credit_days: sale.credit_days ?? 0,
+                due_date: sale.due_date ?? sale.sale_date,
                 created_by: user.id,
                 updated_by: user.id,
             }, {

@@ -448,6 +448,11 @@ export interface DispatchWithOrder {
     sgst_amount: number | null
     igst_amount: number | null
     total_invoice_value: number | null
+    stock_sale_id?: string | null
+    party_name?: string | null
+    party_phone?: string | null
+    party_city?: string | null
+    challan_number?: string | null
     package_lines: DispatchPackageLine[]
     orders: {
         id: string
@@ -524,6 +529,7 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
         .from('dispatches')
         .select(`
             id,
+            stock_sale_id,
             dispatch_number,
             qty_meters_sent,
             qty_meters_received,
@@ -821,6 +827,10 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
             sgst_amount,
             igst_amount,
             total_invoice_value,
+            party_name,
+            party_phone,
+            party_city,
+            challan_number,
             dispatch_package_lines (
                 id,
                 package_id,
@@ -833,7 +843,7 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
                 qty_meters_sent,
                 qty_meters_received
             ),
-            orders!inner (
+            orders (
                 id,
                 party_name,
                 quality_label,
@@ -852,7 +862,14 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
         data: rows.map((row) => ({
             ...row,
             package_lines: (row as unknown as RawDispatchRow).dispatch_package_lines ?? [],
-            orders: Array.isArray(row.orders) ? row.orders[0] : row.orders,
+            orders: (Array.isArray(row.orders) ? row.orders[0] : row.orders) ?? {
+                id: row.stock_sale_id ?? row.id,
+                party_name: row.party_name ?? 'Stock Sale Party',
+                quality_label: null,
+                tracking_token: '',
+                total_target_meters: row.qty_meters_sent,
+                status: 'stock_sale',
+            },
         })),
     }
 }
@@ -864,9 +881,9 @@ export async function getDispatchOverviewStats(): Promise<DispatchOverviewResult
     const [salesRes, discrepanciesRes] = await Promise.all([
         supabase
             .from('fabric_stock_sales')
-            .select('meters_sold, revenue_amount')
+            .select('meters_sold, revenue_amount, pending_dispatch_meters, dispatch_status')
             .eq('org_id', profile.org_id)
-            .is('dispatch_id', null),
+            .in('dispatch_status', ['not_dispatched', 'partially_dispatched', 'discrepancy']),
         supabase
             .from('stock_discrepancies')
             .select('difference_meters')
@@ -884,7 +901,7 @@ export async function getDispatchOverviewStats(): Promise<DispatchOverviewResult
     return {
         data: {
             pending_sales_count: rows.length,
-            pending_dispatch_meters: rows.reduce((sum, row) => sum + Number(row.meters_sold ?? 0), 0),
+            pending_dispatch_meters: rows.reduce((sum, row) => sum + Number(row.pending_dispatch_meters ?? row.meters_sold ?? 0), 0),
             pending_dispatch_value: rows.reduce((sum, row) => sum + Number(row.revenue_amount ?? 0), 0),
             open_discrepancy_count: discrepancies.length,
             open_discrepancy_meters: discrepancies.reduce((sum, row) => sum + Math.abs(Number(row.difference_meters ?? 0)), 0),

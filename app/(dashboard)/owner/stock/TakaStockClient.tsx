@@ -476,7 +476,7 @@ function SaleDialog({
                             placeholder={`Max ${lot.available_taka_count}`}
                         />
                         <p className="text-xs font-semibold text-muted-foreground">
-                            Available: {stockQuantity(lot.available_taka_count, lot.available_meters, lot.unit_label)}
+                            Available for sale: {stockQuantity(lot.available_taka_count, lot.available_meters, lot.unit_label)}
                         </p>
                     </div>
 
@@ -647,7 +647,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
     const [sellAndDispatchLotId, setSellAndDispatchLotId] = useState<string | undefined>()
     const marketRunOnly = isMarketRunOnlyMode(initialData.productionMode)
     const stockLabel = marketRunOnly ? 'Godown Ledger' : 'Godown Stock'
-    const availableLabel = marketRunOnly ? 'Expected Available' : 'Ledger Available'
+    const availableLabel = marketRunOnly ? 'Expected available for sale' : 'Available for sale'
 
     const godowns = useMemo(() => {
         return Array.from(new Set(initialData.lots.map((lot) => lot.godown))).sort()
@@ -704,11 +704,18 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
-                    label="Available Units"
+                    label="Available For Sale"
                     value={stockUnits(initialData.summary.available_taka)}
                     helper={`${availableLabel}: ${meters(initialData.summary.available_meters)}`}
                     icon={Boxes}
                     tone="bg-blue-50 text-blue-600"
+                />
+                <MetricCard
+                    label="Sold Pending Dispatch"
+                    value={meters(initialData.summary.pending_dispatch_meters)}
+                    helper="sold fabric still awaiting dispatch"
+                    icon={Send}
+                    tone="bg-indigo-50 text-indigo-700"
                 />
                 <MetricCard
                     label="Stock Cost"
@@ -950,7 +957,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                             <th className="px-4 py-3 text-right font-bold">Units</th>
                                             <th className="px-4 py-3 text-right font-bold">Meters</th>
                                             <th className="px-4 py-3 text-right font-bold">Sale / m</th>
-                                            <th className="px-4 py-3 text-right font-bold">Profit</th>
+                                            <th className="px-4 py-3 text-right font-bold">Booked Gross Profit</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/40">

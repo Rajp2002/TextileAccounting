@@ -94,6 +94,8 @@ export interface TakaStockSaleRow {
     revenue_amount: number
     cost_amount: number
     gross_profit_amount: number
+    dispatch_status?: 'not_dispatched' | 'partially_dispatched' | 'dispatched' | 'received' | 'discrepancy'
+    pending_dispatch_meters?: number
     notes: string | null
     created_at: string
     fabric_stock_lots: {
@@ -145,6 +147,7 @@ export interface TakaStockBoardData {
         stock_value_at_cost: number
         realized_revenue: number
         realized_profit: number
+        pending_dispatch_meters: number
     }
 }
 
@@ -264,6 +267,8 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
                 revenue_amount,
                 cost_amount,
                 gross_profit_amount,
+                dispatch_status,
+                pending_dispatch_meters,
                 notes,
                 created_at,
                 fabric_stock_lots!inner (
@@ -406,7 +411,12 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
         stock_value_at_cost: 0,
         realized_revenue: 0,
         realized_profit: 0,
+        pending_dispatch_meters: 0,
     })
+
+    for (const sale of sales) {
+        summary.pending_dispatch_meters += toNumber((sale as unknown as Record<string, unknown>).pending_dispatch_meters)
+    }
 
     return {
         productionMode,
