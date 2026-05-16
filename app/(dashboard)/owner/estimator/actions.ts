@@ -122,8 +122,8 @@ export async function upsertFactoryCostProfile(data: {
 
     if (error) return { error: error.message }
 
-    revalidatePath('/owner/settings')
     revalidatePath('/owner/estimator')
+    revalidatePath('/owner/settings')
     return { success: true }
 }
 
@@ -201,6 +201,7 @@ export async function saveAsFabricTemplate(data: {
     if (error) return { error: error.message }
 
     revalidatePath('/owner/estimator')
+    revalidatePath('/owner/settings')
     return { success: true }
 }
 
@@ -233,6 +234,7 @@ export async function updateTemplateRates(data: {
     if (error) return { error: error.message }
 
     revalidatePath('/owner/estimator')
+    revalidatePath('/owner/settings')
     return { success: true }
 }
 
@@ -294,6 +296,7 @@ export async function updateFabricTemplate(data: {
     if (error) return { error: error.message }
 
     revalidatePath('/owner/estimator')
+    revalidatePath('/owner/settings')
     return { success: true }
 }
 
@@ -312,6 +315,7 @@ export async function renameTemplate(id: string, name: string) {
     if (error) return { error: error.message }
 
     revalidatePath('/owner/estimator')
+    revalidatePath('/owner/settings')
     return { success: true }
 }
 
@@ -328,6 +332,7 @@ export async function deleteTemplate(id: string) {
     if (error) return { error: error.message }
 
     revalidatePath('/owner/estimator')
+    revalidatePath('/owner/settings')
     return { success: true }
 }
 
@@ -899,6 +904,12 @@ export async function createMarketRunFromEstimator(params: {
         await supabase.from('estimator_quotes').delete().eq('id', savedQuote.id).eq('org_id', profile.org_id)
         return { error: orderError?.message ?? 'Failed to create production order.' }
     }
+
+    await supabase
+        .from('estimator_quotes')
+        .update({ order_id: order.id, market_run_id: marketRun.id })
+        .eq('id', savedQuote.id)
+        .eq('org_id', profile.org_id)
 
     // 5. Compute and store yarn requirements (same as quote-to-order flow)
     const estimateForOrder = {
