@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateDailyPay, calculateTotalPay, sumMeters, formatINR, sumAdvances, calculateNetPay, calculateRemainingDebt, calculateMaxDeduction } from '../lib/finance'
+import { calculateDailyPay, calculateTotalPay, sumMeters, formatINR, sumAdvances, calculateNetPay, calculateRemainingDebt, calculateMaxDeduction, calculateAdvanceRecovery } from '../lib/finance'
 
 // ============================================================
 // UNIT TESTS: Financial Math (runs offline, no DB needed)
@@ -206,6 +206,35 @@ describe('Finance: calculateMaxDeduction', () => {
 
     it('handles string inputs', () => {
         expect(calculateMaxDeduction('15000', 50)).toBe('7500.00')
+    })
+})
+
+describe('Finance: calculateAdvanceRecovery', () => {
+    it('recommends the full debt when it fits inside the 50% cap', () => {
+        expect(calculateAdvanceRecovery(2500, 1000)).toEqual({
+            maxDeduction: '1250.00',
+            recommendedRecovery: '1000.00',
+            remainingDebt: '0.00',
+            capApplied: false,
+        })
+    })
+
+    it('caps recovery at 50% of gross pay when debt is higher', () => {
+        expect(calculateAdvanceRecovery(2000, 1250)).toEqual({
+            maxDeduction: '1000.00',
+            recommendedRecovery: '1000.00',
+            remainingDebt: '250.00',
+            capApplied: true,
+        })
+    })
+
+    it('supports final settlement by allowing full gross recovery', () => {
+        expect(calculateAdvanceRecovery(3000, 2500, 100)).toEqual({
+            maxDeduction: '3000.00',
+            recommendedRecovery: '2500.00',
+            remainingDebt: '0.00',
+            capApplied: false,
+        })
     })
 })
 

@@ -7,6 +7,11 @@ import { calculateTotalPay, calculateDailyPay } from '@/lib/finance'
 import { ToggleWorkerPaidSchema, PayrollConfigSchema, safeParse } from '@/lib/schemas'
 import { getPayrollCycleBounds } from '@/lib/payroll-cycle'
 import { validateAndConsumeAccessCode } from '@/lib/access-codes'
+import {
+    calculatePayrollManualAdjustmentTotals,
+    sanitizePayrollManualAdjustments,
+    type PayrollManualAdjustment,
+} from '@/lib/payroll-manual-adjustments'
 
 export async function toggleWorkerPaid(
     workerType: 'meter' | 'fixed',
@@ -17,6 +22,8 @@ export async function toggleWorkerPaid(
     manualDeductionOverride: number | null = null,
     cycleStartDate: string | null = null,
     paymentMode: 'cash' | 'bank_transfer' | 'upi' | 'cheque' | null = null,
+    manualAdjustments: PayrollManualAdjustment[] = [],
+    verifiedByOwner: boolean = false,
     accessCode?: string
 ) {
     const { user, profile } = await requireRole(['owner'])
@@ -109,6 +116,21 @@ export async function toggleWorkerPaid(
             return { error: 'Payment mode is required.' }
         }
 
+        if (!verifiedByOwner) {
+            return { error: 'Owner verification is required before confirming payroll.' }
+        }
+
+        const parsedAdjustments = sanitizePayrollManualAdjustments(manualAdjustments)
+        if (!parsedAdjustments.success) {
+            return { error: parsedAdjustments.error }
+        }
+
+        const adjustmentTotals = calculatePayrollManualAdjustmentTotals(parsedAdjustments.data)
+        const adjustedGrossAmount = grossAmount + adjustmentTotals.manualAdjustmentTotal
+        if (adjustedGrossAmount < 0) {
+            return { error: 'Kapaat cannot make the final payout negative.' }
+        }
+
         const { data, error } = await supabase.rpc('settle_worker_payroll', {
             p_org_id: profile.org_id,
             p_worker_type: workerType,
@@ -119,6 +141,8 @@ export async function toggleWorkerPaid(
             p_manual_deduction_override: manualDeductionOverride,
             p_actor_id: user.id,
             p_payment_mode: paymentMode,
+            p_manual_adjustments: parsedAdjustments.data,
+            p_verified_by_owner: verifiedByOwner,
         })
 
         if (error) {
