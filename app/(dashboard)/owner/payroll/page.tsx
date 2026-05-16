@@ -105,6 +105,8 @@ const ROLE_COLORS: Record<string, string> = {
     sanitation: 'bg-green-100 text-green-700', daily: 'bg-orange-100 text-orange-700',
 }
 
+const PAYROLL_QUERY_VERSION = 'production-ledger-v2'
+
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function monthLabel(ym: string) {
     const [y, m] = ym.split('-')
@@ -119,6 +121,14 @@ function nextMonth(ym: string) {
     const d = new Date(ym + '-01')
     d.setMonth(d.getMonth() + 1)
     return d.toISOString().substring(0, 7)
+}
+
+function payrollMeterQueryKey(orgId: string | undefined, month: string) {
+    return ['payroll_meter', orgId, month, PAYROLL_QUERY_VERSION] as const
+}
+
+function payrollFixedQueryKey(orgId: string | undefined, month: string) {
+    return ['payroll_fixed', orgId, month, PAYROLL_QUERY_VERSION] as const
 }
 
 function isPfEsiEnrolled(worker: WorkerBase) {
@@ -1404,10 +1414,46 @@ export default function PayrollPage() {
     })
     const orgName = orgData?.name || 'Factory'
 
+    useEffect(() => {
+        const orgId = userProfile?.org_id
+        if (!orgId) return
+
+        const invalidatePayroll = () => {
+            void queryClient.invalidateQueries({ queryKey: ['payroll_meter', orgId] })
+            void queryClient.invalidateQueries({ queryKey: ['payroll_fixed', orgId] })
+        }
+
+        const channel = supabase
+            .channel(`payroll-ledger-${orgId}`)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'production_logs', filter: `org_id=eq.${orgId}` },
+                invalidatePayroll
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'worker_advances', filter: `org_id=eq.${orgId}` },
+                invalidatePayroll
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'payroll_settlements', filter: `org_id=eq.${orgId}` },
+                invalidatePayroll
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [queryClient, supabase, userProfile?.org_id])
+
     // ── Meter workers payroll data ──────────────────────────────────────────
     const { data: meterWorkers, isLoading: meterLoading } = useQuery({
-        queryKey: ['payroll_meter', userProfile?.org_id, selectedMonth],
+        queryKey: payrollMeterQueryKey(userProfile?.org_id, selectedMonth),
         enabled: !!userProfile?.org_id && !!selectedMonth,
+        staleTime: 0,
+        refetchOnMount: 'always',
+        refetchOnWindowFocus: true,
         queryFn: async () => {
             const bounds = getPayrollCycleBounds(selectedMonth, cycleStartDay)
             const monthStart = bounds.cycle_start
@@ -1535,8 +1581,11 @@ export default function PayrollPage() {
     })
 
     const { data: fixedWorkers, isLoading: fixedLoading } = useQuery({
-        queryKey: ['payroll_fixed', userProfile?.org_id, selectedMonth],
+        queryKey: payrollFixedQueryKey(userProfile?.org_id, selectedMonth),
         enabled: !!userProfile?.org_id && !!selectedMonth,
+        staleTime: 0,
+        refetchOnMount: 'always',
+        refetchOnWindowFocus: true,
         queryFn: async () => {
             const bounds = getPayrollCycleBounds(selectedMonth, cycleStartDay)
             const monthStart = bounds.cycle_start
@@ -1650,8 +1699,8 @@ export default function PayrollPage() {
             const orgId = userProfile?.org_id
             const targetMonth = variables.targetMonth
             const queryKey = variables.workerType === 'meter' 
-                ? ['payroll_meter', orgId, targetMonth] 
-                : ['payroll_fixed', orgId, targetMonth]
+                ? payrollMeterQueryKey(orgId, targetMonth)
+                : payrollFixedQueryKey(orgId, targetMonth)
 
             await queryClient.cancelQueries({ queryKey })
             const previousData = queryClient.getQueryData(queryKey)

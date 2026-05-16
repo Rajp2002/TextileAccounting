@@ -16,6 +16,29 @@ describe('P1 production and dispatch regressions', () => {
         expect(page).not.toContain("toast.error('Could not save production log. Your entry is still saved as a draft. Check your connection and try again.')")
     })
 
+    it('refreshes payroll caches after shift meters are saved', () => {
+        const page = readProjectFile('app/(dashboard)/supervisor/dashboard/page.tsx')
+        const action = readProjectFile('app/(dashboard)/supervisor/actions.ts')
+
+        expect(page).toContain("invalidateQueries({ queryKey: ['payroll_meter'] })")
+        expect(action).toContain("revalidatePath('/owner/payroll')")
+    })
+
+    it('keeps factory today on the factory timezone calendar day', () => {
+        const action = readProjectFile('app/(dashboard)/owner/today/actions.ts')
+
+        expect(action).toContain('getSuratTodayString')
+        expect(action).not.toContain("const today = new Date().toISOString().split('T')[0]")
+    })
+
+    it('forces payroll production data to refetch instead of trusting persisted stale rows', () => {
+        const page = readProjectFile('app/(dashboard)/owner/payroll/page.tsx')
+
+        expect(page).toContain('PAYROLL_QUERY_VERSION')
+        expect(page).toContain("refetchOnMount: 'always'")
+        expect(page).toContain("table: 'production_logs'")
+    })
+
     it('returns public dispatch links under /track/[token]', () => {
         const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
         expect(action).toContain('`/track/${dispatchMeta.tracking_token}`')

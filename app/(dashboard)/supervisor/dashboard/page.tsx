@@ -59,6 +59,7 @@ import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { RoleBanner } from '@/components/RoleBanner'
+import { useQueryClient } from '@tanstack/react-query'
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
@@ -561,6 +562,7 @@ function MachineDetailSheet({
 export default function UnifiedDashboard() {
     const { t } = useTranslation()
     const { data: userProfile } = useUserProfile()
+    const queryClient = useQueryClient()
     const [date, setDate] = useState(getTodayString())
     const [shift, setShift] = useState<'day' | 'night'>(getCurrentShift())
     const [loading, setLoading] = useState(true)
@@ -842,6 +844,8 @@ export default function UnifiedDashboard() {
             setShowDuplicateDialog(false)
             setDuplicateAccessCode('')
             setCorrectionWindowExpiresAt(res.correctionWindowExpiresAt ?? null)
+            void queryClient.invalidateQueries({ queryKey: ['payroll_meter'] })
+            void queryClient.invalidateQueries({ queryKey: ['payroll_fixed'] })
             fetchData()
         } catch (error: unknown) {
             console.error('Failed to submit production logs:', error)
