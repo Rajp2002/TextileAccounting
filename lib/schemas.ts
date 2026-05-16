@@ -103,6 +103,14 @@ export const SignInSchema = z.object({
     password: z.string().min(1, 'Password required'),
 })
 
+/**
+ * PasswordResetRequestSchema — forgot password form.
+ * Used by requestPasswordReset() server action.
+ */
+export const PasswordResetRequestSchema = z.object({
+    email: z.string().trim().email('Invalid email address').max(254),
+})
+
 // ─── Inventory Schemas ────────────────────────────────────────────────────────
 
 export const QualitySchema = z.object({
