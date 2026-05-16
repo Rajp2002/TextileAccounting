@@ -45,7 +45,6 @@ import { cn } from '@/lib/utils'
 import {
     adjustTakaStockLot,
     createTakaStockLot,
-    recordTakaStockSale,
     type StockSourceOption,
     type TakaStockBoardData,
     type TakaStockLotSummary,
@@ -76,16 +75,6 @@ function stockUnits(value: number, unitLabel = 'taka') {
 
 function stockQuantity(unitCount: number, meterCount: number, unitLabel = 'taka') {
     return `${stockUnits(unitCount, unitLabel)} (${meters(meterCount)})`
-}
-
-function positiveWholeInput(value: string, max: number) {
-    if (value === '') return ''
-    if (!/^\d+$/.test(value)) return null
-
-    const parsed = Number(value)
-    if (!Number.isSafeInteger(parsed) || parsed < 1) return ''
-
-    return String(Math.min(parsed, Math.floor(max)))
 }
 
 function MetricCard({
@@ -385,163 +374,6 @@ function AddStockDialog({
     )
 }
 
-function SaleDialog({
-    lot,
-    open,
-    onOpenChange,
-    onSaved,
-}: {
-    lot: TakaStockLotSummary | null
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    onSaved: () => void
-}) {
-    const [pending, startTransition] = useTransition()
-    const [form, setForm] = useState({
-        taka_sold: '',
-        price_per_meter: '',
-        sale_date: today(),
-        notes: '',
-    })
-
-    if (!lot) return null
-
-    const takasSold = Number(form.taka_sold || 0)
-    const price = Number(form.price_per_meter || 0)
-    const metersSold = takasSold * lot.meters_per_taka
-    const revenue = metersSold * price
-    const profit = metersSold * (price - lot.cost_per_meter)
-    const canSubmit = Number.isInteger(takasSold)
-        && takasSold > 0
-        && takasSold <= lot.available_taka_count
-        && price >= 0
-        && form.price_per_meter !== ''
-
-    const handleSubmit = () => {
-        if (!canSubmit) {
-            toast.error(`${lot.unit_label} sold must be a positive whole number`)
-            return
-        }
-
-        startTransition(async () => {
-            const res = await recordTakaStockSale({
-                stock_lot_id: lot.stock_lot_id,
-                taka_sold: Number(form.taka_sold),
-                price_per_meter: Number(form.price_per_meter),
-                sale_date: form.sale_date,
-                notes: form.notes,
-            })
-
-            if ('error' in res) {
-                toast.error(res.error)
-                return
-            }
-
-            toast.success('Sale recorded')
-            setForm({ taka_sold: '', price_per_meter: '', sale_date: today(), notes: '' })
-            onOpenChange(false)
-            onSaved()
-        })
-    }
-
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Record Stock Sale</DialogTitle>
-                    <DialogDescription>{lot.quality_label} · {lot.godown}</DialogDescription>
-                </DialogHeader>
-
-                <div className="grid gap-4 py-2 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                        <Label>{lot.unit_label} Sold</Label>
-                        <Input
-                            type="number"
-                            inputMode="numeric"
-                            min="1"
-                            max={lot.available_taka_count}
-                            step="1"
-                            value={form.taka_sold}
-                            onKeyDown={(event) => {
-                                if (['.', ',', '-', '+', 'e', 'E'].includes(event.key)) {
-                                    event.preventDefault()
-                                }
-                            }}
-                            onChange={(event) => {
-                                const next = positiveWholeInput(event.target.value, lot.available_taka_count)
-                                if (next !== null) {
-                                    setForm((prev) => ({ ...prev, taka_sold: next }))
-                                }
-                            }}
-                            placeholder={`Max ${lot.available_taka_count}`}
-                        />
-                        <p className="text-xs font-semibold text-muted-foreground">
-                            Available for sale: {stockQuantity(lot.available_taka_count, lot.available_meters, lot.unit_label)}
-                        </p>
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <Label>Sale Price / m</Label>
-                        <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={form.price_per_meter}
-                            onChange={(event) => setForm((prev) => ({ ...prev, price_per_meter: event.target.value }))}
-                            placeholder={`Cost ${money(lot.cost_per_meter, 2)}`}
-                        />
-                        <p className={cn('text-xs font-semibold', price >= lot.cost_per_meter ? 'text-emerald-600' : 'text-rose-600')}>
-                            {form.price_per_meter ? `${money(price - lot.cost_per_meter, 2)}/m margin` : ' '}
-                        </p>
-                    </div>
-
-                    <div className="space-y-1.5 sm:col-span-2">
-                        <Label>Sale Date</Label>
-                        <Input
-                            type="date"
-                            value={form.sale_date}
-                            onChange={(event) => setForm((prev) => ({ ...prev, sale_date: event.target.value }))}
-                        />
-                    </div>
-
-                    <div className="space-y-1.5 sm:col-span-2">
-                        <Label>Notes</Label>
-                        <Textarea
-                            value={form.notes}
-                            onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
-                            placeholder="Optional sale note"
-                            className="min-h-16 resize-none"
-                        />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 rounded-lg border bg-muted/30 p-3 text-center">
-                    <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Meters</p>
-                        <p className="font-black text-foreground">{meters(metersSold)}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Revenue</p>
-                        <p className="font-black text-foreground">{money(revenue)}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Profit</p>
-                        <p className={cn('font-black', profit >= 0 ? 'text-emerald-600' : 'text-rose-600')}>{money(profit)}</p>
-                    </div>
-                </div>
-
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={handleSubmit} disabled={pending || !canSubmit}>
-                        {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Store className="mr-2 h-4 w-4" />}
-                        Record Sale
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
-}
-
 function AdjustDialog({
     lot,
     open,
@@ -640,7 +472,6 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
     const [query, setQuery] = useState('')
     const [godown, setGodown] = useState('all')
     const [addOpen, setAddOpen] = useState(false)
-    const [saleLot, setSaleLot] = useState<TakaStockLotSummary | null>(null)
     const [adjustLot, setAdjustLot] = useState<TakaStockLotSummary | null>(null)
     const [expandedLots, setExpandedLots] = useState<Record<string, boolean>>({})
     const [sellAndDispatchOpen, setSellAndDispatchOpen] = useState(false)
@@ -705,8 +536,8 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <MetricCard
                     label="Available For Sale"
-                    value={stockUnits(initialData.summary.available_taka)}
-                    helper={`${availableLabel}: ${meters(initialData.summary.available_meters)}`}
+                    value={meters(initialData.summary.available_meters)}
+                    helper={`${availableLabel}; approx ${stockUnits(initialData.summary.available_taka)} for display`}
                     icon={Boxes}
                     tone="bg-blue-50 text-blue-600"
                 />
@@ -790,7 +621,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                             <div className="flex flex-col items-end justify-center bg-white/80 rounded-xl p-2 border border-amber-100 shadow-sm col-span-2 sm:col-span-1">
                                                 <p className="text-xs font-bold uppercase tracking-wider text-amber-700">{availableLabel}</p>
                                                 <p className="text-2xl font-black text-foreground">{meters(lot.available_meters)}</p>
-                                                <p className="text-sm font-semibold text-muted-foreground">{stockUnits(lot.available_taka_count, lot.unit_label)}</p>
+                                                <p className="text-sm font-semibold text-muted-foreground">approx {stockUnits(lot.available_taka_count, lot.unit_label)}</p>
                                             </div>
                                             <div>
                                                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Unit Size</p>
@@ -808,7 +639,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                     <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/60 pt-4">
                                         <Button
                                             onClick={() => { setSellAndDispatchLotId(lot.stock_lot_id); setSellAndDispatchOpen(true); }}
-                                            disabled={lot.available_taka_count <= 0}
+                                            disabled={lot.available_meters <= 0}
                                             className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white h-11 lg:h-9"
                                         >
                                             <Send className="h-4 w-4" />
@@ -816,12 +647,12 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                         </Button>
                                         <Button
                                             variant="outline"
-                                            onClick={() => setSaleLot(lot)}
-                                            disabled={lot.available_taka_count <= 0}
+                                            onClick={() => { setSellAndDispatchLotId(lot.stock_lot_id); setSellAndDispatchOpen(true); }}
+                                            disabled={lot.available_meters <= 0}
                                             className="gap-2 h-11 lg:h-9"
                                         >
                                             <Store className="h-4 w-4" />
-                                            Record Sale
+                                            Sell by Meters
                                         </Button>
                                         <Button variant="outline" onClick={() => setAdjustLot(lot)} className="gap-2 h-11 lg:h-9">
                                             <PencilLine className="h-4 w-4" />
@@ -954,7 +785,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                         <tr>
                                             <th className="px-4 py-3 font-bold">Date</th>
                                             <th className="px-4 py-3 font-bold">Quality</th>
-                                            <th className="px-4 py-3 text-right font-bold">Units</th>
+                                            <th className="px-4 py-3 text-right font-bold">Approx Units</th>
                                             <th className="px-4 py-3 text-right font-bold">Meters</th>
                                             <th className="px-4 py-3 text-right font-bold">Sale / m</th>
                                             <th className="px-4 py-3 text-right font-bold">Booked Gross Profit</th>
@@ -1008,7 +839,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                         </div>
                                         <div className="grid grid-cols-3 gap-2 text-sm pt-1">
                                             <div>
-                                                <p className="text-xs text-muted-foreground">Units</p>
+                                                <p className="text-xs text-muted-foreground">Approx units</p>
                                                 <p className="font-semibold">{stockUnits(Number(sale.taka_sold), sale.fabric_stock_lots.unit_label)}</p>
                                             </div>
                                             <div>
@@ -1058,12 +889,6 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                 open={addOpen}
                 onOpenChange={setAddOpen}
                 sourceOptions={initialData.sourceOptions}
-                onSaved={refresh}
-            />
-            <SaleDialog
-                lot={saleLot}
-                open={Boolean(saleLot)}
-                onOpenChange={(open) => !open && setSaleLot(null)}
                 onSaved={refresh}
             />
             <AdjustDialog

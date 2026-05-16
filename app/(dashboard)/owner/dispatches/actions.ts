@@ -21,7 +21,7 @@ export async function getSellAndDispatchOptions() {
             .from('fabric_stock_lot_summary')
             .select('stock_lot_id, quality_label, godown, source_type, market_run_id, available_taka_count, available_meters, meters_per_taka, cost_per_meter, order_id, unit_label')
             .eq('org_id', profile.org_id)
-            .gt('available_taka_count', 0)
+            .gt('available_meters', 0)
             .order('created_at', { ascending: false })
     ])
 

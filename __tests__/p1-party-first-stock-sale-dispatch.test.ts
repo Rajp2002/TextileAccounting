@@ -99,4 +99,16 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(commercials).toContain('Booked Gross Profit')
         expect(commercials).not.toMatch(/profit received/i)
     })
+
+    it('keeps sales meter-first and treats takas as optional display metadata', () => {
+        const dialog = readProjectFile('components/dispatches/SellAndDispatchDialog.tsx')
+        const stock = readProjectFile('app/(dashboard)/owner/stock/TakaStockClient.tsx')
+        const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
+        expect(dialog).toContain('optional display count')
+        expect(dialog).toContain('Meters reserve stock. Taka count is only adjusted when entered.')
+        expect(stock).toContain('Sell by Meters')
+        expect(stock).toContain('approx ${stockUnits')
+        expect(stock).not.toContain('positiveWholeInput')
+        expect(action).toContain(".gt('available_meters', 0)")
+    })
 })
