@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +17,14 @@ export default function LoginForm() {
     const [email, setEmail]                 = useState('')
     const [password, setPassword]           = useState('')
     const [showPassword, setShowPassword]   = useState(false)
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search)
+        if (params.get('message') === 'password-updated') {
+            toast.success('Password updated. Please sign in with your new password.')
+            window.history.replaceState(null, '', window.location.pathname)
+        }
+    }, [])
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -77,10 +85,9 @@ export default function LoginForm() {
                         <Label htmlFor="password" className="font-medium text-body">
                             Password
                         </Label>
-                        {/* Placeholder for future forgot password */}
-                        {/* <Link href="/reset-password" className="text-xs text-amber-700 hover:underline">
+                        <Link href="/forgot-password" className="text-xs font-medium text-saffron-deep hover:underline">
                             Forgot password?
-                        </Link> */}
+                        </Link>
                     </div>
                     <div className="relative">
                         <Input

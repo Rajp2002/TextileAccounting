@@ -12,9 +12,10 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { CreateOrgSchema, JoinOrgSchema, SignInSchema, safeParse } from '@/lib/schemas'
+import { CreateOrgSchema, JoinOrgSchema, PasswordResetRequestSchema, SignInSchema, safeParse } from '@/lib/schemas'
 import { hasExplicitProductionMode } from '@/lib/production-mode'
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -28,6 +29,41 @@ function generateJoinCode(): string {
     return Array.from({ length: 8 }, () =>
         chars[Math.floor(Math.random() * chars.length)]
     ).join('')
+}
+
+async function getRequestOrigin(): Promise<string> {
+    const requestHeaders = await headers()
+    const forwardedHost = requestHeaders.get('x-forwarded-host')
+
+    if (forwardedHost) {
+        const forwardedProto = requestHeaders.get('x-forwarded-proto') ?? 'https'
+        return `${forwardedProto}://${forwardedHost}`
+    }
+
+    const host = requestHeaders.get('host')
+    const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https'
+    if (host) return `${protocol}://${host}`
+
+    return requestHeaders.get('origin') ?? ''
+}
+
+// ─── requestPasswordReset ─────────────────────────────────────────────────────
+
+/**
+ * Sends Supabase's built-in password reset email.
+ * The return value is deliberately generic so account existence is never exposed.
+ */
+export async function requestPasswordReset(input: { email: string }) {
+    const parsed = safeParse(PasswordResetRequestSchema, input)
+    if ('error' in parsed) return { error: parsed.error }
+
+    const supabase = await createClient()
+    const origin = await getRequestOrigin()
+    const redirectTo = `${origin}/reset-password`
+
+    await supabase.auth.resetPasswordForEmail(parsed.data.email, { redirectTo })
+
+    return { success: true }
 }
 
 // ─── createOrganization ────────────────────────────────────────────────────────

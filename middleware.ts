@@ -54,7 +54,16 @@ function isAuthRoute(pathname: string): boolean {
         pathname.startsWith('/login') ||
         pathname.startsWith('/signup') ||
         pathname.startsWith('/join') ||
+        pathname.startsWith('/forgot-password') ||
         pathname.startsWith('/auth')
+    )
+}
+
+/** Password recovery routes must remain reachable during a temporary recovery session */
+function isPasswordRecoveryRoute(pathname: string): boolean {
+    return (
+        pathname.startsWith('/forgot-password') ||
+        pathname.startsWith('/reset-password')
     )
 }
 
@@ -65,6 +74,7 @@ function isPublicRoute(pathname: string): boolean {
         pathname.startsWith('/login') ||
         pathname.startsWith('/signup') ||
         pathname.startsWith('/join') ||
+        isPasswordRecoveryRoute(pathname) ||
         pathname.startsWith('/auth') ||
         pathname.startsWith('/verify') ||
         pathname.startsWith('/privacy') ||
@@ -192,7 +202,7 @@ export async function updateSession(request: NextRequest) {
     // ── Route Guards ───────────────────────────────────────────────────────
 
     // 1. Authenticated user hitting auth pages or landing → redirect to their home
-    if (user && (isAuthRoute(pathname) || pathname === '/') && pathname !== '/auth/callback') {
+    if (user && (isAuthRoute(pathname) || pathname === '/') && pathname !== '/auth/callback' && !isPasswordRecoveryRoute(pathname)) {
         const token = request.cookies.get('sb-' + process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID + '-auth-token')
         
         let jwt: Record<string, unknown> = {}

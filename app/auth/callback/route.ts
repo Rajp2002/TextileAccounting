@@ -6,6 +6,7 @@ export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
     const next = searchParams.get('next') ?? '/'
+    const type = searchParams.get('type')
 
     if (code) {
         const supabase = await createClient()
@@ -20,6 +21,10 @@ export async function GET(request: Request) {
             const forwardedHost = request.headers.get('x-forwarded-host')
             const isLocalEnv = process.env.NODE_ENV === 'development'
             const base = isLocalEnv ? origin : (forwardedHost ? `https://${forwardedHost}` : origin)
+
+            if (type === 'recovery' || next.startsWith('/reset-password')) {
+                return NextResponse.redirect(`${base}/reset-password?recovery=1`)
+            }
 
             const jwt = parseJWT(data.session.access_token)
             const role = jwt.user_role
