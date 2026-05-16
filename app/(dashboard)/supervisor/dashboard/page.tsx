@@ -220,9 +220,9 @@ function MachineUnifiedRow({
     const orderId = assignment?.order_id ?? ''
     const status = (machine.machine_status || 'idle') as 'running' | 'idle' | 'maintenance'
 
-    const selectedOrder = orders.find((o) => o.id === orderId)
+    const selectedTarget = orders.find((o) => o.id === orderId)
     const isMaintenance = status === 'maintenance'
-    const deadlineLabel = selectedOrder ? formatShortDate(selectedOrder.deadline) : null
+    const deadlineLabel = selectedTarget ? formatShortDate(selectedTarget.deadline) : null
 
     return (
         <div className={cn(
@@ -298,7 +298,7 @@ function MachineUnifiedRow({
                     </Select>
                 </div>
 
-                {/* Order Dropdown */}
+                {/* Cost Analysis / Quality Dropdown */}
                 <div className="flex items-center gap-2 min-w-0">
                     <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-surface-soft">
                         <Package className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-muted-foreground" />
@@ -308,23 +308,23 @@ function MachineUnifiedRow({
                         onValueChange={(val) => onAssignmentChange(machine.id, workerId ? parseInt(workerId) : null, val)}
                     >
                         <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline lg:border-none bg-surface lg:bg-transparent px-3 lg:p-0 text-sm font-medium leading-tight text-muted-foreground shadow-none transition-colors hover:text-ink focus:ring-0">
-                            <SelectValue placeholder={t('production.link_order')} />
+                            <SelectValue placeholder="Select cost analysis / quality" />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
                             {orders.map((o) => (
                                 <SelectItem key={o.id} value={o.id}>
-                                    <span className="font-bold">{o.quality_label}</span>
-                                    <span className="ml-1 opacity-60">— {o.party_name}</span>
+                                    <span className="font-bold">{o.quality_label || o.party_name}</span>
+                                    <span className="ml-1 opacity-60">— {o.market_run_id ? 'Market Run' : o.party_name}</span>
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
                 </div>
 
-                {selectedOrder && (
+                {selectedTarget && (
                     <div className="ml-10 lg:ml-8 flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
                         <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
-                            {formatMeters(selectedOrder.remaining_meters)} left
+                            {formatMeters(selectedTarget.remaining_meters)} left
                         </span>
                         {deadlineLabel && (
                             <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
@@ -343,7 +343,7 @@ function MachineUnifiedRow({
                 <div className="flex w-full flex-col items-center gap-3 lg:gap-2">
                     {(!workerId || !orderId) ? (
                         <div className="flex h-11 lg:h-12 flex-col items-center justify-center px-1 text-center text-xs font-semibold leading-tight text-muted-foreground/70 animate-in fade-in duration-500">
-                             {!workerId ? t('production.no_worker') : t('production.link_order')}
+                             {!workerId ? t('production.no_worker') : 'Select cost analysis / quality'}
                              <AlertCircle className="h-4 w-4 mt-1 opacity-40" />
                         </div>
                     ) : (
@@ -817,9 +817,9 @@ export default function UnifiedDashboard() {
             )
 
             if (machinesWithMetersButNoOrder.length > 0) {
-                toast.error(`Cannot log production for ${machinesWithMetersButNoOrder.length} looms: no Market Run or order is assigned.`)
+                toast.error(`Cannot log production for ${machinesWithMetersButNoOrder.length} looms: no cost analysis or quality is assigned.`)
             } else {
-                toast.error('No valid production metres found. Ensure both a worker and a Market Run/order are assigned to each loom.')
+                toast.error('No valid production metres found. Ensure both a worker and a cost analysis or quality are assigned to each loom.')
             }
             return
         }

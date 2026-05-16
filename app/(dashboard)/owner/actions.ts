@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import crypto from 'crypto'
+import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 import {
     QualitySchema,
     YarnBatchSchema,
@@ -19,6 +20,39 @@ import {
     safeParse,
 } from '@/lib/schemas'
 import { eraseWorkerPII } from './actions/compliance'
+
+export type ProductionTargetOption = {
+    source_type: 'order' | 'market_run'
+    source_id: string
+    order_id: string | null
+    market_run_id: string | null
+    label: string
+    detail_label: string
+    quality_label: string | null
+    target_meters: number | null
+    worker_rate_per_m: number | null
+    deadline: string | null
+    created_at: string | null
+    status: string
+}
+
+type ProductionTargetRef = {
+    source_type: 'order' | 'market_run'
+    source_id: string
+}
+
+function generateOrderTrackingToken(): string {
+    return crypto.randomBytes(9).toString('base64url').slice(0, 12)
+}
+
+function addDaysIsoDate(days: number): string {
+    return new Date(Date.now() + days * 86400000).toISOString().split('T')[0]
+}
+
+function numericValue(value: unknown): number {
+    const parsed = Number(value ?? 0)
+    return Number.isFinite(parsed) ? parsed : 0
+}
 
 // ─── Machine Management (Server Actions) ──────────────────────────────────────
 // These run server-side so auth.uid() is always set in the audit trigger,
@@ -175,7 +209,7 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
         }
 
         if (!machineRes.data.current_order_id || activeOrder?.status !== 'active') {
-            return { error: 'Assign an active order before activating this loom.' }
+            return { error: 'Assign an active cost analysis or quality before activating this loom.' }
         }
     }
 
@@ -1350,7 +1384,210 @@ export async function getOrCreateReferralCodeAction() {
     return await getOrCreateReferralCode(profile.org_id);
 }
 
-export async function assignMachineOrder(machineId: string, orderId: string | null) {
+export async function getActiveProductionTargets(): Promise<{
+    data?: ProductionTargetOption[]
+    error?: string
+}> {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const [ordersRes, runsRes] = await Promise.all([
+        supabase
+            .from('orders')
+            .select('id, party_name, quality_label, total_target_meters, deadline, status, created_at, worker_rate_per_m, market_run_id')
+            .eq('org_id', profile.org_id)
+            .eq('status', 'active')
+            .order('deadline', { ascending: true }),
+        supabase
+            .from('market_run_summary')
+            .select('market_run_id, fabric_label, quality_label, target_meters, worker_rate_per_m, status, order_id, order_status, total_meters_produced, meters_in_godown, total_meters_sold, created_at')
+            .eq('org_id', profile.org_id)
+            .order('created_at', { ascending: false }),
+    ])
+
+    if (ordersRes.error) return { error: ordersRes.error.message }
+    if (runsRes.error) return { error: runsRes.error.message }
+
+    const runTargets: ProductionTargetOption[] = (runsRes.data ?? [])
+        .filter((run) => {
+            const displayStatus = getMarketRunDisplayStatus({
+                storedStatus: run.status,
+                producedQuantity: run.total_meters_produced,
+                availableQuantity: run.meters_in_godown,
+                soldQuantity: run.total_meters_sold,
+            })
+            return displayStatus === 'production'
+        })
+        .map((run) => {
+            const fabricLabel = String(run.fabric_label || run.quality_label || 'Market Run')
+            const qualityLabel = run.quality_label ? String(run.quality_label) : fabricLabel
+            const targetMeters = numericValue(run.target_meters)
+
+            return {
+                source_type: 'market_run',
+                source_id: String(run.market_run_id),
+                order_id: run.order_id ? String(run.order_id) : null,
+                market_run_id: String(run.market_run_id),
+                label: qualityLabel,
+                detail_label: `Market Run · ${fabricLabel} · ${targetMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m`,
+                quality_label: qualityLabel,
+                target_meters: targetMeters,
+                worker_rate_per_m: run.worker_rate_per_m == null ? null : numericValue(run.worker_rate_per_m),
+                deadline: null,
+                created_at: run.created_at ? String(run.created_at) : null,
+                status: String(run.status ?? 'production'),
+            }
+        })
+
+    const orderTargets: ProductionTargetOption[] = (ordersRes.data ?? [])
+        .filter((order) => !order.market_run_id)
+        .map((order) => {
+            const qualityLabel = order.quality_label ? String(order.quality_label) : String(order.party_name || 'Party Order')
+            const partyLabel = String(order.party_name || 'Party Order')
+            const targetMeters = numericValue(order.total_target_meters)
+
+            return {
+                source_type: 'order',
+                source_id: String(order.id),
+                order_id: String(order.id),
+                market_run_id: null,
+                label: qualityLabel,
+                detail_label: `Party Order · ${partyLabel} · ${targetMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m`,
+                quality_label: qualityLabel,
+                target_meters: targetMeters,
+                worker_rate_per_m: order.worker_rate_per_m == null ? null : numericValue(order.worker_rate_per_m),
+                deadline: order.deadline ? String(order.deadline) : null,
+                created_at: order.created_at ? String(order.created_at) : null,
+                status: String(order.status ?? 'active'),
+            }
+        })
+
+    return { data: [...runTargets, ...orderTargets] }
+}
+
+async function ensureActiveOrderForMarketRun(
+    supabase: Awaited<ReturnType<typeof createServerClient>>,
+    orgId: string,
+    marketRunId: string
+): Promise<{ orderId?: string; error?: string }> {
+    const { data: run, error: runError } = await supabase
+        .from('market_run_summary')
+        .select('market_run_id, fabric_label, quality_label, target_meters, worker_rate_per_m, status, order_id, order_status, total_meters_produced, meters_in_godown, total_meters_sold, quote_id, notes')
+        .eq('market_run_id', marketRunId)
+        .eq('org_id', orgId)
+        .maybeSingle()
+
+    if (runError) {
+        console.error('Failed to load market run target:', runError)
+        return { error: 'Failed to load this market run.' }
+    }
+
+    if (!run) return { error: 'Market run not found.' }
+
+    const displayStatus = getMarketRunDisplayStatus({
+        storedStatus: run.status,
+        producedQuantity: run.total_meters_produced,
+        availableQuantity: run.meters_in_godown,
+        soldQuantity: run.total_meters_sold,
+    })
+
+    if (displayStatus !== 'production') {
+        return { error: 'Only market runs still in production can be assigned to a loom.' }
+    }
+
+    const admin = createAdminClient()
+    const existingOrderId = run.order_id ? String(run.order_id) : null
+
+    if (existingOrderId) {
+        if (run.order_status !== 'active') {
+            const { error: reactivateError } = await admin
+                .from('orders')
+                .update({ status: 'active' })
+                .eq('id', existingOrderId)
+                .eq('org_id', orgId)
+
+            if (reactivateError) {
+                console.error('Failed to reactivate market run backing order:', reactivateError)
+                return { error: 'Failed to activate this market run for loom production.' }
+            }
+        }
+
+        return { orderId: existingOrderId }
+    }
+
+    const { data: existingOrder, error: existingOrderError } = await admin
+        .from('orders')
+        .select('id, status')
+        .eq('org_id', orgId)
+        .eq('market_run_id', marketRunId)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+
+    if (existingOrderError) {
+        console.error('Failed to check market run backing order:', existingOrderError)
+        return { error: 'Failed to prepare this market run for loom production.' }
+    }
+
+    if (existingOrder) {
+        if (existingOrder.status !== 'active') {
+            const { error: reactivateError } = await admin
+                .from('orders')
+                .update({ status: 'active' })
+                .eq('id', existingOrder.id)
+                .eq('org_id', orgId)
+
+            if (reactivateError) {
+                console.error('Failed to reactivate existing market run backing order:', reactivateError)
+                return { error: 'Failed to activate this market run for loom production.' }
+            }
+        }
+
+        return { orderId: String(existingOrder.id) }
+    }
+
+    const fabricLabel = String(run.fabric_label || run.quality_label || 'Market Run')
+    const qualityLabel = run.quality_label ? String(run.quality_label) : fabricLabel
+    const targetMeters = numericValue(run.target_meters)
+
+    const { data: createdOrder, error: createOrderError } = await admin
+        .from('orders')
+        .insert({
+            org_id: orgId,
+            party_name: fabricLabel,
+            quality_label: qualityLabel,
+            warp_instruction: '',
+            weft_instruction: '',
+            total_target_meters: targetMeters > 0 ? targetMeters : 1,
+            start_date: addDaysIsoDate(0),
+            deadline: addDaysIsoDate(30),
+            status: 'active',
+            worker_rate_per_m: run.worker_rate_per_m ?? null,
+            notes: run.notes ? String(run.notes) : '',
+            tracking_token: generateOrderTrackingToken(),
+            market_run_id: marketRunId,
+        })
+        .select('id')
+        .single()
+
+    if (createOrderError || !createdOrder) {
+        console.error('Failed to create market run backing order:', createOrderError)
+        return { error: 'Failed to prepare this market run for loom production.' }
+    }
+
+    if (run.quote_id) {
+        await admin
+            .from('estimator_quotes')
+            .update({ order_id: createdOrder.id, market_run_id: marketRunId })
+            .eq('id', run.quote_id)
+            .eq('org_id', orgId)
+            .is('order_id', null)
+    }
+
+    return { orderId: String(createdOrder.id) }
+}
+
+export async function assignMachineProductionTarget(machineId: string, target: ProductionTargetRef | null) {
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
@@ -1358,22 +1595,33 @@ export async function assignMachineOrder(machineId: string, orderId: string | nu
     if ('error' in machineParsed) return { error: machineParsed.error }
 
     let parsedOrderId: string | null = null
-    if (orderId) {
-        const orderParsed = safeParse(UuidSchema, orderId)
-        if ('error' in orderParsed) return { error: orderParsed.error }
-        parsedOrderId = orderParsed.data
+    if (target) {
+        if (!['order', 'market_run'].includes(target.source_type)) {
+            return { error: 'Invalid production target.' }
+        }
 
-        const { data: order, error: orderError } = await supabase
-            .from('orders')
-            .select('id')
-            .eq('id', parsedOrderId)
-            .eq('org_id', profile.org_id)
-            .eq('status', 'active')
-            .single()
+        const targetParsed = safeParse(UuidSchema, target.source_id)
+        if ('error' in targetParsed) return { error: targetParsed.error }
 
-        if (orderError || !order) {
-            if (orderError) console.error('Failed to verify active order:', orderError)
-            return { error: 'Only active orders can be assigned to a loom.' }
+        if (target.source_type === 'market_run') {
+            const ensured = await ensureActiveOrderForMarketRun(supabase, profile.org_id, targetParsed.data)
+            if (ensured.error || !ensured.orderId) return { error: ensured.error ?? 'Failed to prepare this market run.' }
+            parsedOrderId = ensured.orderId
+        } else {
+            parsedOrderId = targetParsed.data
+
+            const { data: order, error: orderError } = await supabase
+                .from('orders')
+                .select('id')
+                .eq('id', parsedOrderId)
+                .eq('org_id', profile.org_id)
+                .eq('status', 'active')
+                .single()
+
+            if (orderError || !order) {
+                if (orderError) console.error('Failed to verify active order:', orderError)
+                return { error: 'Only active production targets can be assigned to a loom.' }
+            }
         }
     }
 
@@ -1387,11 +1635,21 @@ export async function assignMachineOrder(machineId: string, orderId: string | nu
         .eq('org_id', profile.org_id)
 
     if (error) {
-        console.error('Failed to assign machine order:', error)
-        return { error: 'Failed to assign order. Please try again.' }
+        console.error('Failed to assign machine production target:', error)
+        return { error: 'Failed to assign cost analysis. Please try again.' }
     }
 
     revalidatePath('/owner/machines')
+    revalidatePath('/supervisor/machines')
+    revalidatePath('/supervisor/dashboard')
+    revalidatePath('/supervisor/production')
     revalidatePath('/owner/analytics')
     return { success: true }
+}
+
+export async function assignMachineOrder(machineId: string, orderId: string | null) {
+    return assignMachineProductionTarget(
+        machineId,
+        orderId ? { source_type: 'order', source_id: orderId } : null
+    )
 }

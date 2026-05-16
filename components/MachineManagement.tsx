@@ -49,9 +49,10 @@ import {
     updateMachine,
     toggleMachineStatus as toggleMachineStatusAction,
     updateMachineAssignment,
-    assignMachineOrder,
+    assignMachineProductionTarget,
+    getActiveProductionTargets,
 } from '@/app/(dashboard)/owner/actions'
-import { getActiveOrders } from '@/app/(dashboard)/owner/orders/actions'
+import type { ProductionTargetOption } from '@/app/(dashboard)/owner/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
@@ -77,6 +78,8 @@ interface Machine {
         worker_rate_per_m: number
         quality_label: string
         status: string
+        market_run_id?: string | null
+        party_name?: string | null
     } | null
 }
 
@@ -136,7 +139,7 @@ export function MachineManagement({
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('machines')
-                .select('*, orders(worker_rate_per_m, quality_label, status)')
+                .select('*, orders(worker_rate_per_m, quality_label, party_name, status, market_run_id)')
                 .eq('org_id', orgId)
                 .order('name')
             if (error) throw error
@@ -183,11 +186,11 @@ export function MachineManagement({
         }
     })
 
-    // Fetch Active Orders (Owner only)
-    const { data: activeOrders } = useQuery({
-        queryKey: ['active_orders', orgId],
+    // Fetch assignable cost analyses / qualities across party orders and market runs.
+    const { data: productionTargets } = useQuery({
+        queryKey: ['production_targets', orgId],
         queryFn: async () => {
-            const res = await getActiveOrders()
+            const res = await getActiveProductionTargets()
             if ('error' in res) throw new Error(res.error)
             return res.data
         },
@@ -206,12 +209,16 @@ export function MachineManagement({
         }
     })
 
-    const handleOrderLink = async (machineId: string, orderId: string | null) => {
+    const handleProductionTargetLink = async (machineId: string, target: ProductionTargetOption | null) => {
         try {
-            const res = await assignMachineOrder(machineId, orderId)
+            const res = await assignMachineProductionTarget(
+                machineId,
+                target ? { source_type: target.source_type, source_id: target.source_id } : null
+            )
             if (res.error) throw new Error(res.error)
-            toast.success(t('machines.order_assigned') || 'Order linked to loom')
+            toast.success(target ? 'Cost analysis linked to loom' : 'Cost analysis unlinked from loom')
             queryClient.invalidateQueries({ queryKey: ['machines'] })
+            queryClient.invalidateQueries({ queryKey: ['production_targets', orgId] })
         } catch (error: any) {
             toast.error(error.message || t('machines.order_assign_failed'))
         }
@@ -326,7 +333,7 @@ export function MachineManagement({
             }
 
             if (!machine.current_order_id || machine.orders?.status !== 'active') {
-                toast.error('Assign an active order before activating this loom.')
+                toast.error('Assign an active cost analysis or quality before activating this loom.')
                 return
             }
         }
@@ -492,7 +499,7 @@ export function MachineManagement({
                                     {/* Rate is now defined on the Quality, not the machine */}
                                     <p className="flex items-center gap-1.5 rounded-md border border-info-soft bg-info-soft p-2.5 text-xs text-info">
                                         <Tag className="h-3.5 w-3.5 shrink-0 text-info" />
-                                        Worker rates are set per fabric quality. The loom rate updates automatically when a beam is linked.
+                                        Worker rates are set per fabric quality. The loom rate follows the selected cost analysis.
                                     </p>
                                 </div>
                                 <DialogFooter>
@@ -526,12 +533,15 @@ export function MachineManagement({
                                         const isInactive = machine.status === 'inactive'
 
                                         const hasRequiredAssignments = !!dayAssignment && !!nightAssignment
-                                        const hasActiveOrder = !!machine.current_order_id && machine.orders?.status === 'active'
-                                        const isEffectivelyActive = !isInactive && hasRequiredAssignments && hasActiveOrder
+                                        const activeTarget = productionTargets?.find((target) => target.order_id === machine.current_order_id)
+                                        const hasActiveProductionTarget = !!machine.current_order_id && machine.orders?.status === 'active'
+                                        const isEffectivelyActive = !isInactive && hasRequiredAssignments && hasActiveProductionTarget
 
-                                        // Derive rate from the active order
-                                        const activeRate = machine.orders?.worker_rate_per_m
-                                        const activeQualityName = machine.orders?.quality_label
+                                        // Derive the wage rate from the selected cost analysis / quality.
+                                        const activeRate = activeTarget?.worker_rate_per_m ?? machine.orders?.worker_rate_per_m
+                                        const activeQualityName = activeTarget?.label ?? machine.orders?.quality_label
+                                        const activeDetailLabel = activeTarget?.detail_label
+                                            ?? (machine.orders?.market_run_id ? 'Market Run' : machine.orders?.party_name)
 
                                         const dayWorkerName = workers?.find(w => w.id === dayAssignment?.worker_id)?.name
                                         const nightWorkerName = workers?.find(w => w.id === nightAssignment?.worker_id)?.name
@@ -629,38 +639,45 @@ export function MachineManagement({
                                                     )}
                                                 </div>
 
-                                                {/* Order & Quality Section */}
+                                                {/* Cost Analysis / Quality Section */}
                                                 <div className="flex-1 space-y-4">
                                                     <Popover>
                                                         <PopoverTrigger asChild disabled={userProfile?.role !== 'owner' && userProfile?.role !== 'supervisor'}>
                                                             <div className={cn(
                                                                 "rounded-lg border p-3 transition-all",
-                                                                machine.current_order_id
+                                                                hasActiveProductionTarget
                                                                     ? "border-success-soft bg-success-soft/45"
                                                                     : "border-hairline bg-surface-soft/60",
                                                                 (userProfile?.role === 'owner' || userProfile?.role === 'supervisor') && "cursor-pointer hover:border-saffron-soft hover:bg-saffron-soft/30"
                                                             )}>
                                                                 <div className="flex items-center justify-between mb-1">
-                                                                    <span className="text-[11px] font-semibold text-muted-foreground">Active quality</span>
-                                                                    {machine.current_order_id && (
+                                                                    <span className="text-[11px] font-semibold text-muted-foreground">Cost analysis / quality</span>
+                                                                    {hasActiveProductionTarget && (
                                                                         <Badge variant="success" className="text-[11px]">
                                                                             ₹{activeRate ?? '—'}/m
                                                                         </Badge>
                                                                     )}
                                                                 </div>
-                                                                {machine.current_order_id ? (
+                                                                {hasActiveProductionTarget ? (
                                                                     <div className="flex items-center gap-2">
                                                                         <div className="rounded-md border border-success-soft bg-surface p-1.5">
                                                                             <Tag className="h-3.5 w-3.5 text-success" />
                                                                         </div>
-                                                                        <span className="truncate text-sm font-semibold text-ink">
-                                                                            {activeQualityName || "Custom Order"}
-                                                                        </span>
+                                                                        <div className="min-w-0">
+                                                                            <span className="block truncate text-sm font-semibold text-ink">
+                                                                                {activeQualityName || "Selected quality"}
+                                                                            </span>
+                                                                            {activeDetailLabel && (
+                                                                                <span className="block truncate text-[10px] font-medium text-muted-foreground">
+                                                                                    {activeDetailLabel}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 ) : (
                                                                     <div className="flex items-center gap-2 text-muted-foreground">
                                                                         <AlertCircle className="h-3.5 w-3.5" />
-                                                                        <span className="text-xs">No active order</span>
+                                                                        <span className="text-xs">No cost analysis selected</span>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -668,36 +685,43 @@ export function MachineManagement({
                                                         <PopoverContent className="w-[280px] p-0" align="start">
                                                             <div className="max-h-[300px] overflow-auto p-1">
                                                                 <div className="mb-1 flex items-center justify-between border-b border-hairline px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">
-                                                                    Assign order
+                                                                    Assign cost analysis / quality
                                                                     {machine.current_order_id && (
                                                                         <button
-                                                                            onClick={() => handleOrderLink(machine.id, null)}
+                                                                            onClick={() => handleProductionTargetLink(machine.id, null)}
                                                                             className="font-semibold text-risk hover:text-risk/80"
                                                                         >
                                                                             Unlink
                                                                         </button>
                                                                     )}
                                                                 </div>
-                                                                {activeOrders?.map((order: any) => (
+                                                                {productionTargets?.map((target) => (
                                                                     <button
-                                                                        key={order.id}
+                                                                        key={`${target.source_type}:${target.source_id}`}
                                                                         type="button"
                                                                         className={cn(
                                                                             "w-full space-y-0.5 rounded-md px-3 py-2.5 text-left text-sm transition-colors hover:bg-surface-soft",
-                                                                            machine.current_order_id === order.id && "border border-saffron-soft bg-saffron-soft text-saffron-deep font-medium"
+                                                                            machine.current_order_id === target.order_id && "border border-saffron-soft bg-saffron-soft text-saffron-deep font-medium"
                                                                         )}
                                                                         onClick={() => {
-                                                                            handleOrderLink(machine.id, order.id)
+                                                                            handleProductionTargetLink(machine.id, target)
                                                                         }}
                                                                     >
-                                                                        <div className="font-bold truncate">{order.quality_label || 'Unnamed Order'}</div>
-                                                                        <div className="text-[10px] opacity-70 truncate">{order.party_name}</div>
+                                                                        <div className="flex items-center justify-between gap-2">
+                                                                            <div className="truncate font-bold">{target.label || 'Unnamed quality'}</div>
+                                                                            {target.worker_rate_per_m !== null && (
+                                                                                <span className="shrink-0 rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-bold opacity-80">
+                                                                                    ₹{target.worker_rate_per_m}/m
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="text-[10px] opacity-70 truncate">{target.detail_label}</div>
                                                                     </button>
                                                                 ))}
-                                                                {activeOrders?.length === 0 && (
+                                                                {productionTargets?.length === 0 && (
                                                                     <div className="p-4 text-center text-xs text-muted-foreground">
-                                                                        No active orders found.<br/>
-                                                                        Create one in the Orders tab.
+                                                                        No active cost analyses found.<br/>
+                                                                        Start a party order or market run from Estimator.
                                                                     </div>
                                                                 )}
                                                             </div>

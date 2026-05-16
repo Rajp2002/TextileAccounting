@@ -358,7 +358,7 @@ export async function startBeam(batchId: string, machineId: string) {
 }
 
 /**
- * Link an order to a machine.
+ * Link an order-backed production target to a machine.
  */
 export async function linkOrderToMachine(orderId: string, machineId: string) {
     const { user, profile } = await requireRole(['owner', 'supervisor'])
@@ -386,8 +386,8 @@ export async function linkOrderToMachine(orderId: string, machineId: string) {
         .single()
 
     if (orderError || !order) {
-        if (orderError) console.error('Error verifying active order:', orderError)
-        return { error: 'Only active orders can be assigned to a machine.' }
+        if (orderError) console.error('Error verifying active production target:', orderError)
+        return { error: 'Only active cost analyses or qualities can be assigned to a machine.' }
     }
 
     // Set audit actor before service-role DML
@@ -400,8 +400,8 @@ export async function linkOrderToMachine(orderId: string, machineId: string) {
         .eq('org_id', orgId)
 
     if (error) {
-        console.error('Error linking order to machine:', error)
-        return { error: 'Failed to assign order to machine. Please try again.' }
+        console.error('Error linking production target to machine:', error)
+        return { error: 'Failed to assign cost analysis to machine. Please try again.' }
     }
 
     return { success: true }
@@ -720,7 +720,7 @@ export async function requestAccessCode() {
 
 /**
  * Get all data needed for the shift setup screen for a given date + shift.
- * Returns machines, active orders, active workers, and any existing assignments.
+ * Returns machines, active production targets, active workers, and any existing assignments.
  */
 export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
     const { profile } = await requireRole(['owner', 'supervisor'])
@@ -736,7 +736,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             .order('name'),
         supabase
             .from('orders')
-            .select('id, quality_label, party_name, warp_instruction, weft_instruction, total_target_meters, deadline, status, worker_rate_per_m')
+            .select('id, quality_label, party_name, warp_instruction, weft_instruction, total_target_meters, deadline, status, worker_rate_per_m, market_run_id')
             .eq('org_id', orgId)
             .eq('status', 'active')
             .order('deadline'),
@@ -894,8 +894,8 @@ export async function upsertShiftAssignment(data: {
             .single()
 
         if (orderError || !order) {
-            if (orderError) console.error('upsertShiftAssignment active order check error:', orderError)
-            return { error: 'Only active orders can be assigned to a loom.' }
+            if (orderError) console.error('upsertShiftAssignment active production target check error:', orderError)
+            return { error: 'Only active cost analyses or qualities can be assigned to a loom.' }
         }
     }
 
@@ -1008,7 +1008,7 @@ export async function bulkLogProduction(entries: {
     const headerList = await headers()
     const clientIp = headerList.get('x-forwarded-for')?.split(',')[0] || 'unknown'
 
-    // ── Guard: Ensure every machine with meters has an order assigned ──
+    // ── Guard: Ensure every machine with meters has a production target assigned ──
     const invalidEntry = entries.find(e => e.meters !== 0 && !e.order_id)
     if (invalidEntry) {
         return { error: 'ORDER_MISSING', message: 'All machines with production must have an assigned order.' }
@@ -1116,7 +1116,7 @@ export async function bulkLogProduction(entries: {
         ) {
             return {
                 error: 'LOOM_SETUP_INCOMPLETE',
-                message: `${machine?.name ?? 'This loom'} needs day and night workers assigned and an active linked order before production can be saved.`,
+                message: `${machine?.name ?? 'This loom'} needs day and night workers assigned and an active cost analysis before production can be saved.`,
             }
         }
     }

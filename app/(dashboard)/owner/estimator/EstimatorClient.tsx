@@ -37,7 +37,6 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
-import { getQualities, addQuality } from '@/app/(dashboard)/owner/actions'
 import {
     calcFullTotals,
     runScenarios,
@@ -602,7 +601,7 @@ export default function EstimatorClient({
     const [savingQuote, setSavingQuote] = useState(false)
     const [savingTemplate, setSavingTemplate] = useState(false)
     const [templates, setTemplates] = useState<any[]>(initialTemplates ?? [])
-    const [qualities, setQualities] = useState<any[]>(initialQualities)
+    const qualities = initialQualities
     const [outputSuggestion, setOutputSuggestion] = useState<EstimateState['outputSuggestion'] | null>(null)
     const [isSuggestingOutput, setIsSuggestingOutput] = useState(false)
     const [showStartPartyOrder, setShowStartPartyOrder] = useState(false)
@@ -617,10 +616,6 @@ export default function EstimatorClient({
 
     const [showSaveTemplate, setShowSaveTemplate] = useState(false)
     const [templateName,     setTemplateName]     = useState('')
-
-    const [showCreateQuality, setShowCreateQuality] = useState(false)
-    const [newQualityName, setNewQualityName] = useState('')
-    const [newQualityTargetYield, setNewQualityTargetYield] = useState('')
 
     // Template management — "edit rates" sheet
     const [editRatesTpl,     setEditRatesTpl]     = useState<any | null>(null)
@@ -721,6 +716,14 @@ export default function EstimatorClient({
             : templates,
     [templates, templateSearch])
 
+    const basicQualityOptions = useMemo(() => {
+        const templateNames = new Set(templates.map(t => String(t.name).trim().toLowerCase()).filter(Boolean))
+        return qualities.filter(q => {
+            const name = String(q.name ?? '').trim()
+            return name && !templateNames.has(name.toLowerCase())
+        })
+    }, [qualities, templates])
+
     const handleAutoSuggestOutput = async () => {
         setIsSuggestingOutput(true)
         try {
@@ -743,6 +746,24 @@ export default function EstimatorClient({
         setQualityLabel(tpl.name)
         toast.success(`${t('estimator.quality.applied')} ${tpl.name}`)
     }, [t])
+
+    const openSaveTemplateDialog = useCallback(() => {
+        setTemplateName(
+            qualityLabel.trim()
+            || appliedTemplate?.name
+            || (mode === 'market' ? partyName.trim() : '')
+        )
+        setShowSaveTemplate(true)
+    }, [appliedTemplate?.name, mode, partyName, qualityLabel])
+
+    const handleQualityLabelSelect = useCallback((value: string) => {
+        const selectedTemplate = templates.find(t => t.name === value)
+        if (selectedTemplate) {
+            applyTemplate(selectedTemplate)
+            return
+        }
+        setQualityLabel(value)
+    }, [applyTemplate, templates])
 
     const handleSaveProfile = async () => {
         setSaving(true)
@@ -788,8 +809,9 @@ export default function EstimatorClient({
         const weftRows = trimLayerLabels(state.weftRows)
 
         setSavingTemplate(true)
+        const savedName = templateName.trim()
         const res = await saveAsFabricTemplate({
-            name:             templateName.trim(),
+            name:             savedName,
             warpRows,
             weftRows,
             tapeLengthM:      state.tapeLengthM,
@@ -806,40 +828,18 @@ export default function EstimatorClient({
         setSavingTemplate(false)
         if (res.success) {
             const tRes = await getEstimatorTemplates()
-            if (tRes.data) setTemplates(tRes.data)
+            if (tRes.data) {
+                setTemplates(tRes.data)
+                const savedTemplate = tRes.data.find(t => t.name === savedName)
+                if (savedTemplate) setAppliedTemplate(savedTemplate)
+            }
+            setQualityLabel(savedName)
             setShowSaveTemplate(false)
             setTemplateName('')
             clearDraft()
             toast.success(t('estimator.quality.saved'))
         } else {
             toast.error(res.error ?? t('estimator.quality.saveFailed'))
-        }
-    }
-
-    const handleCreateQuality = async () => {
-        if (!newQualityName.trim()) return toast.error('Quality name is required')
-        const targetYield = parseFloat(newQualityTargetYield)
-        if (isNaN(targetYield) || targetYield <= 0) {
-            return toast.error('Target yield must be positive')
-        }
-        setSaving(true)
-        const res = await addQuality({
-            name: newQualityName.trim(),
-            target_yield: targetYield,
-            avg_sale_price_per_m: 0,
-            default_worker_rate_per_m: 0,
-        })
-        setSaving(false)
-        if (res.success) {
-            toast.success('Quality created successfully!')
-            const qRes = await getQualities()
-            setQualities(qRes)
-            setQualityLabel(newQualityName.trim())
-            setShowCreateQuality(false)
-            setNewQualityName('')
-            setNewQualityTargetYield('')
-        } else {
-            toast.error(res.error || 'Failed to create quality')
         }
     }
 
@@ -974,9 +974,9 @@ export default function EstimatorClient({
         toast.success(t('estimator.quality.deleted'))
     }
 
-    const handleSaveQuote = async () => {
+    const handleSaveQuote = async (targetMode: 'quote' | 'market' = mode) => {
         if (!partyName.trim()) {
-            return toast.error(mode === 'market' ? 'Fabric Label is required' : t('estimator.toast.party_required'))
+            return toast.error(targetMode === 'market' ? 'Fabric Label is required' : t('estimator.toast.party_required'))
         }
         if (!qualityLabel.trim()) return toast.error(t('estimator.toast.quality_required'))
         if (!state.orderQuantityM || state.orderQuantityM <= 0) {
@@ -985,7 +985,7 @@ export default function EstimatorClient({
 
         setSavingQuote(true)
         
-        if (mode === 'market') {
+        if (targetMode === 'market') {
             const workerRatePerM = state.weftRows.reduce((sum, r) => sum + (r.picks ?? 0), 0) * (state.perPickCostPaisa ?? 0)
             const res = await createMarketRunFromEstimator({
                 fabricLabel:             partyName.trim(),
@@ -1191,7 +1191,7 @@ export default function EstimatorClient({
                                         size="sm"
                                         variant="outline"
                                         className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50 font-bold text-xs gap-1.5 sm:gap-2"
-                                        onClick={handleSaveQuote}
+                                        onClick={() => handleSaveQuote('quote')}
                                         disabled={savingQuote}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
@@ -1217,8 +1217,12 @@ export default function EstimatorClient({
                                         id="btn-start-market-run"
                                         size="sm"
                                         className="col-span-2 sm:col-span-1 flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-blue-600/20"
-                                        onClick={handleSaveQuote}
-                                        disabled={savingQuote}
+                                        onClick={() => handleSaveQuote('market')}
+                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0}
+                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0)
+                                            ? 'Complete fabric label, quality, quantity, and cost result first.'
+                                            : undefined
+                                        }
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Gauge className="h-3.5 w-3.5 shrink-0" />}
                                         <span className="truncate">Start Market Run</span>
@@ -1230,10 +1234,7 @@ export default function EstimatorClient({
                                         size="sm"
                                         variant="outline"
                                         className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border-blue-200 bg-white text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 sm:gap-2"
-                                        onClick={() => {
-                                            setMode('quote')
-                                            handleSaveQuote()
-                                        }}
+                                        onClick={() => handleSaveQuote('quote')}
                                         disabled={savingQuote}
                                     >
                                         <Save className="h-3.5 w-3.5 shrink-0" />
@@ -1416,8 +1417,7 @@ export default function EstimatorClient({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                    setTemplateName(qualityLabel.trim() || appliedTemplate?.name || '')
-                                    setShowSaveTemplate(true)
+                                    openSaveTemplateDialog()
                                 }}
                                 className="shrink-0 snap-start rounded-xl px-4 h-10 border-indigo-200 bg-indigo-50/50 text-indigo-600 hover:bg-indigo-100/50 hover:border-indigo-300 transition-all gap-1.5 font-bold shadow-sm"
                              >
@@ -1496,28 +1496,37 @@ export default function EstimatorClient({
 
                             <div className="space-y-1.5">
                                 <Label className="text-[10px] uppercase font-bold text-slate-500">{t('estimator.order_basics.quality_label')}</Label>
-                                {qualities.length > 0 || qualityLabel ? (
+                                {templates.length > 0 || qualities.length > 0 || qualityLabel ? (
                                     <div className="flex gap-2">
                                         <select
                                             value={qualityLabel}
-                                            onChange={e => setQualityLabel(e.target.value)}
+                                            onChange={e => handleQualityLabelSelect(e.target.value)}
                                             className="font-bold border-slate-200 h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent"
                                         >
                                             <option value="" disabled>Select a quality</option>
-                                            {qualityLabel && !qualities.some(q => q.name === qualityLabel) && (
+                                            {qualityLabel && !templates.some(tpl => tpl.name === qualityLabel) && !qualities.some(q => q.name === qualityLabel) && (
                                                 <option value={qualityLabel}>Existing value: {qualityLabel}</option>
                                             )}
-                                            {qualities.map(q => (
-                                                <option key={q.id} value={q.name}>{q.name}</option>
-                                            ))}
+                                            {templates.length > 0 && (
+                                                <optgroup label="Saved estimator qualities">
+                                                    {templates.map(tpl => (
+                                                        <option key={`template-${tpl.id}`} value={tpl.name}>{tpl.name}</option>
+                                                    ))}
+                                                </optgroup>
+                                            )}
+                                            {basicQualityOptions.length > 0 && (
+                                                <optgroup label="Basic quality names">
+                                                    {basicQualityOptions.map(q => (
+                                                        <option key={`quality-${q.id}`} value={q.name}>{q.name}</option>
+                                                    ))}
+                                                </optgroup>
+                                            )}
                                         </select>
                                         <Button
                                             variant="outline"
-                                            onClick={() => {
-                                                setNewQualityName(qualityLabel)
-                                                setShowCreateQuality(true)
-                                            }}
+                                            onClick={openSaveTemplateDialog}
                                             className="h-11 border-slate-200 hover:bg-slate-50"
+                                            title="Save current estimator setup as a quality"
                                         >
                                             <Plus className="h-4 w-4" />
                                         </Button>
@@ -1528,7 +1537,7 @@ export default function EstimatorClient({
                                         <Button
                                             size="sm"
                                             className="bg-brand-accent text-white hover:bg-brand-accent/90 self-start"
-                                            onClick={() => setShowCreateQuality(true)}
+                                            onClick={openSaveTemplateDialog}
                                         >
                                             {t('estimator.quality.addFirstQuality')}
                                         </Button>
@@ -2530,45 +2539,6 @@ export default function EstimatorClient({
                         <Button className="bg-brand-accent text-white" onClick={handleSaveTemplate} disabled={savingTemplate}>
                             {savingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                             {t('estimator.quality.confirmSave')}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Create Quality Dialog */}
-            <Dialog open={showCreateQuality} onOpenChange={setShowCreateQuality}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>{t('estimator.quality.newQuality')}</DialogTitle>
-                    </DialogHeader>
-                    <div className="py-4 space-y-4">
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">Quality Name</Label>
-                            <Input
-                                placeholder="Japan Satin, Canvas Shine"
-                                value={newQualityName}
-                                onChange={e => setNewQualityName(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && handleCreateQuality()}
-                                autoFocus
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">Target Yield (m/kg)</Label>
-                            <Input
-                                type="number"
-                                placeholder="e.g. 9.5"
-                                value={newQualityTargetYield}
-                                onChange={e => setNewQualityTargetYield(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && handleCreateQuality()}
-                            />
-                            <p className="text-[10px] text-slate-400">Target yield helps Weavly estimate expected production/output. You can adjust this later.</p>
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setShowCreateQuality(false)}>Cancel</Button>
-                        <Button className="bg-brand-accent text-white" onClick={handleCreateQuality} disabled={saving}>
-                            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-                            Create Quality
                         </Button>
                     </DialogFooter>
                 </DialogContent>
