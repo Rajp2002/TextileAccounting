@@ -113,6 +113,39 @@ export function calculateMaxDeduction(
 }
 
 /**
+ * Calculate the recommended advance recovery for a payroll settlement.
+ * Recovery is capped to the configured percentage of gross pay, then any
+ * leftover advance balance is carried forward.
+ *
+ * @param grossPay - total earned
+ * @param totalAdvances - total pending advances to recover
+ * @param maxDeductionPercent - max % of gross that can be recovered
+ */
+export function calculateAdvanceRecovery(
+    grossPay: number | string,
+    totalAdvances: number | string,
+    maxDeductionPercent: number = 50
+): {
+    maxDeduction: string
+    recommendedRecovery: string
+    remainingDebt: string
+    capApplied: boolean
+} {
+    const gross = Decimal.max(0, new Decimal(grossPay || 0))
+    const advances = Decimal.max(0, new Decimal(totalAdvances || 0))
+    const maxDeduction = gross.times(maxDeductionPercent).div(100)
+    const recommendedRecovery = Decimal.min(advances, maxDeduction)
+    const remainingDebt = Decimal.max(0, advances.minus(recommendedRecovery))
+
+    return {
+        maxDeduction: maxDeduction.toFixed(2),
+        recommendedRecovery: recommendedRecovery.toFixed(2),
+        remainingDebt: remainingDebt.toFixed(2),
+        capApplied: advances.gt(recommendedRecovery) && maxDeductionPercent < 100,
+    }
+}
+
+/**
  * Calculate net payout after deducting advances from gross pay.
  * Net pay is floored at ₹0 — never goes negative.
  *
