@@ -3,7 +3,7 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import type { SellAndDispatchInput, SellAndDispatchResult } from '@/lib/dispatch/sell-and-dispatch-types'
+import type { LegacyOrderSellAndDispatchInput, SellAndDispatchInput, SellAndDispatchResult } from '@/lib/dispatch/sell-and-dispatch-types'
 import { ensureReceivableForCommercialEntry } from '@/lib/commercials/receivables'
 
 export async function getSellAndDispatchOptions() {
@@ -19,7 +19,7 @@ export async function getSellAndDispatchOptions() {
             .order('deadline', { ascending: true }),
         supabase
             .from('fabric_stock_lot_summary')
-            .select('stock_lot_id, quality_label, godown, available_taka_count, available_meters, cost_per_meter, order_id, unit_label')
+            .select('stock_lot_id, quality_label, godown, source_type, market_run_id, available_taka_count, available_meters, meters_per_taka, cost_per_meter, order_id, unit_label')
             .eq('org_id', profile.org_id)
             .gt('available_taka_count', 0)
             .order('created_at', { ascending: false })
@@ -31,8 +31,105 @@ export async function getSellAndDispatchOptions() {
     }
 }
 
+function toFiniteNumber(value: unknown) {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : 0
+}
 
-export async function sellAndDispatchTakas(input: SellAndDispatchInput): Promise<SellAndDispatchResult> {
+function normalizeDate(value: string | null | undefined) {
+    return value?.trim() || new Date().toISOString().slice(0, 10)
+}
+
+function cleanText(value: string | null | undefined) {
+    const cleaned = value?.trim()
+    return cleaned ? cleaned : null
+}
+
+export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDispatchInput): Promise<SellAndDispatchResult> {
+    await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const partyName = cleanText(input.partyName)
+    const saleDate = normalizeDate(input.saleDate)
+    const creditDays = Math.trunc(toFiniteNumber(input.creditDays))
+    const soldMeters = toFiniteNumber(input.soldMeters)
+    const saleRatePerMeter = toFiniteNumber(input.saleRatePerMeter)
+    const requestedDispatchMeters = input.dispatchNow ? toFiniteNumber(input.actualDispatchedMeters) : 0
+
+    if (!input.sourceId || !input.sourceType) {
+        return { success: false, stage: 'validation', message: 'Source stock is required' }
+    }
+    if (!partyName) {
+        return { success: false, stage: 'validation', message: 'Party name is required' }
+    }
+    if (soldMeters <= 0) {
+        return { success: false, stage: 'validation', message: 'Sold meters must be greater than 0' }
+    }
+    if (saleRatePerMeter <= 0) {
+        return { success: false, stage: 'validation', message: 'Sale rate must be greater than 0' }
+    }
+    if (creditDays < 0) {
+        return { success: false, stage: 'validation', message: 'Credit days cannot be negative' }
+    }
+    if (input.dispatchNow && (requestedDispatchMeters <= 0 || requestedDispatchMeters > soldMeters)) {
+        return { success: false, stage: 'validation', message: 'Dispatched meters must be greater than 0 and not more than sold meters' }
+    }
+    const hasExplicitSoldTakas = input.soldTakas != null && String(input.soldTakas).trim() !== ''
+    const soldTakas = hasExplicitSoldTakas ? toFiniteNumber(input.soldTakas) : null
+    if (soldTakas != null && soldTakas <= 0) {
+        return { success: false, stage: 'validation', message: 'Sold takas must be greater than 0' }
+    }
+
+    const { data, error } = await supabase.rpc('create_party_stock_sale_dispatch_v1', {
+        p_source_type: input.sourceType,
+        p_source_id: input.sourceId,
+        p_party_name: partyName,
+        p_party_phone: cleanText(input.partyPhone),
+        p_party_city: cleanText(input.partyCity),
+        p_party_gstin: cleanText(input.partyGstin),
+        p_sold_meters: soldMeters,
+        p_sold_takas: soldTakas,
+        p_sale_rate_per_meter: saleRatePerMeter,
+        p_credit_days: creditDays,
+        p_sale_date: saleDate,
+        p_dispatch_now: input.dispatchNow,
+        p_actual_dispatched_meters: input.dispatchNow ? requestedDispatchMeters : null,
+        p_dispatch_date: input.dispatchNow ? normalizeDate(input.dispatchDate) : null,
+        p_transport_name: cleanText(input.transportName),
+        p_vehicle_number: cleanText(input.vehicleNumber),
+        p_challan_number: cleanText(input.challanNumber),
+        p_notes: cleanText(input.notes),
+    })
+
+    if (error) {
+        const message = error.message || 'Failed to create stock sale'
+        const stage = /stock|available|sold|party|credit|rate|source|dispatch/i.test(message) ? 'validation' : 'sale'
+        return { success: false, stage, message }
+    }
+
+    const result = Array.isArray(data) ? data[0] : data
+    if (!result?.sale_id) {
+        return { success: false, stage: 'sale', message: 'Stock sale was not created' }
+    }
+
+    revalidatePath('/owner/stock')
+    revalidatePath('/owner/dispatches')
+    revalidatePath('/owner/market-runs')
+    revalidatePath('/owner/commercials')
+
+    return {
+        success: true,
+        saleIds: [result.sale_id],
+        dispatchId: result.dispatch_id ?? null,
+        dispatchNumber: result.dispatch_number == null ? null : Number(result.dispatch_number),
+        trackingUrl: null,
+        dispatchStatus: result.dispatch_status,
+        pendingDispatchMeters: Number(result.pending_dispatch_meters ?? 0),
+        receivableId: result.receivable_id ?? null,
+    }
+}
+
+export async function sellAndDispatchTakas(input: LegacyOrderSellAndDispatchInput): Promise<SellAndDispatchResult> {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
     
@@ -174,6 +271,8 @@ export async function sellAndDispatchTakas(input: SellAndDispatchInput): Promise
         saleIds,
         dispatchId: dispatchMeta.dispatch_id,
         dispatchNumber: dispatchMeta.dispatch_number,
-        trackingUrl: dispatchMeta.tracking_token ? `/track/${dispatchMeta.tracking_token}` : null
+        trackingUrl: dispatchMeta.tracking_token ? `/track/${dispatchMeta.tracking_token}` : null,
+        dispatchStatus: 'dispatched',
+        pendingDispatchMeters: 0,
     }
 }

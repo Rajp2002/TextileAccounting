@@ -197,7 +197,7 @@ function EntryRow({ entry }: { entry: CommercialProfitEntry }) {
                 <p className={cn('font-black', entry.gross_profit_amount >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
                     {entry.gross_profit_amount >= 0 ? '+' : ''}{money(entry.gross_profit_amount)}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">{margin == null ? '—' : `${margin.toFixed(1)}% margin`}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{margin == null ? 'booked, not received' : `${margin.toFixed(1)}% booked margin`}</p>
             </td>
         </tr>
     )
@@ -345,7 +345,7 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
                 <TabsList className="mb-4">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="receivables">Receivables ({initialReceivables.length})</TabsTrigger>
-                    <TabsTrigger value="profit_entries">Profit Entries ({initialData.entries.length})</TabsTrigger>
+                    <TabsTrigger value="profit_entries">Booked Gross Profit ({initialData.entries.length})</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
@@ -358,7 +358,7 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
                             tone="bg-blue-50 text-blue-600"
                         />
                         <MetricCard
-                            label="Realized Profit"
+                            label="Booked Gross Profit"
                             value={money(initialData.summary.realized_profit)}
                             helper={initialData.summary.realized_margin_pct == null ? 'No realized sales yet' : `${initialData.summary.realized_margin_pct.toFixed(1)}% gross margin`}
                             icon={TrendingUp}
@@ -631,7 +631,7 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
                                                                 <p className="font-semibold text-foreground mt-0.5">{money(entry.revenue_amount)}</p>
                                                             </div>
                                                             <div>
-                                                                <p className="text-muted-foreground uppercase text-xs font-bold">Gross Profit</p>
+                                                                <p className="text-muted-foreground uppercase text-xs font-bold">Booked Gross Profit</p>
                                                                 <p className={cn('font-bold mt-0.5', entry.gross_profit_amount >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
                                                                     {entry.gross_profit_amount >= 0 ? '+' : ''}{money(entry.gross_profit_amount)}
                                                                 </p>
@@ -654,7 +654,7 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
                                                     <th className="px-4 py-3 text-right font-bold">Quantity</th>
                                                     <th className="px-4 py-3 text-right font-bold">Rate / m</th>
                                                     <th className="px-4 py-3 text-right font-bold">Revenue</th>
-                                                    <th className="px-4 py-3 text-right font-bold">Gross Profit</th>
+                                                    <th className="px-4 py-3 text-right font-bold">Booked Gross Profit</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-border/40">
