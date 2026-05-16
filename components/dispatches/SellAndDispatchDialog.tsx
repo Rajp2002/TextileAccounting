@@ -224,7 +224,7 @@ export function SellAndDispatchDialog({
                             <option value="">Select godown or expected stock</option>
                             {lots.map((lot) => (
                                 <option key={lot.stock_lot_id} value={lot.stock_lot_id}>
-                                    {lot.quality_label} · {lot.godown} · {Number(lot.available_meters).toFixed(0)}m · {Number(lot.available_taka_count).toFixed(0)} {lot.unit_label}
+                                    {lot.quality_label} · {lot.godown} · {Number(lot.available_meters).toFixed(0)}m · approx {Number(lot.available_taka_count).toFixed(2)} {lot.unit_label}
                                 </option>
                             ))}
                         </select>
@@ -233,7 +233,7 @@ export function SellAndDispatchDialog({
                         <div className="rounded-lg border border-slate-200 p-3 text-sm">
                             <div className="font-bold text-slate-950">{selectedLot.quality_label}</div>
                             <div className="mt-1 text-slate-500">
-                                {selectedLot.godown} · available for sale {Number(selectedLot.available_meters).toFixed(2)}m / {Number(selectedLot.available_taka_count).toFixed(2)} {selectedLot.unit_label}
+                                {selectedLot.godown} · available for sale {Number(selectedLot.available_meters).toFixed(2)}m · approx {Number(selectedLot.available_taka_count).toFixed(2)} {selectedLot.unit_label}
                             </div>
                             <div className="mt-2 text-xs font-semibold text-slate-600">
                                 Cost snapshot: {money(costPerMeter)} per meter
@@ -272,8 +272,9 @@ export function SellAndDispatchDialog({
                             <Input type="number" min="0" step="0.01" value={soldMeters} onChange={(event) => setSoldMeters(event.target.value)} className="h-11 lg:h-9" />
                         </div>
                         <div className="space-y-1.5">
-                            <Label>Sold takas <span className="font-normal text-slate-400">(optional)</span></Label>
+                            <Label>Sold takas <span className="font-normal text-slate-400">(optional display count)</span></Label>
                             <Input type="number" min="0" step="0.01" value={soldTakas} onChange={(event) => setSoldTakas(event.target.value)} placeholder="Leave blank if unknown" className="h-11 lg:h-9" />
+                            <p className="text-[11px] font-semibold text-slate-500">Meters reserve stock. Taka count is only adjusted when entered.</p>
                         </div>
                         <div className="space-y-1.5">
                             <Label>Sale rate per meter</Label>
