@@ -632,7 +632,6 @@ export default function EstimatorClient({
 
     // Scenario panel
     const [showScenarios,      setShowScenarios]      = useState(false)
-    const [showAdvancedCosting, setShowAdvancedCosting] = useState(false)
     const [customTargetPrice,  setCustomTargetPrice]  = useState<string>('')
 
     // Party rate memory — debounced with 800ms + 3-char min
@@ -1983,21 +1982,6 @@ export default function EstimatorClient({
                     </CardContent>
                 </Card>
 
-                <button
-                    type="button"
-                    onClick={() => setShowAdvancedCosting(prev => !prev)}
-                    className="flex w-full items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-3 text-left shadow-sm transition-colors hover:border-brand-accent/40 hover:bg-brand-accent/5"
-                >
-                    <Calculator className="h-4 w-4 text-brand-accent" />
-                    <div className="min-w-0 flex-1">
-                        <p className="text-sm font-black text-slate-800">Advanced costing</p>
-                        <p className="text-xs font-medium text-slate-500">Factory overhead, processing, finishing, and stress-test scenarios</p>
-                    </div>
-                    {showAdvancedCosting ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-                </button>
-
-                {showAdvancedCosting && (
-                    <>
                 {/* 5b. Factory Overhead — Itemized Breakdown */}
                 <Card className="border-border/60 shadow-sm overflow-hidden">
                     <SectionHeader
@@ -2415,8 +2399,6 @@ export default function EstimatorClient({
                         </div>
                     </CardContent>
                 </Card>
-                    </>
-                )}
 
                 {/* 7. Simulation / Order */}
                 <Card className="border-border/60 shadow-sm overflow-hidden bg-slate-50/20">
@@ -2444,7 +2426,7 @@ export default function EstimatorClient({
             </div>
 
             {/* ── SCENARIO ANALYSIS (STRESS TESTS) ───────────────────────── */}
-            {showAdvancedCosting && hasOrderQty && totals.orderQuote && (
+            {hasOrderQty && totals.orderQuote && (
                 <div className="max-w-6xl mx-auto space-y-2">
                     <button
                         onClick={() => setShowScenarios(!showScenarios)}
