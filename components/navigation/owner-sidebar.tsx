@@ -193,31 +193,22 @@ export function OwnerSidebar({ factoryName, userName, productionMode }: OwnerSid
                 <NavContent factoryName={factoryName} userName={userName} productionMode={normalizedProductionMode} />
             </aside>
 
-            {/* Mobile header bar */}
-            <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-canvas/92 px-4 py-2 pt-safe backdrop-blur-xl md:hidden">
-                <div className="flex items-center">
-                    <div className="relative h-10 w-28 shrink-0">
-                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="7rem" className="object-contain" priority />
-                    </div>
-                </div>
-
-                <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                    <SheetContent
-                        side="left"
-                        className="w-[280px] border-white/10 bg-[#111111] p-0"
-                    >
-                        <SheetHeader className="sr-only">
-                            <SheetTitle>{t('common.navigation')}</SheetTitle>
-                        </SheetHeader>
-                        <NavContent
-                            factoryName={factoryName}
-                            userName={userName}
-                            productionMode={normalizedProductionMode}
-                            onLinkClick={() => setIsOpen(false)}
-                        />
-                    </SheetContent>
-                </Sheet>
-            </header>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetContent
+                    side="left"
+                    className="w-[280px] border-white/10 bg-[#111111] p-0"
+                >
+                    <SheetHeader className="sr-only">
+                        <SheetTitle>{t('common.navigation')}</SheetTitle>
+                    </SheetHeader>
+                    <NavContent
+                        factoryName={factoryName}
+                        userName={userName}
+                        productionMode={normalizedProductionMode}
+                        onLinkClick={() => setIsOpen(false)}
+                    />
+                </SheetContent>
+            </Sheet>
 
             {/* Mobile Bottom Navigation Form Factor */}
             <div className={cn(
