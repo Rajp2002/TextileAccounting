@@ -3,6 +3,7 @@
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { processCommercialPayment, RecordPaymentInput } from '@/lib/commercials/receivables'
+import { getSuratTodayString, formatToSurat } from '@/lib/time'
 import { revalidatePath } from 'next/cache'
 
 export type CommercialStage = 'realized' | 'expected'
@@ -190,4 +191,63 @@ export async function recordCommercialPaymentAction(input: RecordPaymentInput) {
         revalidatePath('/owner/commercials')
     }
     return result
+}
+
+export interface CommercialPayment {
+    id: string
+    amount: number
+    payment_date: string
+    payment_mode: string
+    reference_number: string | null
+    notes: string | null
+    created_at: string
+}
+
+export async function getCommercialPayments(receivableId: string): Promise<{ data: CommercialPayment[] } | { error: string }> {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('commercial_payment_receipts')
+        .select('id, amount, payment_date, payment_mode, reference_number, notes, created_at')
+        .eq('receivable_id', receivableId)
+        .eq('org_id', profile.org_id)
+        .order('payment_date', { ascending: false })
+        .order('created_at', { ascending: false })
+
+    if (error) return { error: error.message }
+
+    const payments: CommercialPayment[] = (data ?? []).map((row: Record<string, unknown>) => ({
+        id: String(row.id),
+        amount: Number(row.amount ?? 0),
+        payment_date: String(row.payment_date),
+        payment_mode: String(row.payment_mode ?? 'other'),
+        reference_number: row.reference_number == null ? null : String(row.reference_number),
+        notes: row.notes == null ? null : String(row.notes),
+        created_at: String(row.created_at),
+    }))
+
+    return { data: payments }
+}
+
+export async function getCollectedThisMonth(): Promise<{ data: number } | { error: string }> {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    // Use IST (Asia/Kolkata) dates to avoid UTC midnight drift on Vercel
+    const today = getSuratTodayString()
+    const firstOfMonth = formatToSurat(new Date(), 'yyyy-MM') + '-01'
+
+    const { data, error } = await supabase
+        .from('commercial_payment_receipts')
+        .select('amount')
+        .eq('org_id', profile.org_id)
+        .gte('payment_date', firstOfMonth)
+        .lte('payment_date', today)
+
+    if (error) return { error: error.message }
+
+    const total = (data ?? []).reduce((sum: number, row: Record<string, unknown>) => sum + Number(row.amount ?? 0), 0)
+
+    return { data: total }
 }
