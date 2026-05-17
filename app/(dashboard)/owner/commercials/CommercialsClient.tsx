@@ -212,6 +212,81 @@ interface Receivable {
     received_amount: number
     balance_amount: number
     due_date?: string | null
+    credit_days?: number | null
+    meters_sold?: number | null
+    dispatch_status?: 'not_dispatched' | 'partially_dispatched' | 'dispatched' | 'received' | 'discrepancy' | null
+    dispatched_meters?: number | null
+    pending_dispatch_meters?: number | null
+    booked_gross_profit?: number | null
+}
+
+// Helper to compare dates as local YYYY-MM-DD strings to avoid timezone drift issues
+function getLocalDateString(dateInput?: Date | string | null): string {
+    if (!dateInput) return ''
+    if (dateInput instanceof Date) {
+        const y = dateInput.getFullYear()
+        const m = String(dateInput.getMonth() + 1).padStart(2, '0')
+        const d = String(dateInput.getDate()).padStart(2, '0')
+        return `${y}-${m}-${d}`
+    }
+    return dateInput.split('T')[0].split(' ')[0]
+}
+
+function getDueBucket(rec: Receivable): 'overdue' | 'due_today' | 'due_this_week' | 'upcoming' | 'paid' {
+    if (rec.payment_status === 'paid' || rec.balance_amount <= 0) {
+        return 'paid'
+    }
+    if (!rec.due_date) {
+        return 'upcoming'
+    }
+
+    const todayStr = getLocalDateString(new Date())
+    const dueStr = getLocalDateString(rec.due_date)
+
+    if (dueStr < todayStr) {
+        return 'overdue'
+    }
+    if (dueStr === todayStr) {
+        return 'due_today'
+    }
+
+    const todayParts = todayStr.split('-').map(Number)
+    const dueParts = dueStr.split('-').map(Number)
+
+    const todayLocal = new Date(todayParts[0], todayParts[1] - 1, todayParts[2])
+    const dueLocal = new Date(dueParts[0], dueParts[1] - 1, dueParts[2])
+
+    const diffTime = dueLocal.getTime() - todayLocal.getTime()
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays > 0 && diffDays <= 7) {
+        return 'due_this_week'
+    }
+    return 'upcoming'
+}
+
+function getDispatchStatusLabel(status: string | null | undefined): string {
+    if (!status) return 'Unknown'
+    switch (status) {
+        case 'not_dispatched': return 'Not dispatched'
+        case 'partially_dispatched': return 'Partially dispatched'
+        case 'dispatched': return 'Dispatched'
+        case 'received': return 'Received'
+        case 'discrepancy': return 'Needs review'
+        default: return status
+    }
+}
+
+function getDispatchStatusTone(status: string | null | undefined): string {
+    if (!status) return 'bg-slate-50 text-slate-700 border-slate-200'
+    switch (status) {
+        case 'not_dispatched': return 'bg-slate-50 text-slate-700 border-slate-200'
+        case 'partially_dispatched': return 'bg-amber-50 text-amber-700 border-amber-200'
+        case 'dispatched': return 'bg-blue-50 text-blue-700 border-blue-200'
+        case 'received': return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        case 'discrepancy': return 'bg-rose-50 text-rose-700 border-rose-200'
+        default: return 'bg-slate-50 text-slate-700 border-slate-200'
+    }
 }
 
 interface CommercialsClientProps {
@@ -225,6 +300,9 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
     const [stage, setStage] = useState<StageFilter>('all')
     const [source, setSource] = useState<SourceFilter>('all')
     const [activeTab, setActiveTab] = useState('overview')
+
+    const [dueTab, setDueTab] = useState<'all' | 'overdue' | 'due_today' | 'due_this_week' | 'upcoming' | 'paid'>('all')
+    const [receivableSearch, setReceivableSearch] = useState('')
 
     // Payment Dialog State
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
@@ -317,20 +395,42 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
 
     // Calculate Receivables Summary
     const receivablesSummary = useMemo(() => {
-        return initialReceivables.reduce((acc, rec) => {
-            acc.total += rec.total_amount
-            acc.received += rec.received_amount
-            acc.balance += rec.balance_amount
-            if (rec.payment_status === 'unpaid' || rec.payment_status === 'partial') {
-                acc.moneyToCollect += rec.balance_amount
-                // Check if overdue
-                if (rec.due_date && new Date(rec.due_date) < new Date()) {
-                    acc.overdue += rec.balance_amount
+        let totalToCollect = 0
+        let overdue = 0
+        let dueThisWeek = 0
+        let openSales = 0
+
+        initialReceivables.forEach((rec) => {
+            const bucket = getDueBucket(rec)
+            if (rec.balance_amount > 0) {
+                totalToCollect += rec.balance_amount
+                openSales += 1
+
+                if (bucket === 'overdue') {
+                    overdue += rec.balance_amount
+                } else if (bucket === 'due_today' || bucket === 'due_this_week') {
+                    dueThisWeek += rec.balance_amount
                 }
             }
-            return acc
-        }, { total: 0, received: 0, balance: 0, moneyToCollect: 0, overdue: 0 })
+        })
+
+        return {
+            totalToCollect,
+            overdue,
+            dueThisWeek,
+            openSales
+        }
     }, [initialReceivables])
+
+    const filteredReceivables = useMemo(() => {
+        const needle = receivableSearch.trim().toLowerCase()
+        return initialReceivables.filter((rec) => {
+            const bucket = getDueBucket(rec)
+            const matchesBucket = dueTab === 'all' || bucket === dueTab
+            const haystack = `${rec.party_name} ${rec.quality_label} ${rec.payment_status}`.toLowerCase()
+            return matchesBucket && (!needle || haystack.includes(needle))
+        })
+    }, [initialReceivables, dueTab, receivableSearch])
 
     return (
         <div className="space-y-6">
@@ -349,13 +449,27 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                         <MetricCard
-                            label="Realized Revenue"
-                            value={money(initialData.summary.realized_revenue)}
-                            helper={`${money(initialData.summary.realized_cost)} production cost`}
-                            icon={IndianRupee}
-                            tone="bg-blue-50 text-blue-600"
+                            label="Total to Collect"
+                            value={money(receivablesSummary.totalToCollect)}
+                            helper="Unpaid balance amount"
+                            icon={BadgeIndianRupee}
+                            tone="bg-violet-50 text-violet-700"
+                        />
+                        <MetricCard
+                            label="Overdue"
+                            value={money(receivablesSummary.overdue)}
+                            helper="Due before today"
+                            icon={CalendarDays}
+                            tone="bg-rose-50 text-rose-700"
+                        />
+                        <MetricCard
+                            label="Due This Week"
+                            value={money(receivablesSummary.dueThisWeek)}
+                            helper="Due in next 7 days"
+                            icon={CalendarDays}
+                            tone="bg-amber-50 text-amber-700"
                         />
                         <MetricCard
                             label="Booked Gross Profit"
@@ -365,18 +479,11 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
                             tone="bg-emerald-50 text-emerald-700"
                         />
                         <MetricCard
-                            label="Money to Collect"
-                            value={money(receivablesSummary.moneyToCollect)}
-                            helper={`${money(receivablesSummary.overdue)} overdue`}
-                            icon={BadgeIndianRupee}
-                            tone="bg-violet-50 text-violet-700"
-                        />
-                        <MetricCard
-                            label="Expected Profit"
-                            value={money(initialData.summary.expected_profit)}
-                            helper={`${money(initialData.summary.expected_revenue)} expected revenue`}
+                            label="Open Sales"
+                            value={`${receivablesSummary.openSales} sales`}
+                            helper="Active receivables count"
                             icon={FileText}
-                            tone="bg-amber-50 text-amber-700"
+                            tone="bg-blue-50 text-blue-600"
                         />
                     </div>
 
@@ -394,15 +501,33 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
+                                value={receivableSearch}
+                                onChange={(e) => setReceivableSearch(e.target.value)}
                                 placeholder="Search party, quality..."
                                 className="pl-10"
                             />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {(['all', 'overdue', 'due_today', 'due_this_week', 'upcoming', 'paid'] as const).map((tab) => {
+                                const label = tab === 'all' ? 'All' : tab.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                                const count = initialReceivables.filter(r => tab === 'all' || getDueBucket(r) === tab).length
+                                return (
+                                    <Button
+                                        key={tab}
+                                        variant={dueTab === tab ? 'default' : 'outline'}
+                                        onClick={() => setDueTab(tab)}
+                                        className="h-11 min-h-11 lg:h-9 lg:min-h-9 capitalize text-xs font-bold"
+                                    >
+                                        {label} ({count})
+                                    </Button>
+                                )
+                            })}
                         </div>
                     </div>
 
                     <Card className="border-border/60">
                         <CardContent className="p-0">
-                            {initialReceivables.length === 0 ? (
+                            {filteredReceivables.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-16 text-center">
                                     <BadgeIndianRupee className="mb-3 h-10 w-10 text-muted-foreground/70" />
                                     <p className="text-lg font-bold text-foreground">No receivables found</p>
@@ -412,7 +537,7 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
                                 <>
                                     {/* Mobile Cards */}
                                     <div className="lg:hidden space-y-4 p-4">
-                                        {initialReceivables.map((rec) => (
+                                        {filteredReceivables.map((rec) => (
                                             <Card key={rec.id} className="border-border/60 shadow-sm rounded-2xl overflow-hidden">
                                                 <CardContent className="p-4 space-y-3">
                                                     <div className="flex justify-between items-start">
@@ -420,45 +545,76 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
                                                             <p className="font-bold text-foreground text-base">{rec.party_name}</p>
                                                             <p className="text-xs text-muted-foreground">{rec.quality_label}</p>
                                                         </div>
-                                                        <Badge variant="outline" className={cn('capitalize font-bold text-xs', 
-                                                            rec.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                                            rec.payment_status === 'partial' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                                            'bg-rose-50 text-rose-700 border-rose-200'
-                                                        )}>
-                                                            {rec.payment_status}
-                                                        </Badge>
+                                                        <div className="flex flex-col items-end gap-1.5">
+                                                            <Badge variant="outline" className={cn('capitalize font-bold text-xs', 
+                                                                rec.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                                rec.payment_status === 'partial' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                                'bg-rose-50 text-rose-700 border-rose-200'
+                                                            )}>
+                                                                {rec.payment_status}
+                                                            </Badge>
+                                                            {rec.dispatch_status && (
+                                                                <Badge variant="outline" className={cn('font-bold text-xs w-fit capitalize', getDispatchStatusTone(rec.dispatch_status))}>
+                                                                    {getDispatchStatusLabel(rec.dispatch_status)}
+                                                                </Badge>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                     
                                                     <div className="grid grid-cols-3 gap-2 text-xs py-2 border-y border-border/40">
                                                         <div>
-                                                            <p className="text-muted-foreground uppercase text-xs font-bold">Total</p>
+                                                            <p className="text-muted-foreground uppercase text-[10px] font-bold">Total</p>
                                                             <p className="font-semibold text-foreground mt-0.5">{money(rec.total_amount)}</p>
                                                         </div>
                                                         <div>
-                                                            <p className="text-muted-foreground uppercase text-xs font-bold">Received</p>
+                                                            <p className="text-muted-foreground uppercase text-[10px] font-bold">Received</p>
                                                             <p className="font-semibold text-emerald-600 mt-0.5">{money(rec.received_amount)}</p>
                                                         </div>
                                                         <div>
-                                                            <p className="text-muted-foreground uppercase text-xs font-bold">Balance</p>
+                                                            <p className="text-muted-foreground uppercase text-[10px] font-bold">Balance</p>
                                                             <p className="font-bold text-rose-600 mt-0.5">{money(rec.balance_amount)}</p>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                                                            {rec.due_date ? (
-                                                                <>
-                                                                    <CalendarDays className="h-3.5 w-3.5" />
-                                                                    <span>Due: {new Date(rec.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
-                                                                </>
-                                                            ) : (
-                                                                <span>No due date</span>
+                                                    {/* Meters tracking (stock sales only) */}
+                                                    {rec.meters_sold != null && (
+                                                        <div className="grid grid-cols-3 gap-2 text-[10px] py-2 border-b border-border/40 bg-muted/20 px-2 rounded-lg">
+                                                            <div>
+                                                                <p className="text-muted-foreground uppercase font-bold">Sold</p>
+                                                                <p className="font-semibold text-foreground mt-0.5">{meters(rec.meters_sold)}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-muted-foreground uppercase font-bold">Dispatched</p>
+                                                                <p className="font-semibold text-blue-600 mt-0.5">{meters(rec.dispatched_meters ?? 0)}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-muted-foreground uppercase font-bold">Pending</p>
+                                                                <p className="font-semibold text-amber-600 mt-0.5">{meters(rec.pending_dispatch_meters ?? 0)}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+                                                        <div className="font-semibold text-muted-foreground space-y-1">
+                                                            <div className="flex items-center gap-1">
+                                                                <CalendarDays className="h-3.5 w-3.5" />
+                                                                {rec.due_date ? (
+                                                                    <span>Due: {new Date(rec.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                                                ) : (
+                                                                    <span>No due date</span>
+                                                                )}
+                                                            </div>
+                                                            {rec.credit_days != null && (
+                                                                <p className="text-[10px] text-muted-foreground/80">Credit terms: {rec.credit_days} days</p>
+                                                            )}
+                                                            {rec.booked_gross_profit != null && (
+                                                                <p className="text-[10px] text-emerald-600 font-bold">Booked Gross Profit: {money(rec.booked_gross_profit)}</p>
                                                             )}
                                                         </div>
                                                         <Button 
                                                             variant="ghost" 
                                                             size="sm" 
-                                                            className="h-11 min-h-11 lg:h-9 lg:min-h-9 gap-1 text-xs font-bold"
+                                                            className="h-9 min-h-9 gap-1 text-xs font-bold"
                                                             onClick={() => {
                                                                 setSelectedReceivable(rec)
                                                                 setPaymentAmount(rec.balance_amount.toString())
@@ -489,29 +645,65 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-border/40">
-                                                {initialReceivables.map((rec) => (
+                                                {filteredReceivables.map((rec) => (
                                                     <tr key={rec.id} className="hover:bg-muted/30">
                                                         <td className="px-4 py-3">
                                                             <p className="font-bold text-foreground">{rec.party_name}</p>
-                                                            <p className="text-xs text-muted-foreground">{rec.quality_label}</p>
+                                                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                                                <span className="text-xs text-muted-foreground">{rec.quality_label}</span>
+                                                                {rec.credit_days != null && (
+                                                                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                                                        {rec.credit_days} days credit
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {rec.booked_gross_profit != null && (
+                                                                <p className="text-[10px] text-emerald-600 font-bold mt-1">
+                                                                    Booked Gross Profit: {money(rec.booked_gross_profit)}
+                                                                </p>
+                                                            )}
                                                         </td>
                                                         <td className="px-4 py-3">
-                                                            <Badge variant="outline" className={cn('capitalize font-bold', 
-                                                                rec.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                                                rec.payment_status === 'partial' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                                                'bg-rose-50 text-rose-700 border-rose-200'
-                                                            )}>
-                                                                {rec.payment_status}
-                                                            </Badge>
+                                                            <div className="flex flex-col gap-1.5">
+                                                                <Badge variant="outline" className={cn('capitalize font-bold w-fit text-xs', 
+                                                                    rec.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                                    rec.payment_status === 'partial' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                                    'bg-rose-50 text-rose-700 border-rose-200'
+                                                                )}>
+                                                                    {rec.payment_status}
+                                                                </Badge>
+                                                                {rec.dispatch_status && (
+                                                                    <Badge variant="outline" className={cn('font-bold w-fit text-[10px] px-1.5 py-0 capitalize', getDispatchStatusTone(rec.dispatch_status))}>
+                                                                        {getDispatchStatusLabel(rec.dispatch_status)}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                         </td>
-                                                        <td className="px-4 py-3 text-right font-semibold">{money(rec.total_amount)}</td>
-                                                        <td className="px-4 py-3 text-right text-emerald-600">{money(rec.received_amount)}</td>
-                                                        <td className="px-4 py-3 text-right font-bold text-rose-600">{money(rec.balance_amount)}</td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <p className="font-semibold text-foreground">{money(rec.total_amount)}</p>
+                                                            {rec.meters_sold != null && (
+                                                                <p className="text-[10px] text-muted-foreground mt-0.5">Sold: {meters(rec.meters_sold)}</p>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <p className="text-emerald-600 font-medium">{money(rec.received_amount)}</p>
+                                                            {rec.dispatched_meters != null && (
+                                                                <p className="text-[10px] text-blue-600 mt-0.5">Sent: {meters(rec.dispatched_meters)}</p>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <p className="font-bold text-rose-600">{money(rec.balance_amount)}</p>
+                                                            {rec.pending_dispatch_meters != null && (
+                                                                <p className="text-[10px] text-amber-600 mt-0.5">Pend: {meters(rec.pending_dispatch_meters)}</p>
+                                                            )}
+                                                        </td>
                                                         <td className="px-4 py-3">
                                                             {rec.due_date ? (
-                                                                <div className="flex items-center gap-1 text-xs font-semibold">
-                                                                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-                                                                    {new Date(rec.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                                <div className="flex flex-col gap-1">
+                                                                    <div className="flex items-center gap-1 text-xs font-semibold text-foreground">
+                                                                        <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                                                                        {new Date(rec.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                    </div>
                                                                 </div>
                                                             ) : '—'}
                                                         </td>
@@ -519,7 +711,7 @@ export default function CommercialsClient({ initialData, initialReceivables }: C
                                                             <Button 
                                                                 variant="ghost" 
                                                                 size="sm" 
-                                                                className="gap-1 text-xs"
+                                                                className="gap-1 text-xs font-bold h-9 min-h-9"
                                                                 onClick={() => {
                                                                     setSelectedReceivable(rec)
                                                                     setPaymentAmount(rec.balance_amount.toString())
