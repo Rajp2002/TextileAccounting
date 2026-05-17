@@ -13,6 +13,7 @@ import {
     TrendingUp,
     CalendarDays,
     ArrowRight,
+    AlertTriangle,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -232,6 +233,8 @@ interface Receivable {
     dispatched_meters?: number | null
     pending_dispatch_meters?: number | null
     booked_gross_profit?: number | null
+    receipt_status?: 'not_confirmed' | 'matched' | 'difference_reported' | null
+    receipt_difference_meters?: number | null
 }
 
 // Helper to compare dates as local YYYY-MM-DD strings to avoid timezone drift issues
@@ -301,6 +304,13 @@ function getDispatchStatusTone(status: string | null | undefined): string {
         case 'discrepancy': return 'bg-rose-50 text-rose-700 border-rose-200'
         default: return 'bg-slate-50 text-slate-700 border-slate-200'
     }
+}
+
+function getReceiptDifferenceWarning(rec: Receivable): string | null {
+    if (rec.receipt_status !== 'difference_reported' || rec.receipt_difference_meters == null) return null
+    const diff = Number(rec.receipt_difference_meters)
+    if (!Number.isFinite(diff) || Math.abs(diff) <= 0.01) return null
+    return `Receipt difference reported: ${Math.abs(diff).toLocaleString('en-IN', { maximumFractionDigits: 2 })}m ${diff < 0 ? 'short' : 'extra'}`
 }
 
 interface CommercialsClientProps {
@@ -577,6 +587,12 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                                         {filteredReceivables.map((rec) => (
                                             <Card key={rec.id} className="border-border/60 shadow-sm rounded-2xl overflow-hidden">
                                                 <CardContent className="p-4 space-y-3">
+                                                    {getReceiptDifferenceWarning(rec) && (
+                                                        <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">
+                                                            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                                                            {getReceiptDifferenceWarning(rec)}
+                                                        </div>
+                                                    )}
                                                     <div className="flex justify-between items-start">
                                                         <div>
                                                             <p className="font-bold text-foreground text-base">{rec.party_name}</p>
@@ -743,6 +759,12 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                                                                     {rec.booked_gross_profit != null && (
                                                                         <p className="text-[10px] text-emerald-600 font-bold mt-1">
                                                                             Booked Gross Profit: {money(rec.booked_gross_profit)}
+                                                                        </p>
+                                                                    )}
+                                                                    {getReceiptDifferenceWarning(rec) && (
+                                                                        <p className="mt-1 flex items-center gap-1 text-[10px] font-bold text-rose-600">
+                                                                            <AlertTriangle className="h-3 w-3" />
+                                                                            {getReceiptDifferenceWarning(rec)}
                                                                         </p>
                                                                     )}
                                                                 </div>

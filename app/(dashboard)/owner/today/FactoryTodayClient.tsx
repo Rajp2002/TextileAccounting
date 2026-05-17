@@ -94,6 +94,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
         data.workAtRisk.inactiveMarketRuns.length === 0 &&
         data.dispatch.soldNotDispatched.length === 0 &&
         data.dispatch.pendingReceipts.length === 0 &&
+        data.dispatch.receiptDifferences.length === 0 &&
         data.payroll.pendingAdvanceTotal === 0
     const checklist = data.activationChecklist || {
         hasEstimate: false,
@@ -186,7 +187,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                     {/* Right Column */}
                     <div className="space-y-4">
                         <SoldNotDispatchedCard sales={data.dispatch.soldNotDispatched} />
-                        <PendingReceiptsCard receipts={data.dispatch.pendingReceipts} />
+                        <PendingReceiptsCard receipts={data.dispatch.pendingReceipts} receiptDifferences={data.dispatch.receiptDifferences} />
                         <PayrollHisaabCard payroll={data.payroll} />
                         <QuickActionsCard productionMode={data.productionMode} />
                     </div>

@@ -137,7 +137,7 @@ export async function getCommercialReceivables(filters?: any) {
     if (stockSaleIds.length > 0) {
         const { data: sales, error: salesError } = await supabase
             .from('fabric_stock_sales')
-            .select('id, meters_sold, dispatched_meters, pending_dispatch_meters, dispatch_status, credit_days, gross_profit_amount')
+            .select('id, meters_sold, dispatched_meters, pending_dispatch_meters, dispatch_status, credit_days, gross_profit_amount, dispatch_id')
             .in('id', stockSaleIds)
 
         if (salesError) {
@@ -145,9 +145,37 @@ export async function getCommercialReceivables(filters?: any) {
         }
 
         const salesMap = new Map(sales?.map((s) => [s.id, s]))
+        const receivableDispatchIds = (receivables ?? [])
+            .map((rec) => rec.dispatch_id as string | null)
+            .filter((id): id is string => Boolean(id))
+        const dispatchIds = Array.from(new Set([
+            ...receivableDispatchIds,
+            ...(sales ?? [])
+            .map((sale) => sale.dispatch_id as string | null)
+            .filter((id): id is string => Boolean(id)),
+        ]))
+        const { data: receiptDispatches, error: dispatchError } = dispatchIds.length > 0
+            ? await supabase
+                .from('dispatches')
+                .select('id, qty_meters_sent, received_meters, qty_meters_received, receipt_status')
+                .eq('org_id', profile.org_id)
+                .in('id', dispatchIds)
+            : { data: [], error: null }
+
+        if (dispatchError) {
+            console.error('Failed to fetch receipt differences for commercials:', dispatchError)
+        }
+
+        const dispatchMap = new Map((receiptDispatches ?? []).map((d) => [d.id, d]))
         const enriched = (receivables ?? []).map((rec) => {
             if (rec.source_type === 'fabric_stock_sale') {
                 const sale = salesMap.get(rec.source_id)
+                const linkedDispatchId = sale?.dispatch_id ?? rec.dispatch_id
+                const dispatch = linkedDispatchId ? dispatchMap.get(linkedDispatchId) : null
+                const receivedMeters = dispatch?.received_meters ?? dispatch?.qty_meters_received ?? null
+                const differenceMeters = dispatch?.receipt_status === 'difference_reported' && receivedMeters != null
+                    ? Number(receivedMeters) - Number(dispatch.qty_meters_sent ?? 0)
+                    : null
                 return {
                     ...rec,
                     meters_sold: sale?.meters_sold ?? null,
@@ -156,6 +184,8 @@ export async function getCommercialReceivables(filters?: any) {
                     dispatch_status: sale?.dispatch_status || 'not_dispatched',
                     credit_days: sale?.credit_days ?? null,
                     booked_gross_profit: sale?.gross_profit_amount ?? null,
+                    receipt_status: dispatch?.receipt_status ?? null,
+                    receipt_difference_meters: differenceMeters,
                 }
             }
             return {
@@ -166,6 +196,8 @@ export async function getCommercialReceivables(filters?: any) {
                 dispatch_status: null,
                 credit_days: rec.credit_days ?? null,
                 booked_gross_profit: null,
+                receipt_status: null,
+                receipt_difference_meters: null,
             }
         })
 
@@ -180,6 +212,8 @@ export async function getCommercialReceivables(filters?: any) {
         dispatch_status: null,
         credit_days: rec.credit_days ?? null,
         booked_gross_profit: null,
+        receipt_status: null,
+        receipt_difference_meters: null,
     }))
 
     return { data: simpleMapped }

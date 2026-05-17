@@ -32,7 +32,7 @@ import {
     type DispatchRow,
     type DispatchOverviewStats,
 } from '@/app/(dashboard)/owner/orders/actions'
-import { confirmDispatchReceiptByOwner } from '@/app/(dashboard)/owner/orders/actions'
+import { confirmDispatchReceived } from '@/app/(dashboard)/owner/dispatches/actions'
 import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
 import { SellAndDispatchDialog } from '@/components/dispatches/SellAndDispatchDialog'
 import {
@@ -62,9 +62,12 @@ interface Dispatch {
     dispatch_number: number
     qty_meters_sent: number
     qty_meters_received: number | null
+    received_meters?: number | null
     receipt_confirmed_by_owner: boolean
     receipt_confirmation_note: string | null
     receipt_confirmed_by: string | null
+    received_note?: string | null
+    receipt_status?: 'not_confirmed' | 'matched' | 'difference_reported'
     status: 'in_transit' | 'delivered' | 'disputed'
     dispatched_at: string
     received_at: string | null
@@ -160,31 +163,30 @@ const getOrderStatusBadge = (group: OrderGroup) => {
 }
 
 const getReceiptBadge = (dispatch: Dispatch, t: (key: string) => string) => {
-    if (dispatch.qty_meters_received === null) {
+    const receivedMeters = dispatch.received_meters ?? dispatch.qty_meters_received
+    if (dispatch.receipt_status === 'not_confirmed' || receivedMeters === null) {
         return {
-            label: t('dispatch.shortage.awaiting'),
+            label: 'Not confirmed',
             className: 'bg-amber-50 text-amber-700 border-amber-200',
         }
     }
 
-    const variance = Number(dispatch.qty_meters_received) - Number(dispatch.qty_meters_sent)
-    if (variance < -0.01) {
+    const variance = Number(receivedMeters) - Number(dispatch.qty_meters_sent)
+    if (dispatch.receipt_status === 'difference_reported' || Math.abs(variance) > 0.01) {
         return {
-            label: t('dispatch.shortage.badge').replace('{amount}', Math.abs(variance).toFixed(2)),
-            className: 'bg-rose-50 text-rose-700 border-rose-200',
-        }
-    }
-    if (variance > 0.01) {
-        return {
-            label: t('dispatch.shortage.extra').replace('{amount}', variance.toFixed(2)),
-            className: 'bg-sky-50 text-sky-700 border-sky-200',
+            label: 'Difference reported',
+            className: variance < 0 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-sky-50 text-sky-700 border-sky-200',
         }
     }
 
     return {
-        label: t('dispatch.shortage.received'),
+        label: 'Matched',
         className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     }
+}
+
+function getTodayInputDate() {
+    return new Date().toISOString().split('T')[0]
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -194,20 +196,22 @@ function DispatchBatchRow({
     onOwnerReceiptConfirmed,
 }: {
     dispatch: Dispatch
-    onOwnerReceiptConfirmed: (dispatchId: string, qtyReceived: number, note: string) => void
+    onOwnerReceiptConfirmed: (dispatchId: string, qtyReceived: number, note: string, receiptStatus: Dispatch['receipt_status']) => void
 }) {
     const { t } = useTranslation()
     const [isReceiptSheetOpen, setIsReceiptSheetOpen] = useState(false)
     const [showExtraConfirm, setShowExtraConfirm] = useState(false)
-    const [metersReceived, setMetersReceived] = useState(String(dispatch.qty_meters_sent))
-    const [confirmationNote, setConfirmationNote] = useState('')
+    const [metersReceived, setMetersReceived] = useState(String(dispatch.received_meters ?? dispatch.qty_meters_received ?? dispatch.qty_meters_sent))
+    const [receivedAt, setReceivedAt] = useState(getTodayInputDate())
+    const [confirmationNote, setConfirmationNote] = useState(dispatch.received_note ?? dispatch.receipt_confirmation_note ?? '')
     const [isPending, startTransition] = useTransition()
     const status = getStatusConfig(dispatch.status)
-    const shortage = dispatch.qty_meters_received !== null
-        ? Number(dispatch.qty_meters_sent) - Number(dispatch.qty_meters_received)
+    const confirmedReceivedMeters = dispatch.received_meters ?? dispatch.qty_meters_received
+    const shortage = confirmedReceivedMeters !== null && confirmedReceivedMeters !== undefined
+        ? Number(dispatch.qty_meters_sent) - Number(confirmedReceivedMeters)
         : 0
     const receiptBadge = getReceiptBadge(dispatch, t)
-    const showRecordReceipt = dispatch.qty_meters_received === null
+    const showRecordReceipt = dispatch.receipt_status !== 'matched' && dispatch.receipt_status !== 'difference_reported' && confirmedReceivedMeters == null
 
     const submitOwnerReceiptConfirm = () => {
         const qty = Number.parseFloat(metersReceived)
@@ -217,14 +221,19 @@ function DispatchBatchRow({
         }
 
         startTransition(async () => {
-            const result = await confirmDispatchReceiptByOwner(dispatch.id, qty, confirmationNote)
+            const result = await confirmDispatchReceived({
+                dispatchId: dispatch.id,
+                receivedMeters: qty,
+                receivedAt,
+                note: confirmationNote,
+            })
             if ('error' in result) {
                 toast.error(result.error)
                 return
             }
 
             toast.success(t('dispatch.receipt.recordButton'))
-            onOwnerReceiptConfirmed(dispatch.id, result.qty_received, confirmationNote)
+            onOwnerReceiptConfirmed(dispatch.id, result.receivedMeters, confirmationNote, result.receiptStatus)
             setIsReceiptSheetOpen(false)
             setShowExtraConfirm(false)
         })
@@ -278,9 +287,9 @@ function DispatchBatchRow({
                 <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30" />
                 <div>
                     <p className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-wider">Received</p>
-                    {dispatch.qty_meters_received !== null ? (
+                    {confirmedReceivedMeters !== null && confirmedReceivedMeters !== undefined ? (
                         <p className={cn("text-sm font-black tabular-nums", shortage > 0.01 ? "text-rose-600" : "text-emerald-600")}>
-                            {Number(dispatch.qty_meters_received).toFixed(2)}<span className="text-[10px] ml-0.5 font-bold opacity-60">m</span>
+                            {Number(confirmedReceivedMeters).toFixed(2)}<span className="text-[10px] ml-0.5 font-bold opacity-60">m</span>
                         </p>
                     ) : (
                         <p className="text-sm font-black text-muted-foreground/40 italic">Pending</p>
@@ -288,13 +297,13 @@ function DispatchBatchRow({
                 </div>
                 {shortage > 0.01 && (
                     <div className="border-l border-zinc-200 dark:border-zinc-700 pl-4">
-                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-wider">Shortage</p>
+                        <p className="text-[10px] font-black text-rose-500 uppercase tracking-wider">Difference</p>
                         <p className="text-sm font-black text-rose-600 tabular-nums">-{shortage.toFixed(2)}<span className="text-[10px] ml-0.5 font-bold opacity-70">m</span></p>
                     </div>
                 )}
                 {shortage < -0.01 && (
                     <div className="border-l border-zinc-200 dark:border-zinc-700 pl-4">
-                        <p className="text-[10px] font-black text-sky-500 uppercase tracking-wider">Extra</p>
+                        <p className="text-[10px] font-black text-sky-500 uppercase tracking-wider">Difference</p>
                         <p className="text-sm font-black text-sky-600 tabular-nums">+{Math.abs(shortage).toFixed(2)}<span className="text-[10px] ml-0.5 font-bold opacity-70">m</span></p>
                     </div>
                 )}
@@ -352,6 +361,14 @@ function DispatchBatchRow({
                         />
                     </div>
                     <div className="space-y-2">
+                        <Label>Received date</Label>
+                        <Input
+                            type="date"
+                            value={receivedAt}
+                            onChange={(event) => setReceivedAt(event.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
                         <Label>{t('dispatch.receipt.note')}</Label>
                         <Textarea
                             value={confirmationNote}
@@ -370,7 +387,7 @@ function DispatchBatchRow({
                     <Button
                         className="bg-emerald-600 hover:bg-emerald-500"
                         onClick={handleOwnerReceiptConfirm}
-                        disabled={isPending || metersReceived.trim() === ''}
+                        disabled={isPending || metersReceived.trim() === '' || receivedAt.trim() === ''}
                     >
                         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         {t('dispatch.receipt.recordButton')}
@@ -398,7 +415,7 @@ function OrderGroupCard({
 }: {
     group: OrderGroup
     statusFilter: 'all' | 'in_transit' | 'delivered' | 'disputed'
-    onOwnerReceiptConfirmed: (dispatchId: string, qtyReceived: number, note: string) => void
+    onOwnerReceiptConfirmed: (dispatchId: string, qtyReceived: number, note: string, receiptStatus: Dispatch['receipt_status']) => void
 }) {
     const [expanded, setExpanded] = useState(false)
 
@@ -651,15 +668,18 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
         }
     }
 
-    const handleOwnerReceiptConfirmed = (dispatchId: string, qtyReceived: number, note: string) => {
+    const handleOwnerReceiptConfirmed = (dispatchId: string, qtyReceived: number, note: string, receiptStatus: Dispatch['receipt_status']) => {
         setDispatches((prev) =>
             prev.map((dispatch) =>
                 dispatch.id === dispatchId
                     ? {
                         ...dispatch,
+                        received_meters: qtyReceived,
                         qty_meters_received: qtyReceived,
                         status: 'delivered',
                         received_at: new Date().toISOString(),
+                        received_note: note.trim() || null,
+                        receipt_status: receiptStatus,
                         receipt_confirmed_by_owner: true,
                         receipt_confirmation_note: note.trim() || null,
                     }
@@ -693,7 +713,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
             const group = map.get(oid)!
             group.dispatches.push(d)
             group.totalDispatched += Number(d.qty_meters_sent)
-            if (d.status === 'delivered') group.totalReceived += Number(d.qty_meters_received ?? 0)
+            if (d.status === 'delivered') group.totalReceived += Number(d.received_meters ?? d.qty_meters_received ?? 0)
             if (d.status === 'in_transit') group.hasInTransit = true
             if (d.status === 'disputed') group.hasDisputed = true
         }
@@ -701,9 +721,9 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
         // Compute shortage
         for (const g of map.values()) {
             g.shortage = g.dispatches
-                .filter(d => d.status === 'delivered' && d.qty_meters_received !== null)
+                .filter(d => d.status === 'delivered' && (d.received_meters ?? d.qty_meters_received) !== null)
                 .reduce((acc, d) => {
-                    const diff = Number(d.qty_meters_sent) - Number(d.qty_meters_received!)
+                    const diff = Number(d.qty_meters_sent) - Number(d.received_meters ?? d.qty_meters_received!)
                     return acc + (diff > 0.01 ? diff : 0)
                 }, 0)
 
@@ -726,7 +746,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
                 g.dispatches.some(d => d.status === statusFilter)
 
             const matchesPendingReceipt = !pendingReceiptOnly ||
-                g.dispatches.some(d => d.qty_meters_received === null)
+                g.dispatches.some(d => (d.received_meters ?? d.qty_meters_received) === null)
 
             return matchesSearch && matchesStatus && matchesPendingReceipt
         })
@@ -741,8 +761,8 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
     const shortageTotal = orderGroups.reduce((acc, g) => acc + g.shortage, 0)
     const shortageBatches = dispatches.filter((d) =>
         d.status === 'delivered' &&
-        d.qty_meters_received !== null &&
-        Number(d.qty_meters_sent) - Number(d.qty_meters_received) > 0.01
+        (d.received_meters ?? d.qty_meters_received) !== null &&
+        Number(d.qty_meters_sent) - Number(d.received_meters ?? d.qty_meters_received) > 0.01
     ).length
 
     return (

@@ -46,7 +46,9 @@ describe('P1 party-first stock sale dispatch refinement', () => {
 
     it('keeps partial dispatch out of stock discrepancy creation', () => {
         const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
-        const partyFirstAction = action.split('export async function sellAndDispatchTakas')[0]
+        const partyFirstAction = action
+            .split('export async function createPartyStockSaleAndOptionalDispatch')[1]
+            .split('export async function sellAndDispatchTakas')[0]
         const migration = readProjectFile('supabase/migrations/20260517103000_harden_party_stock_sale_dispatch_rpc.sql')
         expect(partyFirstAction).not.toContain("stock_discrepancies")
         expect(migration).not.toContain('stock_discrepancies')

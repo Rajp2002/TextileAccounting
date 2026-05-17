@@ -71,6 +71,16 @@ export type FactoryTodayData = {
             trackingToken: string
             daysPending: number
         }>
+        receiptDifferences: Array<{
+            discrepancyId: string
+            dispatchId: string
+            dispatchNumber: number
+            partyName: string
+            sentMeters: number
+            receivedMeters: number
+            differenceMeters: number
+            direction: 'short' | 'extra'
+        }>
     }
 
     payroll: {
@@ -138,6 +148,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         recentProdForRunsRes,
         salesRes,
         dispatchesRes,
+        receiptDifferencesRes,
         payrollConfigRes,
         advancesRes,
         settlementsRes,
@@ -202,6 +213,34 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             .eq('status', 'in_transit')
             .order('dispatched_at', { ascending: true })
             .limit(15),
+
+        // 8. Unresolved dispatch receipt differences
+        supabase
+            .from('stock_discrepancies')
+            .select(`
+                id,
+                dispatch_id,
+                expected_meters,
+                actual_received_meters,
+                actual_dispatched_meters,
+                difference_meters,
+                discrepancy_type,
+                dispatches (
+                    dispatch_number,
+                    qty_meters_sent,
+                    received_meters,
+                    qty_meters_received,
+                    party_name,
+                    orders (
+                        party_name
+                    )
+                )
+            `)
+            .eq('org_id', orgId)
+            .eq('status', 'needs_review')
+            .eq('source_reference', 'dispatch_receipt')
+            .order('discrepancy_date', { ascending: false })
+            .limit(10),
 
         // 9. Payroll config
         supabase
@@ -464,7 +503,28 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         }
     })
 
-    const dispatch: FactoryTodayData['dispatch'] = { soldNotDispatched, pendingReceipts }
+    const receiptDifferences = (receiptDifferencesRes.data ?? []).map((row) => {
+        const raw = row as Record<string, unknown>
+        const dispatchRow = Array.isArray(raw.dispatches) ? raw.dispatches[0] : raw.dispatches
+        const dispatchTyped = dispatchRow as Record<string, unknown> | null
+        const orderRow = Array.isArray(dispatchTyped?.orders) ? dispatchTyped?.orders[0] : dispatchTyped?.orders
+        const orderTyped = orderRow as Record<string, unknown> | null
+        const differenceMeters = toNum(raw.difference_meters)
+        const sentMeters = toNum(dispatchTyped?.qty_meters_sent ?? raw.expected_meters)
+        const receivedMeters = toNum(dispatchTyped?.received_meters ?? dispatchTyped?.qty_meters_received ?? raw.actual_received_meters ?? raw.actual_dispatched_meters)
+        return {
+            discrepancyId: String(raw.id),
+            dispatchId: String(raw.dispatch_id),
+            dispatchNumber: toNum(dispatchTyped?.dispatch_number),
+            partyName: String(dispatchTyped?.party_name || orderTyped?.party_name || 'Party'),
+            sentMeters,
+            receivedMeters,
+            differenceMeters,
+            direction: differenceMeters < 0 ? 'short' as const : 'extra' as const,
+        }
+    })
+
+    const dispatch: FactoryTodayData['dispatch'] = { soldNotDispatched, pendingReceipts, receiptDifferences }
 
     // ── 5. Payroll ─────────────────────────────────────────────────────────────
     const cycleStartDay = payrollConfigRes.data?.cycle_start_day ?? 1
@@ -499,6 +559,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         ordersBehindPace.filter((o) => o.riskLevel === 'red').length,
         soldNotDispatched.length > 0 ? 1 : 0,
         pendingReceipts.filter((r) => r.daysPending > 5).length,
+        receiptDifferences.length,
     ].reduce((a, b) => a + b, 0)
 
     const warning = [

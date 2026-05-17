@@ -337,9 +337,12 @@ export interface DispatchRow {
     dispatch_number: number
     qty_meters_sent: number
     qty_meters_received: number | null
+    received_meters?: number | null
     receipt_confirmed_by_owner: boolean
     receipt_confirmation_note: string | null
     receipt_confirmed_by: string | null
+    received_note?: string | null
+    receipt_status?: 'not_confirmed' | 'matched' | 'difference_reported'
     status: 'in_transit' | 'delivered' | 'disputed'
     notes: string | null
     eway_bill_number: string | null
@@ -427,9 +430,12 @@ export interface DispatchWithOrder {
     dispatch_number: number
     qty_meters_sent: number
     qty_meters_received: number | null
+    received_meters?: number | null
     receipt_confirmed_by_owner: boolean
     receipt_confirmation_note: string | null
     receipt_confirmed_by: string | null
+    received_note?: string | null
+    receipt_status?: 'not_confirmed' | 'matched' | 'difference_reported'
     status: 'in_transit' | 'delivered' | 'disputed'
     dispatched_at: string
     received_at: string | null
@@ -533,9 +539,12 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
             dispatch_number,
             qty_meters_sent,
             qty_meters_received,
+            received_meters,
             receipt_confirmed_by_owner,
             receipt_confirmation_note,
             receipt_confirmed_by,
+            received_note,
+            receipt_status,
             status,
             notes,
             eway_bill_number,
@@ -717,9 +726,12 @@ export async function createDispatch(
             dispatch_number,
             qty_meters_sent,
             qty_meters_received,
+            received_meters,
             receipt_confirmed_by_owner,
             receipt_confirmation_note,
             receipt_confirmed_by,
+            received_note,
+            receipt_status,
             status,
             notes,
             eway_bill_number,
@@ -806,9 +818,12 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
             dispatch_number,
             qty_meters_sent,
             qty_meters_received,
+            received_meters,
             receipt_confirmed_by_owner,
             receipt_confirmation_note,
             receipt_confirmed_by,
+            received_note,
+            receipt_status,
             status,
             dispatched_at,
             received_at,
