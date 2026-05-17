@@ -123,10 +123,10 @@ export const en = {
       switch: "Switch to Owner View"
     },
     meter: {
-      counterReading: "Total metres produced",
-      counterHelper: "Enter the total metres produced on each loom for this shift.",
-      openingReading: "Opening (previous shift)",
-      shiftProduction: "Total metres this shift",
+      counterReading: "Metres produced this shift",
+      counterHelper: "Enter the metres produced on each loom for this shift.",
+      openingReading: "Opening (previous shift)",  // Legacy — not shown in Phase 1 Quick Meter Mode
+      shiftProduction: "Metres produced this shift",
       counterWarning: "Metres cannot be negative. Please verify.",
       counterConfirm: "One or more metre entries look incorrect. Please confirm before saving this shift."
     },

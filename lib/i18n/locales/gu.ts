@@ -123,9 +123,9 @@ export const gu = {
       switch: "માલિક દૃશ્ય પર જાઓ"
     },
     meter: {
-      counterReading: "કુલ બનેલા મીટર",
-      counterHelper: "આ પાળીમાં દરેક લૂમ પર બનેલા કુલ મીટર દાખલ કરો.",
-      openingReading: "શરૂઆત (પાછળની પાળી)",
+      counterReading: "આ પાળીમાં બનેલા મીટર",
+      counterHelper: "આ પાળીમાં દરેક લૂમ પર બનેલા મીટર દાખલ કરો.",
+      openingReading: "શરૂઆત (પાછળની પાળી)",  // Legacy — Phase 1 Quick Meter Mode માં બતાવવામાં આવતું નથી
       shiftProduction: "આ પાળીના કુલ મીટર",
       counterWarning: "મીટર નકારાત્મક હોઈ શકતા નથી. કૃ. ચકાસો.",
       counterConfirm: "એક અથવા વધુ મીટર એન્ટ્રી ખોટી લાગે છે. આ પાળી સેવ કરતા પહેલા ખાતરી કરો."

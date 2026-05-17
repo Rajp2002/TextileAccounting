@@ -1033,7 +1033,8 @@ export async function bulkLogProduction(entries: {
         }
     }
 
-    const negativeEntry = entries.find(e => !e.counter_was_reset && (e.closing_meter_reading < e.opening_meter_reading || e.meters < 0))
+    // Quick Meter Mode: supervisor enters direct shift metres. No opening/closing counter logic.
+    const negativeEntry = entries.find(e => e.meters < 0)
     if (negativeEntry) {
         return { error: VALIDATION_MESSAGES.NEGATIVE_METERS }
     }
@@ -1042,7 +1043,6 @@ export async function bulkLogProduction(entries: {
         .filter((e) => e.meters > 0 || Boolean(e.zero_meter_reason?.trim()))
         .map((e) => {
             const isProduction = e.meters > 0
-            const resolvedMeters = e.counter_was_reset ? e.closing_meter_reading : e.meters
             // Build the reason string: for status logs, combine reason + note
             let zeroReason: string | null = null
             if (!isProduction && e.zero_meter_reason?.trim()) {
@@ -1056,10 +1056,10 @@ export async function bulkLogProduction(entries: {
                 machine_id: e.machine_id,
                 worker_id: isProduction ? e.worker_id : (e.worker_id || null),
                 order_id: isProduction ? e.order_id! : (e.order_id || null),
-                meters: resolvedMeters,
-                opening_meter_reading: e.counter_was_reset ? 0 : e.opening_meter_reading,
-                closing_meter_reading: e.closing_meter_reading,
-                counter_was_reset: e.counter_was_reset ?? false,
+                meters: e.meters,
+                opening_meter_reading: 0,               // Phase 1: Quick Meter Mode — always 0
+                closing_meter_reading: e.meters,         // Phase 1: mirrors shift metres for DB compatibility
+                counter_was_reset: false,                // Phase 1: no counter mode
                 shift: e.shift,
                 date: e.date,
                 worker_rate_snapshot: isProduction ? e.rate_per_m! : 0,

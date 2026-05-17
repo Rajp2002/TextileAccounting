@@ -25,7 +25,7 @@ const plans = [
         features: [
             'Everything in Estimating',
             'Orders, market runs, and dispatch tracking',
-            'Shift production logs with meter readings',
+            'Shift production logs with direct shift metres',
             'Payroll, advances, and settlement',
             'WhatsApp briefs, payslips, and receipts',
             'Operational analytics for owners',

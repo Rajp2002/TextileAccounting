@@ -5,11 +5,11 @@ const faqs = [
     },
     {
         question: 'Can my supervisor use this on the factory floor?',
-        answer: 'Yes. The supervisor flow is mobile-first and focused on daily actions: assign workers, update machine status, enter meter readings, and submit shift logs.',
+        answer: 'Yes. The supervisor flow is mobile-first and focused on daily actions: assign workers, update machine status, log shift metres, and submit shift logs.',
     },
     {
         question: 'What happens if the factory internet is unreliable?',
-        answer: 'The production flow is designed for quick mobile entry in patchy factory conditions. While offline queueing is supported for expenses, offline production logging for meter readings is planned for a future update.',
+        answer: 'The production flow is designed for quick mobile entry in patchy factory conditions. While offline queueing is supported for expenses, offline production logging for shift metres is planned for a future update.',
     },
     {
         question: 'What does Weavly replace?',

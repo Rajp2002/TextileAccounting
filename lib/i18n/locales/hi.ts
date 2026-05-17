@@ -123,9 +123,9 @@ export const hi = {
       switch: "मालिक व्यू पर जाएं"
     },
     meter: {
-      counterReading: "कुल बने मीटर",
-      counterHelper: "इस पाली में हर लूम पर बने कुल मीटर दर्ज करें।",
-      openingReading: "शुरुआत (पिछली पाली)",
+      counterReading: "इस पाली में बने मीटर",
+      counterHelper: "इस पाली में हर लूम पर बने मीटर दर्ज करें।",
+      openingReading: "शुरुआत (पिछली पाली)",  // Legacy — Phase 1 में नहीं दिखाया जाता
       shiftProduction: "इस पाली के कुल मीटर",
       counterWarning: "मीटर नकारात्मक नहीं हो सकते। कृपया जांचें।",
       counterConfirm: "एक या अधिक मीटर एंट्री गलत लग रही हैं। इस पाली को सेव करने से पहले पुष्टि करें।"
