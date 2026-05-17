@@ -125,10 +125,63 @@ export async function getCommercialReceivables(filters?: any) {
         query = query.eq('payment_status', filters.status)
     }
 
-    const { data, error } = await query
+    const { data: receivables, error } = await query
 
     if (error) return { error: error.message }
-    return { data }
+
+    const stockSaleIds = (receivables ?? [])
+        .filter((r) => r.source_type === 'fabric_stock_sale' && r.source_id)
+        .map((r) => r.source_id as string)
+
+    if (stockSaleIds.length > 0) {
+        const { data: sales, error: salesError } = await supabase
+            .from('fabric_stock_sales')
+            .select('id, meters_sold, dispatched_meters, pending_dispatch_meters, dispatch_status, credit_days, gross_profit_amount')
+            .in('id', stockSaleIds)
+
+        if (salesError) {
+            console.error('Failed to fetch fabric stock sales for commercials:', salesError)
+        }
+
+        const salesMap = new Map(sales?.map((s) => [s.id, s]))
+        const enriched = (receivables ?? []).map((rec) => {
+            if (rec.source_type === 'fabric_stock_sale') {
+                const sale = salesMap.get(rec.source_id)
+                return {
+                    ...rec,
+                    meters_sold: sale?.meters_sold ?? null,
+                    dispatched_meters: sale?.dispatched_meters ?? null,
+                    pending_dispatch_meters: sale?.pending_dispatch_meters ?? null,
+                    dispatch_status: sale?.dispatch_status || 'not_dispatched',
+                    credit_days: sale?.credit_days ?? null,
+                    booked_gross_profit: sale?.gross_profit_amount ?? null,
+                }
+            }
+            return {
+                ...rec,
+                meters_sold: null,
+                dispatched_meters: null,
+                pending_dispatch_meters: null,
+                dispatch_status: null,
+                credit_days: rec.credit_days ?? null,
+                booked_gross_profit: null,
+            }
+        })
+
+        return { data: enriched }
+    }
+
+    const simpleMapped = (receivables ?? []).map((rec) => ({
+        ...rec,
+        meters_sold: null,
+        dispatched_meters: null,
+        pending_dispatch_meters: null,
+        dispatch_status: null,
+        credit_days: rec.credit_days ?? null,
+        booked_gross_profit: null,
+    }))
+
+    return { data: simpleMapped }
 }
 
 export async function recordCommercialPaymentAction(input: RecordPaymentInput) {
