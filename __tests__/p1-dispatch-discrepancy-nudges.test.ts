@@ -71,6 +71,8 @@ describe('P1 dispatch discrepancy nudges', () => {
         const todayClient = readProjectFile('app/(dashboard)/owner/today/FactoryTodayClient.tsx')
         expect(actions).toContain('receiptDifferences')
         expect(actions).toContain("source_reference', 'dispatch_receipt'")
+        expect(actions).toContain('party_name, orders(party_name, tracking_token)')
+        expect(actions).not.toContain('orders!inner(party_name, tracking_token)')
         expect(card).toContain('reported {Math.abs(d.differenceMeters)')
         expect(card).toContain('markDiscrepancyReviewed')
         expect(todayClient).toContain('receiptDifferences.length === 0')
