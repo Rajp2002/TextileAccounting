@@ -1021,9 +1021,6 @@ export async function bulkLogProduction(entries: {
 
     // ── Strictness / Forgiveness validation ──────────────────────────────
     for (const entry of entries) {
-        // Skip entries that will be filtered out (0m without reason)
-        if (entry.meters === 0 && !entry.zero_meter_reason?.trim()) continue
-
         const validation = validateEntry({
             machine_id: entry.machine_id,
             meters: entry.meters,
@@ -1290,7 +1287,11 @@ export async function bulkLogProduction(entries: {
     const replaceResult = Array.isArray(replaceRows) ? replaceRows[0] : replaceRows
     const loggedCount = Number(replaceResult?.inserted_count ?? logs.length)
 
-    const producedOrderIds = [...new Set(logs.map((log) => log.order_id).filter((id): id is string => Boolean(id)))]
+    const producedOrderIds = [...new Set(logs
+        .filter((log) => log.meters > 0)
+        .map((log) => log.order_id)
+        .filter((id): id is string => Boolean(id))
+    )]
     await Promise.all(producedOrderIds.map((orderId) => supabase.rpc('create_or_refresh_stock_inward_draft', {
         p_order_id: orderId,
         p_source_date: logDate,

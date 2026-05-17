@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import {
     validateProductionLog,
     validateStatusLog,
@@ -8,6 +10,12 @@ import {
     ZERO_METER_REASON_LABELS,
     type ProductionLogEntry,
 } from '../lib/production-log-validation'
+
+const root = process.cwd()
+
+function readProjectFile(path: string) {
+    return readFileSync(join(root, path), 'utf8')
+}
 
 // ============================================================
 // Shared Validation Module Tests
@@ -166,6 +174,11 @@ describe('Production Log Strictness / Forgiveness Validation', () => {
                 })
                 expect(result.valid).toBe(true)
             }
+        })
+
+        it('server action does not silently skip explicit 0m rows without a reason', () => {
+            const actions = readProjectFile('app/(dashboard)/supervisor/actions.ts')
+            expect(actions).not.toContain('if (entry.meters === 0 && !entry.zero_meter_reason?.trim()) continue')
         })
     })
 

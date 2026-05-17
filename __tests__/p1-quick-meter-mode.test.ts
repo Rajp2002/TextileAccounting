@@ -117,6 +117,12 @@ describe('Quick Meter Mode — Phase 1 Verification', () => {
             expect(actions).toContain("counter_was_reset: false,                // Phase 1: no counter mode")
         })
 
+        it('supervisor dashboard sends positive meter rows even when required production fields are missing', () => {
+            const dashboard = readProjectFile('app/(dashboard)/supervisor/dashboard/page.tsx')
+            expect(dashboard).toContain('.filter((e) => e.meters > 0)')
+            expect(dashboard).not.toContain('.filter((e) => e.worker_id && e.order_id && e.meters > 0)')
+        })
+
         it('negative meter check does not reference counter_was_reset', () => {
             const actions = readProjectFile('app/(dashboard)/supervisor/actions.ts')
             // The simplified check should just be e.meters < 0
@@ -151,6 +157,12 @@ describe('Quick Meter Mode — Phase 1 Verification', () => {
             const entry = { machine_id: 'm1', meters: 0, worker_id: null, order_id: null, rate_per_m: null, zero_meter_reason: 'maintenance' as const }
             expect(entry.meters).toBe(0)
             expect(entry.order_id).toBeNull()
+        })
+
+        it('stock refresh is triggered only from positive production rows', () => {
+            const actions = readProjectFile('app/(dashboard)/supervisor/actions.ts')
+            expect(actions).toContain('.filter((log) => log.meters > 0)')
+            expect(actions).toContain("supabase.rpc('create_or_refresh_stock_inward_draft'")
         })
 
         it('positive production log feeds stock basis', () => {

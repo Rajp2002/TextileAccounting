@@ -208,7 +208,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         // 7. In-transit dispatches (pending receipt)
         supabase
             .from('dispatches')
-            .select('id, dispatch_number, qty_meters_sent, dispatched_at, orders!inner(party_name, tracking_token)')
+            .select('id, dispatch_number, qty_meters_sent, dispatched_at, party_name, orders(party_name, tracking_token)')
             .eq('org_id', orgId)
             .eq('status', 'in_transit')
             .order('dispatched_at', { ascending: true })
@@ -495,7 +495,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         return {
             dispatchId: String(raw.id),
             dispatchNumber: toNum(raw.dispatch_number),
-            partyName: String(orderTyped?.party_name || 'Party'),
+            partyName: String(raw.party_name || orderTyped?.party_name || 'Party'),
             sentMeters: toNum(raw.qty_meters_sent),
             sentDate,
             trackingToken: String(orderTyped?.tracking_token || ''),

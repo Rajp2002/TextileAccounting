@@ -937,7 +937,7 @@ export default function UnifiedDashboard() {
                     zero_meter_note: null as string | null,
                 }
             })
-            .filter((e) => e.worker_id && e.order_id && e.meters > 0)
+            .filter((e) => e.meters > 0)
 
         // Build downtime entries (mode === 'downtime' with valid reason)
         const downtimeEntries = machines
@@ -1076,6 +1076,7 @@ export default function UnifiedDashboard() {
             id: 'missing-worker',
             label: 'without worker',
             count: machines.filter((machine) => {
+                if ((loggingModes[machine.id] ?? 'production') === 'downtime') return false
                 const assignment = assignments.find((a) => a.machine_id === machine.id)
                 const hasMeters = (productionMeters[machine.id] ?? 0) > 0
                 return (machine.machine_status === 'running' || hasMeters) && !assignment?.worker_id
@@ -1086,6 +1087,7 @@ export default function UnifiedDashboard() {
             id: 'missing-order',
             label: 'without order',
             count: machines.filter((machine) => {
+                if ((loggingModes[machine.id] ?? 'production') === 'downtime') return false
                 const assignment = assignments.find((a) => a.machine_id === machine.id)
                 const hasMeters = (productionMeters[machine.id] ?? 0) > 0
                 return (machine.machine_status === 'running' || hasMeters) && !assignment?.order_id
@@ -1096,6 +1098,7 @@ export default function UnifiedDashboard() {
             id: 'missing-rate',
             label: 'without rate',
             count: machines.filter((machine) => {
+                if ((loggingModes[machine.id] ?? 'production') === 'downtime') return false
                 const assignment = assignments.find((a) => a.machine_id === machine.id)
                 const hasMeters = (productionMeters[machine.id] ?? 0) > 0
                 return hasMeters && Boolean(assignment?.worker_id) && Boolean(assignment?.order_id) && normalizeRate(assignment?.rate_per_m) <= 0
@@ -1105,7 +1108,10 @@ export default function UnifiedDashboard() {
         {
             id: 'running-no-reading',
             label: 'running no metres',
-            count: machines.filter((machine) => machine.machine_status === 'running' && (productionMeters[machine.id] ?? 0) <= 0).length,
+            count: machines.filter((machine) => {
+                if ((loggingModes[machine.id] ?? 'production') === 'downtime') return false
+                return machine.machine_status === 'running' && (productionMeters[machine.id] ?? 0) <= 0
+            }).length,
             tone: 'warning',
         },
         {
