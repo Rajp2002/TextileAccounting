@@ -97,15 +97,36 @@ export interface RecordPaymentInput {
     notes?: string
 }
 
+// Defensive map: accepts both human-readable UI labels and already-normalized DB enum values
+export const PAYMENT_MODE_MAP: Record<string, string> = {
+    'Bank Transfer': 'bank',
+    'Cash': 'cash',
+    'UPI': 'upi',
+    'Cheque': 'cheque',
+    'Other': 'other',
+    // Pass-through for already-normalized enum values
+    'bank': 'bank',
+    'cash': 'cash',
+    'upi': 'upi',
+    'cheque': 'cheque',
+    'other': 'other',
+}
+
+export function normalizePaymentMode(mode: string): string {
+    return PAYMENT_MODE_MAP[mode] ?? 'other'
+}
+
 export async function processCommercialPayment(input: RecordPaymentInput) {
     await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    const normalizedMode = normalizePaymentMode(input.paymentMode)
 
     const { error } = await supabase.rpc('record_commercial_payment_v1', {
         p_receivable_id: input.receivableId,
         p_amount: input.amount,
         p_payment_date: input.paymentDate,
-        p_payment_mode: input.paymentMode,
+        p_payment_mode: normalizedMode,
         p_reference_number: input.referenceNumber || null,
         p_cheque_number: input.chequeNumber || null,
         p_cheque_date: input.chequeDate || null,

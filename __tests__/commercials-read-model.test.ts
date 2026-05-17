@@ -63,10 +63,10 @@ describe('Commercials read-model and UI attributes', () => {
         
         // Verify 5 top summary cards in the Overview panel
         expect(clientFile).toContain('Total to Collect')
+        expect(clientFile).toContain('Collected This Month')
         expect(clientFile).toContain('Overdue')
         expect(clientFile).toContain('Due This Week')
         expect(clientFile).toContain('Booked Gross Profit')
-        expect(clientFile).toContain('Open Sales')
     })
 
     it('supports interactive due bucket filter tabs and harmonized search filtering', () => {

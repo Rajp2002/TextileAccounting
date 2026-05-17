@@ -1,5 +1,5 @@
 import CommercialsClient from './CommercialsClient'
-import { getCommercialsData, getCommercialReceivables } from './actions'
+import { getCommercialsData, getCommercialReceivables, getCollectedThisMonth } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,9 +9,10 @@ export const metadata = {
 }
 
 export default async function CommercialsPage() {
-    const [commercialsRes, receivablesRes] = await Promise.all([
+    const [commercialsRes, receivablesRes, collectedRes] = await Promise.all([
         getCommercialsData(),
-        getCommercialReceivables()
+        getCommercialReceivables(),
+        getCollectedThisMonth(),
     ])
 
     if ('error' in commercialsRes) {
@@ -24,6 +25,8 @@ export default async function CommercialsPage() {
     }
 
     const receivables = 'error' in receivablesRes ? [] : (receivablesRes.data ?? [])
+    const collectedThisMonth = 'error' in collectedRes ? 0 : (collectedRes.data ?? 0)
 
-    return <CommercialsClient initialData={commercialsRes.data} initialReceivables={receivables} />
+    return <CommercialsClient initialData={commercialsRes.data} initialReceivables={receivables} collectedThisMonth={collectedThisMonth} />
 }
+
