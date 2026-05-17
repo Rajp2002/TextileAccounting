@@ -22,6 +22,16 @@ describe('Commercials read-model and UI attributes', () => {
         expect(actionFile).toContain('booked_gross_profit')
     })
 
+    it('does not keep anonymous fallback names for fabric stock sale receivables', () => {
+        const initialMigration = readProjectFile('supabase/migrations/20260510000000_commercial_receivables.sql')
+        const partyFirstMigration = readProjectFile('supabase/migrations/20260517090000_party_first_stock_sale_dispatch.sql')
+
+        expect(initialMigration).not.toContain("'Anonymous'")
+        expect(partyFirstMigration).toContain("cr.party_name = 'Anonymous'")
+        expect(partyFirstMigration).toContain("cr.source_type = 'fabric_stock_sale'")
+        expect(partyFirstMigration).toContain('COALESCE(NULLIF(BTRIM(s.party_name)')
+    })
+
     it('defines Receivable interface with the 10+ enriched commercial attributes', () => {
         const clientFile = readProjectFile('app/(dashboard)/owner/commercials/CommercialsClient.tsx')
         

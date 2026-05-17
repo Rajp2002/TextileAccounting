@@ -34,6 +34,25 @@ LEFT JOIN orders o ON o.id = l.order_id
 WHERE l.id = s.stock_lot_id
   AND (s.party_name IS NULL OR s.due_date IS NULL);
 
+UPDATE commercial_receivables cr
+SET
+  party_name = COALESCE(NULLIF(BTRIM(s.party_name), ''), NULLIF(BTRIM(o.party_name), ''), cr.party_name),
+  credit_days = COALESCE(cr.credit_days, s.credit_days),
+  due_date = COALESCE(cr.due_date, s.due_date)
+FROM fabric_stock_sales s
+JOIN fabric_stock_lots l ON l.id = s.stock_lot_id
+LEFT JOIN orders o ON o.id = l.order_id
+WHERE cr.org_id = s.org_id
+  AND cr.source_type = 'fabric_stock_sale'
+  AND cr.source_id = s.id
+  AND (
+    cr.party_name = 'Anonymous'
+    OR cr.party_name IS NULL
+    OR BTRIM(cr.party_name) = ''
+    OR cr.credit_days IS NULL
+    OR cr.due_date IS NULL
+  );
+
 ALTER TABLE commercial_receivables
   DROP CONSTRAINT IF EXISTS commercial_receivables_payment_status_check;
 

@@ -228,7 +228,7 @@ SELECT
   'fabric_stock_sale', 
   s.id, 
   s.sale_date,
-  COALESCE(o.party_name, 'Anonymous'),
+  COALESCE(NULLIF(BTRIM(o.party_name), ''), 'Legacy Stock Sale'),
   l.quality_label,
   s.revenue_amount,
   'unpaid',
