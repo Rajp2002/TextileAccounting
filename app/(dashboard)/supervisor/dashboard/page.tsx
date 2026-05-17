@@ -21,6 +21,8 @@ import {
     MessageSquare,
     AlertTriangle,
     KeyRound,
+    Zap,
+    Pause,
 } from 'lucide-react'
 import {
     Select,
@@ -40,6 +42,11 @@ import {
     updateMachineBreakdown,
     requestAccessCode,
 } from '../actions'
+import {
+    ZERO_METER_REASONS,
+    ZERO_METER_REASON_LABELS,
+    type ZeroMeterReason,
+} from '@/lib/production-log-validation'
 import {
     Sheet,
     SheetContent,
@@ -202,6 +209,12 @@ interface MachineUnifiedRowProps {
     onAssignmentChange: (machineId: string, workerId: number | null, orderId: string | null) => void
     isSyncing?: boolean
     isSaved?: boolean
+    loggingMode: 'production' | 'downtime'
+    onLoggingModeChange: (mode: 'production' | 'downtime') => void
+    downtimeReason: string
+    onDowntimeReasonChange: (reason: string) => void
+    downtimeNote: string
+    onDowntimeNoteChange: (note: string) => void
 }
 
 function MachineUnifiedRow({
@@ -215,6 +228,12 @@ function MachineUnifiedRow({
     onAssignmentChange,
     isSyncing,
     isSaved,
+    loggingMode,
+    onLoggingModeChange,
+    downtimeReason,
+    onDowntimeReasonChange,
+    downtimeNote,
+    onDowntimeNoteChange,
 }: MachineUnifiedRowProps) {
     const { t } = useTranslation()
     const workerId = assignment?.worker_id?.toString() ?? ''
@@ -223,12 +242,13 @@ function MachineUnifiedRow({
 
     const selectedTarget = orders.find((o) => o.id === orderId)
     const isMaintenance = status === 'maintenance'
+    const isDowntime = loggingMode === 'downtime'
     const deadlineLabel = selectedTarget ? formatShortDate(selectedTarget.deadline) : null
 
     return (
         <div className={cn(
             "relative flex flex-col lg:flex-row items-stretch gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:border-hairline-strong",
-            isMaintenance && "opacity-75"
+            isMaintenance && !isDowntime && "opacity-75"
         )}>
             {/* Status Strip & Detail Trigger (Header on mobile, side strip on desktop) */}
             <button
@@ -277,103 +297,185 @@ function MachineUnifiedRow({
                 </div>
             </button>
 
-            {/* Assignments Section */}
+            {/* Assignments + Mode Toggle Section */}
             <div className="flex-1 min-w-0 p-4 lg:p-3 py-4 flex flex-col justify-center gap-3 lg:gap-2">
-                {/* Worker Dropdown */}
-                <div className="flex items-center gap-2 min-w-0">
-                    <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-saffron-soft/70">
-                        <Users className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-saffron-deep" />
-                    </div>
-                    <Select
-                        value={workerId}
-                        onValueChange={(val) => onAssignmentChange(machine.id, parseInt(val), orderId || null)}
-                    >
-                        <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline lg:border-none bg-surface lg:bg-transparent px-3 lg:p-0 text-sm font-semibold shadow-none transition-colors hover:text-saffron-deep focus:ring-0">
-                            <SelectValue placeholder={t('production.no_worker')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {workers.map((w) => (
-                                <SelectItem key={w.id} value={w.id.toString()}>{w.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                {/* Cost Analysis / Quality Dropdown */}
-                <div className="flex items-center gap-2 min-w-0">
-                    <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-surface-soft">
-                        <Package className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-muted-foreground" />
-                    </div>
-                    <Select
-                        value={orderId}
-                        onValueChange={(val) => onAssignmentChange(machine.id, workerId ? parseInt(workerId) : null, val)}
-                    >
-                        <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline lg:border-none bg-surface lg:bg-transparent px-3 lg:p-0 text-sm font-medium leading-tight text-muted-foreground shadow-none transition-colors hover:text-ink focus:ring-0">
-                            <SelectValue placeholder="Select cost analysis / quality" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-60">
-                            {orders.map((o) => (
-                                <SelectItem key={o.id} value={o.id}>
-                                    <span className="font-bold">{o.quality_label || o.party_name}</span>
-                                    <span className="ml-1 opacity-60">— {o.market_run_id ? 'Market Run' : o.party_name}</span>
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                {selectedTarget && (
-                    <div className="ml-10 lg:ml-8 flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                        <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
-                            {formatMeters(selectedTarget.remaining_meters)} left
-                        </span>
-                        {deadlineLabel && (
-                            <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
-                                Due {deadlineLabel}
-                            </span>
+                {/* Production / Downtime Toggle */}
+                <div className="flex rounded-lg border border-hairline bg-surface-soft p-0.5">
+                    <button
+                        onClick={() => onLoggingModeChange('production')}
+                        className={cn(
+                            "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150",
+                            !isDowntime
+                                ? "bg-surface text-saffron-deep shadow-sm ring-1 ring-hairline"
+                                : "text-muted-foreground hover:text-ink"
                         )}
-                    </div>
+                    >
+                        <Zap className="h-3.5 w-3.5" /> Production
+                    </button>
+                    <button
+                        onClick={() => onLoggingModeChange('downtime')}
+                        className={cn(
+                            "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150",
+                            isDowntime
+                                ? "bg-warning-soft text-warning shadow-sm ring-1 ring-warning-soft"
+                                : "text-muted-foreground hover:text-ink"
+                        )}
+                    >
+                        <Pause className="h-3.5 w-3.5" /> Downtime
+                    </button>
+                </div>
+
+                {!isDowntime && (
+                    <>
+                        {/* Worker Dropdown */}
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-saffron-soft/70">
+                                <Users className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-saffron-deep" />
+                            </div>
+                            <Select
+                                value={workerId}
+                                onValueChange={(val) => onAssignmentChange(machine.id, parseInt(val), orderId || null)}
+                            >
+                                <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline lg:border-none bg-surface lg:bg-transparent px-3 lg:p-0 text-sm font-semibold shadow-none transition-colors hover:text-saffron-deep focus:ring-0">
+                                    <SelectValue placeholder={t('production.no_worker')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {workers.map((w) => (
+                                        <SelectItem key={w.id} value={w.id.toString()}>{w.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Cost Analysis / Quality Dropdown */}
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-surface-soft">
+                                <Package className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-muted-foreground" />
+                            </div>
+                            <Select
+                                value={orderId}
+                                onValueChange={(val) => onAssignmentChange(machine.id, workerId ? parseInt(workerId) : null, val)}
+                            >
+                                <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline lg:border-none bg-surface lg:bg-transparent px-3 lg:p-0 text-sm font-medium leading-tight text-muted-foreground shadow-none transition-colors hover:text-ink focus:ring-0">
+                                    <SelectValue placeholder="Select cost analysis / quality" />
+                                </SelectTrigger>
+                                <SelectContent className="max-h-60">
+                                    {orders.map((o) => (
+                                        <SelectItem key={o.id} value={o.id}>
+                                            <span className="font-bold">{o.quality_label || o.party_name}</span>
+                                            <span className="ml-1 opacity-60">— {o.market_run_id ? 'Market Run' : o.party_name}</span>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {selectedTarget && (
+                            <div className="ml-10 lg:ml-8 flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                                <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
+                                    {formatMeters(selectedTarget.remaining_meters)} left
+                                </span>
+                                {deadlineLabel && (
+                                    <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
+                                        Due {deadlineLabel}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {isDowntime && (
+                    <>
+                        {/* Downtime Reason Dropdown */}
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-warning-soft/70">
+                                <Pause className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-warning" />
+                            </div>
+                            <Select
+                                value={downtimeReason}
+                                onValueChange={onDowntimeReasonChange}
+                            >
+                                <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline bg-surface px-3 text-sm font-semibold shadow-none transition-colors focus:ring-0">
+                                    <SelectValue placeholder="Select downtime reason" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {ZERO_METER_REASONS.map((reason) => (
+                                        <SelectItem key={reason} value={reason}>
+                                            {ZERO_METER_REASON_LABELS[reason]}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Note input for "other" reason */}
+                        {downtimeReason === 'other' && (
+                            <div className="ml-10 lg:ml-8">
+                                <Input
+                                    placeholder="Describe the reason…"
+                                    value={downtimeNote}
+                                    onChange={(e) => onDowntimeNoteChange(e.target.value)}
+                                    className="h-10 text-sm"
+                                />
+                            </div>
+                        )}
+
+                        {/* Optional worker/order in downtime (collapsed) */}
+                        <div className="ml-10 lg:ml-8 flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                            <span className="rounded-full bg-warning-soft/60 px-2.5 py-1 lg:py-0.5 text-warning">
+                                0 m — downtime
+                            </span>
+                            {workerId && (
+                                <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
+                                    {workers.find(w => w.id.toString() === workerId)?.name ?? 'Worker'}
+                                </span>
+                            )}
+                        </div>
+                    </>
                 )}
             </div>
 
-            {/* Production Input (The Quick Log) */}
-            <div className={cn(
-                "flex flex-col lg:flex-row w-full lg:w-auto items-center justify-center border-t lg:border-t-0 lg:border-l border-hairline bg-surface-soft/35 p-4 lg:p-3",
-                (!workerId || !orderId) && "opacity-55"
-            )}>
-                <div className="flex w-full flex-col items-center gap-3 lg:gap-2">
-                    {(!workerId || !orderId) ? (
-                        <div className="flex h-11 lg:h-12 flex-col items-center justify-center px-1 text-center text-xs font-semibold leading-tight text-muted-foreground/70 animate-in fade-in duration-500">
-                             {!workerId ? t('production.no_worker') : 'Select cost analysis / quality'}
-                             <AlertCircle className="h-4 w-4 mt-1 opacity-40" />
-                        </div>
-                    ) : (
-                        <>
-                            <div className={cn(
-                                "group/input flex items-center overflow-hidden rounded-lg border bg-surface transition-all duration-200 w-full lg:w-auto h-11 lg:h-9",
-                                producedMeters > 0 ? "border-saffron ring-4 ring-saffron/10" : "border-hairline shadow-sm"
-                            )}>
-                                <Input
-                                    type="number"
-                                    inputMode="decimal"
-                                    pattern="[0-9]*"
-                                    placeholder="0"
-                                    value={producedMeters || ''}
-                                    onChange={(e) => onProducedMetersChange(Number(e.target.value))}
-                                    className="h-full flex-1 border-none bg-transparent p-0 text-center font-mono text-lg font-semibold focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                />
+            {/* Production Input (The Quick Log) — only shown in production mode */}
+            {!isDowntime && (
+                <div className={cn(
+                    "flex flex-col lg:flex-row w-full lg:w-auto items-center justify-center border-t lg:border-t-0 lg:border-l border-hairline bg-surface-soft/35 p-4 lg:p-3",
+                    (!workerId || !orderId) && "opacity-55"
+                )}>
+                    <div className="flex w-full flex-col items-center gap-3 lg:gap-2">
+                        {(!workerId || !orderId) ? (
+                            <div className="flex h-11 lg:h-12 flex-col items-center justify-center px-1 text-center text-xs font-semibold leading-tight text-muted-foreground/70 animate-in fade-in duration-500">
+                                 {!workerId ? t('production.no_worker') : 'Select cost analysis / quality'}
+                                 <AlertCircle className="h-4 w-4 mt-1 opacity-40" />
                             </div>
-                            <div className="flex w-full flex-col items-center gap-2 lg:gap-1">
-                                <div className="flex max-w-full items-center gap-1 rounded-full border border-hairline bg-surface px-2.5 py-1 lg:py-0.5 shadow-sm">
-                                    <span className="text-center text-xs font-semibold uppercase tracking-wide leading-tight text-saffron-deep">
-                                        {t('floor.meter.shiftProduction')}
-                                    </span>
+                        ) : (
+                            <>
+                                <div className={cn(
+                                    "group/input flex items-center overflow-hidden rounded-lg border bg-surface transition-all duration-200 w-full lg:w-auto h-11 lg:h-9",
+                                    producedMeters > 0 ? "border-saffron ring-4 ring-saffron/10" : "border-hairline shadow-sm"
+                                )}>
+                                    <Input
+                                        type="number"
+                                        inputMode="decimal"
+                                        pattern="[0-9]*"
+                                        placeholder="0"
+                                        value={producedMeters || ''}
+                                        onChange={(e) => onProducedMetersChange(Number(e.target.value))}
+                                        className="h-full flex-1 border-none bg-transparent p-0 text-center font-mono text-lg font-semibold focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                    />
                                 </div>
-                            </div>
-                        </>
-                    )}
+                                <div className="flex w-full flex-col items-center gap-2 lg:gap-1">
+                                    <div className="flex max-w-full items-center gap-1 rounded-full border border-hairline bg-surface px-2.5 py-1 lg:py-0.5 shadow-sm">
+                                        <span className="text-center text-xs font-semibold uppercase tracking-wide leading-tight text-saffron-deep">
+                                            {t('floor.meter.shiftProduction')}
+                                        </span>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Detail Sheet Indicator (Desktop only) */}
             <button
@@ -591,6 +693,11 @@ export default function UnifiedDashboard() {
     const [duplicateAccessCode, setDuplicateAccessCode] = useState('')
     const [requestingCode, setRequestingCode] = useState(false)
 
+    // Downtime / Production mode per machine
+    const [loggingModes, setLoggingModes] = useState<Record<string, 'production' | 'downtime'>>({})
+    const [downtimeReasons, setDowntimeReasons] = useState<Record<string, string>>({})
+    const [downtimeNotes, setDowntimeNotes] = useState<Record<string, string>>({})
+
     // ─── Pull to Refresh Logic ────────────────────────────────────────────────
     const [pullDistance, setPullDistance] = useState(0)
     const [isRefreshing, setIsRefreshing] = useState(false)
@@ -685,6 +792,25 @@ export default function UnifiedDashboard() {
         } else {
             setProductionMeters(existingProductionMeters)
         }
+
+        // Auto-map machine status to downtime mode defaults
+        const initialModes: Record<string, 'production' | 'downtime'> = {}
+        const initialReasons: Record<string, string> = {}
+        for (const m of data.machines) {
+            if (m.machine_status === 'maintenance') {
+                initialModes[m.id] = 'downtime'
+                initialReasons[m.id] = 'maintenance'
+            } else if (m.machine_status === 'idle') {
+                initialModes[m.id] = 'downtime'
+                initialReasons[m.id] = 'machine_idle'
+            } else {
+                initialModes[m.id] = 'production'
+            }
+        }
+        setLoggingModes(initialModes)
+        setDowntimeReasons(initialReasons)
+        setDowntimeNotes({})
+
         setLoading(false)
     }, [date, shift])
 
@@ -696,6 +822,9 @@ export default function UnifiedDashboard() {
         setCorrectionWindowExpiresAt(null)
         setShowDuplicateDialog(false)
         setDuplicateAccessCode('')
+        setLoggingModes({})
+        setDowntimeReasons({})
+        setDowntimeNotes({})
     }
 
     const handleDateChange = (nextDate: string) => {
@@ -782,17 +911,15 @@ export default function UnifiedDashboard() {
             return
         }
 
-        const assignedMachines = machines.filter((m) =>
-            assignments.some((a) => a.machine_id === m.id && a.worker_id)
-        )
-
-        const entries = assignedMachines
+        // Build production entries (mode === 'production' with meters > 0)
+        const productionEntries = machines
+            .filter((m) => (loggingModes[m.id] ?? 'production') === 'production')
             .map((m) => {
                 const assignment = assignments.find((a) => a.machine_id === m.id)
                 const metersProduced = productionMeters[m.id] ?? 0
                 return {
                     machine_id: m.id,
-                    worker_id: assignment?.worker_id,
+                    worker_id: assignment?.worker_id ?? null,
                     order_id: assignment?.order_id ?? null,
                     meters: metersProduced,
                     opening_meter_reading: 0,
@@ -801,10 +928,42 @@ export default function UnifiedDashboard() {
                     shift,
                     date,
                     rate_per_m: assignment?.rate_per_m,
-                    zero_meter_reason: [assignment?.breakdown_category, assignment?.breakdown_notes].filter(Boolean).join(': ') || null,
+                    zero_meter_reason: null as string | null,
+                    zero_meter_note: null as string | null,
                 }
             })
-            .filter((e) => e.worker_id && e.order_id && (e.meters > 0 || Boolean(e.zero_meter_reason)))
+            .filter((e) => e.worker_id && e.order_id && e.meters > 0)
+
+        // Build downtime entries (mode === 'downtime' with valid reason)
+        const downtimeEntries = machines
+            .filter((m) => loggingModes[m.id] === 'downtime')
+            .map((m) => {
+                const assignment = assignments.find((a) => a.machine_id === m.id)
+                const reason = downtimeReasons[m.id] ?? ''
+                const note = downtimeNotes[m.id] ?? ''
+                return {
+                    machine_id: m.id,
+                    worker_id: assignment?.worker_id ?? null,
+                    order_id: assignment?.order_id ?? null,
+                    meters: 0,
+                    opening_meter_reading: 0,
+                    closing_meter_reading: 0,
+                    counter_was_reset: false,
+                    shift,
+                    date,
+                    rate_per_m: 0,
+                    zero_meter_reason: reason || null,
+                    zero_meter_note: (reason === 'other' ? note : null) as string | null,
+                }
+            })
+            .filter((e) => {
+                const reason = e.zero_meter_reason?.trim()
+                if (!reason) return false
+                if (reason === 'other' && !e.zero_meter_note?.trim()) return false
+                return true
+            })
+
+        const entries = [...productionEntries, ...downtimeEntries]
 
         const negativeMeters = Object.values(productionMeters).filter((meters) => meters < 0)
         if (negativeMeters.length > 0) {
@@ -891,6 +1050,14 @@ export default function UnifiedDashboard() {
     const assignedCount = assignments.filter((a) => a.worker_id).length
     const loggedMetersCount = Object.keys(productionMeters).filter((machineId) => (productionMeters[machineId] ?? 0) > 0).length
     const validEntryCount = machines.filter((machine) => {
+        const mode = loggingModes[machine.id] ?? 'production'
+        if (mode === 'downtime') {
+            const reason = downtimeReasons[machine.id]?.trim()
+            if (!reason) return false
+            if (reason === 'other' && !downtimeNotes[machine.id]?.trim()) return false
+            return true
+        }
+        // Production mode
         const assignment = assignments.find((a) => a.machine_id === machine.id)
         return Boolean(
             assignment?.worker_id &&
@@ -1076,6 +1243,12 @@ export default function UnifiedDashboard() {
                                 onAssignmentChange={handleAssignmentChange}
                                 isSyncing={syncingState[machine.id] === 'syncing'}
                                 isSaved={syncingState[machine.id] === 'saved'}
+                                loggingMode={loggingModes[machine.id] ?? 'production'}
+                                onLoggingModeChange={(mode) => setLoggingModes(prev => ({ ...prev, [machine.id]: mode }))}
+                                downtimeReason={downtimeReasons[machine.id] ?? ''}
+                                onDowntimeReasonChange={(reason) => setDowntimeReasons(prev => ({ ...prev, [machine.id]: reason }))}
+                                downtimeNote={downtimeNotes[machine.id] ?? ''}
+                                onDowntimeNoteChange={(note) => setDowntimeNotes(prev => ({ ...prev, [machine.id]: note }))}
                             />
                         )
                     })

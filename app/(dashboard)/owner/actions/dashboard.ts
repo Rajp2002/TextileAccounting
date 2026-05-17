@@ -133,7 +133,8 @@ async function getKpiForDate(
       .from('production_logs')
       .select('meters, worker_rate_snapshot, yarn_batch_id')
       .eq('org_id', orgId)
-      .eq('date', date),
+      .eq('date', date)
+      .gt('meters', 0),
     supabase
       .from('fixed_workers')
       .select('monthly_salary')

@@ -15,8 +15,8 @@ describe('P1 priority 6 triage', () => {
         const migration = readProjectFile('supabase/migrations/20260514112000_persist_zero_meter_reason.sql')
 
         expect(actions).toContain('zero_meter_reason')
-        expect(actions).toContain("e.meters !== 0 || Boolean(e.zero_meter_reason?.trim())")
-        expect(dashboard).toContain("assignment?.breakdown_category, assignment?.breakdown_notes")
+        expect(actions).toContain("e.meters > 0 || Boolean(e.zero_meter_reason?.trim())")
+        expect(dashboard).toContain("ZERO_METER_REASON_LABELS")
         expect(migration).toContain('ADD COLUMN IF NOT EXISTS zero_meter_reason TEXT')
     })
 

@@ -1464,6 +1464,7 @@ export default function PayrollPage() {
                 supabase.from('production_logs')
                     .select('worker_id, machine_id, meters, worker_rate_snapshot, order_id')
                     .eq('org_id', userProfile!.org_id)
+                    .gt('meters', 0)
                     .gte('date', monthStart)
                     .lte('date', monthEnd),
                 // Fetch ALL workers (active + inactive) — inactive workers who worked this month must still appear

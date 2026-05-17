@@ -68,6 +68,7 @@ export async function toggleWorkerPaid(
             .select('meters, worker_rate_snapshot')
             .eq('org_id', profile.org_id)
             .eq('worker_id', workerId)
+            .gt('meters', 0)
             .gte('date', monthStart)
             .lte('date', monthEnd)
 
