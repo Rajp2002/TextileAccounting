@@ -218,6 +218,7 @@ export default function AdvancesPage() {
                 .select('meters, worker_rate_snapshot')
                 .eq('org_id', userProfile!.org_id)
                 .eq('worker_id', selectedWorker!.id)
+                .gt('meters', 0)
                 .gte('date', `${monthStr}-01`)
                 .lte('date', `${monthStr}-${new Date(Number(monthStr.split('-')[0]), Number(monthStr.split('-')[1]), 0).getDate()}`)
 

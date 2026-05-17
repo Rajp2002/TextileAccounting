@@ -18,6 +18,7 @@ import {
     safeParse,
 } from '@/lib/schemas'
 import { getCycleBoundsForDate } from '@/lib/payroll-cycle'
+import { validateEntry, VALIDATION_MESSAGES } from '@/lib/production-log-validation'
 
 type ShiftType = 'day' | 'night'
 
@@ -984,11 +985,14 @@ export async function copyPreviousShiftAction(
 
 /**
  * Bulk-log production at end of shift.
- * For each entry, looks up the shift assignment rate → falls back to machine.default_rate_per_m → falls back to provided default.
+ *
+ * Strictness rules:
+ *   meters > 0  → require worker + quality/work anchor (order_id) + rate > 0
+ *   meters === 0 → require zero_meter_reason; worker/order/rate are optional
  */
 export async function bulkLogProduction(entries: {
     machine_id: string
-    worker_id: number
+    worker_id: number | null
     order_id: string | null
     meters: number
     opening_meter_reading: number
@@ -996,8 +1000,9 @@ export async function bulkLogProduction(entries: {
     counter_was_reset?: boolean
     shift: 'day' | 'night'
     date: string
-    rate_per_m?: number
+    rate_per_m?: number | null
     zero_meter_reason?: string | null
+    zero_meter_note?: string | null
 }[], accessCode?: string) {
     const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
@@ -1008,37 +1013,63 @@ export async function bulkLogProduction(entries: {
     const headerList = await headers()
     const clientIp = headerList.get('x-forwarded-for')?.split(',')[0] || 'unknown'
 
-    // ── Guard: Ensure every machine with meters has a production target assigned ──
-    const invalidEntry = entries.find(e => e.meters !== 0 && !e.order_id)
-    if (invalidEntry) {
-        return { error: 'ORDER_MISSING', message: 'All machines with production must have an assigned order.' }
+    // ── Strictness / Forgiveness validation ──────────────────────────────
+    for (const entry of entries) {
+        // Skip entries that will be filtered out (0m without reason)
+        if (entry.meters === 0 && !entry.zero_meter_reason?.trim()) continue
+
+        const validation = validateEntry({
+            machine_id: entry.machine_id,
+            meters: entry.meters,
+            worker_id: entry.worker_id,
+            order_id: entry.order_id,
+            rate_per_m: entry.rate_per_m,
+            zero_meter_reason: entry.zero_meter_reason,
+            zero_meter_note: entry.zero_meter_note,
+        })
+
+        if (!validation.valid) {
+            return { error: validation.errors[0], message: validation.errors[0] }
+        }
     }
 
     const negativeEntry = entries.find(e => !e.counter_was_reset && (e.closing_meter_reading < e.opening_meter_reading || e.meters < 0))
     if (negativeEntry) {
-        return { error: 'Closing meter reading cannot be below opening meter reading.' }
+        return { error: VALIDATION_MESSAGES.NEGATIVE_METERS }
     }
 
     const logs = entries
-        .filter((e) => e.meters !== 0 || Boolean(e.zero_meter_reason?.trim()))
-        .map((e) => ({
-            org_id: orgId,
-            machine_id: e.machine_id,
-            worker_id: e.worker_id,
-            order_id: e.order_id!,
-            meters: e.counter_was_reset ? e.closing_meter_reading : e.meters,
-            opening_meter_reading: e.counter_was_reset ? 0 : e.opening_meter_reading,
-            closing_meter_reading: e.closing_meter_reading,
-            counter_was_reset: e.counter_was_reset ?? false,
-            shift: e.shift,
-            date: e.date,
-            worker_rate_snapshot: e.rate_per_m ?? 1.5,
-            created_by: user.id,
-            updated_by: user.id,
-            submitted_at: new Date().toISOString(),
-            client_ip: clientIp,
-            zero_meter_reason: e.meters === 0 ? e.zero_meter_reason?.trim() || null : null,
-        }))
+        .filter((e) => e.meters > 0 || Boolean(e.zero_meter_reason?.trim()))
+        .map((e) => {
+            const isProduction = e.meters > 0
+            const resolvedMeters = e.counter_was_reset ? e.closing_meter_reading : e.meters
+            // Build the reason string: for status logs, combine reason + note
+            let zeroReason: string | null = null
+            if (!isProduction && e.zero_meter_reason?.trim()) {
+                const parts = [e.zero_meter_reason.trim()]
+                if (e.zero_meter_note?.trim()) parts.push(e.zero_meter_note.trim())
+                zeroReason = parts.join(': ')
+            }
+
+            return {
+                org_id: orgId,
+                machine_id: e.machine_id,
+                worker_id: isProduction ? e.worker_id : (e.worker_id || null),
+                order_id: isProduction ? e.order_id! : (e.order_id || null),
+                meters: resolvedMeters,
+                opening_meter_reading: e.counter_was_reset ? 0 : e.opening_meter_reading,
+                closing_meter_reading: e.closing_meter_reading,
+                counter_was_reset: e.counter_was_reset ?? false,
+                shift: e.shift,
+                date: e.date,
+                worker_rate_snapshot: isProduction ? e.rate_per_m! : 0,
+                created_by: user.id,
+                updated_by: user.id,
+                submitted_at: new Date().toISOString(),
+                client_ip: clientIp,
+                zero_meter_reason: zeroReason,
+            }
+        })
 
     if (logs.length === 0) return { success: true, logged: 0 }
 
@@ -1099,6 +1130,9 @@ export async function bulkLogProduction(entries: {
     }
 
     for (const log of logs) {
+        // Downtime / status logs (0m with reason) bypass loom setup checks
+        if (log.meters === 0 && log.zero_meter_reason) continue
+
         const machine = machineById.get(log.machine_id)
         const activeOrder = Array.isArray(machine?.orders) ? machine?.orders[0] : machine?.orders
         const standingAssignments = standingByMachineId.get(log.machine_id)
@@ -1177,8 +1211,8 @@ export async function bulkLogProduction(entries: {
     if (cycleStart) {
         const payrollWorkerIds = [...new Set([
             ...logs.map((l) => l.worker_id),
-            ...(existingLogs?.map((l) => (l as any).worker_id).filter(Boolean) || [])
-        ])]
+            ...(existingLogs?.map((l) => (l as any).worker_id) || [])
+        ])].filter((id): id is number => id != null)
 
         if (payrollWorkerIds.length > 0) {
             const { data: settlements } = await supabase
