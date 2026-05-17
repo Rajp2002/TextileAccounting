@@ -41,6 +41,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import {
     adjustTakaStockLot,
@@ -471,6 +472,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
     const router = useRouter()
     const [query, setQuery] = useState('')
     const [godown, setGodown] = useState('all')
+    const [activeTab, setActiveTab] = useState<'active' | 'archive'>('active')
     const [addOpen, setAddOpen] = useState(false)
     const [adjustLot, setAdjustLot] = useState<TakaStockLotSummary | null>(null)
     const [expandedLots, setExpandedLots] = useState<Record<string, boolean>>({})
@@ -488,10 +490,11 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
         const needle = query.trim().toLowerCase()
         return initialData.lots.filter((lot) => {
             const matchesGodown = godown === 'all' || lot.godown === godown
+            const matchesTab = activeTab === 'active' ? lot.is_active : !lot.is_active
             const haystack = `${lot.quality_label} ${lot.godown} ${lot.notes || ''}`.toLowerCase()
-            return matchesGodown && (!needle || haystack.includes(needle))
+            return matchesGodown && matchesTab && (!needle || haystack.includes(needle))
         })
-    }, [initialData.lots, godown, query])
+    }, [initialData.lots, godown, query, activeTab])
 
     const movementsByLot = useMemo(() => {
         const grouped = new Map<string, TakaStockMovementRow[]>()
@@ -557,6 +560,17 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                 />
                 {/* Profit/Revenue cards removed - managed in Commercials */}
             </div>
+
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'active' | 'archive')} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 lg:w-[400px] bg-stone-100/80 p-1 rounded-xl">
+                    <TabsTrigger value="active" className="rounded-lg font-bold text-xs py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                        Active Stock
+                    </TabsTrigger>
+                    <TabsTrigger value="archive" className="rounded-lg font-bold text-xs py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                        Archive / History
+                    </TabsTrigger>
+                </TabsList>
+            </Tabs>
 
             <div className="flex flex-col gap-3 lg:flex-row">
                 <div className="relative flex-1">
