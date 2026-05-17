@@ -4,6 +4,7 @@ import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { ensureReceivableForCommercialEntry } from '@/lib/commercials/receivables'
 import { getOrganizationProductionMode, type ProductionMode } from '@/lib/production-mode'
+import { isStockLotActionable } from '@/lib/stock-lifecycle'
 import {
     AdjustTakaStockLotSchema,
     CreateFabricPackageSchema,
@@ -81,6 +82,12 @@ export interface TakaStockLotSummary {
     total_cost_on_sold: number
     total_gross_profit: number
     stock_status: 'available' | 'partially_sold' | 'sold_out'
+    is_active?: boolean
+    available_for_sale_meters?: number
+    reserved_meters?: number
+    pending_dispatch_meters?: number
+    has_unresolved_discrepancy?: boolean
+    parent_status?: string | null
 }
 
 export interface TakaStockSaleRow {
@@ -248,7 +255,18 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const [lotsRes, salesRes, movementsRes, runsRes, quotesRes, productionModeRes] = await Promise.all([
+    const [
+        lotsRes,
+        salesRes,
+        movementsRes,
+        runsRes,
+        quotesRes,
+        productionModeRes,
+        allRunsRes,
+        allOrdersRes,
+        discrepanciesRes,
+        pendingSalesRes
+    ] = await Promise.all([
         supabase
             .from('fabric_stock_lot_summary')
             .select('*')
@@ -330,6 +348,24 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
             .order('created_at', { ascending: false })
             .limit(80),
         getOrganizationProductionMode(supabase, profile.org_id),
+        supabase
+            .from('market_runs')
+            .select('id, status')
+            .eq('org_id', profile.org_id),
+        supabase
+            .from('orders')
+            .select('id, status')
+            .eq('org_id', profile.org_id),
+        supabase
+            .from('stock_discrepancies')
+            .select('id, stock_lot_id, status')
+            .eq('org_id', profile.org_id)
+            .eq('status', 'needs_review'),
+        supabase
+            .from('fabric_stock_sales')
+            .select('id, stock_lot_id, pending_dispatch_meters')
+            .eq('org_id', profile.org_id)
+            .gt('pending_dispatch_meters', 0)
     ])
 
     if (lotsRes.error) return { error: lotsRes.error.message }
@@ -338,17 +374,86 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
     if (runsRes.error) return { error: runsRes.error.message }
     if (quotesRes.error) return { error: quotesRes.error.message }
     if (productionModeRes.error) return { error: productionModeRes.error.message ?? 'Unable to load production mode' }
+    if (allRunsRes.error) return { error: allRunsRes.error.message }
+    if (allOrdersRes.error) return { error: allOrdersRes.error.message }
+    if (discrepanciesRes.error) return { error: discrepanciesRes.error.message }
+    if (pendingSalesRes.error) return { error: pendingSalesRes.error.message }
 
     const productionMode = productionModeRes.productionMode
 
+    const runStatusMap = new Map<string, string>()
+    if (allRunsRes.data) {
+        for (const run of allRunsRes.data) {
+            runStatusMap.set(run.id, run.status)
+        }
+    }
+
+    const orderStatusMap = new Map<string, string>()
+    if (allOrdersRes.data) {
+        for (const order of allOrdersRes.data) {
+            orderStatusMap.set(order.id, order.status)
+        }
+    }
+
+    const unresolvedDiscrepancyLots = new Set<string>()
+    if (discrepanciesRes.data) {
+        for (const disc of discrepanciesRes.data) {
+            if (disc.stock_lot_id) {
+                unresolvedDiscrepancyLots.add(disc.stock_lot_id)
+            }
+        }
+    }
+
+    const lotPendingDispatchMap = new Map<string, number>()
+    if (pendingSalesRes.data) {
+        for (const sale of pendingSalesRes.data) {
+            if (sale.stock_lot_id) {
+                const current = lotPendingDispatchMap.get(sale.stock_lot_id) || 0
+                lotPendingDispatchMap.set(sale.stock_lot_id, current + toNumber(sale.pending_dispatch_meters))
+            }
+        }
+    }
+
     const lots = ((lotsRes.data ?? []) as unknown[]).map((row) => {
         const item = row as Record<string, unknown>
+        const stock_lot_id = String(item.stock_lot_id)
+        const source_type = item.source_type as string
+        const market_run_id = item.market_run_id ? String(item.market_run_id) : null
+        const order_id = item.order_id ? String(item.order_id) : null
+        
+        const available_meters = toNumber(item.available_meters)
+        const available_taka_count = toNumber(item.available_taka_count)
+        
+        const pending_dispatch_meters = lotPendingDispatchMap.get(stock_lot_id) || 0
+        const has_unresolved_discrepancy = unresolvedDiscrepancyLots.has(stock_lot_id)
+        
+        let parent_status: string | null = null
+        if (source_type === 'market_run' && market_run_id) {
+            parent_status = runStatusMap.get(market_run_id) || null
+        } else if (source_type === 'order' && order_id) {
+            parent_status = orderStatusMap.get(order_id) || null
+        }
+
+        const available_for_sale_meters = source_type === 'order' ? 0 : available_meters
+        const reserved_meters = (source_type === 'order' && parent_status === 'active') ? available_meters : 0
+
+        const is_active = isStockLotActionable({
+            available_meters,
+            available_for_sale_meters,
+            reserved_meters,
+            pending_dispatch_meters,
+            has_unresolved_discrepancy,
+            source_type,
+            source_id: source_type === 'market_run' ? market_run_id : (source_type === 'order' ? order_id : null),
+            parent_status,
+        })
+
         return {
             ...item,
             original_taka_count: toNumber(item.original_taka_count),
-            available_taka_count: toNumber(item.available_taka_count),
+            available_taka_count,
             original_meters: toNumber(item.original_meters),
-            available_meters: toNumber(item.available_meters),
+            available_meters,
             meters_per_taka: toNumber(item.meters_per_taka),
             unit_label: String(item.unit_label || 'taka'),
             cost_per_meter: toNumber(item.cost_per_meter),
@@ -357,6 +462,12 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
             total_revenue: toNumber(item.total_revenue),
             total_cost_on_sold: toNumber(item.total_cost_on_sold),
             total_gross_profit: toNumber(item.total_gross_profit),
+            is_active,
+            available_for_sale_meters,
+            reserved_meters,
+            pending_dispatch_meters,
+            has_unresolved_discrepancy,
+            parent_status,
         } as TakaStockLotSummary
     })
 
@@ -398,12 +509,14 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
         }
     })
 
-    const summary = lots.reduce((acc, lot) => {
+    const activeLots = lots.filter((lot) => lot.is_active)
+    const summary = activeLots.reduce((acc, lot) => {
         acc.available_taka += lot.available_taka_count
         acc.available_meters += lot.available_meters
         acc.stock_value_at_cost += lot.available_meters * lot.cost_per_meter
         acc.realized_revenue += lot.total_revenue
         acc.realized_profit += lot.total_gross_profit
+        acc.pending_dispatch_meters += lot.pending_dispatch_meters || 0
         return acc
     }, {
         available_taka: 0,
@@ -413,10 +526,6 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
         realized_profit: 0,
         pending_dispatch_meters: 0,
     })
-
-    for (const sale of sales) {
-        summary.pending_dispatch_meters += toNumber((sale as unknown as Record<string, unknown>).pending_dispatch_meters)
-    }
 
     return {
         productionMode,
