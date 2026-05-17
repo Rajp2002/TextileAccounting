@@ -78,6 +78,12 @@ describe('Quick Meter Mode — Phase 1 Verification', () => {
             const dashboard = readProjectFile('app/(dashboard)/supervisor/dashboard/page.tsx')
             expect(dashboard).toContain('counter_was_reset: false')
         })
+
+        it('supervisor readiness does not count positive production without a positive rate as valid', () => {
+            const dashboard = readProjectFile('app/(dashboard)/supervisor/dashboard/page.tsx')
+            expect(dashboard).toContain('normalizeRate(assignment?.rate_per_m) > 0')
+            expect(dashboard).toContain("id: 'missing-rate'")
+        })
     })
 
     // ─── 3. bulkLogProduction saves direct metres ────────────────────────
@@ -87,6 +93,16 @@ describe('Quick Meter Mode — Phase 1 Verification', () => {
             const actions = readProjectFile('app/(dashboard)/supervisor/actions.ts')
             // After cleanup, resolvedMeters should be gone
             expect(actions).not.toContain('resolvedMeters')
+        })
+
+        it('active supervisor paths do not use the old 1.5 rate fallback', () => {
+            const actions = readProjectFile('app/(dashboard)/supervisor/actions.ts')
+            const dashboard = readProjectFile('app/(dashboard)/supervisor/dashboard/page.tsx')
+
+            expect(actions).not.toContain('?? 1.5')
+            expect(actions).not.toContain('|| 1.5')
+            expect(dashboard).not.toContain('?? 1.5')
+            expect(dashboard).not.toContain('|| 1.5')
         })
 
         it('server action writes opening_meter_reading: 0 (Quick Meter Mode)', () => {

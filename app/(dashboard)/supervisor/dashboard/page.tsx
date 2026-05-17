@@ -102,6 +102,11 @@ function formatLoomName(name: string) {
     return name.replace(/^Machine\b/i, 'Loom')
 }
 
+function normalizeRate(value: unknown) {
+    const rate = Number(value)
+    return Number.isFinite(rate) && rate > 0 ? rate : 0
+}
+
 interface ReadinessIssue {
     id: string
     label: string
@@ -849,10 +854,10 @@ export default function UnifiedDashboard() {
         const currentOrder = orders.find(o => o.id === orderId)
         const machine = machines.find(m => m.id === machineId)
 
-        const rate = existing?.rate_per_m
-            ?? currentOrder?.worker_rate_per_m
-            ?? machine?.default_rate_per_m
-            ?? 1.5
+        const rate =
+            normalizeRate(existing?.rate_per_m) ||
+            normalizeRate(currentOrder?.worker_rate_per_m) ||
+            normalizeRate(machine?.default_rate_per_m)
 
         // OPTIMISTIC UPDATE: Update the local assignments list immediately
         const originalAssignments = [...assignments]
@@ -1062,6 +1067,7 @@ export default function UnifiedDashboard() {
         return Boolean(
             assignment?.worker_id &&
             assignment?.order_id &&
+            normalizeRate(assignment?.rate_per_m) > 0 &&
             (productionMeters[machine.id] ?? 0) > 0
         )
     }).length
@@ -1083,6 +1089,16 @@ export default function UnifiedDashboard() {
                 const assignment = assignments.find((a) => a.machine_id === machine.id)
                 const hasMeters = (productionMeters[machine.id] ?? 0) > 0
                 return (machine.machine_status === 'running' || hasMeters) && !assignment?.order_id
+            }).length,
+            tone: 'blocker',
+        },
+        {
+            id: 'missing-rate',
+            label: 'without rate',
+            count: machines.filter((machine) => {
+                const assignment = assignments.find((a) => a.machine_id === machine.id)
+                const hasMeters = (productionMeters[machine.id] ?? 0) > 0
+                return hasMeters && Boolean(assignment?.worker_id) && Boolean(assignment?.order_id) && normalizeRate(assignment?.rate_per_m) <= 0
             }).length,
             tone: 'blocker',
         },

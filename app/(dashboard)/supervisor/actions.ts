@@ -34,6 +34,11 @@ interface ProductionLogRow {
     submitted_at: string | null
 }
 
+function normalizeRate(value: unknown) {
+    const rate = Number(value)
+    return Number.isFinite(rate) && rate > 0 ? rate : 0
+}
+
 // ─── Internal Helpers ──────────────────────────────────────────────────────────
 
 /**
@@ -781,7 +786,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
 
     const machineIds = eligibleMachines.map((machine) => machine.id)
     const orderIds = (ordersRes.data ?? []).map((order) => order.id)
-    const orderRateById = new Map((ordersRes.data ?? []).map((order) => [order.id, Number(order.worker_rate_per_m)]))
+    const orderRateById = new Map((ordersRes.data ?? []).map((order) => [order.id, normalizeRate(order.worker_rate_per_m)]))
     const datedAssignmentByMachineId = new Map(
         (assignmentsRes.data ?? []).map((assignment) => [assignment.machine_id, assignment])
     )
@@ -798,8 +803,9 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
                 ...existing,
                 worker_id: existing.worker_id ?? workerId,
                 order_id: mergedOrderId,
-                rate_per_m: existing.rate_per_m
-                    ?? (mergedOrderId ? (orderRateById.get(mergedOrderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5)),
+                rate_per_m:
+                    normalizeRate(existing.rate_per_m) ||
+                    (mergedOrderId ? (orderRateById.get(mergedOrderId) || normalizeRate(machine.default_rate_per_m)) : normalizeRate(machine.default_rate_per_m)),
             }]
         }
 
@@ -810,7 +816,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             machine_id: machine.id,
             worker_id: workerId,
             order_id: orderId,
-            rate_per_m: orderId ? (orderRateById.get(orderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5),
+            rate_per_m: orderId ? (orderRateById.get(orderId) || normalizeRate(machine.default_rate_per_m)) : normalizeRate(machine.default_rate_per_m),
             breakdown_category: null,
             breakdown_notes: null,
         }]
