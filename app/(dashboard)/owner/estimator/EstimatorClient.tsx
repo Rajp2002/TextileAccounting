@@ -1838,15 +1838,17 @@ export default function EstimatorClient({
                         {/* ── Loom Wage per Meter → auto-derives paisa/pick ── */}
                         {(() => {
                             const totalPicks = state.weftRows.reduce((a, b) => a + b.picks, 0)
+                            const perPickCostRupees = state.perPickCostPaisa
+                            const paisaPerPickDisplay = Math.round(perPickCostRupees * 100 * 10000) / 10000
                             const derivedWagePerM = totalPicks > 0
-                                ? (state.perPickCostPaisa * totalPicks).toFixed(2)
+                                ? (perPickCostRupees * totalPicks).toFixed(2)
                                 : '0.00'
                             return (
                                 <div className="rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/40 p-4 space-y-3">
                                     <div className="flex items-center gap-2">
                                         <Banknote className="h-4 w-4 text-amber-600" />
                                         <p className="text-[11px] uppercase tracking-widest font-black text-amber-700">Loom Weave Wage</p>
-                                        <span className="ml-auto text-[10px] text-amber-500 font-medium bg-amber-100 px-2 py-0.5 rounded-full">₹/m ↔ paisa/pick</span>
+                                        <span className="ml-auto text-[10px] text-amber-500 font-medium bg-amber-100 px-2 py-0.5 rounded-full">₹/m ↔ paise/pick</span>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1878,25 +1880,25 @@ export default function EstimatorClient({
                                             <p className="text-[10px] text-amber-600/70 font-medium">e.g. 8 for ₹8 per meter loom wage</p>
                                         </div>
 
-                                        {/* Display: derived paisa/pick + live impact */}
+                                        {/* Display: derived paise/pick + live impact */}
                                         <div className="space-y-1.5">
-                                            <Label className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Paisa per Pick (₹/pick)</Label>
+                                            <Label className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Paisa per pick</Label>
                                             <div className="relative group">
                                                 <Input
                                                     type="number"
                                                     min={0}
-                                                    step={0.001}
-                                                    value={state.perPickCostPaisa}
+                                                    step={0.1}
+                                                    value={paisaPerPickDisplay}
                                                     onChange={e => {
                                                         const v = Number(e.target.value)
-                                                        dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v })
+                                                        dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v / 100 })
                                                         setWagePerMInput('')
                                                     }}
                                                     className="h-11 text-sm font-mono font-bold text-center pr-16 bg-white border-slate-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full"
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/pick</span>
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">paise</span>
                                             </div>
-                                            <p className="text-[10px] text-slate-400 font-medium">Direct entry or auto-derived from ₹/m above</p>
+                                            <p className="text-[10px] text-slate-400 font-medium">Enter paise per pick. Example: 16 means ₹0.16/pick.</p>
                                         </div>
                                     </div>
 
@@ -1912,6 +1914,17 @@ export default function EstimatorClient({
                                             <span className="text-sm font-black font-mono text-amber-700">₹{totals.weaveCostPerM.toFixed(2)}</span>
                                         </div>
                                     </div>
+
+                                    {/* Unusually High Weave Cost Warning */}
+                                    {totals.weaveCostPerM > 100 && (
+                                        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3 text-xs flex items-start gap-2.5 shadow-sm">
+                                            <span className="text-sm shrink-0">⚠️</span>
+                                            <div>
+                                                <p className="font-bold">Unusually High Weave Cost (₹{totals.weaveCostPerM.toFixed(2)}/m)</p>
+                                                <p className="text-amber-700 mt-0.5 font-medium">This weave cost looks unusually high. Did you mean paise per pick?</p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )
                         })()}
