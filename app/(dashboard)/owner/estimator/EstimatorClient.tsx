@@ -39,6 +39,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
 import {
     calcFullTotals,
+    calcWeftYarnKg,
     runScenarios,
     makeDefaultEstimateState,
     DEFAULT_WARP_ROW,
@@ -704,7 +705,12 @@ export default function EstimatorClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [partyName])
 
-    const totals: EstimatorV3Totals = useMemo(() => calcFullTotals(state), [state])
+    const totals: EstimatorV3Totals = useMemo(() => {
+        // Temporary debug log to prove the client bundle computes cm-to-inch weft calculation correctly
+        const debugWeftVal = calcWeftYarnKg(68, 112, 50)
+        console.log(`[DEBUG] calcWeftYarnKg(68, 112, 50) = ${debugWeftVal} (expected raw ≈ 1.6658, gross at 15% shortage ≈ 1.916)`)
+        return calcFullTotals(state)
+    }, [state])
     const scenarios = useMemo(() =>
         runScenarios(state, totals, customTargetPrice ? Number(customTargetPrice) : undefined),
     [state, totals, customTargetPrice])
