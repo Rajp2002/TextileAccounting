@@ -280,7 +280,7 @@ export function calcWarpYarnKg(beamEnds: number, calcDenier: number): number {
 /**
  * Weft yarn weight per 100m of finished fabric.
  *
- * Formula: (picks × clothWidth × calcDenier × 100) / 9_000_000
+ * Formula: (picks × (clothWidth / 2.54) × calcDenier × 100) / 9_000_000
  *   - picks     = picks per INCH (PPI) — standard Surat unit
  *   - clothWidth = FINISHED cloth output width in cm (NOT loom/reed width)
  *
@@ -289,7 +289,7 @@ export function calcWarpYarnKg(beamEnds: number, calcDenier: number): number {
  * 60–80cm due to warp/weft crimp. Using reed width over-estimates weft
  * consumption by ~20–35%.
  *
- *   Per 1m fabric length: picks × (clothWidth/100) m of weft thread
+ *   Per 1m fabric length: picks × (clothWidth / 2.54) inches of weft thread
  *   × 100 (per-100m) ÷ 9000 (denier→g/m) ÷ 1000 (g→kg)
  *
  * @param picks      - picks per inch (PPI)
@@ -298,8 +298,10 @@ export function calcWarpYarnKg(beamEnds: number, calcDenier: number): number {
  * @returns kg per 100m
  */
 export function calcWeftYarnKg(picks: number, clothWidth: number, calcDenier: number): number {
+  // clothWidth is in cm. Convert to inches: clothWidth / 2.54
+  const clothWidthInches = new Decimal(clothWidth).div(2.54)
   return new Decimal(picks)
-    .times(clothWidth)
+    .times(clothWidthInches)
     .times(calcDenier)
     .times(100)
     .div(9_000_000)
