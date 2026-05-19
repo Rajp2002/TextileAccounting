@@ -850,7 +850,7 @@ export const gu = {
       myQualitiesHelper: "વારંવાર ઉપયોગમાં આવતી ફેબ્રિક રેસિપી સાચવો અને પછીથી ફરી ઉપયોગ કરો.",
       fabricQualityNameHelper: "આ એસ્ટીમેટરને નામ આપો, દા.ત. 60g જ્યોર્જેટ અથવા D.246.",
       saveCurrentAsQuality: "કરંટ સેટઅપને ક્વોલિટીમાં સેવ કરો",
-      newQuality: "નવી ક્વોલિટી",
+      newQuality: "નવી ક્વોલિટી / રિસેટ",
       editQuality: "ક્વોલિટી સંપાદિત કરો",
       saveQuality: "ક્વોલિટી સાચવો",
       hint: "લાગુ કરવા ટેપ કરો · રેટ્સ બદલવા લૉન્ગ-પ્રેસ કરો",
