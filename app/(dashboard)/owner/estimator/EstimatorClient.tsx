@@ -1561,43 +1561,54 @@ export default function EstimatorClient({
                                 <Save className="h-3.5 w-3.5" />
                                 {t('estimator.quality.saveCurrentAsQuality')}
                              </Button>
-                            {filteredTemplates.map(tpl => (
-                                <div key={tpl.id} className="relative shrink-0 snap-start group flex items-center">
-                                    <button
-                                        onClick={() => applyTemplate(tpl)}
-                                        onContextMenu={e => { e.preventDefault(); openEditRates(tpl) }}
-                                        className={`min-w-28 rounded-xl px-4 py-2.5 text-xs font-bold border transition-all shadow-sm ${
-                                            appliedTemplate?.id === tpl.id || (!tpl.id && qualityLabel === tpl.name)
-                                                ? 'bg-brand-accent border-brand-accent text-white shadow-brand-accent/20'
-                                                : 'bg-white border-slate-200 text-slate-600 group-hover:border-brand-accent/50 group-hover:bg-slate-50'
-                                        } pr-14`}
-                                    >
-                                        {tpl.name}
-                                    </button>
-                                    <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {filteredTemplates.map(tpl => {
+                                const isActive = appliedTemplate?.id === tpl.id || (!tpl.id && qualityLabel === tpl.name);
+                                return (
+                                    <div key={tpl.id} className="relative shrink-0 snap-start group flex items-center">
                                         <button
-                                            onClick={e => { e.stopPropagation(); openEditRates(tpl) }}
-                                            className="p-1 rounded-md hover:bg-brand-accent/10 text-slate-400 hover:text-brand-accent transition-colors"
-                                            title={t('estimator.quality.editRatesTitle')}
+                                            onClick={() => applyTemplate(tpl)}
+                                            onContextMenu={e => { e.preventDefault(); openEditRates(tpl) }}
+                                            className={`min-w-28 rounded-xl px-4 py-2.5 text-xs font-bold border transition-all shadow-sm ${
+                                                isActive
+                                                    ? 'bg-brand-accent border-brand-accent text-white shadow-brand-accent/20'
+                                                    : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/50 hover:bg-slate-50'
+                                            } pr-16`}
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                            {tpl.name}
                                         </button>
-                                        <button
-                                            onClick={e => {
-                                                e.stopPropagation();
-                                                if (window.confirm(t('estimator.quality.deleteConfirm').replace('{name}', tpl.name))) {
-                                                    handleDeleteTemplate(tpl.id)
-                                                }
-                                            }}
-                                            disabled={deletingTpl === tpl.id}
-                                            className="p-1 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
-                                            title={t('estimator.quality.deleteButton')}
-                                        >
-                                            {deletingTpl === tpl.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                                        </button>
+                                        <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-95 hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={e => { e.stopPropagation(); openEditRates(tpl) }}
+                                                className={`p-1 h-6 w-6 flex items-center justify-center rounded-lg transition-all ${
+                                                    isActive
+                                                        ? 'bg-white/20 text-white hover:bg-white/30 border border-white/10'
+                                                        : 'bg-slate-50 text-slate-500 hover:text-brand-accent hover:bg-brand-accent/10 border border-slate-200/60 shadow-sm'
+                                                }`}
+                                                title={t('estimator.quality.editRatesTitle')}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                            </button>
+                                            <button
+                                                onClick={e => {
+                                                    e.stopPropagation();
+                                                    if (window.confirm(t('estimator.quality.deleteConfirm').replace('{name}', tpl.name))) {
+                                                        handleDeleteTemplate(tpl.id)
+                                                    }
+                                                }}
+                                                disabled={deletingTpl === tpl.id}
+                                                className={`p-1 h-6 w-6 flex items-center justify-center rounded-lg transition-all ${
+                                                    isActive
+                                                        ? 'bg-white text-rose-600 hover:bg-rose-50 border border-slate-100 shadow-sm'
+                                                        : 'bg-slate-50 text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200/60 shadow-sm'
+                                                }`}
+                                                title={t('estimator.quality.deleteButton')}
+                                            >
+                                                {deletingTpl === tpl.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {filteredTemplates.length === 0 && templateSearch && (
                                 <p className="text-xs text-slate-400 italic py-2">{t('estimator.quality.noMatch').replace('{query}', templateSearch)}</p>
                             )}
