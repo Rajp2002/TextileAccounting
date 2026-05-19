@@ -171,7 +171,7 @@ export function CostAnalysisDetails({
                         {estimate.commissionPct > 0 && (
                             <CostLine
                                 label={`Commission (${estimate.commissionPct.toFixed(1)}%)`}
-                                value={totals.totalProductionCostPerM * (estimate.commissionPct / 100)}
+                                value={(quotePrice > 0 ? quotePrice : (totals.orderQuote?.quotePricePerM || 0)) * (estimate.commissionPct / 100)}
                                 targetMeters={meters}
                                 tone="muted"
                             />

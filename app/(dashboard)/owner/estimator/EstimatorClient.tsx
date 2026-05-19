@@ -1173,6 +1173,8 @@ export default function EstimatorClient({
         state.perPickCostPaisa <= 0 ? 'Loom wage missing' : null,
         !hasOrderQty ? 'Quantity not set' : null,
         state.monthlyOutputM <= 0 && totals.overheadPerM <= 0 ? 'Factory overhead not configured' : null,
+        orderQuote && !orderQuote.isValid ? orderQuote.errorMessage : null,
+        orderQuote && orderQuote.isValid && (state.commissionPct + state.profitPct > 65) ? 'High commission and margin configuration may result in excessively high quote prices.' : null,
     ].filter((warning): warning is string => Boolean(warning))
 
     return (
@@ -1262,7 +1264,7 @@ export default function EstimatorClient({
                             </p>
                         </div>
 
-                        {hasOrderQty && orderQuote && (
+                        {hasOrderQty && orderQuote && orderQuote.isValid && (
                             <>
                                 <div className="h-6 sm:h-8 w-px bg-slate-200 shrink-0 hidden sm:block" />
                                 {/* Quote Price */}
@@ -1294,8 +1296,8 @@ export default function EstimatorClient({
                                         size="sm"
                                         className="col-span-2 sm:col-span-1 flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-indigo-600/20"
                                         onClick={() => setShowStartPartyOrder(true)}
-                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0}
-                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0)
+                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
                                             ? 'Complete party, quality, quantity, and cost result first.'
                                             : undefined
                                         }
@@ -1311,7 +1313,7 @@ export default function EstimatorClient({
                                         variant="outline"
                                         className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50 font-bold text-xs gap-1.5 sm:gap-2"
                                         onClick={() => handleSaveQuote('quote')}
-                                        disabled={savingQuote}
+                                        disabled={savingQuote || !orderQuote?.isValid}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
                                         <span className="truncate">{t('estimator.hud.order_btn')}</span>
@@ -1337,8 +1339,8 @@ export default function EstimatorClient({
                                         size="sm"
                                         className="col-span-2 sm:col-span-1 flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-blue-600/20"
                                         onClick={() => handleSaveQuote('market')}
-                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0}
-                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0)
+                                        disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
+                                        title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
                                             ? 'Complete fabric label, quality, quantity, and cost result first.'
                                             : undefined
                                         }
@@ -1354,7 +1356,7 @@ export default function EstimatorClient({
                                         variant="outline"
                                         className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border-blue-200 bg-white text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 sm:gap-2"
                                         onClick={() => handleSaveQuote('quote')}
-                                        disabled={savingQuote}
+                                        disabled={savingQuote || !orderQuote?.isValid}
                                     >
                                         <Save className="h-3.5 w-3.5 shrink-0" />
                                         <span className="truncate">Save Quote</span>

@@ -32,11 +32,25 @@ describe('Estimator formula primitives', () => {
             profitMarginPct: 10,
         })
 
-        expect(round2(quote.landedCostPerM)).toBe(52.5)
-        expect(round2(quote.quotePricePerM)).toBe(57.75)
-        expect(round2(quote.totalOrderValue)).toBe(57750)
-        expect(round2(quote.grossProfitRupees)).toBe(5250)
-        expect(round2(quote.actualMarginPct)).toBe(9.09)
+        expect(round2(quote.landedCostPerM)).toBe(52.67)
+        expect(round2(quote.quotePricePerM)).toBe(58.52)
+        expect(round2(quote.totalOrderValue)).toBe(58522.73)
+        expect(round2(quote.grossProfitRupees)).toBe(5852.27)
+        expect(round2(quote.actualMarginPct)).toBe(10)
+    })
+
+    it('returns invalid state if commission + margin percentage >= 100%', () => {
+        const quote = calcOrderQuote({
+            totalProductionCostPerM: 32.48,
+            orderQuantityM: 1000,
+            commissionPct: 50,
+            transportPerM: 1.5,
+            profitMarginPct: 50,
+        })
+
+        expect(quote.isValid).toBe(false)
+        expect(quote.errorMessage).toBe('Commission % + Margin % must be below 100%.')
+        expect(quote.quotePricePerM).toBe(0)
     })
 })
 
@@ -102,8 +116,8 @@ describe('Estimator full totals', () => {
         expect(round2(totals.warpingAndSizingPerM)).toBe(0.1)
         expect(round2(totals.overheadPerM)).toBe(10)
         expect(round2(totals.totalProductionCostPerM)).toBe(25.66)
-        expect(round2(totals.orderQuote?.quotePricePerM ?? 0)).toBe(30.43)
-        expect(round2(totals.orderQuote?.grossProfitRupees ?? 0)).toBe(3260.82)
+        expect(round2(totals.orderQuote?.quotePricePerM ?? 0)).toBe(31.00)
+        expect(round2(totals.orderQuote?.grossProfitRupees ?? 0)).toBe(3720.04)
     })
 
     it('calculates V3 totals for a mixed warp/weft composition', () => {
@@ -163,7 +177,7 @@ describe('Estimator full totals', () => {
 
         expect(round2(totals.weftRows[0].kgPer100m)).toBeCloseTo(1.92, 2)
         expect(round2(totals.weftCostPerM)).toBeCloseTo(6.70, 2)
-        expect(round2(totals.orderQuote?.landedCostPerM ?? 0)).toBeCloseTo(32.24, 2)
+        expect(round2(totals.orderQuote?.landedCostPerM ?? 0)).toBeCloseTo(32.36, 2)
     })
 
     it('calculates the exact 60g Georgette production cost scenario correctly', () => {
@@ -275,7 +289,8 @@ describe('Estimator full totals', () => {
         const totals = calcFullTotals(estimate)
 
         expect(round2(totals.totalProductionCostPerM)).toBe(32.48)
-        expect(round2(totals.orderQuote?.landedCostPerM ?? 0)).toBe(34.63)
+        expect(round2(totals.orderQuote?.landedCostPerM ?? 0)).toBe(34.77)
+        expect(round2(totals.orderQuote?.quotePricePerM ?? 0)).toBe(39.51)
     })
 })
 
