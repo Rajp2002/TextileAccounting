@@ -847,6 +847,9 @@ export const gu = {
     },
     quality: {
       myQualities: "મારી ક્વોલિટી",
+      myQualitiesHelper: "વારંવાર ઉપયોગમાં આવતી ફેબ્રિક રેસિપી સાચવો અને પછીથી ફરી ઉપયોગ કરો.",
+      fabricQualityNameHelper: "આ એસ્ટીમેટરને નામ આપો, દા.ત. 60g જ્યોર્જેટ અથવા D.246.",
+      saveCurrentAsQuality: "કરંટ સેટઅપને ક્વોલિટીમાં સેવ કરો",
       newQuality: "નવી ક્વોલિટી",
       editQuality: "ક્વોલિટી સંપાદિત કરો",
       saveQuality: "ક્વોલિટી સાચવો",
@@ -866,7 +869,7 @@ export const gu = {
       savesNotePrefix: "સાચવે છે",
       savesNoteWarp: "તાણો +",
       savesNoteWeft: "ભરણ બ્લેન્ડ લેયર્સ સહિત વર્તમાન સૂત રેટ્સ.",
-      rateNote: "આ ક્વોલિટી ફરીથી બનાવ્યા વગર સૂત રેટ્સ ગમે ત્યારે અપડેટ કરી શકાય.",
+      rateNote: "આ ફેબ્રિક રેસિપીને યાર્ન લેયર, રેટ્સ, પિક્સ, પહોળાઈ અને ગણતરીની ધારણાઓ સાથે સેવ કરે છે. તમે પછીથી ક્વોલિટીમાં ફેરફાર કરીને અને ફરીથી સેવ કરીને રેટ્સ અપડેટ કરી શકો છો.",
       cancel: "રદ કરો",
       confirmSave: "ક્વોલિટી સાચવો",
       structureNotePrefix: "નીચે સૂત રેટ્સ અપડેટ કરો. ફેબ્રિક સ્ટ્રક્ચર (ડેનિયર, એન્ડ્સ, પિક્સ) એ જ રહેશે. સેવ કરવાથી આ ક્વોલિટી અપડેટ થશે",
@@ -895,6 +898,7 @@ export const gu = {
       title: "ઓર્ડર અને ફેબ્રિક લેબલ",
       party: "પાર્ટી / ગ્રાહક",
       quality_label: "ક્વોલિટી / ફેબ્રિક લેબલ",
+      fabric_quality_name: "ફેબ્રિક / ક્વોલિટીનું નામ",
       warp_construction: "તાણો બાંધણ (Warp Construction)",
       weft_construction: "ભરણ બાંધણ (Weft Construction)"
     },
