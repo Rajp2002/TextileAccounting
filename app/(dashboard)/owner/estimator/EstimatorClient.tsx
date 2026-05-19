@@ -425,6 +425,112 @@ function NumField({
     )
 }
 
+function WidthField({
+    label,
+    value,
+    onChange,
+    unit,
+    onUnitChange,
+    hint,
+}: {
+    label: string
+    value: number
+    onChange: (v: number) => void
+    unit: 'cm' | 'inch'
+    onUnitChange: (u: 'cm' | 'inch') => void
+    hint?: string
+}) {
+    const displayValue = useMemo(() => {
+        if (!value) return ''
+        if (unit === 'inch') {
+            const inches = value / 2.54
+            return Number(inches.toFixed(2))
+        }
+        return value
+    }, [value, unit])
+
+    const secondaryReadout = useMemo(() => {
+        if (!value) return ''
+        if (unit === 'cm') {
+            const inches = value / 2.54
+            const roundedInches = Math.round(inches)
+            if (Math.abs(inches - roundedInches) < 0.15) {
+                return `≈ ${roundedInches} inches`
+            }
+            return `≈ ${inches.toFixed(1)} inches`
+        } else {
+            const roundedCm = Math.round(value)
+            if (Math.abs(value - roundedCm) < 0.3) {
+                return `≈ ${roundedCm} cm`
+            }
+            return `≈ ${value.toFixed(1)} cm`
+        }
+    }, [value, unit])
+
+    return (
+        <div className="space-y-1.5 min-w-0">
+            <div className="flex items-center justify-between">
+                <Label className="block text-xs uppercase tracking-wider font-semibold text-slate-500 whitespace-nowrap overflow-visible">
+                    {label}
+                </Label>
+                <div className="flex items-center bg-slate-100 rounded-lg p-0.5 scale-90 origin-right border border-slate-200/50">
+                    <button
+                        type="button"
+                        onClick={() => onUnitChange('cm')}
+                        className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-md transition-all ${
+                            unit === 'cm'
+                                ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/20'
+                                : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                        cm
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => onUnitChange('inch')}
+                        className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-md transition-all ${
+                            unit === 'inch'
+                                ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/20'
+                                : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                        inch
+                    </button>
+                </div>
+            </div>
+            <div className="relative group">
+                <Input
+                    type="number"
+                    step={unit === 'cm' ? 1 : 0.1}
+                    min={0}
+                    value={displayValue}
+                    onChange={e => {
+                        const raw = e.target.value === '' ? 0 : Number(e.target.value)
+                        if (unit === 'inch') {
+                            const cm = raw * 2.54
+                            onChange(Number(cm.toFixed(4)))
+                        } else {
+                            onChange(raw)
+                        }
+                    }}
+                    className="h-11 lg:h-9 text-xs sm:text-sm font-mono font-black text-center pr-12 sm:pr-16 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full text-orange-600"
+                />
+                <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
+                    {unit}
+                </span>
+            </div>
+            <div className="flex flex-col gap-0.5 mt-1">
+                {value > 0 && (
+                    <p className="text-[10px] text-emerald-600 font-bold leading-tight flex items-center gap-1 bg-emerald-50/50 py-0.5 px-2 rounded-md self-start border border-emerald-100/50">
+                        <span className="text-[9px]">✨</span> {secondaryReadout}
+                    </p>
+                )}
+                {hint && <p className="text-[10px] text-slate-400 font-medium leading-tight pl-1">{hint}</p>}
+            </div>
+        </div>
+    )
+}
+
 function CostPill({ label, value, type = 'default' }: { label: string; value: number; type?: 'default' | 'warp' | 'weft' | 'weave' | 'primary' }) {
     if (value <= 0) return null
     const base = "shrink-0 text-xs rounded-full px-2.5 py-0.5 font-mono font-bold border transition-all"
@@ -545,6 +651,20 @@ export default function EstimatorClient({
     const router = useRouter()
     
     const [mode, setMode] = useState<'quote' | 'market'>(searchParams.get('mode') === 'market' ? 'market' : 'quote')
+
+    const [widthUnit, setWidthUnit] = useState<'cm' | 'inch'>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('weavly-estimator-width-unit')
+            if (saved === 'cm' || saved === 'inch') return saved
+        }
+        return 'cm'
+    })
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('weavly-estimator-width-unit', widthUnit)
+        }
+    }, [widthUnit])
 
     // Build the initial state synchronously from server-provided data (no loading flash)
     const initialState = useMemo(() => {
@@ -1780,7 +1900,14 @@ export default function EstimatorClient({
                                         onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
                                     />
                                     <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} />
-                                    <NumField label={t('estimator.field_labels.cloth_width')} value={row.reedSpace} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v ?? 0 })} unit="cm" hint={t('estimator.weft.cloth_width_hint')} />
+                                    <WidthField
+                                        label={t('estimator.field_labels.cloth_width')}
+                                        value={row.reedSpace}
+                                        onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })}
+                                        unit={widthUnit}
+                                        onUnitChange={setWidthUnit}
+                                        hint={t('estimator.weft.cloth_width_hint')}
+                                    />
                                     <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.5} />
                                     <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`or ${state.yarnShortagePct}% default`} warning={row.shortagePct !== null && (row.shortagePct > 15 || (row.shortagePct === 0 && state.yarnShortagePct > 15)) ? 'High waste %' : undefined} />
                                     {(() => {
