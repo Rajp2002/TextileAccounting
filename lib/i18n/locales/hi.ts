@@ -847,6 +847,9 @@ export const hi = {
     },
     quality: {
       myQualities: "मेरी क्वालिटी",
+      myQualitiesHelper: "अक्सर उपयोग होने वाले फैब्रिक रेसिपी को सहेजें और बाद में पुन: उपयोग करें।",
+      fabricQualityNameHelper: "इस एस्टीमेट को नाम दें, उदा. 60g जॉर्जेट या D.246।",
+      saveCurrentAsQuality: "करंट सेटअप को क्वालिटी में सहेजें",
       newQuality: "नई क्वालिटी",
       editQuality: "क्वालिटी संपादित करें",
       saveQuality: "क्वालिटी सहेजें",
@@ -866,7 +869,7 @@ export const hi = {
       savesNotePrefix: "सहेजता है",
       savesNoteWarp: "ताना +",
       savesNoteWeft: "बाना ब्लेंड लेयर्स सहित वर्तमान सूत रेट्स।",
-      rateNote: "इस क्वालिटी को दोबारा बनाए बिना सूत रेट्स कभी भी अपडेट किए जा सकते हैं।",
+      rateNote: "इस फ़ैब्रिक रेसिपी को सूत लेयर्स, रेट्स, पिक्स, चौड़ाई और लागत मान्यताओं सहित सहेजता है। आप बाद में क्वालिटी को संपादित और दोबारा सहेजकर रेट्स अपडेट कर सकते हैं।",
       cancel: "रद्द करें",
       confirmSave: "क्वालिटी सहेजें",
       structureNotePrefix: "नीचे सूत रेट्स अपडेट करें। फैब्रिक संरचना (डेनियर, एंड्स, पिक्स) वही रहेगी। सेव करने पर यह क्वालिटी अपडेट होगी",
@@ -895,6 +898,7 @@ export const hi = {
       title: "ऑर्डर और फैब्रिक लेबल",
       party: "पार्टी / ग्राहक",
       quality_label: "क्वालिटी / फैब्रिक लेबल",
+      fabric_quality_name: "फैब्रिक / क्वालिटी का नाम",
       warp_construction: "ताना निर्माण (Warp Construction)",
       weft_construction: "बाना निर्माण (Weft Construction)"
     },

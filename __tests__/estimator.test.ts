@@ -364,3 +364,37 @@ describe('Loom weave wage UX and paise/rupee conversion safety', () => {
     })
 })
 
+describe('Estimator Market-Mode Race Condition Safety', () => {
+    function resolvePartyNameForSubmit(targetMode: 'quote' | 'market', qualityLabel: string, partyName: string) {
+        return targetMode === 'market' 
+            ? (qualityLabel.trim() || partyName.trim()) 
+            : partyName.trim()
+    }
+
+    it('resolves the latest qualityLabel as the fabric label in market mode during a race condition', () => {
+        // Simulates the user having just typed a brand new fabric label in Market Mode
+        // while the internal React batch/delayed state has not yet synced to partyName
+        const qualityLabel = 'Japan Satin 100D'
+        const partyName = 'Japan Satin 50D' // Outdated/old value in partyName state
+
+        const resolved = resolvePartyNameForSubmit('market', qualityLabel, partyName)
+        expect(resolved).toBe('Japan Satin 100D')
+    })
+
+    it('resolves qualityLabel when partyName is completely empty in market mode', () => {
+        const qualityLabel = 'Japan Satin 100D'
+        const partyName = ''
+
+        const resolved = resolvePartyNameForSubmit('market', qualityLabel, partyName)
+        expect(resolved).toBe('Japan Satin 100D')
+    })
+
+    it('resolves partyName normally in quote/party mode', () => {
+        const qualityLabel = 'Japan Satin 100D'
+        const partyName = 'Sundaram Textiles'
+
+        const resolved = resolvePartyNameForSubmit('quote', qualityLabel, partyName)
+        expect(resolved).toBe('Sundaram Textiles')
+    })
+})
+
