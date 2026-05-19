@@ -1010,27 +1010,6 @@ export default function EstimatorClient({
         }
     }
 
-    const handleResetEstimator = () => {
-        if (window.confirm(tx('Reset estimator to standard profile defaults? All unsaved changes will be lost.'))) {
-            dispatch({ 
-                type: 'RESET', 
-                data: { 
-                    profile: initialProfile, 
-                    sections: initialProfile?.enabled_sections ?? DEFAULT_FACTORY_SECTIONS,
-                    workers: initialWorkers || []
-                } 
-            })
-            setAppliedTemplate(null)
-            setQualityLabel('')
-            setPartyName('')
-            setWarpInstruction('')
-            setWeftInstruction('')
-            setCustomTargetPrice('')
-            clearDraft()
-            toast.success(tx('Estimator reset to profile defaults'))
-        }
-    }
-
     const handleNewQualityConfirm = () => {
         dispatch({ 
             type: 'RESET', 
@@ -1559,16 +1538,6 @@ export default function EstimatorClient({
                             </div>
                         )}
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 snap-x">
-                             <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleResetEstimator}
-                                className="shrink-0 snap-start rounded-xl px-3 h-10 border-dashed border-slate-300 bg-white/80 text-slate-500 hover:text-brand-accent hover:border-brand-accent hover:bg-brand-accent/5 transition-all gap-1.5 font-bold"
-                             >
-                                <RotateCcw className="h-3.5 w-3.5" />
-                                {t('estimator.quality.resetBtn')}
-                             </Button>
-
                              <Button
                                 variant="outline"
                                 size="sm"
@@ -2666,7 +2635,7 @@ export default function EstimatorClient({
                             <Sparkles className="h-6 w-6" />
                         </div>
                         <DialogTitle className="text-center text-lg font-bold text-slate-900">
-                            Start new quality?
+                            Start new quality / Reset?
                         </DialogTitle>
                     </DialogHeader>
                     <div className="text-center text-sm text-slate-500 py-2 leading-relaxed">
@@ -2684,7 +2653,7 @@ export default function EstimatorClient({
                             onClick={handleNewQualityConfirm}
                             className="w-full sm:w-auto bg-brand-accent hover:bg-brand-accent/90 text-white font-medium shadow-sm"
                         >
-                            Start New
+                            Reset & Start
                         </Button>
                     </DialogFooter>
                 </DialogContent>

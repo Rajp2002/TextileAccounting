@@ -853,7 +853,7 @@ export const en = {
       myQualitiesHelper: "Save frequently used fabric recipes and reuse them later.",
       fabricQualityNameHelper: "Name this estimate, e.g. 60g Georgette or D.246.",
       saveCurrentAsQuality: "Save Current as Quality",
-      newQuality: "New Quality",
+      newQuality: "New Quality / Reset",
       editQuality: "Edit Quality",
       saveQuality: "Save Quality",
       hint: "Tap to apply · Long-press to edit rates",
