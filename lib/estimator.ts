@@ -219,6 +219,8 @@ export interface OrderQuote {
   totalOrderValue:    number   // quotePricePerM × orderQuantityM
   grossProfitRupees:  number   // totalOrderValue − landed cost × qty
   actualMarginPct:    number   // gross profit as % of total order value
+  isValid?:           boolean  // dynamic boundary validation
+  errorMessage?:      string   // dynamic boundary validation error message
 }
 
 /** Complete derived totals from calcFullTotals */
@@ -465,14 +467,35 @@ export function calcOrderQuote(params: {
 }): OrderQuote {
   const { totalProductionCostPerM, orderQuantityM, commissionPct, transportPerM, profitMarginPct } = params
 
-  const landedCostPerM   = new Decimal(totalProductionCostPerM).times(new Decimal(1).plus(new Decimal(commissionPct).div(100))).plus(transportPerM)
-  const quotePricePerM   = landedCostPerM.times(new Decimal(1).plus(new Decimal(profitMarginPct).div(100)))
+  const P = new Decimal(totalProductionCostPerM)
+  const T = new Decimal(transportPerM)
+  const C = new Decimal(commissionPct).div(100)
+  const M = new Decimal(profitMarginPct).div(100)
+
+  const denominator = new Decimal(1).minus(C).minus(M)
+
+  if (denominator.lte(0)) {
+    return {
+      isValid: false,
+      errorMessage: 'Commission % + Margin % must be below 100%.',
+      landedCostPerM: 0,
+      quotePricePerM: 0,
+      totalOrderValue: 0,
+      grossProfitRupees: 0,
+      actualMarginPct: 0
+    }
+  }
+
+  const quotePricePerM   = P.plus(T).div(denominator)
+  const commissionPerM   = quotePricePerM.times(C)
+  const landedCostPerM   = P.plus(T).plus(commissionPerM)
   const totalOrderValue  = quotePricePerM.times(orderQuantityM)
   const totalCost        = landedCostPerM.times(orderQuantityM)
   const grossProfitRupees = totalOrderValue.minus(totalCost)
-  const actualMarginPct  = totalOrderValue.gt(0) ? grossProfitRupees.div(totalOrderValue).times(100) : new Decimal(0)
+  const actualMarginPct  = quotePricePerM.gt(0) ? grossProfitRupees.div(totalOrderValue).times(100) : new Decimal(0)
 
   return { 
+    isValid: true,
     landedCostPerM: landedCostPerM.toNumber(), 
     quotePricePerM: quotePricePerM.toNumber(), 
     totalOrderValue: totalOrderValue.toNumber(), 
@@ -633,16 +656,13 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   // Approximate metres a full beam produces (tape_length reduced by take-up)
   const estimatedBeamCapacityM = new Decimal(estimate.tapeLengthM).times(new Decimal(1).minus(new Decimal(estimate.warpCrimpPct || 0).div(100))).toNumber()
 
-  // ── Order Quote (only when quantity is set) ─────────────────────────────
-  const orderQuote = estimate.orderQuantityM && estimate.orderQuantityM > 0
-    ? calcOrderQuote({
-        totalProductionCostPerM: totalProductionCostPerM.toNumber(),
-        orderQuantityM:  estimate.orderQuantityM,
-        commissionPct:   estimate.enabledSections.commission ? estimate.commissionPct : 0,
-        transportPerM:   estimate.enabledSections.transport  ? estimate.transportPerM  : 0,
-        profitMarginPct: estimate.profitPct,
-      })
-    : null
+  const orderQuote = calcOrderQuote({
+    totalProductionCostPerM: totalProductionCostPerM.toNumber(),
+    orderQuantityM:  estimate.orderQuantityM || 0,
+    commissionPct:   estimate.enabledSections.commission ? estimate.commissionPct : 0,
+    transportPerM:   estimate.enabledSections.transport  ? estimate.transportPerM  : 0,
+    profitMarginPct: estimate.profitPct,
+  })
 
   return {
     warpRows,
@@ -850,15 +870,24 @@ export function runScenarios(
   // ── 4. Custom target price ──────────────────────────────────────────────
   // Owner enters a price the party demanded — what's the resulting margin?
   if (customTargetPrice != null && customTargetPrice > 0 && baselineTotals.orderQuote) {
-    const landedCost = new Decimal(baselineTotals.orderQuote.landedCostPerM)
+    const P = new Decimal(baselineTotals.totalProductionCostPerM)
+    const T = new Decimal(baseline.enabledSections.transport ? baseline.transportPerM : 0)
+    const C = new Decimal(baseline.enabledSections.commission ? baseline.commissionPct : 0).div(100)
     const targetPrice = new Decimal(customTargetPrice)
-    const impliedMarginPct = landedCost.gt(0)
-      ? targetPrice.minus(landedCost).div(landedCost).times(100)
+
+    const commissionPerM = targetPrice.times(C)
+    const landedCostPerM = P.plus(T).plus(commissionPerM)
+    const profitPerM = targetPrice.minus(landedCostPerM)
+
+    const impliedMarginPct = targetPrice.gt(0)
+      ? profitPerM.div(targetPrice).times(100)
       : new Decimal(0)
+
     const orderQty   = new Decimal(baseline.orderQuantityM ?? 0)
     const totalValue = targetPrice.times(orderQty)
-    const totalCost  = landedCost.times(orderQty)
+    const totalCost  = landedCostPerM.times(orderQty)
     const grossProfit = totalValue.minus(totalCost)
+
     results.push({
       id:          'custom-target',
       label:       `Target ₹${customTargetPrice.toFixed(2)}/m`,
