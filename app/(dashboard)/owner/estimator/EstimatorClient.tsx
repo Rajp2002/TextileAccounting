@@ -1396,13 +1396,13 @@ export default function EstimatorClient({
                                         <span className="truncate">Save Quote</span>
                                     </Button>
 
-                                    {/* TERTIARY: Start Party Order */}
+                                    {/* TERTIARY: Transition to Party Order mode */}
                                     <Button
                                         id="btn-start-party-order-market"
                                         size="sm"
                                         variant="ghost"
                                         className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold text-xs gap-1.5 sm:gap-2"
-                                        onClick={() => { setMode('quote'); setShowStartPartyOrder(true) }}
+                                        onClick={() => setMode('quote')}
                                         disabled={savingQuote}
                                     >
                                         <Play className="h-3.5 w-3.5 shrink-0" />
