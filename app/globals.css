@@ -84,6 +84,33 @@
 :root {
   --radius: 0.625rem;
 
+  --color-primary: #1E2528;
+  --color-primary-active: #111719;
+  --color-canvas: #FFFDF7;
+  --color-canvas-white: #FFFFFF;
+  --color-surface-soft: #FAF3E4;
+  --color-surface-strong: #EAD8B8;
+  --color-ledger-cream: #F5E8CF;
+  --color-cotton-beige: #EFE1C5;
+  --color-loom-navy: #18252E;
+  --color-loom-navy-elevated: #22313A;
+  --color-hairline: #DED2BD;
+  --color-hairline-strong: #CBB894;
+  --color-ink: #1E2528;
+  --color-body: #3F4542;
+  --color-muted: #74746A;
+  --color-subtle: #9A9587;
+  --color-yarn-orange: #D96B1C;
+  --color-yarn-orange-dark: #9E4212;
+  --color-factory-green: #285C3B;
+  --color-factory-green-soft: #E1F0E5;
+  --color-warning-amber: #C98A13;
+  --color-warning-amber-soft: #F7E8C2;
+  --color-risk-red: #A6402D;
+  --color-risk-red-soft: #F2D8D1;
+  --color-info-blue: #315C78;
+  --color-info-blue-soft: #DDEAF0;
+
   --weavly-primary: #1E2528;
   --weavly-primary-active: #111719;
   --weavly-saffron: #E27025;

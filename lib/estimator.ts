@@ -564,6 +564,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
     const baseKg          = calcWeftYarnKg(r.picks, r.reedSpace, r.calcDenier)
     const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage;
+    // NOTE: Using `warpCrimpPct` for weft is correct for Surat practice, where weft shortage/crimp is
+    // estimated using the warp crimp percentage, despite the misleading "warp" name.
     const totalShortagePct = new Decimal(warpCrimpPct).plus(shortagePctUsed); // Weft now carries the full loom-wide shortage burden
 
     // Ensure weft contributes to total winding weight with the same '1.1 multiplier' safety net
