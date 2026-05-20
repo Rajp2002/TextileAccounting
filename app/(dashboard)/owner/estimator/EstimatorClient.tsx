@@ -346,28 +346,32 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
 // SUB-COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SectionHeader({ title, icon: Icon, accent = 'indigo', badgeContent }: {
+function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detail }: {
     title:    string
     icon:     React.ElementType
-    accent?:  'indigo' | 'emerald' | 'amber' | 'violet' | 'rose' | 'orange'
+    accent?:  'warp' | 'weft' | 'weave' | 'overhead' | 'post' | 'neutral'
     badgeContent?: React.ReactNode
+    detail?: React.ReactNode
 }) {
     const variants: Record<string, string> = {
-        indigo:  'bg-indigo-50 text-indigo-600 border-indigo-100',
-        emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-        amber:   'bg-amber-50 text-amber-600 border-amber-100',
-        violet:  'bg-violet-50 text-violet-600 border-violet-100',
-        rose:    'bg-rose-50 text-rose-600 border-rose-100',
-        orange:  'bg-orange-50 text-orange-600 border-orange-100',
+        warp:     'bg-[var(--color-info-blue-soft)] text-[var(--color-info-blue)]',
+        weft:     'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]',
+        weave:    'bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]',
+        overhead: 'bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)]',
+        post:     'bg-[var(--color-surface-soft)] text-[var(--color-muted)]',
+        neutral:  'bg-[var(--color-surface-soft)] text-[var(--color-muted)]',
     }
-    const colorClass = variants[accent]
+    const colorClass = variants[accent] ?? variants.neutral
     return (
-        <div className={`px-5 py-4 sm:px-6 flex items-center justify-between border-b ${colorClass.split(' ')[2]} ${colorClass.split(' ')[0]}`}>
-            <div className="flex items-center gap-2.5">
-                <div className={`p-1.5 rounded-lg bg-white/80 shadow-sm`}>
-                    <Icon className={`h-4 w-4 ${colorClass.split(' ')[1]}`} />
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--color-hairline)] px-5 py-3.5">
+            <div className="flex min-w-0 items-center gap-2.5">
+                <div className={`flex h-7 w-7 items-center justify-center rounded-[8px] ${colorClass}`}>
+                    <Icon className="h-4 w-4" />
                 </div>
-                <span className="text-sm sm:text-base font-bold tracking-tight">{title}</span>
+                <div className="min-w-0">
+                    <span className="text-sm font-medium text-[var(--color-ink)]">{title}</span>
+                    {detail}
+                </div>
             </div>
             {badgeContent}
         </div>
@@ -375,15 +379,16 @@ function SectionHeader({ title, icon: Icon, accent = 'indigo', badgeContent }: {
 }
 
 function NumField({
-    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder,
+    label, value, onChange, unit, step = 1, min = 0, hint, warning, onDismissWarning, placeholder, attentionWhenEmpty = false,
 }: {
     label: string; value: number | null; onChange: (v: number | null) => void
     unit?: string; step?: number; min?: number; hint?: string; warning?: string
-    onDismissWarning?: () => void; placeholder?: string
+    onDismissWarning?: () => void; placeholder?: string; attentionWhenEmpty?: boolean
 }) {
+    const isEmpty = attentionWhenEmpty && (!value || value <= 0)
     return (
         <div className="space-y-1.5 min-w-0">
-            <Label className="block text-xs uppercase tracking-wider font-semibold text-slate-500 whitespace-nowrap overflow-visible">{label}</Label>
+            <Label className="block text-xs uppercase tracking-wider font-medium text-[var(--color-muted)] whitespace-nowrap overflow-visible">{label}</Label>
             <div className="relative group">
                 <Input
                     type="number"
@@ -395,19 +400,22 @@ function NumField({
                         const val = e.target.value === '' ? null : Number(e.target.value)
                         onChange(val)
                     }}
-                    className="h-11 lg:h-9 text-xs sm:text-sm font-mono font-black text-center pr-10 sm:pr-14 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full text-orange-600"
+                    className={`h-11 lg:h-9 text-xs sm:text-sm font-mono font-medium text-center pr-10 sm:pr-14 border focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[10px] text-[var(--color-yarn-orange)] ${
+                        isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)]' : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)]'
+                    }`}
                 />
                 {unit && (
-                    <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
+                    <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-[var(--color-muted)] font-medium pointer-events-none">
                         {unit}
                     </span>
                 )}
             </div>
+            {isEmpty && <p className="text-[10px] text-[var(--color-warning-amber)]">Required</p>}
             {warning ? (
                 <div className="flex flex-col gap-0.5 mt-1">
                     <div className="flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
-                        <p className="text-xs font-bold text-amber-600 truncate">{warning}</p>
+                        <AlertTriangle className="h-3 w-3 text-[var(--color-warning-amber)] shrink-0" />
+                        <p className="text-[10px] font-medium text-[var(--color-warning-amber)] truncate">{warning}</p>
                     </div>
                     {onDismissWarning && (
                         <button 
@@ -418,8 +426,8 @@ function NumField({
                         </button>
                     )}
                 </div>
-            ) : hint ? (
-                <p className="text-xs text-slate-400 font-medium leading-tight mt-1">{hint}</p>
+            ) : hint && !isEmpty ? (
+                <p className="text-xs text-[var(--color-muted)] font-medium leading-tight mt-1">{hint}</p>
             ) : null}
         </div>
     )
@@ -477,7 +485,7 @@ function WidthField({
                     <button
                         type="button"
                         onClick={() => onUnitChange('cm')}
-                        className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-md transition-all ${
+                        className={`px-2 py-0.5 text-[10px] font-semibold uppercase rounded-md transition-all ${
                             unit === 'cm'
                                 ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/20'
                                 : 'text-slate-500 hover:text-slate-700'
@@ -488,7 +496,7 @@ function WidthField({
                     <button
                         type="button"
                         onClick={() => onUnitChange('inch')}
-                        className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-md transition-all ${
+                        className={`px-2 py-0.5 text-[10px] font-semibold uppercase rounded-md transition-all ${
                             unit === 'inch'
                                 ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/20'
                                 : 'text-slate-500 hover:text-slate-700'
@@ -513,7 +521,7 @@ function WidthField({
                             onChange(raw)
                         }
                     }}
-                    className="h-11 lg:h-9 text-xs sm:text-sm font-mono font-black text-center pr-12 sm:pr-16 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full text-orange-600"
+                    className="h-11 lg:h-9 text-xs sm:text-sm font-mono font-semibold text-center pr-12 sm:pr-16 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full text-orange-600"
                 />
                 <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
                     {unit}
@@ -533,19 +541,64 @@ function WidthField({
 
 function CostPill({ label, value, type = 'default' }: { label: string; value: number; type?: 'default' | 'warp' | 'weft' | 'weave' | 'primary' }) {
     if (value <= 0) return null
-    const base = "shrink-0 text-xs rounded-full px-2.5 py-0.5 font-mono font-bold border transition-all"
-    const variants: Record<string, string> = {
-        default: "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300",
-        warp:    "bg-indigo-50 text-indigo-700 border-indigo-100 hover:border-indigo-200",
-        weft:    "bg-emerald-50 text-emerald-700 border-emerald-100 hover:border-emerald-200",
-        weave:   "bg-amber-50 text-amber-700 border-amber-100 hover:border-amber-200",
-        primary: "bg-orange-50 text-orange-700 border-orange-100 hover:border-orange-200",
+    const dot: Record<string, string> = {
+        warp: 'bg-[var(--color-info-blue)]',
+        weft: 'bg-[var(--color-factory-green)]',
+        weave: 'bg-[var(--color-yarn-orange)]',
+        default: 'bg-[var(--color-muted)]',
+        primary: 'bg-[var(--color-yarn-orange)]',
     }
+    const base = "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-[var(--color-hairline-strong)]"
     return (
-        <span className={`${base} ${variants[type] || variants.default}`}>
+        <span className={base}>
+            <span className={`h-[7px] w-[7px] rounded-full ${dot[type] ?? dot.default}`} />
             {label} ₹{value.toFixed(2)}
         </span>
     )
+}
+
+function SectionCostPill({ value }: { value: number }) {
+    const hasCost = value > 0
+    return (
+        <span className={`rounded-full px-2.5 py-[3px] text-[13px] font-medium ${
+            hasCost
+                ? 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]'
+                : 'bg-[var(--color-surface-soft)] text-[var(--color-muted)]'
+        }`}>
+            ₹{value.toFixed(2)}/m
+        </span>
+    )
+}
+
+function CapacityMetricField({
+    label, value, unit, onChange, hint,
+}: {
+    label: string
+    value: number | null
+    unit: string
+    onChange: (value: number | null) => void
+    hint?: string
+}) {
+    return (
+        <div className="rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2.5">
+            <Label className="text-[10px] font-medium uppercase tracking-[0.05em] text-[var(--color-muted)]">{label}</Label>
+            <div className="mt-1 flex items-end gap-1">
+                <Input
+                    type="number"
+                    value={value ?? ''}
+                    onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}
+                    className="h-7 border-0 bg-transparent p-0 text-lg font-semibold text-[var(--color-ink)] shadow-none focus-visible:ring-0"
+                />
+                <span className="pb-0.5 text-[11px] font-medium text-[var(--color-muted)]">{unit}</span>
+            </div>
+            {hint && <p className="mt-1 text-[10px] text-[var(--color-muted)]">{hint}</p>}
+        </div>
+    )
+}
+
+function InlineInputWarning({ show, children }: { show: boolean; children: React.ReactNode }) {
+    if (!show) return null
+    return <p className="text-[10px] text-[var(--color-warning-amber)]">{children}</p>
 }
 
 function LayerNameField({
@@ -560,16 +613,19 @@ function LayerNameField({
     onChange: (value: string) => void
 }) {
     return (
-        <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4 space-y-1.5">
-            <Label className="block text-xs uppercase tracking-wider font-semibold text-slate-500">
+        <div className="space-y-1.5 min-w-0">
+            <Label className="block text-xs uppercase tracking-wider font-medium text-[var(--color-muted)]">
                 {label}
             </Label>
             <Input
                 value={value}
                 placeholder={placeholder}
                 onChange={e => onChange(e.target.value)}
-                className="h-10 bg-white/80 border-slate-200 focus:border-brand-accent focus:ring-brand-accent/10 rounded-lg font-semibold"
+                className={`h-10 rounded-[10px] border font-medium focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/10 ${
+                    value?.trim() ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]' : 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]'
+                }`}
             />
+            {!value?.trim() && <p className="text-[10px] text-[var(--color-warning-amber)]">Required</p>}
         </div>
     )
 }
@@ -595,38 +651,35 @@ function RowCard({
     kgPer100m: number; costPer100m: number; children: React.ReactNode; accent?: 'indigo' | 'emerald'
 }) {
     const colors = {
-        indigo:  { text: 'text-indigo-600', bg: 'bg-indigo-50/50', border: 'border-indigo-100' },
-        emerald: { text: 'text-emerald-600', bg: 'bg-emerald-50/50', border: 'border-emerald-100' },
+        indigo:  { strip: 'bg-[var(--color-info-blue-soft)]', badge: 'bg-[var(--color-info-blue-soft)] text-[var(--color-info-blue)]' },
+        emerald: { strip: 'bg-[var(--color-factory-green-soft)]', badge: 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]' },
     }
     const c = colors[accent]
     return (
-        <div className={`rounded-xl border ${c.border} ${c.bg} p-4 sm:p-5 space-y-4 relative overflow-hidden group`}>
-            {/* Component label */}
-            <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] group">
+            <div className={`flex items-center justify-between gap-2 px-3.5 py-2.5 ${c.strip}`}>
                 <div className="flex items-center gap-2">
-                    <span className={`text-[10px] uppercase tracking-widest font-black ${c.text}`}>
+                    <span className={`rounded-[4px] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] ${c.badge}`}>
                         {title} {index + 1}
                     </span>
-                    <Badge variant="outline" className="text-[9px] sm:text-[10px] px-1.5 py-0 h-4 bg-white border-slate-200 text-slate-500 font-mono">
+                    <Badge variant="outline" className="h-4 border-0 bg-transparent px-0 py-0 text-[11px] font-medium text-[var(--color-muted)]">
                         {kgPer100m.toFixed(3)} kg/100m
                     </Badge>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-slate-500 font-bold font-mono">
+                    <span className="text-xs font-medium text-[var(--color-muted)]">
                         ₹{costPer100m.toFixed(2)}/100m
                     </span>
                     {canRemove && (
-                        <button onClick={onRemove} className="text-slate-300 hover:text-red-500 transition-colors">
+                        <button onClick={onRemove} className="text-[var(--color-muted)] hover:text-[var(--color-risk-red)] transition-colors">
                             <Trash2 className="h-3.5 w-3.5" />
                         </button>
                     )}
                 </div>
             </div>
-            <div className="grid [grid-template-columns:repeat(auto-fit,minmax(170px,1fr))] gap-4 relative z-10">
+            <div className={`grid gap-3 px-3.5 py-3 ${accent === 'indigo' ? 'lg:grid-cols-5' : 'lg:grid-cols-6'}`}>
                 {children}
             </div>
-            {/* Subtle row indicator */}
-            <div className={`absolute left-0 top-0 bottom-0 w-1 ${accent === 'indigo' ? 'bg-indigo-500/20' : 'bg-emerald-500/20'}`} />
         </div>
     )
 }
@@ -1172,24 +1225,6 @@ export default function EstimatorClient({
 
     // Validation: Pilot Safety Rails
     const isZeroConfig = state.overheadItems.filter(i => i.isPreset).every(i => (i.monthlyAmount || 0) === 0)
-    const electricityItem = state.overheadItems.find(i => i.category === 'electricity')
-    const hasElectricityLeak = electricityItem && (
-        (electricityItem.isLocked && electricityItem.meta?.type === 'electricity' && (
-            (electricityItem.meta.unitsPerLoomPerMonth || 0) === 0 || 
-            (electricityItem.meta.ratePerUnit || 0) === 0
-        )) ||
-        (!electricityItem.isLocked && (electricityItem.monthlyAmount || 0) === 0)
-    )
-    const estimateWarnings = [
-        ...(state.warpRows.some(row => row.yarnRate <= 0) ? ['Warp yarn rate missing'] : []),
-        ...(state.weftRows.some(row => row.yarnRate <= 0) ? ['Weft yarn rate missing'] : []),
-        state.perPickCostPaisa <= 0 ? 'Loom wage missing' : null,
-        !hasOrderQty ? 'Quantity not set' : null,
-        state.monthlyOutputM <= 0 && totals.overheadPerM <= 0 ? 'Factory overhead not configured' : null,
-        orderQuote && !orderQuote.isValid ? orderQuote.errorMessage : null,
-        orderQuote && orderQuote.isValid && (state.commissionPct + state.profitPct > 65) ? 'High commission and margin configuration may result in excessively high quote prices.' : null,
-    ].filter((warning): warning is string => Boolean(warning))
-
     return (
         <div className="space-y-5 pb-floating-button md:pb-20 relative">
             {!state.isConfigured && (
@@ -1265,41 +1300,39 @@ export default function EstimatorClient({
             )}
 
             {/* ── STICKY HUD ───────────────────────────────────────── */}
-            <div className="sticky top-0 z-40 bg-app-bg/95 backdrop-blur-md border-b border-border/60 shadow-sm -mt-5 pt-3 sm:pt-6 pb-3 sm:pb-4 px-3 sm:px-4 mx-[-12px] sm:mx-[-32px] md:mx-[-40px]">
-                <div className="max-w-6xl mx-auto space-y-2.5 sm:space-y-4">
-
-                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-4 rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
-                        {/* Production Cost */}
-                        <div className="min-w-0 flex-1 sm:flex-none">
-                            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-0.5">{t('estimator.hud.prod_cost')}</p>
-                            <p className="text-xl sm:text-2xl font-black font-mono text-slate-900 leading-none">
+            <div className="sticky top-0 z-40 -mt-5 mx-[-12px] border-b border-[var(--color-hairline)] bg-[var(--color-loom-navy)] px-3 py-3 sm:mx-[-32px] sm:px-4 md:mx-[-40px]">
+                <div className="mx-auto max-w-6xl space-y-3">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="min-w-[120px]">
+                            <p className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--color-muted)]">{t('estimator.hud.prod_cost')}</p>
+                            <p className="font-mono text-[22px] font-semibold leading-none text-[var(--color-ledger-cream)]">
                                 ₹{totals.totalProductionCostPerM.toFixed(2)}
                             </p>
                         </div>
 
-                        {hasOrderQty && orderQuote && orderQuote.isValid && (
-                            <>
-                                <div className="h-6 sm:h-8 w-px bg-slate-200 shrink-0 hidden sm:block" />
-                                {/* Quote Price */}
-                                <div className="min-w-0">
-                                    <p className="text-[10px] uppercase tracking-wider text-brand-accent font-black mb-0.5">{t('estimator.hud.quote_per_m')}</p>
-                                    <p className="text-xl sm:text-3xl font-black font-mono text-brand-accent leading-none">
-                                        ₹{orderQuote.quotePricePerM.toFixed(2)}
-                                    </p>
-                                </div>
-                                <div className="h-8 w-px bg-slate-200 shrink-0 hidden md:block" />
-                                {/* Total Value */}
-                                <div className="min-w-0 flex-1 hidden md:block text-right">
-                                    <p className="text-[10px] uppercase tracking-wider text-emerald-600 font-bold mb-0.5">{t('estimator.hud.total_order')}</p>
-                                    <p className="text-xl font-black font-mono text-slate-900 leading-none">
-                                        ₹{orderQuote.totalOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                                    </p>
-                                </div>
-                            </>
-                        )}
+                        <div className="min-w-[110px]">
+                            <p className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--color-muted)]">{t('estimator.hud.quote_per_m')}</p>
+                            <p className="font-mono text-[22px] font-semibold leading-none text-[var(--color-yarn-orange)]">
+                                ₹{orderQuote?.isValid ? orderQuote.quotePricePerM.toFixed(2) : '0.00'}
+                            </p>
+                        </div>
 
-                        {/* Actions — three-path hierarchy */}
-                        <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 ml-auto shrink-0 self-center w-full sm:w-auto mt-1 sm:mt-0 pt-2.5 sm:pt-0 border-t border-slate-100 sm:border-0 order-last sm:order-none justify-end">
+                        <div className="min-w-[130px]">
+                            <p className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--color-muted)]">{t('estimator.hud.total_order')}</p>
+                            <p className="font-mono text-[22px] font-semibold leading-none text-[var(--color-factory-green)]">
+                                ₹{orderQuote?.isValid ? orderQuote.totalOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0'}
+                            </p>
+                        </div>
+
+                        <div className="hidden h-9 w-px bg-[var(--color-primary-active)] sm:block" />
+
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                            <CostPill label="Warp" value={totals.warpCostPerM} type="warp" />
+                            <CostPill label="Weft" value={totals.weftCostPerM} type="weft" />
+                            <CostPill label="Weave" value={totals.weaveCostPerM} type="weave" />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 sm:ml-auto sm:flex sm:w-auto">
 
                             {mode === 'quote' ? (
                                 <>
@@ -1307,7 +1340,7 @@ export default function EstimatorClient({
                                     <Button
                                         id="btn-start-party-order"
                                         size="sm"
-                                        className="col-span-2 sm:col-span-1 flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-indigo-600/20"
+                                        className="col-span-2 h-9 rounded-[8px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                         onClick={() => setShowStartPartyOrder(true)}
                                         disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
@@ -1324,7 +1357,7 @@ export default function EstimatorClient({
                                         id="btn-save-quote"
                                         size="sm"
                                         variant="outline"
-                                        className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        className="h-9 rounded-[8px] border border-white/15 bg-transparent px-4 text-[13px] font-medium text-[var(--color-hairline-strong)] hover:bg-white/10"
                                         onClick={() => handleSaveQuote('quote')}
                                         disabled={savingQuote || !orderQuote?.isValid}
                                     >
@@ -1337,7 +1370,7 @@ export default function EstimatorClient({
                                         id="btn-switch-market"
                                         size="sm"
                                         variant="ghost"
-                                        className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        className="h-9 rounded-[8px] border border-white/15 bg-transparent px-4 text-[13px] font-medium text-[var(--color-hairline-strong)] hover:bg-white/10"
                                         onClick={() => setMode('market')}
                                     >
                                         <Gauge className="h-3.5 w-3.5 shrink-0" />
@@ -1350,7 +1383,7 @@ export default function EstimatorClient({
                                     <Button
                                         id="btn-start-market-run"
                                         size="sm"
-                                        className="col-span-2 sm:col-span-1 flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs gap-1.5 sm:gap-2 shadow-lg shadow-blue-600/20"
+                                        className="col-span-2 h-9 rounded-[8px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                         onClick={() => handleSaveQuote('market')}
                                         disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
@@ -1367,7 +1400,7 @@ export default function EstimatorClient({
                                         id="btn-save-quote-market"
                                         size="sm"
                                         variant="outline"
-                                        className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border-blue-200 bg-white text-blue-700 hover:bg-blue-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        className="h-9 rounded-[8px] border border-white/15 bg-transparent px-4 text-[13px] font-medium text-[var(--color-hairline-strong)] hover:bg-white/10"
                                         onClick={() => handleSaveQuote('quote')}
                                         disabled={savingQuote || !orderQuote?.isValid}
                                     >
@@ -1380,7 +1413,7 @@ export default function EstimatorClient({
                                         id="btn-start-party-order-market"
                                         size="sm"
                                         variant="ghost"
-                                        className="flex-1 sm:flex-none h-10 sm:h-9 px-3 sm:px-4 rounded-lg border border-slate-200 bg-white text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold text-xs gap-1.5 sm:gap-2"
+                                        className="h-9 rounded-[8px] border border-white/15 bg-transparent px-4 text-[13px] font-medium text-[var(--color-hairline-strong)] hover:bg-white/10"
                                         onClick={() => setMode('quote')}
                                         disabled={savingQuote}
                                     >
@@ -1396,7 +1429,7 @@ export default function EstimatorClient({
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-9 px-3 sm:px-4 border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 sm:gap-2 font-bold"
+                                        className="h-9 rounded-[8px] border border-white/15 bg-transparent px-4 text-[13px] font-medium text-[var(--color-hairline-strong)] hover:bg-white/10"
                                         onClick={handleUpdateTemplate}
                                         disabled={savingTemplate}
                                     >
@@ -1407,7 +1440,7 @@ export default function EstimatorClient({
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => setAppliedTemplate(null)}
-                                        className="h-9 px-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors ml-1"
+                                        className="ml-1 h-9 px-2 text-[var(--color-muted)] hover:bg-transparent hover:text-[var(--color-muted)]"
                                         title={t('estimator.quality.detachTooltip')}
                                     >
                                         <X className="h-4 w-4" />
@@ -1417,7 +1450,7 @@ export default function EstimatorClient({
                                 <Button
                                     size="sm"
                                     variant="ghost"
-                                    className="hidden sm:flex flex-none h-9 px-3 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-xs gap-1.5 font-bold"
+                                    className="hidden h-9 flex-none rounded-[8px] px-3 text-[13px] font-medium text-[var(--color-muted)] hover:bg-transparent hover:text-[var(--color-hairline-strong)] sm:flex"
                                     onClick={() => {
                                         setTemplateName(qualityLabel.trim())
                                         setShowSaveTemplate(true)
@@ -1430,85 +1463,42 @@ export default function EstimatorClient({
                         </div>
                     </div>
 
-                    {/* HUD Row 2: Margin slider */}
                     {hasOrderQty && orderQuote && (
-                        <div className="flex items-center gap-2 sm:gap-4 bg-orange-50/50 p-2 sm:p-2.5 rounded-xl border border-orange-100">
-                            <div className="shrink-0 w-16 sm:w-auto">
-                                <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t('estimator.hud.margin')}</p>
-                                <p className="text-sm font-black text-brand-accent leading-none mt-0.5">{state.profitPct.toFixed(1)}%</p>
+                        <div className="flex items-center gap-3 border-t border-[var(--color-primary-active)] pt-3">
+                            <div className="shrink-0">
+                                <p className="text-[11px] text-[var(--color-muted)]">{t('estimator.hud.margin')}</p>
                             </div>
                             <input
                                 type="range"
                                 min={0} max={100} step={0.5}
                                 value={state.profitPct}
                                 onChange={e => dispatch({ type: 'SET', field: 'profitPct', value: Number(e.target.value) })}
-                                className="flex-1 h-2 rounded-full bg-slate-200 appearance-none cursor-pointer accent-brand-accent"
+                                className="h-2 flex-1 cursor-pointer appearance-none rounded-full accent-[var(--color-yarn-orange)]"
                             />
-                            <div className="shrink-0 text-right w-20 sm:w-auto">
-                                <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-wider">{t('estimator.hud.net_profit')}</p>
-                                <p className="text-[13px] sm:text-sm font-black text-emerald-600 leading-none mt-0.5">
+                            <p className="shrink-0 text-sm font-medium text-[var(--color-yarn-orange)]">{state.profitPct.toFixed(1)}%</p>
+                            <div className="h-6 w-px bg-[var(--color-primary-active)]" />
+                            <div className="shrink-0 text-right">
+                                <p className="text-[11px] text-[var(--color-muted)]">{t('estimator.hud.net_profit')}</p>
+                                <p className="text-sm font-medium leading-none text-[var(--color-factory-green)]">
                                     ₹{orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
                         </div>
                     )}
-
-                    {/* HUD Row 2b: Contribution Margin Floor (visible when order qty set) */}
-                    {hasOrderQty && (
-                        <div className="flex items-center gap-4 px-1">
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Break-even (full)</span>
-                                <span className="text-[11px] font-black font-mono text-slate-600">₹{totals.totalProductionCostPerM.toFixed(2)}/m</span>
-                            </div>
-                            <span className="text-slate-300">·</span>
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Direct-only floor</span>
-                                <span className="text-[11px] font-black font-mono text-emerald-600" title="Minimum price to cover variable costs only (yarn + weave + warping)">
-                                    ₹{totals.directCostPerM.toFixed(2)}/m
-                                </span>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* HUD Row 3: Pills */}
-                    <div className="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pt-0.5">
-                        <CostPill label="🧶 Warp"           value={totals.warpCostPerM}    type="warp" />
-                        <CostPill label="🧵 Weft"           value={totals.weftCostPerM}    type="weft" />
-                        <CostPill label="⚙️ Weave"          value={totals.weaveCostPerM}   type="weave" />
-                        <CostPill label="🔀 Warp+Size"      value={totals.warpingAndSizingPerM} />
-                        {totals.windingPerM > 0     && <CostPill label="🌀 Winding"    value={totals.windingPerM} />}
-                        {totals.processingPerM > 0  && <CostPill label="🎨 Processing" value={totals.processingPerM} type="primary" />}
-                        {totals.finishingPerM > 0   && <CostPill label="✨ Finishing"  value={totals.finishingPerM} type="primary" />}
-                        <CostPill label="🏭 Overhead"       value={totals.overheadPerM} />
-                    </div>
                 </div>
             </div>
 
             {/* ── MAIN FORM ────────────────────────────────────────────── */}
             <div className="max-w-6xl mx-auto space-y-7">
-                {estimateWarnings.length > 0 && (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-3 sm:px-4 shadow-sm shadow-amber-200/20">
-                        <div className="flex items-start gap-3">
-                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                            <div className="min-w-0">
-                                <p className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-amber-800">Before saving, check these costing inputs</p>
-                                <p className="mt-1 text-xs font-medium leading-relaxed text-amber-700">
-                                    {estimateWarnings.join(' · ')}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {/* Saved Qualities Row */}
                 {templates.length > 0 && (
                     <div className="space-y-2.5">
                         <div className="flex flex-wrap items-center gap-2">
-                            <History className="h-3.5 w-3.5 text-slate-400" />
-                            <p className="text-[11px] uppercase tracking-widest text-slate-500 font-bold">{t('estimator.quality.myQualities')}</p>
-                            <span className="ml-auto text-[10px] text-slate-400 font-medium hidden xs:inline">{t('estimator.quality.hint')}</span>
+                            <History className="h-3.5 w-3.5 text-[var(--color-muted)]" />
+                            <p className="text-[11px] font-medium uppercase tracking-widest text-[var(--color-muted)]">{t('estimator.quality.myQualities')}</p>
+                            <span className="ml-auto hidden text-[11px] text-[var(--color-muted)] xs:inline">{t('estimator.quality.hint')}</span>
                         </div>
-                        <p className="text-xs text-slate-400 leading-normal">{t('estimator.quality.myQualitiesHelper')}</p>
+                        <p className="text-xs text-[var(--color-muted)] leading-normal">{t('estimator.quality.myQualitiesHelper')}</p>
                         {/* Search — only shown when there are more than 5 qualities */}
                         {templates.length > 5 && (
                             <div className="relative">
@@ -1518,7 +1508,7 @@ export default function EstimatorClient({
                                     value={templateSearch}
                                     onChange={e => setTemplateSearch(e.target.value)}
                                     placeholder={t('estimator.quality.searchPlaceholder').replace('{count}', String(templates.length))}
-                                    className="w-full pl-8 pr-8 py-1.5 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand-accent/20 focus:border-brand-accent"
+                                    className="w-full rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] py-1.5 pl-8 pr-8 text-xs focus:border-[var(--color-yarn-orange)] focus:outline-none focus:ring-2 focus:ring-[var(--color-yarn-orange)]/20"
                                 />
                                 {templateSearch && (
                                     <button
@@ -1544,7 +1534,7 @@ export default function EstimatorClient({
                                 onClick={() => {
                                     setShowConfirmNewQuality(true)
                                 }}
-                                className="shrink-0 snap-start rounded-xl px-4 h-10 border-emerald-200 bg-emerald-50/50 text-emerald-600 hover:bg-emerald-100/50 hover:border-emerald-300 transition-all gap-1.5 font-bold shadow-sm"
+                                className="h-8 shrink-0 snap-start rounded-full border border-dashed border-[var(--color-hairline)] bg-transparent px-3.5 text-xs font-medium text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]"
                              >
                                 <Plus className="h-3.5 w-3.5" />
                                 {t('estimator.quality.newQuality')}
@@ -1556,7 +1546,7 @@ export default function EstimatorClient({
                                 onClick={() => {
                                     openSaveTemplateDialog()
                                 }}
-                                className="shrink-0 snap-start rounded-xl px-4 h-10 border-indigo-200 bg-indigo-50/50 text-indigo-600 hover:bg-indigo-100/50 hover:border-indigo-300 transition-all gap-1.5 font-bold shadow-sm"
+                                className="h-8 shrink-0 snap-start rounded-full border border-[var(--color-hairline)] bg-transparent px-3.5 text-xs font-medium text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]"
                              >
                                 <Save className="h-3.5 w-3.5" />
                                 {t('estimator.quality.saveCurrentAsQuality')}
@@ -1568,10 +1558,10 @@ export default function EstimatorClient({
                                         <button
                                             onClick={() => applyTemplate(tpl)}
                                             onContextMenu={e => { e.preventDefault(); openEditRates(tpl) }}
-                                            className={`min-w-28 rounded-xl px-4 py-2.5 text-xs font-bold border transition-all shadow-sm ${
+                                            className={`min-w-28 rounded-full border px-4 py-2 text-xs font-medium transition-all ${
                                                 isActive
-                                                    ? 'bg-brand-accent border-brand-accent text-white shadow-brand-accent/20'
-                                                    : 'bg-white border-slate-200 text-slate-600 hover:border-brand-accent/50 hover:bg-slate-50'
+                                                    ? 'border-[var(--color-yarn-orange)] bg-[var(--color-warning-amber-soft)] text-[var(--color-yarn-orange-dark)]'
+                                                    : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)] text-[var(--color-muted)] hover:border-[var(--color-yarn-orange)]'
                                             } pr-16`}
                                         >
                                             {tpl.name}
@@ -1617,8 +1607,8 @@ export default function EstimatorClient({
                 )}
 
                 {/* 1. Order Basics */}
-                <Card className="border-border/60 shadow-sm overflow-hidden">
-                    <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="indigo" />
+                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
+                    <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" />
                     <CardContent className="p-4 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Party / Customer (only visible in quote mode) */}
@@ -1692,12 +1682,13 @@ export default function EstimatorClient({
                 </Card>
 
                 {/* 2. Warp Yarn Rows */}
-                <Card className="border-border/60 shadow-sm overflow-hidden">
+                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
                     <SectionHeader 
                         title={t('estimator.warp.title')} 
                         icon={Sparkles} 
-                        accent="indigo"
-                        badgeContent={<div className="text-[11px] font-mono font-bold text-indigo-700 bg-white/60 px-2 py-0.5 rounded-md border border-indigo-100">₹{totals.warpCostPerM.toFixed(2)}/m</div>}
+                        accent="warp"
+                        detail={<p className="text-[11px] text-[var(--color-muted)]">{state.warpCrimpPct || 0}% crimp · {state.yarnShortagePct || 0}% waste → <span className="font-semibold text-[var(--color-warning-amber)]">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}% total</span></p>}
+                        badgeContent={<SectionCostPill value={totals.warpCostPerM} />}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         {/* Global Defaults Block */}
@@ -1737,7 +1728,7 @@ export default function EstimatorClient({
                                     <Calculator className="h-3.5 w-3.5 text-indigo-500" />
                                     <span className="text-[10px] font-bold text-indigo-800 uppercase tracking-wider">Effective Total Shortage</span>
                                 </div>
-                                <span className="text-[11px] font-mono font-black text-indigo-700 flex items-center gap-2">
+                                <span className="text-[11px] font-mono font-semibold text-indigo-700 flex items-center gap-2">
                                     <span>{state.warpCrimpPct || 0}% + {state.yarnShortagePct || 0}% =</span>
                                     <span className="text-sm bg-white px-2 py-0.5 rounded border border-indigo-200">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}%</span>
                                 </span>
@@ -1778,6 +1769,7 @@ export default function EstimatorClient({
                                                 value={row.yarnRate} 
                                                 onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })} 
                                                 step={1} 
+                                                attentionWhenEmpty
                                                 warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
                                                 onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
                                             />
@@ -1814,8 +1806,8 @@ export default function EstimatorClient({
                                             />
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-wider">{t('estimator.warp.beam_capacity')}</p>
-                                            <p className="text-lg font-black font-mono text-indigo-600 leading-none">
+                                            <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">{t('estimator.warp.beam_capacity')}</p>
+                                            <p className="text-lg font-semibold font-mono text-indigo-600 leading-none">
                                                 {beamM > 0 ? `≈ ${beamM.toFixed(0)} m` : '— m'}
                                             </p>
                                             <p className="text-[9px] text-slate-400 mt-0.5">cloth per beam</p>
@@ -1827,7 +1819,7 @@ export default function EstimatorClient({
                                             <div className="flex items-center gap-2">
                                                 <Layers className="h-4 w-4 text-indigo-500 shrink-0" />
                                                 <div>
-                                                    <p className="text-[10px] uppercase font-black text-indigo-600 tracking-wider">Beams Needed</p>
+                                                    <p className="text-[10px] uppercase font-semibold text-indigo-600 tracking-wider">Beams Needed</p>
                                                     {beamsNeeded !== null ? (
                                                     <p className="text-[9px] text-slate-500 font-medium">
                                                             for {(orderQty!).toLocaleString('en-IN')} m order
@@ -1842,13 +1834,13 @@ export default function EstimatorClient({
                                             <div className="text-right shrink-0">
                                                 {beamsNeeded !== null ? (
                                                     <>
-                                                        <p className="text-2xl font-black font-mono text-indigo-700 leading-none">{beamsNeeded}</p>
+                                                        <p className="text-2xl font-semibold font-mono text-indigo-700 leading-none">{beamsNeeded}</p>
                                                         <p className="text-[9px] text-slate-500 font-bold mt-0.5">
                                                             beams × {beamM.toFixed(0)} m
                                                         </p>
                                                     </>
                                                 ) : (
-                                                    <p className="text-xl font-black font-mono text-slate-300 leading-none">—</p>
+                                                    <p className="text-xl font-semibold font-mono text-slate-300 leading-none">—</p>
                                                 )}
                                             </div>
                                         </div>
@@ -1860,12 +1852,12 @@ export default function EstimatorClient({
                 </Card>
 
                 {/* 3. Weft Yarn Rows */}
-                <Card className="border-border/60 shadow-sm overflow-hidden">
+                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
                     <SectionHeader 
                         title={t('estimator.weft.title')} 
                         icon={Scissors} 
-                        accent="emerald"
-                        badgeContent={<div className="text-[11px] font-mono font-bold text-emerald-700 bg-white/60 px-2 py-0.5 rounded-md border border-emerald-100">₹{totals.weftCostPerM.toFixed(2)}/m</div>}
+                        accent="weft"
+                        badgeContent={<SectionCostPill value={totals.weftCostPerM} />}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         {/* Global Defaults Sync Readout */}
@@ -1875,7 +1867,7 @@ export default function EstimatorClient({
                                     <Calculator className="h-3.5 w-3.5 text-emerald-500" />
                                     <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Effective Total Shortage</span>
                                 </div>
-                                <span className="text-[11px] font-mono font-black text-emerald-700 flex items-center gap-2">
+                                <span className="text-[11px] font-mono font-semibold text-emerald-700 flex items-center gap-2">
                                     <span>{state.warpCrimpPct || 0}% + {state.yarnShortagePct || 0}% =</span>
                                     <span className="text-sm bg-white px-2 py-0.5 rounded border border-emerald-200">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}%</span>
                                 </span>
@@ -1926,6 +1918,7 @@ export default function EstimatorClient({
                                                 label={t('estimator.field_labels.rate_kg')} 
                                                 value={row.yarnRate} 
                                                 onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })} 
+                                                attentionWhenEmpty
                                                 warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
                                                 onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
                                             />
@@ -1946,8 +1939,8 @@ export default function EstimatorClient({
                 </Card>
 
                 {/* 4. Weave Cost */}
-                <Card className="border-border/60 shadow-sm overflow-hidden">
-                    <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="amber" />
+                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
+                    <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="weave" badgeContent={<SectionCostPill value={totals.weaveCostPerM} />} />
                     <CardContent className="p-5 sm:p-6 space-y-6">
 
                         {/* ── Loom Type Selector ── renders above Loom Wage ── */}
@@ -1975,19 +1968,19 @@ export default function EstimatorClient({
                                 ? (perPickCostRupees * totalPicks).toFixed(2)
                                 : '0.00'
                             return (
-                                <div className="rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/40 p-4 space-y-3">
+                                <div className="rounded-[10px] border border-[var(--color-warning-amber-soft)] bg-[var(--color-canvas)] px-4 py-3.5">
                                     <div className="flex items-center gap-2">
-                                        <Banknote className="h-4 w-4 text-amber-600" />
-                                        <p className="text-[11px] uppercase tracking-widest font-black text-amber-700">Loom Weave Wage</p>
-                                        <span className="ml-auto text-[10px] text-amber-500 font-medium bg-amber-100 px-2 py-0.5 rounded-full">₹/m ↔ paise/pick</span>
+                                        <Banknote className="h-4 w-4 text-[var(--color-warning-amber)]" />
+                                        <p className="text-[11px] font-semibold uppercase text-[var(--color-warning-amber)]">Loom Weave Wage</p>
+                                        <span className="ml-auto rounded-full bg-[var(--color-warning-amber-soft)] px-2 py-0.5 text-[10px] text-[var(--color-warning-amber)]">₹/m ↔ paise/pick</span>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="mt-3 grid grid-cols-1 items-end gap-3 md:grid-cols-[1fr_auto_1fr]">
                                         {/* Input: ₹ per meter */}
                                         <div className="space-y-1.5">
-                                            <Label className="text-[10px] uppercase tracking-wider font-semibold text-amber-700/80">Wage per Meter (₹/m)</Label>
+                                            <Label className="text-[10px] uppercase tracking-wider font-medium text-[var(--color-warning-amber)]">Wage per Meter (₹/m)</Label>
                                             <div className="relative group">
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500 pointer-events-none">₹</span>
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-[var(--color-muted)] pointer-events-none">₹</span>
                                                 <Input
                                                     type="number"
                                                     min={0}
@@ -2004,16 +1997,18 @@ export default function EstimatorClient({
                                                         }
                                                     }}
                                                     onBlur={() => setWagePerMInput('')}
-                                                    className="h-11 text-sm font-mono font-bold text-center pl-8 pr-14 bg-white border-amber-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full"
+                                                    className="h-10 rounded-[10px] border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-8 pr-14 text-center text-sm font-medium [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/m</span>
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">/m</span>
                                             </div>
-                                            <p className="text-[10px] text-amber-600/70 font-medium">e.g. 8 for ₹8 per meter loom wage</p>
+                                            <InlineInputWarning show={state.perPickCostPaisa <= 0}>Required</InlineInputWarning>
                                         </div>
+
+                                        <div className="hidden rounded-[6px] bg-[var(--color-warning-amber-soft)] px-2 py-1 text-center text-[11px] text-[var(--color-warning-amber)] md:block">↔</div>
 
                                         {/* Display: derived paise/pick + live impact */}
                                         <div className="space-y-1.5">
-                                            <Label className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">Paisa per pick</Label>
+                                            <Label className="text-[10px] uppercase tracking-wider font-medium text-[var(--color-muted)]">Paisa per pick</Label>
                                             <div className="relative group">
                                                 <Input
                                                     type="number"
@@ -2025,25 +2020,19 @@ export default function EstimatorClient({
                                                         dispatch({ type: 'SET', field: 'perPickCostPaisa', value: v / 100 })
                                                         setWagePerMInput('')
                                                     }}
-                                                    className="h-11 text-sm font-mono font-bold text-center pr-16 bg-white border-slate-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-300/30 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full"
+                                                    className={`h-10 rounded-[10px] border pr-16 text-center text-sm font-medium [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+                                                        state.perPickCostPaisa <= 0 ? 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]' : 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]'
+                                                    }`}
                                                 />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">paise</span>
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">paise</span>
                                             </div>
-                                            <p className="text-[10px] text-slate-400 font-medium">Enter paise per pick. Example: 16 means ₹0.16/pick.</p>
+                                            <InlineInputWarning show={state.perPickCostPaisa <= 0}>Required</InlineInputWarning>
                                         </div>
                                     </div>
 
-                                    {/* Live equivalence banner */}
-                                    <div className="flex items-center justify-between bg-white/70 border border-amber-100 rounded-lg px-3 py-2">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">At {totalPicks} picks</span>
-                                            <span className="text-[10px] text-slate-400">→</span>
-                                            <span className="text-[11px] font-black font-mono text-amber-800">₹{derivedWagePerM}/m</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="text-[10px] text-slate-400 font-medium">Weave cost</span>
-                                            <span className="text-sm font-black font-mono text-amber-700">₹{totals.weaveCostPerM.toFixed(2)}</span>
-                                        </div>
+                                    <div className="mt-3 flex items-center justify-between border-t border-[var(--color-warning-amber-soft)] pt-3">
+                                        <span className="text-[11px] text-[var(--color-warning-amber)]">At {totalPicks} picks</span>
+                                        <span className="text-sm font-semibold text-[var(--color-warning-amber)]">₹{totals.weaveCostPerM.toFixed(2)}/m</span>
                                     </div>
 
                                     {/* Unusually High Weave Cost Warning */}
@@ -2064,8 +2053,8 @@ export default function EstimatorClient({
                 </Card>
 
                 {/* 5. Warping & Sizing */}
-                <Card className="border-border/60 shadow-sm overflow-hidden">
-                    <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="violet" />
+                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
+                    <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} />} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <NumField label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} />
@@ -2073,7 +2062,7 @@ export default function EstimatorClient({
 
                         {/* Sizing: in-house vs outsourced toggle (Gap fix: zero is now explicit) */}
                         <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-3 space-y-2">
-                            <p className="text-[10px] uppercase font-black text-violet-700/80 tracking-wider">Sizing</p>
+                            <p className="text-[10px] uppercase font-semibold text-violet-700/80 tracking-wider">Sizing</p>
                             <div className="flex gap-4">
                                 <label className="flex items-center gap-2 cursor-pointer group">
                                     <input
@@ -2127,17 +2116,15 @@ export default function EstimatorClient({
                 </Card>
 
                 {/* 5b. Factory Overhead — Itemized Breakdown */}
-                <Card className="border-border/60 shadow-sm overflow-hidden">
+                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
                     <SectionHeader
                         title={t('estimator.overhead.title')}
                         icon={Calculator}
-                        accent="rose"
+                        accent="overhead"
                         badgeContent={
                             <div className="flex items-center gap-2">
-                                <span className="text-[11px] font-mono font-bold text-rose-700 bg-white/60 px-2 py-0.5 rounded-md border border-rose-100">
-                                    ₹{totals.overheadPerM.toFixed(2)}/m
-                                </span>
-                                <span className="text-[10px] font-bold text-slate-400 bg-white/60 px-2 py-0.5 rounded-md border border-slate-200">
+                                <SectionCostPill value={totals.overheadPerM} />
+                                <span className="rounded-full bg-[var(--color-surface-soft)] px-2.5 py-[3px] text-[10px] font-medium text-[var(--color-muted)]">
                                     {totals.capacityUtilisationPct.toFixed(1)}% Capacity
                                 </span>
                             </div>
@@ -2146,16 +2133,16 @@ export default function EstimatorClient({
                     <CardContent className="p-5 sm:p-6 space-y-6">
                         
                         {/* A. Factory Capacity Section */}
-                        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-4">
+                        <div className="space-y-3">
                             <div className="flex items-center justify-between gap-2 mb-1">
                                 <div className="flex items-center gap-2">
-                                    <Zap className="h-3.5 w-3.5 text-brand-accent" />
-                                    <h4 className="text-[10px] uppercase font-black text-slate-500 tracking-wider leading-none">Factory Capacity Configuration</h4>
+                                    <Zap className="h-3.5 w-3.5 text-[var(--color-yarn-orange)]" />
+                                    <h4 className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)] leading-none">Factory Capacity Configuration</h4>
                                 </div>
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 text-[9px] font-bold text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 px-2"
+                                    className="h-6 px-2 text-[11px] font-medium text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]"
                                     onClick={handleSaveProfile}
                                     disabled={saving}
                                 >
@@ -2163,20 +2150,20 @@ export default function EstimatorClient({
                                     Update Baseline
                                 </Button>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                                <NumField 
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                <CapacityMetricField
                                     label="Loom Count" 
                                     value={state.loomCount} 
                                     onChange={v => dispatch({ type: 'SET', field: 'loomCount', value: v ?? 0 })} 
                                     unit="looms" 
                                 />
-                                <NumField 
+                                <CapacityMetricField
                                     label="Avg Daily Output" 
                                     value={state.avgOutputPerLoomPerDay} 
                                     onChange={v => dispatch({ type: 'SET', field: 'avgOutputPerLoomPerDay', value: v ?? 0 })} 
                                     unit="m/day" 
                                 />
-                                <NumField 
+                                <CapacityMetricField
                                     label="Working Days" 
                                     value={state.monthlyWorkingDays} 
                                     onChange={v => dispatch({ type: 'SET', field: 'monthlyWorkingDays', value: v ?? 0 })} 
@@ -2185,28 +2172,28 @@ export default function EstimatorClient({
                                 />
                             </div>
                             {state.loomCount > 0 && state.avgOutputPerLoomPerDay > 0 && (
-                                <div className="flex items-center justify-between pt-1 border-t border-slate-200/50">
-                                    <span className="text-[10px] font-bold text-slate-400">Monthly Rated Capacity:</span>
-                                    <span className="text-xs font-mono font-bold text-slate-600">{totals.ratedCapacityM.toLocaleString()} metres</span>
+                                <div className="flex items-center justify-between border-t border-[var(--color-hairline)] pt-2">
+                                    <span className="text-[10px] font-medium text-[var(--color-muted)]">Monthly Rated Capacity:</span>
+                                    <span className="text-xs font-mono font-medium text-[var(--color-ink)]">{totals.ratedCapacityM.toLocaleString()} metres</span>
                                 </div>
                             )}
                         </div>
 
                         {/* B. Itemized Overhead Rows */}
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between mb-1">
-                                <p className="text-[10px] uppercase tracking-widest font-black text-slate-500">Monthly Fixed Costs</p>
+                            <div className="mt-4 mb-2 flex items-center justify-between">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Monthly Fixed Costs</p>
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 text-[9px] font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                                    className="h-7 rounded-[6px] border border-dashed border-[var(--color-hairline)] px-2 text-[11px] font-medium text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)]"
                                     onClick={() => dispatch({ type: 'ADD_OVERHEAD_ITEM' })}
                                 >
                                     <Plus className="h-3 w-3 mr-1" /> New Item
                                 </Button>
                             </div>
                             
-                            <div className="space-y-2">
+                            <div className="divide-y divide-[var(--color-hairline)]">
                                 {totals.resolvedItems.map(item => {
                                     const isPreset = item.isPreset
                                     const isLocked = item.isLocked
@@ -2214,34 +2201,32 @@ export default function EstimatorClient({
                                     const isDepreciation = item.category === 'depreciation'
                                     
                                     return (
-                                        <div key={item.id} className={`group relative flex flex-col gap-2 rounded-xl border p-3 transition-colors ${
-                                            isLocked ? 'bg-indigo-50/30 border-indigo-100' : 'bg-white border-slate-200'
-                                        }`}>
+                                        <div key={item.id} className={`group relative flex flex-col gap-2 py-2.5 ${isLocked ? 'opacity-50' : ''}`}>
                                             <div className="flex items-center gap-3">
                                                 {/* Label / Preset Indicator */}
                                                 <div className="flex-1 flex items-center gap-2">
-                                                    {isLocked && <Lock className="h-3 w-3 text-indigo-400 shrink-0" />}
+                                                    {isLocked && <Lock className="h-3 w-3 text-[var(--color-muted)] shrink-0" />}
                                                     <Input
                                                         value={item.label}
                                                         disabled={isPreset}
                                                         onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'label', value: e.target.value })}
-                                                        className={`h-7 text-xs font-bold border-0 bg-transparent p-0 focus:ring-0 ${isPreset ? 'text-slate-700' : 'text-slate-500'}`}
+                                                        className={`h-7 border-0 bg-transparent p-0 text-[13px] font-medium focus:ring-0 ${isPreset ? 'text-[var(--color-ink)]' : 'text-[var(--color-muted)]'}`}
                                                     />
+                                                    {isLocked && <span className="rounded-[4px] bg-[var(--color-surface-soft)] px-1.5 py-0.5 text-[10px] text-[var(--color-muted)]">auto-calc</span>}
+                                                    {isElectricity && <span className="rounded-[4px] bg-[var(--color-surface-soft)] px-1.5 py-0.5 text-[10px] text-[var(--color-muted)]">per loom helper</span>}
                                                 </div>
 
                                                 {/* Amount Display/Input */}
                                                 <div className="relative shrink-0 w-32">
-                                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">₹</span>
+                                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">₹</span>
                                                     <Input
                                                         type="number"
                                                         value={item.monthlyAmount}
                                                         disabled={isLocked}
                                                         onChange={e => dispatch({ type: 'UPDATE_OVERHEAD_ITEM', id: item.id, field: 'monthlyAmount', value: Number(e.target.value) })}
-                                                        className={`h-8 text-[11px] font-mono font-bold text-right pr-9 pl-6 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full ${
-                                                            isLocked ? 'bg-indigo-50/50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-200'
-                                                        }`}
+                                                        className="h-8 min-w-[120px] rounded-[7px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-6 pr-9 text-right text-[11px] font-medium [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                     />
-                                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">/mo</span>
+                                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-[var(--color-muted)] font-medium pointer-events-none">/mo</span>
                                                 </div>
 
                                                 {!isPreset && (
@@ -2271,7 +2256,7 @@ export default function EstimatorClient({
                                                     {item.isLocked && (
                                                         <>
                                                             <div className="flex flex-col gap-0.5">
-                                                                <span className="text-[8px] uppercase font-black text-slate-400">Units/Loom</span>
+                                                                <span className="text-[8px] uppercase font-semibold text-slate-400">Units/Loom</span>
                                                                 <Input 
                                                                     type="number" 
                                                                     value={(item.meta as ElectricityMeta)?.unitsPerLoomPerMonth ?? 0} 
@@ -2280,7 +2265,7 @@ export default function EstimatorClient({
                                                                 />
                                                             </div>
                                                             <div className="flex flex-col gap-0.5">
-                                                                <span className="text-[8px] uppercase font-black text-slate-400">Rate/Unit</span>
+                                                                <span className="text-[8px] uppercase font-semibold text-slate-400">Rate/Unit</span>
                                                                 <Input 
                                                                     type="number" 
                                                                     value={(item.meta as ElectricityMeta)?.ratePerUnit ?? 0} 
@@ -2296,7 +2281,7 @@ export default function EstimatorClient({
                                             {isDepreciation && item.meta && (
                                                 <div className="grid grid-cols-2 gap-3 mt-1 pt-2 border-t border-indigo-100/50">
                                                     <div className="flex flex-col gap-1">
-                                                        <span className="text-[8px] uppercase font-black text-slate-400">Machine Value (avg/loom)</span>
+                                                        <span className="text-[8px] uppercase font-semibold text-slate-400">Machine Value (avg/loom)</span>
                                                         <div className="relative">
                                                             <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">₹</span>
                                                             <Input 
@@ -2308,7 +2293,7 @@ export default function EstimatorClient({
                                                         </div>
                                                     </div>
                                                     <div className="flex flex-col gap-1">
-                                                        <span className="text-[8px] uppercase font-black text-slate-400">Lifespan (Years)</span>
+                                                        <span className="text-[8px] uppercase font-semibold text-slate-400">Lifespan (Years)</span>
                                                         <Input 
                                                             type="number" 
                                                             value={(item.meta as DepreciationMeta)?.usefulLifeYears ?? 10} 
@@ -2325,19 +2310,20 @@ export default function EstimatorClient({
                         </div>
 
                         {/* C. Denominator & Summary Block */}
-                        <div className="pt-4 border-t border-slate-100 space-y-4">
-                            <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="space-y-4 border-t border-[var(--color-hairline)] pt-4">
+                            <div className="space-y-2">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Monthly Output</p>
                                 {/* Monthly Output & Suggestions */}
-                                <div className="flex-1 space-y-3">
+                                <div className="space-y-3">
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
-                                            <Label className="text-[10px] uppercase font-black text-slate-500">Monthly Output (Actual/Target)</Label>
+                                            <Label className="text-[10px] font-medium uppercase text-[var(--color-muted)]">Monthly Output (Actual/Target)</Label>
                                             <Button 
                                                 variant="ghost" 
                                                 size="sm" 
                                                 onClick={handleAutoSuggestOutput}
                                                 disabled={isSuggestingOutput}
-                                                className="h-5 px-2 text-[10px] font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                                                className="h-5 px-2 text-[10px] font-medium text-[var(--color-yarn-orange)] hover:bg-[var(--color-surface-soft)]"
                                             >
                                                 {isSuggestingOutput ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Sparkles className="h-3 w-3 mr-1" />}
                                                 Suggest
@@ -2348,9 +2334,9 @@ export default function EstimatorClient({
                                                 type="number"
                                                 value={state.monthlyOutputM}
                                                 onChange={e => dispatch({ type: 'SET', field: 'monthlyOutputM', value: Number(e.target.value) })}
-                                                className="h-10 text-sm font-mono font-bold text-center pr-9 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className="h-10 rounded-[9px] border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pr-9 text-center text-sm font-medium [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                             />
-                                            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">m</span>
+                                            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[var(--color-muted)] font-medium pointer-events-none">m</span>
                                         </div>
                                     </div>
 
@@ -2369,106 +2355,72 @@ export default function EstimatorClient({
                                                     onClick={() => { dispatch({ type: 'SET', field: 'monthlyOutputM', value: outputSuggestion.avg30Days }); setOutputSuggestion(null); }}
                                                     className="bg-white border border-indigo-100 rounded-lg p-2 text-left hover:border-indigo-300 transition-all group"
                                                 >
-                                                    <p className="text-[8px] uppercase font-black text-slate-400">Last 30 Days</p>
+                                                    <p className="text-[8px] uppercase font-semibold text-slate-400">Last 30 Days</p>
                                                     <p className="text-xs font-mono font-bold text-indigo-600 group-hover:text-indigo-700">{outputSuggestion.avg30Days.toLocaleString()}m</p>
                                                 </button>
                                                 <button 
                                                     onClick={() => { dispatch({ type: 'SET', field: 'monthlyOutputM', value: outputSuggestion.avg90Days }); setOutputSuggestion(null); }}
                                                     className="bg-white border border-indigo-100 rounded-lg p-2 text-left hover:border-indigo-300 transition-all group"
                                                 >
-                                                    <p className="text-[8px] uppercase font-black text-slate-400">Last 90 Days</p>
+                                                    <p className="text-[8px] uppercase font-semibold text-slate-400">Last 90 Days</p>
                                                     <p className="text-xs font-mono font-bold text-indigo-600 group-hover:text-indigo-700">{outputSuggestion.avg90Days.toLocaleString()}m</p>
                                                 </button>
                                             </div>
                                         </motion.div>
-                                    )}
-                                </div>
+	                                    )}
+	                                </div>
+	                            </div>
 
-                                {/* Overhead Summary Block */}
-                                <div className="shrink-0 sm:w-48 bg-orange-50/50 rounded-xl p-4 border-2 border-orange-100 space-y-4 shadow-sm">
-                                    <div className="space-y-1">
-                                        <p className="text-[9px] uppercase font-black text-orange-600/70 tracking-wider">Total Monthly Cost</p>
-                                        <div className="flex items-baseline gap-1 text-orange-600">
-                                            <span className="text-sm font-bold opacity-70">₹</span>
-                                            <span className="text-2xl font-black font-mono tracking-tighter">
-                                                {totals.overheadTotalMonthly.toLocaleString('en-IN')}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2 border-t border-orange-200/50 pt-3">
-                                        <div className="flex justify-between items-baseline">
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">100% Capacity Cost</span>
-                                            <div className="flex items-baseline gap-0.5 text-emerald-600">
-                                                <span className="text-[8px] font-bold">₹</span>
-                                                <span className="text-[10px] font-mono font-bold">{totals.overheadPerMAtCapacity.toFixed(2)}/m</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex justify-between items-baseline">
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">Your Actual Cost</span>
-                                            <div className="flex items-baseline gap-0.5 text-rose-600">
-                                                <span className="text-[8px] font-bold">₹</span>
-                                                <span className="text-[11px] font-mono font-black">{totals.overheadPerM.toFixed(2)}/m</span>
-                                            </div>
-                                        </div>
-                                    </div>
+	                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
+                                    <p className="text-[10px] text-[var(--color-muted)]">Total monthly cost</p>
+                                    <p className={`text-base font-semibold ${totals.overheadTotalMonthly <= 0 ? 'text-[var(--color-risk-red)]' : 'text-[var(--color-ink)]'}`}>
+                                        ₹{totals.overheadTotalMonthly.toLocaleString('en-IN')}
+                                    </p>
+                                </div>
+                                <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
+                                    <p className="text-[10px] text-[var(--color-muted)]">100% capacity cost</p>
+                                    <p className="text-base font-semibold text-[var(--color-ink)]">₹{totals.overheadPerMAtCapacity.toFixed(2)}/m</p>
+                                </div>
+                                <div className="rounded-[9px] bg-[var(--color-surface-soft)] px-3 py-2.5">
+                                    <p className="text-[10px] text-[var(--color-muted)]">Your actual cost</p>
+                                    <p className={`text-base font-semibold ${totals.overheadPerM > 0 ? 'text-[var(--color-factory-green)]' : 'text-[var(--color-ink)]'}`}>₹{totals.overheadPerM.toFixed(2)}/m</p>
                                 </div>
                             </div>
+                            {isZeroConfig && (
+                                <p className="text-[11px] text-[var(--color-warning-amber)]">Factory overhead items total is zero. Estimates may miss fixed cost recovery.</p>
+                            )}
 
-                            {/* Validation Banners (Pilot Safety Rails) */}
                             <div className="space-y-2">
-                                {isZeroConfig && (
-                                    <div className="flex items-center gap-3 rounded-xl border border-rose-100 bg-rose-50/50 p-3">
-                                        <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0" />
-                                        <div>
-                                            <p className="text-[11px] font-black text-rose-700">⚠️ Overhead Configuration Missing</p>
-                                            <p className="text-[9.5px] font-bold text-rose-600/80 leading-tight">All factory overhead presets are currently at ₹0. Your estimates will be significantly inaccurate until you provide your monthly fixed costs.</p>
-                                        </div>
-                                    </div>
-                                )}
                                 
-                                {hasElectricityLeak && (
-                                    <div className="flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50/50 p-3">
-                                        <Zap className="h-4 w-4 text-amber-500 shrink-0" />
-                                        <div>
-                                            <p className="text-[11px] font-black text-amber-700">⚠️ Electricity Helper Inactive</p>
-                                            <p className="text-[9.5px] font-bold text-amber-600/80 leading-tight">The electricity calculator is enabled but missing units or rate data. Power costs are currently not being recovered.</p>
-                                        </div>
-                                    </div>
-                                )}
-
                                 {totals.costOfIdleCapacityMonthly > 500 && (
-                                    <div className="flex items-center gap-3 rounded-xl border border-rose-100 bg-rose-50/50 p-3">
-                                        <AlertCircle className="h-4 w-4 text-rose-500 shrink-0" />
+                                    <div className="flex items-center gap-3 rounded-[10px] border border-[var(--color-risk-red-soft)] bg-[var(--color-risk-red-soft)] p-3">
+                                        <AlertCircle className="h-4 w-4 text-[var(--color-risk-red)] shrink-0" />
                                         <div>
-                                            <p className="text-[11px] font-black text-rose-700">Cost of Idle Capacity: ₹{totals.costOfIdleCapacityMonthly.toLocaleString('en-IN')}/mo</p>
-                                            <p className="text-[9.5px] font-bold text-rose-600/80 leading-tight">Your factory is running at {totals.capacityUtilisationPct.toFixed(1)}% capacity. You are effectively losing money on unrecovered fixed costs.</p>
+                                            <p className="text-[11px] font-semibold text-[var(--color-risk-red)]">Cost of Idle Capacity: ₹{totals.costOfIdleCapacityMonthly.toLocaleString('en-IN')}/mo</p>
+                                            <p className="text-[9.5px] font-medium text-[var(--color-risk-red)] leading-tight">Your factory is running at {totals.capacityUtilisationPct.toFixed(1)}% capacity. You are effectively losing money on unrecovered fixed costs.</p>
                                         </div>
                                     </div>
                                 )}
                             </div>
 
                             {/* Direct Override Input & Safety Rail */}
-                            <div className={`rounded-xl border-2 transition-all ${
-                                state.overheadOverridePerM != null && state.overheadOverridePerM > 0
-                                    ? 'border-amber-400 bg-amber-50/60'
-                                    : 'border-dashed border-slate-200 bg-slate-50/40'
-                            } px-4 py-3 space-y-2`}>
-                                <div className="flex items-center justify-between">
+                            <div className="rounded-[9px] border border-dashed border-[var(--color-hairline)] px-3.5 py-2.5">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <p className="text-[10px] uppercase tracking-widest font-black text-slate-600">Direct Overhead Override (₹/m)</p>
-                                        <p className="text-[9.5px] text-slate-400 font-medium">Use this to force a specific overhead rate, e.g. from historical data</p>
+                                        <p className="text-[13px] font-medium text-[var(--color-ink)]">Direct overhead override</p>
+                                        <p className="text-[11px] text-[var(--color-muted)]">Force a specific overhead rate from historical data</p>
                                     </div>
                                     {state.overheadOverridePerM != null && state.overheadOverridePerM > 0 && (
                                         <button
                                             onClick={() => dispatch({ type: 'SET', field: 'overheadOverridePerM', value: null })}
-                                            className="text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg px-2 py-1 transition-all"
+                                            className="text-[10px] font-medium text-[var(--color-warning-amber)]"
                                         >
                                             Clear
                                         </button>
                                     )}
-                                </div>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500 pointer-events-none">₹</span>
+                                    <div className="relative w-full sm:w-[140px]">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-[var(--color-muted)] pointer-events-none">₹</span>
                                     <Input
                                         type="number"
                                         min={0}
@@ -2479,13 +2431,9 @@ export default function EstimatorClient({
                                             const v = e.target.value
                                             dispatch({ type: 'SET', field: 'overheadOverridePerM', value: v === '' ? null : Number(v) })
                                         }}
-                                        className={`h-10 text-sm font-mono font-bold pl-10 pr-20 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full ${
-                                            state.overheadOverridePerM != null && state.overheadOverridePerM > 0
-                                                ? 'border-amber-400 bg-white focus:border-amber-500 focus:ring-1 focus:ring-amber-300/50'
-                                                : 'border-slate-300 bg-white/50'
-                                        }`}
+                                        className="h-10 rounded-[9px] border-[var(--color-hairline)] bg-[var(--color-canvas-white)] pl-8 pr-4 text-sm font-medium [appearance:textfield] focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/30 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                     />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">PER METRE</span>
+                                    </div>
                                 </div>
 
                                 {state.overheadOverridePerM != null && state.overheadOverridePerM < totals.overheadPerM && (
@@ -2503,15 +2451,15 @@ export default function EstimatorClient({
                             {/* Live Summary */}
                             <div className="flex items-center justify-between bg-rose-50/70 border border-rose-100 rounded-xl px-4 py-3">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-rose-600/80 leading-none mb-1">{t('estimator.overhead.overhead_per_m')}</p>
-                                    <p className="text-2xl font-black font-mono text-rose-700 leading-none">₹{totals.overheadPerM.toFixed(2)}</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-600/80 leading-none mb-1">{t('estimator.overhead.overhead_per_m')}</p>
+                                    <p className="text-2xl font-semibold font-mono text-rose-700 leading-none">₹{totals.overheadPerM.toFixed(2)}</p>
                                     {state.overheadOverridePerM != null && state.overheadOverridePerM > 0 && (
                                         <p className="text-[9px] text-amber-600 font-bold mt-0.5">⚡ direct override</p>
                                     )}
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 leading-none mb-1">{t('estimator.overhead.effective_rate')}</p>
-                                    <p className="text-2xl font-black font-mono text-slate-700 leading-none">{totals.effectiveOverheadPct.toFixed(1)}%</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 leading-none mb-1">{t('estimator.overhead.effective_rate')}</p>
+                                    <p className="text-2xl font-semibold font-mono text-slate-700 leading-none">{totals.effectiveOverheadPct.toFixed(1)}%</p>
                                     <p className="text-[9px] text-slate-400 mt-0.5">{t('estimator.overhead.of_direct_cost')} ₹{totals.directCostPerM.toFixed(2)}/m</p>
                                 </div>
                             </div>
@@ -2521,8 +2469,8 @@ export default function EstimatorClient({
 
 
                 {/* 6. Optional Sections */}
-                <Card className="border-border/60 shadow-sm overflow-hidden">
-                    <SectionHeader title={t('estimator.post_processing.title')} icon={Palette} accent="orange" />
+                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
+                    <SectionHeader title={t('estimator.post_processing.title')} icon={Palette} accent="post" />
                     <CardContent className="p-5 sm:p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {state.enabledSections.winding ? (
@@ -2545,8 +2493,8 @@ export default function EstimatorClient({
                 </Card>
 
                 {/* 7. Simulation / Order */}
-                <Card className="border-border/60 shadow-sm overflow-hidden bg-slate-50/20">
-                    <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="emerald" />
+                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
+                    <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <NumField 
@@ -2556,6 +2504,7 @@ export default function EstimatorClient({
                                 unit="m" 
                                 step={100}
                                 placeholder="1000"
+                                attentionWhenEmpty
                                 hint={t('estimator.simulation.quantity_hint')}
                             />
                             {hasOrderQty && (
@@ -2678,7 +2627,7 @@ export default function EstimatorClient({
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.quality.qualityNameLabel')}</Label>
+                            <Label className="text-[10px] uppercase font-semibold text-slate-500">{t('estimator.quality.qualityNameLabel')}</Label>
                             <Input
                                 placeholder="Japan Satin, Canvas Shine"
                                 value={templateName}
@@ -2713,7 +2662,7 @@ export default function EstimatorClient({
                     </DialogHeader>
                     <div className="py-3 space-y-5">
                         <div className="space-y-1.5">
-                            <Label className="text-[10px] uppercase font-black text-slate-500">{t('estimator.quality.qualityNameLabel')}</Label>
+                            <Label className="text-[10px] uppercase font-semibold text-slate-500">{t('estimator.quality.qualityNameLabel')}</Label>
                             <Input
                                 value={editingTplName}
                                 onChange={e => setEditingTplName(e.target.value)}
@@ -2727,7 +2676,7 @@ export default function EstimatorClient({
                         {/* Warp rates */}
                         {editingWarpRates.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest font-black text-indigo-600">{t('estimator.quality.warpRates')}</p>
+                                <p className="text-[10px] uppercase tracking-widest font-semibold text-indigo-600">{t('estimator.quality.warpRates')}</p>
                                 {(editRatesTpl?.warp_rows ?? []).map((row: WarpRow, i: number) => (
                                     <div key={row.id} className="flex items-center gap-4 bg-indigo-50/50 border border-indigo-100/50 rounded-2xl px-4 py-3 shadow-sm transition-all hover:border-indigo-200 hover:bg-indigo-50">
                                         <div className="flex-1 min-w-0">
@@ -2744,7 +2693,7 @@ export default function EstimatorClient({
                                                 onChange={e => setEditingWarpRates(prev =>
                                                     prev.map(x => x.id === row.id ? { ...x, yarnRate: Number(e.target.value) } : x)
                                                 )}
-                                                className="h-10 text-sm font-mono font-black text-right pr-12 pl-8 border-indigo-100 focus:border-indigo-300 bg-white rounded-xl shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className="h-10 text-sm font-mono font-semibold text-right pr-12 pl-8 border-indigo-100 focus:border-indigo-300 bg-white rounded-xl shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/kg</span>
                                         </div>
@@ -2756,7 +2705,7 @@ export default function EstimatorClient({
                         {/* Weft rates */}
                         {editingWeftRates.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-[10px] uppercase tracking-widest font-black text-emerald-600">{t('estimator.quality.weftRates')}</p>
+                                <p className="text-[10px] uppercase tracking-widest font-semibold text-emerald-600">{t('estimator.quality.weftRates')}</p>
                                 {(editRatesTpl?.weft_rows ?? []).map((row: WeftRow, i: number) => (
                                     <div key={row.id} className="flex items-center gap-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl px-4 py-3 shadow-sm transition-all hover:border-emerald-200 hover:bg-emerald-50">
                                         <div className="flex-1 min-w-0">
@@ -2773,7 +2722,7 @@ export default function EstimatorClient({
                                                 onChange={e => setEditingWeftRates(prev =>
                                                     prev.map(x => x.id === row.id ? { ...x, yarnRate: Number(e.target.value) } : x)
                                                 )}
-                                                className="h-10 text-sm font-mono font-black text-right pr-12 pl-8 border-emerald-100 focus:border-emerald-300 bg-white rounded-xl shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                className="h-10 text-sm font-mono font-semibold text-right pr-12 pl-8 border-emerald-100 focus:border-emerald-300 bg-white rounded-xl shadow-inner [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             />
                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold pointer-events-none">/kg</span>
                                         </div>
@@ -2810,7 +2759,7 @@ export default function EstimatorClient({
                             {t('estimator.quality.applyAsIs')}
                         </Button>
                         <Button 
-                            className="bg-brand-accent text-white font-black rounded-xl h-12 sm:h-11 shadow-lg shadow-brand-accent/20 hover:shadow-xl hover:shadow-brand-accent/30 transition-all flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[180px]" 
+                            className="bg-brand-accent text-white font-semibold rounded-xl h-12 sm:h-11 shadow-lg shadow-brand-accent/20 hover:shadow-xl hover:shadow-brand-accent/30 transition-all flex items-center justify-center gap-2 flex-1 sm:flex-none sm:min-w-[180px]" 
                             onClick={handleSaveRatesAndApply} 
                             disabled={savingRates}
                         >
