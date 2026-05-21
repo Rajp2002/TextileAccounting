@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
     ArrowLeft,
-    TrendingUp,
     Package,
     Warehouse,
     Store,
@@ -76,7 +75,6 @@ const STATUS_CONFIG: Record<MarketRunSummary['status'], { label: string; color: 
     closed:         { label: 'Closed',        color: 'bg-slate-50 text-slate-500 border-slate-200', dot: 'bg-slate-400' },
 }
 
-function fmt(n: number) { return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}` }
 function fmtM(n: number) { return `${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m` }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -102,10 +100,6 @@ export default function MarketRunDetailClient({
         soldQuantity: run.total_meters_sold
     })
     const status = STATUS_CONFIG[derivedStatus] ?? STATUS_CONFIG.production
-    const marginPct = run.total_revenue > 0
-        ? ((run.total_profit / run.total_revenue) * 100).toFixed(1)
-        : '0.0'
-
     const availableGodown = Math.max(0, run.meters_in_godown)
 
     const handleCloseRun = async () => {
@@ -231,7 +225,7 @@ export default function MarketRunDetailClient({
             </Dialog>
 
             {/* Metrics Overview */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <Card className="border-border/50">
                     <CardContent className="p-4 flex flex-col justify-between">
                         <div className="flex items-center gap-2 mb-3">
@@ -277,22 +271,6 @@ export default function MarketRunDetailClient({
                     </CardContent>
                 </Card>
 
-                <Card className={`border-border/50 ${run.total_profit > 0 ? 'bg-emerald-50/30 border-emerald-100' : ''}`}>
-                    <CardContent className="p-4 flex flex-col justify-between">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="p-1.5 rounded-lg bg-emerald-100">
-                                <TrendingUp className="h-3.5 w-3.5 text-emerald-700" />
-                            </div>
-                            <span className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Total Profit</span>
-                        </div>
-                        <div>
-                            <p className={`text-2xl font-black ${run.total_profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                                {fmt(run.total_profit)}
-                            </p>
-                            <p className="text-xs text-emerald-700/70 mt-0.5">{marginPct}% blended margin</p>
-                        </div>
-                    </CardContent>
-                </Card>
             </div>
 
             {quote && (
@@ -317,7 +295,7 @@ export default function MarketRunDetailClient({
                         <div>
                             <p className="text-sm font-bold text-orange-800">Selling & Dispatching This Fabric</p>
                             <p className="text-xs text-stone-700 max-w-2xl">
-                                Fabric produced from this Market Run is managed in Stock/Godown. To sell or dispatch it, open Stock and use Sell & Dispatch on the produced taka. Commercials will update from the completed sale.
+                                Fabric produced from this Market Run is managed in Stock/Godown. To sell or dispatch it, open Stock and use Sell & Dispatch on the produced taka. Money, receivables, and profit stay in Commercials.
                             </p>
                         </div>
                     </div>
@@ -333,7 +311,7 @@ export default function MarketRunDetailClient({
             {/* Sales List */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold tracking-tight">Run Profit Trail</h2>
+                    <h2 className="text-lg font-bold tracking-tight">Run Sales Trail</h2>
                 </div>
 
                 {initialSales.length === 0 ? (
@@ -354,8 +332,6 @@ export default function MarketRunDetailClient({
                         {/* Mobile Card List */}
                         <div className="md:hidden space-y-3">
                             {initialSales.map((sale) => {
-                                const profitPerM = sale.price_per_meter - sale.cost_per_meter
-                                const totalProfit = profitPerM * sale.meters_sold
                                 return (
                                     <div key={sale.id} className="border border-border/60 rounded-xl p-4 bg-surface space-y-3">
                                         <div className="flex items-start justify-between gap-3">
@@ -381,20 +357,8 @@ export default function MarketRunDetailClient({
                                                 <p className="font-bold text-foreground">{fmtM(sale.meters_sold)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-muted-foreground font-medium mb-0.5">Price/m</p>
-                                                <p className="font-bold text-foreground">₹{Number(sale.price_per_meter).toFixed(2)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-muted-foreground font-medium mb-0.5">Profit/m</p>
-                                                <p className={`font-bold ${profitPerM >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                                    {profitPerM > 0 ? '+' : ''}₹{profitPerM.toFixed(2)}
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-muted-foreground font-medium mb-0.5">Total Profit</p>
-                                                <p className={`font-bold ${totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                                    {totalProfit > 0 ? '+' : ''}{fmt(totalProfit)}
-                                                </p>
+                                                <p className="text-muted-foreground font-medium mb-0.5">Commercials</p>
+                                                <p className="font-bold text-foreground">Tracked in Commercials</p>
                                             </div>
                                         </div>
                                     </div>
@@ -410,16 +374,12 @@ export default function MarketRunDetailClient({
                                         <th className="px-4 py-3 font-semibold">Date</th>
                                         <th className="px-4 py-3 font-semibold">Direct Trader Invoice</th>
                                         <th className="px-4 py-3 font-semibold text-right">Meters</th>
-                                        <th className="px-4 py-3 font-semibold text-right">Price/m</th>
-                                        <th className="px-4 py-3 font-semibold text-right">Profit/m</th>
-                                        <th className="px-4 py-3 font-semibold text-right">Total Profit</th>
+                                        <th className="px-4 py-3 font-semibold text-right">Commercials</th>
                                         <th className="px-4 py-3 font-semibold text-right">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border/50">
                                     {initialSales.map((sale) => {
-                                        const profitPerM = sale.price_per_meter - sale.cost_per_meter
-                                        const totalProfit = profitPerM * sale.meters_sold
                                         return (
                                             <tr key={sale.id} className="hover:bg-muted/30 transition-colors">
                                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
@@ -436,14 +396,8 @@ export default function MarketRunDetailClient({
                                                 <td className="px-4 py-3 whitespace-nowrap text-right font-medium">
                                                     {fmtM(sale.meters_sold)}
                                                 </td>
-                                                <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-foreground">
-                                                    ₹{Number(sale.price_per_meter).toFixed(2)}
-                                                </td>
-                                                <td className={`px-4 py-3 whitespace-nowrap text-right font-semibold ${profitPerM >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                                    {profitPerM > 0 ? '+' : ''}₹{profitPerM.toFixed(2)}
-                                                </td>
-                                                <td className={`px-4 py-3 whitespace-nowrap text-right font-bold ${totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                                    {totalProfit > 0 ? '+' : ''}{fmt(totalProfit)}
+                                                <td className="px-4 py-3 whitespace-nowrap text-right text-xs font-semibold text-muted-foreground">
+                                                    View money details in Commercials
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap text-right">
                                                     <Badge variant="outline" className={

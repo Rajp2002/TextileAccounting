@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from 'react'
 import type { ElementType } from 'react'
 import {
     BadgeIndianRupee,
-    BarChart3,
     ChevronDown,
     History,
     IndianRupee,
@@ -13,6 +12,8 @@ import {
     TrendingUp,
     CalendarDays,
     ArrowRight,
+    AlertTriangle,
+    BookOpenCheck,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -219,19 +220,55 @@ function EntryRow({ entry }: { entry: CommercialProfitEntry }) {
 
 interface Receivable {
     id: string
+    source_type?: 'fabric_stock_sale' | 'market_run_sale' | 'party_invoice'
+    source_id?: string
+    source_date?: string | null
+    sale_date?: string | null
+    order_id?: string | null
     party_name: string
     quality_label: string
+    reference_label?: string | null
     payment_status: 'unpaid' | 'partial' | 'paid'
     total_amount: number
     received_amount: number
     balance_amount: number
     due_date?: string | null
     credit_days?: number | null
+    taka_sold?: number | null
     meters_sold?: number | null
+    price_per_meter?: number | null
+    cost_per_meter?: number | null
+    revenue_amount?: number | null
+    cost_amount?: number | null
     dispatch_status?: 'not_dispatched' | 'partially_dispatched' | 'dispatched' | 'received' | 'discrepancy' | null
     dispatched_meters?: number | null
     pending_dispatch_meters?: number | null
     booked_gross_profit?: number | null
+    market_run_id?: string | null
+    market_run_label?: string | null
+    market_run_quality?: string | null
+    order_party_name?: string | null
+    order_quality_label?: string | null
+    godown?: string | null
+}
+
+type CommercialGroupKind = 'market_run' | 'order' | 'sale'
+
+interface CommercialGroup {
+    id: string
+    kind: CommercialGroupKind
+    title: string
+    subtitle: string
+    receivables: Receivable[]
+    entries: CommercialProfitEntry[]
+    totalSales: number
+    totalPaid: number
+    totalBalance: number
+    bookedGrossProfit: number
+    metersSold: number
+    earliestDueDate: string | null
+    latestSaleDate: string | null
+    overdueBalance: number
 }
 
 // Helper to compare dates as local YYYY-MM-DD strings to avoid timezone drift issues
@@ -279,6 +316,150 @@ function getDueBucket(rec: Receivable): 'overdue' | 'due_today' | 'due_this_week
     return 'upcoming'
 }
 
+function getDaysLate(rec: Receivable): number {
+    if (!rec.due_date || rec.balance_amount <= 0) return 0
+    const todayParts = getLocalDateString(new Date()).split('-').map(Number)
+    const dueParts = getLocalDateString(rec.due_date).split('-').map(Number)
+    const todayLocal = new Date(todayParts[0], todayParts[1] - 1, todayParts[2])
+    const dueLocal = new Date(dueParts[0], dueParts[1] - 1, dueParts[2])
+    return Math.max(0, Math.floor((todayLocal.getTime() - dueLocal.getTime()) / (1000 * 60 * 60 * 24)))
+}
+
+function estimateLateInterest(rec: Receivable, annualRatePct = 18): number {
+    const daysLate = getDaysLate(rec)
+    if (daysLate <= 0 || rec.balance_amount <= 0) return 0
+    return (rec.balance_amount * (annualRatePct / 100) * daysLate) / 365
+}
+
+function formatDate(value?: string | null) {
+    if (!value) return 'No date'
+    return new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+function getReceivableGroupMeta(rec: Receivable) {
+    if (rec.market_run_id) {
+        return {
+            id: `market_run:${rec.market_run_id}`,
+            kind: 'market_run' as const,
+            title: rec.market_run_label || rec.market_run_quality || 'Market run',
+            subtitle: `Market run sale${rec.godown ? ` · ${rec.godown}` : ''}`,
+        }
+    }
+
+    if (rec.order_id) {
+        return {
+            id: `order:${rec.order_id}`,
+            kind: 'order' as const,
+            title: rec.order_party_name || rec.party_name || 'Order',
+            subtitle: rec.order_quality_label || rec.quality_label || 'Order sale',
+        }
+    }
+
+    return {
+        id: `${rec.source_type || 'sale'}:${rec.source_id || rec.id}`,
+        kind: 'sale' as const,
+        title: rec.party_name || 'Stock sale',
+        subtitle: rec.quality_label || rec.reference_label || 'Commercial sale',
+    }
+}
+
+function getEntryGroupId(entry: CommercialProfitEntry) {
+    return `${entry.source_kind}:${entry.source_id}`
+}
+
+function buildCommercialGroups(receivables: Receivable[], entries: CommercialProfitEntry[]): CommercialGroup[] {
+    const groups = new Map<string, CommercialGroup>()
+    const entryBySource = new Map(entries.map((entry) => [getEntryGroupId(entry), entry]))
+
+    receivables.forEach((rec) => {
+        const meta = getReceivableGroupMeta(rec)
+        const existing = groups.get(meta.id)
+        const entry = rec.source_id && rec.source_type === 'fabric_stock_sale'
+            ? entryBySource.get(`stock_sale:${rec.source_id}`)
+            : rec.source_id
+                ? entryBySource.get(`${rec.source_type}:${rec.source_id}`)
+                : undefined
+
+        const group = existing ?? {
+            id: meta.id,
+            kind: meta.kind,
+            title: meta.title,
+            subtitle: meta.subtitle,
+            receivables: [],
+            entries: [],
+            totalSales: 0,
+            totalPaid: 0,
+            totalBalance: 0,
+            bookedGrossProfit: 0,
+            metersSold: 0,
+            earliestDueDate: null,
+            latestSaleDate: null,
+            overdueBalance: 0,
+        }
+
+        group.receivables.push(rec)
+        if (entry && !group.entries.some((item) => getEntryGroupId(item) === getEntryGroupId(entry))) {
+            group.entries.push(entry)
+        }
+        groups.set(meta.id, group)
+    })
+
+    entries.forEach((entry) => {
+        const alreadyGrouped = Array.from(groups.values()).some((group) =>
+            group.entries.some((item) => getEntryGroupId(item) === getEntryGroupId(entry))
+        )
+        if (alreadyGrouped) return
+
+        const id = getEntryGroupId(entry)
+        groups.set(id, {
+            id,
+            kind: entry.source_kind === 'order_invoice' || entry.source_kind === 'order_quote' ? 'order' : 'sale',
+            title: entry.source_label || entry.quality_label,
+            subtitle: entry.reference || entry.quality_label,
+            receivables: [],
+            entries: [entry],
+            totalSales: 0,
+            totalPaid: 0,
+            totalBalance: 0,
+            bookedGrossProfit: 0,
+            metersSold: 0,
+            earliestDueDate: null,
+            latestSaleDate: null,
+            overdueBalance: 0,
+        })
+    })
+
+    return Array.from(groups.values())
+        .map((group) => {
+            const receivableSales = group.receivables.reduce((sum, rec) => sum + Number(rec.total_amount ?? 0), 0)
+            const entrySales = group.entries.reduce((sum, entry) => sum + Number(entry.revenue_amount ?? 0), 0)
+            const receivableProfit = group.receivables.reduce((sum, rec) => sum + Number(rec.booked_gross_profit ?? 0), 0)
+            const entryProfit = group.entries.reduce((sum, entry) => sum + Number(entry.gross_profit_amount ?? 0), 0)
+            const dueDates = group.receivables.map((rec) => rec.due_date).filter(Boolean).sort() as string[]
+            const saleDates = [
+                ...group.receivables.map((rec) => rec.sale_date || rec.source_date).filter(Boolean),
+                ...group.entries.map((entry) => entry.event_date).filter(Boolean),
+            ].sort() as string[]
+
+            return {
+                ...group,
+                totalSales: receivableSales || entrySales,
+                totalPaid: group.receivables.reduce((sum, rec) => sum + Number(rec.received_amount ?? 0), 0),
+                totalBalance: group.receivables.reduce((sum, rec) => sum + Number(rec.balance_amount ?? 0), 0),
+                bookedGrossProfit: receivableProfit || entryProfit,
+                metersSold: group.receivables.reduce((sum, rec) => sum + Number(rec.meters_sold ?? 0), 0)
+                    || group.entries.reduce((sum, entry) => sum + Number(entry.meters_sold ?? 0), 0),
+                earliestDueDate: dueDates[0] ?? null,
+                latestSaleDate: saleDates.at(-1) ?? null,
+                overdueBalance: group.receivables.reduce((sum, rec) => getDueBucket(rec) === 'overdue' ? sum + Number(rec.balance_amount ?? 0) : sum, 0),
+            }
+        })
+        .sort((a, b) => {
+            if (a.overdueBalance !== b.overdueBalance) return b.overdueBalance - a.overdueBalance
+            return (b.latestSaleDate || '').localeCompare(a.latestSaleDate || '')
+        })
+}
+
 function getDispatchStatusLabel(status: string | null | undefined): string {
     if (!status) return 'Unknown'
     switch (status) {
@@ -309,12 +490,255 @@ interface CommercialsClientProps {
     collectedThisMonth: number
 }
 
+function CommercialGroupCard({
+    group,
+    expanded,
+    onToggle,
+    onRecordPayment,
+    onToggleHistory,
+    expandedHistoryId,
+    paymentHistoryCache,
+    loadingHistoryId,
+}: {
+    group: CommercialGroup
+    expanded: boolean
+    onToggle: () => void
+    onRecordPayment: (rec: Receivable) => void
+    onToggleHistory: (receivableId: string) => void
+    expandedHistoryId: string | null
+    paymentHistoryCache: Record<string, CommercialPayment[]>
+    loadingHistoryId: string | null
+}) {
+    const groupTone = group.kind === 'market_run'
+        ? 'bg-violet-50 text-violet-700 border-violet-200'
+        : group.kind === 'order'
+            ? 'bg-blue-50 text-blue-700 border-blue-200'
+            : 'bg-slate-50 text-slate-700 border-slate-200'
+    const groupLabel = group.kind === 'market_run' ? 'Market Run' : group.kind === 'order' ? 'Order' : 'Stock Sale'
+
+    return (
+        <Card className="overflow-hidden border-border/60 bg-white/90 shadow-sm">
+            <button
+                type="button"
+                onClick={onToggle}
+                className="flex w-full flex-col gap-4 p-4 text-left transition hover:bg-muted/20 lg:flex-row lg:items-center lg:justify-between"
+            >
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline" className={cn('font-bold', groupTone)}>{groupLabel}</Badge>
+                        {group.overdueBalance > 0 && (
+                            <Badge variant="outline" className="border-rose-200 bg-rose-50 font-bold text-rose-700">
+                                Overdue {money(group.overdueBalance)}
+                            </Badge>
+                        )}
+                    </div>
+                    <p className="mt-2 truncate text-base font-black text-foreground">{group.title}</p>
+                    <p className="mt-0.5 text-xs font-semibold text-muted-foreground">
+                        {group.subtitle} · {group.receivables.length || group.entries.length} sale{(group.receivables.length || group.entries.length) === 1 ? '' : 's'} · {meters(group.metersSold)}
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 lg:min-w-[620px]">
+                    <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sales</p>
+                        <p className="mt-1 font-black text-foreground">{money(group.totalSales)}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Paid</p>
+                        <p className="mt-1 font-black text-emerald-700">{money(group.totalPaid)}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Left</p>
+                        <p className="mt-1 font-black text-rose-700">{money(group.totalBalance)}</p>
+                    </div>
+                    <div className="flex items-start justify-between gap-2">
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Gross Profit</p>
+                            <p className={cn('mt-1 font-black', group.bookedGrossProfit >= 0 ? 'text-emerald-700' : 'text-rose-700')}>
+                                {group.bookedGrossProfit >= 0 ? '+' : ''}{money(group.bookedGrossProfit)}
+                            </p>
+                        </div>
+                        <ChevronDown className={cn('mt-4 h-4 w-4 shrink-0 text-muted-foreground transition-transform', expanded && 'rotate-180')} />
+                    </div>
+                </div>
+            </button>
+
+            {expanded && (
+                <div className="border-t border-border/50 bg-stone-50/50 p-4">
+                    <div className="mb-4 grid gap-2 md:grid-cols-3">
+                        <div className="rounded-xl border border-border/60 bg-white p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Credit Deadline</p>
+                            <p className="mt-1 text-sm font-black text-foreground">{formatDate(group.earliestDueDate)}</p>
+                        </div>
+                        <div className="rounded-xl border border-border/60 bg-white p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Collection Status</p>
+                            <p className="mt-1 text-sm font-black text-foreground">{group.totalBalance <= 0 ? 'Fully paid' : `${money(group.totalBalance)} left`}</p>
+                        </div>
+                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Late Interest Cue</p>
+                            <p className="mt-1 text-xs font-semibold text-amber-900">Estimate at 18% yearly after due date. Treat as negotiable, not auto-posted.</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        {group.receivables.map((rec) => {
+                            const daysLate = getDaysLate(rec)
+                            const lateInterest = estimateLateInterest(rec)
+                            const paymentHistory = paymentHistoryCache[rec.id] ?? []
+
+                            return (
+                                <div key={rec.id} className="rounded-xl border border-border/60 bg-white p-4">
+                                    <div className="grid gap-3 lg:grid-cols-[1.3fr_1fr_1fr_auto] lg:items-start">
+                                        <div>
+                                            <p className="font-black text-foreground">{rec.party_name}</p>
+                                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                                {rec.quality_label} · Sold {formatDate(rec.sale_date || rec.source_date)}
+                                            </p>
+                                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                                <Badge variant="outline" className={cn('font-bold capitalize',
+                                                    rec.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                    rec.payment_status === 'partial' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                                    'bg-rose-50 text-rose-700 border-rose-200'
+                                                )}>{rec.payment_status}</Badge>
+                                                {rec.dispatch_status && (
+                                                    <Badge variant="outline" className={cn('font-bold capitalize', getDispatchStatusTone(rec.dispatch_status))}>
+                                                        {getDispatchStatusLabel(rec.dispatch_status)}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                            <div>
+                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Meters</p>
+                                                <p className="mt-1 font-black text-foreground">{meters(rec.meters_sold ?? 0)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Quote</p>
+                                                <p className="mt-1 font-black text-foreground">{money(rec.price_per_meter ?? 0, 2)}/m</p>
+                                            </div>
+                                            <div>
+                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Cost</p>
+                                                <p className="mt-1 font-semibold text-muted-foreground">{money(rec.cost_per_meter ?? 0, 2)}/m</p>
+                                            </div>
+                                            <div>
+                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Profit</p>
+                                                <p className={cn('mt-1 font-black', Number(rec.booked_gross_profit ?? 0) >= 0 ? 'text-emerald-700' : 'text-rose-700')}>
+                                                    {money(rec.booked_gross_profit ?? 0)}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                            <div>
+                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Sale</p>
+                                                <p className="mt-1 font-black text-foreground">{money(rec.total_amount)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Paid</p>
+                                                <p className="mt-1 font-black text-emerald-700">{money(rec.received_amount)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Left</p>
+                                                <p className="mt-1 font-black text-rose-700">{money(rec.balance_amount)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Due</p>
+                                                <p className="mt-1 font-black text-foreground">{formatDate(rec.due_date)}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
+                                            {rec.received_amount > 0 && (
+                                                <Button variant="outline" size="sm" className="h-9 min-h-9 gap-1 text-xs font-bold" onClick={() => onToggleHistory(rec.id)}>
+                                                    <History className="h-3 w-3" />
+                                                    History
+                                                </Button>
+                                            )}
+                                            {rec.balance_amount > 0 && (
+                                                <Button size="sm" className="h-9 min-h-9 gap-1 text-xs font-bold" onClick={() => onRecordPayment(rec)}>
+                                                    Record Payment
+                                                    <ArrowRight className="h-3 w-3" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {(rec.credit_days != null || daysLate > 0) && (
+                                        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                                            {rec.credit_days != null && (
+                                                <span className="rounded-lg bg-muted px-2 py-1 font-semibold text-muted-foreground">{rec.credit_days} days credit</span>
+                                            )}
+                                            {daysLate > 0 && (
+                                                <span className="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-2 py-1 font-bold text-rose-700">
+                                                    <AlertTriangle className="h-3 w-3" />
+                                                    {daysLate}d late · estimated interest {money(lateInterest)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {expandedHistoryId === rec.id && (
+                                        <div className="mt-3 border-t border-border/40 pt-3">
+                                            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Payment History</p>
+                                            {loadingHistoryId === rec.id ? (
+                                                <p className="text-xs text-muted-foreground">Loading...</p>
+                                            ) : paymentHistory.length === 0 ? (
+                                                <p className="text-xs text-muted-foreground">No payments recorded yet.</p>
+                                            ) : (
+                                                <div className="grid gap-1.5">
+                                                    {paymentHistory.map((payment) => (
+                                                        <div key={payment.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs">
+                                                            <span className="font-semibold text-foreground">{formatDate(payment.payment_date)}</span>
+                                                            <span className="text-muted-foreground">{getPaymentModeLabel(payment.payment_mode)}</span>
+                                                            {payment.reference_number && <span className="text-muted-foreground">Ref: {payment.reference_number}</span>}
+                                                            <span className="ml-auto font-black text-emerald-700">{money(payment.amount)}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+
+                        {group.receivables.length === 0 && group.entries.map((entry) => (
+                            <div key={getEntryGroupId(entry)} className="rounded-xl border border-border/60 bg-white p-4">
+                                <div className="grid gap-3 md:grid-cols-5">
+                                    <div className="md:col-span-2">
+                                        <p className="font-black text-foreground">{entry.source_label}</p>
+                                        <p className="text-xs text-muted-foreground">{entry.quality_label} · {formatDate(entry.event_date)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Meters</p>
+                                        <p className="font-black">{meters(entry.meters_sold)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sale</p>
+                                        <p className="font-black">{money(entry.revenue_amount)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Gross Profit</p>
+                                        <p className={cn('font-black', entry.gross_profit_amount >= 0 ? 'text-emerald-700' : 'text-rose-700')}>{money(entry.gross_profit_amount)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </Card>
+    )
+}
+
 export default function CommercialsClient({ initialData, initialReceivables, collectedThisMonth }: CommercialsClientProps) {
     const router = useRouter()
     const [query, setQuery] = useState('')
     const [stage, setStage] = useState<StageFilter>('all')
     const [source, setSource] = useState<SourceFilter>('all')
     const [activeTab, setActiveTab] = useState('overview')
+    const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null)
 
     const [dueTab, setDueTab] = useState<'all' | 'overdue' | 'due_today' | 'due_this_week' | 'upcoming' | 'paid'>('all')
     const [receivableSearch, setReceivableSearch] = useState('')
@@ -433,6 +857,24 @@ export default function CommercialsClient({ initialData, initialReceivables, col
         { key: 'order_quote', label: 'Expected Orders' },
     ]
 
+    const commercialGroups = useMemo(() => {
+        return buildCommercialGroups(initialReceivables, initialData.entries)
+    }, [initialData.entries, initialReceivables])
+
+    const filteredGroups = useMemo(() => {
+        const needle = receivableSearch.trim().toLowerCase()
+        return commercialGroups.filter((group) => {
+            const matchesBucket = dueTab === 'all' || group.receivables.some((rec) => getDueBucket(rec) === dueTab)
+            const haystack = [
+                group.title,
+                group.subtitle,
+                ...group.receivables.flatMap((rec) => [rec.party_name, rec.quality_label, rec.payment_status]),
+                ...group.entries.flatMap((entry) => [entry.source_label, entry.quality_label, entry.reference ?? '']),
+            ].join(' ').toLowerCase()
+            return matchesBucket && (!needle || haystack.includes(needle))
+        })
+    }, [commercialGroups, dueTab, receivableSearch])
+
     // Calculate Receivables Summary
     const receivablesSummary = useMemo(() => {
         let totalToCollect = 0
@@ -481,8 +923,8 @@ export default function CommercialsClient({ initialData, initialReceivables, col
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="mb-4">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="receivables">Receivables ({initialReceivables.length})</TabsTrigger>
-                    <TabsTrigger value="profit_entries">Booked Gross Profit ({initialData.entries.length})</TabsTrigger>
+                    <TabsTrigger value="receivables">Runs / Orders ({commercialGroups.length})</TabsTrigger>
+                    <TabsTrigger value="profit_entries">Ledger Lines ({initialData.entries.length})</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
@@ -524,11 +966,23 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                         />
                     </div>
 
-                    <Card className="border-border/60">
-                        <CardContent className="p-6 flex flex-col items-center justify-center text-center py-12">
-                            <BarChart3 className="mb-3 h-10 w-10 text-muted-foreground/70" />
-                            <p className="text-lg font-bold text-foreground">Commercials Dashboard</p>
-                            <p className="text-sm text-muted-foreground mt-1">Use the tabs above to view detailed Receivables and Profit Entries.</p>
+                    <Card className="border-border/60 bg-white/80">
+                        <CardContent className="grid gap-4 p-5 md:grid-cols-[1.1fr_1fr] md:items-center">
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <BookOpenCheck className="h-5 w-5 text-emerald-700" />
+                                    <p className="text-sm font-black text-foreground">One money ledger</p>
+                                </div>
+                                <p className="text-sm leading-relaxed text-muted-foreground">
+                                    Market Runs and Stock stay about fabric movement. Commercials is the only screen for booked gross profit, receivables, collections, credit dates, and payment history.
+                                </p>
+                            </div>
+                            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                                <p className="font-bold">Surat trade pattern baked into the view</p>
+                                <p className="mt-1 text-xs leading-relaxed">
+                                    Use 30 days as the default credit promise, but keep terms configurable per sale. Late-interest is shown as an estimate at 18% yearly after the due date, so the owner can decide whether to charge it.
+                                </p>
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -562,7 +1016,37 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                         </div>
                     </div>
 
-                    <Card className="border-border/60">
+                    <div className="space-y-3">
+                        {filteredGroups.length === 0 ? (
+                            <Card className="border-border/60">
+                                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                                    <BadgeIndianRupee className="mb-3 h-10 w-10 text-muted-foreground/70" />
+                                    <p className="text-lg font-bold text-foreground">No commercial groups found</p>
+                                    <p className="mt-1 text-sm text-muted-foreground">Sales will automatically create receivables here.</p>
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            filteredGroups.map((group) => (
+                                <CommercialGroupCard
+                                    key={group.id}
+                                    group={group}
+                                    expanded={expandedGroupId === group.id}
+                                    onToggle={() => setExpandedGroupId(expandedGroupId === group.id ? null : group.id)}
+                                    onRecordPayment={(rec) => {
+                                        setSelectedReceivable(rec)
+                                        setPaymentAmount(rec.balance_amount.toString())
+                                        setIsPaymentDialogOpen(true)
+                                    }}
+                                    onToggleHistory={togglePaymentHistory}
+                                    expandedHistoryId={expandedHistoryId}
+                                    paymentHistoryCache={paymentHistoryCache}
+                                    loadingHistoryId={loadingHistoryId}
+                                />
+                            ))
+                        )}
+                    </div>
+
+                    <Card className="hidden border-border/60">
                         <CardContent className="p-0">
                             {filteredReceivables.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-16 text-center">

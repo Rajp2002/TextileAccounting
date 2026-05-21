@@ -112,7 +112,7 @@ export async function getCommercialsData(): Promise<{ data: CommercialsData } | 
     return { data: { entries, summary } }
 }
 
-export async function getCommercialReceivables(filters?: any) {
+export async function getCommercialReceivables(filters?: { status?: 'unpaid' | 'partial' | 'paid' }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
@@ -137,7 +137,35 @@ export async function getCommercialReceivables(filters?: any) {
     if (stockSaleIds.length > 0) {
         const { data: sales, error: salesError } = await supabase
             .from('fabric_stock_sales')
-            .select('id, meters_sold, dispatched_meters, pending_dispatch_meters, dispatch_status, credit_days, gross_profit_amount')
+            .select(`
+                id,
+                sale_date,
+                taka_sold,
+                meters_sold,
+                price_per_meter,
+                cost_per_meter,
+                revenue_amount,
+                cost_amount,
+                gross_profit_amount,
+                dispatched_meters,
+                pending_dispatch_meters,
+                dispatch_status,
+                credit_days,
+                fabric_stock_lots (
+                    market_run_id,
+                    order_id,
+                    godown,
+                    quality_label,
+                    market_runs (
+                        fabric_label,
+                        quality_label
+                    ),
+                    orders (
+                        party_name,
+                        quality_label
+                    )
+                )
+            `)
             .in('id', stockSaleIds)
 
         if (salesError) {
@@ -148,24 +176,56 @@ export async function getCommercialReceivables(filters?: any) {
         const enriched = (receivables ?? []).map((rec) => {
             if (rec.source_type === 'fabric_stock_sale') {
                 const sale = salesMap.get(rec.source_id)
+                const lotRaw = sale?.fabric_stock_lots
+                const lot = Array.isArray(lotRaw) ? lotRaw[0] : lotRaw
+                const marketRunRaw = lot?.market_runs
+                const marketRun = Array.isArray(marketRunRaw) ? marketRunRaw[0] : marketRunRaw
+                const orderRaw = lot?.orders
+                const order = Array.isArray(orderRaw) ? orderRaw[0] : orderRaw
                 return {
                     ...rec,
+                    sale_date: sale?.sale_date ?? rec.source_date ?? null,
+                    taka_sold: sale?.taka_sold ?? null,
                     meters_sold: sale?.meters_sold ?? null,
+                    price_per_meter: sale?.price_per_meter ?? null,
+                    cost_per_meter: sale?.cost_per_meter ?? null,
+                    revenue_amount: sale?.revenue_amount ?? rec.total_amount ?? null,
+                    cost_amount: sale?.cost_amount ?? null,
                     dispatched_meters: sale?.dispatched_meters ?? null,
                     pending_dispatch_meters: sale?.pending_dispatch_meters ?? null,
                     dispatch_status: sale?.dispatch_status || 'not_dispatched',
                     credit_days: sale?.credit_days ?? null,
                     booked_gross_profit: sale?.gross_profit_amount ?? null,
+                    market_run_id: lot?.market_run_id ?? null,
+                    market_run_label: marketRun?.fabric_label ?? null,
+                    market_run_quality: marketRun?.quality_label ?? lot?.quality_label ?? null,
+                    order_id: lot?.order_id ?? rec.order_id ?? null,
+                    order_party_name: order?.party_name ?? null,
+                    order_quality_label: order?.quality_label ?? null,
+                    godown: lot?.godown ?? null,
                 }
             }
             return {
                 ...rec,
+                sale_date: rec.source_date ?? null,
+                taka_sold: null,
                 meters_sold: null,
+                price_per_meter: null,
+                cost_per_meter: null,
+                revenue_amount: rec.total_amount ?? null,
+                cost_amount: null,
                 dispatched_meters: null,
                 pending_dispatch_meters: null,
                 dispatch_status: null,
                 credit_days: rec.credit_days ?? null,
                 booked_gross_profit: null,
+                market_run_id: null,
+                market_run_label: null,
+                market_run_quality: null,
+                order_id: rec.order_id ?? null,
+                order_party_name: null,
+                order_quality_label: null,
+                godown: null,
             }
         })
 
@@ -174,12 +234,25 @@ export async function getCommercialReceivables(filters?: any) {
 
     const simpleMapped = (receivables ?? []).map((rec) => ({
         ...rec,
+        sale_date: rec.source_date ?? null,
+        taka_sold: null,
         meters_sold: null,
+        price_per_meter: null,
+        cost_per_meter: null,
+        revenue_amount: rec.total_amount ?? null,
+        cost_amount: null,
         dispatched_meters: null,
         pending_dispatch_meters: null,
         dispatch_status: null,
         credit_days: rec.credit_days ?? null,
         booked_gross_profit: null,
+        market_run_id: null,
+        market_run_label: null,
+        market_run_quality: null,
+        order_id: rec.order_id ?? null,
+        order_party_name: null,
+        order_quality_label: null,
+        godown: null,
     }))
 
     return { data: simpleMapped }

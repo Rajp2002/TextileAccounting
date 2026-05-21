@@ -801,8 +801,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                             <th className="px-4 py-3 font-bold">Quality</th>
                                             <th className="px-4 py-3 text-right font-bold">Approx Units</th>
                                             <th className="px-4 py-3 text-right font-bold">Meters</th>
-                                            <th className="px-4 py-3 text-right font-bold">Sale / m</th>
-                                            <th className="px-4 py-3 text-right font-bold">Booked Gross Profit</th>
+                                            <th className="px-4 py-3 text-right font-bold">Commercials</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/40">
@@ -819,9 +818,8 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                     {stockUnits(Number(sale.taka_sold), sale.fabric_stock_lots.unit_label)}
                                                 </td>
                                                 <td className="px-4 py-3 text-right font-semibold">{meters(Number(sale.meters_sold))}</td>
-                                                <td className="px-4 py-3 text-right font-semibold">{money(Number(sale.price_per_meter), 2)}</td>
-                                                <td className={cn('px-4 py-3 text-right font-black', Number(sale.gross_profit_amount) >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
-                                                    {Number(sale.gross_profit_amount) >= 0 ? '+' : ''}{money(Number(sale.gross_profit_amount))}
+                                                <td className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">
+                                                    Tracked in Commercials
                                                 </td>
                                             </tr>
                                         ))}
@@ -846,9 +844,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                 <p className="text-xs text-muted-foreground">
                                                     {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                                                 </p>
-                                                <p className={cn('font-black text-sm', Number(sale.gross_profit_amount) >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
-                                                    {Number(sale.gross_profit_amount) >= 0 ? '+' : ''}{money(Number(sale.gross_profit_amount))}
-                                                </p>
+                                                <p className="text-xs font-semibold text-muted-foreground">Commercials</p>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-3 gap-2 text-sm pt-1">
@@ -861,8 +857,8 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                 <p className="font-semibold">{meters(Number(sale.meters_sold))}</p>
                                             </div>
                                             <div>
-                                                <p className="text-xs text-muted-foreground">Rate</p>
-                                                <p className="font-semibold">{money(Number(sale.price_per_meter), 2)}/m</p>
+                                                <p className="text-xs text-muted-foreground">Money</p>
+                                                <p className="font-semibold">Commercials</p>
                                             </div>
                                         </div>
                                     </div>

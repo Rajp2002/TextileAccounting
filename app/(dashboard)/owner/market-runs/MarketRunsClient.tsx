@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    TrendingUp, Warehouse, ArrowRight, Plus,
+    Warehouse, ArrowRight, Plus,
     AlertCircle, BarChart3, Layers, Archive,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -43,7 +43,6 @@ const STATUS_CONFIG: Record<MarketRunSummary['status'], { label: string; color: 
     closed:         { label: 'Closed',        color: 'bg-slate-50 text-slate-500 border-slate-200', dot: 'bg-slate-400' },
 }
 
-function fmt(n: number) { return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}` }
 function fmtM(n: number) { return `${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m` }
 
 // ─── Run Card ─────────────────────────────────────────────────────────────────
@@ -62,10 +61,6 @@ function RunCard({ run }: { run: MarketRunSummary }) {
     const soldPct = run.total_meters_produced > 0
         ? Math.min(100, (run.total_meters_sold / run.total_meters_produced) * 100)
         : 0
-    const marginPct = run.total_revenue > 0
-        ? ((run.total_profit / run.total_revenue) * 100).toFixed(1)
-        : '—'
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -126,15 +121,11 @@ function RunCard({ run }: { run: MarketRunSummary }) {
                                 </div>
                             </div>
 
-                            {/* Profit */}
+                            {/* Commercials */}
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Total Profit</p>
-                                <p className={`text-sm font-bold ${run.total_profit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                    {fmt(run.total_profit)}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                    {marginPct !== '—' ? `${marginPct}% margin` : 'No sales yet'}
-                                </p>
+                                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">Commercials</p>
+                                <p className="text-sm font-bold text-foreground">{run.sales_count > 0 ? 'Tracked' : 'No sales yet'}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">money view in Commercials</p>
                             </div>
 
                             {/* Sales */}
@@ -211,7 +202,6 @@ export default function MarketRunsClient({
     })
 
     // Summary stats
-    const totalProfit   = initialRuns.reduce((s, r) => s + Number(r.total_profit ?? 0), 0)
     const inGodown      = initialRuns.reduce((s, r) => s + Math.max(0, Number(r.meters_in_godown ?? 0)), 0)
     const activeRuns    = initialRuns.filter(r => {
         const derivedStatus = getMarketRunDisplayStatus({
@@ -249,7 +239,7 @@ export default function MarketRunsClient({
 
             {/* Summary cards */}
             {initialRuns.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                     <Card className="border-border/50">
                         <CardContent className="p-4">
                             <div className="flex items-center gap-2 mb-2">
@@ -272,20 +262,6 @@ export default function MarketRunsClient({
                             </div>
                             <p className="text-2xl font-black text-foreground">{fmtM(inGodown)}</p>
                             <p className="text-xs text-muted-foreground">tracked in Stock</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-border/50 col-span-2 sm:col-span-1">
-                        <CardContent className="p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1.5 rounded-lg bg-emerald-50">
-                                    <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
-                                </div>
-                                <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Profit</span>
-                            </div>
-                            <p className={`text-2xl font-black ${totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                {fmt(totalProfit)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">total across all runs</p>
                         </CardContent>
                     </Card>
                 </div>
