@@ -1225,6 +1225,8 @@ export default function EstimatorClient({
 
     // Validation: Pilot Safety Rails
     const isZeroConfig = state.overheadItems.filter(i => i.isPreset).every(i => (i.monthlyAmount || 0) === 0)
+    const pageShellClass = "mx-auto w-full max-w-6xl lg:translate-x-8 xl:translate-x-12 2xl:translate-x-16"
+    const hudShellClass = "mx-auto max-w-5xl space-y-3 rounded-[18px] border border-[var(--color-hairline)] bg-[var(--color-loom-navy)] px-5 py-3 sm:px-6 lg:translate-x-8 xl:translate-x-12 2xl:translate-x-16"
     return (
         <div className="space-y-5 pb-floating-button md:pb-20 relative">
             {!state.isConfigured && (
@@ -1270,7 +1272,7 @@ export default function EstimatorClient({
 
             {/* ── DRAFT RESTORE BANNER ─────────────────────────────── */}
             {hasDraft && draft && (
-                <div className="max-w-6xl mx-auto">
+                <div className={pageShellClass}>
                     <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                         <RotateCcw className="h-4 w-4 text-amber-600 shrink-0" />
                         <p className="text-sm text-amber-800 flex-1">
@@ -1300,8 +1302,8 @@ export default function EstimatorClient({
             )}
 
             {/* ── STICKY HUD ───────────────────────────────────────── */}
-            <div className="sticky top-0 z-40 -mt-5 mx-[-12px] border-b border-[var(--color-hairline)] bg-[var(--color-loom-navy)] px-3 py-3 sm:mx-[-32px] sm:px-4 md:mx-[-40px]">
-                <div className="mx-auto max-w-6xl space-y-3">
+            <div className="sticky top-3 z-40 -mt-3 px-5 py-3 sm:px-8 md:px-12 lg:px-16">
+                <div className={hudShellClass}>
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="min-w-[120px]">
                             <p className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--color-muted)]">{t('estimator.hud.prod_cost')}</p>
@@ -1489,7 +1491,7 @@ export default function EstimatorClient({
             </div>
 
             {/* ── MAIN FORM ────────────────────────────────────────────── */}
-            <div className="max-w-6xl mx-auto space-y-7">
+            <div className={`${pageShellClass} space-y-7`}>
                 {/* Saved Qualities Row */}
                 {templates.length > 0 && (
                     <div className="space-y-2.5">
@@ -2520,7 +2522,7 @@ export default function EstimatorClient({
 
             {/* ── SCENARIO ANALYSIS (STRESS TESTS) ───────────────────────── */}
             {hasOrderQty && totals.orderQuote && (
-                <div className="max-w-6xl mx-auto space-y-2">
+                <div className={`${pageShellClass} space-y-2`}>
                     <button
                         onClick={() => setShowScenarios(!showScenarios)}
                         className="flex items-center gap-2 w-full px-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:border-indigo-200 transition-colors"
