@@ -14,6 +14,7 @@ import {
     ArrowRight,
     AlertTriangle,
     BookOpenCheck,
+    Users,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -271,6 +272,17 @@ interface CommercialGroup {
     overdueBalance: number
 }
 
+interface PartyReceivableSummary {
+    partyName: string
+    receivables: Receivable[]
+    totalBalance: number
+    totalSales: number
+    totalPaid: number
+    earliestDueDate: string | null
+    overdueBalance: number
+    openSalesCount: number
+}
+
 // Helper to compare dates as local YYYY-MM-DD strings to avoid timezone drift issues
 function getLocalDateString(dateInput?: Date | string | null): string {
     if (!dateInput) return ''
@@ -457,6 +469,58 @@ function buildCommercialGroups(receivables: Receivable[], entries: CommercialPro
         .sort((a, b) => {
             if (a.overdueBalance !== b.overdueBalance) return b.overdueBalance - a.overdueBalance
             return (b.latestSaleDate || '').localeCompare(a.latestSaleDate || '')
+        })
+}
+
+function buildPartyReceivableSummaries(receivables: Receivable[]): PartyReceivableSummary[] {
+    const parties = new Map<string, PartyReceivableSummary>()
+
+    receivables
+        .filter((rec) => Number(rec.balance_amount ?? 0) > 0)
+        .forEach((rec) => {
+            const key = rec.party_name?.trim() || 'Unknown Party'
+            const existing = parties.get(key) ?? {
+                partyName: key,
+                receivables: [],
+                totalBalance: 0,
+                totalSales: 0,
+                totalPaid: 0,
+                earliestDueDate: null,
+                overdueBalance: 0,
+                openSalesCount: 0,
+            }
+
+            existing.receivables.push(rec)
+            existing.totalBalance += Number(rec.balance_amount ?? 0)
+            existing.totalSales += Number(rec.total_amount ?? 0)
+            existing.totalPaid += Number(rec.received_amount ?? 0)
+            existing.openSalesCount += 1
+            if (getDueBucket(rec) === 'overdue') {
+                existing.overdueBalance += Number(rec.balance_amount ?? 0)
+            }
+
+            if (rec.due_date && (!existing.earliestDueDate || getLocalDateString(rec.due_date) < getLocalDateString(existing.earliestDueDate))) {
+                existing.earliestDueDate = rec.due_date
+            }
+
+            parties.set(key, existing)
+        })
+
+    return Array.from(parties.values())
+        .map((party) => ({
+            ...party,
+            receivables: party.receivables.sort((a, b) => {
+                const aOverdue = getDueBucket(a) === 'overdue' ? 1 : 0
+                const bOverdue = getDueBucket(b) === 'overdue' ? 1 : 0
+                if (aOverdue !== bOverdue) return bOverdue - aOverdue
+                return (getLocalDateString(a.due_date) || '9999-12-31').localeCompare(getLocalDateString(b.due_date) || '9999-12-31')
+            }),
+        }))
+        .sort((a, b) => {
+            if (a.overdueBalance !== b.overdueBalance) return b.overdueBalance - a.overdueBalance
+            const dueCompare = (a.earliestDueDate || '9999-12-31').localeCompare(b.earliestDueDate || '9999-12-31')
+            if (dueCompare !== 0) return dueCompare
+            return b.totalBalance - a.totalBalance
         })
 }
 
@@ -732,6 +796,179 @@ function CommercialGroupCard({
     )
 }
 
+function PartiesOwingPanel({
+    parties,
+    expandedPartyName,
+    onToggleParty,
+    onRecordPayment,
+    onToggleHistory,
+    expandedHistoryId,
+    paymentHistoryCache,
+    loadingHistoryId,
+}: {
+    parties: PartyReceivableSummary[]
+    expandedPartyName: string | null
+    onToggleParty: (partyName: string) => void
+    onRecordPayment: (rec: Receivable) => void
+    onToggleHistory: (receivableId: string) => void
+    expandedHistoryId: string | null
+    paymentHistoryCache: Record<string, CommercialPayment[]>
+    loadingHistoryId: string | null
+}) {
+    const totalOwed = parties.reduce((sum, party) => sum + party.totalBalance, 0)
+
+    return (
+        <Card className="border-border/60 bg-white/95 shadow-sm lg:sticky lg:top-4">
+            <CardContent className="p-0">
+                <div className="border-b border-border/60 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            <div className="rounded-lg bg-violet-50 p-1.5 text-violet-700">
+                                <Users className="h-4 w-4" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-black text-foreground">Parties Owing</p>
+                                <p className="text-xs text-muted-foreground">{parties.length} open parties</p>
+                            </div>
+                        </div>
+                        <p className="text-sm font-black text-rose-700">{money(totalOwed)}</p>
+                    </div>
+                </div>
+
+                {parties.length === 0 ? (
+                    <div className="p-6 text-center">
+                        <BadgeIndianRupee className="mx-auto mb-2 h-8 w-8 text-muted-foreground/70" />
+                        <p className="text-sm font-bold text-foreground">No open dues</p>
+                        <p className="mt-1 text-xs text-muted-foreground">Parties with unpaid balances will appear here.</p>
+                    </div>
+                ) : (
+                    <div className="max-h-[680px] divide-y divide-border/40 overflow-y-auto">
+                        {parties.map((party) => {
+                            const expanded = expandedPartyName === party.partyName
+
+                            return (
+                                <div key={party.partyName}>
+                                    <button
+                                        type="button"
+                                        className="w-full p-4 text-left transition hover:bg-muted/25"
+                                        onClick={() => onToggleParty(party.partyName)}
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-black text-foreground">{party.partyName}</p>
+                                                <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                                                    {party.openSalesCount} open sale{party.openSalesCount === 1 ? '' : 's'} · due {formatDate(party.earliestDueDate)}
+                                                </p>
+                                            </div>
+                                            <ChevronDown className={cn('mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform', expanded && 'rotate-180')} />
+                                        </div>
+                                        <div className="mt-3 flex items-center justify-between gap-3">
+                                            <p className="text-lg font-black text-rose-700">{money(party.totalBalance)}</p>
+                                            {party.overdueBalance > 0 ? (
+                                                <Badge variant="outline" className="border-rose-200 bg-rose-50 font-bold text-rose-700">
+                                                    {money(party.overdueBalance)} overdue
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="outline" className="border-amber-200 bg-amber-50 font-bold text-amber-700">
+                                                    On credit
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </button>
+
+                                    {expanded && (
+                                        <div className="space-y-2 bg-stone-50/70 px-3 pb-3">
+                                            {party.receivables.map((rec) => {
+                                                const daysLate = getDaysLate(rec)
+                                                const paymentHistory = paymentHistoryCache[rec.id] ?? []
+
+                                                return (
+                                                    <div key={rec.id} className="rounded-xl border border-border/60 bg-white p-3">
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div className="min-w-0">
+                                                                <p className="truncate text-xs font-black text-foreground">{rec.quality_label}</p>
+                                                                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                                                                    {meters(rec.meters_sold ?? 0)} · {money(rec.price_per_meter ?? 0, 2)}/m
+                                                                </p>
+                                                            </div>
+                                                            <p className="shrink-0 text-sm font-black text-rose-700">{money(rec.balance_amount)}</p>
+                                                        </div>
+
+                                                        <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+                                                            <div>
+                                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Sale</p>
+                                                                <p className="font-semibold text-foreground">{money(rec.total_amount)}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Paid</p>
+                                                                <p className="font-semibold text-emerald-700">{money(rec.received_amount)}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Due</p>
+                                                                <p className="font-semibold text-foreground">{formatDate(rec.due_date)}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold uppercase tracking-wider text-muted-foreground">Source</p>
+                                                                <p className="truncate font-semibold text-foreground">
+                                                                    {rec.market_run_label || rec.order_quality_label || rec.godown || 'Stock sale'}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        {daysLate > 0 && (
+                                                            <p className="mt-2 inline-flex items-center gap-1 rounded-lg bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700">
+                                                                <AlertTriangle className="h-3 w-3" />
+                                                                {daysLate}d late
+                                                            </p>
+                                                        )}
+
+                                                        <div className="mt-3 flex flex-wrap gap-2">
+                                                            {rec.received_amount > 0 && (
+                                                                <Button variant="outline" size="sm" className="h-8 min-h-8 gap-1 text-xs font-bold" onClick={() => onToggleHistory(rec.id)}>
+                                                                    <History className="h-3 w-3" />
+                                                                    History
+                                                                </Button>
+                                                            )}
+                                                            <Button size="sm" className="h-8 min-h-8 gap-1 text-xs font-bold" onClick={() => onRecordPayment(rec)}>
+                                                                Record
+                                                                <ArrowRight className="h-3 w-3" />
+                                                            </Button>
+                                                        </div>
+
+                                                        {expandedHistoryId === rec.id && (
+                                                            <div className="mt-3 border-t border-border/40 pt-2">
+                                                                {loadingHistoryId === rec.id ? (
+                                                                    <p className="text-xs text-muted-foreground">Loading...</p>
+                                                                ) : paymentHistory.length === 0 ? (
+                                                                    <p className="text-xs text-muted-foreground">No payments recorded yet.</p>
+                                                                ) : (
+                                                                    <div className="space-y-1.5">
+                                                                        {paymentHistory.map((payment) => (
+                                                                            <div key={payment.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/30 px-2 py-1.5 text-[11px]">
+                                                                                <span className="font-semibold text-foreground">{formatDate(payment.payment_date)}</span>
+                                                                                <span className="text-muted-foreground">{getPaymentModeLabel(payment.payment_mode)}</span>
+                                                                                <span className="font-black text-emerald-700">{money(payment.amount)}</span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
+
 export default function CommercialsClient({ initialData, initialReceivables, collectedThisMonth }: CommercialsClientProps) {
     const router = useRouter()
     const [query, setQuery] = useState('')
@@ -739,6 +976,7 @@ export default function CommercialsClient({ initialData, initialReceivables, col
     const [source, setSource] = useState<SourceFilter>('all')
     const [activeTab, setActiveTab] = useState('overview')
     const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null)
+    const [expandedPartyName, setExpandedPartyName] = useState<string | null>(null)
 
     const [dueTab, setDueTab] = useState<'all' | 'overdue' | 'due_today' | 'due_this_week' | 'upcoming' | 'paid'>('all')
     const [receivableSearch, setReceivableSearch] = useState('')
@@ -827,6 +1065,12 @@ export default function CommercialsClient({ initialData, initialReceivables, col
         }
     }
 
+    const openPaymentDialog = (rec: Receivable) => {
+        setSelectedReceivable(rec)
+        setPaymentAmount(rec.balance_amount.toString())
+        setIsPaymentDialogOpen(true)
+    }
+
     const filtered = useMemo(() => {
         const needle = query.trim().toLowerCase()
         return initialData.entries.filter((entry) => {
@@ -874,6 +1118,10 @@ export default function CommercialsClient({ initialData, initialReceivables, col
             return matchesBucket && (!needle || haystack.includes(needle))
         })
     }, [commercialGroups, dueTab, receivableSearch])
+
+    const partySummaries = useMemo(() => {
+        return buildPartyReceivableSummaries(initialReceivables)
+    }, [initialReceivables])
 
     // Calculate Receivables Summary
     const receivablesSummary = useMemo(() => {
@@ -1016,34 +1264,43 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        {filteredGroups.length === 0 ? (
-                            <Card className="border-border/60">
-                                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                                    <BadgeIndianRupee className="mb-3 h-10 w-10 text-muted-foreground/70" />
-                                    <p className="text-lg font-bold text-foreground">No commercial groups found</p>
-                                    <p className="mt-1 text-sm text-muted-foreground">Sales will automatically create receivables here.</p>
-                                </CardContent>
-                            </Card>
-                        ) : (
-                            filteredGroups.map((group) => (
-                                <CommercialGroupCard
-                                    key={group.id}
-                                    group={group}
-                                    expanded={expandedGroupId === group.id}
-                                    onToggle={() => setExpandedGroupId(expandedGroupId === group.id ? null : group.id)}
-                                    onRecordPayment={(rec) => {
-                                        setSelectedReceivable(rec)
-                                        setPaymentAmount(rec.balance_amount.toString())
-                                        setIsPaymentDialogOpen(true)
-                                    }}
-                                    onToggleHistory={togglePaymentHistory}
-                                    expandedHistoryId={expandedHistoryId}
-                                    paymentHistoryCache={paymentHistoryCache}
-                                    loadingHistoryId={loadingHistoryId}
-                                />
-                            ))
-                        )}
+                    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+                        <div className="space-y-3">
+                            {filteredGroups.length === 0 ? (
+                                <Card className="border-border/60">
+                                    <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                                        <BadgeIndianRupee className="mb-3 h-10 w-10 text-muted-foreground/70" />
+                                        <p className="text-lg font-bold text-foreground">No commercial groups found</p>
+                                        <p className="mt-1 text-sm text-muted-foreground">Sales will automatically create receivables here.</p>
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                filteredGroups.map((group) => (
+                                    <CommercialGroupCard
+                                        key={group.id}
+                                        group={group}
+                                        expanded={expandedGroupId === group.id}
+                                        onToggle={() => setExpandedGroupId(expandedGroupId === group.id ? null : group.id)}
+                                        onRecordPayment={openPaymentDialog}
+                                        onToggleHistory={togglePaymentHistory}
+                                        expandedHistoryId={expandedHistoryId}
+                                        paymentHistoryCache={paymentHistoryCache}
+                                        loadingHistoryId={loadingHistoryId}
+                                    />
+                                ))
+                            )}
+                        </div>
+
+                        <PartiesOwingPanel
+                            parties={partySummaries}
+                            expandedPartyName={expandedPartyName}
+                            onToggleParty={(partyName) => setExpandedPartyName(expandedPartyName === partyName ? null : partyName)}
+                            onRecordPayment={openPaymentDialog}
+                            onToggleHistory={togglePaymentHistory}
+                            expandedHistoryId={expandedHistoryId}
+                            paymentHistoryCache={paymentHistoryCache}
+                            loadingHistoryId={loadingHistoryId}
+                        />
                     </div>
 
                     <Card className="hidden border-border/60">
