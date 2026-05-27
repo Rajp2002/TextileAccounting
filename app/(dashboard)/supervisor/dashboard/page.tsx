@@ -35,7 +35,6 @@ import { toast } from 'sonner'
 import { format, subDays } from 'date-fns'
 import {
     getShiftSetupData,
-    upsertShiftAssignment,
     copyPreviousShiftAction,
     bulkLogProduction,
     updateMachineStatus,
@@ -206,7 +205,6 @@ interface MachineUnifiedRowProps {
     producedMeters: number
     onProducedMetersChange: (v: number) => void
     onStatusClick: (machine: any) => void
-    onAssignmentChange: (machineId: string, workerId: number | null, orderId: string | null) => void
     isSyncing?: boolean
     isSaved?: boolean
     loggingMode: 'production' | 'downtime'
@@ -225,7 +223,6 @@ function MachineUnifiedRow({
     producedMeters,
     onProducedMetersChange,
     onStatusClick,
-    onAssignmentChange,
     isSyncing,
     isSaved,
     loggingMode,
@@ -327,47 +324,31 @@ function MachineUnifiedRow({
 
                 {!isDowntime && (
                     <>
-                        {/* Worker Dropdown */}
+                        {/* Worker Display */}
                         <div className="flex items-center gap-2 min-w-0">
                             <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-saffron-soft/70">
                                 <Users className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-saffron-deep" />
                             </div>
-                            <Select
-                                value={workerId}
-                                onValueChange={(val) => onAssignmentChange(machine.id, parseInt(val), orderId || null)}
-                            >
-                                <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline lg:border-none bg-surface lg:bg-transparent px-3 lg:p-0 text-sm font-semibold shadow-none transition-colors hover:text-saffron-deep focus:ring-0">
-                                    <SelectValue placeholder={t('production.no_worker')} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {workers.map((w) => (
-                                        <SelectItem key={w.id} value={w.id.toString()}>{w.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <span className="truncate text-sm font-semibold text-ink">
+                                {workers.find((w) => w.id.toString() === workerId)?.name ?? t('production.no_worker')}
+                            </span>
                         </div>
 
-                        {/* Cost Analysis / Quality Dropdown */}
+                        {/* Cost Analysis / Quality Display */}
                         <div className="flex items-center gap-2 min-w-0">
                             <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-surface-soft">
                                 <Package className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-muted-foreground" />
                             </div>
-                            <Select
-                                value={orderId}
-                                onValueChange={(val) => onAssignmentChange(machine.id, workerId ? parseInt(workerId) : null, val)}
-                            >
-                                <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline lg:border-none bg-surface lg:bg-transparent px-3 lg:p-0 text-sm font-medium leading-tight text-muted-foreground shadow-none transition-colors hover:text-ink focus:ring-0">
-                                    <SelectValue placeholder="Select cost analysis / quality" />
-                                </SelectTrigger>
-                                <SelectContent className="max-h-60">
-                                    {orders.map((o) => (
-                                        <SelectItem key={o.id} value={o.id}>
-                                            <span className="font-bold">{o.quality_label || o.party_name}</span>
-                                            <span className="ml-1 opacity-60">— {o.market_run_id ? 'Market Run' : o.party_name}</span>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <span className="truncate text-sm font-medium leading-tight text-muted-foreground">
+                                {selectedTarget ? (
+                                    <>
+                                        <span className="font-semibold text-ink">{selectedTarget.quality_label || selectedTarget.party_name}</span>
+                                        <span className="ml-1 text-xs opacity-75">— {selectedTarget.market_run_id ? 'Market Run' : selectedTarget.party_name}</span>
+                                    </>
+                                ) : (
+                                    "No cost analysis / quality"
+                                )}
+                            </span>
                         </div>
 
                         {selectedTarget && (
@@ -839,69 +820,7 @@ export default function UnifiedDashboard() {
         setShift(nextShift)
     }
 
-    // Update assignment (optimistic)
-    const handleAssignmentChange = async (machineId: string, workerId: number | null, orderId: string | null) => {
-        // Mark as syncing
-        setSyncingState(prev => ({ ...prev, [machineId]: 'syncing' }))
 
-        // Find existing record to get current rate
-        const existing = assignments.find(a => a.machine_id === machineId)
-        const currentOrder = orders.find(o => o.id === orderId)
-        const machine = machines.find(m => m.id === machineId)
-
-        const rate = existing?.rate_per_m
-            ?? currentOrder?.worker_rate_per_m
-            ?? machine?.default_rate_per_m
-            ?? 1.5
-
-        // OPTIMISTIC UPDATE: Update the local assignments list immediately
-        const originalAssignments = [...assignments]
-        setAssignments(prev => {
-            const next = prev.filter(a => a.machine_id !== machineId)
-            if (workerId || orderId) {
-                next.push({
-                    machine_id: machineId,
-                    worker_id: workerId,
-                    order_id: orderId,
-                    rate_per_m: rate,
-                    breakdown_category: existing?.breakdown_category,
-                    breakdown_notes: existing?.breakdown_notes
-                })
-            }
-            return next
-        })
-
-        const res = await upsertShiftAssignment({
-            date,
-            shift,
-            machine_id: machineId,
-            worker_id: workerId,
-            order_id: orderId,
-            rate_per_m: rate,
-        })
-
-        if (res.success) {
-            setSyncingState(prev => ({ ...prev, [machineId]: 'saved' }))
-            // Clear the "saved" checkmark after 3 seconds
-            setTimeout(() => {
-                setSyncingState(prev => ({ ...prev, [machineId]: null }))
-            }, 3000)
-
-            // Clear meters locally if worker or order was unassigned
-            if (!workerId || !orderId) {
-                setProductionMeters(prev => {
-                    const next = { ...prev }
-                    delete next[machineId]
-                    return next
-                })
-            }
-        } else {
-            // ROLLBACK on error
-            setAssignments(originalAssignments)
-            setSyncingState(prev => ({ ...prev, [machineId]: null }))
-            toast.error(res.error)
-        }
-    }
 
     const handleBulkSubmit = async (code: string = '') => {
         if (submitLockRef.current || submitting) return
@@ -1240,7 +1159,6 @@ export default function UnifiedDashboard() {
                                 producedMeters={productionMeters[machine.id] ?? 0}
                                 onProducedMetersChange={(v) => setProductionMeters(prev => ({ ...prev, [machine.id]: v }))}
                                 onStatusClick={setSelectedMachine}
-                                onAssignmentChange={handleAssignmentChange}
                                 isSyncing={syncingState[machine.id] === 'syncing'}
                                 isSaved={syncingState[machine.id] === 'saved'}
                                 loggingMode={loggingModes[machine.id] ?? 'production'}
