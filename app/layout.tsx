@@ -27,7 +27,8 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Weavly",
-    statusBarStyle: "default",
+    // 'black-translucent' lets content extend behind the status bar and keeps env(safe-area-inset-top) active
+    statusBarStyle: "black-translucent",
   },
   icons: {
     apple: "/apple-icon.png?v=3",
