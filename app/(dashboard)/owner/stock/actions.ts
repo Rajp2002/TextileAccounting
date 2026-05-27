@@ -365,6 +365,7 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
             .from('fabric_stock_sales')
             .select('id, stock_lot_id, pending_dispatch_meters')
             .eq('org_id', profile.org_id)
+            .in('dispatch_status', ['not_dispatched', 'partially_dispatched', 'discrepancy'])
             .gt('pending_dispatch_meters', 0)
     ])
 

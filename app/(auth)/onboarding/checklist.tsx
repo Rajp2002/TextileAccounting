@@ -89,18 +89,31 @@ function ProductionModeForm({ onDone }: { onDone: () => void }) {
 
 // ─── Machine Form ────────────────────────────────────────────────────────────────
 
+interface LoomGroup {
+    loomType: string
+    customLabel: string
+    count: number
+}
+
+const LOOM_TYPE_LABELS: Record<string, string> = {
+    jacquard: 'Jacquard',
+    rapier: 'Rapier',
+    water_jet: 'Water Jet',
+    air_jet: 'Air Jet',
+    power_loom: 'Power Loom',
+    shuttle: 'Shuttle',
+}
+
 function MachineForm({ onDone }: { onDone: () => void }) {
-    const [machines, setMachines] = useState([{ name: '', loomType: '', customLabel: '' }])
-    const [bulkText, setBulkText] = useState('')
-    const [bulkMode, setBulkMode] = useState(false)
-    const [bulkLoomType, setBulkLoomType] = useState('')
-    const [bulkCustomLabel, setBulkCustomLabel] = useState('')
+    const [loomGroups, setLoomGroups] = useState<LoomGroup[]>([
+        { loomType: '', customLabel: '', count: 1 }
+    ])
     const [saving, setSaving] = useState(false)
 
-    const addRow = () => setMachines(m => [...m, { name: '', loomType: '', customLabel: '' }])
-    const removeRow = (i: number) => setMachines(m => m.filter((_, idx) => idx !== i))
-    const updateRow = (i: number, field: string, val: string) =>
-        setMachines(m => m.map((r, idx) => {
+    const addGroup = () => setLoomGroups(g => [...g, { loomType: '', customLabel: '', count: 1 }])
+    const removeGroup = (i: number) => setLoomGroups(g => g.filter((_, idx) => idx !== i))
+    const updateGroup = (i: number, field: keyof LoomGroup, val: any) =>
+        setLoomGroups(g => g.map((r, idx) => {
             if (idx === i) {
                 const updated = { ...r, [field]: val }
                 if (field === 'loomType' && val !== 'other') {
@@ -111,163 +124,155 @@ function MachineForm({ onDone }: { onDone: () => void }) {
             return r
         }))
 
-    const parseBulk = () => {
-        const lines = bulkText.split('\n').map(l => l.trim()).filter(Boolean)
-        if (lines.length === 0) { toast.error('No machine names found'); return }
-        if (!bulkLoomType) { toast.error('Please select a loom type for these machines'); return }
-        if (bulkLoomType === 'other' && !bulkCustomLabel.trim()) { toast.error('Custom label is required for Other loom type'); return }
-        
-        setMachines(lines.map(name => ({
-            name,
-            loomType: bulkLoomType,
-            customLabel: bulkLoomType === 'other' ? bulkCustomLabel.trim() : ''
-        })))
-        setBulkMode(false)
-        toast.success(`Parsed ${lines.length} machine names`)
-    }
-
     const handleSave = async () => {
-        const validMachines = machines.map(m => ({
-            name: m.name.trim(),
-            loomType: m.loomType,
-            customLabel: m.customLabel.trim()
-        })).filter(m => m.name)
+        const validGroups = loomGroups.filter(g => g.loomType)
 
-        if (validMachines.length === 0) { toast.error('Enter at least one machine name'); return }
+        if (validGroups.length === 0) {
+            toast.error('Please configure at least one loom type')
+            return
+        }
 
-        for (const m of validMachines) {
-            if (!m.loomType) { toast.error(`Please select a loom type for "${m.name}"`); return }
-            if (m.loomType === 'other' && !m.customLabel) { toast.error(`Custom label is required for "${m.name}"`); return }
+        for (const g of validGroups) {
+            if (g.loomType === 'other' && !g.customLabel.trim()) {
+                toast.error('Custom label is required for Other loom type')
+                return
+            }
+            const count = parseInt(String(g.count), 10)
+            if (isNaN(count) || count <= 0) {
+                toast.error('Number of machines must be at least 1')
+                return
+            }
+        }
+
+        const machinesToAdd: { name: string; loomType: string; customLabel: string }[] = []
+        const typeCounters: Record<string, number> = {}
+
+        for (const group of validGroups) {
+            const count = parseInt(String(group.count), 10)
+            const label = group.loomType === 'other'
+                ? group.customLabel.trim()
+                : LOOM_TYPE_LABELS[group.loomType] || group.loomType
+
+            const lowerLabel = label.toLowerCase()
+            if (typeCounters[lowerLabel] === undefined) {
+                typeCounters[lowerLabel] = 0
+            }
+
+            for (let i = 0; i < count; i++) {
+                typeCounters[lowerLabel]++
+                machinesToAdd.push({
+                    name: `${label} ${typeCounters[lowerLabel]}`,
+                    loomType: group.loomType,
+                    customLabel: group.loomType === 'other' ? group.customLabel.trim() : ''
+                })
+            }
         }
 
         setSaving(true)
         let allOk = true
-        for (const m of validMachines) {
+        for (const m of machinesToAdd) {
             const res = await addMachine(m.name, m.loomType, m.customLabel)
-            if (res?.error) { toast.error(`"${m.name}": ${res.error}`); allOk = false }
+            if (res?.error) {
+                toast.error(`"${m.name}": ${res.error}`)
+                allOk = false
+            }
         }
         setSaving(false)
         if (allOk) {
-            toast.success(`${validMachines.length} machine${validMachines.length > 1 ? 's' : ''} added!`)
+            toast.success(`Successfully added ${machinesToAdd.length} machine${machinesToAdd.length > 1 ? 's' : ''}!`)
             onDone()
         }
     }
 
+    const totalCount = loomGroups.reduce((acc, curr) => {
+        const c = parseInt(String(curr.count), 10)
+        return acc + (isNaN(c) || c < 0 ? 0 : c)
+    }, 0)
+
     return (
         <div className="space-y-4 pt-4 border-t border-gray-100">
             <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">Add machines one by one or paste a list</p>
-                <Button
-                    type="button" variant="ghost" size="sm"
-                    onClick={() => setBulkMode(b => !b)}
-                    className="text-amber-700 hover:text-amber-800 hover:bg-amber-50 gap-1.5 text-xs"
-                >
-                    <Upload className="h-3.5 w-3.5" />
-                    {bulkMode ? 'Manual entry' : 'Bulk import'}
-                </Button>
+                <p className="text-sm text-gray-500">Specify the quantity of each loom type in your factory</p>
             </div>
 
-            <AnimatePresence mode="wait">
-                {bulkMode ? (
-                    <motion.div key="bulk"
-                        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }} className="space-y-3"
-                    >
-                        <Label className="text-xs text-gray-600">Paste machine names (one per line)</Label>
-                        <textarea
-                            rows={5}
-                            value={bulkText}
-                            onChange={e => setBulkText(e.target.value)}
-                            placeholder={"Machine 1\nMachine 2\nMachine 3"}
-                            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none"
-                        />
-                        <div className="flex gap-2">
-                            <select
-                                value={bulkLoomType}
-                                onChange={e => setBulkLoomType(e.target.value)}
-                                className="h-9 text-sm rounded-lg border border-gray-200 bg-gray-50 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent flex-1"
-                            >
-                                <option value="">Select Loom Type for All</option>
-                                <option value="jacquard">Jacquard</option>
-                                <option value="rapier">Rapier</option>
-                                <option value="water_jet">Water Jet</option>
-                                <option value="air_jet">Air Jet</option>
-                                <option value="power_loom">Power Loom</option>
-                                <option value="shuttle">Shuttle</option>
-                                <option value="other">Other</option>
-                            </select>
-                            {bulkLoomType === 'other' && (
-                                <Input
-                                    value={bulkCustomLabel}
-                                    placeholder="Custom label"
-                                    onChange={e => setBulkCustomLabel(e.target.value)}
-                                    className="h-9 text-sm flex-1"
+            <div className="space-y-3">
+                {loomGroups.map((group, i) => (
+                    <div key={i} className="flex flex-col gap-2 p-3 border border-gray-100 rounded-xl bg-gray-50/50">
+                        <div className="flex flex-wrap gap-2 items-center">
+                            <div className="flex-1 min-w-[150px]">
+                                <select
+                                    value={group.loomType}
+                                    onChange={e => updateGroup(i, 'loomType', e.target.value)}
+                                    className="w-full h-9 text-sm rounded-lg border border-gray-200 bg-white px-3 py-1 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                                >
+                                    <option value="">Select Loom Type</option>
+                                    <option value="jacquard">Jacquard</option>
+                                    <option value="rapier">Rapier</option>
+                                    <option value="water_jet">Water Jet</option>
+                                    <option value="air_jet">Air Jet</option>
+                                    <option value="power_loom">Power Loom</option>
+                                    <option value="shuttle">Shuttle</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            {group.loomType === 'other' && (
+                                <div className="flex-1 min-w-[120px]">
+                                    <Input
+                                        value={group.customLabel}
+                                        placeholder="Custom label (e.g. Saurer)"
+                                        onChange={e => updateGroup(i, 'customLabel', e.target.value)}
+                                        className="h-9 text-sm bg-white"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="w-[110px] flex items-center gap-1.5 shrink-0 bg-white border border-gray-200 rounded-lg px-2 h-9">
+                                <span className="text-xs text-gray-400 font-medium shrink-0">Qty:</span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={group.count === 0 ? '' : group.count}
+                                    onChange={e => {
+                                        const val = parseInt(e.target.value, 10)
+                                        updateGroup(i, 'count', isNaN(val) ? 0 : val)
+                                    }}
+                                    className="w-full text-sm text-center font-mono focus:outline-none"
                                 />
+                            </div>
+
+                            {loomGroups.length > 1 && (
+                                <button
+                                    type="button"
+                                    onClick={() => removeGroup(i)}
+                                    className="text-gray-300 hover:text-red-400 transition-colors p-1.5 shrink-0 ml-auto"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </button>
                             )}
                         </div>
-                        <Button type="button" size="sm" onClick={parseBulk}
-                            className="bg-amber-600 hover:bg-amber-700 text-white">
-                            Parse list
-                        </Button>
-                    </motion.div>
-                ) : (
-                    <motion.div key="manual"
-                        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }} className="space-y-3"
-                    >
-                        {machines.map((m, i) => (
-                            <div key={i} className="flex flex-col gap-2 p-3 border border-gray-100 rounded-lg">
-                                <div className="flex gap-2">
-                                    <Input
-                                        value={m.name}
-                                        placeholder={`e.g. Machine ${i + 1}`}
-                                        onChange={e => updateRow(i, 'name', e.target.value)}
-                                        className="h-9 text-sm flex-1"
-                                    />
-                                    {machines.length > 1 && (
-                                        <button type="button" onClick={() => removeRow(i)}
-                                            className="text-gray-300 hover:text-red-400 transition-colors">
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="flex gap-2">
-                                    <select
-                                        value={m.loomType}
-                                        onChange={e => updateRow(i, 'loomType', e.target.value)}
-                                        className="h-9 text-sm rounded-lg border border-gray-200 bg-gray-50 px-3 py-1 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent flex-1"
-                                    >
-                                        <option value="">Select Loom Type</option>
-                                        <option value="jacquard">Jacquard</option>
-                                        <option value="rapier">Rapier</option>
-                                        <option value="water_jet">Water Jet</option>
-                                        <option value="air_jet">Air Jet</option>
-                                        <option value="power_loom">Power Loom</option>
-                                        <option value="shuttle">Shuttle</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                    {m.loomType === 'other' && (
-                                        <Input
-                                            value={m.customLabel}
-                                            placeholder="Custom label"
-                                            onChange={e => updateRow(i, 'customLabel', e.target.value)}
-                                            className="h-9 text-sm flex-1"
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                        <button type="button" onClick={addRow}
-                            className="flex items-center gap-1 text-xs text-amber-700 hover:text-amber-800 font-medium mt-1">
-                            <Plus className="h-3.5 w-3.5" /> Add another machine
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    </div>
+                ))}
 
-            <Button onClick={handleSave} disabled={saving}
-                className="w-full bg-amber-600 hover:bg-amber-700 text-white h-10 font-semibold">
-                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : `Save ${machines.filter(m=>m.name.trim()).length || ''} machine${machines.filter(m=>m.name.trim()).length !== 1 ? 's' : ''}`}
+                <button
+                    type="button"
+                    onClick={addGroup}
+                    className="flex items-center gap-1 text-xs text-amber-700 hover:text-amber-800 font-semibold mt-1 px-1 py-0.5 rounded hover:bg-amber-50 transition-colors"
+                >
+                    <Plus className="h-3.5 w-3.5" /> Add another loom type
+                </button>
+            </div>
+
+            <Button
+                onClick={handleSave}
+                disabled={saving || totalCount === 0}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white h-10 font-semibold mt-2"
+            >
+                {saving ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
+                ) : (
+                    `Save ${totalCount || ''} machine${totalCount !== 1 ? 's' : ''}`
+                )}
             </Button>
         </div>
     )
