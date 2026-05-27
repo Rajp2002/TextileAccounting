@@ -196,8 +196,8 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
              */}
             <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-canvas/92 px-4 py-2 pt-safe shadow-sm backdrop-blur-xl md:hidden">
                 <div className="flex items-center gap-2">
-                    <div className="relative h-8 w-24 shrink-0 transition-transform active:scale-95">
-                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="6rem" className="object-contain" priority />
+                    <div className="relative h-16 w-36 shrink-0 transition-transform active:scale-95">
+                        <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="9rem" className="object-contain" priority />
                     </div>
                 </div>
 

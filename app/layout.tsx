@@ -24,12 +24,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Weavly — Factory OS for Textile Weaving Units",
   description: "Weavly connects fabric costing, loom production logs, dispatches, advances, payroll, and WhatsApp briefs for grey fabric weaving factories.",
-  // Apple PWA meta tags
   appleWebApp: {
     capable: true,
     title: "Weavly",
-    // 'black-translucent' lets content extend behind the status bar
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
   },
   icons: {
     apple: "/apple-icon.png?v=3",

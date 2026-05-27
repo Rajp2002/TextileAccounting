@@ -213,6 +213,7 @@ interface MachineUnifiedRowProps {
     onDowntimeReasonChange: (reason: string) => void
     downtimeNote: string
     onDowntimeNoteChange: (note: string) => void
+    existingLog?: any
 }
 
 function MachineUnifiedRow({
@@ -231,6 +232,7 @@ function MachineUnifiedRow({
     onDowntimeReasonChange,
     downtimeNote,
     onDowntimeNoteChange,
+    existingLog,
 }: MachineUnifiedRowProps) {
     const { t } = useTranslation()
     const workerId = assignment?.worker_id?.toString() ?? ''
@@ -242,230 +244,260 @@ function MachineUnifiedRow({
     const isDowntime = loggingMode === 'downtime'
     const deadlineLabel = selectedTarget ? formatShortDate(selectedTarget.deadline) : null
 
+    const getDowntimeLabel = (reasonStr: string) => {
+        if (!reasonStr) return 'Downtime'
+        const parts = reasonStr.split(':')
+        const code = parts[0].trim()
+        const label = ZERO_METER_REASON_LABELS[code as ZeroMeterReason] || code
+        if (parts.length > 1) {
+            const detail = parts.slice(1).join(':').trim()
+            if (detail) {
+                return `${label} (${detail})`
+            }
+        }
+        return label
+    }
+
     return (
         <div className={cn(
-            "relative flex flex-col lg:flex-row items-stretch gap-0 overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:border-hairline-strong",
+            "relative flex flex-col overflow-hidden rounded-2xl border border-hairline bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:border-hairline-strong",
             isMaintenance && !isDowntime && "opacity-75"
         )}>
-            {/* Status Strip & Detail Trigger (Header on mobile, side strip on desktop) */}
-            <button
-                onClick={() => onStatusClick(machine)}
-                className={cn(
-                    "relative flex flex-row lg:flex-col w-full lg:w-16 shrink-0 items-center justify-between lg:justify-center gap-1.5 border-b lg:border-b-0 lg:border-r border-hairline transition-all hover:bg-surface-soft p-3 lg:p-1",
-                    status === 'running' ? "bg-success-soft/50" : status === 'maintenance' ? "bg-warning-soft/60" : "bg-surface-soft/50",
-                    isSyncing && "animate-pulse"
-                )}
-            >
-                {/* Left Status Bar (Desktop only) */}
-                <div className={cn(
-                    "absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full hidden lg:block",
-                    status === 'running' ? "bg-success" :
-                    status === 'maintenance' ? "bg-warning" :
-                    "bg-hairline-strong"
-                )} />
-
-                <div className="flex flex-row lg:flex-col items-center justify-between lg:justify-center w-full px-1">
-                    <div className="flex items-center gap-2 lg:flex-col lg:gap-1">
-                        <p className="text-sm font-semibold leading-none text-ink lg:text-[10px]">
-                            {formatLoomName(machine.name)}
-                        </p>
-                        <div className="lg:hidden">
-                            <MachineStatusBadge status={status} />
-                        </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                        {isSyncing ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-saffron" />
-                        ) : isSaved ? (
-                            <div className="rounded-full bg-success p-0.5 shadow-sm animate-in zoom-in duration-300">
-                                 <Check className="h-3 w-3 text-white stroke-[4px]" />
-                            </div>
-                        ) : (
-                            <div className={cn(
-                                "w-2.5 h-2.5 rounded-full hidden lg:block",
-                                status === 'running' ? "bg-success" :
-                                status === 'maintenance' ? "bg-warning" :
-                                "bg-hairline-strong"
-                            )} />
-                        )}
-                        <ChevronRight className="h-4 w-4 text-muted-foreground/35 lg:hidden" />
-                    </div>
-                </div>
-            </button>
-
-            {/* Assignments + Mode Toggle Section */}
-            <div className="flex-1 min-w-0 p-4 lg:p-3 py-4 flex flex-col justify-center gap-3 lg:gap-2">
-                {/* Production / Downtime Toggle */}
-                <div className="flex rounded-lg border border-hairline bg-surface-soft p-0.5">
-                    <button
-                        onClick={() => onLoggingModeChange('production')}
-                        className={cn(
-                            "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150",
-                            !isDowntime
-                                ? "bg-surface text-saffron-deep shadow-sm ring-1 ring-hairline"
-                                : "text-muted-foreground hover:text-ink"
-                        )}
-                    >
-                        <Zap className="h-3.5 w-3.5" /> Production
-                    </button>
-                    <button
-                        onClick={() => onLoggingModeChange('downtime')}
-                        className={cn(
-                            "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150",
-                            isDowntime
-                                ? "bg-warning-soft text-warning shadow-sm ring-1 ring-warning-soft"
-                                : "text-muted-foreground hover:text-ink"
-                        )}
-                    >
-                        <Pause className="h-3.5 w-3.5" /> Downtime
-                    </button>
-                </div>
-
-                {!isDowntime && (
-                    <>
-                        {/* Worker Display */}
-                        <div className="flex items-center gap-2 min-w-0">
-                            <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-saffron-soft/70">
-                                <Users className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-saffron-deep" />
-                            </div>
-                            <span className="truncate text-sm font-semibold text-ink">
-                                {workers.find((w) => w.id.toString() === workerId)?.name ?? t('production.no_worker')}
-                            </span>
-                        </div>
-
-                        {/* Cost Analysis / Quality Display */}
-                        <div className="flex items-center gap-2 min-w-0">
-                            <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-surface-soft">
-                                <Package className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-muted-foreground" />
-                            </div>
-                            <span className="truncate text-sm font-medium leading-tight text-muted-foreground">
-                                {selectedTarget ? (
-                                    <>
-                                        <span className="font-semibold text-ink">{selectedTarget.quality_label || selectedTarget.party_name}</span>
-                                        <span className="ml-1 text-xs opacity-75">— {selectedTarget.market_run_id ? 'Market Run' : selectedTarget.party_name}</span>
-                                    </>
-                                ) : (
-                                    "No cost analysis / quality"
-                                )}
-                            </span>
-                        </div>
-
-                        {selectedTarget && (
-                            <div className="ml-10 lg:ml-8 flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                                <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
-                                    {formatMeters(selectedTarget.remaining_meters)} left
-                                </span>
-                                {deadlineLabel && (
-                                    <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
-                                        Due {deadlineLabel}
-                                    </span>
-                                )}
-                            </div>
-                        )}
-                    </>
-                )}
-
-                {isDowntime && (
-                    <>
-                        {/* Downtime Reason Dropdown */}
-                        <div className="flex items-center gap-2 min-w-0">
-                            <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-warning-soft/70">
-                                <Pause className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-warning" />
-                            </div>
-                            <Select
-                                value={downtimeReason}
-                                onValueChange={onDowntimeReasonChange}
-                            >
-                                <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline bg-surface px-3 text-sm font-semibold shadow-none transition-colors focus:ring-0">
-                                    <SelectValue placeholder="Select downtime reason" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {ZERO_METER_REASONS.map((reason) => (
-                                        <SelectItem key={reason} value={reason}>
-                                            {ZERO_METER_REASON_LABELS[reason]}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        {/* Note input for "other" reason */}
-                        {downtimeReason === 'other' && (
-                            <div className="ml-10 lg:ml-8">
-                                <Input
-                                    placeholder="Describe the reason…"
-                                    value={downtimeNote}
-                                    onChange={(e) => onDowntimeNoteChange(e.target.value)}
-                                    className="h-10 text-sm"
-                                />
-                            </div>
-                        )}
-
-                        {/* Optional worker/order in downtime (collapsed) */}
-                        <div className="ml-10 lg:ml-8 flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                            <span className="rounded-full bg-warning-soft/60 px-2.5 py-1 lg:py-0.5 text-warning">
-                                0 m — downtime
-                            </span>
-                            {workerId && (
-                                <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
-                                    {workers.find(w => w.id.toString() === workerId)?.name ?? 'Worker'}
-                                </span>
-                            )}
-                        </div>
-                    </>
-                )}
-            </div>
-
-            {/* Production Input (The Quick Log) — only shown in production mode */}
-            {!isDowntime && (
-                <div className={cn(
-                    "flex flex-col lg:flex-row w-full lg:w-auto items-center justify-center border-t lg:border-t-0 lg:border-l border-hairline bg-surface-soft/35 p-4 lg:p-3",
-                    (!workerId || !orderId) && "opacity-55"
-                )}>
-                    <div className="flex w-full flex-col items-center gap-3 lg:gap-2">
-                        {(!workerId || !orderId) ? (
-                            <div className="flex h-11 lg:h-12 flex-col items-center justify-center px-1 text-center text-xs font-semibold leading-tight text-muted-foreground/70 animate-in fade-in duration-500">
-                                 {!workerId ? t('production.no_worker') : 'Select cost analysis / quality'}
-                                 <AlertCircle className="h-4 w-4 mt-1 opacity-40" />
-                            </div>
-                        ) : (
-                            <>
-                                <div className={cn(
-                                    "group/input flex items-center overflow-hidden rounded-lg border bg-surface transition-all duration-200 w-full lg:w-auto h-11 lg:h-9",
-                                    producedMeters > 0 ? "border-saffron ring-4 ring-saffron/10" : "border-hairline shadow-sm"
-                                )}>
-                                    <Input
-                                        type="number"
-                                        inputMode="decimal"
-                                        pattern="[0-9]*"
-                                        placeholder="0"
-                                        value={producedMeters || ''}
-                                        onChange={(e) => onProducedMetersChange(Number(e.target.value))}
-                                        className="h-full flex-1 border-none bg-transparent p-0 text-center font-mono text-lg font-semibold focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                    />
-                                </div>
-                                <div className="flex w-full flex-col items-center gap-2 lg:gap-1">
-                                    <div className="flex max-w-full items-center gap-1 rounded-full border border-hairline bg-surface px-2.5 py-1 lg:py-0.5 shadow-sm">
-                                        <span className="text-center text-xs font-semibold uppercase tracking-wide leading-tight text-saffron-deep">
-                                            {t('floor.meter.shiftProduction')}
-                                        </span>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    </div>
+            {existingLog && (
+                <div className="bg-success-soft/30 border-b border-success-soft text-success text-[13px] font-semibold px-4 py-2.5 flex items-center justify-between animate-in fade-in slide-in-from-top duration-300">
+                    <span className="flex items-center gap-1.5">
+                        <Check className="h-3.5 w-3.5 stroke-[3px]" />
+                        {existingLog.meters > 0
+                            ? `Already logged: ${existingLog.meters} m`
+                            : `Already logged: Downtime (${getDowntimeLabel(existingLog.zero_meter_reason)})`}
+                    </span>
+                    <span className="text-[10px] text-success/70 font-normal">
+                        {existingLog.submitted_at && `at ${format(new Date(existingLog.submitted_at), 'h:mm a')}`}
+                    </span>
                 </div>
             )}
 
-            {/* Detail Sheet Indicator (Desktop only) */}
-            <button
-                onClick={() => onStatusClick(machine)}
-                className="absolute right-2 top-2 p-1 text-muted-foreground/35 transition-colors hover:text-saffron-deep hidden lg:block"
-                title="Loom details"
-            >
-                <ChevronRight className="h-4 w-4" />
-            </button>
+            <div className="relative flex flex-col lg:flex-row items-stretch gap-0 flex-1">
+                {/* Status Strip & Detail Trigger (Header on mobile, side strip on desktop) */}
+                <button
+                    onClick={() => onStatusClick(machine)}
+                    className={cn(
+                        "relative flex flex-row lg:flex-col w-full lg:w-16 shrink-0 items-center justify-between lg:justify-center gap-1.5 border-b lg:border-b-0 lg:border-r border-hairline transition-all hover:bg-surface-soft p-3 lg:p-1",
+                        status === 'running' ? "bg-success-soft/50" : status === 'maintenance' ? "bg-warning-soft/60" : "bg-surface-soft/50",
+                        isSyncing && "animate-pulse"
+                    )}
+                >
+                    {/* Left Status Bar (Desktop only) */}
+                    <div className={cn(
+                        "absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full hidden lg:block",
+                        status === 'running' ? "bg-success" :
+                        status === 'maintenance' ? "bg-warning" :
+                        "bg-hairline-strong"
+                    )} />
+
+                    <div className="flex flex-row lg:flex-col items-center justify-between lg:justify-center w-full px-1">
+                        <div className="flex items-center gap-2 lg:flex-col lg:gap-1">
+                            <p className="text-sm font-semibold leading-none text-ink lg:text-[10px]">
+                                {formatLoomName(machine.name)}
+                            </p>
+                            <div className="lg:hidden">
+                                <MachineStatusBadge status={status} />
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                            {isSyncing ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-saffron" />
+                            ) : isSaved ? (
+                                <div className="rounded-full bg-success p-0.5 shadow-sm animate-in zoom-in duration-300">
+                                     <Check className="h-3 w-3 text-white stroke-[4px]" />
+                                </div>
+                            ) : (
+                                <div className={cn(
+                                    "w-2.5 h-2.5 rounded-full hidden lg:block",
+                                    status === 'running' ? "bg-success" :
+                                    status === 'maintenance' ? "bg-warning" :
+                                    "bg-hairline-strong"
+                                )} />
+                            )}
+                            <ChevronRight className="h-4 w-4 text-muted-foreground/35 lg:hidden" />
+                        </div>
+                    </div>
+                </button>
+
+                {/* Assignments + Mode Toggle Section */}
+                <div className="flex-1 min-w-0 p-4 lg:p-3 py-4 flex flex-col justify-center gap-3 lg:gap-2">
+                    {/* Production / Downtime Toggle */}
+                    <div className="flex rounded-lg border border-hairline bg-surface-soft p-0.5">
+                        <button
+                            onClick={() => onLoggingModeChange('production')}
+                            className={cn(
+                                "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150",
+                                !isDowntime
+                                    ? "bg-surface text-saffron-deep shadow-sm ring-1 ring-hairline"
+                                    : "text-muted-foreground hover:text-ink"
+                            )}
+                        >
+                            <Zap className="h-3.5 w-3.5" /> Production
+                        </button>
+                        <button
+                            onClick={() => onLoggingModeChange('downtime')}
+                            className={cn(
+                                "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150",
+                                isDowntime
+                                    ? "bg-warning-soft text-warning shadow-sm ring-1 ring-warning-soft"
+                                    : "text-muted-foreground hover:text-ink"
+                            )}
+                        >
+                            <Pause className="h-3.5 w-3.5" /> Downtime
+                        </button>
+                    </div>
+
+                    {!isDowntime && (
+                        <>
+                            {/* Worker Display */}
+                            <div className="flex items-center gap-2 min-w-0">
+                                <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-saffron-soft/70">
+                                    <Users className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-saffron-deep" />
+                                </div>
+                                <span className="truncate text-sm font-semibold text-ink">
+                                    {workers.find((w) => w.id.toString() === workerId)?.name ?? t('production.no_worker')}
+                                </span>
+                            </div>
+
+                            {/* Cost Analysis / Quality Display */}
+                            <div className="flex items-center gap-2 min-w-0">
+                                <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-surface-soft">
+                                    <Package className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-muted-foreground" />
+                                </div>
+                                <span className="truncate text-sm font-medium leading-tight text-muted-foreground">
+                                    {selectedTarget ? (
+                                        <>
+                                            <span className="font-semibold text-ink">{selectedTarget.quality_label || selectedTarget.party_name}</span>
+                                            <span className="ml-1 text-xs opacity-75">— {selectedTarget.market_run_id ? 'Market Run' : selectedTarget.party_name}</span>
+                                        </>
+                                    ) : (
+                                        "No cost analysis / quality"
+                                    )}
+                                </span>
+                            </div>
+
+                            {selectedTarget && (
+                                <div className="ml-10 lg:ml-8 flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                                    <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
+                                        {formatMeters(selectedTarget.remaining_meters)} left
+                                    </span>
+                                    {deadlineLabel && (
+                                        <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
+                                            Due {deadlineLabel}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {isDowntime && (
+                        <>
+                            {/* Downtime Reason Dropdown */}
+                            <div className="flex items-center gap-2 min-w-0">
+                                <div className="flex h-8 w-8 lg:h-6 lg:w-6 shrink-0 items-center justify-center rounded-md bg-warning-soft/70">
+                                    <Pause className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-warning" />
+                                </div>
+                                <Select
+                                    value={downtimeReason}
+                                    onValueChange={onDowntimeReasonChange}
+                                >
+                                    <SelectTrigger className="h-11 lg:h-9 max-w-full truncate border border-hairline bg-surface px-3 text-sm font-semibold shadow-none transition-colors focus:ring-0">
+                                        <SelectValue placeholder="Select downtime reason" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {ZERO_METER_REASONS.map((reason) => (
+                                            <SelectItem key={reason} value={reason}>
+                                                {ZERO_METER_REASON_LABELS[reason]}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Note input for "other" reason */}
+                            {downtimeReason === 'other' && (
+                                <div className="ml-10 lg:ml-8">
+                                    <Input
+                                        placeholder="Describe the reason…"
+                                        value={downtimeNote}
+                                        onChange={(e) => onDowntimeNoteChange(e.target.value)}
+                                        className="h-10 text-sm"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Optional worker/order in downtime (collapsed) */}
+                            <div className="ml-10 lg:ml-8 flex flex-wrap items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                                <span className="rounded-full bg-warning-soft/60 px-2.5 py-1 lg:py-0.5 text-warning">
+                                    0 m — downtime
+                                </span>
+                                {workerId && (
+                                    <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
+                                        {workers.find(w => w.id.toString() === workerId)?.name ?? 'Worker'}
+                                    </span>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                {/* Production Input (The Quick Log) — only shown in production mode */}
+                {!isDowntime && (
+                    <div className={cn(
+                        "flex flex-col lg:flex-row w-full lg:w-auto items-center justify-center border-t lg:border-t-0 lg:border-l border-hairline bg-surface-soft/35 p-4 lg:p-3",
+                        (!workerId || !orderId) && "opacity-55"
+                    )}>
+                        <div className="flex w-full flex-col items-center gap-3 lg:gap-2">
+                            {(!workerId || !orderId) ? (
+                                <div className="flex h-11 lg:h-12 flex-col items-center justify-center px-1 text-center text-xs font-semibold leading-tight text-muted-foreground/70 animate-in fade-in duration-500">
+                                     {!workerId ? t('production.no_worker') : 'Select cost analysis / quality'}
+                                     <AlertCircle className="h-4 w-4 mt-1 opacity-40" />
+                                </div>
+                            ) : (
+                                <>
+                                    <div className={cn(
+                                        "group/input flex items-center overflow-hidden rounded-lg border bg-surface transition-all duration-200 w-full lg:w-auto h-11 lg:h-9",
+                                        producedMeters > 0 ? "border-saffron ring-4 ring-saffron/10" : "border-hairline shadow-sm"
+                                    )}>
+                                        <Input
+                                            type="number"
+                                            inputMode="decimal"
+                                            pattern="[0-9]*"
+                                            placeholder="0"
+                                            value={producedMeters || ''}
+                                            onChange={(e) => onProducedMetersChange(Number(e.target.value))}
+                                            className="h-full flex-1 border-none bg-transparent p-0 text-center font-mono text-lg font-semibold focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                        />
+                                    </div>
+                                    <div className="flex w-full flex-col items-center gap-2 lg:gap-1">
+                                        <div className="flex max-w-full items-center gap-1 rounded-full border border-hairline bg-surface px-2.5 py-1 lg:py-0.5 shadow-sm">
+                                            <span className="text-center text-xs font-semibold uppercase tracking-wide leading-tight text-saffron-deep">
+                                                {t('floor.meter.shiftProduction')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Detail Sheet Indicator (Desktop only) */}
+                <button
+                    onClick={() => onStatusClick(machine)}
+                    className="absolute right-2 top-2 p-1 text-muted-foreground/35 transition-colors hover:text-saffron-deep hidden lg:block"
+                    title="Loom details"
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </button>
+            </div>
         </div>
     )
 }
@@ -657,6 +689,7 @@ export default function UnifiedDashboard() {
     const [workers, setWorkers] = useState<any[]>([])
     const [orders, setOrders] = useState<any[]>([])
     const [assignments, setAssignments] = useState<any[]>([])
+    const [existingLogs, setExistingLogs] = useState<any[]>([])
 
     // Bulk Entry state
     const [productionMeters, setProductionMeters] = useState<Record<string, number>>({})
@@ -750,6 +783,7 @@ export default function UnifiedDashboard() {
         setWorkers(data.workers)
         setOrders(data.orders)
         setAssignments(data.assignments)
+        setExistingLogs(data.existingLogs ?? [])
         setCorrectionWindowExpiresAt(data.latestSubmittedAt
             ? new Date(new Date(data.latestSubmittedAt).getTime() + 30 * 60 * 1000).toISOString()
             : null
@@ -806,6 +840,7 @@ export default function UnifiedDashboard() {
         setLoggingModes({})
         setDowntimeReasons({})
         setDowntimeNotes({})
+        setExistingLogs([])
     }
 
     const handleDateChange = (nextDate: string) => {
@@ -1149,6 +1184,7 @@ export default function UnifiedDashboard() {
                 ) : (
                     machines.map((machine) => {
                         const assignment = assignments.find((a) => a.machine_id === machine.id)
+                        const existingLog = existingLogs.find((l) => l.machine_id === machine.id)
                         return (
                             <MachineUnifiedRow
                                 key={machine.id}
@@ -1167,6 +1203,7 @@ export default function UnifiedDashboard() {
                                 onDowntimeReasonChange={(reason) => setDowntimeReasons(prev => ({ ...prev, [machine.id]: reason }))}
                                 downtimeNote={downtimeNotes[machine.id] ?? ''}
                                 onDowntimeNoteChange={(note) => setDowntimeNotes(prev => ({ ...prev, [machine.id]: note }))}
+                                existingLog={existingLog}
                             />
                         )
                     })

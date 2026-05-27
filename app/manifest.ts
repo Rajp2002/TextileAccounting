@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
         // auth-check → redirect chain (saves 3+ sequential server round-trips).
         start_url: '/login',
         scope: '/',
-        display: 'standalone',
+        display: 'fullscreen',
         // Warm brand color painted by the OS before JS loads — eliminates black flash.
         background_color: '#FFF8EA',
         orientation: 'portrait',

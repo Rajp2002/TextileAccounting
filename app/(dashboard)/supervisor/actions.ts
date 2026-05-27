@@ -32,6 +32,7 @@ interface ProductionLogRow {
     opening_meter_reading: number | null
     counter_was_reset: boolean
     submitted_at: string | null
+    zero_meter_reason: string | null
 }
 
 // ─── Internal Helpers ──────────────────────────────────────────────────────────
@@ -821,7 +822,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             ? Promise.resolve({ data: [] as ProductionLogRow[] })
             : supabase
                   .from('production_logs')
-                  .select('id, machine_id, date, shift, meters, opening_meter_reading, closing_meter_reading, counter_was_reset, submitted_at')
+                  .select('id, machine_id, date, shift, meters, opening_meter_reading, closing_meter_reading, counter_was_reset, submitted_at, zero_meter_reason')
                   .eq('org_id', orgId)
                   .eq('date', date)
                   .eq('shift', shift)
