@@ -999,7 +999,6 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                                     setTransportName('')
                                                     setVehicleNumber('')
                                                     setChallanNumber('')
-                                                    setReceivedMeters('')
                                                     const pendingMeters = sale.pending_dispatch_meters ?? sale.meters_sold
                                                     setDispatchMeters(String(pendingMeters))
                                                     const avgMetersPerTaka = sale.meters_sold / (sale.taka_sold || 1)
