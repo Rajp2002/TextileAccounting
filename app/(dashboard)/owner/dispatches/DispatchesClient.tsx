@@ -31,6 +31,9 @@ import {
     type DispatchSummary,
     type DispatchRow,
     type DispatchOverviewStats,
+    confirmPendingSaleDispatch,
+    confirmPendingSaleReceived,
+    type PendingStockSale,
 } from '@/app/(dashboard)/owner/orders/actions'
 import { confirmDispatchReceiptByOwner } from '@/app/(dashboard)/owner/orders/actions'
 import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
@@ -120,6 +123,7 @@ interface OrderGroup {
 interface DispatchesClientProps {
     initialDispatches: Dispatch[]
     initialOverview: DispatchOverviewStats
+    initialPendingSales: PendingStockSale[]
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -502,22 +506,6 @@ function OrderGroupCard({
 
                             {/* Actions + chevron */}
                             <div className="flex items-center gap-3 lg:flex-col lg:items-end lg:min-w-[160px]">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-9 font-bold text-primary hover:bg-primary/5 rounded-xl text-xs shrink-0"
-                                    asChild
-                                >
-                                    <a 
-                                        href={`/track/${group.trackingToken}`} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                                        Track Portal
-                                    </a>
-                                </Button>
                                 <div className={cn(
                                     "p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 transition-transform duration-300",
                                     expanded && "rotate-180"
@@ -620,14 +608,90 @@ function MetricCard({
     )
 }
 
-export default function DispatchesClient({ initialDispatches, initialOverview }: DispatchesClientProps) {
+function todayDate() {
+    return new Date().toISOString().slice(0, 10)
+}
+
+export default function DispatchesClient({ initialDispatches, initialOverview, initialPendingSales = [] }: DispatchesClientProps) {
     const { t } = useTranslation()
     const [dispatches, setDispatches] = useState(initialDispatches)
     const [overview, setOverview] = useState(initialOverview)
+    const [pendingSales, setPendingSales] = useState(initialPendingSales)
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<'all' | 'in_transit' | 'delivered' | 'disputed'>('all')
     const [pendingReceiptOnly, setPendingReceiptOnly] = useState(false)
     const [sellAndDispatchOpen, setSellAndDispatchOpen] = useState(false)
+
+    // For tab switching: 'dispatched' (default) or 'pending'
+    const [activeTab, setActiveTab] = useState<'dispatched' | 'pending'>('dispatched')
+
+    // Confirm dispatch modal states
+    const [confirmingSale, setConfirmingSale] = useState<PendingStockSale | null>(null)
+    const [confirmMode, setConfirmMode] = useState<'dispatch' | 'received' | null>(null)
+    const [dispatchDate, setDispatchDate] = useState(todayDate())
+    const [transportName, setTransportName] = useState('')
+    const [vehicleNumber, setVehicleNumber] = useState('')
+    const [challanNumber, setChallanNumber] = useState('')
+    const [receivedMeters, setReceivedMeters] = useState('')
+    const [dispatchNotes, setDispatchNotes] = useState('')
+    const [confirmPending, startConfirmTransition] = useTransition()
+
+    const handleConfirmDispatch = () => {
+        if (!confirmingSale) return
+        startConfirmTransition(async () => {
+            let res
+            if (confirmMode === 'received') {
+                const meters = Number.parseFloat(receivedMeters)
+                if (!Number.isFinite(meters) || meters <= 0) {
+                    toast.error('Received meters must be a valid number greater than 0')
+                    return
+                }
+                res = await confirmPendingSaleReceived(
+                    confirmingSale.id,
+                    dispatchDate,
+                    transportName,
+                    vehicleNumber,
+                    challanNumber,
+                    meters,
+                    dispatchNotes
+                )
+            } else {
+                res = await confirmPendingSaleDispatch(
+                    confirmingSale.id,
+                    dispatchDate,
+                    transportName,
+                    vehicleNumber,
+                    challanNumber,
+                    dispatchNotes
+                )
+            }
+
+            if (!res.success) {
+                toast.error(res.message || 'Failed to confirm action')
+            } else {
+                toast.success(
+                    confirmMode === 'received'
+                        ? `Dispatch #${res.dispatchNumber} confirmed and received!`
+                        : `Dispatch #${res.dispatchNumber} confirmed!`
+                )
+                setConfirmingSale(null)
+                setConfirmMode(null)
+                // Reload the page to refresh stats and list
+                window.location.reload()
+            }
+        })
+    }
+
+    const filteredPendingSales = useMemo(() => {
+        return pendingSales.filter((sale) => {
+            const searchLower = search.toLowerCase()
+            return (
+                !search ||
+                sale.party_name.toLowerCase().includes(searchLower) ||
+                sale.quality_label.toLowerCase().includes(searchLower)
+            )
+        })
+    }, [pendingSales, search])
 
     // Global Modal Flow State
     const [globalModalStep, setGlobalModalStep] = useState<'idle' | 'select_order' | 'loading_summary' | 'create_dispatch'>('idle')
@@ -807,6 +871,32 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
                 />
             </div>
 
+            {/* Tab Switcher */}
+            <div className="flex border-b border-zinc-200 dark:border-zinc-800">
+                <button
+                    onClick={() => setActiveTab('dispatched')}
+                    className={cn(
+                        "px-6 py-3 font-bold text-sm border-b-2 transition-all",
+                        activeTab === 'dispatched'
+                            ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 font-black"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                    )}
+                >
+                    Dispatched Batches ({dispatches.length})
+                </button>
+                <button
+                    onClick={() => setActiveTab('pending')}
+                    className={cn(
+                        "px-6 py-3 font-bold text-sm border-b-2 transition-all",
+                        activeTab === 'pending'
+                            ? "border-indigo-600 text-indigo-600 dark:text-indigo-400 font-black"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                    )}
+                >
+                    Pending Dispatches ({pendingSales.length})
+                </button>
+            </div>
+
             {/* Filters bar */}
             <div className="flex flex-col sm:flex-row gap-4 items-center">
                 <div className="relative flex-1 w-full">
@@ -818,73 +908,183 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
-                <div className="flex gap-2 w-full sm:w-auto">
-                    <Button
-                        variant={pendingReceiptOnly ? 'default' : 'outline'}
-                        onClick={() => setPendingReceiptOnly((prev) => !prev)}
-                        className={cn(
-                            "h-11 px-5 rounded-xl font-bold transition-all",
-                            pendingReceiptOnly ? "shadow-md scale-105" : "bg-white dark:bg-zinc-900/50"
-                        )}
-                    >
-                        {t('dispatch.filter.pendingReceipt')}
-                    </Button>
-                    {(['all', 'in_transit', 'delivered', 'disputed'] as const).map((status) => (
+                {activeTab === 'dispatched' && (
+                    <div className="flex gap-2 w-full sm:w-auto">
                         <Button
-                            key={status}
-                            variant={statusFilter === status ? 'default' : 'outline'}
-                            onClick={() => setStatusFilter(status)}
+                            variant={pendingReceiptOnly ? 'default' : 'outline'}
+                            onClick={() => setPendingReceiptOnly((prev) => !prev)}
                             className={cn(
-                                "h-11 px-5 rounded-xl font-bold capitalize transition-all",
-                                statusFilter === status ? "shadow-md scale-105" : "bg-white dark:bg-zinc-900/50"
+                                "h-11 px-5 rounded-xl font-bold transition-all",
+                                pendingReceiptOnly ? "shadow-md scale-105" : "bg-white dark:bg-zinc-900/50"
                             )}
                         >
-                            {status.replace('_', ' ')}
+                            {t('dispatch.filter.pendingReceipt')}
                         </Button>
-                    ))}
-                </div>
+                        {(['all', 'in_transit', 'delivered', 'disputed'] as const).map((status) => (
+                            <Button
+                                key={status}
+                                variant={statusFilter === status ? 'default' : 'outline'}
+                                onClick={() => setStatusFilter(status)}
+                                className={cn(
+                                    "h-11 px-5 rounded-xl font-bold capitalize transition-all",
+                                    statusFilter === status ? "shadow-md scale-105" : "bg-white dark:bg-zinc-900/50"
+                                )}
+                            >
+                                {status.replace('_', ' ')}
+                            </Button>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            {/* Order Group List */}
-            <div className="grid gap-4">
-                <AnimatePresence mode="popLayout">
-                    {filteredGroups.length > 0 ? (
-                        filteredGroups.map(group => (
-                            <OrderGroupCard
-                                key={group.orderId}
-                                group={group}
-                                statusFilter={statusFilter}
-                                onOwnerReceiptConfirmed={handleOwnerReceiptConfirmed}
-                            />
+            {/* Order Group / Pending Sales List */}
+            {activeTab === 'pending' ? (
+                <div className="grid gap-4">
+                    {filteredPendingSales.length > 0 ? (
+                        filteredPendingSales.map((sale) => (
+                            <motion.div
+                                key={sale.id}
+                                layout
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.97 }}
+                                transition={{ duration: 0.22 }}
+                            >
+                                <Card className="border-none shadow-[0_4px_24px_rgb(0,0,0,0.04)] bg-white dark:bg-zinc-900/60 overflow-hidden p-5 sm:p-6 hover:shadow-[0_8px_32px_rgb(0,0,0,0.08)] transition-all duration-300">
+                                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                                        <div className="space-y-1.5 flex-grow">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20 text-[10px] font-bold">
+                                                    Pending Dispatch
+                                                </Badge>
+                                                <span className="text-[11px] font-bold text-muted-foreground/50">·</span>
+                                                <span className="text-[11px] font-bold text-muted-foreground/60">Sold on {format(new Date(sale.sale_date), 'dd MMM yyyy')}</span>
+                                            </div>
+                                            <h3 className="text-lg font-black text-foreground flex items-center gap-2 mt-1">
+                                                <User className="h-4 w-4 text-primary/50 flex-shrink-0" />
+                                                {sale.party_name}
+                                            </h3>
+                                            <p className="text-sm font-bold text-muted-foreground flex items-center gap-1.5">
+                                                <Layers className="h-3.5 w-3.5" />
+                                                {sale.quality_label}
+                                            </p>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-6 flex-grow max-w-sm">
+                                            <div>
+                                                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Sold Meters</p>
+                                                <p className="text-base font-black tabular-nums text-foreground">
+                                                    {sale.meters_sold.toFixed(2)}
+                                                    <span className="text-xs ml-1 font-bold text-muted-foreground">m</span>
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Taka Count</p>
+                                                <p className="text-base font-black tabular-nums text-foreground">
+                                                    {sale.taka_sold ? sale.taka_sold.toFixed(0) : '-'}
+                                                    <span className="text-xs ml-1 font-bold text-muted-foreground"> {sale.unit_label}</span>
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Credit Days</p>
+                                                <p className="text-base font-black tabular-nums text-amber-600">
+                                                    {sale.credit_days}
+                                                    <span className="text-xs ml-1 font-bold opacity-60">days</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 flex-wrap lg:min-w-[340px] lg:justify-end">
+                                            <Button
+                                                onClick={() => {
+                                                    setConfirmingSale(sale)
+                                                    setConfirmMode('dispatch')
+                                                    setDispatchDate(todayDate())
+                                                    setTransportName('')
+                                                    setVehicleNumber('')
+                                                    setChallanNumber('')
+                                                    setReceivedMeters('')
+                                                    setDispatchNotes('')
+                                                }}
+                                                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 shrink-0 h-10 px-4 rounded-xl shadow-md transition-all active:scale-95 text-xs"
+                                            >
+                                                <Truck className="h-4 w-4" />
+                                                Confirm Dispatch
+                                            </Button>
+                                            <Button
+                                                onClick={() => {
+                                                    setConfirmingSale(sale)
+                                                    setConfirmMode('received')
+                                                    setDispatchDate(todayDate())
+                                                    setTransportName('')
+                                                    setVehicleNumber('')
+                                                    setChallanNumber('')
+                                                    setReceivedMeters(String(sale.meters_sold))
+                                                    setDispatchNotes('')
+                                                }}
+                                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold gap-2 shrink-0 h-10 px-4 rounded-xl shadow-md transition-all active:scale-95 text-xs"
+                                            >
+                                                <CheckCircle2 className="h-4 w-4" />
+                                                Confirmation Received
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </Card>
+                            </motion.div>
                         ))
                     ) : (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="py-20 text-center space-y-4"
-                        >
+                        <div className="py-20 text-center space-y-4">
                             <div className="inline-flex p-6 bg-zinc-100 dark:bg-zinc-800 rounded-full">
-                                <Truck className="h-10 w-10 text-muted-foreground/30" />
+                                <CheckCircle2 className="h-10 w-10 text-muted-foreground/30" />
                             </div>
                             <div className="space-y-1">
-                                <h3 className="text-xl font-black text-foreground">No dispatches found</h3>
+                                <h3 className="text-xl font-black text-foreground">No pending dispatches</h3>
                                 <p className="text-muted-foreground font-medium max-w-xs mx-auto">
-                                    {dispatches.length === 0
-                                        ? 'Create a dispatch from an active order to generate a professional challan.'
-                                        : 'Try adjusting your search or filters.'}
+                                    All stock sales are fully dispatched.
                                 </p>
-                                {dispatches.length === 0 && (
-                                    <div className="pt-3">
-                                        <Button variant="outline" asChild>
-                                            <Link href="/owner/orders">Open Orders</Link>
-                                        </Button>
-                                    </div>
-                                )}
                             </div>
-                        </motion.div>
+                        </div>
                     )}
-                </AnimatePresence>
-            </div>
+                </div>
+            ) : (
+                <div className="grid gap-4">
+                    <AnimatePresence mode="popLayout">
+                        {filteredGroups.length > 0 ? (
+                            filteredGroups.map(group => (
+                                <OrderGroupCard
+                                    key={group.orderId}
+                                    group={group}
+                                    statusFilter={statusFilter}
+                                    onOwnerReceiptConfirmed={handleOwnerReceiptConfirmed}
+                                />
+                            ))
+                        ) : (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="py-20 text-center space-y-4"
+                            >
+                                <div className="inline-flex p-6 bg-zinc-100 dark:bg-zinc-800 rounded-full">
+                                    <Truck className="h-10 w-10 text-muted-foreground/30" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="text-xl font-black text-foreground">No dispatches found</h3>
+                                    <p className="text-muted-foreground font-medium max-w-xs mx-auto">
+                                        {dispatches.length === 0
+                                            ? 'Create a dispatch from an active order to generate a professional challan.'
+                                            : 'Try adjusting your search or filters.'}
+                                    </p>
+                                    {dispatches.length === 0 && (
+                                        <div className="pt-3">
+                                            <Button variant="outline" asChild>
+                                                <Link href="/owner/orders">Open Orders</Link>
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            )}
             {/* Global Dispatch Modal Flow */}
             <GlobalDispatchModal 
                 step={globalModalStep} 
@@ -931,6 +1131,116 @@ export default function DispatchesClient({ initialDispatches, initialOverview }:
                         setSellAndDispatchOpen(false)
                     }}
                 />
+            )}
+            {confirmingSale && (
+                <Dialog open={confirmingSale !== null} onOpenChange={(v) => { if (!v) { setConfirmingSale(null); setConfirmMode(null); } }}>
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                {confirmMode === 'received' ? (
+                                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                                ) : (
+                                    <Truck className="h-5 w-5 text-indigo-600" />
+                                )}
+                                {confirmMode === 'received' ? 'Confirmation Received' : 'Confirm Dispatch'}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {confirmMode === 'received' ? (
+                                    <>
+                                        Record that the sale to <strong>{confirmingSale.party_name}</strong> was dispatched and received by the client.
+                                        Based on the dispatch date, the credit days of {confirmingSale.credit_days} days will start.
+                                    </>
+                                ) : (
+                                    <>
+                                        Confirm dispatch details for sale to <strong>{confirmingSale.party_name}</strong>.
+                                        Based on the dispatch date, the credit days of {confirmingSale.credit_days} days will start.
+                                    </>
+                                )}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-2">
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-semibold text-slate-700">Dispatch Date</Label>
+                                <Input
+                                    type="date"
+                                    value={dispatchDate}
+                                    onChange={(e) => setDispatchDate(e.target.value)}
+                                    className="h-11 border-slate-200"
+                                />
+                            </div>
+                            <div className="grid gap-3 grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700">Transport</Label>
+                                    <Input
+                                        value={transportName}
+                                        onChange={(e) => setTransportName(e.target.value)}
+                                        placeholder="e.g. VRL"
+                                        className="h-11 border-slate-200"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700">Vehicle No.</Label>
+                                    <Input
+                                        value={vehicleNumber}
+                                        onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
+                                        placeholder="e.g. MH04GP1234"
+                                        className="h-11 border-slate-200"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-semibold text-slate-700">Challan Number</Label>
+                                <Input
+                                    value={challanNumber}
+                                    onChange={(e) => setChallanNumber(e.target.value)}
+                                    placeholder="e.g. CH-2342"
+                                    className="h-11 border-slate-200"
+                                />
+                            </div>
+                            {confirmMode === 'received' && (
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700">Received Meters</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={receivedMeters}
+                                        onChange={(e) => setReceivedMeters(e.target.value)}
+                                        placeholder="e.g. 120.5"
+                                        className="h-11 border-slate-200"
+                                    />
+                                </div>
+                            )}
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-semibold text-slate-700">Notes</Label>
+                                <Input
+                                    value={dispatchNotes}
+                                    onChange={(e) => setDispatchNotes(e.target.value)}
+                                    placeholder="Optional notes"
+                                    className="h-11 border-slate-200"
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter className="gap-2">
+                            <Button variant="outline" onClick={() => { setConfirmingSale(null); setConfirmMode(null); }} disabled={confirmPending}>
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleConfirmDispatch}
+                                disabled={confirmPending || !dispatchDate || (confirmMode === 'received' && !receivedMeters)}
+                                className={cn(
+                                    "font-bold gap-2",
+                                    confirmMode === 'received' 
+                                        ? "bg-emerald-600 hover:bg-emerald-500 text-white" 
+                                        : "bg-indigo-600 hover:bg-indigo-500 text-white"
+                                )}
+                            >
+                                {confirmPending ? <Loader2 className="h-4 w-4 animate-spin" /> : confirmMode === 'received' ? <CheckCircle2 className="h-4 w-4" /> : <Truck className="h-4 w-4" />}
+                                {confirmPending ? 'Confirming...' : confirmMode === 'received' ? 'Record Receipt' : 'Confirm Dispatch'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             )}
         </div>
     )

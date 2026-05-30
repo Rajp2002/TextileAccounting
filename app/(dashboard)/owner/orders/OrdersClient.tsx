@@ -294,9 +294,7 @@ function DispatchSection({
     const [summary, setSummary] = useState<DispatchSummary | null>(null)
     const [loadingDispatches, setLoadingDispatches] = useState(true)
     const [showCreateModal, setShowCreateModal] = useState(false)
-    const [showShareModal, setShowShareModal] = useState(false)
     const [trackingToken, setTrackingToken] = useState<string | null>(null)
-    const [trackingUrl, setTrackingUrl] = useState<string | null>(null)
 
     const loadDispatches = useCallback(async () => {
         const res = await getDispatchesForOrder(orderId)
@@ -330,19 +328,6 @@ function DispatchSection({
         return () => { supabase.removeChannel(channel) }
     }, [orderId, loadDispatches])
 
-    const handleOpenShare = async () => {
-        if (trackingToken && trackingUrl) { setShowShareModal(true); return }
-        const res = await getTrackingToken(orderId)
-        if ('error' in res) { toast.error(res.error); return }
-        
-        const token = (res as any).tracking_token
-        const url = `${window.location.origin}/track/${token}`
-        
-        setTrackingToken(token)
-        setTrackingUrl(url)
-        setShowShareModal(true)
-    }
-
     const handleDispatchCreated = async (newDispatch: DispatchRow, token: string, partyName: string, orgName: string) => {
         await loadDispatches()
         setShowCreateModal(false)
@@ -368,21 +353,12 @@ function DispatchSection({
                 <div className="flex gap-2">
                     <Button
                         size="sm"
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 text-xs"
+                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 text-xs"
                         onClick={() => setShowCreateModal(true)}
                         disabled={(summary?.available_packages.length ?? 0) <= 0}
                     >
                         <Send className="h-3.5 w-3.5" />
                         Dispatch Batch
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 border-slate-200 text-slate-700 hover:bg-slate-50 font-bold gap-2 text-xs"
-                        onClick={handleOpenShare}
-                    >
-                        <QrCode className="h-3.5 w-3.5" />
-                        Share Link
                     </Button>
                 </div>
             )}
@@ -397,19 +373,6 @@ function DispatchSection({
                         <p>{summary.packages_waiting_inspection_meters.toFixed(2)} m still waiting for inspection</p>
                     )}
                 </div>
-            )}
-
-            {/* Share button for completed orders */}
-            {isCompleted && (
-                <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full border-slate-200 text-slate-700 hover:bg-slate-50 font-bold gap-2 text-xs"
-                    onClick={handleOpenShare}
-                >
-                    <QrCode className="h-3.5 w-3.5" />
-                    Share Tracking Link
-                </Button>
             )}
 
             {/* Dispatch list */}
@@ -480,20 +443,11 @@ function DispatchSection({
                     onCreated={handleDispatchCreated}
                 />
             )}
-
-            {/* Share Modal */}
-            {showShareModal && trackingUrl && (
-                <ShareTrackingModal
-                    trackingUrl={trackingUrl}
-                    trackingToken={trackingToken ?? ''}
-                    onClose={() => setShowShareModal(false)}
-                />
-            )}
         </div>
     )
 }
 
-import { CreateDispatchModal, ShareTrackingModal } from '@/components/dispatches/DispatchModals'
+import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
 
 
 

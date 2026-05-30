@@ -981,3 +981,175 @@ export async function confirmDispatchReceiptByOwner(
     const result = Array.isArray(data) ? data[0] : data
     return { success: true, qty_received: Number(result?.qty_received ?? qtyReceived) }
 }
+
+export interface PendingStockSale {
+    id: string
+    sale_date: string
+    taka_sold: number
+    meters_sold: number
+    price_per_meter: number
+    revenue_amount: number
+    credit_days: number
+    party_name: string
+    party_phone: string | null
+    party_city: string | null
+    party_gstin: string | null
+    quality_label: string
+    godown: string
+    unit_label: string
+}
+
+export async function getPendingStockSales(): Promise<{ data: PendingStockSale[]; error?: string }> {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    const { data, error } = await supabase
+        .from('fabric_stock_sales')
+        .select(`
+            id,
+            sale_date,
+            taka_sold,
+            meters_sold,
+            price_per_meter,
+            revenue_amount,
+            credit_days,
+            party_name,
+            party_phone,
+            party_city,
+            party_gstin,
+            fabric_stock_lots!inner (
+                quality_label,
+                godown,
+                unit_label
+            )
+        `)
+        .eq('org_id', profile.org_id)
+        .is('dispatch_id', null)
+        .order('sale_date', { ascending: false })
+        .order('created_at', { ascending: false })
+
+    if (error) return { error: error.message, data: [] }
+
+    const formatted = (data ?? []).map((row: any) => {
+        const lot = Array.isArray(row.fabric_stock_lots) ? row.fabric_stock_lots[0] : row.fabric_stock_lots
+        return {
+            id: row.id,
+            sale_date: row.sale_date,
+            taka_sold: Number(row.taka_sold ?? 0),
+            meters_sold: Number(row.meters_sold ?? 0),
+            price_per_meter: Number(row.price_per_meter ?? 0),
+            revenue_amount: Number(row.revenue_amount ?? 0),
+            credit_days: Number(row.credit_days ?? 0),
+            party_name: row.party_name ?? 'Stock Sale Party',
+            party_phone: row.party_phone,
+            party_city: row.party_city,
+            party_gstin: row.party_gstin,
+            quality_label: lot?.quality_label ?? 'Unknown Quality',
+            godown: lot?.godown ?? 'Godown',
+            unit_label: lot?.unit_label ?? 'taka',
+        }
+    })
+
+    return { data: formatted }
+}
+
+export async function confirmPendingSaleDispatch(
+    saleId: string,
+    dispatchDate: string,
+    transportName: string,
+    vehicleNumber: string,
+    challanNumber: string,
+    notes: string
+): Promise<{ success: boolean; dispatchId?: string; dispatchNumber?: number; message?: string }> {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    if (!saleId) {
+        return { success: false, message: 'Sale is required' }
+    }
+    if (!dispatchDate) {
+        return { success: false, message: 'Dispatch date is required' }
+    }
+
+    const { data, error } = await supabase.rpc('confirm_party_stock_sale_dispatch_v1', {
+        p_sale_id: saleId,
+        p_dispatch_date: dispatchDate,
+        p_transport_name: transportName?.trim() || null,
+        p_vehicle_number: vehicleNumber?.trim()?.toUpperCase() || null,
+        p_challan_number: challanNumber?.trim() || null,
+        p_notes: notes?.trim() || null,
+    })
+
+    if (error) {
+        return { success: false, message: error.message || 'Failed to confirm dispatch' }
+    }
+
+    const result = Array.isArray(data) ? data[0] : data
+    if (!result?.dispatch_id) {
+        return { success: false, message: 'Dispatch was not created' }
+    }
+
+    revalidatePath('/owner/dispatches')
+    revalidatePath('/owner/stock')
+    revalidatePath('/owner/commercials')
+
+    return {
+        success: true,
+        dispatchId: result.dispatch_id,
+        dispatchNumber: Number(result.dispatch_number),
+    }
+}
+
+export async function confirmPendingSaleReceived(
+    saleId: string,
+    dispatchDate: string,
+    transportName: string,
+    vehicleNumber: string,
+    challanNumber: string,
+    receivedMeters: number,
+    notes: string
+): Promise<{ success: boolean; dispatchId?: string; dispatchNumber?: number; message?: string }> {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    if (!saleId) {
+        return { success: false, message: 'Sale is required' }
+    }
+    if (!dispatchDate) {
+        return { success: false, message: 'Dispatch date is required' }
+    }
+    if (receivedMeters <= 0) {
+        return { success: false, message: 'Received meters must be greater than 0' }
+    }
+
+    const { data, error } = await supabase.rpc('confirm_party_stock_sale_received_v1', {
+        p_sale_id: saleId,
+        p_dispatch_date: dispatchDate,
+        p_transport_name: transportName?.trim() || null,
+        p_vehicle_number: vehicleNumber?.trim()?.toUpperCase() || null,
+        p_challan_number: challanNumber?.trim() || null,
+        p_received_meters: receivedMeters,
+        p_notes: notes?.trim() || null,
+    })
+
+    if (error) {
+        return { success: false, message: error.message || 'Failed to confirm receipt' }
+    }
+
+    const result = Array.isArray(data) ? data[0] : data
+    if (!result?.dispatch_id) {
+        return { success: false, message: 'Dispatch was not created' }
+    }
+
+    revalidatePath('/owner/dispatches')
+    revalidatePath('/owner/stock')
+    revalidatePath('/owner/commercials')
+
+    return {
+        success: true,
+        dispatchId: result.dispatch_id,
+        dispatchNumber: Number(result.dispatch_number),
+    }
+}
+
+

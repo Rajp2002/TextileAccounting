@@ -78,7 +78,7 @@ export function SellAndDispatchDialog({
     const [saleRate, setSaleRate] = useState('')
     const [creditDays, setCreditDays] = useState('0')
     const [saleDate, setSaleDate] = useState(todayDate())
-    const [dispatchNow, setDispatchNow] = useState(true)
+    const [dispatchNow, setDispatchNow] = useState(false)
     const [actualDispatchedMeters, setActualDispatchedMeters] = useState('')
     const [dispatchDate, setDispatchDate] = useState(todayDate())
     const [transportName, setTransportName] = useState('')
@@ -101,7 +101,7 @@ export function SellAndDispatchDialog({
         setSaleRate('')
         setCreditDays('0')
         setSaleDate(todayDate())
-        setDispatchNow(true)
+        setDispatchNow(false)
         setActualDispatchedMeters('')
         setDispatchDate(todayDate())
         setTransportName('')
@@ -133,11 +133,14 @@ export function SellAndDispatchDialog({
     const selectedOrder = selectedLot?.order_id ? orders.find((order) => order.id === selectedLot.order_id) : null
 
     useEffect(() => {
-        if (!selectedLot) return
-        if (!soldMeters) setSoldMeters(String(Number(selectedLot.available_meters || 0).toFixed(2)))
-        if (!actualDispatchedMeters) setActualDispatchedMeters(String(Number(selectedLot.available_meters || 0).toFixed(2)))
-        if (!partyName && selectedOrder?.party_name) setPartyName(selectedOrder.party_name)
-    }, [actualDispatchedMeters, partyName, selectedLot, selectedOrder, soldMeters, soldTakas])
+        const lot = lots.find((l) => l.stock_lot_id === sourceId)
+        if (!lot) return
+        const order = lot.order_id ? orders.find((o) => o.id === lot.order_id) : null
+
+        setSoldMeters(String(Number(lot.available_meters || 0).toFixed(2)))
+        setActualDispatchedMeters(String(Number(lot.available_meters || 0).toFixed(2)))
+        setPartyName(order?.party_name || '')
+    }, [sourceId, lots, orders])
 
     const soldMetersNum = Number(soldMeters) || 0
     const soldTakasNum = Number(soldTakas) || 0
@@ -292,8 +295,10 @@ export function SellAndDispatchDialog({
                             <Input type="date" value={saleDate} onChange={(event) => setSaleDate(event.target.value)} className="h-11 lg:h-9" />
                         </div>
                         <div className="space-y-1.5">
-                            <Label>Due date based on sale date</Label>
-                            <Input value={dueDate} readOnly className="h-11 bg-slate-50 lg:h-9" />
+                            <Label>Due date basis</Label>
+                            <div className="flex h-11 items-center rounded-md border border-dashed border-indigo-200 bg-indigo-50/50 px-3 text-xs font-semibold text-indigo-700 lg:h-9">
+                                Starts from dispatch date + credit days
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -303,47 +308,10 @@ export function SellAndDispatchDialog({
         if (step === 3) {
             return (
                 <div className="space-y-4 py-2">
-                    <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1">
-                        <button type="button" onClick={() => setDispatchNow(true)} className={cn('rounded-md px-3 py-2 text-sm font-bold', dispatchNow ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500')}>
-                            Dispatch now
-                        </button>
-                        <button type="button" onClick={() => setDispatchNow(false)} className={cn('rounded-md px-3 py-2 text-sm font-bold', !dispatchNow ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500')}>
-                            Save sale only
-                        </button>
-                    </div>
-                    {dispatchNow && (
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="space-y-1.5">
-                                <Label>Actual dispatched meters</Label>
-                                <Input type="number" min="0" step="0.01" value={actualDispatchedMeters} onChange={(event) => setActualDispatchedMeters(event.target.value)} className="h-11 lg:h-9" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label>Dispatch date</Label>
-                                <Input type="date" value={dispatchDate} onChange={(event) => setDispatchDate(event.target.value)} className="h-11 lg:h-9" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label>Transport</Label>
-                                <Input value={transportName} onChange={(event) => setTransportName(event.target.value)} className="h-11 lg:h-9" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label>Vehicle number</Label>
-                                <Input value={vehicleNumber} onChange={(event) => setVehicleNumber(event.target.value.toUpperCase())} className="h-11 lg:h-9" />
-                            </div>
-                            <div className="space-y-1.5 sm:col-span-2">
-                                <Label>Challan number</Label>
-                                <Input value={challanNumber} onChange={(event) => setChallanNumber(event.target.value)} className="h-11 lg:h-9" />
-                            </div>
-                        </div>
-                    )}
                     <div className="space-y-1.5">
-                        <Label>Notes</Label>
-                        <Input value={notes} onChange={(event) => setNotes(event.target.value)} className="h-11 lg:h-9" />
+                        <Label>Notes / References</Label>
+                        <Input value={notes} onChange={(event) => setNotes(event.target.value)} className="h-11 lg:h-9" placeholder="Optional notes about this sale" />
                     </div>
-                    {dispatchNow && pendingDispatch > 0.01 && (
-                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
-                            {pendingDispatch.toFixed(2)}m will remain pending dispatch for this sale.
-                        </div>
-                    )}
                 </div>
             )
         }
@@ -359,9 +327,9 @@ export function SellAndDispatchDialog({
                     {renderMetric('Gross cost', money(grossCost))}
                     {renderMetric('Booked gross profit', money(grossProfit), true)}
                     {renderMetric('Gross margin', `${grossMargin.toFixed(1)}%`)}
-                    {renderMetric('Due date based on sale date', dueDate)}
-                    {renderMetric('Dispatch status', dispatchStatus)}
-                    {renderMetric('Sold pending dispatch', `${pendingDispatch.toFixed(2)} m`)}
+                    {renderMetric('Due date', 'Starts from dispatch date')}
+                    {renderMetric('Dispatch status', 'Not dispatched')}
+                    {renderMetric('Sold pending dispatch', `${soldMetersNum.toFixed(2)} m`)}
                 </div>
             </div>
         )
@@ -381,10 +349,10 @@ export function SellAndDispatchDialog({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Package className="h-5 w-5 text-indigo-600" />
-                        Sell & Dispatch
+                        Sell Stock
                     </DialogTitle>
                     <DialogDescription>
-                        Sell stock to a named party, then dispatch now or keep the sale pending.
+                        Sell stock to a named party. The sale will be saved and can be dispatched later from the Dispatches page.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -392,7 +360,7 @@ export function SellAndDispatchDialog({
                     {[
                         { num: 1, label: 'Stock', icon: Package },
                         { num: 2, label: 'Party', icon: UserRound },
-                        { num: 3, label: 'Dispatch', icon: Truck },
+                        { num: 3, label: 'Notes', icon: Send },
                         { num: 4, label: 'Preview', icon: CalendarDays },
                     ].map((item) => {
                         const Icon = item.icon

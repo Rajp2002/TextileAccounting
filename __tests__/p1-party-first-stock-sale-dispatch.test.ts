@@ -93,7 +93,7 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         const dialog = readProjectFile('components/dispatches/SellAndDispatchDialog.tsx')
         const stock = readProjectFile('app/(dashboard)/owner/stock/TakaStockClient.tsx')
         const commercials = readProjectFile('app/(dashboard)/owner/commercials/CommercialsClient.tsx')
-        expect(dialog).toContain('Due date based on sale date')
+        expect(dialog).toContain('Due date')
         expect(stock).toContain('Available for sale')
         expect(stock).toContain('Sold Pending Dispatch')
         expect(commercials).toContain('Booked Gross Profit')
@@ -110,5 +110,26 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(stock).toContain('approx ${stockUnits')
         expect(stock).not.toContain('positiveWholeInput')
         expect(action).toContain(".gt('available_meters', 0)")
+    })
+
+    it('verifies direct receipt confirmation, deferring credit due date, and tracking removal', () => {
+        const action = readProjectFile('app/(dashboard)/owner/orders/actions.ts')
+        const migration = readProjectFile('supabase/migrations/20260530210000_confirm_party_stock_sale_dispatch.sql')
+        const dispatchesClient = readProjectFile('app/(dashboard)/owner/dispatches/DispatchesClient.tsx')
+        const ordersClient = readProjectFile('app/(dashboard)/owner/orders/OrdersClient.tsx')
+
+        // Check backend server actions and RPC definitions
+        expect(action).toContain('confirmPendingSaleReceived')
+        expect(action).toContain('confirmPendingSaleDispatch')
+        expect(migration).toContain('CREATE OR REPLACE FUNCTION confirm_party_stock_sale_received_v1')
+        expect(migration).toContain('CREATE OR REPLACE FUNCTION confirm_party_stock_sale_dispatch_v1')
+        expect(migration).toContain('v_due_date := p_dispatch_date + COALESCE(')
+
+        // Check client UI button presence and Track Portal removal
+        expect(dispatchesClient).toContain('Confirmation Received')
+        expect(dispatchesClient).toContain('confirmMode === \'received\'')
+        expect(dispatchesClient).not.toContain('Track Portal')
+        expect(ordersClient).not.toContain('Share Link')
+        expect(ordersClient).not.toContain('Share Tracking Link')
     })
 })
