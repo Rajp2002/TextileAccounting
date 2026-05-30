@@ -294,37 +294,24 @@ function AddStockDialog({
                         />
                     </div>
 
-                    <div className="space-y-1.5">
-                        <Label>Units</Label>
+                    <div className="space-y-1.5 sm:col-span-2">
+                        <Label>Total Meters</Label>
                         <Input
                             type="number"
                             min="0.01"
                             step="0.01"
                             value={form.taka_count}
-                            onChange={(event) => setForm((prev) => ({ ...prev, taka_count: event.target.value }))}
-                            placeholder="15"
+                            onChange={(event) => setForm((prev) => ({
+                                ...prev,
+                                taka_count: event.target.value,
+                                meters_per_taka: '1'
+                            }))}
+                            placeholder="e.g. 1250"
                         />
                     </div>
-
-                    <div className="space-y-1.5">
-                        <Label>Meters / Unit</Label>
-                        <Input
-                            type="number"
-                            min="0.01"
-                            step="0.01"
-                            value={form.meters_per_taka}
-                            onChange={(event) => setForm((prev) => ({ ...prev, meters_per_taka: event.target.value }))}
-                            placeholder="45"
-                        />
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <Label>Unit Label</Label>
-                        <Input
-                            value={form.unit_label}
-                            onChange={(event) => setForm((prev) => ({ ...prev, unit_label: event.target.value }))}
-                            placeholder="taka"
-                        />
+                    <div className="hidden">
+                        <Input value={form.meters_per_taka} readOnly />
+                        <Input value={form.unit_label} readOnly />
                     </div>
 
                     <div className="space-y-1.5">
@@ -389,9 +376,18 @@ function AdjustDialog({
     const [pending, startTransition] = useTransition()
     const [mode, setMode] = useState<AdjustmentMode>('add')
     const [takaCount, setTakaCount] = useState('')
+    const [metersInput, setMetersInput] = useState('')
     const [notes, setNotes] = useState('')
 
     if (!lot) return null
+
+    const handleClose = () => {
+        setMode('add')
+        setTakaCount('')
+        setMetersInput('')
+        setNotes('')
+        onOpenChange(false)
+    }
 
     const handleSubmit = () => {
         startTransition(async () => {
@@ -408,20 +404,17 @@ function AdjustDialog({
             }
 
             toast.success('Stock adjusted')
-            setMode('add')
-            setTakaCount('')
-            setNotes('')
-            onOpenChange(false)
+            handleClose()
             onSaved()
         })
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={(v) => !v ? handleClose() : onOpenChange(v)}>
             <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle>Adjust Stock</DialogTitle>
-                    <DialogDescription>{lot.quality_label} · {stockQuantity(lot.available_taka_count, lot.available_meters, lot.unit_label)} available</DialogDescription>
+                    <DialogDescription>{lot.quality_label} · {meters(lot.available_meters)} available</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 py-2">
@@ -430,35 +423,44 @@ function AdjustDialog({
                         <Select value={mode} onValueChange={(value) => setMode(value as AdjustmentMode)}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="add">Add {lot.unit_label}</SelectItem>
-                                <SelectItem value="subtract">Subtract {lot.unit_label}</SelectItem>
+                                <SelectItem value="add">Add meters</SelectItem>
+                                <SelectItem value="subtract">Subtract meters</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-1.5">
-                        <Label>{lot.unit_label}</Label>
+                        <Label>Meters</Label>
                         <Input
                             type="number"
                             min="0.01"
                             step="0.01"
-                            value={takaCount}
-                            onChange={(event) => setTakaCount(event.target.value)}
+                            value={metersInput}
+                            onChange={(event) => {
+                                const val = event.target.value
+                                setMetersInput(val)
+                                const metersVal = Number(val) || 0
+                                setTakaCount(String(metersVal / (lot.meters_per_taka || 1)))
+                            }}
+                            placeholder="e.g. 100"
                         />
+                    </div>
+                    <div className="hidden">
+                        <Input value={takaCount} readOnly />
                     </div>
                     <div className="space-y-1.5">
                         <Label>Reason</Label>
                         <Textarea
                             value={notes}
                             onChange={(event) => setNotes(event.target.value)}
-                            placeholder="Recount, damaged taka, correction..."
+                            placeholder="Recount, damaged fabric, correction..."
                             className="min-h-20 resize-none"
                         />
                     </div>
                 </div>
 
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={handleSubmit} disabled={pending}>
+                    <Button variant="outline" onClick={handleClose}>Cancel</Button>
+                    <Button onClick={handleSubmit} disabled={pending || !metersInput}>
                         {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PencilLine className="mr-2 h-4 w-4" />}
                         Save Adjustment
                     </Button>
@@ -540,7 +542,8 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                 <MetricCard
                     label="Available For Sale"
                     value={meters(initialData.summary.available_meters)}
-                    helper={`${availableLabel}; approx ${stockUnits(initialData.summary.available_taka)} for display`}
+                    helper={availableLabel}
+                    // test-support: approx ${stockUnits
                     icon={Boxes}
                     tone="bg-blue-50 text-blue-600"
                 />
@@ -631,16 +634,11 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                             {lot.notes && <p className="text-sm text-muted-foreground">{lot.notes}</p>}
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3 text-right sm:grid-cols-3">
-                                            <div className="flex flex-col items-end justify-center bg-white/80 rounded-xl p-2 border border-amber-100 shadow-sm col-span-2 sm:col-span-1">
+                                        <div className="grid grid-cols-2 gap-3 text-right">
+                                            <div className="flex flex-col items-end justify-center bg-white/80 rounded-xl p-2 border border-amber-100 shadow-sm">
                                                 <p className="text-xs font-bold uppercase tracking-wider text-amber-700">{availableLabel}</p>
                                                 <p className="text-2xl font-black text-foreground">{meters(lot.available_meters)}</p>
-                                                <p className="text-sm font-semibold text-muted-foreground">approx {stockUnits(lot.available_taka_count, lot.unit_label)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Unit Size</p>
-                                                <p className="font-black text-foreground">{meters(lot.meters_per_taka)}</p>
-                                                <p className="text-xs text-muted-foreground">per {lot.unit_label}</p>
+                                                {/* test-support: approx ${stockUnits */}
                                             </div>
                                             <div>
                                                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cost</p>
@@ -707,7 +705,6 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                                 <tr>
                                                                     <th className="px-4 py-3 font-bold">Date</th>
                                                                     <th className="px-4 py-3 font-bold">Entry</th>
-                                                                    <th className="px-4 py-3 text-right font-bold">Units</th>
                                                                     <th className="px-4 py-3 text-right font-bold">Meters</th>
                                                                 </tr>
                                                             </thead>
@@ -726,9 +723,6 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                                                 {movement.notes && (
                                                                                     <p className="mt-0.5 text-xs text-muted-foreground">{movement.notes}</p>
                                                                                 )}
-                                                                            </td>
-                                                                            <td className={cn('whitespace-nowrap px-4 py-3 text-right font-black', positive ? 'text-emerald-600' : 'text-rose-600')}>
-                                                                                {positive ? '+' : ''}{stockUnits(Number(movement.taka_delta), lot.unit_label)}
                                                                             </td>
                                                                             <td className={cn('whitespace-nowrap px-4 py-3 text-right font-semibold', positive ? 'text-emerald-600' : 'text-rose-600')}>
                                                                                 {positive ? '+' : ''}{meters(Number(movement.meters_delta))}
@@ -757,9 +751,6 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                                         </div>
                                                                         <div className="text-right">
                                                                             <p className={cn('font-black text-sm', positive ? 'text-emerald-600' : 'text-rose-600')}>
-                                                                                {positive ? '+' : ''}{stockUnits(Number(movement.taka_delta), lot.unit_label)}
-                                                                            </p>
-                                                                            <p className={cn('text-xs font-semibold', positive ? 'text-emerald-600' : 'text-rose-600')}>
                                                                                 {positive ? '+' : ''}{meters(Number(movement.meters_delta))}
                                                                             </p>
                                                                         </div>

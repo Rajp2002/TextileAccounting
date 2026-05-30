@@ -962,7 +962,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                                 {sale.quality_label}
                                             </p>
                                         </div>
-                                        <div className="grid grid-cols-3 gap-6 flex-grow max-w-sm">
+                                        <div className="grid grid-cols-2 gap-6 flex-grow max-w-sm">
                                             <div>
                                                 <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Pending Meters</p>
                                                 <p className="text-base font-black tabular-nums text-foreground">
@@ -975,7 +975,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                                     </p>
                                                 )}
                                             </div>
-                                            <div>
+                                            <div className="hidden">
                                                 <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Taka Count</p>
                                                 <p className="text-base font-black tabular-nums text-foreground">
                                                     {sale.taka_sold ? sale.taka_sold.toFixed(0) : '-'}
@@ -1142,14 +1142,21 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                 />
                             </div>
                             <div className="grid gap-3 grid-cols-2">
-                                <div className="space-y-1.5">
+                                <div className="space-y-1.5 col-span-2">
                                     <Label className="text-xs font-semibold text-slate-700">Meters to Dispatch</Label>
                                     <Input
                                         type="number"
                                         step="0.01"
                                         min="0"
                                         value={dispatchMeters}
-                                        onChange={(e) => setDispatchMeters(e.target.value)}
+                                        onChange={(e) => {
+                                            const val = e.target.value
+                                            setDispatchMeters(val)
+                                            const metersVal = Number(val) || 0
+                                            const avgMetersPerTaka = confirmingSale.meters_sold / (confirmingSale.taka_sold || 1)
+                                            const calculatedTakas = Math.max(1, Math.round(metersVal / (avgMetersPerTaka || 1)))
+                                            setDispatchTakas(String(calculatedTakas))
+                                        }}
                                         placeholder="e.g. 200"
                                         className="h-11 border-slate-200"
                                     />
@@ -1157,7 +1164,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                         Remaining: {(confirmingSale.pending_dispatch_meters ?? confirmingSale.meters_sold).toFixed(2)} m
                                     </span>
                                 </div>
-                                <div className="space-y-1.5">
+                                <div className="hidden">
                                     <Label className="text-xs font-semibold text-slate-700">
                                         {confirmingSale.unit_label.charAt(0).toUpperCase() + confirmingSale.unit_label.slice(1)}s to Dispatch
                                     </Label>

@@ -137,8 +137,12 @@ export function SellAndDispatchDialog({
         if (!lot) return
         const order = lot.order_id ? orders.find((o) => o.id === lot.order_id) : null
 
-        setSoldMeters(String(Number(lot.available_meters || 0).toFixed(2)))
-        setActualDispatchedMeters(String(Number(lot.available_meters || 0).toFixed(2)))
+        const metersVal = Number(lot.available_meters || 0).toFixed(2)
+        setSoldMeters(String(metersVal))
+        setActualDispatchedMeters(String(metersVal))
+        if (lot.meters_per_taka > 0) {
+            setSoldTakas(String(Math.max(1, Math.round(Number(metersVal) / lot.meters_per_taka))))
+        }
         setPartyName(order?.party_name || '')
     }, [sourceId, lots, orders])
 
@@ -270,11 +274,25 @@ export function SellAndDispatchDialog({
                         </div>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5 sm:col-span-2">
                             <Label>Sold meters</Label>
-                            <Input type="number" min="0" step="0.01" value={soldMeters} onChange={(event) => setSoldMeters(event.target.value)} className="h-11 lg:h-9" />
+                            <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={soldMeters}
+                                onChange={(event) => {
+                                    const val = event.target.value
+                                    setSoldMeters(val)
+                                    if (selectedLot && selectedLot.meters_per_taka > 0) {
+                                        const metersVal = Number(val) || 0
+                                        setSoldTakas(String(Math.max(1, Math.round(metersVal / selectedLot.meters_per_taka))))
+                                    }
+                                }}
+                                className="h-11 lg:h-9"
+                            />
                         </div>
-                        <div className="space-y-1.5">
+                        <div className="hidden">
                             <Label>Sold takas <span className="font-normal text-slate-400">(optional display count)</span></Label>
                             <Input type="number" min="0" step="0.01" value={soldTakas} onChange={(event) => setSoldTakas(event.target.value)} placeholder="Leave blank if unknown" className="h-11 lg:h-9" />
                             <p className="text-[11px] font-semibold text-slate-500">Meters reserve stock. Taka count is only adjusted when entered.</p>

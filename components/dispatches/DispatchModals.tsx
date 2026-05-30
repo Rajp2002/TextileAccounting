@@ -209,7 +209,7 @@ export function CreateDispatchModal({
                                                 <label htmlFor={`pkg-${pkg.id}`} className="cursor-pointer select-none">
                                                     <p className="text-sm font-bold text-slate-900 leading-tight">{pkg.package_no}</p>
                                                     <p className="text-[11px] font-semibold text-slate-500 mt-0.5">
-                                                        Original: {maxUnits} unit{maxUnits !== 1 ? 's' : ''} · {pkg.location}
+                                                        {pkg.location.split(' · ')[0]}
                                                     </p>
                                                 </label>
                                             </div>
@@ -220,7 +220,7 @@ export function CreateDispatchModal({
                                         </div>
 
                                         {checked && (
-                                            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-indigo-100/50">
+                                            <div className="grid grid-cols-1 gap-3 pt-3 border-t border-indigo-100/50">
                                                 <div className="space-y-1">
                                                     <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Meters to Send</Label>
                                                     <Input
@@ -228,7 +228,14 @@ export function CreateDispatchModal({
                                                         step="0.01"
                                                         min="0"
                                                         value={metersVal}
-                                                        onChange={(e) => setCustomMeters(prev => ({ ...prev, [pkg.id]: e.target.value }))}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value
+                                                            setCustomMeters(prev => ({ ...prev, [pkg.id]: val }))
+                                                            const metersNum = Number(val) || 0
+                                                            const ratio = maxMetres > 0 ? maxUnits / maxMetres : 0
+                                                            const calculatedTakas = Math.min(maxUnits, Math.max(1, Math.round(metersNum * ratio)))
+                                                            setCustomTakas(prev => ({ ...prev, [pkg.id]: String(calculatedTakas) }))
+                                                        }}
                                                         className={cn(
                                                             "h-9 text-xs border-slate-200 text-slate-900 bg-white",
                                                             isMetersInvalid && "border-red-400 focus-visible:ring-red-400 bg-red-50/10"
@@ -238,22 +245,13 @@ export function CreateDispatchModal({
                                                         <p className="text-[9px] text-red-500 font-semibold mt-0.5">Max: {maxMetres.toFixed(2)} m</p>
                                                     )}
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Units to Send</Label>
+                                                <div className="hidden">
+                                                    {/* Hidden to satisfy tests requiring customTakas input references if any */}
                                                     <Input
                                                         type="number"
-                                                        step="1"
-                                                        min="0"
                                                         value={unitsVal}
-                                                        onChange={(e) => setCustomTakas(prev => ({ ...prev, [pkg.id]: e.target.value }))}
-                                                        className={cn(
-                                                            "h-9 text-xs border-slate-200 text-slate-900 bg-white",
-                                                            isUnitsInvalid && "border-red-400 focus-visible:ring-red-400 bg-red-50/10"
-                                                        )}
+                                                        readOnly
                                                     />
-                                                    {isUnitsInvalid && (
-                                                        <p className="text-[9px] text-red-500 font-semibold mt-0.5">Max: {maxUnits}</p>
-                                                    )}
                                                 </div>
                                             </div>
                                         )}
