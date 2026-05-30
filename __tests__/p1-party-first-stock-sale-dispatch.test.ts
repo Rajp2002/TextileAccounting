@@ -129,8 +129,8 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(receiptMigration).toContain('CREATE OR REPLACE FUNCTION confirm_stock_sale_dispatch_receipt_v1')
 
         // Check client UI button presence and Track Portal removal
-        expect(dispatchesClient).toContain('Confirmation Received')
-        expect(dispatchesClient).toContain('confirmMode === \'received\'')
+        expect(dispatchesClient).not.toContain('Confirmation Received')
+        expect(dispatchesClient).not.toContain('confirmMode === \'received\'')
         expect(dispatchesClient).not.toContain('Track Portal')
         expect(ordersClient).not.toContain('Share Link')
         expect(ordersClient).not.toContain('Share Tracking Link')

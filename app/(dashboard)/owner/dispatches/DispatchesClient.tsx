@@ -627,12 +627,13 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
 
     // Confirm dispatch modal states
     const [confirmingSale, setConfirmingSale] = useState<PendingStockSale | null>(null)
-    const [confirmMode, setConfirmMode] = useState<'dispatch' | 'received' | null>(null)
+    const [confirmMode, setConfirmMode] = useState<'dispatch' | null>(null)
     const [dispatchDate, setDispatchDate] = useState(todayDate())
     const [transportName, setTransportName] = useState('')
     const [vehicleNumber, setVehicleNumber] = useState('')
     const [challanNumber, setChallanNumber] = useState('')
-    const [receivedMeters, setReceivedMeters] = useState('')
+    const [dispatchMeters, setDispatchMeters] = useState('')
+    const [dispatchTakas, setDispatchTakas] = useState('')
     const [dispatchNotes, setDispatchNotes] = useState('')
     const [confirmPending, startConfirmTransition] = useTransition()
 
@@ -640,40 +641,32 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
         if (!confirmingSale) return
         startConfirmTransition(async () => {
             let res
-            if (confirmMode === 'received') {
-                const meters = Number.parseFloat(receivedMeters)
-                if (!Number.isFinite(meters) || meters <= 0) {
-                    toast.error('Received meters must be a valid number greater than 0')
-                    return
-                }
-                res = await confirmPendingSaleReceived(
-                    confirmingSale.id,
-                    dispatchDate,
-                    transportName,
-                    vehicleNumber,
-                    challanNumber,
-                    meters,
-                    dispatchNotes
-                )
-            } else {
-                res = await confirmPendingSaleDispatch(
-                    confirmingSale.id,
-                    dispatchDate,
-                    transportName,
-                    vehicleNumber,
-                    challanNumber,
-                    dispatchNotes
-                )
+            const meters = Number.parseFloat(dispatchMeters)
+            const takas = Number.parseInt(dispatchTakas, 10) || 0
+            if (!Number.isFinite(meters) || meters <= 0) {
+                toast.error('Dispatch meters must be a valid number greater than 0')
+                return
             }
+            const pendingMeters = confirmingSale.pending_dispatch_meters ?? confirmingSale.meters_sold
+            if (meters > pendingMeters + 0.01) {
+                toast.error(`Cannot dispatch more than remaining pending meters (${pendingMeters.toFixed(2)} m)`)
+                return
+            }
+            res = await confirmPendingSaleDispatch(
+                confirmingSale.id,
+                dispatchDate,
+                transportName,
+                vehicleNumber,
+                challanNumber,
+                meters,
+                takas,
+                dispatchNotes
+            )
 
             if (!res.success) {
                 toast.error(res.message || 'Failed to confirm action')
             } else {
-                toast.success(
-                    confirmMode === 'received'
-                        ? `Dispatch #${res.dispatchNumber} confirmed and received!`
-                        : `Dispatch #${res.dispatchNumber} confirmed!`
-                )
+                toast.success(`Dispatch #${res.dispatchNumber} confirmed!`)
                 setConfirmingSale(null)
                 setConfirmMode(null)
                 // Reload the page to refresh stats and list
@@ -971,11 +964,16 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                         </div>
                                         <div className="grid grid-cols-3 gap-6 flex-grow max-w-sm">
                                             <div>
-                                                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Sold Meters</p>
+                                                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Pending Meters</p>
                                                 <p className="text-base font-black tabular-nums text-foreground">
-                                                    {sale.meters_sold.toFixed(2)}
+                                                    {(sale.pending_dispatch_meters ?? sale.meters_sold).toFixed(2)}
                                                     <span className="text-xs ml-1 font-bold text-muted-foreground">m</span>
                                                 </p>
+                                                {(sale.dispatched_meters ?? 0) > 0 && (
+                                                    <p className="text-[10px] font-bold text-muted-foreground/60 mt-0.5">
+                                                        Of {sale.meters_sold.toFixed(2)} m total
+                                                    </p>
+                                                )}
                                             </div>
                                             <div>
                                                 <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Taka Count</p>
@@ -1002,28 +1000,17 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                                     setVehicleNumber('')
                                                     setChallanNumber('')
                                                     setReceivedMeters('')
+                                                    const pendingMeters = sale.pending_dispatch_meters ?? sale.meters_sold
+                                                    setDispatchMeters(String(pendingMeters))
+                                                    const avgMetersPerTaka = sale.meters_sold / (sale.taka_sold || 1)
+                                                    const estimatedPendingTakas = Math.max(1, Math.round(pendingMeters / (avgMetersPerTaka || 1)))
+                                                    setDispatchTakas(String(estimatedPendingTakas))
                                                     setDispatchNotes('')
                                                 }}
                                                 className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 shrink-0 h-10 px-4 rounded-xl shadow-md transition-all active:scale-95 text-xs"
                                             >
                                                 <Truck className="h-4 w-4" />
                                                 Confirm Dispatch
-                                            </Button>
-                                            <Button
-                                                onClick={() => {
-                                                    setConfirmingSale(sale)
-                                                    setConfirmMode('received')
-                                                    setDispatchDate(todayDate())
-                                                    setTransportName('')
-                                                    setVehicleNumber('')
-                                                    setChallanNumber('')
-                                                    setReceivedMeters(String(sale.meters_sold))
-                                                    setDispatchNotes('')
-                                                }}
-                                                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold gap-2 shrink-0 h-10 px-4 rounded-xl shadow-md transition-all active:scale-95 text-xs"
-                                            >
-                                                <CheckCircle2 className="h-4 w-4" />
-                                                Confirmation Received
                                             </Button>
                                         </div>
                                     </div>
@@ -1137,25 +1124,12 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                     <DialogContent className="max-w-md">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
-                                {confirmMode === 'received' ? (
-                                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                                ) : (
-                                    <Truck className="h-5 w-5 text-indigo-600" />
-                                )}
-                                {confirmMode === 'received' ? 'Confirmation Received' : 'Confirm Dispatch'}
+                                <Truck className="h-5 w-5 text-indigo-600" />
+                                Confirm Dispatch
                             </DialogTitle>
                             <DialogDescription>
-                                {confirmMode === 'received' ? (
-                                    <>
-                                        Record that the sale to <strong>{confirmingSale.party_name}</strong> was dispatched and received by the client.
-                                        Based on the dispatch date, the credit days of {confirmingSale.credit_days} days will start.
-                                    </>
-                                ) : (
-                                    <>
-                                        Confirm dispatch details for sale to <strong>{confirmingSale.party_name}</strong>.
-                                        Based on the dispatch date, the credit days of {confirmingSale.credit_days} days will start.
-                                    </>
-                                )}
+                                Confirm dispatch details for sale to <strong>{confirmingSale.party_name}</strong>.
+                                Based on the dispatch date, the credit days of {confirmingSale.credit_days} days will start.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-2">
@@ -1167,6 +1141,40 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                     onChange={(e) => setDispatchDate(e.target.value)}
                                     className="h-11 border-slate-200"
                                 />
+                            </div>
+                            <div className="grid gap-3 grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700">Meters to Dispatch</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={dispatchMeters}
+                                        onChange={(e) => setDispatchMeters(e.target.value)}
+                                        placeholder="e.g. 200"
+                                        className="h-11 border-slate-200"
+                                    />
+                                    <span className="text-[10px] text-slate-500 font-medium">
+                                        Remaining: {(confirmingSale.pending_dispatch_meters ?? confirmingSale.meters_sold).toFixed(2)} m
+                                    </span>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold text-slate-700">
+                                        {confirmingSale.unit_label.charAt(0).toUpperCase() + confirmingSale.unit_label.slice(1)}s to Dispatch
+                                    </Label>
+                                    <Input
+                                        type="number"
+                                        step="1"
+                                        min="0"
+                                        value={dispatchTakas}
+                                        onChange={(e) => setDispatchTakas(e.target.value)}
+                                        placeholder="e.g. 4"
+                                        className="h-11 border-slate-200"
+                                    />
+                                    <span className="text-[10px] text-slate-500 font-medium">
+                                        Total sold: {confirmingSale.taka_sold} {confirmingSale.unit_label}s
+                                    </span>
+                                </div>
                             </div>
                             <div className="grid gap-3 grid-cols-2">
                                 <div className="space-y-1.5">
@@ -1197,20 +1205,6 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                     className="h-11 border-slate-200"
                                 />
                             </div>
-                            {confirmMode === 'received' && (
-                                <div className="space-y-1.5">
-                                    <Label className="text-xs font-semibold text-slate-700">Received Meters</Label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={receivedMeters}
-                                        onChange={(e) => setReceivedMeters(e.target.value)}
-                                        placeholder="e.g. 120.5"
-                                        className="h-11 border-slate-200"
-                                    />
-                                </div>
-                            )}
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-semibold text-slate-700">Notes</Label>
                                 <Input
@@ -1227,16 +1221,11 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                             </Button>
                             <Button
                                 onClick={handleConfirmDispatch}
-                                disabled={confirmPending || !dispatchDate || (confirmMode === 'received' && !receivedMeters)}
-                                className={cn(
-                                    "font-bold gap-2",
-                                    confirmMode === 'received' 
-                                        ? "bg-emerald-600 hover:bg-emerald-500 text-white" 
-                                        : "bg-indigo-600 hover:bg-indigo-500 text-white"
-                                )}
+                                disabled={confirmPending || !dispatchDate || !dispatchMeters}
+                                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2"
                             >
-                                {confirmPending ? <Loader2 className="h-4 w-4 animate-spin" /> : confirmMode === 'received' ? <CheckCircle2 className="h-4 w-4" /> : <Truck className="h-4 w-4" />}
-                                {confirmPending ? 'Confirming...' : confirmMode === 'received' ? 'Record Receipt' : 'Confirm Dispatch'}
+                                {confirmPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Truck className="h-4 w-4" />}
+                                {confirmPending ? 'Confirming...' : 'Confirm Dispatch'}
                             </Button>
                         </DialogFooter>
                     </DialogContent>

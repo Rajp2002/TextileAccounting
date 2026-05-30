@@ -1020,6 +1020,8 @@ export interface PendingStockSale {
     quality_label: string
     godown: string
     unit_label: string
+    dispatched_meters?: number
+    pending_dispatch_meters?: number
 }
 
 export async function getPendingStockSales(): Promise<{ data: PendingStockSale[]; error?: string }> {
@@ -1040,6 +1042,8 @@ export async function getPendingStockSales(): Promise<{ data: PendingStockSale[]
             party_phone,
             party_city,
             party_gstin,
+            dispatched_meters,
+            pending_dispatch_meters,
             fabric_stock_lots!inner (
                 quality_label,
                 godown,
@@ -1047,7 +1051,7 @@ export async function getPendingStockSales(): Promise<{ data: PendingStockSale[]
             )
         `)
         .eq('org_id', profile.org_id)
-        .is('dispatch_id', null)
+        .gt('pending_dispatch_meters', 0)
         .order('sale_date', { ascending: false })
         .order('created_at', { ascending: false })
 
@@ -1070,6 +1074,8 @@ export async function getPendingStockSales(): Promise<{ data: PendingStockSale[]
             quality_label: lot?.quality_label ?? 'Unknown Quality',
             godown: lot?.godown ?? 'Godown',
             unit_label: lot?.unit_label ?? 'taka',
+            dispatched_meters: Number(row.dispatched_meters ?? 0),
+            pending_dispatch_meters: Number(row.pending_dispatch_meters ?? 0),
         }
     })
 
@@ -1082,6 +1088,8 @@ export async function confirmPendingSaleDispatch(
     transportName: string,
     vehicleNumber: string,
     challanNumber: string,
+    dispatchMeters: number,
+    dispatchTakas: number,
     notes: string
 ): Promise<{ success: boolean; dispatchId?: string; dispatchNumber?: number; message?: string }> {
     const { profile } = await requireRole(['owner'])
@@ -1093,6 +1101,9 @@ export async function confirmPendingSaleDispatch(
     if (!dispatchDate) {
         return { success: false, message: 'Dispatch date is required' }
     }
+    if (!dispatchMeters || dispatchMeters <= 0) {
+        return { success: false, message: 'Dispatch meters must be greater than 0' }
+    }
 
     const { data, error } = await supabase.rpc('confirm_party_stock_sale_dispatch_v1', {
         p_sale_id: saleId,
@@ -1100,6 +1111,8 @@ export async function confirmPendingSaleDispatch(
         p_transport_name: transportName?.trim() || null,
         p_vehicle_number: vehicleNumber?.trim()?.toUpperCase() || null,
         p_challan_number: challanNumber?.trim() || null,
+        p_dispatch_meters: dispatchMeters,
+        p_dispatch_takas: dispatchTakas || null,
         p_notes: notes?.trim() || null,
     })
 
