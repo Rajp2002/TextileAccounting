@@ -48,15 +48,47 @@ export function CreateDispatchModal({
     const [selected, setSelected] = useState<string[]>(availablePackages.map((pkg) => pkg.id))
     const [pending, startTransition] = useTransition()
 
+    // ── Configurable Batch Dispatch Date, Meters & Takas State ──
+    const [dispatchDate, setDispatchDate] = useState(() => new Date().toISOString().slice(0, 10))
+    const [customMeters, setCustomMeters] = useState<Record<string, string>>(() => {
+        const initial: Record<string, string> = {}
+        availablePackages.forEach((pkg) => {
+            initial[pkg.id] = String(Number(pkg.metres ?? 0).toFixed(2))
+        })
+        return initial
+    })
+    const [customTakas, setCustomTakas] = useState<Record<string, string>>(() => {
+        const initial: Record<string, string> = {}
+        availablePackages.forEach((pkg) => {
+            initial[pkg.id] = String(Number(pkg.units_count ?? 0))
+        })
+        return initial
+    })
+
     const selectedPackages = availablePackages.filter((pkg) => selected.includes(pkg.id))
+    
+    // Total meters and taxable values dynamically calculated based on inputs
     const totalMetres = selectedPackages
-        .reduce((sum, pkg) => sum + Number(pkg.metres ?? 0), 0)
+        .reduce((sum, pkg) => sum + (Number(customMeters[pkg.id]) || 0), 0)
+    
     const taxableValue = selectedPackages
-        .reduce((sum, pkg) => sum + Number(pkg.sale_value ?? 0), 0)
+        .reduce((sum, pkg) => {
+            const meters = Number(customMeters[pkg.id]) || 0
+            const rate = Number(pkg.price_per_meter ?? 0)
+            return sum + (meters * rate)
+        }, 0)
+
     const estimatedGst = taxableValue * 0.05
     const estimatedConsignmentValue = taxableValue + estimatedGst
     const ewayLikelyRequired = estimatedConsignmentValue > 50000
     const parsedDistance = distanceKm.trim() ? Number(distanceKm) : null
+
+    // Validation for enabling/disabling the main dispatch action
+    const isAnyInputInvalid = selectedPackages.some((pkg) => {
+        const m = Number(customMeters[pkg.id]) || 0
+        const t = Number(customTakas[pkg.id]) || 0
+        return m <= 0 || m > Number(pkg.metres) + 0.01 || t <= 0 || t > Number(pkg.units_count)
+    })
 
     const handleSubmit = () => {
         if (selected.length === 0) {
@@ -67,6 +99,36 @@ export function CreateDispatchModal({
             toast.error('Enter a valid distance')
             return
         }
+
+        // Additional validation
+        for (const pkg of selectedPackages) {
+            const m = Number(customMeters[pkg.id]) || 0
+            const t = Number(customTakas[pkg.id]) || 0
+            if (m <= 0) {
+                toast.error(`Enter a valid meters value for package ${pkg.package_no}`)
+                return
+            }
+            if (m > Number(pkg.metres) + 0.01) {
+                toast.error(`Meters to dispatch for ${pkg.package_no} cannot exceed available ${Number(pkg.metres).toFixed(2)} m`)
+                return
+            }
+            if (t <= 0) {
+                toast.error(`Enter a valid unit count for package ${pkg.package_no}`)
+                return
+            }
+            if (t > Number(pkg.units_count)) {
+                toast.error(`Units to dispatch for ${pkg.package_no} cannot exceed available ${pkg.units_count}`)
+                return
+            }
+        }
+
+        const dispatchMetersObj: Record<string, number> = {}
+        const dispatchTakasObj: Record<string, number> = {}
+        selected.forEach((id) => {
+            dispatchMetersObj[id] = Number(customMeters[id])
+            dispatchTakasObj[id] = Number(customTakas[id])
+        })
+
         startTransition(async () => {
             const res = await createDispatch(orderId, selected, notes || undefined, {
                 eway_bill_number: ewayNumber,
@@ -75,7 +137,8 @@ export function CreateDispatchModal({
                 transporter_id: transporterId,
                 approximate_distance_km: parsedDistance,
                 eway_bill_generated_at: ewayNumber.trim() ? new Date().toISOString() : '',
-            })
+            }, dispatchMetersObj, dispatchTakasObj, dispatchDate)
+            
             if ('error' in res) {
                 toast.error(res.error)
             } else {
@@ -87,43 +150,114 @@ export function CreateDispatchModal({
 
     return (
         <Dialog open onOpenChange={(v) => !v && onClose()}>
-            <DialogContent className="max-w-lg">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <Send className="h-5 w-5 text-indigo-600" /> Create Dispatch Batch
+            <DialogContent className="max-w-lg max-h-[95vh] flex flex-col p-6 overflow-hidden">
+                <DialogHeader className="shrink-0">
+                    <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+                        <Send className="h-5 w-5 text-indigo-600 animate-pulse" /> Create Dispatch Batch
                     </DialogTitle>
-                    <DialogDescription>
-                        Select the sold takas you are sending to the trader.
-                        A Tax Invoice cum Delivery Challan PDF with a tracking QR code will auto-download.
+                    <DialogDescription className="text-sm font-medium text-muted-foreground mt-1">
+                        Select the sold takas you are sending to the trader. Customize quantities to support partial/batch dispatches.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-2">
+
+                <div className="flex-1 overflow-y-auto pr-1 py-4 space-y-4">
+                    {/* Dispatch Date Input */}
+                    <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-700">Dispatch Date</Label>
+                        <Input
+                            type="date"
+                            value={dispatchDate}
+                            onChange={(e) => setDispatchDate(e.target.value)}
+                            className="h-11 border-slate-200 text-slate-900 bg-white"
+                        />
+                    </div>
+
                     <div className="space-y-2">
                         <Label className="text-xs font-semibold text-slate-700">Sold Stock to Dispatch</Label>
-                        <div className="max-h-72 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-2">
+                        <div className="max-h-64 space-y-3 overflow-y-auto rounded-xl border border-slate-200 p-3 bg-slate-50/50">
                             {availablePackages.map((pkg) => {
                                 const checked = selected.includes(pkg.id)
+                                const maxMetres = Number(pkg.metres)
+                                const maxUnits = Number(pkg.units_count)
+                                
+                                const metersVal = customMeters[pkg.id] ?? ''
+                                const unitsVal = customTakas[pkg.id] ?? ''
+                                
+                                const metersNum = Number(metersVal) || 0
+                                const unitsNum = Number(unitsVal) || 0
+                                
+                                const isMetersInvalid = checked && (metersNum <= 0 || metersNum > maxMetres + 0.01)
+                                const isUnitsInvalid = checked && (unitsNum <= 0 || unitsNum > maxUnits)
+
                                 return (
-                                    <button
+                                    <div
                                         key={pkg.id}
-                                        type="button"
-                                        onClick={() => setSelected((prev) => checked ? prev.filter((id) => id !== pkg.id) : [...prev, pkg.id])}
                                         className={cn(
-                                            'flex w-full items-start justify-between rounded-xl border px-3 py-2 text-left transition-all',
-                                            checked ? 'border-indigo-300 bg-indigo-50' : 'border-slate-200 bg-white hover:border-slate-300'
+                                            'rounded-xl border p-4 transition-all space-y-3 bg-white shadow-sm border-slate-200',
+                                            checked && 'border-indigo-300 bg-indigo-50/20'
                                         )}
                                     >
-                                        <div>
-                                            <p className="text-sm font-black text-slate-900">{pkg.package_no}</p>
-                                            <p className="text-[11px] font-semibold text-slate-500">
-                                                {pkg.units_count} unit{pkg.units_count !== 1 ? 's' : ''} · {pkg.location}
-                                            </p>
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`pkg-${pkg.id}`}
+                                                    checked={checked}
+                                                    onChange={() => setSelected((prev) => checked ? prev.filter((id) => id !== pkg.id) : [...prev, pkg.id])}
+                                                    className="h-4.5 w-4.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                />
+                                                <label htmlFor={`pkg-${pkg.id}`} className="cursor-pointer select-none">
+                                                    <p className="text-sm font-bold text-slate-900 leading-tight">{pkg.package_no}</p>
+                                                    <p className="text-[11px] font-semibold text-slate-500 mt-0.5">
+                                                        Original: {maxUnits} unit{maxUnits !== 1 ? 's' : ''} · {pkg.location}
+                                                    </p>
+                                                </label>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-mono text-sm font-black text-slate-900">{maxMetres.toFixed(2)} m</p>
+                                                <p className="text-[10px] font-bold text-slate-400">Available</p>
+                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="font-mono text-sm font-black text-slate-900">{Number(pkg.metres).toFixed(2)} m</p>
-                                            <p className="text-[10px] font-bold text-slate-400">Sold stock</p>
-                                        </div>
-                                    </button>
+
+                                        {checked && (
+                                            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-indigo-100/50">
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Meters to Send</Label>
+                                                    <Input
+                                                        type="number"
+                                                        step="0.01"
+                                                        min="0"
+                                                        value={metersVal}
+                                                        onChange={(e) => setCustomMeters(prev => ({ ...prev, [pkg.id]: e.target.value }))}
+                                                        className={cn(
+                                                            "h-9 text-xs border-slate-200 text-slate-900 bg-white",
+                                                            isMetersInvalid && "border-red-400 focus-visible:ring-red-400 bg-red-50/10"
+                                                        )}
+                                                    />
+                                                    {isMetersInvalid && (
+                                                        <p className="text-[9px] text-red-500 font-semibold mt-0.5">Max: {maxMetres.toFixed(2)} m</p>
+                                                    )}
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Units to Send</Label>
+                                                    <Input
+                                                        type="number"
+                                                        step="1"
+                                                        min="0"
+                                                        value={unitsVal}
+                                                        onChange={(e) => setCustomTakas(prev => ({ ...prev, [pkg.id]: e.target.value }))}
+                                                        className={cn(
+                                                            "h-9 text-xs border-slate-200 text-slate-900 bg-white",
+                                                            isUnitsInvalid && "border-red-400 focus-visible:ring-red-400 bg-red-50/10"
+                                                        )}
+                                                    />
+                                                    {isUnitsInvalid && (
+                                                        <p className="text-[9px] text-red-500 font-semibold mt-0.5">Max: {maxUnits}</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 )
                             })}
                         </div>
@@ -133,7 +267,7 @@ export function CreateDispatchModal({
                     </div>
 
                     <div className={cn(
-                        'rounded-xl border px-3 py-2.5 text-[11px]',
+                        'rounded-xl border px-3 py-2.5 text-[11px] transition-all',
                         ewayLikelyRequired
                             ? 'border-amber-200 bg-amber-50 text-amber-800'
                             : 'border-emerald-100 bg-emerald-50 text-emerald-800'
@@ -144,7 +278,7 @@ export function CreateDispatchModal({
                                 <p className="font-bold">
                                     {ewayLikelyRequired ? 'E-way bill may be required' : 'E-way bill likely not required by value'}
                                 </p>
-                                <p>
+                                <p className="leading-relaxed">
                                     Estimated consignment value is Rs. {estimatedConsignmentValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}.
                                     E-way bill is generally needed above Rs. 50,000 before goods move. Check local/state exemptions.
                                 </p>
@@ -167,7 +301,7 @@ export function CreateDispatchModal({
                                 value={ewayNumber}
                                 onChange={e => setEwayNumber(e.target.value)}
                                 placeholder="Optional"
-                                className="text-slate-900 border-slate-200"
+                                className="text-slate-900 border-slate-200 bg-white"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -176,7 +310,7 @@ export function CreateDispatchModal({
                                 value={vehicleNumber}
                                 onChange={e => setVehicleNumber(e.target.value.toUpperCase())}
                                 placeholder="GJ01AB1234"
-                                className="text-slate-900 border-slate-200"
+                                className="text-slate-900 border-slate-200 bg-white"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -185,7 +319,7 @@ export function CreateDispatchModal({
                                 value={transporterName}
                                 onChange={e => setTransporterName(e.target.value)}
                                 placeholder="Transport name"
-                                className="text-slate-900 border-slate-200"
+                                className="text-slate-900 border-slate-200 bg-white"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -194,7 +328,7 @@ export function CreateDispatchModal({
                                 value={transporterId}
                                 onChange={e => setTransporterId(e.target.value.toUpperCase())}
                                 placeholder="Optional"
-                                className="text-slate-900 border-slate-200"
+                                className="text-slate-900 border-slate-200 bg-white"
                             />
                         </div>
                         <div className="space-y-1.5 sm:col-span-2">
@@ -206,7 +340,7 @@ export function CreateDispatchModal({
                                 value={distanceKm}
                                 onChange={e => setDistanceKm(e.target.value)}
                                 placeholder="Used for EWB validity planning"
-                                className="text-slate-900 border-slate-200"
+                                className="text-slate-900 border-slate-200 bg-white"
                             />
                         </div>
                     </div>
@@ -220,19 +354,20 @@ export function CreateDispatchModal({
                             value={notes}
                             onChange={e => setNotes(e.target.value)}
                             placeholder="Invoice #, truck number, e-way bill, etc."
-                            className="text-slate-900 border-slate-200"
+                            className="text-slate-900 border-slate-200 bg-white"
                         />
                     </div>
                     <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2 text-[11px] text-indigo-700">
                         A Tax Invoice cum Delivery Challan PDF with a scannable QR code will download automatically after creating this dispatch.
                     </div>
                 </div>
-                <DialogFooter className="gap-2">
-                    <Button variant="outline" onClick={onClose} disabled={pending}>Cancel</Button>
+
+                <DialogFooter className="shrink-0 gap-2 pt-4 border-t border-slate-100">
+                    <Button variant="outline" onClick={onClose} disabled={pending} className="h-10 px-4 rounded-xl">Cancel</Button>
                     <Button
                         onClick={handleSubmit}
-                        disabled={pending || selected.length === 0}
-                        className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2"
+                        disabled={pending || selected.length === 0 || isAnyInputInvalid || !dispatchDate}
+                        className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 h-10 px-5 rounded-xl transition-all shadow-md active:scale-98"
                     >
                         {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                         {pending ? 'Creating…' : 'Create & Download Invoice'}

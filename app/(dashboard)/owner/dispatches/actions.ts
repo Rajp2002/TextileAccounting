@@ -192,6 +192,8 @@ export async function sellAndDispatchTakas(input: LegacyOrderSellAndDispatchInpu
     // 2. Perform Sales sequentially to avoid partial state ambiguity in case of RPC crash midway
     const saleIds: string[] = []
     let expectedDispatchMeters = 0
+    const dispatchMetersArr: number[] = []
+    const dispatchTakasArr: number[] = []
     for (const lotReq of input.selectedLots) {
         const { data: saleData, error: saleError } = await supabase.rpc('record_fabric_stock_sale', {
             p_stock_lot_id: lotReq.stockLotId,
@@ -212,7 +214,10 @@ export async function sellAndDispatchTakas(input: LegacyOrderSellAndDispatchInpu
         }
         
         saleIds.push(saleData[0].sale_id)
-        expectedDispatchMeters += Number(saleData[0].meters_sold ?? 0)
+        const meters = Number(saleData[0].meters_sold ?? 0)
+        expectedDispatchMeters += meters
+        dispatchMetersArr.push(meters)
+        dispatchTakasArr.push(lotReq.unitsToSell)
         await ensureReceivableForCommercialEntry('fabric_stock_sale', saleData[0].sale_id)
     }
 
@@ -221,6 +226,9 @@ export async function sellAndDispatchTakas(input: LegacyOrderSellAndDispatchInpu
         p_org_id: profile.org_id,
         p_order_id: input.orderId,
         p_sale_ids: saleIds,
+        p_dispatch_meters: dispatchMetersArr,
+        p_dispatch_takas: dispatchTakasArr,
+        p_dispatch_date: input.sale.saleDate,
         p_notes: input.dispatch.notes || null,
         p_eway_bill_number: input.dispatch.ewayBillNumber || null,
         p_vehicle_number: input.dispatch.vehicleNumber || null,

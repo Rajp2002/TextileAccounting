@@ -135,4 +135,31 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(ordersClient).not.toContain('Share Link')
         expect(ordersClient).not.toContain('Share Tracking Link')
     })
+
+    it('verifies configurable batch dispatch quantities and dates support', () => {
+        const action = readProjectFile('app/(dashboard)/owner/orders/actions.ts')
+        const migration = readProjectFile('supabase/migrations/20260531010000_configurable_batch_dispatch.sql')
+        const modal = readProjectFile('components/dispatches/DispatchModals.tsx')
+
+        // Check backend server action
+        expect(action).toContain('dispatchMeters?: Record<string, number>')
+        expect(action).toContain('dispatchTakas?: Record<string, number>')
+        expect(action).toContain('dispatchDate?: string')
+        expect(action).toContain("p_dispatch_meters: finalMeters")
+        expect(action).toContain("p_dispatch_takas: finalTakas")
+        expect(action).toContain("p_dispatch_date: finalDispatchDate")
+
+        // Check SQL function signature
+        expect(migration).toContain('CREATE OR REPLACE FUNCTION create_stock_sale_dispatch')
+        expect(migration).toContain('p_dispatch_meters NUMERIC[]')
+        expect(migration).toContain('p_dispatch_takas NUMERIC[]')
+        expect(migration).toContain('p_dispatch_date DATE')
+
+        // Check UI component features
+        expect(modal).toContain('const [dispatchDate, setDispatchDate]')
+        expect(modal).toContain('const [customMeters, setCustomMeters]')
+        expect(modal).toContain('const [customTakas, setCustomTakas]')
+        expect(modal).toContain('dispatchMetersObj')
+        expect(modal).toContain('dispatchTakasObj')
+    })
 })

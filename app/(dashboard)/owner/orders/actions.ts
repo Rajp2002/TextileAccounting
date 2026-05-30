@@ -396,6 +396,8 @@ type PendingStockSaleDispatchRow = {
     price_per_meter: number
     revenue_amount: number
     dispatch_id: string | null
+    pending_dispatch_meters?: number
+    dispatched_meters?: number
     fabric_stock_lots: {
         quality_label: string
         godown: string
@@ -583,6 +585,8 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
             price_per_meter,
             revenue_amount,
             dispatch_id,
+            pending_dispatch_meters,
+            dispatched_meters,
             fabric_stock_lots!inner (
                 quality_label,
                 godown,
@@ -591,7 +595,7 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
             )
         `)
         .eq('org_id', profile.org_id)
-        .is('dispatch_id', null)
+        .gt('pending_dispatch_meters', 0)
         .order('sale_date', { ascending: false })
         .order('created_at', { ascending: false })
 
@@ -620,17 +624,21 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
     const availablePackages: AvailableFabricPackage[] = pendingSales.map((sale) => {
         const lot = Array.isArray(sale.fabric_stock_lots) ? sale.fabric_stock_lots[0] : sale.fabric_stock_lots
         const unitLabel = lot?.unit_label || 'taka'
+        const pendingMeters = Number(sale.pending_dispatch_meters ?? sale.meters_sold ?? 0)
+        const avgMetersPerTaka = Number(sale.meters_sold ?? 0) / (Number(sale.taka_sold) || 1)
+        const estimatedPendingTakas = Math.max(1, Math.round(pendingMeters / (avgMetersPerTaka || 1)))
+
         return {
             id: sale.id,
             package_no: `${lot?.quality_label || 'Stock sale'} · ${new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}`,
             package_type: 'bulk',
-            units_count: Number(sale.taka_sold ?? 0),
-            metres: Number(sale.meters_sold ?? 0),
+            units_count: estimatedPendingTakas,
+            metres: pendingMeters,
             grade: 'Sold',
             inspection_status: 'pass',
             stock_state: 'reserved',
-            location: `${lot?.godown || 'Godown'} · ${Number(sale.taka_sold ?? 0)} ${unitLabel}`,
-            sale_value: Number(sale.revenue_amount ?? 0),
+            location: `${lot?.godown || 'Godown'} · ${estimatedPendingTakas} ${unitLabel}`,
+            sale_value: Number(sale.price_per_meter ?? 0) * pendingMeters,
             price_per_meter: Number(sale.price_per_meter ?? 0),
         }
     })
@@ -674,7 +682,10 @@ export async function createDispatch(
         transporter_id?: string
         approximate_distance_km?: number | null
         eway_bill_generated_at?: string
-    }
+    },
+    dispatchMeters?: Record<string, number>,
+    dispatchTakas?: Record<string, number>,
+    dispatchDate?: string
 ): Promise<{ dispatch: DispatchRow; tracking_token: string; party_name: string; org_name: string; dispatch_number: number } | { error: string }> {
     const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
@@ -691,10 +702,37 @@ export async function createDispatch(
     })
     if ('error' in parsed) return parsed
 
+    // 1. Resolve custom meters/takas with DB fallbacks if not provided
+    let finalMeters: number[] = []
+    let finalTakas: number[] = []
+    const finalDispatchDate = dispatchDate || new Date().toISOString().slice(0, 10)
+
+    if (!dispatchMeters || !dispatchTakas) {
+        const { data: sales } = await supabase
+            .from('fabric_stock_sales')
+            .select('id, pending_dispatch_meters, taka_sold')
+            .in('id', packageIds)
+        
+        const metersMap: Record<string, number> = {}
+        const takasMap: Record<string, number> = {}
+        sales?.forEach(s => {
+            metersMap[s.id] = Number(s.pending_dispatch_meters ?? 0)
+            takasMap[s.id] = Number(s.taka_sold ?? 0)
+        })
+        finalMeters = packageIds.map(id => metersMap[id] ?? 0)
+        finalTakas = packageIds.map(id => takasMap[id] ?? 0)
+    } else {
+        finalMeters = packageIds.map(id => dispatchMeters[id] ?? 0)
+        finalTakas = packageIds.map(id => dispatchTakas[id] ?? 0)
+    }
+
     const { data: rpcData, error: rpcError } = await supabase.rpc('create_stock_sale_dispatch', {
         p_org_id: profile.org_id,
         p_order_id: parsed.data.order_id,
         p_sale_ids: parsed.data.package_ids,
+        p_dispatch_meters: finalMeters,
+        p_dispatch_takas: finalTakas,
+        p_dispatch_date: finalDispatchDate,
         p_notes: parsed.data.notes || null,
         p_eway_bill_number: parsed.data.eway_bill_number || null,
         p_vehicle_number: parsed.data.vehicle_number || null,
