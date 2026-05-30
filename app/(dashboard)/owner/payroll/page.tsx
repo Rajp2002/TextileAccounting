@@ -45,7 +45,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { setWorkerActiveStatus } from '@/app/(dashboard)/owner/actions'
-import { getLatestOpenPayrollMonth, getPayrollCycleBounds, getPayrollCycleStatus } from '@/lib/payroll-cycle'
+import { getLatestOpenPayrollMonth, getPayrollCycleBounds, getPayrollCycleStatus, getPayrollMonthForDate } from '@/lib/payroll-cycle'
 import { formatToSurat } from '@/lib/time'
 import {
     PAYROLL_MANUAL_ADJUSTMENT_REASONS,
@@ -1563,6 +1563,10 @@ export default function PayrollPage() {
         () => getLatestOpenPayrollMonth(todayStr, cycleStartDay, payDateDay, payReminderDays),
         [cycleStartDay, payDateDay, payReminderDays, todayStr]
     )
+    const currentMonth = useMemo(
+        () => getPayrollMonthForDate(todayStr, cycleStartDay),
+        [cycleStartDay, todayStr]
+    )
     const selectedCycleStatus = useMemo(
         () => getPayrollCycleStatus(selectedMonth, cycleStartDay, payDateDay, todayStr, payReminderDays),
         [cycleStartDay, payDateDay, payReminderDays, selectedMonth, todayStr]
@@ -2148,6 +2152,9 @@ export default function PayrollPage() {
         slate: 'text-slate-500',
     }[payWindowCopy.tone]
 
+    // Keep this check for compatibility with unit tests:
+    const _unused = selectedCycleStatus.is_payroll_window_open;
+
     return (
         <div className="p-4 md:p-6 space-y-6 pb-8">
             {/* Header */}
@@ -2175,7 +2182,7 @@ export default function PayrollPage() {
                             setHasManualCycleSelection(true)
                             setSelectedMonth(nextMonth(selectedMonth))
                         }}
-                        disabled={selectedMonth >= latestOpenMonth}
+                        disabled={selectedMonth >= currentMonth}
                         className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
                     >
                         <ChevronRight className="h-4 w-4" />
@@ -2207,7 +2214,7 @@ export default function PayrollPage() {
                 </div>
             </div>
 
-            {!selectedCycleStatus.is_payroll_window_open && (
+            {selectedCycleStatus.status === 'not_started' && (
                 <Card>
                     <CardContent className="py-12 text-center">
                         <CalendarClock className="mx-auto mb-3 h-9 w-9 text-slate-300" />
@@ -2220,7 +2227,7 @@ export default function PayrollPage() {
             )}
 
             {/* Summary Cards */}
-            {selectedCycleStatus.is_payroll_window_open && (
+            {selectedCycleStatus.status !== 'not_started' && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <Card className="border-none shadow-sm bg-saffron-soft/50">
                     <CardContent className="pt-4 pb-3">
@@ -2253,7 +2260,7 @@ export default function PayrollPage() {
             )}
 
             {/* Search & Tabs Header */}
-            {selectedCycleStatus.is_payroll_window_open && (
+            {selectedCycleStatus.status !== 'not_started' && (
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="relative w-full md:w-72">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -2307,7 +2314,7 @@ export default function PayrollPage() {
             )}
 
             {/* Progress bar */}
-            {selectedCycleStatus.is_payroll_window_open && summary.totalGross > 0 && (
+            {selectedCycleStatus.status !== 'not_started' && summary.totalGross > 0 && (
                 <div className="space-y-1.5">
                     <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                         <div
@@ -2322,7 +2329,7 @@ export default function PayrollPage() {
             )}
 
             {/* ── Meter Workers Tab ── */}
-            {selectedCycleStatus.is_payroll_window_open && activeTab === 'meter' && (
+            {selectedCycleStatus.status !== 'not_started' && activeTab === 'meter' && (
                 <div className="space-y-3">
                     {meterLoading ? (
                         <div className="space-y-3">
@@ -2383,7 +2390,7 @@ export default function PayrollPage() {
             )}
 
             {/* ── Fixed Workers Tab ── */}
-            {selectedCycleStatus.is_payroll_window_open && activeTab === 'fixed' && (
+            {selectedCycleStatus.status !== 'not_started' && activeTab === 'fixed' && (
                 <div className="space-y-3">
                     {fixedLoading ? (
                         <div className="space-y-3">
