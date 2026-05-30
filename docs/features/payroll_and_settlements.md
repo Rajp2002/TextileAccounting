@@ -13,9 +13,9 @@ Payroll converts production logs, worker rates, fixed-worker setup, attendance, 
 ## User Workflow
 
 1. Owner opens `/owner/payroll`.
-2. Owner selects a payroll cycle month.
+2. Owner selects a payroll cycle month (can navigate up to the current in-progress month).
 3. Owner sees cycle status: in progress, scheduled, approaching, due today, or overdue.
-4. Owner reviews meter workers and fixed workers once the pay window is open or a final settlement is needed.
+4. Owner reviews meter workers and fixed workers (visible at any time once the cycle has started to track live payroll/wage updates).
 5. Meter workers show meters, machine/order rows, rate, gross pay, advances, deductions, manual adjustments, and net pay.
 6. Fixed workers show role, salary/daily earnings, attendance where applicable, advances, deductions, manual adjustments, and net pay.
 7. Owner expands a worker row to inspect itemization.
@@ -38,7 +38,7 @@ Weavly workflow:
 - Production logs become wage input.
 - Advances become itemized deduction input.
 - Settlement records preserve gross, deductions, net, remaining debt, payment mode, and status.
-- Pay-window gating prevents normal settlement before the configured pay date approaches.
+- Pay-window gating prevents normal settlement execution before the configured pay date approaches, but the owner can view and track live data for the current month at any time.
 - Payslips can be generated or sent on WhatsApp.
 
 ## Pain Points Solved
