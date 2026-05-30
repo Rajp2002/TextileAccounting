@@ -463,6 +463,8 @@ export async function convertAcceptedQuoteToOrder(data: {
     revalidatePath('/owner/orders')
     revalidatePath('/owner/analytics')
     revalidatePath('/owner/quotes')
+    revalidatePath('/owner/machines')
+    revalidatePath('/supervisor/machines')
     return { success: true, orderId: result.orderId }
 }
 
@@ -601,6 +603,8 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
     revalidatePath('/owner/orders')
     revalidatePath('/owner/analytics')
     revalidatePath('/owner/quotes')
+    revalidatePath('/owner/machines')
+    revalidatePath('/supervisor/machines')
 
     return {
         success: true,
@@ -948,6 +952,8 @@ export async function createMarketRunFromEstimator(params: {
     revalidatePath('/owner/market-runs')
     revalidatePath('/owner/orders')
     revalidatePath('/owner/analytics')
+    revalidatePath('/owner/machines')
+    revalidatePath('/supervisor/machines')
     return { success: true, marketRunId: marketRun.id }
 }
 
@@ -1082,5 +1088,7 @@ export async function updateMarketRunStatus(
     revalidatePath(`/owner/market-runs/${marketRunId}`)
     revalidatePath('/owner/market-runs')
     revalidatePath('/owner/archive')
+    revalidatePath('/owner/machines')
+    revalidatePath('/supervisor/machines')
     return { success: true }
 }

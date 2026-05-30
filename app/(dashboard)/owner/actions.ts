@@ -1128,6 +1128,9 @@ export async function upsertOrder(data: {
     }
 
     revalidatePath('/owner/analytics')
+    revalidatePath('/owner/orders')
+    revalidatePath('/owner/machines')
+    revalidatePath('/supervisor/machines')
     return { success: true }
 }
 
@@ -1150,6 +1153,9 @@ export async function deleteOrder(orderId: string) {
     }
 
     revalidatePath('/owner/analytics')
+    revalidatePath('/owner/orders')
+    revalidatePath('/owner/machines')
+    revalidatePath('/supervisor/machines')
     return { success: true }
 }
 
