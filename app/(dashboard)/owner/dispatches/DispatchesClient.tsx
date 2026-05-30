@@ -62,6 +62,7 @@ import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 
 interface Dispatch {
     id: string
+    stock_sale_id?: string | null
     dispatch_number: number
     qty_meters_sent: number
     qty_meters_received: number | null
@@ -86,6 +87,15 @@ interface Dispatch {
     sgst_amount: number | null
     igst_amount: number | null
     total_invoice_value: number | null
+    stock_sale?: {
+        id: string
+        sale_date: string
+        meters_sold: number
+        dispatched_meters: number
+        pending_dispatch_meters: number
+        party_name: string | null
+        quality_label: string | null
+    } | null
     package_lines: Array<{
         id: string
         package_no: string
@@ -111,6 +121,7 @@ interface OrderGroup {
     qualityLabel: string | null
     trackingToken: string
     totalTargetMeters: number
+    remainingToDispatch: number
     orderStatus: string
     dispatches: Dispatch[]
     totalDispatched: number
@@ -160,6 +171,7 @@ const getStatusConfig = (status: string) => {
 const getOrderStatusBadge = (group: OrderGroup) => {
     if (group.hasDisputed) return { label: 'Has Dispute', color: 'bg-rose-500' }
     if (group.hasInTransit) return { label: 'In Transit', color: 'bg-amber-500' }
+    if (group.remainingToDispatch > 0.01) return { label: 'Partially Dispatched', color: 'bg-orange-500' }
     return { label: 'All Delivered', color: 'bg-emerald-500' }
 }
 
@@ -453,13 +465,39 @@ function OrderGroupCard({
                                 )}
                             </div>
 
-                            {/* Dispatched Section */}
-                            <div className="flex flex-col items-start lg:items-end lg:min-w-[120px]">
-                                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Dispatched</p>
-                                <p className="text-xl font-black tabular-nums text-foreground">
-                                    {group.totalDispatched.toFixed(0)}
-                                    <span className="text-xs ml-1 font-bold text-muted-foreground">m</span>
-                                </p>
+                            {/* Sale progress */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 lg:min-w-[440px]">
+                                <div>
+                                    <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Sale</p>
+                                    <p className="text-lg font-black tabular-nums text-foreground">
+                                        {group.totalTargetMeters.toFixed(0)}
+                                        <span className="text-xs ml-1 font-bold text-muted-foreground">m</span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Dispatched</p>
+                                    <p className="text-lg font-black tabular-nums text-foreground">
+                                        {group.totalDispatched.toFixed(0)}
+                                        <span className="text-xs ml-1 font-bold text-muted-foreground">m</span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Confirmed</p>
+                                    <p className="text-lg font-black tabular-nums text-emerald-600">
+                                        {group.totalReceived.toFixed(0)}
+                                        <span className="text-xs ml-1 font-bold opacity-60">m</span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Remaining</p>
+                                    <p className={cn(
+                                        "text-lg font-black tabular-nums",
+                                        group.remainingToDispatch > 0.01 ? "text-orange-600" : "text-muted-foreground"
+                                    )}>
+                                        {group.remainingToDispatch.toFixed(0)}
+                                        <span className="text-xs ml-1 font-bold opacity-60">m</span>
+                                    </p>
+                                </div>
                             </div>
 
                             {/* Actions + chevron */}
@@ -479,6 +517,14 @@ function OrderGroupCard({
                                 <AlertTriangle className="h-3.5 w-3.5 text-rose-500 flex-shrink-0" />
                                 <p className="text-xs font-bold text-rose-600 dark:text-rose-400">
                                     Shortage of <span className="font-black">{group.shortage.toFixed(2)} m</span> across delivered batches
+                                </p>
+                            </div>
+                        )}
+                        {group.remainingToDispatch > 0.01 && (
+                            <div className="mt-4 flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 rounded-xl">
+                                <Layers className="h-3.5 w-3.5 text-orange-500 flex-shrink-0" />
+                                <p className="text-xs font-bold text-orange-700 dark:text-orange-300">
+                                    <span className="font-black">{group.remainingToDispatch.toFixed(2)} m</span> still pending dispatch from this sale.
                                 </p>
                             </div>
                         )}
@@ -598,7 +644,6 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
     const handleConfirmDispatch = () => {
         if (!confirmingSale) return
         startConfirmTransition(async () => {
-            let res
             const meters = Number.parseFloat(dispatchMeters)
             const takas = Number.parseInt(dispatchTakas, 10) || 0
             if (!Number.isFinite(meters) || meters <= 0) {
@@ -610,7 +655,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                 toast.error(`Cannot dispatch more than remaining pending meters (${pendingMeters.toFixed(2)} m)`)
                 return
             }
-            res = await confirmPendingSaleDispatch(
+            const res = await confirmPendingSaleDispatch(
                 confirmingSale.id,
                 dispatchDate,
                 transportName,
@@ -683,19 +728,22 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
         )
     }
 
-    // ── Group dispatches by order ──
+    // ── Group dispatches by order or stock sale ──
     const orderGroups = useMemo<OrderGroup[]>(() => {
         const map = new Map<string, OrderGroup>()
 
         for (const d of dispatches) {
-            const oid = d.orders.id
-            if (!map.has(oid)) {
-                map.set(oid, {
-                    orderId: oid,
-                    partyName: d.orders.party_name,
-                    qualityLabel: d.orders.quality_label,
+            const groupId = d.stock_sale?.id ?? d.stock_sale_id ?? d.orders.id
+            const totalSaleMeters = Number(d.stock_sale?.meters_sold ?? d.orders.total_target_meters ?? d.qty_meters_sent)
+            const pendingSaleMeters = Number(d.stock_sale?.pending_dispatch_meters ?? 0)
+            if (!map.has(groupId)) {
+                map.set(groupId, {
+                    orderId: groupId,
+                    partyName: d.stock_sale?.party_name ?? d.orders.party_name,
+                    qualityLabel: d.stock_sale?.quality_label ?? d.orders.quality_label,
                     trackingToken: d.orders.tracking_token,
-                    totalTargetMeters: Number(d.orders.total_target_meters),
+                    totalTargetMeters: totalSaleMeters,
+                    remainingToDispatch: pendingSaleMeters,
                     orderStatus: d.orders.status,
                     dispatches: [],
                     totalDispatched: 0,
@@ -705,9 +753,11 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                     hasDisputed: false,
                 })
             }
-            const group = map.get(oid)!
+            const group = map.get(groupId)!
             group.dispatches.push(d)
             group.totalDispatched += Number(d.qty_meters_sent)
+            group.totalTargetMeters = Math.max(group.totalTargetMeters, totalSaleMeters)
+            group.remainingToDispatch = Math.max(group.remainingToDispatch, pendingSaleMeters)
             if (d.status === 'delivered') group.totalReceived += Number(d.qty_meters_received ?? 0)
             if (d.status === 'in_transit') group.hasInTransit = true
             if (d.status === 'disputed') group.hasDisputed = true
@@ -721,6 +771,10 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                     const diff = Number(d.qty_meters_sent) - Number(d.qty_meters_received!)
                     return acc + (diff > 0.01 ? diff : 0)
                 }, 0)
+
+            if (g.remainingToDispatch <= 0.01) {
+                g.remainingToDispatch = Math.max(g.totalTargetMeters - g.totalDispatched, 0)
+            }
 
             // Sort dispatches newest first within the group
             g.dispatches.sort((a, b) => b.dispatch_number - a.dispatch_number)

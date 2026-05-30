@@ -1,6 +1,6 @@
 # Floor Operations and Supervisor Dashboard
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 ## Phase 1 Status
 
@@ -8,7 +8,7 @@ Core Phase 1 pillar. `/supervisor/dashboard` is the primary floor workspace, and
 
 ## What It Does
 
-The supervisor dashboard combines shift selection, machine assignment, worker selection, order/run selection, machine status, total metres produced per shift, duplicate protection, and bulk production submission into one mobile-first workflow.
+The supervisor dashboard combines shift selection, machine assignment, worker selection, order/run selection, machine status, downtime reason capture, total metres produced per shift, duplicate protection, and bulk production submission into one mobile-first workflow.
 
 ## User Workflow
 
@@ -53,7 +53,8 @@ Weavly workflow:
 ## User Interaction Details
 
 - Machine rows show status strip, worker selector, order selector, and production input.
-- Missing worker or order disables/confuses logging intentionally so the supervisor fixes setup first.
+- Production rows require an active machine, active current order/cost analysis, day and night standing workers, and the expected shift worker. Missing setup blocks production logging.
+- Downtime/status rows with zero metres and a valid reason can still be saved without the full production setup.
 - Copy Previous Shift reduces repetitive assignment work.
 - Owner access-code flow protects sensitive overwrites and past-date corrections.
 - Machine status changes are separate from production submission.
@@ -80,4 +81,4 @@ Weavly workflow:
 ## Readiness Notes
 
 - This screen must stay fast on mobile.
-- Validation should cover missing assignment, negative readings, duplicate logs, correction windows, and past-date access-code behavior.
+- Validation should cover missing assignment, negative metres, downtime reasons, duplicate logs, correction windows, settled-payroll locks, and past-date access-code behavior.

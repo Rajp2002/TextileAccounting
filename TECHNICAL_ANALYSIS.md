@@ -1,6 +1,6 @@
 # Weavly Technical Analysis
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 ## Stack
 
@@ -25,7 +25,7 @@ Public/auth:
 
 Owner:
 
-- active Phase 1: analytics, estimator, quotes, orders, market-runs, stock, dispatches, commercials, payroll, advances, fixed-workers, machines, billing, settings
+- active Phase 1: today, analytics, estimator, quotes, orders, market-runs, stock, dispatches, commercials, payroll, advances, fixed-workers, machines, billing, settings
 - archived/deferred: inventory, ledger, settings/audit, system-health, admin-facing DPA/compliance paths
 
 Supervisor:
@@ -64,7 +64,7 @@ Tenancy is enforced through:
 - Custom JWT claims for `user_role`, `org_id`, and onboarding status.
 - Server actions that derive org from the authenticated profile rather than trusting client input.
 
-## Core Domain Tables
+## Core Domain Tables and Views
 
 Setup and identity:
 
@@ -73,6 +73,7 @@ Setup and identity:
 - `machines`
 - `workers`
 - `fixed_workers`
+- `payroll_configs`
 
 Estimator and commercial:
 
@@ -100,6 +101,13 @@ Stock and dispatch:
 - `fabric_stock_sales`
 - `fabric_stock_movements`
 - `fabric_stock_inward_drafts`
+- `stock_discrepancies`
+
+Commercials:
+
+- `commercial_profit_entries`
+- `commercial_receivables`
+- `commercial_payment_receipts`
 
 Payroll and advances:
 
@@ -107,7 +115,6 @@ Payroll and advances:
 - `payroll_settlements`
 - `payroll_adjustments`
 - `payroll_adjustment_categories`
-- `payroll_configs`
 - `payroll_payments`
 - `supervisor_float_transactions`
 
@@ -146,6 +153,7 @@ Owner operations:
 
 - machine and worker actions in `app/(dashboard)/owner/actions.ts`
 - order/dispatch actions in `app/(dashboard)/owner/orders/actions.ts`
+- party-first stock sale actions in `app/(dashboard)/owner/dispatches/actions.ts`
 - stock actions in `app/(dashboard)/owner/stock/actions.ts`
 - payroll actions in `app/(dashboard)/owner/payroll/actions.ts`
 - advances actions in `app/(dashboard)/owner/advances/actions.ts`
@@ -189,8 +197,10 @@ Billing uses Razorpay:
 ## Known Technical Realities
 
 - Documentation must distinguish active `/owner/stock` from archived `/owner/inventory`.
+- Documentation must distinguish party-first stock sale/pending dispatch from the older order-first dispatch-only story.
+- Production mode (`organizations.production_mode`) changes navigation visibility but does not change the underlying database shape.
 - The implementation has been hardened to use direct Meta API. Legacy references to Interakt have been cleaned up.
-- Automated tests are thin relative to workflow complexity.
+- Automated tests are broader than the first Phase 1 pass, but workflow coverage is still uneven relative to complexity.
 - `lib/time.ts` centralizes Surat date helpers, but some client code still uses browser `new Date()` for current shift/date.
 - Large migration history means runtime code and latest migrations should be treated as authoritative.
 
@@ -198,9 +208,9 @@ Billing uses Razorpay:
 
 - Estimator formula correctness.
 - Production log duplicate/correction/past-date behavior.
-- Payroll preview versus settlement persistence.
+- Payroll cycle/pay-date gating and preview versus settlement persistence.
 - Advance recovery and final settlement edge cases.
-- Stock inward/sale/adjustment math.
-- Dispatch receipt variance.
+- Stock sale/adjustment/pending-dispatch math.
+- Dispatch partial dispatch and receipt variance.
 - WhatsApp failure isolation.
 - Archive route/navigation consistency.

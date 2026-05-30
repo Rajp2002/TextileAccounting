@@ -11,11 +11,11 @@ import { formatINR, calculateAdvanceRecovery } from '@/lib/finance'
 import {
     CheckCircle2, Circle, ChevronLeft, ChevronRight,
     HardHat, Briefcase, AlertCircle, Loader2, HandCoins, Download, AlertTriangle,
-    Search, Send, Info, Lock, Check, Plus, Trash2
+    Search, Send, Info, Lock, Check, Plus, Trash2, CalendarClock
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { toggleWorkerPaid } from './actions'
+import { savePayrollConfig, toggleWorkerPaid } from './actions'
 import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTransliterate } from '@/hooks/use-transliterate'
@@ -45,7 +45,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { setWorkerActiveStatus } from '@/app/(dashboard)/owner/actions'
-import { getPayrollCycleBounds } from '@/lib/payroll-cycle'
+import { getLatestOpenPayrollMonth, getPayrollCycleBounds, getPayrollCycleStatus } from '@/lib/payroll-cycle'
+import { formatToSurat } from '@/lib/time'
 import {
     PAYROLL_MANUAL_ADJUSTMENT_REASONS,
     calculatePayrollManualAdjustmentTotals,
@@ -105,7 +106,7 @@ const ROLE_COLORS: Record<string, string> = {
     sanitation: 'bg-green-100 text-green-700', daily: 'bg-orange-100 text-orange-700',
 }
 
-const PAYROLL_QUERY_VERSION = 'production-ledger-v2'
+const PAYROLL_QUERY_VERSION = 'production-ledger-v3'
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function monthLabel(ym: string) {
@@ -123,12 +124,68 @@ function nextMonth(ym: string) {
     return d.toISOString().substring(0, 7)
 }
 
-function payrollMeterQueryKey(orgId: string | undefined, month: string) {
-    return ['payroll_meter', orgId, month, PAYROLL_QUERY_VERSION] as const
+function payrollMeterQueryKey(orgId: string | undefined, month: string, cycleStartDay: number) {
+    return ['payroll_meter', orgId, month, cycleStartDay, PAYROLL_QUERY_VERSION] as const
 }
 
-function payrollFixedQueryKey(orgId: string | undefined, month: string) {
-    return ['payroll_fixed', orgId, month, PAYROLL_QUERY_VERSION] as const
+function payrollFixedQueryKey(orgId: string | undefined, month: string, cycleStartDay: number) {
+    return ['payroll_fixed', orgId, month, cycleStartDay, PAYROLL_QUERY_VERSION] as const
+}
+
+function dateLabel(dateStr: string, options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }) {
+    const [year, month, day] = dateStr.split('-').map(Number)
+    return new Date(year, month - 1, day).toLocaleDateString('en-IN', options)
+}
+
+function getPayWindowCopy(status: ReturnType<typeof getPayrollCycleStatus>, payReminderDays: number) {
+    const cycleLabel = `${dateLabel(status.cycle_start)} to ${dateLabel(status.cycle_end)}`
+    const payDateLabel = dateLabel(status.pay_date, { day: 'numeric', month: 'short', year: 'numeric' })
+
+    if (status.status === 'overdue') {
+        return {
+            tone: 'red' as const,
+            title: `Payroll overdue since ${payDateLabel}`,
+            description: `This cycle covers ${cycleLabel}. Settle pending wages now.`,
+        }
+    }
+
+    if (status.status === 'due_today') {
+        return {
+            tone: 'amber' as const,
+            title: `Payroll due today, ${payDateLabel}`,
+            description: `This cycle covers ${cycleLabel}.`,
+        }
+    }
+
+    if (status.status === 'approaching') {
+        return {
+            tone: 'amber' as const,
+            title: `Payroll due in ${status.days_until_pay_date} day${status.days_until_pay_date === 1 ? '' : 's'}`,
+            description: `Pay date is ${payDateLabel} for ${cycleLabel}.`,
+        }
+    }
+
+    if (status.status === 'scheduled') {
+        return {
+            tone: 'slate' as const,
+            title: `Payroll opens ${payReminderDays} day${payReminderDays === 1 ? '' : 's'} before ${payDateLabel}`,
+            description: `This cycle covers ${cycleLabel}. Wages are not due yet.`,
+        }
+    }
+
+    if (status.status === 'in_progress') {
+        return {
+            tone: 'slate' as const,
+            title: 'Current cycle is still in progress',
+            description: `This cycle closes on ${dateLabel(status.cycle_end, { day: 'numeric', month: 'short', year: 'numeric' })} and pays on ${payDateLabel}.`,
+        }
+    }
+
+    return {
+        tone: 'slate' as const,
+        title: 'Payroll cycle has not started yet',
+        description: `This cycle starts on ${dateLabel(status.cycle_start, { day: 'numeric', month: 'short', year: 'numeric' })}.`,
+    }
 }
 
 function isPfEsiEnrolled(worker: WorkerBase) {
@@ -1367,6 +1424,100 @@ function SettlementDialog({
     )
 }
 
+function PayrollRulesDialog({
+    open,
+    onOpenChange,
+    cycleStartDay,
+    payDateDay,
+    payReminderDays,
+    onSave,
+    isSaving,
+}: {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    cycleStartDay: number
+    payDateDay: number
+    payReminderDays: number
+    onSave: (input: { cycleStartDay: number; payDateDay: number; payReminderDays: number }) => void
+    isSaving: boolean
+}) {
+    const [draftCycleStartDay, setDraftCycleStartDay] = useState(cycleStartDay)
+    const [draftPayDateDay, setDraftPayDateDay] = useState(payDateDay)
+    const [draftPayReminderDays, setDraftPayReminderDays] = useState(payReminderDays)
+
+    const clampNumber = (value: string, min: number, max: number) => {
+        const parsed = Number(value)
+        if (!Number.isFinite(parsed)) return min
+        return Math.min(max, Math.max(min, Math.trunc(parsed)))
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Payroll rules</DialogTitle>
+                    <DialogDescription>
+                        Configure the cycle and pay date used to decide when wages become due.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-4 py-2">
+                    <div className="grid gap-1.5">
+                        <Label className="text-xs font-black uppercase tracking-widest text-gray-500">Cycle start day</Label>
+                        <Input
+                            type="number"
+                            min={1}
+                            max={28}
+                            value={draftCycleStartDay}
+                            onChange={(event) => setDraftCycleStartDay(clampNumber(event.target.value, 1, 28))}
+                        />
+                    </div>
+                    <div className="grid gap-1.5">
+                        <Label className="text-xs font-black uppercase tracking-widest text-gray-500">Pay date day</Label>
+                        <Input
+                            type="number"
+                            min={1}
+                            max={28}
+                            value={draftPayDateDay}
+                            onChange={(event) => setDraftPayDateDay(clampNumber(event.target.value, 1, 28))}
+                        />
+                        <p className="text-xs leading-relaxed text-gray-500">
+                            We use the first matching pay date after the cycle closes.
+                        </p>
+                    </div>
+                    <div className="grid gap-1.5">
+                        <Label className="text-xs font-black uppercase tracking-widest text-gray-500">Reminder days</Label>
+                        <Input
+                            type="number"
+                            min={0}
+                            max={14}
+                            value={draftPayReminderDays}
+                            onChange={(event) => setDraftPayReminderDays(clampNumber(event.target.value, 0, 14))}
+                        />
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        className="bg-saffron font-bold text-white hover:bg-saffron-deep"
+                        disabled={isSaving}
+                        onClick={() => onSave({
+                            cycleStartDay: draftCycleStartDay,
+                            payDateDay: draftPayDateDay,
+                            payReminderDays: draftPayReminderDays,
+                        })}
+                    >
+                        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save rules'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function PayrollPage() {
     const supabase = createClient()
@@ -1374,9 +1525,16 @@ export default function PayrollPage() {
     const { t } = useTranslation()
     const router = useRouter()
     const searchParams = useSearchParams()
+    const cycleParam = searchParams.get('cycle')
+    const hasInitialCycleParam = Boolean(cycleParam && /^\d{4}-(?:0[1-9]|1[0-2])$/.test(cycleParam))
+    const initialCycleMonth = hasInitialCycleParam && cycleParam
+        ? cycleParam
+        : new Date().toISOString().substring(0, 7)
     const [activeTab, setActiveTab] = useState<'meter' | 'fixed'>('meter')
-    const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().substring(0, 7))
+    const [selectedMonth, setSelectedMonth] = useState(initialCycleMonth)
+    const [hasManualCycleSelection, setHasManualCycleSelection] = useState(hasInitialCycleParam)
     const [searchTerm, setSearchTerm] = useState('')
+    const [showRulesDialog, setShowRulesDialog] = useState(false)
     const [showAccessCodeDialog, setShowAccessCodeDialog] = useState(false)
     const [accessCode, setAccessCode] = useState('')
     const [pendingAction, setPendingAction] = useState<{
@@ -1387,6 +1545,7 @@ export default function PayrollPage() {
     } | null>(null)
 
     const { data: userProfile } = useUserProfile()
+    const todayStr = useMemo(() => formatToSurat(new Date(), 'yyyy-MM-dd'), [])
 
     // 1. Cycle Config
     const { data: cycleConfig } = useQuery({
@@ -1398,6 +1557,25 @@ export default function PayrollPage() {
         }
     })
     const cycleStartDay = cycleConfig?.cycle_start_day || 1
+    const payDateDay = cycleConfig?.pay_date_day || 10
+    const payReminderDays = cycleConfig?.pay_reminder_days ?? 3
+    const latestOpenMonth = useMemo(
+        () => getLatestOpenPayrollMonth(todayStr, cycleStartDay, payDateDay, payReminderDays),
+        [cycleStartDay, payDateDay, payReminderDays, todayStr]
+    )
+    const selectedCycleStatus = useMemo(
+        () => getPayrollCycleStatus(selectedMonth, cycleStartDay, payDateDay, todayStr, payReminderDays),
+        [cycleStartDay, payDateDay, payReminderDays, selectedMonth, todayStr]
+    )
+
+    useEffect(() => {
+        if (!userProfile?.org_id || hasManualCycleSelection) return
+        let disposed = false
+        queueMicrotask(() => {
+            if (!disposed) setSelectedMonth(latestOpenMonth)
+        })
+        return () => { disposed = true }
+    }, [hasManualCycleSelection, latestOpenMonth, userProfile?.org_id])
 
     // Org name for payslip headers
     const { data: orgData } = useQuery({
@@ -1449,7 +1627,7 @@ export default function PayrollPage() {
 
     // ── Meter workers payroll data ──────────────────────────────────────────
     const { data: meterWorkers, isLoading: meterLoading } = useQuery({
-        queryKey: payrollMeterQueryKey(userProfile?.org_id, selectedMonth),
+        queryKey: payrollMeterQueryKey(userProfile?.org_id, selectedMonth, cycleStartDay),
         enabled: !!userProfile?.org_id && !!selectedMonth,
         staleTime: 0,
         refetchOnMount: 'always',
@@ -1582,7 +1760,7 @@ export default function PayrollPage() {
     })
 
     const { data: fixedWorkers, isLoading: fixedLoading } = useQuery({
-        queryKey: payrollFixedQueryKey(userProfile?.org_id, selectedMonth),
+        queryKey: payrollFixedQueryKey(userProfile?.org_id, selectedMonth, cycleStartDay),
         enabled: !!userProfile?.org_id && !!selectedMonth,
         staleTime: 0,
         refetchOnMount: 'always',
@@ -1668,6 +1846,28 @@ export default function PayrollPage() {
         }
     })
 
+    const configMutation = useMutation({
+        mutationFn: async (input: { cycleStartDay: number; payDateDay: number; payReminderDays: number }) => {
+            return savePayrollConfig(input.cycleStartDay, input.payDateDay, input.payReminderDays)
+        },
+        onSuccess: (data) => {
+            if (data?.error) {
+                toast.error(data.error)
+                return
+            }
+
+            setShowRulesDialog(false)
+            setHasManualCycleSelection(false)
+            toast.success('Payroll rules updated')
+            void queryClient.invalidateQueries({ queryKey: ['payroll_config', userProfile?.org_id] })
+            void queryClient.invalidateQueries({ queryKey: ['payroll_meter'] })
+            void queryClient.invalidateQueries({ queryKey: ['payroll_fixed'] })
+        },
+        onError: () => {
+            toast.error('Failed to update payroll rules')
+        },
+    })
+
     // ── Toggle paid with Optimistic UI ──────────────────────────────────────
     const mutation = useMutation({
         mutationFn: async ({ workerType, workerId, currentPaid, targetMonth, isFinal, manualDeductionOverride, paymentMode, manualAdjustments, verifiedByOwner, accessCode }: {
@@ -1700,8 +1900,8 @@ export default function PayrollPage() {
             const orgId = userProfile?.org_id
             const targetMonth = variables.targetMonth
             const queryKey = variables.workerType === 'meter' 
-                ? payrollMeterQueryKey(orgId, targetMonth)
-                : payrollFixedQueryKey(orgId, targetMonth)
+                ? payrollMeterQueryKey(orgId, targetMonth, cycleStartDay)
+                : payrollFixedQueryKey(orgId, targetMonth, cycleStartDay)
 
             await queryClient.cancelQueries({ queryKey })
             const previousData = queryClient.getQueryData(queryKey)
@@ -1936,6 +2136,18 @@ export default function PayrollPage() {
 
     if (!selectedMonth) return null
 
+    const payWindowCopy = getPayWindowCopy(selectedCycleStatus, payReminderDays)
+    const payWindowToneClasses = {
+        red: 'border-red-200 bg-red-50 text-red-800',
+        amber: 'border-amber-200 bg-amber-50 text-amber-800',
+        slate: 'border-slate-200 bg-slate-50 text-slate-700',
+    }[payWindowCopy.tone]
+    const payWindowIconClasses = {
+        red: 'text-red-600',
+        amber: 'text-amber-600',
+        slate: 'text-slate-500',
+    }[payWindowCopy.tone]
+
     return (
         <div className="p-4 md:p-6 space-y-6 pb-8">
             {/* Header */}
@@ -1947,7 +2159,10 @@ export default function PayrollPage() {
                 {/* Month navigator */}
                 <div className="flex items-center gap-2 bg-white border rounded-lg px-3 py-1.5 self-start sm:self-auto">
                     <button
-                        onClick={() => setSelectedMonth(prevMonth(selectedMonth))}
+                        onClick={() => {
+                            setHasManualCycleSelection(true)
+                            setSelectedMonth(prevMonth(selectedMonth))
+                        }}
                         className="p-1 hover:bg-gray-100 rounded"
                     >
                         <ChevronLeft className="h-4 w-4" />
@@ -1956,8 +2171,11 @@ export default function PayrollPage() {
                         {monthLabel(selectedMonth)}
                     </span>
                     <button
-                        onClick={() => setSelectedMonth(nextMonth(selectedMonth))}
-                        disabled={selectedMonth >= new Date().toISOString().substring(0, 7)}
+                        onClick={() => {
+                            setHasManualCycleSelection(true)
+                            setSelectedMonth(nextMonth(selectedMonth))
+                        }}
+                        disabled={selectedMonth >= latestOpenMonth}
                         className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
                     >
                         <ChevronRight className="h-4 w-4" />
@@ -1965,7 +2183,44 @@ export default function PayrollPage() {
                 </div>
             </div>
 
+            <div className={cn('flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between', payWindowToneClasses)}>
+                <div className="flex min-w-0 items-start gap-3">
+                    <CalendarClock className={cn('mt-0.5 h-5 w-5 shrink-0', payWindowIconClasses)} />
+                    <div className="min-w-0">
+                        <p className="text-sm font-black">{payWindowCopy.title}</p>
+                        <p className="mt-0.5 text-xs leading-relaxed opacity-85">{payWindowCopy.description}</p>
+                    </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                    <Badge variant="outline" className="w-fit border-current/20 bg-white/60 text-[10px] font-black uppercase tracking-widest">
+                        Pay day {payDateDay}
+                    </Badge>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 border-current/20 bg-white/70 text-xs font-bold hover:bg-white"
+                        onClick={() => setShowRulesDialog(true)}
+                    >
+                        Edit rules
+                    </Button>
+                </div>
+            </div>
+
+            {!selectedCycleStatus.is_payroll_window_open && (
+                <Card>
+                    <CardContent className="py-12 text-center">
+                        <CalendarClock className="mx-auto mb-3 h-9 w-9 text-slate-300" />
+                        <p className="font-bold text-slate-800">No wages due for this cycle yet</p>
+                        <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-slate-500">
+                            Payroll rows open when the configured pay date is approaching. This keeps in-progress production out of the due-wages list.
+                        </p>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Summary Cards */}
+            {selectedCycleStatus.is_payroll_window_open && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <Card className="border-none shadow-sm bg-saffron-soft/50">
                     <CardContent className="pt-4 pb-3">
@@ -1995,8 +2250,10 @@ export default function PayrollPage() {
                     </CardContent>
                 </Card>
             </div>
+            )}
 
             {/* Search & Tabs Header */}
+            {selectedCycleStatus.is_payroll_window_open && (
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="relative w-full md:w-72">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -2047,9 +2304,10 @@ export default function PayrollPage() {
                     </button>
                 </div>
             </div>
+            )}
 
             {/* Progress bar */}
-            {summary.totalGross > 0 && (
+            {selectedCycleStatus.is_payroll_window_open && summary.totalGross > 0 && (
                 <div className="space-y-1.5">
                     <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
                         <div
@@ -2064,7 +2322,7 @@ export default function PayrollPage() {
             )}
 
             {/* ── Meter Workers Tab ── */}
-            {activeTab === 'meter' && (
+            {selectedCycleStatus.is_payroll_window_open && activeTab === 'meter' && (
                 <div className="space-y-3">
                     {meterLoading ? (
                         <div className="space-y-3">
@@ -2125,7 +2383,7 @@ export default function PayrollPage() {
             )}
 
             {/* ── Fixed Workers Tab ── */}
-            {activeTab === 'fixed' && (
+            {selectedCycleStatus.is_payroll_window_open && activeTab === 'fixed' && (
                 <div className="space-y-3">
                     {fixedLoading ? (
                         <div className="space-y-3">
@@ -2261,6 +2519,16 @@ export default function PayrollPage() {
                     }}
                 />
             )}
+            <PayrollRulesDialog
+                key={`${cycleStartDay}-${payDateDay}-${payReminderDays}-${showRulesDialog ? 'open' : 'closed'}`}
+                open={showRulesDialog}
+                onOpenChange={setShowRulesDialog}
+                cycleStartDay={cycleStartDay}
+                payDateDay={payDateDay}
+                payReminderDays={payReminderDays}
+                isSaving={configMutation.isPending}
+                onSave={(input) => configMutation.mutate(input)}
+            />
         </div>
     )
 }

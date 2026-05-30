@@ -1,12 +1,12 @@
 # Commercials and Party Ledger
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 ## Phase 1 Status
 
 Split status:
 
-- `/owner/commercials` is active Phase 1 support for gross-profit visibility, receivables, and payment tracking.
+- `/owner/commercials` is active Phase 1 support for gross-profit visibility, receivables, dispatch status context, and payment tracking.
 - `/owner/ledger` is archived/deferred for Phase 1 and represents full accounting/Tally replacement.
 
 ## What Active Commercials Does
@@ -19,17 +19,19 @@ Commercials gives the owner a source-tagged view of expected and realized profit
 - stock sales
 - receivables and money to collect
 - payment history and receipts
+- dispatch status and pending dispatch meters for stock-sale receivables
 
 It shows revenue, production cost, gross profit, margin, receivables, and payment status. It is the source of truth for "Paisa" in the factory.
 
 ## User Workflow
 
 1. Owner opens `/owner/commercials`.
-2. Owner reviews realized revenue, realized profit, expected profit, and filtered profit.
-3. Owner filters by all/realized/expected.
+2. Owner reviews realized revenue, realized profit, expected profit, receivables, collected amount, and balance.
+3. Owner filters by all/realized/expected and receivable status.
 4. Owner filters by Orders, Stock, Market Runs, or Expected.
-5. Owner searches a quality or reference.
-6. Owner reviews row-level revenue, cost, profit, and margin.
+5. Owner searches a quality, reference, party, or source.
+6. Owner reviews row-level revenue, cost, profit, margin, payment status, dispatch status, and pending dispatch meters.
+7. Owner records payments against receivables and can expand payment history.
 
 ## Existing Workflow Translation
 
@@ -44,6 +46,7 @@ Weavly workflow:
 - Profit is visible from operational sources.
 - Expected and realized stages are separated.
 - Stock and market-run sales become part of the same profit story.
+- Party-first stock sales become named receivables immediately instead of anonymous accounting notes.
 
 ## Deferred Party Ledger
 
@@ -67,6 +70,8 @@ Active:
 - `market_run_sales`
 - `estimator_quotes`
 - `orders`
+- `commercial_receivables`
+- `commercial_payment_receipts`
 
 Deferred:
 
@@ -82,4 +87,5 @@ Deferred:
 ## Readiness Notes
 
 - Commercials should remain an operational margin view, not a full accounting promise.
+- Payment recording is operational collection tracking, not bank reconciliation.
 - Ledger reactivation should happen only after Phase 1 core flows are stable.

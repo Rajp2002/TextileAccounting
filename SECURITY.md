@@ -1,6 +1,6 @@
 # Weavly Security Notes
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 ## Security Model
 
@@ -25,7 +25,7 @@ Protection layers:
 
 Role homes:
 
-- owner: `/owner/analytics`
+- owner: `/owner/today`
 - supervisor: `/supervisor/dashboard` or `/supervisor/production` redirect
 - admin: `/admin`
 

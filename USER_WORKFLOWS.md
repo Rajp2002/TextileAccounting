@@ -1,6 +1,6 @@
 # Weavly User Workflows
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 This document explains how users progress through Weavly in the active product. It is written from the user's workflow outward: what they are trying to do, what pain point it replaces, how they interact with the app, and what records are created.
 
@@ -16,13 +16,14 @@ Get a factory into a usable digital state before production logging and payroll 
 
 1. Owner signs up and creates an organization.
 2. Owner is routed to onboarding until required setup exists.
-3. Owner adds machines manually or in bulk.
-4. Owner adds meter workers manually or in bulk, optionally saving WhatsApp numbers with consent.
-5. Owner saves payroll baseline.
-6. Owner starts trial or subscribes where access requires it.
-7. Owner lands on `/owner/analytics`.
-8. Owner continues setup in `/owner/settings`: factory name, join code, WhatsApp, factory cost profile, templates, access codes, supervisor float, and security/data controls.
-9. Supervisor joins with the current join code and is routed to production.
+3. Owner chooses production mode: market-run, order-based, or both.
+4. Owner adds loom types/machine counts.
+5. Owner adds meter workers manually or in bulk, optionally saving WhatsApp numbers with consent.
+6. Owner saves payroll cycle, pay date, and reminder-window settings.
+7. Owner starts trial or subscribes where access requires it.
+8. Owner lands on `/owner/today`.
+9. Owner continues setup in `/owner/settings`: factory name, production mode, join code, WhatsApp, factory cost profile, templates, access codes, supervisor float, and security/data controls.
+10. Supervisor joins with the current join code and is routed to production.
 
 ### Pain Point Replaced
 
@@ -118,8 +119,9 @@ Keep looms productive when client orders are light while still knowing cost, sto
 3. Supervisor logs production against the market-run production anchor.
 4. Owner tracks produced meters, expected in-godown meters, sold meters, revenue, cost, and profit.
 5. Production creates expected stock in the godown ledger; this is not physical inward confirmation.
-6. Owner records sale/dispatch when stock is sold and reviews any shortage or excess.
-7. Owner closes the run when done.
+6. Owner records a named stock sale, creating a receivable.
+7. Owner dispatches pending sold meters in one or more batches and reviews any shortage or excess at receipt.
+8. Owner closes the run when done.
 
 ### Pain Point Replaced
 
@@ -210,10 +212,12 @@ Know what fabric should exist in godown, what is actually dispatched, and which 
 2. Owner reviews expected available takas/meters and stock value at cost.
 3. Market-run production contributes expected stock automatically from production records.
 4. Owner adds manual/opening/order stock lots where needed.
-5. Owner records sale/dispatch and actual dispatched meters.
-6. Any shortage or excess becomes a stock discrepancy with Needs Review status.
-7. Owner adjustments remain traceable and owner-only.
-8. Commercials reflects realized stock profit.
+5. Owner records a party-first stock sale.
+6. The sale creates a named Commercials receivable and pending dispatch meters.
+7. Owner dispatches sold stock fully or partially.
+8. Any receipt shortage or excess becomes a stock discrepancy with Needs Review status.
+9. Owner adjustments remain traceable and owner-only.
+10. Commercials reflects realized stock profit and collection state.
 
 ### Pain Point Replaced
 
@@ -236,12 +240,12 @@ Create a professional handoff for fabric leaving the factory and capture receive
 
 ### Flow
 
-1. Owner chooses an order.
-2. Owner creates dispatch with sent meters and transport/GST metadata.
+1. Owner sells stock to a named party or selects an order-linked pending sale.
+2. Owner confirms dispatch with sent meters/takas and transport/GST metadata.
 3. System creates a dispatch batch and keeps package/batch lines.
-4. Owner shares public tracking link.
+4. Owner shares a public tracking link when the dispatch is order-linked.
 5. Party or owner confirms received meters.
-6. System records delivered, disputed, shortage, or extra received state.
+6. System records delivered, shortage, or extra received state, and keeps partially dispatched stock sales pending for the next batch.
 
 ### Pain Point Replaced
 
@@ -264,11 +268,12 @@ Show realized and expected gross profit without requiring full accounting readin
 ### Flow
 
 1. Owner opens Commercials.
-2. Owner reviews realized revenue, realized cost, realized profit, expected profit, and margin.
-3. Owner filters by realized/expected.
+2. Owner reviews realized revenue, realized cost, realized profit, expected profit, receivables, collected amount, balance, and margin.
+3. Owner filters by realized/expected and receivable status.
 4. Owner filters by orders, stock, market runs, and expected quotes.
-5. Owner searches by quality/reference/source.
-6. Owner reviews row-level revenue, cost, gross profit, and margin.
+5. Owner searches by quality/reference/source/party.
+6. Owner reviews row-level revenue, cost, gross profit, margin, dispatch status, and payment state.
+7. Owner records payments and reviews payment history.
 
 ### Pain Point Replaced
 
@@ -293,14 +298,15 @@ Pay workers from actual production and recover advances transparently.
 
 1. Owner records advances in `/owner/advances`.
 2. Owner opens `/owner/payroll`.
-3. Owner selects month.
-4. Owner reviews meter-worker earnings from production logs.
-5. Owner reviews fixed-worker earnings from salary/attendance.
-6. Owner checks advances, PF/ESI, deductions, net payout, and remaining debt.
-7. Owner toggles final settlement where needed.
-8. Owner selects payment mode.
-9. Owner settles worker.
-10. Owner generates PDF or sends WhatsApp payslip.
+3. Owner selects a payroll cycle month.
+4. Owner checks cycle status based on pay date and reminder window.
+5. Owner reviews meter-worker earnings from production logs.
+6. Owner reviews fixed-worker earnings from salary/attendance.
+7. Owner checks advances, PF/ESI, deductions, manual adjustments, net payout, and remaining debt.
+8. Owner toggles final settlement where needed.
+9. Owner selects payment mode and verifies the payout.
+10. Owner settles worker.
+11. Owner generates PDF or sends WhatsApp payslip.
 
 ### Pain Point Replaced
 

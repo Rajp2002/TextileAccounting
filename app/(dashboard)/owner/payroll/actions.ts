@@ -5,7 +5,8 @@ import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { calculateTotalPay, calculateDailyPay } from '@/lib/finance'
 import { ToggleWorkerPaidSchema, PayrollConfigSchema, safeParse } from '@/lib/schemas'
-import { getPayrollCycleBounds } from '@/lib/payroll-cycle'
+import { getPayrollCycleBounds, getPayrollCycleStatus } from '@/lib/payroll-cycle'
+import { getSuratTodayString } from '@/lib/time'
 import { validateAndConsumeAccessCode } from '@/lib/access-codes'
 import {
     calculatePayrollManualAdjustmentTotals,
@@ -44,18 +45,25 @@ export async function toggleWorkerPaid(
     // 1. Get Cycle Config and derive bounds
     const { data: config } = await supabase
         .from('payroll_configs')
-        .select('cycle_start_day')
+        .select('cycle_start_day, pay_date_day, pay_reminder_days')
         .eq('org_id', profile.org_id)
         .maybeSingle()
     
     const cycleStartDay = config?.cycle_start_day || 1
+    const payDateDay = config?.pay_date_day || 10
+    const payReminderDays = config?.pay_reminder_days ?? 3
     const bounds = getPayrollCycleBounds(month, cycleStartDay)
     const monthStart = bounds.cycle_start
     const monthEnd = bounds.cycle_end
+    const cycleStatus = getPayrollCycleStatus(month, cycleStartDay, payDateDay, getSuratTodayString(), payReminderDays)
     
     let cycleStart = cycleStartDate
     if (newPaid && !cycleStart) {
         cycleStart = monthStart
+    }
+
+    if (newPaid && !isFinalSettlement && !cycleStatus.is_payroll_window_open) {
+        return { error: `Payroll for this cycle is scheduled for ${cycleStatus.pay_date}. It opens ${payReminderDays} day${payReminderDays === 1 ? '' : 's'} before pay date.` }
     }
 
     // ── Calculate gross amount server-side ───────────────────────────────
@@ -245,11 +253,11 @@ export async function createPayrollAdjustment(input: {
     return { success: true }
 }
 
-export async function savePayrollConfig(cycleStartDay: number) {
+export async function savePayrollConfig(cycleStartDay: number, payDateDay = 10, payReminderDays = 3) {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    const parsed = safeParse(PayrollConfigSchema, { cycleStartDay })
+    const parsed = safeParse(PayrollConfigSchema, { cycleStartDay, payDateDay, payReminderDays })
     if ('error' in parsed) return { error: parsed.error }
 
     try {
@@ -263,6 +271,8 @@ export async function savePayrollConfig(cycleStartDay: number) {
         .upsert({
             org_id: profile.org_id,
             cycle_start_day: parsed.data.cycleStartDay,
+            pay_date_day: parsed.data.payDateDay,
+            pay_reminder_days: parsed.data.payReminderDays,
             updated_at: new Date().toISOString()
         }, { onConflict: 'org_id' })
 

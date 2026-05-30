@@ -1,6 +1,6 @@
 # Current Product Implementation Analysis
 
-Last analyzed from the active codebase on May 10, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 This document is intended to be the source of truth for the current implementation of the product. It describes what the app actually does today, how the features connect, what records are created, what outputs users get, and where current implementation realities differ from the ideal product narrative.
 
@@ -11,19 +11,20 @@ It is written from the product outward, but grounded in the codebase: Next.js Ap
 Weavly is a multi-tenant textile operations SaaS for weaving factories. It is not implemented as a generic ERP. The current product is shaped around real factory workflows:
 
 - Factory Today as default owner action center
+- production-mode-aware navigation: market-run, order-based, or both
 - fabric costing before production starts
 - quotes and accepted party work
 - Start Party Order as estimator fast path preserving quote/order architecture
 - speculative market production when looms need to stay busy
 - day/night shift production logging by supervisors
-- meter readings on looms
+- shift-metre production logging
 - machine and worker assignment
 - piece-rate payroll
 - fixed-worker attendance and salary payroll
 - worker advances and kharchi
 - takas and stock in godown as physical inventory
-- Sell & Dispatch as guided sale+dispatch wrapper
-- dispatch batches, public tracking, and receipt reconciliation
+- party-first stock sale as the primary stock sale entry point
+- pending and partial dispatch batches, public tracking where order-linked, and receipt reconciliation
 - Commercials receivables and payment tracking
 - gross profit visibility and money source of truth
 - WhatsApp-based operational messaging
@@ -32,14 +33,14 @@ Weavly is a multi-tenant textile operations SaaS for weaving factories. It is no
 
 The product center is a production-to-money loop:
 
-1. Owner sets up the factory.
+1. Owner sets up the factory, including production mode.
 2. Owner accesses Factory Today for daily attention signals.
 3. Owner estimates fabric cost.
 4. Owner saves a quote or starts a market run.
 5. Accepted quotes become orders; market runs create speculative production anchors.
 6. Supervisor logs shift production against machines, workers, and orders/runs.
 7. Production feeds Factory Today, analytics, payroll, stock inward drafts, and progress tracking.
-8. Stock is confirmed into godown, sold & dispatched through guided workflows, and reconciled.
+8. Stock is confirmed or represented in the godown ledger, sold to a named party, dispatched through pending/partial workflows, and reconciled.
 9. Commercials and payroll turn operational events into money visibility and payment tracking.
 
 ## 2. Implementation Architecture
@@ -113,6 +114,8 @@ Active owner routes include:
 - `/owner/billing`
 - `/owner/settings`
 
+Owner navigation visibility depends on `organizations.production_mode`: market-run organizations hide Quotes/Orders, order-based organizations hide Market Runs, and both-mode organizations show both.
+
 Active supervisor routes include:
 
 - `/supervisor/dashboard`
@@ -140,7 +143,7 @@ The current implementation revolves around these records and relationships.
 - `organizations`: factory, join code, lockdown state, settings, subscription context.
 - `profiles`: user role, org membership, identity metadata.
 - `org_subscriptions`, `subscription_payments`: billing state.
-- `payroll_configs`: cycle-start configuration for payroll.
+- `payroll_configs`: payroll cycle start, pay date, and reminder-window configuration.
 - `factory_cost_profile`: reusable costing defaults for estimator and market runs.
 
 ### Factory Master Data
@@ -174,6 +177,8 @@ The current implementation revolves around these records and relationships.
 - `fabric_packages`: legacy and bridge package records, still used by dispatch creation.
 - `market_run_sales`: direct market-run sales path at the database/action level.
 - `party_invoices`: invoice records used by ledger/commercials flows.
+- `commercial_receivables`: lightweight receivables across stock sales, market-run sales, and party invoices.
+- `commercial_payment_receipts`: payment receipt rows that update receivable status and balance.
 
 ### Payroll and Cash
 
@@ -201,9 +206,9 @@ The current implementation revolves around these records and relationships.
 | Market runs | `/owner/market-runs`, `/owner/market-runs/[id]` | `market_runs`, `market_run_summary`, `createMarketRunFromEstimator`, `create_market_run_sale` |
 | Supervisor production | `/supervisor/dashboard`, `/supervisor/production` | `getShiftSetupData`, `upsertShiftAssignment`, `bulkLogProduction`, `replace_shift_production_logs` |
 | Stock and godown | `/owner/stock`, `TakaStockClient.tsx` | Physical inventory, `fabric_stock_lot_summary`, `fabric_stock_inward_drafts`, `confirm_stock_inward_draft` |
-| Dispatch and tracking | `/owner/dispatches`, Sell & Dispatch UI, `/track/[token]` | `sellAndDispatchTakas`, `create_stock_sale_dispatch`, `get_order_tracking_data` |
-| Commercials | `/owner/commercials` | Money source of truth, receivables, `lib/commercials/receivables.ts`, `record_commercial_payment_v1` |
-| Payroll | `/owner/payroll` | `toggleWorkerPaid`, `settle_worker_payroll`, `unsettle_worker_payroll`, `lib/payroll-cycle.ts` |
+| Dispatch and tracking | `/owner/dispatches`, Sell Stock UI, Pending Dispatches tab, order dispatch UI, `/track/[token]` | `createPartyStockSaleAndOptionalDispatch`, `confirmPendingSaleDispatch`, `create_stock_sale_dispatch`, `confirm_stock_sale_dispatch_receipt_v1`, `get_order_tracking_data` |
+| Commercials | `/owner/commercials` | Money source of truth, receivables, payment receipts, `lib/commercials/receivables.ts`, `record_commercial_payment_v1` |
+| Payroll | `/owner/payroll` | `toggleWorkerPaid`, pay-window gating, `settle_worker_payroll`, `unsettle_worker_payroll`, `lib/payroll-cycle.ts` |
 | Advances and kharchi | `/owner/advances`, supervisor kharchi dialog | `worker_advances`, `recordKharchi`, supervisor float actions |
 | Workers and machines | `/owner/machines`, `/owner/fixed-workers`, `/supervisor/workers`, `/supervisor/attendance` | owner/supervisor actions, `machines`, `workers`, `fixed_workers`, attendance tables |
 | WhatsApp | settings UI, payslip/advance/access-code flows | `supabase/functions/*`, `supabase/functions/_shared/whatsapp.ts`, `whatsapp_delivery_log` |
@@ -216,7 +221,7 @@ The current implementation revolves around these records and relationships.
 
 #### User Interaction
 
-Owners sign up, create or join an organization, and are routed through onboarding until the app has enough factory data to operate. Onboarding asks for machines, workers, payroll baseline, and plan/subscription context. Supervisors join through `/join` using the current organization join code.
+Owners sign up, create or join an organization, and are routed through onboarding until the app has enough factory data to operate. Onboarding asks for production mode, loom type/count setup, meter workers, payroll cycle/pay-date/reminder configuration, and plan/subscription context. Supervisors join through `/join` using the current organization join code.
 
 Ongoing setup lives in `/owner/settings`. It includes organization name, join code controls, WhatsApp preferences, factory cost profile, message templates, supervisor float, access-code tools, security controls, and data export/delete controls.
 
@@ -226,7 +231,7 @@ The middleware keeps incomplete owners inside onboarding. Owner settings update 
 
 #### Value Provided
 
-Setup turns informal master data into the foundation for every downstream workflow. Machines power production logs. Workers power payroll. Fixed workers can feed overhead and salary payroll. Payroll config determines settlement cycles. Access codes let owners approve risky corrections without being present on the floor.
+Setup turns informal master data into the foundation for every downstream workflow. Production mode controls whether Quotes/Orders, Market Runs, or both are visible. Machines power production logs. Workers power payroll. Fixed workers can feed overhead and salary payroll. Payroll config determines cycle bounds, pay date, and when normal settlements open. Access codes let owners approve risky corrections without being present on the floor.
 
 #### Connected Features
 
@@ -414,7 +419,7 @@ Market runs connect estimator, orders, supervisor production, stock inward draft
 
 #### User Interaction
 
-The supervisor's main workspace is `/supervisor/dashboard`. It is implemented as a mobile-first shift meter log.
+The supervisor's main workspace is `/supervisor/dashboard`. It is implemented as a mobile-first shift production log.
 
 The supervisor can:
 
@@ -425,12 +430,11 @@ The supervisor can:
 - assign an order or market-run backing order to each machine
 - set machine status as running, idle, or maintenance
 - add breakdown category and notes
-- see opening readings
-- enter closing readings
-- mark counter reset
+- enter produced metres for the shift
+- record downtime/service reasons for zero-production rows
 - submit the shift
 
-The UI persists draft closing readings and counter-reset flags in local storage per date and shift. It shows readiness issues before submission, such as missing worker, missing order, missing reading, counter below opening, or maintenance without note.
+The UI persists draft production metres in local storage per date and shift. Although the data model still carries opening/closing meter fields, the current visible UI records shift metres directly and stores synthetic readings (`opening_meter_reading = 0`, `closing_meter_reading = meters`). It shows readiness issues before submission, such as missing worker, missing order/cost analysis, negative metres, or downtime without a reason.
 
 #### Logic and Output
 
@@ -442,7 +446,7 @@ The UI persists draft closing readings and counter-reset flags in local storage 
 - date/shift assignments
 - standing machine assignments
 - existing logs
-- previous closing meter readings
+- existing shift production logs
 - order production totals
 
 It merges dated assignments, standing assignments, and current machine order to make the supervisor's screen pre-filled instead of blank.
@@ -454,6 +458,8 @@ It merges dated assignments, standing assignments, and current machine order to 
 - non-empty entries
 - no production meters without an order
 - no negative readings unless counter reset is used
+- strict loom setup for production rows: active machine, active current order/cost analysis, day and night standing workers, and the expected shift worker
+- downtime/status rows with a zero-meter reason can bypass the strict production setup checks
 - duplicate/correction handling
 - 30-minute correction window
 - owner access code requirement outside the correction window
@@ -464,7 +470,7 @@ It calls `replace_shift_production_logs` to replace same machine/date/shift logs
 
 #### Value Provided
 
-The supervisor log replaces the shift register. It captures production in the format needed by owners, stock, and payroll: machine, worker, order/run, meters, date, shift, rate, and status context.
+The supervisor log replaces the shift register. It captures production in the format needed by owners, stock, and payroll: machine, worker, order/run, metres, date, shift, rate, and status context. Current implementation is stricter than the ideal low-friction floor workflow because production rows require a fully assigned loom and active production target before saving.
 
 #### Connected Features
 
@@ -504,7 +510,7 @@ Analytics consumes production logs, orders, machines, workers, and dashboard RPC
 
 #### User Interaction
 
-The active stock module is `/owner/stock`. The market-run UI is centered around expected godown ledger stock, with actual stock checked at dispatch.
+The active stock module is `/owner/stock`. The market-run UI is centered around expected/physical godown ledger stock, with actual stock checked when fabric is sold and dispatched.
 
 The owner can:
 
@@ -514,7 +520,7 @@ The owner can:
 - use optional/order-based inward drafts where needed
 - add opening/manual/order/market-run stock lots
 - choose source, quality, godown, unit count, meters per unit, unit label, cost, received date, and notes
-- record sales from a stock lot
+- record sales from a stock lot through the party-first stock sale flow
 - record dispatch stock differences as shortage/excess needing review
 - adjust stock for traceable owner corrections
 - inspect recent movements and recent sales
@@ -537,13 +543,13 @@ For market-run mode, supervisor production logs create expected stock without re
 
 `createTakaStockLot` can add opening/manual/order/market-run/adjustment stock after validating the source belongs to the organization.
 
-`recordTakaStockSale` calls `record_fabric_stock_sale`, which requires whole unit count, calculates meters, revenue, cost, and profit, decrements available stock, and writes a sale movement.
+The older `recordTakaStockSale` path calls `record_fabric_stock_sale`, which requires whole unit count, calculates meters, revenue, cost, and profit, decrements available stock, writes a sale movement, and ensures a receivable where possible. The current primary UI path for stock sales is the party-first Sell Stock dialog on `/owner/dispatches`, which records party details, sold meters, sale rate, credit days, a stock movement, and a Commercials receivable in one owner action.
 
 `adjustTakaStockLot` calls `adjust_fabric_stock_lot`, which adds or subtracts physical units and records the movement.
 
 #### Value Provided
 
-Stock turns produced fabric into a physical, costed godown record. It lets the owner know what exists, where it is, what it cost, what has been sold, and what profit has been realized.
+Stock turns produced fabric into a costed godown record and sale source. It lets the owner know what exists or should exist, where it is, what it cost, what has been sold, what is pending dispatch, and what profit has been booked in Commercials.
 
 #### Connected Features
 
@@ -553,13 +559,15 @@ Stock connects production logs, orders, market runs, dispatch, commercials, and 
 
 #### User Interaction
 
-Dispatches appear both inside an order drawer and on `/owner/dispatches`.
+Dispatches appear inside order drawers and on `/owner/dispatches`, but the main market-run/stock-sale workflow now starts party-first instead of order-first.
 
 The owner can:
 
-- see pending dispatch meters and value
-- group dispatches by order
-- create a dispatch from sold stock entries
+- create a named stock sale from available source stock
+- see pending dispatch meters and value from saved stock sales
+- confirm dispatch for all or part of a pending stock sale
+- group dispatched batches by order or fallback stock-sale party
+- create an order-linked dispatch from sold stock entries
 - enter e-way bill information where needed
 - generate a challan
 - copy/share a tracking link
@@ -567,27 +575,31 @@ The owner can:
 - confirm receipt on behalf of the receiver
 - record shortages or extra received quantity
 
-The public tracking portal lives at `/track/[token]`. A party can open the link without login, see safe order/dispatch details, and confirm receipt for in-transit batches.
+The public tracking portal lives at `/track/[token]` for order-linked dispatches. A party can open the link without login, see safe order/dispatch details, and confirm receipt for in-transit order batches. Orderless stock-sale batches are confirmed by the owner from `/owner/dispatches`.
 
 #### Logic and Output
 
 The current dispatch path dispatches sold stock entries, not arbitrary unsold production.
 
-A guided "Sell & Dispatch" workflow allows the owner to:
-- Select taka stock.
-- Choose/confirm order.
-- Enter sale rate.
-- Enter dispatch details.
-- Create sale + dispatch in one guided flow.
+The visible Sell Stock workflow uses `createPartyStockSaleAndOptionalDispatch` and `create_party_stock_sale_dispatch_v1` to:
 
-This workflow uses the server action `sellAndDispatchTakas`. It preserves the backend model: stock sale first -> stock movement -> dispatch from sold stock entries. If the sale succeeds but dispatch fails, the sale remains valid and recoverable.
+- select available source stock
+- capture party name, phone, city, and GSTIN
+- capture sold meters, optional taka count, sale rate, credit days, sale date, and notes
+- decrement stock meters
+- write a stock sale and stock movement
+- create a named `commercial_receivables` row
+- keep the sale in `not_dispatched` or `partially_dispatched` state until dispatch batches are confirmed
 
-Standard dispatch creation also exists where the owner selects pending sold stock entries for an order. The dispatch RPC `create_stock_sale_dispatch`:
+The current dialog saves the sale first. Pending dispatch is then handled from the Pending Dispatches tab through `confirmPendingSaleDispatch`, which calls `confirm_party_stock_sale_dispatch_v1` with dispatch date, meters, takas, challan, vehicle, transporter, and notes. Later migrations made this configurable, so one sale can be dispatched in multiple batches. Receiving one batch does not remove the remaining pending quantity.
+
+Order-linked dispatch creation also exists where the owner selects pending sold stock entries for an order. The dispatch RPC `create_stock_sale_dispatch`:
 
 - validates owner/supervisor role and organization
 - locks selected sales
 - validates active order compatibility
-- calculates sent meters and invoice value
+- validates requested dispatch meters/takas against each sale's pending quantity
+- calculates sent meters and invoice value for the batch
 - applies GST values
 - requires e-way fields when invoice value crosses the configured threshold
 - creates a dispatch
@@ -595,15 +607,15 @@ Standard dispatch creation also exists where the owner selects pending sold stoc
 - creates `dispatch_package_lines`
 - links the stock sales to the dispatch
 
-Tracking uses order tracking tokens. `get_order_tracking_data` returns safe public JSON. Public receipt confirmation is rate limited and calls `confirm_fabric_dispatch_receipt`.
+Order tracking uses order tracking tokens. `get_order_tracking_data` returns safe public JSON. Public receipt confirmation is rate limited and calls `confirm_fabric_dispatch_receipt`. Owner receipt confirmation routes orderless stock-sale batches through `confirm_stock_sale_dispatch_receipt_v1`, which updates dispatch status, sale dispatch status, package-line received meters, and stock discrepancies for true receipt variance.
 
 #### Value Provided
 
-Dispatches create a controlled bridge between sold stock and delivery. Tracking replaces WhatsApp-only follow-up with a public receipt workflow, while still preserving owner visibility into shortages and delivered state.
+Dispatches create a controlled bridge between sold stock and delivery. The party-first split lets owners book a sale and receivable before the fabric physically leaves, then dispatch and receive it in batches. Tracking replaces WhatsApp-only follow-up for order-linked shipments, while owner receipt confirmation preserves visibility into shortages and delivered state.
 
 #### Connected Features
 
-Dispatch connects orders, stock sales, packages, challans, tracking links, public receipt confirmation, shortages, and commercials.
+Dispatch connects orders, stock sales, packages, challans, tracking links, owner/public receipt confirmation, shortages, and commercials.
 
 ### 4.10 Commercials
 
@@ -616,6 +628,7 @@ The owner can:
 - see expected profit from converted quotes/orders
 - track receivables and money to collect
 - record payments and view payment history
+- see dispatch status and pending dispatch meters for stock-sale receivables
 - follow up on overdue amounts
 - filter by realized or expected stage
 - filter by source type
@@ -633,13 +646,15 @@ The main source is the database view `commercial_profit_entries`. It combines:
 
 The action aggregates realized and expected values and returns summary metrics plus row-level entries.
 
+Receivables are stored separately in `commercial_receivables`. Party-first stock sales create named fabric-stock-sale receivables directly. The receivables action enriches stock-sale rows with sale date, sold meters, sale rate, cost, booked gross profit, dispatch status, pending dispatch meters, market-run/order context, and godown. Payment recording goes through `record_commercial_payment_v1`, which inserts `commercial_payment_receipts`, increments `received_amount`, and changes `payment_status` to `partial` or `paid`.
+
 #### Value Provided
 
-Commercials gives the owner a gross-profit lens across multiple ways value is created: order work, stock sales, market-run sales, and expected quote/order value. It is not currently a full accounting ledger.
+Commercials gives the owner a gross-profit and collection lens across multiple ways value is created: order work, stock sales, market-run sales, and expected quote/order value. It is not currently a full accounting ledger and does not replace claim/deduction settlement, supplier ledger, GST filing, or bank reconciliation.
 
 #### Connected Features
 
-Commercials consumes estimator quote snapshots, invoices, stock sales, market-run sales, and orders. It is downstream of sales and production economics.
+Commercials consumes estimator quote snapshots, invoices, stock sales, market-run sales, orders, receivables, and payment receipts. It is downstream of sales and production economics.
 
 ### 4.11 Payroll, Advances, and Supervisor Float
 
@@ -653,11 +668,12 @@ Payroll lives at `/owner/payroll`. The owner can review monthly/cycle payroll fo
 The UI supports:
 
 - cycle month navigation
+- pay date status: in progress, scheduled, approaching, due today, overdue
 - meter breakdown by worker, machine, and order
 - fixed-worker attendance-based calculation
 - pending advances and deductions
 - statutory PF/ESIC deduction preview where configured
-- settlement with payment mode
+- settlement with payment mode and owner verification
 - final settlement
 - secure reversal with access code
 - payslip generation
@@ -670,6 +686,14 @@ Supervisors can record kharchi from the floor. Supervisor float can be refilled 
 #### Logic and Output
 
 Meter payroll sums `production_logs.meters * worker_rate_snapshot` inside the configured payroll cycle.
+
+`payroll_configs` now stores:
+
+- `cycle_start_day`: day 1-28 that starts each wage cycle
+- `pay_date_day`: day 1-28 used as the first pay date after cycle close
+- `pay_reminder_days`: 0-14 day window before pay date when normal settlements open
+
+`lib/payroll-cycle.ts` derives cycle start/end, pay date, cycle status, and latest open payroll month. `toggleWorkerPaid` blocks normal settlement until the cycle has closed and the pay window is approaching/due, while final settlement behavior remains available for exit cases.
 
 Fixed payroll uses:
 
@@ -793,7 +817,7 @@ It also contains archived owner modules such as inventory, ledger, audit setting
 Factory Today is the default owner landing page at `/owner/today`. It serves as the daily action center that aggregates signals across the factory:
 - Production status and machine assignment signals.
 - Work at risk or off pace.
-- Pending stock inward drafts.
+- Stock/dispatch signals, especially sold-not-dispatched items.
 - Sold but not dispatched items.
 - Dispatches pending receipt.
 - Payroll and advance signals.
@@ -821,9 +845,10 @@ This is the main party-backed pipeline. It begins with cost analysis and ends wh
 Before the owner can estimate reliably, the factory needs:
 
 - machines
+- production mode
 - meter workers
 - fixed workers where overhead/payroll needs them
-- payroll cycle
+- payroll cycle, pay date, and reminder window
 - factory cost profile
 - optional WhatsApp and access-code settings
 
@@ -904,17 +929,15 @@ Changing sensitive details requires an owner access code. Increasing target on a
 
 ### Step 7: Supervisor Logs Production
 
-The supervisor sees active orders in the shift log. For each machine, they select or confirm:
+The supervisor sees active production targets in the shift log. For each eligible machine, they select or confirm:
 
 - worker
 - order
 - rate snapshot
-- opening reading
-- closing reading
-- counter reset if needed
+- produced metres for the shift
 - machine status
 
-Submitting the shift writes `production_logs`. For order work, this immediately affects:
+Submitting the shift writes `production_logs`. The current UI records shift metres directly; the data model's reading fields are populated synthetically. For order work, this immediately affects:
 
 - order progress
 - owner analytics
@@ -950,10 +973,11 @@ Confirmation creates `fabric_stock_lots` and `fabric_stock_movements`. This step
 
 ### Step 10: Stock Is Sold (or Sold & Dispatched)
 
-The owner records stock sales from available lots or uses the guided "Sell & Dispatch" workflow.
-- A standard sale consumes whole units, calculates meters, revenue, cost, and profit, decrements available stock, and writes a sale movement. This creates a commercial receivable.
-- The "Sell & Dispatch" workflow creates a stock sale and receivable, and then creates a dispatch in one flow.
-- If a sale succeeds but dispatch fails, the sale remains valid and recoverable via "Sold Not Dispatched".
+The owner records stock sales from available lots or uses the party-first Sell Stock workflow.
+- The older standard sale path consumes whole units, calculates meters, revenue, cost, and profit, decrements available stock, writes a sale movement, and can ensure a receivable.
+- The current primary Sell Stock workflow captures named party and credit terms, creates a stock sale, decrements stock, writes the sale movement, and creates a Commercials receivable.
+- The visible dialog saves the sale first; pending dispatch is confirmed later from `/owner/dispatches`.
+- Partial dispatch is represented by `partially_dispatched` plus `pending_dispatch_meters`; intentional partial dispatch is not treated as a stock discrepancy.
 
 For order-reserved stock, this creates sold stock entries that can be dispatched against the order.
 
@@ -961,23 +985,24 @@ For order-reserved stock, this creates sold stock entries that can be dispatched
 
 Dispatches are created from sold stock entries, not directly from unsold stock.
 
-From an order drawer or `/owner/dispatches`, the owner selects pending sold stock entries for that order. The dispatch RPC:
+From `/owner/dispatches`, the owner can dispatch pending party-first stock sales without creating a fake order. From an order drawer or the order dispatch flow, the owner can also select pending sold stock entries for an active order. The dispatch RPCs:
 
 - validates the order and selected sale entries
-- calculates sent meters
-- calculates taxable value and GST
+- validate requested batch meters/takas against pending dispatch quantities
+- calculate sent meters
+- calculate taxable value and GST
 - requires e-way details above threshold
 - creates a dispatch number
 - creates dispatch-package bridge lines
 - links stock sales to the dispatch
 
-The UI can generate a challan and share a tracking link.
+The UI can generate a challan. Order-linked dispatches can share a tracking link. Orderless stock-sale dispatches are still visible in the dispatch list with party fallback data.
 
 ### Step 12: Party Tracks and Confirms Receipt
 
-The public link `/track/[token]` shows safe order and dispatch details without exposing internal app data. The recipient can confirm received quantity for in-transit dispatches.
+The public link `/track/[token]` shows safe order and dispatch details without exposing internal app data. The recipient can confirm received quantity for in-transit order-linked dispatches. Owners can also confirm receipt from `/owner/dispatches`; orderless stock-sale receipts use `confirm_stock_sale_dispatch_receipt_v1`.
 
-Receipt confirmation updates dispatch state. Shortages or extra quantities become visible for owner reconciliation.
+Receipt confirmation updates dispatch state. For stock-sale dispatches, a received batch can move the sale to `received` only when no pending dispatch meters remain and all linked batches are delivered. Shortages or extra quantities become visible for owner reconciliation.
 
 ### Step 13: Order Closes Operationally
 
@@ -1003,7 +1028,7 @@ The order pipeline turns a customer-approved fabric price into controlled execut
 - order progress is visible
 - looms and workers are assigned
 - floor production feeds stock and payroll
-- stock sale and dispatch are traceable
+- stock sale, receivable, dispatch, and receipt are traceable
 - public receipt confirmation reduces follow-up friction
 - gross profit and labor cost become visible
 
@@ -1087,11 +1112,11 @@ There is also a direct market-run sale backend path:
 
 That path can create direct trader/party market-run sales and invoices, and the detail page can display those records. However, the current primary owner UI points the user to Stock for selling/adjusting physical takas rather than exposing a full direct-sale form on the market-run detail page.
 
-### Step 7: Dispatch Depends on Sold Stock and Order Matching
+### Step 7: Market Stock Can Be Sold and Dispatched Without Fake Orders
 
-Market-run stock sales are reflected in stock and commercials. Dispatch creation, however, is currently order-centered. The dispatch RPC expects selected sold stock entries to be compatible with an active order by stock-lot order id or by matching quality.
+Market-run stock sales are reflected in stock, dispatches, and Commercials. The party-first Sell Stock flow lets the owner sell market-run stock directly to a named party without creating an order first. The sale creates a named receivable and pending dispatch meters.
 
-That means market-run stock sale and dispatch are not the same as automatic market-run dispatch. The product currently treats Stock as the main sale/profit path, while Dispatch is still organized around order delivery.
+Dispatch is then confirmed from `/owner/dispatches`. The owner can dispatch the pending quantity fully or partially, with dispatch date, meters, takas, challan, vehicle, transporter, and notes. The order-based dispatch flow still exists for pre-committed party orders, but market-run stock no longer needs a fake order to enter the money/dispatch loop.
 
 ### Step 8: Owner Monitors and Closes the Run
 
@@ -1231,18 +1256,18 @@ Primary value: tenant access and growth loop are managed in-product.
 
 | Feature | Depends On | Produces | Feeds |
 | --- | --- | --- | --- |
-| Onboarding | Auth, organization | machines, workers, payroll config | all operations |
-| Settings | owner role, organization | cost profile, join code, access code, preferences | estimator, supervisor, WhatsApp |
+| Onboarding | Auth, organization | production mode, machines, workers, payroll config, plan | all operations |
+| Settings | owner role, organization | production mode, cost profile, join code, access code, preferences | estimator, supervisor, WhatsApp, navigation |
 | Estimator | cost profile, templates, fixed workers | quote snapshots, templates, market-run inputs | quotes, orders, market runs |
 | Quotes | estimator snapshots | accepted/rejected/sent quote state | orders, commercials |
 | Orders | accepted quotes or market-run anchor | active production commitment | supervisor, analytics, stock, dispatch |
 | Market Runs | estimator market mode | speculative run and backing order | supervisor, stock, commercials |
 | Supervisor Log | machines, workers, active orders | production logs, stock drafts | analytics, payroll, stock |
 | Analytics | production logs, orders, machines | KPI and pace visibility | owner decisions |
-| Stock | production drafts, manual lots | stock lots, sales, movements | dispatch, commercials, market summaries |
-| Dispatch | sold stock, active orders | dispatch batches, tracking | public receipt, shortages |
-| Commercials | quotes, invoices, sales | gross profit view | owner money decisions |
-| Payroll | production, attendance, advances | settlements, payslips | worker payment history |
+| Stock | production drafts, manual/source lots | stock lots, named stock sales, movements, pending dispatch meters | dispatch, commercials, market summaries |
+| Dispatch | sold stock, active orders or stock-sale parties | dispatch batches, package lines, receipt state | public/owner receipt, shortages, commercials |
+| Commercials | quotes, invoices, sales, receivables, payment receipts | gross profit and collection view | owner money decisions |
+| Payroll | production, attendance, advances, payroll config | pay-window status, settlements, payslips | worker payment history |
 | Advances | workers, supervisor float | pending/deducted debt | payroll |
 | WhatsApp | worker/profile contact, templates | delivery logs | access, payroll, alerts |
 | Billing | organization, Razorpay | subscription state | access and plan UX |
@@ -1255,11 +1280,11 @@ These points matter when using this document as a source of truth.
 
 2. Market runs use backing orders. This is not accidental. It lets the supervisor log market production through the same order-based shift UI.
 
-3. The market-run detail page has a "Floor Order" link that points to `/owner/orders/[id]`, but the active orders UI is a board/drawer at `/owner/orders`; there is no dedicated order detail route in the current implementation.
+3. Production mode affects navigation. Market-run mode hides Quotes/Orders, order-based mode hides Market Runs, and both mode exposes both.
 
 4. Direct market-run sale logic exists in actions/RPCs and `market_run_sales`, but the active owner UI primarily sends the user to Stock to sell/adjust physical takas.
 
-5. Dispatch creation currently starts from sold stock entries. The "Sell & Dispatch" workflow combines sale and dispatch but still preserves this backend order. Dispatch is not a direct "send unsold production" workflow.
+5. Dispatch creation currently starts from sold stock entries. The visible Sell Stock workflow creates the sale/receivable first and then dispatches pending meters from `/owner/dispatches`. Dispatch is not a direct "send unsold production" workflow.
 
 6. Market-run status is not fully auto-derived from every stock sale path. Summary metrics update through views, while closing/status remains a manual action in the current UI.
 
@@ -1277,7 +1302,7 @@ These points matter when using this document as a source of truth.
 
 13. Offline support is partial. The app uses IndexedDB/local storage and some queueing patterns, especially around floor workflows, but the safest source of truth is still the server after sync.
 
-14. Payroll settlement protects production history. Once a worker's relevant cycle is settled, production corrections for that period are blocked.
+14. Payroll settlement protects production history. Once a worker's relevant cycle is settled, production corrections for that period are blocked. Normal settlement is also gated by the configured pay date and reminder window.
 
 15. WhatsApp delivery is supportive and logged, but core operational writes should not depend on a WhatsApp send succeeding.
 
@@ -1292,11 +1317,11 @@ For product decisions, treat these as the current canonical flows:
 - Customer work starts as estimator -> quote -> accepted quote -> order.
 - Market work starts as estimator market mode -> market run -> backing order.
 - Floor production is always logged through the supervisor shift log against an active order-like anchor.
-- Physical fabric becomes trusted stock only after inward draft confirmation or manual stock-lot creation.
-- Stock sale is the current active mechanism for realized stock profit.
-- Dispatch is created from sold stock entries matched to an order.
-- Payroll is calculated from production logs and attendance inside the configured cycle.
-- Commercials is a gross-profit dashboard, not a full ledger.
+- Physical fabric becomes trusted stock through expected stock context, inward draft confirmation, or manual/source stock-lot creation.
+- Party-first stock sale is the current active mechanism for realized stock profit and named receivables.
+- Dispatch is created from sold stock entries, either order-linked or orderless stock-sale pending dispatch.
+- Payroll is calculated from production logs and attendance inside the configured cycle, then opened by the configured pay date/reminder window.
+- Commercials is a gross-profit and receivables dashboard, not a full ledger.
 - Archived routes should not be treated as active product promises.
 
 ## 11. Most Important Product Value
@@ -1306,7 +1331,7 @@ The current implementation creates one connected operating loop for a weaving fa
 - The owner knows what a fabric should cost before accepting work.
 - The accepted quote becomes a controlled production order.
 - Market production can be costed and tracked instead of treated informally.
-- The supervisor captures actual production with low-friction meter readings.
+- The supervisor captures actual production with low-friction shift-metre entry.
 - The owner sees progress, stock, dispatches, payroll, and profit from the same source data.
 - Workers' pay and advances are tied back to logged work.
 - Physical stock and dispatches are traceable.

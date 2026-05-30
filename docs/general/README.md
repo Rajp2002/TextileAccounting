@@ -1,8 +1,8 @@
 # Weavly Documentation Index
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
-Weavly is a multi-tenant operating system for Indian weaving factories. The current Phase 1 source of truth is the factory loop from estimating to quotes/orders/market runs, production logging, stock/dispatch/commercial visibility, and payroll/advances.
+Weavly is a multi-tenant operating system for Indian weaving factories. The current Phase 1 source of truth is the factory loop from production-mode setup to estimating, orders or market runs, supervisor shift logging, expected godown stock, party-first stock sale, dispatch/receipt tracking, Commercials receivables/payments, and payroll/advances.
 
 ## Documentation Source of Truth
 
@@ -42,21 +42,27 @@ Feature docs:
 
 ## Current Phase 1 Owner Surface
 
-- `/owner/today` - **Default landing page** and daily action center.
+- `/owner/today` - **Default owner landing page** and daily action center.
 - `/owner/analytics` - live production overview, historical date view, order health, machine utilization, trend, worker breakdown.
 - `/owner/estimator` - costing engine, templates, quotes, market-run creation, Start Party Order.
 - `/owner/quotes` - quote history, status changes, re-estimate, accepted quote conversion.
 - `/owner/orders` - active order board, progress, pace, assignment, dispatch section.
 - `/owner/market-runs` - speculative production tracking.
-- `/owner/stock` - expected godown ledger, adjustments, dispatch stock differences, movements.
-- `/owner/dispatches` - order-linked dispatches, Sell & Dispatch, receipt reconciliation, tracking links.
-- `/owner/commercials` - source of truth for revenue, profit, receivables, and payment tracking.
-- `/owner/payroll` - meter and fixed payroll, settlements, WhatsApp payslips.
+- `/owner/stock` - expected/physical godown ledger, manual or source-linked lots, stock sales, adjustments, movements, pending dispatch context.
+- `/owner/dispatches` - party-first stock sale workflow, pending/partial dispatches, order-linked dispatches, receipt reconciliation, tracking links.
+- `/owner/commercials` - source of truth for revenue, gross profit, receivables, payment status, and payment receipts.
+- `/owner/payroll` - meter and fixed payroll, configurable cycle/pay date/reminder window, settlements, WhatsApp payslips.
 - `/owner/advances` - worker Upaad tracking and recovery support.
 - `/owner/fixed-workers` - workforce setup and fixed staff management.
 - `/owner/machines` - loom setup and assignment infrastructure.
 - `/owner/billing` - trial, Razorpay subscription, payment history, referrals.
 - `/owner/settings` - org identity, join code, access codes, WhatsApp, templates, cost profile, float/security controls.
+
+Production mode is stored on `organizations.production_mode` and controls owner navigation visibility:
+
+- `market_run`: hides Quotes and Orders, keeps Market Runs, Stock, Dispatches, Commercials, Payroll, and Analytics.
+- `order_based`: hides Market Runs, keeps Quotes and Orders.
+- `both`: shows both order and market-run workflows.
 
 ## Current Phase 1 Supervisor Surface
 

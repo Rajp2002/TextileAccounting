@@ -1,6 +1,6 @@
 # Weavly Phase 1 Scope
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 Phase 1 is a focused launch of Weavly as a weaving-factory operating loop, not a full ERP. The codebase contains ledger, deep inventory, compliance, DPA, admin, audit, and system health surfaces, but Phase 1 readiness should be judged by whether a factory can trust the daily loop from costing to production to worker settlement.
 
@@ -24,17 +24,18 @@ The product rule:
 
 ### 1. Factory Setup and Access
 
-Phase 1 starts before the first estimate. An owner must be able to create an organization, select or trial a plan, add machines, add workers, set a payroll baseline, configure factory cost assumptions, and invite supervisors.
+Phase 1 starts before the first estimate. An owner must be able to create an organization, choose the factory production mode, select or trial a plan, add loom types/machines, add workers, set payroll cycle/pay-date configuration, configure factory cost assumptions, and invite supervisors.
 
 In scope:
 
 - Owner signup, login, onboarding checklist, and route guarding.
 - Factory Today as default owner action center and landing page.
+- Production mode setup: market-run only, order-based only, or both.
 - Supervisor join flow through organization join code.
 - Role-aware redirects: owner to Factory Today, supervisor to production log, admin to admin.
 - Machine creation and management with loom type where available.
 - Meter worker and fixed worker setup.
-- Payroll config baseline during onboarding.
+- Payroll config baseline during onboarding: cycle start day, pay date day, and reminder window.
 - Factory name, settings, join-code regeneration, and language switching.
 - Access-code generation for protected supervisor or correction flows.
 - Subscription/trial gating where it controls product access.
@@ -104,8 +105,8 @@ In scope:
 - `/supervisor/production` redirect to the active production workspace.
 - Day/night shift selection and current shift defaulting.
 - Machine cards with worker selection and order selection.
-- Opening/closing meter readings from previous logs.
-- Shift meters calculation.
+- Shift-metre entry.
+- Synthetic opening/closing fields are currently persisted for compatibility, but the visible UI records produced metres directly.
 - Copy previous shift setup.
 - Immediate assignment upsert.
 - Bulk production log submission.
@@ -139,6 +140,7 @@ In scope:
 - Final settlement mode.
 - PF/ESI enrolled fields and employee deductions.
 - Payment mode capture: cash, bank transfer, UPI, cheque.
+- Pay-date/reminder gating for normal settlement, with final settlement still available when appropriate.
 - Paid/unpaid state and unsettlement behavior where available.
 - Payroll adjustments/categories where implemented.
 - Payslip PDF generation.
@@ -170,8 +172,9 @@ In scope:
 - Pending inward drafts remain optional/legacy support and should not be a required market-run Phase 1 workflow.
 - Unit count, meters per unit, godown, cost per meter, expected available meters, and ledger movements.
 - Stock adjustment add/subtract.
-- Stock sale recording with price and quantity (profit dashboard moved to Commercials).
-- Sell & Dispatch guided workflow.
+- Party-first stock sale recording with named party, price, quantity, credit days, and Commercials receivable creation.
+- Pending dispatch tracking for stock sales, including partial dispatch quantities.
+- Configurable dispatch batches: dispatch date, meters, takas, challan, vehicle, transporter, and notes.
 - Stock movements history.
 - Dispatches for order-linked output.
 - Dispatch package/batch rows, transport/GST/e-way metadata, and receipt confirmation.
@@ -252,9 +255,10 @@ These modules may exist in code and may even be routable in some environments, b
 
 ## Navigation Implication
 
-Phase 1 owner navigation should prioritize:
+Phase 1 owner navigation should prioritize the production-mode-appropriate subset of:
 
-- Dashboard
+- Factory Today
+- Analytics
 - Estimator
 - Quotes
 - Orders
@@ -268,6 +272,8 @@ Phase 1 owner navigation should prioritize:
 - Machines
 - Billing
 - Settings
+
+In `market_run` mode, Quotes and Orders are hidden. In `order_based` mode, Market Runs are hidden. In `both` mode, both sets are visible.
 
 Phase 1 supervisor navigation should prioritize:
 
@@ -290,7 +296,7 @@ Archived routes are documented in `docs/general/PHASE_1_ARCHIVE.md`; the active 
 - Payroll preview matches final settlement.
 - Advance recovery, final settlement, PF/ESI, payment mode, and payslip send are tested.
 - Expected stock, optional inward drafts, lot creation, adjustment, sale, and commercials aggregation are tested.
-- Dispatch creation, actual dispatch check, receipt confirmation, shortage/excess discrepancy, and public tracking are tested.
+- Party-first stock sale, pending/partial dispatch, receipt confirmation, shortage/excess discrepancy, and public tracking are tested.
 - WhatsApp failures are logged and retryable without blocking writes (failure fallback exists so app workflows do not crash).
 - **WhatsApp Pre-Pilot Checklist:**
   - [ ] Meta Business account configured

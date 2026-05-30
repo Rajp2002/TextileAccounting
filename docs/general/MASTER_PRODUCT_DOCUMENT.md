@@ -1,6 +1,6 @@
 # Weavly Master Product Document
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 This is the product source of truth for the current Weavly codebase. It describes what the app is, what Phase 1 now includes, how users move through the product, which pain points each feature translates from the existing physical workflow, and how the digital objects connect.
 
@@ -8,17 +8,18 @@ For launch prioritization, `docs/general/PHASE_1_SCOPE.md` remains the most auth
 
 ## 1. Executive Summary
 
-Weavly is a multi-tenant textile operations SaaS for Indian weaving factories. It is not a generic ERP. The product is shaped around weaving-factory realities: yarn and loom math, piece-rate workers, day/night shift logging, meter readings, speculative market production, takas in godown, worker advances, payroll settlement, dispatch shortages, and WhatsApp-based communication.
+Weavly is a multi-tenant textile operations SaaS for Indian weaving factories. It is not a generic ERP. The product is shaped around weaving-factory realities: yarn and loom math, piece-rate workers, day/night shift logging, shift-metre capture, speculative market production, takas in godown, worker advances, payroll settlement, party-first stock sale, dispatch shortages, and WhatsApp-based communication.
 
 Phase 1 is a focused operating loop for Surat grey fabric manufacturers/traders. The active Phase 1 surface includes the supporting features needed to make that loop useful in a real factory:
 
 - Factory Today as default owner action center
+- production-mode-aware workflows for market-run, order-based, or both
 - quotes and orders
 - Start Party Order fast path
 - market runs
 - expected taka/godown ledger for market-run stock
-- Sell & Dispatch guided workflow
-- dispatches and public tracking
+- party-first stock sale and pending/partial dispatch workflow
+- dispatches, public tracking where order-linked, and owner receipt confirmation
 - Commercials receivables and payment tracking
 - gross profit visibility and money source of truth
 - workers, machines, attendance, settings, access codes
@@ -101,8 +102,7 @@ They ask:
 - Which shift am I recording?
 - Which worker is on this machine?
 - Which order or run is this loom producing?
-- What was the opening reading?
-- What is the closing reading?
+- How many metres were produced this shift?
 - Is the machine running, idle, or under service?
 - Do I need an owner access code for this correction?
 
@@ -122,7 +122,7 @@ Admin is the governance user: compliance, notices, grievances, DPA, export logs,
 
 ### 4.1 Setup
 
-An owner signs up, creates or owns an organization, starts a trial or subscription, and completes onboarding. Onboarding requires enough operational data for the rest of the app to work: machines, workers, and payroll configuration. Settings later lets the owner maintain factory name, join code, WhatsApp preferences, access codes, templates, cost profiles, supervisor float, and security controls.
+An owner signs up, creates or owns an organization, starts a trial or subscription, and completes onboarding. Onboarding requires enough operational data for the rest of the app to work: production mode, loom types/machines, workers, payroll cycle/pay-date/reminder configuration, and plan/trial state. Settings later lets the owner maintain factory name, production mode, join code, WhatsApp preferences, access codes, templates, cost profiles, supervisor float, and security controls.
 
 The supervisor joins with a secure organization join code and lands on the production workspace.
 
@@ -153,9 +153,9 @@ If the factory is producing for stock, the owner creates a market run from estim
 
 ### 4.5 Assign and Log Production
 
-The supervisor opens `/supervisor/dashboard`, chooses date and shift, assigns worker and order/run per machine, updates machine status, and enters closing readings. Opening readings are derived from the latest earlier log. The UI warns on missing assignments and suspicious readings. Copy Previous Shift reduces repeated setup.
+The supervisor opens `/supervisor/dashboard`, chooses date and shift, assigns worker and order/run per machine, updates machine status, and enters shift production metres. The UI warns on missing assignments, negative metres, and missing downtime reasons. Copy Previous Shift reduces repeated setup.
 
-Submitting logs writes `production_logs` with machine, worker, order, date, shift, meters, opening/closing readings, submitted timestamp, rate snapshots, and actor context. Duplicate and correction flows protect payroll and analytics from accidental rewrites.
+Submitting logs writes `production_logs` with machine, worker, order, date, shift, metres, synthetic opening/closing reading fields, submitted timestamp, rate snapshots, and actor context. Duplicate and correction flows protect payroll and analytics from accidental rewrites.
 
 ### 4.6 Analyze
 
@@ -173,11 +173,11 @@ The dashboard is operational, not a broad executive BI suite.
 
 ### 4.7 Expected Stock and Dispatch
 
-For market-run factories, production creates expected stock in the godown ledger. This is a production/commercial expectation, not a daily physical inward confirmation. `/owner/stock` shows expected available or ledger available meters, stock lots, adjustments, sales, movements, and cost visibility. Physical stock is reconciled at sale/dispatch; shortage or excess becomes a `needs_review` stock discrepancy for the owner.
+For market-run factories, production creates expected stock context in the godown ledger. This is a production/commercial expectation, not a daily physical inward confirmation. `/owner/stock` shows expected available or ledger available meters, stock lots, adjustments, sales, pending dispatch meters, movements, and cost visibility. Physical stock is reconciled when stock is sold, dispatched, and received; shortage or excess becomes a `needs_review` stock discrepancy for the owner.
 
 Stock Inward is not a mandatory Phase 1 workflow for market-run mode. It may remain available for legacy/direct-access or order-based support, but the core market-run journey is production ledger -> dispatch check -> discrepancy review. The older `/owner/inventory` deep yarn/beam module is archived.
 
-Dispatches turn order output into a tracked shipment with transport/GST/e-way metadata, batch/package rows, sent meters, received meters, shortage/extra variance, owner receipt confirmation, and public token tracking.
+Dispatches turn sold stock into tracked shipment batches with transport/GST/e-way metadata, package rows, sent meters, received meters, shortage/extra variance, owner receipt confirmation, and public token tracking where the dispatch is order-linked. Market-run stock can now be sold and dispatched without creating a fake party order.
 
 ### 4.8 Commercial View
 
@@ -188,11 +188,11 @@ Dispatches turn order output into a tracked shipment with transport/GST/e-way me
 - market-run sales
 - stock sales
 
-This is a Phase 1 profit lens, not a full accounting ledger.
+Commercials also tracks receivables, payment receipts, collected amount, balance, and dispatch status context for stock-sale receivables. This is a Phase 1 profit and collection lens, not a full accounting ledger.
 
 ### 4.9 Payroll and Advances
 
-Payroll aggregates meter-worker production logs and fixed-worker attendance/salary data. It previews gross, advance deduction, statutory deductions, net payout, remaining debt, compliance flags, and final-settlement behavior. The owner records settlement with payment mode and can send or generate payslips.
+Payroll aggregates meter-worker production logs and fixed-worker attendance/salary data. It uses `payroll_configs` to derive cycle bounds, pay date, reminder window, and pay-window status. It previews gross, advance deduction, statutory deductions, manual adjustments, net payout, remaining debt, compliance flags, and final-settlement behavior. The owner records settlement with payment mode and verification, then can send or generate payslips.
 
 Advances tracks pending and deducted Upaad for both meter and fixed workers, estimates debt burden against typical pay, and feeds payroll recovery.
 
@@ -217,9 +217,9 @@ Billing manages trial and Razorpay subscription state. Referrals support lightwe
 | Production Log | Live factory truth | Primary daily workspace | `shift_assignments`, `production_logs`, `machines` |
 | Analytics | Progress, pace, worker and machine signals | Indirect | Dashboard RPCs, realtime production inserts |
 | Stock | Expected godown quantity, cost, sale, dispatch difference review | Optional packaging support | `fabric_stock_lots`, `fabric_stock_sales`, `fabric_stock_movements`, `fabric_stock_inward_drafts`, `stock_discrepancies` |
-| Dispatch | Professional handoff, actual stock check, shortage/excess control | Indirect | `dispatches`, `dispatch_package_lines`, `fabric_packages`, tracking token |
-| Commercials | Realized/expected gross profit | None | order/quote/stock/market-run aggregates |
-| Payroll | Trustworthy settlement | Production logs become wages | `payroll_settlements`, `payroll_adjustments`, `production_logs`, `attendance` |
+| Dispatch | Professional handoff, pending/partial dispatch, shortage/excess control | Indirect | `dispatches`, `dispatch_package_lines`, `fabric_packages`, tracking token |
+| Commercials | Realized/expected gross profit, receivables, payment tracking | None | `commercial_profit_entries`, `commercial_receivables`, `commercial_payment_receipts` |
+| Payroll | Trustworthy settlement timing and payout | Production logs become wages | `payroll_configs`, `payroll_settlements`, `payroll_adjustments`, `production_logs`, `attendance` |
 | Advances | Upaad visibility and recovery | Worker trust | `worker_advances`, payroll RPCs |
 | Workers/Machines | Operating baseline | Floor selection lists | `workers`, `fixed_workers`, `machines` |
 | Settings | Identity, access, WhatsApp, cost defaults | Indirect | `organizations`, `whatsapp_settings`, profile/settings tables |
@@ -239,6 +239,7 @@ Billing manages trial and Razorpay subscription state. Referrals support lightwe
 
 ### Owner
 
+- `/owner/today`
 - `/owner/analytics`
 - `/owner/estimator`
 - `/owner/quotes`
@@ -258,6 +259,8 @@ Billing manages trial and Razorpay subscription state. Referrals support lightwe
 - `/owner/ledger` archived
 - `/owner/settings/audit` archived
 - `/owner/system-health` archived
+
+Owner navigation is production-mode aware. `market_run` hides Quotes/Orders, `order_based` hides Market Runs, and `both` shows both workflow families.
 - `/owner/settings/dpa` secondary/deferred
 
 ### Supervisor

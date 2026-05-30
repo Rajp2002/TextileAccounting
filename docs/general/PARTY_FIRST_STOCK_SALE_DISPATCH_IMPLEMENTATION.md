@@ -1,23 +1,41 @@
 # Weavly Phase 1 Refinement #1: Party-First Stock Sale / Sell & Dispatch
 
+Current status as of May 31, 2026: implemented, with the visible UI now split into "Sell Stock" first and "Confirm Dispatch" later. The original May 17 implementation supported an immediate `Dispatch now` path, but the current dialog saves a named stock sale and receivable, then the Dispatches page handles pending/partial dispatch batches.
+
+Current visible flow:
+
+1. Select available source stock.
+2. Enter party details.
+3. Enter sold meters, optional takas, sale rate, credit days, sale date, and notes.
+4. Save the stock sale and named Commercials receivable.
+5. Confirm pending dispatch later from `/owner/dispatches`, fully or partially.
+6. Confirm receipt for each dispatch batch.
+
+Later migrations added configurable stock-sale dispatch quantities/dates and kept partially dispatched sales pending after one batch is received:
+
+- `supabase/migrations/20260530210000_confirm_party_stock_sale_dispatch.sql`
+- `supabase/migrations/20260530211000_confirm_stock_sale_dispatch_receipt.sql`
+- `supabase/migrations/20260531000000_configurable_stock_sale_dispatch.sql`
+- `supabase/migrations/20260531010000_configurable_batch_dispatch.sql`
+- `supabase/migrations/20260531020000_keep_partial_stock_sale_receipt_pending.sql`
+
 ## Summary
 
 This implementation refines Weavly Phase 1's Sell & Dispatch workflow so market-run factories can sell godown or expected stock directly to a named party without creating a fake order.
 
 The previous flow was order-first. It required the owner to select an order before selling and dispatching stock. That worked for order-based factories, but it blocked the market-run operating model where fabric is produced first, stored in godown, and later sold directly to a party.
 
-The new flow is party-first:
+The implemented model is party-first:
 
 1. Select available source stock.
 2. Enter party details.
 3. Enter sold meters/takas and sale rate.
-4. Enter credit days and auto-calculate due date.
-5. Choose either `Save sale only` or `Dispatch now`.
-6. Create a stock sale.
-7. Optionally create a dispatch.
-8. Create/update a named commercial receivable/profit entry.
-9. Track pending dispatch quantity when sold meters exceed dispatched meters.
-10. Preserve the existing order-based and both-mode workflows.
+4. Enter credit days and sale date.
+5. Create a stock sale and named Commercials receivable.
+6. Track pending dispatch quantity.
+7. Confirm dispatch later, fully or partially.
+8. Confirm receipt and record true shortage/excess discrepancies.
+9. Preserve the existing order-based and both-mode workflows.
 
 This is still a Phase 1 operating loop, not a full ERP or accounting module.
 
@@ -30,7 +48,7 @@ Implemented:
 - Named commercial receivables for stock sales.
 - Gross profit snapshot at sale time.
 - Simple credit terms and due date calculation.
-- Optional immediate dispatch.
+- Immediate dispatch support exists in RPC/type history, but the current visible dialog saves sale first and dispatches later.
 - Partial dispatch support.
 - Pending dispatch quantity tracking.
 - Stock discrepancy creation remains available through the existing lean discrepancy table for true reconciliation mismatches, but intentional party-first partial dispatch does not create a discrepancy.
@@ -69,14 +87,14 @@ Updated file:
 components/dispatches/SellAndDispatchDialog.tsx
 ```
 
-The Sell & Dispatch dialog was refactored from an order-first wizard into a party-first wizard.
+The stock sale dialog was refactored from an order-first wizard into a party-first wizard. The current visible title is "Sell Stock", even though older code/docs may still use "Sell & Dispatch" naming around the broader workflow.
 
-The new dialog has four steps:
+The current visible dialog has four steps:
 
-1. Source Stock
-2. Party and Sale Terms
-3. Dispatch Now or Save Sale Only
-4. Preview and Confirm
+1. Stock
+2. Party
+3. Notes
+4. Preview
 
 ## Step 1: Source Stock
 
@@ -126,13 +144,11 @@ Captured sale fields:
 - credit days
 - sale date
 
-The due date is automatically calculated in the UI as:
+Current due-date behavior starts credit from dispatch, not sale. A sale saved without dispatch has `due_date = null`. When dispatch is confirmed, the due date becomes:
 
 ```ts
-due_date = sale_date + credit_days
+due_date = dispatch_date + credit_days
 ```
-
-The due date is displayed read-only in the dialog.
 
 Validation enforced by the UI:
 
@@ -145,23 +161,16 @@ Validation enforced by the UI:
 
 Server-side validation repeats the important checks.
 
-## Step 3: Dispatch Choice
+## Step 3: Notes
 
-The owner chooses one of two modes:
-
-```text
-Dispatch now
-Save sale only
-```
-
-If `Save sale only` is selected:
+The current visible dialog collects optional notes/references. It saves the sale first:
 
 - stock sale is created
 - receivable/profit entry is created
 - no dispatch row is created
 - the sale remains pending dispatch
 
-If `Dispatch now` is selected, the owner enters:
+When pending dispatch is confirmed later, the owner enters:
 
 - actual dispatched meters
 - dispatch date
@@ -172,14 +181,14 @@ If `Dispatch now` is selected, the owner enters:
 
 Dispatch can be partial.
 
-The UI allows dispatch when:
+The pending dispatch UI allows dispatch when:
 
 ```ts
 actualDispatchedMeters > 0
-actualDispatchedMeters <= soldMeters
+actualDispatchedMeters <= pendingDispatchMeters
 ```
 
-If actual dispatched meters are less than sold meters, the UI shows how many meters will remain pending dispatch.
+If actual dispatched meters are less than the pending quantity, the UI shows how many meters will remain pending dispatch.
 
 ## Step 4: Preview and Confirm
 
@@ -351,9 +360,9 @@ reference: `Sale to ${partyName}`
 
 This keeps the stock movement history aligned with the stock sale.
 
-## Optional Dispatch Creation
+## Dispatch Creation
 
-If `dispatchNow` is true, the RPC creates a dispatch row in:
+Dispatch is currently confirmed after sale creation from `/owner/dispatches`. `confirmPendingSaleDispatch` calls `confirm_party_stock_sale_dispatch_v1`, which creates a dispatch row in:
 
 ```text
 dispatches
@@ -683,7 +692,7 @@ Updated file:
 lib/commercials/receivables.ts
 ```
 
-Previously, fabric stock sale receivables could fall back to:
+Historically, fabric stock sale receivables could fall back to:
 
 ```ts
 'Anonymous'
@@ -932,12 +941,12 @@ The stock sale creates:
 - `fabric_stock_movements`
 - `commercial_receivables`
 - visible row through `commercial_profit_entries`
-- optional `dispatches`
-- optional `stock_discrepancies`
+- later `dispatches` when pending dispatch is confirmed
+- later `stock_discrepancies` when receipt variance exists
 
 ## Save Sale Only Behavior
 
-When `dispatchNow` is false:
+In the current visible save-first flow:
 
 The system creates:
 
@@ -963,20 +972,19 @@ dispatch_id = null
 
 Commercials sees the sale as an unpaid named receivable.
 
-## Full Dispatch Behavior
+## Full Pending Dispatch Behavior
 
-When `dispatchNow` is true and:
+When the owner later confirms dispatch and:
 
 ```ts
 actualDispatchedMeters === soldMeters
 ```
 
-The system creates:
+The dispatch confirmation creates:
 
-- stock sale
-- stock movement
 - dispatch row
-- named commercial receivable/profit entry
+- package/dispatch lines
+- receivable due-date update
 
 Sale state:
 
@@ -998,18 +1006,16 @@ status = 'in_transit'
 
 ## Partial Dispatch Behavior
 
-When `dispatchNow` is true and:
+When the owner later confirms dispatch and:
 
 ```ts
 actualDispatchedMeters < soldMeters
 ```
 
-The system creates:
+The dispatch confirmation creates:
 
-- stock sale
-- stock movement
 - dispatch row
-- named commercial receivable/profit entry
+- package/dispatch lines
 - pending dispatch quantity on sale
 
 The system does not create a stock discrepancy for this intentional partial dispatch.

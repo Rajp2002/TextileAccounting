@@ -1,255 +1,101 @@
 # Current Onboarding Implementation
 
-## 1. Executive Summary
+Last analyzed from the active codebase on May 31, 2026.
 
-- **What onboarding currently does:** The current onboarding flow is a blocking gate for **Owner** users. It requires them to complete a 4-step checklist: adding at least one machine, adding at least one worker, setting a payroll cycle start day, and choosing a subscription plan (or starting a trial). Until this is done, they cannot access the main dashboard.
-- **Who it is for:** It is exclusively for the **Owner** role. **Supervisor** users skip this flow entirely and are dropped directly into the supervisor dashboard after joining.
-- **What roles are involved:** 
-  - **Owner**: The primary user who creates the organization and completes the onboarding setup.
-  - **Supervisor**: Team members invited via a join code. They do not participate in onboarding.
-- **What the current intended user journey appears to be:**
-  1. Owner signs up and creates an organization.
-  2. Owner is redirected to `/onboarding`.
-  3. Owner completes the 4 steps (Machines, Workers, Payroll, Plan).
-  4. Owner clicks "Go to dashboard" and lands on `/owner/analytics` (or `/owner/today` depending on the file).
-- **Whether onboarding feels complete, partial, or fragile based on the code:** It feels **partial and slightly fragile**. 
-  - It is **partial** because it only collects names of machines and workers, leaving out critical data like rates, qualities, and worker types (fixed vs meter) that are needed for the core loop (Estimator, Production).
-  - It feels **fragile** due to documented race conditions in the code (e.g., JWT hook lag on fresh signup) and inconsistencies in redirect destinations between files (some use `/owner/today`, others `/owner/analytics`).
-- **Whether the flow is role-based, organization-based, factory-based, or user-based:** It is **organization-based and role-gated**. The state is stored on the `organizations` table (`onboarding_complete`), and the gate applies only to users with the `owner` role.
+## Executive Summary
 
-## 2. Route Map
+Onboarding is a blocking gate for owner users. It now uses a five-step checklist:
 
-| Route Path | File Path | Component/Page | Access | Redirect Destination | Linked From |
-|---|---|---|---|---|---|
-| `/onboarding` | `app/(auth)/onboarding/page.tsx` | `OnboardingPage` | Authenticated Owners | `/owner/analytics` or `/owner/today` | Middleware, Auth Callback |
-| `/signup` | `app/(auth)/signup/page.tsx` | `SignupPage` | Public | `/onboarding` (via action) | Login page |
-| `/join` | `app/(auth)/join/page.tsx` | `JoinPage` | Public | `/supervisor/production` | Signup page |
-| `/login` | `app/(auth)/login/page.tsx` | `LoginPage` | Public | Role-based home path | - |
-| `/auth/callback` | `app/auth/callback/route.ts` | Server Route | Public | Role/Onboarding based | Supabase Auth |
+1. Choose production mode.
+2. Add loom types and machine counts.
+3. Add piece-rate workers.
+4. Configure payroll cycle, pay date, and reminder window.
+5. Start a trial or subscribe.
 
-- **Access Controls:**
-  - `/onboarding` is gated in `middleware.ts`. If an owner has `onboarding_complete = false`, they are redirected here from any non-allowed route.
-  - Allowed routes during onboarding (for owners): `/api/`, `/onboarding`, `/owner/machines`, `/owner/workers`, `/owner/settings`.
+When complete, the owner lands on `/owner/today`. Supervisors do not run onboarding; they join through `/join` and are routed to the supervisor production workspace.
 
-## 3. Authentication and Redirect Flow
+The flow is organization-based and role-gated. The durable completion flag is `organizations.onboarding_complete`, and the current checklist state is inferred from production mode, machines, workers, payroll config, and subscription/trial state.
 
-1. **Login / Signup:**
-   - Owner signs up at `/signup`. `createOrganizationAndRedirect` action creates the user, organization, and profile, then signs them in and redirects to `/onboarding`.
-2. **Auth Callback:**
-   - `app/auth/callback/route.ts` handles the code exchange.
-   - If user is `owner` and `onboarding_complete` is false, it redirects to `/onboarding`.
-   - If complete, it redirects to `/owner/analytics`.
-3. **Role Detection:**
-   - Uses JWT claims injected by `custom_access_token_hook`.
-   - Fallback to DB query (`profiles` table) if JWT claims are stale.
-4. **Onboarding Detection:**
-   - Checked in `middleware.ts` and `OnboardingPage`.
-   - Reads `onboarding_complete` from organizations table or JWT claim.
-5. **Final Landing Page:**
-   - `middleware.ts` points owners to `/owner/today` when complete.
-   - `OnboardingPage` and `auth/callback` point owners to `/owner/analytics`.
-   - Supervisors go to `/supervisor/dashboard` or `/supervisor/production`.
+## Route Map
 
-- **Inconsistencies:**
-  - `middleware.ts` (Line 226) redirects to `/owner/today`.
-  - `OnboardingPage` (Line 31) redirects to `/owner/analytics`.
-  - `checklist.tsx` (Line 668) redirects to `/owner/analytics`.
+| Route Path | File Path | Access | Redirect Destination |
+| --- | --- | --- | --- |
+| `/onboarding` | `app/(auth)/onboarding/page.tsx` | Authenticated owners | `/owner/today` when complete |
+| `/signup` | `app/(auth)/signup/page.tsx` | Public | `/onboarding` after owner/org creation |
+| `/join` | `app/(auth)/join/page.tsx` | Public | Supervisor home |
+| `/login` | `app/(auth)/login/page.tsx` | Public | Role-based home |
+| `/auth/callback` | `app/auth/callback/route.ts` | Public | `/onboarding`, `/owner/today`, or supervisor home |
 
-## 4. Database Model Related to Onboarding
+Middleware redirects complete owners to `/owner/today`, incomplete owners to `/onboarding`, and supervisors to `/supervisor/dashboard` or `/supervisor/production` depending on entry point.
 
-### Tables and Columns
+## Onboarding Steps
 
-| Table Name | Column Name | Type | Purpose | Default | Required for Onboarding |
-|---|---|---|---|---|---|
-| `organizations` | `onboarding_complete` | BOOLEAN | Tracks if setup is done | `false` | Yes |
-| `organizations` | `join_code` | TEXT | Code for supervisors | Generated | No |
-| `organizations` | `join_code_expires_at`| TIMESTAMPTZ | Expiry for join code | `now() + 30 days`| No |
-| `profiles` | `role` | TEXT | `owner` or `supervisor`| - | Yes |
-| `profiles` | `org_id` | UUID | Links user to org | - | Yes |
-| `machines` | - | - | At least 1 row required | - | Yes |
-| `workers` | - | - | At least 1 row required | - | Yes |
-| `payroll_configs`| - | - | Must exist | - | Yes |
-| `org_subscriptions`| - | - | Active sub or trial | - | Yes |
+### 1. Choose Production Mode
 
-- **RPCs Used:** None directly in the checklist file, but `getOnboardingStatus` queries the database directly.
-- **Triggers:** `custom_access_token_hook` is a function used in a Supabase hook to inject claims.
-- **RLS Policies:** 
-  - `organizations`: Select requires session, Update requires `owner_id = auth.uid()`.
-  - `profiles`: Select allows viewing own or same org.
-  - `workers` & `machines`: Only owners can manage (All), members can view (Select).
+Production mode is saved through `updateOrganizationProductionMode` and stored on `organizations.production_mode`.
 
-## 5. Current Onboarding Steps
+Options:
 
-The flow is step-based in `OnboardingChecklist` (`app/(auth)/onboarding/checklist.tsx`).
+- `market_run`: produce fabric first, store/sell/dispatch later.
+- `order_based`: produce against confirmed party orders.
+- `both`: show both workflows.
 
-### Step 1: Add your machines
-- **Route:** `/onboarding` (Client Component)
-- **Component:** `MachineForm`
-- **Purpose:** Add initial machines.
-- **Inputs:** Machine names (Manual or Bulk import).
-- **Validation:** At least one machine name.
-- **Database Writes:** Inserts into `machines` table.
-- **Completion Condition:** `machines` count > 0.
-- **Next Route:** Auto-opens next step.
+This setting controls owner navigation visibility through `lib/production-mode.ts`.
 
-### Step 2: Add your workers
-- **Route:** `/onboarding`
-- **Component:** `WorkerForm`
-- **Purpose:** Add initial piece-rate workers.
-- **Inputs:** Worker name, Phone (optional).
-- **Validation:** At least one worker name. 10-digit phone if provided. Consent checkbox required if phone provided.
-- **Database Writes:** Inserts into `workers` table. Inserts into `worker_whatsapp_consent` or similar (via `saveWorkerWhatsApp`).
-- **Completion Condition:** `workers` count > 0.
+### 2. Add Machines
 
-### Step 3: Set your pay cycle
-- **Route:** `/onboarding`
-- **Component:** `PayrollCycleForm`
-- **Purpose:** Define monthly payroll period.
-- **Inputs:** Day of month (1-28).
-- **Validation:** Must select a day.
-- **Database Writes:** Inserts/Updates `payroll_configs` table.
-- **Completion Condition:** `payroll_configs` row exists.
+The machine form collects loom type and quantity, then creates named machines such as `Jacquard 1` or a custom type label. It writes through `addMachine` and requires at least one configured loom type/count.
 
-### Step 4: Choose your plan
-- **Route:** `/onboarding`
-- **Component:** `PlanSelectionForm`
-- **Purpose:** Start trial or subscribe.
-- **Inputs:** Plan selection (Trial, Base, Premium).
-- **Database Writes:** Creates `org_subscriptions` row.
-- **Completion Condition:** Valid subscription exists.
+### 3. Add Workers
 
-## 6. Role-Based Onboarding Behavior
+The worker form creates piece-rate meter workers through `addMeterWorker`. It supports manual rows and bulk import. Phone numbers are optional; if any phone is saved, the owner must confirm consent. Worker phone and language are saved through `saveWorkerWhatsApp`.
 
-- **Owner:**
-  - Creates organization during signup.
-  - Blocked by `/onboarding` until all 4 steps are complete.
-  - Can bypass specific gates if they navigate to allowed routes like `/owner/machines` or `/owner/workers` directly, but `middleware.ts` restricts access to main dashboard areas.
-- **Supervisor:**
-  - Joins via code at `/join`.
-  - Does not see onboarding.
-  - Lands on `/supervisor/production` or `/supervisor/dashboard`.
-  - Cannot onboard without owner setup because they need a join code generated by an organization.
+Fixed workers, PF/ESI details, rates, and deeper worker setup remain post-onboarding workflows.
 
-## 7. UI and UX Inventory
+### 4. Configure Payroll
 
-- **Component:** `OnboardingChecklist` in `app/(auth)/onboarding/checklist.tsx`.
-- **Purpose:** Renders the checklist UI.
-- **Form Fields:** 
-  - Machine names (text or textarea).
-  - Worker names and phones.
-  - Day selector for payroll.
-  - Plan buttons.
-- **Polished or Placeholder:** The UI looks **polished** with Framer Motion animations and a clean layout.
-- **Clarity:** It explains what the steps are, but does not explain *why* they are needed in depth (except for payroll cycle).
-- **Friction:** Bulk import helps reduce friction.
-- **Terms:** Uses English terms.
+The payroll form writes `payroll_configs` through `savePayrollConfig`.
 
-## 8. Business Setup Coverage
+Fields:
 
-| Item | Coverage | Notes |
-|---|---|---|
-| Factory Profile | Partially covered | Name collected at signup |
-| Owner Profile | Partially covered | Name, Email, Phone at signup |
-| Loom/Machine Setup | Partially covered | Name only. No type or specific config |
-| Quality Setup | Not covered | Comment says "no longer a mandatory gate" |
-| Worker Setup | Partially covered | Name and phone only. No rate or type |
-| Day/Night Assignment| Not covered | - |
-| Rate Setup | Not covered | - |
-| Stock Setup | Not covered | - |
-| Payroll Basics | Partially covered | Cycle start day only |
+- `cycle_start_day`: day 1-28 that starts the wage cycle.
+- `pay_date_day`: first selected day after cycle close when wages are scheduled.
+- `pay_reminder_days`: 0-14 day reminder/opening window before pay date.
 
-## 9. Data Dependencies and Activation Requirements
+Common presets include Surat-style and month-end-plus-10th setups.
 
-### Prerequisite Data for Core Loop:
+### 5. Choose Plan
 
-- **Estimator:** Needs qualities and rates. (Not collected in onboarding).
-- **Quotes:** Needs customer data, qualities. (Not collected).
-- **Production Logging:** Needs machine, worker, and quality (often). Onboarding collects machines and workers but not qualities or rates.
-- **Supervisor Dashboard:** Needs assigned workers and machines.
+The plan step uses the trial/subscription components. A valid `org_subscriptions` row with active/authenticated status and non-expired `current_end` satisfies the gate.
 
-- **Does onboarding collect enough data to activate?** **No**. A user landing on the dashboard after onboarding will still need to set up rates and qualities before they can actually use the estimator or log production properly.
+## Completion Logic
 
-## 10. State Management
+`getOnboardingStatus` checks:
 
-- **Stored in DB:** Yes, `onboarding_complete` in `organizations` table.
-- **Cached:** In JWT claims (`onboarding_complete`).
-- **Inferred:** `getOnboardingStatus` infers state by counting rows in `machines`, `workers`, `payroll_configs`, and `org_subscriptions`.
-- **Race Conditions:** Documented in `auth.ts` regarding JWT hook lag. Handled with timeouts and DB fallbacks.
+- `organizations.production_mode`, unless the org was already completed before production mode existed.
+- At least one `machines` row.
+- At least one `workers` row.
+- A `payroll_configs` row.
+- A valid active/authenticated subscription or trial.
 
-## 11. Validation and Error Handling
+If all checks pass, it updates `organizations.onboarding_complete = true` using the admin client so future JWT refreshes carry the completed state.
 
-- **Validation:** 
-  - Client-side validation in forms (e.g., phone length, empty names).
-  - Server-side validation via Zod schemas in actions (implied by imports).
-- **Error Handling:** 
-  - Uses `sonner` toasts for errors.
-  - Server actions return `{ error: string }` instead of throwing in many cases to avoid crashing.
+`markOnboardingComplete` is called before the final hard navigation to `/owner/today`, but the call is intentionally non-fatal because middleware has a DB fallback.
 
-## 12. Tests and QA Coverage
+## Current Limitations
 
-- **No specific onboarding tests found** in `__tests__`.
-- Missing high-priority tests:
-  - E2E flow from signup to dashboard.
-  - Redirect checks for incomplete onboarding.
-  - Edge cases like refreshing mid-onboarding.
+- Onboarding does not collect estimator qualities, yarn rates, worker rates, fixed workers, stock opening balances, or party masters.
+- Production logging still requires active loom/order/worker setup after onboarding.
+- Production mode affects navigation, not data migration.
+- Some comments in auth/onboarding source files still mention older `/owner/analytics` wording, but the live redirects now point owners to `/owner/today`.
 
-## 13. Edge Cases and Failure Modes
+## Related Files
 
-- **User signs up but profile not created:** Handled by rolling back (deleting user) if profile creation fails in `createOrganization`.
-- **JWT stale on signup:** Handled by waiting 500ms and refreshing session in action, plus DB fallbacks in pages.
-- **User refreshes mid-onboarding:** State is preserved because data is saved to DB on each step completion.
-
-## 14. Churn and Activation Risk Assessment
-
-- **Time to first value:** Slow. User must fill data that isn't immediately usable without further setup (rates, qualities).
-- **Scores (out of 10):**
-  - Technical completeness: 7/10 (Handles race conditions well).
-  - UX clarity: 8/10 (Good UI).
-  - Activation readiness: 4/10 (Does not collect enough data for core loop).
-  - Churn risk reduction: 5/10 (Might lose users who find empty dashboard after setup).
-
-## 15. Gaps, Duplicates, and Inconsistencies
-
-- **Inconsistent Redirects:** 
-  - `middleware.ts` -> `/owner/today`
-  - `checklist.tsx` -> `/owner/analytics`
-  - `auth/callback` -> `/owner/analytics`
-- **Missing Coverage:** Qualities and Rates are missing from onboarding but needed for value.
-
-## 16. Recommended Next Investigation Areas
-
-- Should we make Quality setup part of onboarding again?
-- Should we allow skipping steps or progressive profiling?
-- Is `/owner/today` or `/owner/analytics` the correct landing page?
-
-## 17. Proposed Current-State Flow Diagram
-
-```mermaid
-graph TD
-    A[New User] --> B{Role?}
-    B -->|Owner| C[Signup]
-    B -->|Supervisor| D[Join with Code]
-    C --> E[Redirect to /onboarding]
-    E --> F[Checklist: Machines, Workers, Payroll, Plan]
-    F --> G{All Complete?}
-    G -->|Yes| H[Mark Complete in DB & JWT]
-    H --> I[Redirect to /owner/analytics or /owner/today]
-    G -->|No| E
-    D --> J[Redirect to /supervisor/production]
-```
-
-## 18. File Inventory Appendix
-
-- `middleware.ts`: Controls redirects and gates.
-- `app/(auth)/onboarding/page.tsx`: Server component for onboarding page.
-- `app/(auth)/onboarding/checklist.tsx`: Client component with forms.
-- `app/(auth)/actions/auth.ts`: Server actions for auth and onboarding status.
-- `supabase/migrations/20260403000000_f1_auth_onboarding.sql`: Schema updates.
-
-## 19. Final Summary for Product Discussion
-
-1. **What does onboarding currently do?** Gates owners until they add at least 1 machine, 1 worker, set payroll cycle, and pick a plan.
-2. **What is missing?** Critical data for the core loop: Rates and Qualities.
-3. **What is risky?** Inconsistent landing routes and incomplete data setup leading to empty states on dashboard.
-4. **What should we be careful not to break?** The JWT claim fallback logic that handles race conditions.
-5. **Opportunities:** Improve activation by guiding users to set up rates or qualities immediately after onboarding or as part of it.
+- `app/(auth)/onboarding/page.tsx`
+- `app/(auth)/onboarding/checklist.tsx`
+- `app/(auth)/actions/auth.ts`
+- `app/auth/callback/route.ts`
+- `middleware.ts`
+- `lib/production-mode.ts`
+- `app/(dashboard)/owner/payroll/actions.ts`
+- `lib/payroll-cycle.ts`

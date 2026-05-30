@@ -94,6 +94,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
         data.workAtRisk.inactiveMarketRuns.length === 0 &&
         data.dispatch.soldNotDispatched.length === 0 &&
         data.dispatch.pendingReceipts.length === 0 &&
+        (!data.payroll.isPayWindowOpen || data.payroll.unsettledWorkerCount === 0) &&
         data.payroll.pendingAdvanceTotal === 0
     const checklist = data.activationChecklist || {
         hasEstimate: false,

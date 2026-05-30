@@ -2,7 +2,7 @@
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
-import { getPayrollCycleBounds } from '@/lib/payroll-cycle'
+import { getLatestOpenPayrollMonth, getPayrollCycleDetails, getPayrollCycleStatus } from '@/lib/payroll-cycle'
 import { normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { formatToSurat, getSuratTodayString } from '@/lib/time'
 
@@ -74,7 +74,12 @@ export type FactoryTodayData = {
     }
 
     payroll: {
+        currentCycleMonth: string
         currentCycleLabel: string
+        payDate: string
+        payWindowStatus: 'not_started' | 'in_progress' | 'scheduled' | 'approaching' | 'due_today' | 'overdue'
+        isPayWindowOpen: boolean
+        daysUntilPayDate: number
         unsettledWorkerCount: number
         grossWagesSoFar: number
         pendingAdvanceTotal: number
@@ -109,10 +114,6 @@ function daysBetween(a: string, b: string): number {
     return Math.round((new Date(b).getTime() - new Date(a).getTime()) / msPerDay)
 }
 
-function getCurrentMonth(): string {
-    return formatToSurat(new Date(), 'yyyy-MM')
-}
-
 function hasAnyCount(result: unknown): boolean {
     if (!result || typeof result !== 'object' || !('count' in result)) return false
     const count = (result as { count?: number | null }).count
@@ -126,7 +127,6 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
     const supabase = await createServerClient()
     const orgId = profile.org_id
     const today = getSuratTodayString()
-    const currentMonthStart = `${today.slice(0, 7)}-01`
     const twoDaysAgo = formatToSurat(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd')
 
     // ── All queries run concurrently ──────────────────────────────────────────
@@ -140,7 +140,6 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         dispatchesRes,
         payrollConfigRes,
         advancesRes,
-        settlementsRes,
         hasEstimateRes,
         hasQualityRes,
         hasOrderRes,
@@ -206,7 +205,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         // 9. Payroll config
         supabase
             .from('payroll_configs')
-            .select('cycle_start_day')
+            .select('cycle_start_day, pay_date_day, pay_reminder_days')
             .eq('org_id', orgId)
             .maybeSingle(),
 
@@ -217,14 +216,6 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             .eq('org_id', orgId)
             .eq('status', 'pending')
             .is('writeoff_at', null),
-
-        // 11. Unsettled worker count for current cycle
-        supabase
-            .from('production_logs')
-            .select('worker_id')
-            .eq('org_id', orgId)
-            .gte('date', currentMonthStart)
-            .not('worker_id', 'is', null),
 
         // 12. Activation Checklist: Has Estimate
         (async () => {
@@ -468,17 +459,28 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
 
     // ── 5. Payroll ─────────────────────────────────────────────────────────────
     const cycleStartDay = payrollConfigRes.data?.cycle_start_day ?? 1
-    const currentMonth = getCurrentMonth()
-    const bounds = getPayrollCycleBounds(currentMonth, cycleStartDay)
+    const payDateDay = payrollConfigRes.data?.pay_date_day ?? 10
+    const payReminderDays = payrollConfigRes.data?.pay_reminder_days ?? 3
+    const payrollCycleMonth = getLatestOpenPayrollMonth(today, cycleStartDay, payDateDay, payReminderDays)
+    const bounds = getPayrollCycleDetails(payrollCycleMonth, cycleStartDay, payDateDay)
+    const payrollStatus = getPayrollCycleStatus(payrollCycleMonth, cycleStartDay, payDateDay, today, payReminderDays)
 
     const pendingAdvanceTotal = (advancesRes.data ?? []).reduce(
         (s, a) => s + toNum((a as Record<string, unknown>).amount),
         0
     )
 
+    const payrollWorkerLogsRes = await supabase
+        .from('production_logs')
+        .select('worker_id')
+        .eq('org_id', orgId)
+        .gte('date', bounds.cycle_start)
+        .lte('date', bounds.cycle_end)
+        .not('worker_id', 'is', null)
+
     // Unique workers with logs this cycle = rough unsettled count
     const uniqueWorkerIds = new Set(
-        (settlementsRes.data ?? [])
+        (payrollWorkerLogsRes.data ?? [])
             .map((r) => (r as Record<string, unknown>).worker_id)
             .filter(Boolean)
     )
@@ -486,7 +488,12 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
     const cycleLabel = `${new Date(bounds.cycle_start).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – ${new Date(bounds.cycle_end).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`
 
     const payroll: FactoryTodayData['payroll'] = {
+        currentCycleMonth: payrollCycleMonth,
         currentCycleLabel: cycleLabel,
+        payDate: bounds.pay_date,
+        payWindowStatus: payrollStatus.status,
+        isPayWindowOpen: payrollStatus.is_payroll_window_open,
+        daysUntilPayDate: payrollStatus.days_until_pay_date,
         unsettledWorkerCount: uniqueWorkerIds.size,
         grossWagesSoFar: 0, // summary-only; full calc lives in payroll page
         pendingAdvanceTotal,
@@ -505,6 +512,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         machinesData.unassigned > 0 ? 1 : 0,
         inactiveMarketRuns.length > 0 ? 1 : 0,
         ordersBehindPace.filter((o) => o.riskLevel === 'yellow').length,
+        payroll.isPayWindowOpen && payroll.unsettledWorkerCount > 0 ? 1 : 0,
         pendingAdvanceTotal > 0 ? 1 : 0,
     ].reduce((a, b) => a + b, 0)
 

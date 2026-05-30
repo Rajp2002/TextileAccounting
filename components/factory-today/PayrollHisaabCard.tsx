@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { FactoryTodayData } from '@/app/(dashboard)/owner/today/actions'
-import { DollarSign, Users, HandCoins } from 'lucide-react'
+import { CalendarClock, DollarSign, Users, HandCoins } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface PayrollHisaabCardProps {
@@ -11,21 +11,52 @@ interface PayrollHisaabCardProps {
 
 export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
     const hasAdvances = payroll.pendingAdvanceTotal > 0
-    const hasUnsettled = payroll.unsettledWorkerCount > 0
+    const hasUnsettled = payroll.isPayWindowOpen && payroll.unsettledWorkerCount > 0
+    const isOverdue = payroll.payWindowStatus === 'overdue' && hasUnsettled
 
-    const color = hasAdvances || hasUnsettled ? 'amber' : 'emerald'
+    const color = isOverdue ? 'red' : hasAdvances || hasUnsettled ? 'amber' : 'emerald'
+    const payDateLabel = new Date(payroll.payDate).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+    })
+    const statusLabel = (() => {
+        if (payroll.payWindowStatus === 'overdue') return `Overdue since ${payDateLabel}`
+        if (payroll.payWindowStatus === 'due_today') return `Due today, ${payDateLabel}`
+        if (payroll.payWindowStatus === 'approaching') return `Due in ${payroll.daysUntilPayDate} day${payroll.daysUntilPayDate === 1 ? '' : 's'}`
+        return `Pay date ${payDateLabel}`
+    })()
+    const tone = {
+        red: {
+            header: 'border-risk/20 bg-risk-soft',
+            icon: 'text-risk',
+            text: 'text-risk',
+            link: 'border-risk/30 bg-risk-soft text-risk hover:bg-risk/20',
+        },
+        amber: {
+            header: 'border-warning/20 bg-warning-soft',
+            icon: 'text-warning',
+            text: 'text-warning',
+            link: 'border-warning/30 bg-warning-soft text-warning hover:bg-warning/20',
+        },
+        emerald: {
+            header: 'border-success/20 bg-success-soft',
+            icon: 'text-success',
+            text: 'text-success',
+            link: 'border-hairline bg-surface text-ink hover:bg-surface-soft',
+        },
+    }[color]
 
     return (
         <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
             {/* Header */}
             <div className={cn(
                 'flex items-center gap-3 border-b px-4 py-3',
-                color === 'amber' ? 'border-warning/20 bg-warning-soft' : 'border-success/20 bg-success-soft'
+                tone.header
             )}>
-                <DollarSign className={cn('h-4 w-4 shrink-0', color === 'amber' ? 'text-warning' : 'text-success')} />
+                <DollarSign className={cn('h-4 w-4 shrink-0', tone.icon)} />
                 <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-wide text-ink">Payroll / Hisaab</p>
-                    <p className={cn('text-sm font-bold', color === 'amber' ? 'text-warning' : 'text-success')}>
+                    <p className={cn('text-sm font-bold', tone.text)}>
                         {payroll.currentCycleLabel}
                     </p>
                 </div>
@@ -40,11 +71,13 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                     </div>
                     <p className={cn(
                         'text-2xl font-bold',
-                        hasUnsettled ? 'text-warning' : 'text-ink'
+                        isOverdue ? 'text-risk' : hasUnsettled ? 'text-warning' : 'text-ink'
                     )}>
-                        {payroll.unsettledWorkerCount}
+                        {payroll.isPayWindowOpen ? payroll.unsettledWorkerCount : '—'}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-body">workers with logs this cycle</p>
+                    <p className="mt-0.5 text-[11px] text-body">
+                        {payroll.isPayWindowOpen ? 'workers with logs this cycle' : 'opens near pay date'}
+                    </p>
                 </div>
                 <div className="px-4 py-4">
                     <div className="mb-2 flex items-center gap-2">
@@ -67,16 +100,22 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
             </div>
 
             {/* Cycle info */}
-            {payroll.upcomingSettlementDate && (
-                <div className="px-4 py-3">
-                    <p className="text-xs text-body">
-                        Next cycle starts{' '}
-                        <span className="font-semibold text-ink">
-                            {new Date(payroll.upcomingSettlementDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                        </span>
-                    </p>
+            <div className="px-4 py-3">
+                <div className="flex items-center gap-2 text-xs text-body">
+                    <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                        {statusLabel}
+                        {payroll.upcomingSettlementDate && (
+                            <>
+                                {' '}· Next cycle starts{' '}
+                                <span className="font-semibold text-ink">
+                                    {new Date(payroll.upcomingSettlementDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                </span>
+                            </>
+                        )}
+                    </span>
                 </div>
-            )}
+            </div>
 
             {/* Footer */}
             <div className="flex items-center justify-end gap-2 border-t border-hairline px-4 py-3">
@@ -89,12 +128,10 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                     </Link>
                 )}
                 <Link
-                    href="/owner/payroll"
+                    href={`/owner/payroll?cycle=${payroll.currentCycleMonth}`}
                     className={cn(
                         'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition',
-                        hasUnsettled
-                            ? 'border-warning/30 bg-warning-soft text-warning hover:bg-warning/20'
-                            : 'border-hairline bg-surface text-ink hover:bg-surface-soft'
+                        hasUnsettled ? tone.link : 'border-hairline bg-surface text-ink hover:bg-surface-soft'
                     )}
                 >
                     {hasUnsettled ? 'Settle Hisaab →' : 'View Payroll'}

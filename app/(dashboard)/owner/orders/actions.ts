@@ -451,6 +451,15 @@ export interface DispatchWithOrder {
     igst_amount: number | null
     total_invoice_value: number | null
     stock_sale_id?: string | null
+    stock_sale?: {
+        id: string
+        sale_date: string
+        meters_sold: number
+        dispatched_meters: number
+        pending_dispatch_meters: number
+        party_name: string | null
+        quality_label: string | null
+    } | null
     party_name?: string | null
     party_phone?: string | null
     party_city?: string | null
@@ -484,6 +493,11 @@ type DispatchOverviewResult =
 
 type RawDispatchWithOrder = Omit<DispatchWithOrder, 'orders'> & {
     orders: DispatchWithOrder['orders'] | DispatchWithOrder['orders'][]
+    stock_sale?: (Omit<NonNullable<DispatchWithOrder['stock_sale']>, 'quality_label'> & {
+        fabric_stock_lots?: { quality_label: string | null } | { quality_label: string | null }[] | null
+    }) | Array<Omit<NonNullable<DispatchWithOrder['stock_sale']>, 'quality_label'> & {
+        fabric_stock_lots?: { quality_label: string | null } | { quality_label: string | null }[] | null
+    }> | null
 }
 
 type RawDispatchRow = Omit<DispatchRow, 'package_lines'> & {
@@ -752,6 +766,7 @@ export async function createDispatch(
         .from('dispatches')
         .select(`
             id,
+            stock_sale_id,
             dispatch_number,
             qty_meters_sent,
             qty_meters_received,
@@ -841,6 +856,7 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
         .from('dispatches')
         .select(`
             id,
+            stock_sale_id,
             dispatch_number,
             qty_meters_sent,
             qty_meters_received,
@@ -869,6 +885,17 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
             party_phone,
             party_city,
             challan_number,
+            stock_sale:fabric_stock_sales (
+                id,
+                sale_date,
+                meters_sold,
+                dispatched_meters,
+                pending_dispatch_meters,
+                party_name,
+                fabric_stock_lots (
+                    quality_label
+                )
+            ),
             dispatch_package_lines (
                 id,
                 package_id,
@@ -897,18 +924,37 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
 
     const rows = (data ?? []) as unknown as RawDispatchWithOrder[]
     return {
-        data: rows.map((row) => ({
-            ...row,
-            package_lines: (row as unknown as RawDispatchRow).dispatch_package_lines ?? [],
-            orders: (Array.isArray(row.orders) ? row.orders[0] : row.orders) ?? {
-                id: row.stock_sale_id ?? row.id,
-                party_name: row.party_name ?? 'Stock Sale Party',
-                quality_label: null,
-                tracking_token: '',
-                total_target_meters: row.qty_meters_sent,
-                status: 'stock_sale',
-            },
-        })),
+        data: rows.map((row) => {
+            const rawStockSale = Array.isArray(row.stock_sale) ? row.stock_sale[0] : row.stock_sale
+            const rawStockSaleLot = Array.isArray(rawStockSale?.fabric_stock_lots)
+                ? rawStockSale?.fabric_stock_lots[0]
+                : rawStockSale?.fabric_stock_lots
+            const stockSale = rawStockSale
+                ? {
+                    id: rawStockSale.id,
+                    sale_date: rawStockSale.sale_date,
+                    meters_sold: Number(rawStockSale.meters_sold ?? 0),
+                    dispatched_meters: Number(rawStockSale.dispatched_meters ?? 0),
+                    pending_dispatch_meters: Number(rawStockSale.pending_dispatch_meters ?? 0),
+                    party_name: rawStockSale.party_name ?? null,
+                    quality_label: rawStockSaleLot?.quality_label ?? null,
+                }
+                : null
+
+            return {
+                ...row,
+                stock_sale: stockSale,
+                package_lines: (row as unknown as RawDispatchRow).dispatch_package_lines ?? [],
+                orders: (Array.isArray(row.orders) ? row.orders[0] : row.orders) ?? {
+                    id: stockSale?.id ?? row.stock_sale_id ?? row.id,
+                    party_name: stockSale?.party_name ?? row.party_name ?? 'Stock Sale Party',
+                    quality_label: stockSale?.quality_label ?? null,
+                    tracking_token: '',
+                    total_target_meters: stockSale?.meters_sold ?? row.qty_meters_sent,
+                    status: 'stock_sale',
+                },
+            }
+        }),
     }
 }
 
@@ -1062,6 +1108,18 @@ export interface PendingStockSale {
     pending_dispatch_meters?: number
 }
 
+type PendingStockSaleRow = Omit<PendingStockSale, 'quality_label' | 'godown' | 'unit_label'> & {
+    fabric_stock_lots: {
+        quality_label: string | null
+        godown: string | null
+        unit_label: string | null
+    } | Array<{
+        quality_label: string | null
+        godown: string | null
+        unit_label: string | null
+    }>
+}
+
 export async function getPendingStockSales(): Promise<{ data: PendingStockSale[]; error?: string }> {
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
@@ -1095,7 +1153,7 @@ export async function getPendingStockSales(): Promise<{ data: PendingStockSale[]
 
     if (error) return { error: error.message, data: [] }
 
-    const formatted = (data ?? []).map((row: any) => {
+    const formatted = ((data ?? []) as unknown as PendingStockSaleRow[]).map((row) => {
         const lot = Array.isArray(row.fabric_stock_lots) ? row.fabric_stock_lots[0] : row.fabric_stock_lots
         return {
             id: row.id,
@@ -1130,7 +1188,7 @@ export async function confirmPendingSaleDispatch(
     dispatchTakas: number,
     notes: string
 ): Promise<{ success: boolean; dispatchId?: string; dispatchNumber?: number; message?: string }> {
-    const { profile } = await requireRole(['owner'])
+    await requireRole(['owner'])
     const supabase = await createServerClient()
 
     if (!saleId) {
@@ -1183,7 +1241,7 @@ export async function confirmPendingSaleReceived(
     receivedMeters: number,
     notes: string
 ): Promise<{ success: boolean; dispatchId?: string; dispatchNumber?: number; message?: string }> {
-    const { profile } = await requireRole(['owner'])
+    await requireRole(['owner'])
     const supabase = await createServerClient()
 
     if (!saleId) {
@@ -1225,5 +1283,3 @@ export async function confirmPendingSaleReceived(
         dispatchNumber: Number(result.dispatch_number),
     }
 }
-
-

@@ -1,5 +1,7 @@
 # Onboarding V2 Implementation Plan
 
+Status as of May 31, 2026: implemented with differences. The current blocking flow is production mode -> loom type/count setup -> meter workers -> payroll cycle/pay date/reminder -> plan/trial, then `/owner/today`. This document is retained as implementation history; use `docs/current-onboarding-implementation.md` for the current source of truth.
+
 ## 1. Goal
 
 The goal of the Onboarding V2 redesign is to:
@@ -11,8 +13,8 @@ The goal of the Onboarding V2 redesign is to:
 
 ## 2. Current Problems to Solve
 
-Based on `docs/current-onboarding-implementation.md`, the current implementation has the following issues:
-- **Redirect inconsistency:** Different files redirect owners to different landing pages (`/owner/today` vs `/owner/analytics`).
+Based on the pre-V2 implementation, the current implementation had the following issues:
+- **Redirect inconsistency:** Different files redirected owners to different landing pages (`/owner/today` vs `/owner/analytics`). This is now resolved in live redirects; owner home is `/owner/today`.
 - **Missing qualities:** Qualities are required for Estimator, Quotes, Production, and Stock workflows but are not collected during onboarding. *Decision: We will NOT add quality setup as a blocking onboarding step, as qualities are better created in context inside the Estimator flow.*
 - **Missing rates/activation guidance:** Users can complete onboarding without setting up rates or understanding how to reach first value.
 - **Incomplete setup before dashboard:** The current flow only collects names of machines and workers, which is not enough to use the core loop.
@@ -21,25 +23,17 @@ Based on `docs/current-onboarding-implementation.md`, the current implementation
 
 ## 3. Proposed V2 Flow
 
-We propose a 5-step blocking onboarding flow for Owners. Step 6 drops them into the dashboard with a guided activation checklist.
+The implemented flow is a 5-step blocking onboarding flow for owners, then a redirect to `/owner/today`.
 
-### Step 1: Confirm factory profile
-- **Purpose:** Confirm factory details (lightweight confirmation, not form-heavy).
-- **Fields:**
-  - Factory name (Required, pre-filled from signup)
-  - City/location (Optional)
-  - Number of looms (Optional)
-- **Existing components/actions to reuse:** Signup data is already stored.
-- **New components/actions needed:** A simple confirmation step UI.
-- **Database writes:** Updates `organizations` table if changed.
-- **Validation rules:** Name cannot be empty.
-- **Completion condition:** Step submitted.
-- **Skip behavior:** Cannot skip.
-- *Note: If this adds too much work, we will defer it and keep the existing onboarding structure.*
+### Step 1: Choose production mode
+- **Purpose:** Decide which workflows Weavly should show first.
+- **Fields:** `market_run`, `order_based`, or `both`.
+- **Database writes:** `organizations.production_mode`.
+- **Completion condition:** Production mode exists, except already-completed legacy orgs are treated as complete and normalized to the default.
 
 ### Step 2: Machines/Looms
 - **Purpose:** Add initial machines with loom type support.
-- **Required fields:** Machine Name, Loom Type.
+- **Required fields:** Loom type and count.
 - **Optional fields:** Custom label (required if Loom Type is 'Other').
 - **Existing components/actions to reuse:** `addMachine` in `app/(dashboard)/owner/actions.ts` already supports `loomType` and `customLabel`.
 - **New components/actions needed:** Update `MachineForm` in `checklist.tsx` to include a dropdown for `loomType` and a conditional input for `customLabel`.
@@ -57,8 +51,8 @@ We propose a 5-step blocking onboarding flow for Owners. Step 6 drops them into 
 - **Completion condition:** At least one worker added.
 
 ### Step 4: Payroll Cycle
-- **Purpose:** Set the monthly pay cycle start day.
-- **Required fields:** Cycle Start Day (1-28).
+- **Purpose:** Set monthly pay cycle timing.
+- **Required fields:** Cycle start day (1-28), pay date day (1-28), reminder window (0, 3, 5, or 7 days in the current UI).
 - **Existing components/actions to reuse:** `PayrollCycleForm` in `checklist.tsx`.
 - **Completion condition:** Value selected and saved.
 
@@ -110,9 +104,7 @@ We recommend keeping the worker step lightweight:
 
 ## 7. Payroll Step
 
-The existing payroll step appears functional and safe.
-- **Table:** `payroll_configs`.
-- **Recommendation:** Keep it unchanged and blocking.
+Implemented payroll setup writes `cycle_start_day`, `pay_date_day`, and `pay_reminder_days` to `payroll_configs`. These values now drive payroll-cycle status and normal settlement gating.
 
 ## 8. Plan/Trial Step
 

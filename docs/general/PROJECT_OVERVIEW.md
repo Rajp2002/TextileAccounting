@@ -1,6 +1,6 @@
 # Weavly Project Overview
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 Weavly is a multi-tenant operating system for Indian weaving factories. It is designed around the way a small or mid-sized weaving unit actually works: an owner prices fabric from yarn and loom assumptions, converts confirmed work into orders or speculative market runs, assigns looms on the floor, captures shift production, turns output into stock or dispatches, and settles workers with transparent wage and advance recovery.
 
@@ -12,15 +12,16 @@ Phase 1 should make the factory's core operating loop trustworthy enough to repl
 
 The loop is:
 
-1. Set up the factory basics: owner account, subscription/trial, machines, workers, payroll baseline, factory cost profile, language/WhatsApp preferences, and supervisor access.
+1. Set up the factory basics: owner account, production mode, subscription/trial, loom types/machines, piece-rate workers, payroll cycle/pay date/reminder window, factory cost profile, language/WhatsApp preferences, and supervisor access.
 2. Estimate fabric cost from real weaving inputs: warp/weft rows, yarn rates, GST, shortage, crimp, loom type, RPM, power, overheads, wage assumptions, commission, transport, and margin.
 3. Save reusable templates and commercial quotes.
 4. Move accepted quotes into active orders, or start a market run when the factory is producing for stock rather than a committed party.
 5. Assign machines, workers, and order/run work on the supervisor production log screen.
-6. Capture day/night shift production from loom readings, including opening/closing meter readings, correction windows, duplicate protection, rate snapshots, and machine status.
-7. Convert production into analytics, order progress, market-run progress, expected godown stock, payroll earnings, and dispatch readiness.
-8. Settle payroll and advances with deduction caps, PF/ESI fields, final settlement behavior, payment modes, payslip generation, and WhatsApp communication.
-9. Use dispatch, stock, commercials, billing, referrals, and settings as supporting surfaces where they make the core loop more professional and monetizable.
+6. Capture day/night shift production from produced metre totals, with correction windows, duplicate protection, rate snapshots, downtime reasons, and machine status.
+7. Convert production into Factory Today signals, analytics, order progress, market-run progress, expected godown stock, payroll earnings, and sale/dispatch readiness.
+8. Sell stock to a named party, create a receivable, dispatch in one or more batches, confirm receipt, and review shortages/excesses.
+9. Settle payroll and advances with deduction caps, PF/ESI fields, final settlement behavior, payment modes, payslip generation, and WhatsApp communication.
+10. Use Commercials, billing, referrals, and settings as supporting surfaces where they make the core loop more professional and monetizable.
 
 ## Primary Users
 
@@ -45,6 +46,8 @@ Primary owner routes:
 - `/owner/machines`
 - `/owner/billing`
 - `/owner/settings`
+
+Owner navigation is production-mode aware. `market_run` mode hides Quotes and Orders, `order_based` mode hides Market Runs, and `both` mode exposes both paths.
 
 Secondary or archived owner routes:
 
@@ -80,7 +83,7 @@ Pain point translated: the owner's old calculator-plus-register costing process 
 
 ### Orders
 
-Orders are live commitments. They carry party, quality, target meters, deadline, status, quote snapshot data, worker-rate snapshots, warp/weft instructions, machine assignments, dispatch state, and progress calculated from production logs.
+Orders are live commitments for order-based or both-mode factories. They carry party, quality, target meters, deadline, status, quote snapshot data, worker-rate snapshots, warp/weft instructions, machine assignments, dispatch state, and progress calculated from production logs.
 
 Pain point translated: the whiteboard/order diary becomes a progress board with pace, deadline risk, machine assignment, dispatch history, and tracking token.
 
@@ -92,31 +95,31 @@ Pain point translated: speculative production stops being invisible "market maal
 
 ### Supervisor Production Log
 
-The supervisor dashboard is the active production log workspace. Supervisors select date and day/night shift, assign workers and orders to machines, update machine running/idle/maintenance status, enter loom closing readings, copy previous shift setup, submit logs, and request owner access codes for protected corrections.
+The supervisor dashboard is the active production log workspace. Supervisors select date and day/night shift, assign workers and orders/runs to machines, update machine running/idle/maintenance status, enter produced metres or downtime reasons, copy previous shift setup, submit logs, and request owner access codes for protected corrections.
 
 Pain point translated: the production register becomes a mobile shift screen that feeds owner analytics and payroll directly.
 
 ### Stock / Godown Ledger
 
-The active stock route is the godown ledger. For market-run factories, it shows expected stock as per production and commercial records, not a promise that every meter was physically confirmed at inward. Production creates expected availability; sale/dispatch is where actual availability is checked. Shortage or excess becomes a stock discrepancy for owner review. Manual/opening stock, adjustments, sales, and movements remain available, while Stock Inward is optional/de-emphasized for market-run Phase 1.
+The active stock route is the godown ledger. For market-run factories, it shows expected and physical stock context without forcing daily inward confirmation. Production creates expected availability/drafts; the owner can add or confirm lots when needed. Sale/dispatch is where actual availability is checked. Manual/opening stock, source-linked lots, adjustments, stock sales, pending dispatch meters, and movements remain available, while Stock Inward is optional/de-emphasized for market-run Phase 1.
 
 Pain point translated: the owner can answer "what should be in godown, what was actually dispatched, and what difference needs review?" Profit and receivables are tracked in Commercials.
 
 ### Dispatches
 
-Dispatches turn ready output into professional handoff. The code supports order-linked dispatches, GST/e-way metadata, package lines, receipt confirmation, shortage/extra received variance, owner-confirmed receipt, and a public token-based tracking portal.
+Dispatches turn sold stock into professional handoff. The current visible flow is party-first: the owner sells stock to a named party, which creates a stock sale and receivable, then dispatches pending meters later from `/owner/dispatches`. Dispatch supports configurable batch meters/takas/date, order-linked dispatches, GST/e-way metadata, package lines, receipt confirmation, shortage/extra received variance, owner-confirmed receipt, and public order tracking links.
 
 Pain point translated: informal transport handoff becomes a traceable dispatch with client-facing status and shortage reconciliation.
 
 ### Commercials
 
-Commercials is the source of truth for revenue, profit, receivables, and payment tracking across realized and expected sources: order invoices, stock sales, market-run sales, and expected order quotes. It is not a full accounting ledger; it is an operational gross-profit and collection dashboard.
+Commercials is the source of truth for revenue, gross profit, receivables, and payment tracking across realized and expected sources: stock sales, market-run sales, order invoices, and expected order quotes. Named party-first stock sales create receivables immediately; payments are recorded as receipts and update unpaid/partial/paid state. It is not a full accounting ledger; it is an operational gross-profit and collection dashboard.
 
 Pain point translated: the owner can answer "Paisa/profit kya hua?" and track receivables without waiting for a full accounting workflow.
 
 ### Payroll and Advances
 
-Payroll reads production logs for meter workers and attendance/fixed salary data for fixed workers. It previews and records settlements, applies advance recovery caps, supports final settlement, PF/ESI deductions, payment mode capture, payslip PDF generation, WhatsApp sending, and paid/unpaid state.
+Payroll reads production logs for meter workers and attendance/fixed salary data for fixed workers. The configured cycle start day defines the wage period, and the configured pay date/reminder window controls when normal settlements open. Payroll previews and records settlements, applies advance recovery caps, supports final settlement, PF/ESI deductions, manual adjustments, payment mode capture, payslip PDF generation, WhatsApp sending, and paid/unpaid state.
 
 Advances track Upaad for meter and fixed workers, pending and deducted balances, debt-to-typical-pay warnings, deletion rules, write-off support, and automatic recovery through settlement.
 

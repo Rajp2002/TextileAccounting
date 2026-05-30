@@ -11,9 +11,10 @@ import {
     Search,
     TrendingUp,
     CalendarDays,
+    Clock3,
     ArrowRight,
     AlertTriangle,
-    BookOpenCheck,
+    ReceiptText,
     Users,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -63,6 +64,7 @@ function getPaymentModeLabel(mode: string): string {
 }
 
 type StageFilter = 'all' | CommercialStage
+type DueBucket = 'overdue' | 'due_today' | 'due_this_week' | 'upcoming' | 'paid'
 type SourceFilter =
     | 'all'
     | CommercialSourceKind
@@ -295,7 +297,7 @@ function getLocalDateString(dateInput?: Date | string | null): string {
     return dateInput.split('T')[0].split(' ')[0]
 }
 
-function getDueBucket(rec: Receivable): 'overdue' | 'due_today' | 'due_this_week' | 'upcoming' | 'paid' {
+function getDueBucket(rec: Receivable): DueBucket {
     if (rec.payment_status === 'paid' || rec.balance_amount <= 0) {
         return 'paid'
     }
@@ -341,6 +343,63 @@ function estimateLateInterest(rec: Receivable, annualRatePct = 18): number {
     const daysLate = getDaysLate(rec)
     if (daysLate <= 0 || rec.balance_amount <= 0) return 0
     return (rec.balance_amount * (annualRatePct / 100) * daysLate) / 365
+}
+
+function getCollectionStatusMeta(rec: Receivable): { label: string; className: string } {
+    const bucket = getDueBucket(rec)
+
+    if (bucket === 'paid') {
+        return { label: 'Paid', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' }
+    }
+
+    if (bucket === 'overdue') {
+        const daysLate = getDaysLate(rec)
+        return {
+            label: daysLate > 0 ? `${daysLate}d late` : 'Overdue',
+            className: 'border-rose-200 bg-rose-50 text-rose-700',
+        }
+    }
+
+    if (bucket === 'due_today') {
+        return { label: 'Due today', className: 'border-amber-200 bg-amber-50 text-amber-700' }
+    }
+
+    if (bucket === 'due_this_week') {
+        return { label: 'Due this week', className: 'border-amber-200 bg-amber-50 text-amber-700' }
+    }
+
+    return { label: 'On credit', className: 'border-slate-200 bg-slate-50 text-slate-700' }
+}
+
+function getCollectionSourceLabel(rec: Receivable): string {
+    return rec.market_run_label
+        || rec.order_quality_label
+        || rec.godown
+        || rec.reference_label
+        || 'Stock sale'
+}
+
+function getReceivableQuantityLabel(rec: Receivable): string | null {
+    if (Number(rec.meters_sold ?? 0) > 0) return meters(rec.meters_sold ?? 0)
+    if (Number(rec.taka_sold ?? 0) > 0) return `${Number(rec.taka_sold).toLocaleString('en-IN')} taka`
+    return null
+}
+
+function compareCollectionPriority(a: Receivable, b: Receivable): number {
+    const rank: Record<DueBucket, number> = {
+        overdue: 0,
+        due_today: 1,
+        due_this_week: 2,
+        upcoming: 3,
+        paid: 4,
+    }
+    const bucketCompare = rank[getDueBucket(a)] - rank[getDueBucket(b)]
+    if (bucketCompare !== 0) return bucketCompare
+
+    const dueCompare = (getLocalDateString(a.due_date) || '9999-12-31').localeCompare(getLocalDateString(b.due_date) || '9999-12-31')
+    if (dueCompare !== 0) return dueCompare
+
+    return Number(b.balance_amount ?? 0) - Number(a.balance_amount ?? 0)
 }
 
 function formatDate(value?: string | null) {
@@ -604,7 +663,7 @@ function CommercialGroupCard({
 
                 <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 @2xl:w-[460px] @2xl:shrink-0">
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sales</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Bill Amount</p>
                         <p className="mt-1 font-black text-foreground">{money(group.totalSales)}</p>
                     </div>
                     <div>
@@ -612,12 +671,12 @@ function CommercialGroupCard({
                         <p className="mt-1 font-black text-emerald-700">{money(group.totalPaid)}</p>
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Left</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Balance</p>
                         <p className="mt-1 font-black text-rose-700">{money(group.totalBalance)}</p>
                     </div>
                     <div className="flex items-start justify-between gap-2">
                         <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Gross Profit</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Booked Profit</p>
                             <p className={cn('mt-1 font-black', group.bookedGrossProfit >= 0 ? 'text-emerald-700' : 'text-rose-700')}>
                                 {group.bookedGrossProfit >= 0 ? '+' : ''}{money(group.bookedGrossProfit)}
                             </p>
@@ -969,6 +1028,188 @@ function PartiesOwingPanel({
     )
 }
 
+function CollectionFocusPanel({
+    receivables,
+    onRecordPayment,
+    onToggleHistory,
+    expandedHistoryId,
+    paymentHistoryCache,
+    loadingHistoryId,
+}: {
+    receivables: Receivable[]
+    onRecordPayment: (rec: Receivable) => void
+    onToggleHistory: (receivableId: string) => void
+    expandedHistoryId: string | null
+    paymentHistoryCache: Record<string, CommercialPayment[]>
+    loadingHistoryId: string | null
+}) {
+    const openReceivables = receivables
+        .filter((rec) => Number(rec.balance_amount ?? 0) > 0)
+        .sort(compareCollectionPriority)
+    const overdueTotal = openReceivables.reduce((sum, rec) => getDueBucket(rec) === 'overdue' ? sum + Number(rec.balance_amount ?? 0) : sum, 0)
+    const dueSoonTotal = openReceivables.reduce((sum, rec) => {
+        const bucket = getDueBucket(rec)
+        return bucket === 'due_today' || bucket === 'due_this_week' ? sum + Number(rec.balance_amount ?? 0) : sum
+    }, 0)
+    const laterTotal = openReceivables.reduce((sum, rec) => getDueBucket(rec) === 'upcoming' ? sum + Number(rec.balance_amount ?? 0) : sum, 0)
+    const visibleReceivables = openReceivables.slice(0, 6)
+
+    return (
+        <Card className="border-border/60 bg-white/95 shadow-sm">
+            <CardContent className="p-0">
+                <div className="border-b border-border/60 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            <div className="rounded-lg bg-rose-50 p-1.5 text-rose-700">
+                                <Clock3 className="h-4 w-4" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-black text-foreground">Collect First</p>
+                                <p className="text-xs text-muted-foreground">{openReceivables.length} open sale{openReceivables.length === 1 ? '' : 's'}</p>
+                            </div>
+                        </div>
+                        <p className="text-sm font-black text-rose-700">
+                            {money(openReceivables.reduce((sum, rec) => sum + Number(rec.balance_amount ?? 0), 0))}
+                        </p>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+                        <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
+                            <p className="font-bold uppercase tracking-wider text-rose-700">Overdue</p>
+                            <p className="mt-1 font-black text-rose-800">{money(overdueTotal)}</p>
+                        </div>
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                            <p className="font-bold uppercase tracking-wider text-amber-700">7 days</p>
+                            <p className="mt-1 font-black text-amber-800">{money(dueSoonTotal)}</p>
+                        </div>
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                            <p className="font-bold uppercase tracking-wider text-slate-600">Later</p>
+                            <p className="mt-1 font-black text-slate-800">{money(laterTotal)}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {visibleReceivables.length === 0 ? (
+                    <div className="p-6 text-center">
+                        <BadgeIndianRupee className="mx-auto mb-2 h-8 w-8 text-muted-foreground/70" />
+                        <p className="text-sm font-bold text-foreground">No open balances</p>
+                    </div>
+                ) : (
+                    <div className="divide-y divide-border/40">
+                        {visibleReceivables.map((rec) => {
+                            const status = getCollectionStatusMeta(rec)
+                            const paymentHistory = paymentHistoryCache[rec.id] ?? []
+                            const quantityLabel = getReceivableQuantityLabel(rec)
+
+                            return (
+                                <div key={rec.id} className="p-4">
+                                    <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-start">
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="truncate text-sm font-black text-foreground">{rec.party_name}</p>
+                                                <Badge variant="outline" className={cn('font-bold', status.className)}>
+                                                    {status.label}
+                                                </Badge>
+                                            </div>
+                                            <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                                                {[rec.quality_label, quantityLabel, `due ${formatDate(rec.due_date)}`].filter(Boolean).join(' · ')}
+                                            </p>
+                                            <p className="mt-0.5 truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                                {getCollectionSourceLabel(rec)}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                                            <p className="mr-1 text-lg font-black text-rose-700">{money(rec.balance_amount)}</p>
+                                            {rec.received_amount > 0 && (
+                                                <Button variant="outline" size="sm" className="h-8 min-h-8 gap-1 text-xs font-bold" onClick={() => onToggleHistory(rec.id)}>
+                                                    <History className="h-3 w-3" />
+                                                    History
+                                                </Button>
+                                            )}
+                                            <Button size="sm" className="h-8 min-h-8 gap-1 text-xs font-bold" onClick={() => onRecordPayment(rec)}>
+                                                Record
+                                                <ArrowRight className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {expandedHistoryId === rec.id && (
+                                        <div className="mt-3 border-t border-border/40 pt-3">
+                                            {loadingHistoryId === rec.id ? (
+                                                <p className="text-xs text-muted-foreground">Loading...</p>
+                                            ) : paymentHistory.length === 0 ? (
+                                                <p className="text-xs text-muted-foreground">No payments recorded yet.</p>
+                                            ) : (
+                                                <div className="grid gap-1.5">
+                                                    {paymentHistory.map((payment) => (
+                                                        <div key={payment.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs">
+                                                            <span className="font-semibold text-foreground">{formatDate(payment.payment_date)}</span>
+                                                            <span className="text-muted-foreground">{getPaymentModeLabel(payment.payment_mode)}</span>
+                                                            <span className="ml-auto font-black text-emerald-700">{money(payment.amount)}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
+
+function ProfitSnapshotPanel({ data }: { data: CommercialsData }) {
+    const margin = data.summary.realized_margin_pct
+    const snapshotItems = [
+        { label: 'Booked revenue', value: money(data.summary.realized_revenue), tone: 'text-foreground' },
+        { label: 'Fabric cost', value: money(data.summary.realized_cost), tone: 'text-foreground' },
+        {
+            label: 'Booked profit',
+            value: `${data.summary.realized_profit >= 0 ? '+' : ''}${money(data.summary.realized_profit)}`,
+            tone: data.summary.realized_profit >= 0 ? 'text-emerald-700' : 'text-rose-700',
+        },
+        { label: 'Margin', value: margin == null ? '—' : `${margin.toFixed(1)}%`, tone: margin == null || margin >= 0 ? 'text-emerald-700' : 'text-rose-700' },
+    ]
+
+    return (
+        <Card className="border-border/60 bg-white/95 shadow-sm">
+            <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                    <div className="rounded-lg bg-emerald-50 p-1.5 text-emerald-700">
+                        <ReceiptText className="h-4 w-4" />
+                    </div>
+                    <p className="text-sm font-black text-foreground">Profit Snapshot</p>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                    {snapshotItems.map((item) => (
+                        <div key={item.label} className="rounded-lg border border-border/60 bg-stone-50/50 px-3 py-2">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{item.label}</p>
+                            <p className={cn('mt-1 text-base font-black tabular-nums', item.tone)}>{item.value}</p>
+                        </div>
+                    ))}
+                </div>
+
+                {(data.summary.expected_revenue > 0 || data.summary.expected_profit !== 0) && (
+                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                        <div className="flex items-center justify-between gap-3 text-xs">
+                            <span className="font-bold uppercase tracking-wider text-amber-800">Expected orders</span>
+                            <span className={cn('font-black', data.summary.expected_profit >= 0 ? 'text-amber-900' : 'text-rose-700')}>
+                                {data.summary.expected_profit >= 0 ? '+' : ''}{money(data.summary.expected_profit)}
+                            </span>
+                        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    )
+}
+
 export default function CommercialsClient({ initialData, initialReceivables, collectedThisMonth }: CommercialsClientProps) {
     const router = useRouter()
     const [query, setQuery] = useState('')
@@ -978,7 +1219,7 @@ export default function CommercialsClient({ initialData, initialReceivables, col
     const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null)
     const [expandedPartyName, setExpandedPartyName] = useState<string | null>(null)
 
-    const [dueTab, setDueTab] = useState<'all' | 'overdue' | 'due_today' | 'due_this_week' | 'upcoming' | 'paid'>('all')
+    const [dueTab, setDueTab] = useState<'all' | DueBucket>('all')
     const [receivableSearch, setReceivableSearch] = useState('')
 
     // Payment Dialog State
@@ -1092,22 +1333,26 @@ export default function CommercialsClient({ initialData, initialReceivables, col
 
     const sourceFilters: Array<{ key: SourceFilter; label: string }> = [
         { key: 'all', label: 'All' },
-        { key: 'order_invoice', label: 'Order Invoices' },
-        { key: 'stock_sale', label: 'All Stock Sales' },
-        { key: 'stock_sale_market_run', label: 'Market-Run Stock' },
-        { key: 'stock_sale_order', label: 'Order Stock' },
+        { key: 'stock_sale', label: 'Stock Sales' },
+        { key: 'stock_sale_market_run', label: 'From Market Runs' },
+        { key: 'stock_sale_order', label: 'From Orders' },
         { key: 'stock_sale_manual', label: 'Manual Stock' },
-        { key: 'market_run_sale', label: 'Direct Market Sales' },
+        { key: 'order_invoice', label: 'Billed Orders' },
         { key: 'order_quote', label: 'Expected Orders' },
+        { key: 'market_run_sale', label: 'Direct Market Sales' },
     ]
 
     const commercialGroups = useMemo(() => {
         return buildCommercialGroups(initialReceivables, initialData.entries)
     }, [initialData.entries, initialReceivables])
 
+    const collectionGroups = useMemo(() => {
+        return commercialGroups.filter((group) => group.receivables.length > 0)
+    }, [commercialGroups])
+
     const filteredGroups = useMemo(() => {
         const needle = receivableSearch.trim().toLowerCase()
-        return commercialGroups.filter((group) => {
+        return collectionGroups.filter((group) => {
             const matchesBucket = dueTab === 'all' || group.receivables.some((rec) => getDueBucket(rec) === dueTab)
             const haystack = [
                 group.title,
@@ -1117,7 +1362,7 @@ export default function CommercialsClient({ initialData, initialReceivables, col
             ].join(' ').toLowerCase()
             return matchesBucket && (!needle || haystack.includes(needle))
         })
-    }, [commercialGroups, dueTab, receivableSearch])
+    }, [collectionGroups, dueTab, receivableSearch])
 
     const partySummaries = useMemo(() => {
         return buildPartyReceivableSummaries(initialReceivables)
@@ -1164,15 +1409,15 @@ export default function CommercialsClient({ initialData, initialReceivables, col
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground">Commercials</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">Profit tracking, receivables, and payment collection.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Party dues, collection priority, and booked profit.</p>
                 </div>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="mb-4">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="receivables">Runs / Orders ({commercialGroups.length})</TabsTrigger>
-                    <TabsTrigger value="profit_entries">Ledger Lines ({initialData.entries.length})</TabsTrigger>
+                    <TabsTrigger value="overview">Collect</TabsTrigger>
+                    <TabsTrigger value="receivables">Sales ({collectionGroups.length})</TabsTrigger>
+                    <TabsTrigger value="profit_entries">Profit Ledger ({initialData.entries.length})</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
@@ -1214,25 +1459,30 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                         />
                     </div>
 
-                    <Card className="border-border/60 bg-white/80">
-                        <CardContent className="grid gap-4 p-5 md:grid-cols-[1.1fr_1fr] md:items-center">
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <BookOpenCheck className="h-5 w-5 text-emerald-700" />
-                                    <p className="text-sm font-black text-foreground">One money ledger</p>
-                                </div>
-                                <p className="text-sm leading-relaxed text-muted-foreground">
-                                    Market Runs and Stock stay about fabric movement. Commercials is the only screen for booked gross profit, receivables, collections, credit dates, and payment history.
-                                </p>
-                            </div>
-                            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                                <p className="font-bold">Surat trade pattern baked into the view</p>
-                                <p className="mt-1 text-xs leading-relaxed">
-                                    Use 30 days as the default credit promise, but keep terms configurable per sale. Late-interest is shown as an estimate at 18% yearly after the due date, so the owner can decide whether to charge it.
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <div className="grid gap-4 xl:grid-cols-[420px_minmax(0,1fr)]">
+                        <PartiesOwingPanel
+                            parties={partySummaries}
+                            expandedPartyName={expandedPartyName}
+                            onToggleParty={(partyName) => setExpandedPartyName(expandedPartyName === partyName ? null : partyName)}
+                            onRecordPayment={openPaymentDialog}
+                            onToggleHistory={togglePaymentHistory}
+                            expandedHistoryId={expandedHistoryId}
+                            paymentHistoryCache={paymentHistoryCache}
+                            loadingHistoryId={loadingHistoryId}
+                        />
+
+                        <div className="space-y-4">
+                            <CollectionFocusPanel
+                                receivables={initialReceivables}
+                                onRecordPayment={openPaymentDialog}
+                                onToggleHistory={togglePaymentHistory}
+                                expandedHistoryId={expandedHistoryId}
+                                paymentHistoryCache={paymentHistoryCache}
+                                loadingHistoryId={loadingHistoryId}
+                            />
+                            <ProfitSnapshotPanel data={initialData} />
+                        </div>
+                    </div>
                 </TabsContent>
 
                 <TabsContent value="receivables" className="space-y-6">
@@ -1242,13 +1492,21 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                             <Input
                                 value={receivableSearch}
                                 onChange={(e) => setReceivableSearch(e.target.value)}
-                                placeholder="Search party, quality..."
+                                placeholder="Search party, quality, sale..."
                                 className="pl-10"
                             />
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {(['all', 'overdue', 'due_today', 'due_this_week', 'upcoming', 'paid'] as const).map((tab) => {
-                                const label = tab === 'all' ? 'All' : tab.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                                const label = tab === 'all'
+                                    ? 'All Sales'
+                                    : tab === 'due_today'
+                                        ? 'Today'
+                                        : tab === 'due_this_week'
+                                            ? 'This Week'
+                                            : tab === 'upcoming'
+                                                ? 'Later'
+                                                : tab.charAt(0).toUpperCase() + tab.slice(1)
                                 const count = initialReceivables.filter(r => tab === 'all' || getDueBucket(r) === tab).length
                                 return (
                                     <Button

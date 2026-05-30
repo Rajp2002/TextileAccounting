@@ -1,21 +1,28 @@
 # Weavly Testing Guide
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 ## Current Automated Coverage
 
-The repo currently has a maintained finance math test suite at:
+The repo currently has Vitest-style coverage across finance and several Phase 1 regressions, including:
 
 - `__tests__/finance.test.ts`
+- estimator, market runs, stock lifecycle/source validation
+- party-first stock sale and dispatch
+- Commercials read model and payments
+- payroll cycle, guards, manual adjustments, reversals, and pay-date config
+- production log strictness/forgiveness
+- auth/login and billing gates
+- WhatsApp consent
 
-There are also ad hoc scripts in `scripts/` and several test/probe files, but Phase 1 should not assume comprehensive automated workflow coverage.
+There are also ad hoc scripts in `scripts/` and several test/probe files. Phase 1 still should not assume comprehensive automated end-to-end workflow coverage.
 
 ## Commands
 
 - `npm run lint`
 - `npm run build`
 
-There is no dedicated `test` script in `package.json` at the time of this pass. If adding tests, also add a stable package script.
+There is no dedicated `test` script in `package.json` at the time of this pass. Existing tests can be run with `npx vitest run <file>` or a broader Vitest command. If adding tests, also add a stable package script.
 
 ## Phase 1 Test Priorities
 
@@ -82,8 +89,12 @@ Scenarios:
 - adjust stock up
 - adjust stock down
 - prevent invalid negative stock
-- record stock sale
-- record actual dispatched meters and stock difference on shortage/excess
+- create party-first stock sale with named party and credit days
+- verify receivable creation and due-date behavior
+- dispatch pending sold meters fully
+- dispatch pending sold meters partially
+- keep partial sales pending after one batch is received
+- record receipt shortage/excess as a stock discrepancy
 - verify revenue/cost/gross profit
 - verify Commercials filtering and summary totals
 
@@ -91,13 +102,16 @@ Scenarios:
 
 Scenarios:
 
-- create dispatch from order
+- create order-linked dispatch from sold stock
+- create orderless stock-sale dispatch from pending sale
+- create partial dispatch batch with selected meters/takas/date
 - include transport/GST/e-way metadata
 - public tracking token loads without login
 - owner confirms exact received meters
 - owner confirms shortage
 - owner confirms extra received with confirmation
 - status transitions to delivered/disputed
+- stock-sale status transitions across not_dispatched, partially_dispatched, dispatched, and received
 
 ### 6. Payroll and Advances
 
@@ -110,6 +124,8 @@ Scenarios:
 - final settlement deduction behavior
 - PF/ESI deductions
 - payment mode persistence
+- pay-date/reminder gating for normal settlements
+- owner verification before settlement
 - settle and unsettle
 - paid/pending status
 - payslip PDF generation
@@ -150,7 +166,7 @@ Verify:
 Minimum release smoke:
 
 1. Owner signup.
-2. Onboarding complete with machines/workers/payroll.
+2. Onboarding complete with production mode, machines/workers/payroll timing, and plan/trial.
 3. Estimator creates quote.
 4. Quote accepted and converted to order.
 5. Supervisor logs production.
@@ -158,10 +174,11 @@ Minimum release smoke:
 7. Payroll previews worker earnings.
 8. Advance is recorded and deducted.
 9. Market-run production creates expected stock, or optional/order-based inward flow still works.
-10. Stock sale appears in Commercials.
-11. Dispatch is created and tracking link opens.
-12. Billing page shows plan/trial state.
+10. Party-first stock sale appears in Commercials as a receivable.
+11. Pending stock sale is dispatched and receipt is confirmed.
+12. Order-linked tracking link opens where applicable.
+13. Billing page shows plan/trial state.
 
 ## Release Confidence Gap
 
-Before declaring Phase 1 production-ready, add automated tests around estimator math, production logging guards, payroll settlement, stock sale math, and dispatch receipt variance. These are the areas with the highest trust impact.
+Before declaring Phase 1 production-ready, keep automated tests strong around estimator math, production logging guards, payroll pay-window/settlement behavior, party-first stock sale math, partial dispatch, and receipt variance. These are the areas with the highest trust impact.

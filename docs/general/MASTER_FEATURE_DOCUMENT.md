@@ -1,27 +1,28 @@
 # Weavly Master Feature Document
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 This document unifies the feature docs under `docs/features/`. It is organized around the user workflow rather than the file tree, because Weavly's value comes from how each feature hands off to the next.
 
 ## Unified Feature Loop
 
-1. Owner sets up the factory, plan, machines, workers, payroll baseline, cost profile, join codes, WhatsApp, and access-code controls.
+1. Owner sets up the factory, production mode, plan/trial, loom types/machines, workers, payroll cycle/pay date/reminder window, cost profile, join codes, WhatsApp, and access-code controls.
 2. Owner accesses Factory Today for daily attention signals.
 3. Owner estimates fabric cost and saves templates/quotes.
 4. Owner converts accepted quotes to orders (or uses Start Party Order fast path) or starts market runs for speculative stock production.
-5. Supervisor assigns workers and work to machines and logs shift production from meter readings.
-6. Production feeds Factory Today, analytics, and expected godown stock.
-7. Stock is reconciled at sale/dispatch through guided workflows (Sell & Dispatch), with differences sent to owner review.
-8. Commercials tracks revenue, profit, receivables, and payments.
-9. Owner settles payroll, recovers advances, records payment mode, and sends payslips/receipts over WhatsApp.
-10. Billing, referrals, settings, access codes, audit, and compliance support the operating loop.
+5. Supervisor assigns workers and work to machines and logs shift production metres.
+6. Production feeds Factory Today, analytics, payroll, and expected godown stock.
+7. Stock is sold party-first, creating a named sale and Commercials receivable.
+8. Pending stock sales are dispatched in one or more batches, with receipt variance sent to owner review.
+9. Commercials tracks revenue, profit, receivables, payments, and dispatch status context.
+10. Owner settles payroll, recovers advances, records payment mode, and sends payslips/receipts over WhatsApp.
+11. Billing, referrals, settings, access codes, audit, and compliance support the operating loop.
 
 ## Cross-Feature Dependencies
 
 | Feature | Depends On | Feeds Into |
 | --- | --- | --- |
-| Onboarding and Settings | Auth, organizations, subscription, machines, workers | Estimator, production log, payroll, supervisor access |
+| Onboarding and Settings | Auth, organizations, production mode, subscription, machines, workers | Estimator, production log, payroll, supervisor access, navigation |
 | Factory Today | Production logs, stock, dispatches, commercials, payroll | Owner daily decisions |
 | Estimator | Factory cost profile, fixed workers, loom assumptions | Templates, quotes, orders, market runs |
 | Quotes | Estimator snapshots | Orders, re-estimation, expected commercials |
@@ -29,10 +30,10 @@ This document unifies the feature docs under `docs/features/`. It is organized a
 | Market Runs | Estimator snapshots | Supervisor log, expected stock, stock sales, commercials |
 | Supervisor Production Log | Machines, workers, orders/runs | Production logs, analytics, payroll, expected stock, Factory Today |
 | Analytics | Production logs, orders, machines | Owner decisions, order/run monitoring |
-| Stock | Production output, market runs, orders | Dispatch, stock differences, stock sales, commercials (expected ledger focus) |
-| Dispatches | Orders, packages/stock, parties, Sell & Dispatch | Tracking portal, receipt/shortage reconciliation |
-| Commercials | Quotes, invoices, stock sales, market-run sales, payments | Owner profit visibility, receivables, payment tracking |
-| Payroll | Production logs, attendance, worker rates, advances | Settlements, payslips, debt recovery |
+| Stock | Production output, market runs, orders | Party-first stock sales, pending dispatch, stock differences, commercials |
+| Dispatches | Stock sales, orders, packages/stock, parties | Tracking portal, pending/partial dispatch, receipt/shortage reconciliation |
+| Commercials | Quotes, invoices, stock sales, market-run sales, receivables, payment receipts | Owner profit visibility, collection state, payment history |
+| Payroll | Production logs, attendance, worker rates, advances, payroll config | Pay-window-gated settlements, payslips, debt recovery |
 | Advances | Workers, settlements | Payroll deductions, WhatsApp receipts |
 | WhatsApp | Worker/profile numbers, templates, edge functions | Operational communication logs |
 | Billing and Referrals | Organizations, Razorpay, referral tables | Subscription access and growth |
@@ -42,17 +43,18 @@ This document unifies the feature docs under `docs/features/`. It is organized a
 
 ### What It Is
 
-The setup layer that makes every operational workflow possible. Owners create the organization, establish a subscription/trial, add machines and workers, set payroll configuration, configure cost assumptions, generate join codes, and control protected actions with one-time access codes.
+The setup layer that makes every operational workflow possible. Owners create the organization, choose a production mode, establish a subscription/trial, add loom types/machines and workers, set payroll cycle/pay-date configuration, configure cost assumptions, generate join codes, and control protected actions with one-time access codes.
 
 ### User Workflow
 
 1. Owner signs up.
 2. Middleware routes incomplete owners to `/onboarding`.
-3. Owner adds machines, workers, and payroll config.
-4. Owner starts a trial or subscription where required.
-5. Owner lands on `/owner/analytics`.
-6. Owner manages ongoing factory settings in `/owner/settings`.
-7. Supervisors join through `/join` using the current join code and land on the production log workspace.
+3. Owner chooses production mode: `market_run`, `order_based`, or `both`.
+4. Owner adds loom types/machines, workers, and payroll config.
+5. Owner starts a trial or subscription where required.
+6. Owner lands on `/owner/today`.
+7. Owner manages ongoing factory settings in `/owner/settings`.
+8. Supervisors join through `/join` using the current join code and land on the production log workspace.
 
 ### Pain Points Solved
 
@@ -147,7 +149,7 @@ Orders are party-backed production commitments. Market runs are costed speculati
 
 ### What It Is
 
-The supervisor's primary shift workspace for assignments, machine status, and meter-based production logging.
+The supervisor's primary shift workspace for assignments, machine status, downtime reasons, and shift-metre production logging.
 
 ### User Workflow
 
@@ -156,7 +158,7 @@ The supervisor's primary shift workspace for assignments, machine status, and me
 3. Supervisor copies previous shift setup if useful.
 4. Supervisor assigns worker and order/run to each machine.
 5. Supervisor updates running/idle/maintenance status and breakdown details.
-6. Supervisor enters closing readings.
+6. Supervisor enters produced metres for the shift. The current UI stores these as production metres; it does not capture true loom opening/closing counter readings.
 7. Supervisor submits shift logs.
 8. If a protected correction is needed, supervisor requests or enters an owner access code.
 
@@ -170,7 +172,7 @@ The supervisor's primary shift workspace for assignments, machine status, and me
 
 - Production register becomes a mobile shift grid.
 - Machine condition notes become status and breakdown records.
-- Meter readings become production logs with rate snapshots.
+- Shift metres become production logs with rate snapshots.
 
 ### Data and Code
 
@@ -195,8 +197,8 @@ The bridge between logged meters and physical goods. The codebase has both packa
 2. Market-run output becomes expected godown stock from production records.
 3. Optional/order-based inward draft suggestions can still become taka lots.
 4. Owner records godown, unit count, meters per unit, cost per meter, and source.
-5. Owner checks actual stock at sale/dispatch and reviews shortage/excess discrepancies.
-6. Owner records stock sale (which feeds Commercials receivables).
+5. Owner sells stock to a named party, creating a stock sale and Commercials receivable.
+6. Owner dispatches pending sold meters later and reviews shortage/excess discrepancies from receipt confirmation.
 
 ### Pain Points Solved
 
@@ -208,7 +210,7 @@ The bridge between logged meters and physical goods. The codebase has both packa
 
 - Taka lists become stock lots.
 - Physical corrections become stock movements.
-- Godown sale notes become stock sale records (profit moved to Commercials).
+- Godown sale notes become named stock sale records and receivables (profit and payment state live in Commercials).
 
 ### Data and Code
 
@@ -224,16 +226,17 @@ The bridge between logged meters and physical goods. The codebase has both packa
 
 ### What It Is
 
-The professional handoff layer for order output. Dispatches group sent meters and transport metadata and expose tracking to parties.
+The professional handoff layer for sold stock and order output. Dispatches group sent meters and transport metadata and expose tracking/receipt workflows.
 
 ### User Workflow
 
-1. Owner opens `/owner/dispatches` or the dispatch section inside an order.
-2. Owner selects an order and available output.
-3. Owner creates a dispatch with quantities and transport/GST/e-way details.
-4. Owner shares tracking token/link.
-5. Party or owner records received meters.
-6. Shortage or extra received meters are visible for reconciliation.
+1. Owner opens `/owner/dispatches`.
+2. Owner uses Sell Stock to select source stock, enter party details, sold meters, rate, credit days, and notes.
+3. System creates a stock sale, stock movement, and named Commercials receivable.
+4. Pending dispatch meters appear in the Pending Dispatches tab.
+5. Owner confirms dispatch for all or part of the pending quantity with dispatch date, meters/takas, challan, vehicle, and transporter details.
+6. Party or owner records received meters.
+7. Shortage or extra received meters are visible for reconciliation.
 
 ### Pain Points Solved
 
@@ -255,19 +258,21 @@ The professional handoff layer for order output. Dispatches group sent meters an
 - `dispatches`
 - `dispatch_package_lines`
 - `party_dispatch_claims`
+- `commercial_receivables`
 
 ## 7. Commercials and Ledger
 
 ### What It Is
 
-Phase 1 keeps the active `/owner/commercials` route as the source of truth for revenue, profit, receivables, and payments. The deeper `/owner/ledger` route exists but is archived for Phase 1.
+Phase 1 keeps the active `/owner/commercials` route as the source of truth for revenue, gross profit, receivables, dispatch status context, and payments. The deeper `/owner/ledger` route exists but is archived for Phase 1.
 
 ### User Workflow
 
 1. Owner opens `/owner/commercials`.
-2. Owner reviews realized revenue/profit, expected profit, receivables, and payments.
-3. Owner filters by source: orders, stock, market runs, expected quotes.
-4. Owner searches quality/reference/source and reviews revenue, cost, profit, margin, and payment status.
+2. Owner reviews realized revenue/profit, expected profit, receivables, collected amount, balances, and payment status.
+3. Owner filters by source: orders, stock, market runs, expected quotes, and payment state.
+4. Owner searches quality/reference/source and reviews revenue, cost, profit, margin, dispatch status, and payment history.
+5. Owner records payments against a receivable.
 
 ### Pain Points Solved
 
@@ -285,23 +290,26 @@ Phase 1 keeps the active `/owner/commercials` route as the source of truth for r
 - `/owner/commercials`
 - `/owner/ledger` archived
 - `app/(dashboard)/owner/commercials/actions.ts`
-- `party_*` and supplier tables are deferred
+- `commercial_receivables`
+- `commercial_payment_receipts`
+- `party_*` and supplier ledger depth are deferred
 
 ## 8. Payroll and Settlements
 
 ### What It Is
 
-The worker money layer. It converts production logs and attendance into pay, applies advances and deductions, records settlements, and sends payslips.
+The worker money layer. It converts production logs and attendance into pay, applies advances and deductions, records settlements, and sends payslips. Payroll cycles are configurable by cycle start day, pay date day, and reminder window.
 
 ### User Workflow
 
 1. Owner opens `/owner/payroll`.
-2. Owner chooses a month.
-3. Owner reviews meter workers and fixed workers.
-4. Owner expands worker details for machine/order breakdown, gross pay, advances, deductions, and net.
-5. Owner toggles final settlement where applicable.
-6. Owner records payment mode and settles.
-7. Owner generates PDF or sends WhatsApp payslip.
+2. Owner chooses a payroll cycle month.
+3. Owner reviews whether the cycle is in progress, scheduled, approaching, due today, or overdue.
+4. Owner reviews meter workers and fixed workers.
+5. Owner expands worker details for machine/order breakdown, gross pay, advances, deductions, manual adjustments, and net.
+6. Owner toggles final settlement where applicable.
+7. Owner records payment mode and settles after owner verification.
+8. Owner generates PDF or sends WhatsApp payslip.
 
 ### Pain Points Solved
 
@@ -320,9 +328,10 @@ The worker money layer. It converts production logs and attendance into pay, app
 - `/owner/payroll`
 - `lib/finance.ts`
 - `lib/generate-payslip.ts`
+- `lib/payroll-cycle.ts`
 - `payroll_settlements`
 - `payroll_adjustments`
-- `payroll_payments`
+- `payroll_configs`
 
 ## 9. Advances Management
 

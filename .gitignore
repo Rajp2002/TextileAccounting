@@ -45,3 +45,5 @@ next-env.d.ts
 # dev scripts
 scripts/sql/
 supabase/.temp/
+scratch/
+

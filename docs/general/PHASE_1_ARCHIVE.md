@@ -1,6 +1,6 @@
 # Phase 1 Feature Archive
 
-Last analyzed from the active codebase on May 6, 2026.
+Last reviewed against the active documentation pass on May 31, 2026.
 
 The repository contains modules that are valuable for a future fuller ERP-style release, but they are not part of the Phase 1 polish path. Archiving here means "do not make this a launch blocker," not "delete the code."
 

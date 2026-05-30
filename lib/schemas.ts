@@ -278,6 +278,8 @@ export const ToggleWorkerPaidSchema = z.object({
 
 export const PayrollConfigSchema = z.object({
     cycleStartDay: z.number().int().min(1).max(28, 'Day must be between 1 and 28'),
+    payDateDay: z.number().int().min(1).max(28, 'Pay date must be between 1 and 28').default(10),
+    payReminderDays: z.number().int().min(0).max(14, 'Reminder window must be between 0 and 14 days').default(3),
 })
 
 // ─── Attendance Schemas ───────────────────────────────────────────────────────

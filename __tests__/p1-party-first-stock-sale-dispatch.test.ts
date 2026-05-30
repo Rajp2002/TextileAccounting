@@ -33,7 +33,6 @@ describe('P1 party-first stock sale dispatch refinement', () => {
     })
 
     it('snapshots cost, gross profit inputs, credit terms, and named receivables', () => {
-        const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
         const migration = readProjectFile('supabase/migrations/20260517103000_harden_party_stock_sale_dispatch_rpc.sql')
         const receivables = readProjectFile('lib/commercials/receivables.ts')
         expect(migration).toContain('v_lot.cost_per_meter')
@@ -161,5 +160,24 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(modal).toContain('const [customTakas, setCustomTakas]')
         expect(modal).toContain('dispatchMetersObj')
         expect(modal).toContain('dispatchTakasObj')
+    })
+
+    it('groups multiple batches for the same party stock sale and shows sale progress', () => {
+        const action = readProjectFile('app/(dashboard)/owner/orders/actions.ts')
+        const dispatchesClient = readProjectFile('app/(dashboard)/owner/dispatches/DispatchesClient.tsx')
+        const receiptMigration = readProjectFile('supabase/migrations/20260531020000_keep_partial_stock_sale_receipt_pending.sql')
+
+        expect(action).toContain('stock_sale_id')
+        expect(action).toContain('stock_sale:fabric_stock_sales')
+        expect(action).toContain('id: stockSale?.id ?? row.stock_sale_id ?? row.id')
+        expect(action).toContain('total_target_meters: stockSale?.meters_sold ?? row.qty_meters_sent')
+
+        expect(dispatchesClient).toContain('const groupId = d.stock_sale?.id ?? d.stock_sale_id ?? d.orders.id')
+        expect(dispatchesClient).toContain('remainingToDispatch')
+        expect(dispatchesClient).toContain('Confirmed')
+        expect(dispatchesClient).toContain('Remaining')
+
+        expect(receiptMigration).toContain("WHEN pending_dispatch_meters > 0.01 THEN 'partially_dispatched'")
+        expect(receiptMigration).toContain("AND d.stock_sale_id = v_sale.id")
     })
 })

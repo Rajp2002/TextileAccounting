@@ -18,6 +18,12 @@ describe('P1 payroll config onboarding save', () => {
         expect(payrollActions).toContain("onConflict: 'org_id'")
     })
 
+    it('saves pay date and reminder settings with the cycle config', () => {
+        expect(payrollActions).toContain('pay_date_day: parsed.data.payDateDay')
+        expect(payrollActions).toContain('pay_reminder_days: parsed.data.payReminderDays')
+        expect(onboardingChecklist).toContain('savePayrollConfig(cycleStartDay, payDateDay, payReminderDays)')
+    })
+
     it('keeps auditability for org_id-keyed payroll_configs', () => {
         expect(auditMigration).toContain("COALESCE(to_jsonb(NEW)->>'id', to_jsonb(NEW)->>'org_id')")
         expect(auditMigration).toContain("COALESCE(to_jsonb(OLD)->>'id', to_jsonb(OLD)->>'org_id')")

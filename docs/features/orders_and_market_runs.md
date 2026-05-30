@@ -1,10 +1,10 @@
 # Orders and Market Runs
 
-Last analyzed from the active codebase on May 6, 2026.
+Last analyzed from the active codebase on May 31, 2026.
 
 ## Phase 1 Status
 
-Core Phase 1 pillar. Orders and market runs connect commercial intent to loom execution.
+Core Phase 1 pillar. Orders and market runs connect commercial intent to loom execution. Production mode controls which workflow is visible: `market_run`, `order_based`, or `both`.
 
 ## What It Does
 
@@ -21,7 +21,7 @@ Orders represent committed party-backed production. Market runs represent specul
 7. Owner assigns machines.
 8. Supervisor logs production against that order.
 9. Owner monitors progress and pace.
-10. Owner creates dispatches from the order when output is ready.
+10. Owner sells/dispatches order output from sold stock entries when output is ready.
 11. Owner marks the order complete or cancelled where appropriate.
 
 ## User Workflow: Market Run
@@ -31,7 +31,8 @@ Orders represent committed party-backed production. Market runs represent specul
 3. Supervisor logs production against the run/order anchor.
 4. Production creates expected godown stock from the production ledger.
 5. Owner reviews produced meters, expected in-godown meters, sold meters, revenue, cost, profit, and status.
-6. Owner sells/dispatches market-run stock and reviews any dispatch stock difference.
+6. Owner sells market-run stock to a named party, creating a receivable.
+7. Owner dispatches pending sold meters in one or more batches and reviews any receipt variance.
 
 ## Existing Workflow Translation
 
@@ -86,7 +87,8 @@ Weavly workflow:
 - Owner analytics summarizes order health.
 - Market-run production contributes to expected stock without requiring daily Stock Inward confirmation.
 - Order-based/direct workflows may still use inward drafts where needed.
-- Dispatches and public tracking attach to orders.
+- Order-linked dispatches and public tracking attach to orders.
+- Market-run stock can be sold and dispatched without creating a fake party order.
 - Commercials aggregates expected and realized profit.
 
 ## Readiness Notes

@@ -495,15 +495,17 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
 // ─── Payroll Cycle Form ────────────────────────────────────────────────────────
 
 function PayrollCycleForm({ onDone }: { onDone: () => void }) {
-    const [day, setDay] = useState<number | null>(null)
+    const [cycleStartDay, setCycleStartDay] = useState<number | null>(null)
+    const [payDateDay, setPayDateDay] = useState(10)
+    const [payReminderDays, setPayReminderDays] = useState(3)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
     const handleSave = async () => {
-        if (!day) { toast.error('Please select a start day'); return }
+        if (!cycleStartDay) { toast.error('Please select a start day'); return }
         setError(null)
         setSaving(true)
-        const res = await savePayrollConfig(day)
+        const res = await savePayrollConfig(cycleStartDay, payDateDay, payReminderDays)
         setSaving(false)
         if (res?.error) {
             setError(res.error)
@@ -521,8 +523,8 @@ function PayrollCycleForm({ onDone }: { onDone: () => void }) {
                 <div className="space-y-1">
                     <p className="text-sm font-semibold text-violet-900">Why does this matter?</p>
                     <p className="text-xs text-violet-700 leading-relaxed">
-                        This defines your monthly payroll period. For example, if you pick <span className="font-bold">15th</span>, 
-                        your payroll for March will run from <span className="font-bold italic">15th Feb to 14th March</span>.
+                        This defines your payroll period and pay day. If your cycle starts on the <span className="font-bold">1st</span> and pay day is the <span className="font-bold">10th</span>,
+                        January work is paid on <span className="font-bold italic">10th February</span>.
                     </p>
                 </div>
             </div>
@@ -534,10 +536,10 @@ function PayrollCycleForm({ onDone }: { onDone: () => void }) {
                         <button
                             key={d}
                             type="button"
-                            onClick={() => setDay(d)}
+                            onClick={() => setCycleStartDay(d)}
                             className={cn(
                                 "h-10 rounded-lg text-sm font-bold transition-all border",
-                                day === d 
+                                cycleStartDay === d
                                     ? "bg-violet-600 border-violet-600 text-white shadow-md shadow-violet-100 scale-105" 
                                     : "bg-white border-gray-200 text-gray-600 hover:border-violet-300 hover:bg-violet-50/50"
                             )}
@@ -548,30 +550,83 @@ function PayrollCycleForm({ onDone }: { onDone: () => void }) {
                 </div>
             </div>
 
+            <div className="space-y-3">
+                <Label className="text-xs text-gray-400 font-black uppercase tracking-widest">Select Pay Date Day</Label>
+                <div className="grid grid-cols-7 gap-2">
+                    {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
+                        <button
+                            key={d}
+                            type="button"
+                            onClick={() => setPayDateDay(d)}
+                            className={cn(
+                                "h-10 rounded-lg text-sm font-bold transition-all border",
+                                payDateDay === d
+                                    ? "bg-amber-600 border-amber-600 text-white shadow-md shadow-amber-100 scale-105"
+                                    : "bg-white border-gray-200 text-gray-600 hover:border-amber-300 hover:bg-amber-50/50"
+                            )}
+                        >
+                            {d}
+                        </button>
+                    ))}
+                </div>
+                <p className="text-xs leading-relaxed text-gray-500">
+                    Weavly uses the first selected pay date after the cycle closes, so month-end cycles can pay on the 10th of the following month.
+                </p>
+            </div>
+
+            <div className="space-y-3">
+                <Label className="text-xs text-gray-400 font-black uppercase tracking-widest">Reminder Window</Label>
+                <div className="grid grid-cols-4 gap-2">
+                    {[0, 3, 5, 7].map((days) => (
+                        <button
+                            key={days}
+                            type="button"
+                            onClick={() => setPayReminderDays(days)}
+                            className={cn(
+                                "h-10 rounded-lg border text-xs font-bold transition-all",
+                                payReminderDays === days
+                                    ? "border-slate-800 bg-slate-800 text-white"
+                                    : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                            )}
+                        >
+                            {days === 0 ? 'Due day' : `${days} days`}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             <div className="flex flex-col gap-3">
                 <p className="text-[10px] text-gray-400 font-medium uppercase tracking-tight text-center">Common Settings</p>
                 <div className="flex gap-2">
                     <button
                         type="button"
-                        onClick={() => setDay(15)}
+                        onClick={() => {
+                            setCycleStartDay(15)
+                            setPayDateDay(10)
+                            setPayReminderDays(3)
+                        }}
                         className="flex-1 py-2.5 rounded-xl border border-dashed border-violet-300 bg-violet-50/30 text-violet-700 text-xs font-bold hover:bg-violet-50 transition-colors flex items-center justify-center gap-2"
                     >
                         <Sparkles className="h-3.5 w-3.5" />
-                        Surat Style (15th)
+                        Surat Style
                     </button>
                     <button
                         type="button"
-                        onClick={() => setDay(1)}
+                        onClick={() => {
+                            setCycleStartDay(1)
+                            setPayDateDay(10)
+                            setPayReminderDays(3)
+                        }}
                         className="flex-1 py-2.5 rounded-xl border border-dashed border-gray-300 bg-gray-50/30 text-gray-700 text-xs font-bold hover:bg-gray-50 transition-colors"
                     >
-                        Standard (1st)
+                        Month-end + 10th
                     </button>
                 </div>
             </div>
 
             <Button 
                 onClick={handleSave} 
-                disabled={saving || !day}
+                disabled={saving || !cycleStartDay}
                 className="w-full bg-violet-600 hover:bg-violet-700 text-white h-12 font-black uppercase tracking-widest shadow-lg shadow-violet-100"
             >
                 {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : error ? 'Retry Payroll Config' : 'Save Payroll Config'}
@@ -723,7 +778,7 @@ const STEPS = [
         key: 'hasPayrollConfig' as keyof OnboardingStatus,
         icon: Calendar,
         title: 'Set your pay cycle',
-        description: 'Define the monthly start day for payroll calculations (Standard or Surat-style).',
+        description: 'Define the monthly payroll period, pay date, and reminder timing.',
         accentColor: 'violet',
         form: PayrollCycleForm,
     },

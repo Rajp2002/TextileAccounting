@@ -1,6 +1,6 @@
 # Advances Management
 
-Last analyzed from the active codebase on May 6, 2026.
+Last reviewed against the active documentation pass on May 31, 2026.
 
 ## Phase 1 Status
 

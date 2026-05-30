@@ -1,6 +1,6 @@
 # Gray Fabric Customer Workflow Analysis
 
-Date: May 17, 2026
+Date: May 31, 2026
 
 Target customer stance: owner/operator of a Surat-style grey fabric weaving unit or trader-manufacturer who produces market maal, sells through traders/brokers, dispatches takas/rolls, manages worker hisaab, and tracks money mostly through memory, registers, Excel, WhatsApp, and phone calls.
 
@@ -55,9 +55,9 @@ The active stock screen labels market-run stock as "Godown Ledger" and explicitl
 
 Factory Today puts production, loom assignment, work at risk, sold-not-dispatched, pending receipts, payroll, and quick actions into one owner view. That matches the daily operating questions better than a generic BI dashboard.
 
-### 4. Sell & Dispatch is the right workflow shape
+### 4. Party-first Sell Stock plus Dispatch is now the right workflow shape
 
-Combining sale, stock depletion, dispatch metadata, tracking, and receivable creation is right. The user does not think "first create a sale row, then create a dispatch row, then create a receivable." They think "maal gaya, rate kya, transporter kaun, paisa kab ayega?"
+Combining sale, stock depletion, dispatch metadata, tracking, and receivable creation is right. The implementation has now moved the primary stock sale flow to a party-first shape: sell stock to a named party, create the receivable, then dispatch pending meters in one or more batches. The user does not think "first create a fake order, then create a dispatch row, then create a receivable." They think "maal becha, rate kya, maal kab jayega, paisa kab ayega?"
 
 ### 5. Payroll from production logs is a strong anchor
 
@@ -107,44 +107,48 @@ Choose one product stance:
 
 For this target customer, start with quick mode plus exception detection. Add counter mode only for factories that already use loom counter registers.
 
-### Gap 3: Market-run dispatch still depends on a party order
+### Gap 3: Market-run sale no longer depends on a fake party order
 
-Market-run mode hides Orders in navigation (`lib/production-mode.ts:55-73`), but Sell & Dispatch still asks "Who is this dispatch for?" and requires an active party order (`components/dispatches/SellAndDispatchDialog.tsx:187-205`; `app/(dashboard)/owner/dispatches/actions.ts:39-66`). The SQL function also rejects dispatch from non-active orders (`supabase/migrations/20260506133000_dispatch_sold_stock_sales.sql:76-89`).
+Status: resolved for the active stock-sale path.
 
-Why this is a problem:
+The current Sell Stock dialog selects available source stock and captures party details directly. `createPartyStockSaleAndOptionalDispatch` calls `create_party_stock_sale_dispatch_v1`, which creates a party-first fabric stock sale and Commercials receivable without requiring an order. Pending sold meters are dispatched later from `/owner/dispatches` through `confirmPendingSaleDispatch`.
 
-- Market maal is often sold after production to a trader, broker, processor, or known buyer.
-- That buyer may not have existed as an order before production.
-- Forcing a fake order creates data pollution and makes the user feel the app's mental model is wrong.
+Remaining caveat:
 
-Recommendation:
+- The visible Sell Stock dialog currently saves the sale first; dispatch happens as a second step from Pending Dispatches. This is acceptable for accuracy, but the button text and "Sell & Dispatch" naming should stay clear.
+- Order-linked public tracking still uses order tokens. Orderless stock-sale dispatches are owner-confirmed from the dispatch page.
 
-Make Sell & Dispatch party-first:
+Current flow:
 
 1. Select/create party or trader.
 2. Select stock/takas.
 3. Enter rate, broker/commission, date, and payment terms.
-4. Create sale, dispatch, and receivable.
+4. Create sale and receivable.
+5. Dispatch pending meters fully or partially.
 
 Use order only when dispatch is against a real pre-committed party order.
 
-### Gap 4: Receivables are not yet strong enough for the textile money loop
+### Gap 4: Receivables are stronger, but claim/deduction depth is still missing
 
-Commercials has the right top-level cards: realized revenue, profit, money to collect, expected profit (`app/(dashboard)/owner/commercials/CommercialsClient.tsx:351-380`). It lists receivables and lets owners record payment (`app/(dashboard)/owner/commercials/CommercialsClient.tsx:392-535`).
+Commercials has the right top-level cards and now lists receivables with payment recording, payment history, dispatch status, pending dispatch meters, and stock-sale enrichment (`app/(dashboard)/owner/commercials/CommercialsClient.tsx`). Party-first stock sales create named receivables directly; payment recording uses `record_commercial_payment_v1`.
 
-But receivables are created only for fabric stock sales, and when a stock sale is not linked to an order, the party becomes "Anonymous" (`lib/commercials/receivables.ts:11-75`). The code also has a TODO for market-run sale and party invoice receivables (`lib/commercials/receivables.ts:74-75`).
+What is improved:
 
-Why this is a problem:
+- New stock sales are no longer anonymous if created through the active party-first flow.
+- `commercial_receivables` and `commercial_payment_receipts` now track total, received, balance, status, mode, references, and history.
+- Receivables are backfilled for stock sales, market-run sales, and party invoices where source data exists.
 
-- The owner cares as much about "who owes me money" as "how much profit did I make."
+Remaining risk:
+
 - Broker, credit days, cheque, due date, payment promise, partial payment, and deductions are central.
-- Anonymous receivables destroy trust.
+- Claim deductions, shortage deductions, rate differences, late discounts, and broker commission are not first-class operational flows yet.
+- Old/backfilled records can still carry generic names if historic source data did not have a party.
 
 Recommendation:
 
-- Add a lightweight party picker in Sell & Dispatch.
-- Store party name, phone, broker, GSTIN, credit days, and due date at sale time.
-- Use the existing party ledger schema concepts instead of leaving `/owner/ledger` archived forever. The schema already supports party type, broker name, credit days, credit limit, invoices, receipts, and adjustments (`supabase/migrations/20260428120000_party_ledger.sql:13-79`).
+- Keep the lightweight party capture in Sell Stock.
+- Add optional broker/commission and claim/deduction flows to receivables.
+- Use the existing party ledger schema concepts when ledger reactivation becomes worth the complexity. The schema already supports party type, broker name, credit days, credit limit, invoices, receipts, and adjustments (`supabase/migrations/20260428120000_party_ledger.sql:13-79`).
 - Surface overdue buckets: due today, 1-7 days overdue, 8-30, 30+.
 
 ### Gap 5: Discrepancy creation exists, but the owner review loop is incomplete
@@ -246,9 +250,9 @@ These should not be core-loop blockers for the target pilot:
 4. Sell & Dispatch from stock:
    - select/create party
    - select stock/takas
-   - enter rate, broker, sale date, credit days
-   - enter actual dispatched meters and transport details
-   - create receivable
+   - enter rate, sale date, credit days, and notes
+   - save sale and receivable
+   - dispatch pending meters with transport details
 5. Review differences only if expected and actual do not match.
 6. Track money to collect and overdue parties.
 7. Settle payroll from production logs.
@@ -279,8 +283,8 @@ Anything missing should go to owner review, not block floor logging.
 If I were the target customer, I would understand the value proposition and probably try the app for market-run production, dispatch, payroll, and receivables. I would churn if:
 
 - my supervisor cannot log production because setup is incomplete,
-- I have to create fake orders to sell market stock,
-- receivables show "Anonymous",
+- I have to create fake orders to sell market stock again,
+- new receivables lose the party name or payment promise,
 - shortages are flagged but not resolvable,
 - or the app asks me to maintain data before I get money/control value from it.
 
