@@ -581,11 +581,11 @@ function CommercialGroupCard({
     const groupLabel = group.kind === 'market_run' ? 'Market Run' : group.kind === 'order' ? 'Order' : 'Stock Sale'
 
     return (
-        <Card className="overflow-hidden border-border/60 bg-white/90 shadow-sm">
+        <Card className="overflow-hidden border-border/60 bg-white/90 shadow-sm @container">
             <button
                 type="button"
                 onClick={onToggle}
-                className="flex w-full flex-col gap-4 p-4 text-left transition hover:bg-muted/20 lg:flex-row lg:items-center lg:justify-between"
+                className="flex w-full flex-col gap-4 p-4 text-left transition hover:bg-muted/20 @2xl:flex-row @2xl:items-center @2xl:justify-between"
             >
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -602,7 +602,7 @@ function CommercialGroupCard({
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 lg:min-w-[620px]">
+                <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 @2xl:w-[460px] @2xl:shrink-0">
                     <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Sales</p>
                         <p className="mt-1 font-black text-foreground">{money(group.totalSales)}</p>
