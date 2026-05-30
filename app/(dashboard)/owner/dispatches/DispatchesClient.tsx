@@ -406,10 +406,6 @@ function OrderGroupCard({
 }) {
     const [expanded, setExpanded] = useState(false)
 
-    const dispatchedPct = group.totalTargetMeters > 0
-        ? Math.min(100, (group.totalDispatched / group.totalTargetMeters) * 100)
-        : 0
-    const remaining = Math.max(0, group.totalTargetMeters - group.totalDispatched)
     const orderBadge = getOrderStatusBadge(group)
 
     // Filter individual dispatches per status filter (for the dropdown)
@@ -457,55 +453,17 @@ function OrderGroupCard({
                                 )}
                             </div>
 
-                            {/* Progress section */}
-                            <div className="flex-1 space-y-3 max-w-sm">
-                                {/* Numbers row */}
-                                <div className="flex items-end justify-between gap-4">
-                                    <div>
-                                        <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Dispatched</p>
-                                        <p className="text-xl font-black tabular-nums text-foreground">
-                                            {group.totalDispatched.toFixed(0)}
-                                            <span className="text-xs ml-1 font-bold text-muted-foreground">m</span>
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Remaining</p>
-                                        <p className={cn(
-                                            "text-xl font-black tabular-nums",
-                                            remaining > 0 ? "text-amber-500" : "text-emerald-500"
-                                        )}>
-                                            {remaining.toFixed(0)}
-                                            <span className="text-xs ml-1 font-bold opacity-60">m</span>
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Target</p>
-                                        <p className="text-xl font-black tabular-nums text-muted-foreground">
-                                            {group.totalTargetMeters.toFixed(0)}
-                                            <span className="text-xs ml-1 font-bold opacity-60">m</span>
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Progress bar */}
-                                <div className="relative h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                    <motion.div
-                                        className={cn(
-                                            "absolute left-0 top-0 bottom-0 rounded-full",
-                                            group.hasDisputed ? "bg-rose-400" : group.hasInTransit ? "bg-amber-400" : "bg-emerald-500"
-                                        )}
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${dispatchedPct}%` }}
-                                        transition={{ duration: 0.7, ease: "easeOut" }}
-                                    />
-                                </div>
-                                <p className="text-[10px] font-bold text-muted-foreground/60 text-right">
-                                    {dispatchedPct.toFixed(1)}% dispatched
+                            {/* Dispatched Section */}
+                            <div className="flex flex-col items-start lg:items-end lg:min-w-[120px]">
+                                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">Dispatched</p>
+                                <p className="text-xl font-black tabular-nums text-foreground">
+                                    {group.totalDispatched.toFixed(0)}
+                                    <span className="text-xs ml-1 font-bold text-muted-foreground">m</span>
                                 </p>
                             </div>
 
                             {/* Actions + chevron */}
-                            <div className="flex items-center gap-3 lg:flex-col lg:items-end lg:min-w-[160px]">
+                            <div className="flex items-center gap-3 lg:flex-col lg:items-end">
                                 <div className={cn(
                                     "p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 transition-transform duration-300",
                                     expanded && "rotate-180"
