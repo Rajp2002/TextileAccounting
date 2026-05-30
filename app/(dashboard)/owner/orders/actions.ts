@@ -926,10 +926,8 @@ export async function confirmDispatchReceiptByOwner(
         .select(`
             id,
             org_id,
-            qty_meters_sent,
-            orders!inner (
-                tracking_token
-            )
+            order_id,
+            qty_meters_sent
         `)
         .eq('id', dispatchId)
         .eq('org_id', profile.org_id)
@@ -939,27 +937,53 @@ export async function confirmDispatchReceiptByOwner(
         return { error: 'Dispatch not found' }
     }
 
-    const orderData = Array.isArray(dispatch.orders) ? dispatch.orders[0] : dispatch.orders
-    const trackingToken = orderData?.tracking_token
-    if (!trackingToken) {
-        return { error: 'Tracking link not found for this dispatch' }
-    }
+    let resultQty = qtyReceived
+    if (dispatch.order_id) {
+        const { data: orderData } = await supabase
+            .from('orders')
+            .select('tracking_token')
+            .eq('id', dispatch.order_id)
+            .single()
 
-    const { data, error } = await supabase.rpc('confirm_fabric_dispatch_receipt', {
-        p_dispatch_id: dispatchId,
-        p_tracking_token: trackingToken,
-        p_qty_received: qtyReceived,
-    })
+        const trackingToken = orderData?.tracking_token
+        if (!trackingToken) {
+            return { error: 'Tracking link not found for this dispatch' }
+        }
 
-    if (error) {
-        const message = error.message || 'Could not confirm receipt. Please try again.'
-        if (message.includes('already been confirmed')) {
-            return { error: 'Receipt already confirmed' }
+        const { data, error } = await supabase.rpc('confirm_fabric_dispatch_receipt', {
+            p_dispatch_id: dispatchId,
+            p_tracking_token: trackingToken,
+            p_qty_received: qtyReceived,
+        })
+        if (error) {
+            const message = error.message || 'Could not confirm receipt. Please try again.'
+            if (message.includes('already been confirmed')) {
+                return { error: 'Receipt already confirmed' }
+            }
+            if (message.includes('Enter a valid received quantity')) {
+                return { error: 'Enter a valid received quantity' }
+            }
+            return { error: message }
         }
-        if (message.includes('Enter a valid received quantity')) {
-            return { error: 'Enter a valid received quantity' }
+        const result = Array.isArray(data) ? data[0] : data
+        resultQty = Number(result?.qty_received ?? qtyReceived)
+    } else {
+        const { data, error } = await supabase.rpc('confirm_stock_sale_dispatch_receipt_v1', {
+            p_dispatch_id: dispatchId,
+            p_qty_received: qtyReceived,
+        })
+        if (error) {
+            const message = error.message || 'Could not confirm receipt. Please try again.'
+            if (message.includes('already been confirmed')) {
+                return { error: 'Receipt already confirmed' }
+            }
+            if (message.includes('Enter a valid received quantity')) {
+                return { error: 'Enter a valid received quantity' }
+            }
+            return { error: message }
         }
-        return { error: message }
+        const result = Array.isArray(data) ? data[0] : data
+        resultQty = Number(result?.qty_received ?? qtyReceived)
     }
 
     const { error: updateError } = await supabase
@@ -978,8 +1002,7 @@ export async function confirmDispatchReceiptByOwner(
 
     revalidatePath('/owner/dispatches')
 
-    const result = Array.isArray(data) ? data[0] : data
-    return { success: true, qty_received: Number(result?.qty_received ?? qtyReceived) }
+    return { success: true, qty_received: resultQty }
 }
 
 export interface PendingStockSale {

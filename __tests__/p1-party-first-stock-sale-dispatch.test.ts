@@ -115,15 +115,18 @@ describe('P1 party-first stock sale dispatch refinement', () => {
     it('verifies direct receipt confirmation, deferring credit due date, and tracking removal', () => {
         const action = readProjectFile('app/(dashboard)/owner/orders/actions.ts')
         const migration = readProjectFile('supabase/migrations/20260530210000_confirm_party_stock_sale_dispatch.sql')
+        const receiptMigration = readProjectFile('supabase/migrations/20260530211000_confirm_stock_sale_dispatch_receipt.sql')
         const dispatchesClient = readProjectFile('app/(dashboard)/owner/dispatches/DispatchesClient.tsx')
         const ordersClient = readProjectFile('app/(dashboard)/owner/orders/OrdersClient.tsx')
 
         // Check backend server actions and RPC definitions
         expect(action).toContain('confirmPendingSaleReceived')
         expect(action).toContain('confirmPendingSaleDispatch')
+        expect(action).toContain('confirm_stock_sale_dispatch_receipt_v1')
         expect(migration).toContain('CREATE OR REPLACE FUNCTION confirm_party_stock_sale_received_v1')
         expect(migration).toContain('CREATE OR REPLACE FUNCTION confirm_party_stock_sale_dispatch_v1')
         expect(migration).toContain('v_due_date := p_dispatch_date + COALESCE(')
+        expect(receiptMigration).toContain('CREATE OR REPLACE FUNCTION confirm_stock_sale_dispatch_receipt_v1')
 
         // Check client UI button presence and Track Portal removal
         expect(dispatchesClient).toContain('Confirmation Received')
