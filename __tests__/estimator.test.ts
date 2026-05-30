@@ -19,6 +19,12 @@ describe('Estimator formula primitives', () => {
         expect(calcWeftYarnKg(68, 62, 75)).toBeCloseTo(1.3832021, 6)
     })
 
+    it('calculates warp and weft yarn kg with floating point denier (e.g. 50.6)', () => {
+        expect(calcWarpYarnKg(3200, 50.6)).toBeCloseTo(1.7991111, 6)
+        expect(calcWeftYarnKg(68, 62, 50.6)).toBeCloseTo(0.9332003, 6)
+    })
+
+
     it('calculates weave cost as picks times per-pick rupee rate', () => {
         expect(calcWeaveCostPerMeter(68, 0.16)).toBeCloseTo(10.88, 6)
     })

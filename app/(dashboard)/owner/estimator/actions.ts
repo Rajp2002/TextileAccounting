@@ -157,7 +157,7 @@ export async function saveAsFabricTemplate(data: {
     loomRpm?:         number | null
     loomPowerKw?:     number | null
     sizingMode?:      'in_house' | 'outsourced'
-    hoursPerShift?:   number
+    hoursPerShift?:   number | null
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -256,7 +256,7 @@ export async function updateFabricTemplate(data: {
     loomRpm?:         number | null
     loomPowerKw?:     number | null
     sizingMode?:      'in_house' | 'outsourced'
-    hoursPerShift?:   number
+    hoursPerShift?:   number | null
 }) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -403,8 +403,8 @@ export async function saveEstimatorQuoteV3(params: {
             // Weaver wage rate snapshot — flows downstream to shift_assignments
             worker_rate_per_m:    workerRatePerM,
             // Legacy required fields with sane defaults
-            ppi:     estimate.weftRows[0]?.picks ?? 68,
-            yarn_denier: estimate.warpRows[0]?.calcDenier ?? 75,
+            ppi:     Math.round(estimate.weftRows[0]?.picks ?? 68),
+            yarn_denier: Math.round(estimate.warpRows[0]?.calcDenier ?? 75),
             yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
         })
         .select('id')
@@ -568,8 +568,8 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
             status:                  'accepted',
             worker_rate_per_m:       workerRatePerM,
             // Legacy required fields
-            ppi:          estimatorState.weftRows[0]?.picks    ?? 68,
-            yarn_denier:  estimatorState.warpRows[0]?.calcDenier ?? 75,
+            ppi:          Math.round(estimatorState.weftRows[0]?.picks    ?? 68),
+            yarn_denier:  Math.round(estimatorState.warpRows[0]?.calcDenier ?? 75),
             yarn_rate_per_kg: estimatorState.warpRows[0]?.yarnRate ?? 0,
         })
         .select('id')
@@ -836,8 +836,8 @@ export async function createMarketRunFromEstimator(params: {
             meters:                   targetMeters,
             status:                   'accepted',       // auto-accept — no party negotiation needed
             worker_rate_per_m:        params.workerRatePerM,
-            ppi:     estimate.weftRows[0]?.picks ?? 68,
-            yarn_denier: estimate.warpRows[0]?.calcDenier ?? 75,
+            ppi:     Math.round(estimate.weftRows[0]?.picks ?? 68),
+            yarn_denier: Math.round(estimate.warpRows[0]?.calcDenier ?? 75),
             yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
         })
         .select('id')

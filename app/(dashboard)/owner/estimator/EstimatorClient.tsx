@@ -1755,7 +1755,7 @@ export default function EstimatorClient({
                                         placeholder={`${t('estimator.warp.layer')} ${i + 1}`}
                                         onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'label', value })}
                                     />
-                                    <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.5} />
+                                    <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.1} />
                                     <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} />
                                     <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`or ${state.yarnShortagePct}% default`} warning={row.shortagePct !== null && (row.shortagePct > 15 || (row.shortagePct === 0 && state.yarnShortagePct > 15)) ? 'High waste %' : undefined} />
                                     {(() => {
@@ -1906,7 +1906,7 @@ export default function EstimatorClient({
                                         onUnitChange={setWidthUnit}
                                         hint={t('estimator.weft.cloth_width_hint')}
                                     />
-                                    <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.5} />
+                                    <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.1} />
                                     <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`or ${state.yarnShortagePct}% default`} warning={row.shortagePct !== null && (row.shortagePct > 15 || (row.shortagePct === 0 && state.yarnShortagePct > 15)) ? 'High waste %' : undefined} />
                                     {(() => {
                                         const templateRate = appliedTemplate?.weft_rows?.[i]?.yarnRate ?? null

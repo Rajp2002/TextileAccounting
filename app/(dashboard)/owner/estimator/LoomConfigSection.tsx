@@ -31,7 +31,7 @@ interface LoomConfigSectionProps {
     onSetLoomType:    (lt: LoomType | null) => void
     onSetLoomRpm:     (v: number | null) => void
     onSetLoomPowerKw: (v: number | null) => void
-    onSetHoursPerShift: (v: number) => void
+    onSetHoursPerShift: (v: number | null) => void
     onSuggestOutput: (computedDailyM: number) => void  // pushes value into avgOutputPerLoomPerDay
 }
 
@@ -47,11 +47,12 @@ interface LoomConfigSectionProps {
 export function calcDailyOutputM(
     rpm: number | null,
     picks: number,
-    hoursPerShift: number,
+    hoursPerShift: number | null,
     efficiencyPct: number
 ): number | null {
-    if (!rpm || !picks || !hoursPerShift || rpm <= 0 || picks <= 0) return null
-    return (rpm / picks) * 60 * hoursPerShift * (efficiencyPct / 100)
+    const hrs = hoursPerShift ?? 12
+    if (!rpm || !picks || !hrs || rpm <= 0 || picks <= 0) return null
+    return (rpm / picks) * 60 * hrs * (efficiencyPct / 100)
 }
 
 // Ordered list for the dropdown — most common Surat loom types first
@@ -248,8 +249,9 @@ export function LoomConfigSection({
                                 min={1}
                                 max={24}
                                 step={1}
-                                value={hoursPerShift}
-                                onChange={e => onSetHoursPerShift(Number(e.target.value) || 12)}
+                                value={hoursPerShift ?? ''}
+                                placeholder="12"
+                                onChange={e => onSetHoursPerShift(e.target.value === '' ? null : Number(e.target.value))}
                                 className="h-9 text-xs font-mono font-bold text-center pr-10 bg-white border-violet-200 focus:border-violet-400 focus:ring-1 focus:ring-violet-200/30 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-xl"
                             />
                             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">
@@ -282,7 +284,7 @@ export function LoomConfigSection({
                         )}
                         {dailyOutputM !== null && classDefaults?.efficiencyPct && (
                             <p className="text-[9px] text-slate-400 mt-0.5">
-                                at {loomRpm} RPM · {totalPicks} picks · {hoursPerShift}h · {classDefaults.efficiencyPct}% eff.
+                                at {loomRpm} RPM · {totalPicks} picks · {hoursPerShift ?? 12}h · {classDefaults.efficiencyPct}% eff.
                             </p>
                         )}
                     </div>

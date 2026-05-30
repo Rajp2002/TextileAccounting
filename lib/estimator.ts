@@ -182,7 +182,7 @@ export interface EstimateState {
   loomPowerKw:           number | null   // auto-filled from loom type; editable
   loomRpmIsCustomised:   boolean         // true when owner has manually overridden the default RPM
   loomPowerKwIsCustomised: boolean       // true when owner has manually overridden the default kW
-  hoursPerShift:         number          // factory shift hours — drives daily output preview (default 12)
+  hoursPerShift:         number | null   // factory shift hours — drives daily output preview (default 12)
   // ── Sizing Mode ─────────────────────────────────────────────────────────
   sizingMode:            'in_house' | 'outsourced'  // explicit toggle; in_house = 0 cost
   // ── kept for backward-compat serialisation (computed, never user-edited) ─
