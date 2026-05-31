@@ -103,6 +103,8 @@ Pain point translated: the production register becomes a mobile shift screen tha
 
 The active stock route is the godown ledger. For market-run factories, it shows expected and physical stock context without forcing daily inward confirmation. Production creates expected availability/drafts; the owner can add or confirm lots when needed. Sale/dispatch is where actual availability is checked. Manual/opening stock, source-linked lots, adjustments, stock sales, pending dispatch meters, and movements remain available, while Stock Inward is optional/de-emphasized for market-run Phase 1.
 
+Active Stock is reserved for lots that still have saleable meters, reserved meters, or discrepancies needing owner action. A closed or sold-out market-run lot with `0m` available moves to Archive / History even if a sale from that lot still has pending dispatch meters. Pending dispatch remains visible in the summary cards and Dispatches/Commercials instead of keeping the empty lot active.
+
 Pain point translated: the owner can answer "what should be in godown, what was actually dispatched, and what difference needs review?" Profit and receivables are tracked in Commercials.
 
 ### Dispatches

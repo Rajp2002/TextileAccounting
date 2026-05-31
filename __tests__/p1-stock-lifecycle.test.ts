@@ -78,7 +78,7 @@ describe('Stock Lot Lifecycle Helper Tests', () => {
         expect(isStockLotActionable(lot)).toBe(false)
     })
 
-    it('7. Partially dispatched lots remain active when pending_dispatch_meters > 0', () => {
+    it('7. Closed market-run lots with only pending dispatch move out of active Godown', () => {
         const lot = {
             available_meters: 0,
             available_for_sale_meters: 0,
@@ -88,7 +88,20 @@ describe('Stock Lot Lifecycle Helper Tests', () => {
             source_type: 'market_run',
             parent_status: 'closed'
         }
-        expect(isStockLotActionable(lot)).toBe(true)
+        expect(isStockLotActionable(lot)).toBe(false)
+    })
+
+    it('7b. Sold-out market-run lots with only pending dispatch move out of active Godown', () => {
+        const lot = {
+            available_meters: 0,
+            available_for_sale_meters: 0,
+            reserved_meters: 0,
+            pending_dispatch_meters: 120,
+            has_unresolved_discrepancy: false,
+            source_type: 'market_run',
+            parent_status: 'sold_out'
+        }
+        expect(isStockLotActionable(lot)).toBe(false)
     })
 
     it('8. Lots with unresolved discrepancies remain active', () => {

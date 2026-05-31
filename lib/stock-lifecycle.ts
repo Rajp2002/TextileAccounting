@@ -14,6 +14,9 @@ export function isStockLotActionable(lot: StockLotLifecycleData): boolean {
     if (lot.available_meters > 0) return true
     if (lot.available_for_sale_meters > 0) return true
     if (lot.reserved_meters > 0) return true
+    if (lot.source_type === 'market_run' && ['closed', 'sold_out'].includes(lot.parent_status ?? '')) {
+        return false
+    }
     if (lot.pending_dispatch_meters > 0) return true
 
     return false

@@ -529,6 +529,8 @@ Stock no longer acts as the profit dashboard. Revenue, gross profit, margins, re
 
 For market-run mode, supervisor production logs create expected stock without requiring daily physical inward confirmation. Optional/order-based inward drafts can still be confirmed after checking actual takas/meters.
 
+Active stock visibility is derived by `isStockLotActionable` in `lib/stock-lifecycle.ts`. The active list includes lots with available/saleable meters, active order-reserved meters, or unresolved discrepancies. It does not keep a closed or sold-out market-run lot active only because an already-created sale has pending dispatch meters. That pending quantity is still included in the Sold Pending Dispatch summary and is handled by Dispatches/Commercials.
+
 #### Logic and Output
 
 `getTakaStockBoard` reads:
@@ -538,6 +540,7 @@ For market-run mode, supervisor production logs create expected stock without re
 - recent `fabric_stock_movements`
 - pending `fabric_stock_inward_drafts`
 - source options from market runs and orders
+- parent market-run/order status, unresolved discrepancies, and pending dispatch meters used to classify lots as Active Stock or Archive / History
 
 `confirmStockInwardDraft` calls `confirm_stock_inward_draft`, which locks a pending draft, creates a stock lot, writes an inward movement, and marks the draft confirmed.
 
@@ -1138,6 +1141,8 @@ The market-run list and detail page show:
 - status
 
 The owner can mark a run closed. Current stock-sale metrics update summaries, but run status is not fully auto-derived from every stock path. Status can be set manually through the market-run detail action. Closing a run automatically triggers the database-level `trg_market_run_closed` trigger, which completes backing orders, unlinks assigned looms/machines, sets them to `inactive`, and clears order references in `shift_assignments` for clean supervisor layouts.
+
+Closing also revalidates `/owner/stock`, so a market-run stock lot with no saleable meters is removed from Active Stock and remains available in Archive / History. Pending dispatch from any already-sold meters remains visible in the stock summary and downstream dispatch/commercial views until fulfilled.
 
 ### Market Run Pipeline Value
 

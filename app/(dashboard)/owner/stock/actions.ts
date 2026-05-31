@@ -510,13 +510,14 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
         }
     })
 
-    const activeLots = lots.filter((lot) => lot.is_active)
-    const summary = activeLots.reduce((acc, lot) => {
-        acc.available_taka += lot.available_taka_count
-        acc.available_meters += lot.available_meters
-        acc.stock_value_at_cost += lot.available_meters * lot.cost_per_meter
-        acc.realized_revenue += lot.total_revenue
-        acc.realized_profit += lot.total_gross_profit
+    const summary = lots.reduce((acc, lot) => {
+        if (lot.is_active) {
+            acc.available_taka += lot.available_taka_count
+            acc.available_meters += lot.available_meters
+            acc.stock_value_at_cost += lot.available_meters * lot.cost_per_meter
+            acc.realized_revenue += lot.total_revenue
+            acc.realized_profit += lot.total_gross_profit
+        }
         acc.pending_dispatch_meters += lot.pending_dispatch_meters || 0
         return acc
     }, {

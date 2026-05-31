@@ -14,16 +14,19 @@ Split status:
 
 The active stock board helps owners track what should be available in godown according to production and commercial records. It supports manual/opening stock, order-linked stock, market-run expected stock, adjustments, party-first sales, pending dispatch meters, discrepancy review, and movement history. It is focused on "Maal kya hona chahiye?" and "dispatch pe kya actual nikla?", while profit, receivables, and payment receipts belong to Commercials.
 
+Active Stock is intentionally the actionable/saleable view. A lot remains active when it still has available meters, order-reserved meters, or an unresolved stock discrepancy. Closed or sold-out market-run lots with no saleable meters move to Archive / History even if an old sale still has pending dispatch meters. Those pending meters continue to appear in the Sold Pending Dispatch summary and in Dispatches/Commercials until dispatch is completed.
+
 ## User Workflow
 
 1. Owner opens `/owner/stock`.
 2. Owner sees expected available meters, ledger value at cost, and movement history.
 3. Market-run production contributes to expected stock automatically from production records.
 4. Owner sells stock to a named party, creating a stock sale and Commercials receivable.
-5. Owner dispatches pending sold meters later, either fully or partially.
-6. If received meters differ from sent meters, Weavly records a shortage or excess as a stock discrepancy with `needs_review` status.
-7. Owner can use adjustments for traceable corrections such as sample cutting, damage, measurement correction, returns, or internal adjustment.
-8. Pending inward drafts may remain for direct/legacy/order-based workflows, but are not mandatory for market-run Phase 1.
+5. If the sale consumes all available meters, the lot stops appearing in Active Stock once its market run is closed or sold out.
+6. Owner dispatches pending sold meters later, either fully or partially.
+7. If received meters differ from sent meters, Weavly records a shortage or excess as a stock discrepancy with `needs_review` status.
+8. Owner can use adjustments for traceable corrections such as sample cutting, damage, measurement correction, returns, or internal adjustment.
+9. Pending inward drafts may remain for direct/legacy/order-based workflows, but are not mandatory for market-run Phase 1.
 
 ## Existing Workflow Translation
 
@@ -38,6 +41,7 @@ Weavly workflow:
 - Each ledger stock lot has source, cost, units, meters, godown, and movement history.
 - Market-run stock is expected stock until dispatch or owner adjustment reconciles reality.
 - Sales compute revenue, cost, gross profit, credit terms, and pending dispatch meters.
+- Sold-out closed market-run lots are retained in Archive / History rather than crowding Active Stock.
 - Dispatch checks compare sent meters and received meters, then create discrepancies only for true variance.
 
 ## Pain Points Solved
@@ -67,6 +71,7 @@ Active:
 
 - `app/(dashboard)/owner/stock/TakaStockClient.tsx`
 - `app/(dashboard)/owner/stock/actions.ts`
+- `lib/stock-lifecycle.ts`
 - `fabric_stock_lots`
 - `fabric_stock_sales`
 - `fabric_stock_movements`

@@ -214,14 +214,16 @@ Know what fabric should exist in godown, what is actually dispatched, and which 
 4. Owner adds manual/opening/order stock lots where needed.
 5. Owner records a party-first stock sale.
 6. The sale creates a named Commercials receivable and pending dispatch meters.
-7. Owner dispatches sold stock fully or partially.
-8. Any receipt shortage or excess becomes a stock discrepancy with Needs Review status.
-9. Owner adjustments remain traceable and owner-only.
-10. Commercials reflects realized stock profit and collection state.
+7. If the lot has no saleable meters left and its market run is closed or sold out, it moves from Active Stock to Archive / History.
+8. Owner dispatches sold stock fully or partially.
+9. Any receipt shortage or excess becomes a stock discrepancy with Needs Review status.
+10. Owner adjustments remain traceable and owner-only.
+11. Commercials reflects realized stock profit and collection state.
 
 ### Pain Point Replaced
 
 Loose godown memory becomes an expected ledger reconciled against dispatch reality.
+Pending dispatch is tracked separately from Active Stock so sold-out closed runs do not keep empty lots in the active godown list.
 
 ### Outputs
 

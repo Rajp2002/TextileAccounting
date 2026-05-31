@@ -34,6 +34,7 @@ Orders represent committed party-backed production. Market runs represent specul
 6. Owner sells market-run stock to a named party, creating a receivable.
 7. Owner dispatches pending sold meters in one or more batches and reviews any receipt variance.
 8. Owner closes the market run when production is complete. Closing a market run automatically sets all backing orders to completed, unlinks all assigned machines/looms, and sets them to `inactive`.
+9. Closed/sold-out market-run stock lots with no saleable meters move out of Active Stock; pending dispatch remains tracked from Dispatches and Commercials.
 
 ## Existing Workflow Translation
 

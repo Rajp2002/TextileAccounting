@@ -1174,6 +1174,7 @@ export async function updateMarketRunStatus(
     revalidatePath(`/owner/market-runs/${marketRunId}`)
     revalidatePath('/owner/market-runs')
     revalidatePath('/owner/archive')
+    revalidatePath('/owner/stock')
     revalidatePath('/owner/machines')
     revalidatePath('/supervisor/machines')
     return { success: true }
