@@ -1137,7 +1137,7 @@ The market-run list and detail page show:
 - margin
 - status
 
-The owner can mark a run closed. Current stock-sale metrics update summaries, but run status is not fully auto-derived from every stock path. Status can be set manually through the market-run detail action.
+The owner can mark a run closed. Current stock-sale metrics update summaries, but run status is not fully auto-derived from every stock path. Status can be set manually through the market-run detail action. Closing a run automatically triggers the database-level `trg_market_run_closed` trigger, which completes backing orders, unlinks assigned looms/machines, sets them to `inactive`, and clears order references in `shift_assignments` for clean supervisor layouts.
 
 ### Market Run Pipeline Value
 
