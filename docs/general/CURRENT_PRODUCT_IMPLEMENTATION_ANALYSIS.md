@@ -668,7 +668,9 @@ Payroll lives at `/owner/payroll`. The owner can review monthly/cycle payroll fo
 The UI supports:
 
 - cycle month navigation
+- defaulting to the current payroll month for live wage accumulation
 - pay date status: in progress, scheduled, approaching, due today, overdue
+- a Pay Date Overview for the active due/previous cycle with owed, pending, paid, and quick settlement actions
 - meter breakdown by worker, machine, and order
 - fixed-worker attendance-based calculation
 - pending advances and deductions
@@ -678,6 +680,7 @@ The UI supports:
 - secure reversal with access code
 - payslip generation
 - WhatsApp payslip sending
+- past settlement history with search, month/date filters, historical cycle reopening, detailed audit breakdown, and CSV export
 
 Advances live at `/owner/advances`. The owner can create advances for meter or fixed workers, view pending/deducted debt, inspect risk levels, and delete pending advances.
 
@@ -686,6 +689,8 @@ Supervisors can record kharchi from the floor. Supervisor float can be refilled 
 #### Logic and Output
 
 Meter payroll sums `production_logs.meters * worker_rate_snapshot` inside the configured payroll cycle.
+
+Past settlement history reads paid `payroll_settlements`, resolves meter and fixed worker names, and reconstructs audit earning lines. For meter workers, production logs inside the historical cycle are grouped by machine, order, and rate so owners can see metres multiplied by `worker_rate_snapshot` before advances and other deductions. For fixed workers, the audit view shows salary or attendance basis. CSV exports include earning lines, total metres, net revenue before deductions, adjustments, advance recovery, PF/ESI, net paid, carried debt, and flags. Downloaded filenames are generated as `FactoryName_CycleStart-CycleEnd.csv` or `FactoryName_DateFrom-DateTo.csv`, for example `AshokTextiles_Jan-01-2026-Jan-31-2026.csv`.
 
 `payroll_configs` now stores:
 

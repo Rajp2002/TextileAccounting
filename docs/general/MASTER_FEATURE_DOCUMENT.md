@@ -300,18 +300,20 @@ Phase 1 keeps the active `/owner/commercials` route as the source of truth for r
 
 ### What It Is
 
-The worker money layer. It converts production logs and attendance into pay, applies advances and deductions, records settlements, and sends payslips. Payroll cycles are configurable by cycle start day, pay date day, and reminder window.
+The worker money layer. It converts production logs and attendance into pay, applies advances and deductions, records settlements, and sends payslips. Payroll cycles are configurable by cycle start day, pay date day, and reminder window. The page defaults to the current payroll month for live wage accumulation and keeps a past-settlement archive for audit.
 
 ### User Workflow
 
 1. Owner opens `/owner/payroll`.
-2. Owner selects a payroll cycle month (can navigate up to the current in-progress month and view live/current month payroll details).
+2. Owner lands on the current payroll month by default, or selects a payroll cycle month up to the current in-progress month for live wage tracking.
 3. Owner reviews whether the cycle is in progress, scheduled, approaching, due today, overdue, or completed (which displays as **Paid** or **Clear** with a green success badge once all worker settlements are finished), and views the Pay Date Overview panel showing status and quick actions.
 4. Owner reviews meter workers and fixed workers.
 5. Owner expands worker details for machine/order breakdown, gross pay, advances, deductions, manual adjustments, and net.
 6. Owner toggles final settlement where applicable.
 7. Owner records payment mode and settles after owner verification (normal settlement is gated and only enabled when the pay window is open near the configured pay date; final settlement is always allowed).
 8. Owner generates PDF or sends WhatsApp payslip.
+9. Owner opens **Past settlements** to search/filter paid settlements, inspect the saved audit breakdown, and jump back into a historical cycle.
+10. Owner downloads filtered settlement CSVs named by factory and pay-cycle/range, for example `AshokTextiles_Jan-01-2026-Jan-31-2026.csv`.
 
 ### Pain Points Solved
 
@@ -324,6 +326,7 @@ The worker money layer. It converts production logs and attendance into pay, app
 - Payroll notebook becomes settlement records with itemization.
 - Oral payout explanation becomes a payslip.
 - Production logs become the wage source of truth.
+- Banking-style settlement history becomes the audit trail for past payroll runs.
 
 ### Data and Code
 
@@ -331,6 +334,7 @@ The worker money layer. It converts production logs and attendance into pay, app
 - `lib/finance.ts`
 - `lib/generate-payslip.ts`
 - `lib/payroll-cycle.ts`
+- `__tests__/payroll-settlement-history.test.ts`
 - `payroll_settlements`
 - `payroll_adjustments`
 - `payroll_configs`

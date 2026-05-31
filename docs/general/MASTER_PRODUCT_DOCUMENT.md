@@ -192,9 +192,11 @@ Commercials also tracks receivables, payment receipts, collected amount, balance
 
 ### 4.9 Payroll and Settlements
 
-Payroll aggregates meter-worker production logs and fixed-worker attendance/salary data. It uses `payroll_configs` to derive cycle bounds, pay date, reminder window, and pay-window status. It previews gross, advance deduction, statutory deductions, manual adjustments, net payout, remaining debt, compliance flags, and final-settlement behavior. 
+Payroll aggregates meter-worker production logs and fixed-worker attendance/salary data. It uses `payroll_configs` to derive cycle bounds, pay date, reminder window, and pay-window status. It previews gross/net revenue before deductions, advance deduction, statutory deductions, manual adjustments, net payout, remaining debt, compliance flags, and final-settlement behavior.
 
-The dashboard enables navigation up to the current in-progress month for live wage tracking, and highlights the active cycle with a dedicated `PayDateOverview` component. Normal settlement is gated and disabled if the payroll window is not open, displaying a validation reason near the configured pay date. The owner records settlement with payment mode and verification, then can send or generate payslips.
+The dashboard defaults to the current payroll month for live wage tracking, enables navigation up to the current in-progress month, and highlights the active cycle with a dedicated `PayDateOverview` component. Normal settlement is gated and disabled if the payroll window is not open, displaying a validation reason near the configured pay date. The owner records settlement with payment mode and verification, then can send or generate payslips.
+
+Past settlements are available from `/owner/payroll` as an audit archive. Owners can search, filter by month or settlement date range, inspect paid settlements, reopen the historical cycle, and download CSV exports. Historical meter-worker settlements show earning lines reconstructed from machine/order production logs as metres multiplied by `worker_rate_snapshot`; fixed-worker settlements show salary or attendance basis. Export filenames use the factory and pay-cycle/range, for example `AshokTextiles_Jan-01-2026-Jan-31-2026.csv`.
 
 Advances tracks pending and deducted Upaad for both meter and fixed workers, estimates debt burden against typical pay, and feeds payroll recovery.
 

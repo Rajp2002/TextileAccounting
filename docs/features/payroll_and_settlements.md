@@ -8,12 +8,12 @@ Core Phase 1 pillar.
 
 ## What It Does
 
-Payroll converts production logs, worker rates, fixed-worker setup, attendance, advances, PF/ESI settings, manual adjustments, and payment mode into settlement records and payslips. Payroll timing is configured through cycle start day, pay date day, and reminder window.
+Payroll converts production logs, worker rates, fixed-worker setup, attendance, advances, PF/ESI settings, manual adjustments, and payment mode into settlement records and payslips. Payroll timing is configured through cycle start day, pay date day, and reminder window. The page defaults to the current payroll month so owners can watch wages accumulate in real time, while still surfacing the active pay-date cycle for settlement.
 
 ## User Workflow
 
 1. Owner opens `/owner/payroll`.
-2. Owner selects a payroll cycle month (can navigate up to the current in-progress month and view live/current month payroll details).
+2. Owner lands on the current payroll month by default, unless opening a specific `?cycle=YYYY-MM` link.
 3. Owner sees cycle status: in progress, scheduled, approaching, due today, or overdue.
 4. Owner sees the Pay Date Overview panel showing status, bounds, and quick actions for the current/previous payroll cycle.
 5. Owner reviews meter workers and fixed workers (visible at any time once the cycle has started to track live payroll/wage updates).
@@ -24,6 +24,11 @@ Payroll converts production logs, worker rates, fixed-worker setup, attendance, 
 10. Owner selects payment mode and verifies the payout.
 11. Owner settles or un-settles (normal settlement is gated and only enabled when the pay window is open near the configured pay date; final settlement is always allowed).
 12. Owner generates a payslip PDF or sends the WhatsApp payslip.
+13. Owner opens **Past settlements** to review paid settlement history for audit or worker questions.
+14. Owner filters past settlements by worker/search, payroll month, or settlement date range.
+15. Owner opens a historical settlement to see net paid, payment mode, carried debt, manual adjustments, statutory deductions, and the earning basis.
+16. For meter workers, the historical earning basis is reconstructed as machine/order lines from `production_logs`: produced metres multiplied by `worker_rate_snapshot`.
+17. Owner downloads the filtered settlement audit CSV. The filename uses the factory name and exported pay-cycle/range, for example `AshokTextiles_Jan-01-2026-Jan-31-2026.csv`.
 
 ## Existing Workflow Translation
 
@@ -40,6 +45,7 @@ Weavly workflow:
 - Advances become itemized deduction input.
 - Settlement records preserve gross, deductions, net, remaining debt, payment mode, and status.
 - Pay-window gating prevents normal settlement execution before the configured pay date approaches, but the owner can view and track live data for the current month at any time.
+- Past settlement history gives owners a banking-style settlement archive with downloadable audit CSVs.
 - Payslips can be generated or sent on WhatsApp.
 
 ## Pain Points Solved
@@ -60,6 +66,9 @@ Weavly workflow:
 - Configurable cycle start day, pay date, and reminder window via `payroll_configs`.
 - Normal settlement is gated and disabled if the payroll window is not open, displaying a clear validation reason (e.g., normal settlement opens near the configured pay date).
 - The dashboard highlights the active pay date cycle with a dedicated `PayDateOverview` component, supporting direct toggle payment state and settlement actions. If all workers for the cycle are settled, the status badge updates to **"Paid"** or **"Clear"** with a green success indicator instead of showing a scheduled/overdue status.
+- The `SettlementHistoryDialog` reads paid `payroll_settlements`, resolves meter/fixed worker names, reconstructs meter earning lines from production logs, reconstructs fixed earning lines from salary/attendance context, and shows an audit breakdown from net revenue before deductions to final payout.
+- Past-settlement CSV exports include settlement metadata, worker detail, earning lines, total metres, net revenue before deductions, inam, kapaat, advance recovery, PF/ESI, net paid, carried debt, final/compliance flags, and manual adjustments.
+- Settlement export filenames are generated as `FactoryName_CycleStart-CycleEnd.csv` or `FactoryName_DateFrom-DateTo.csv`, with filename-safe date separators.
 - Owner verification is required before confirming payroll.
 - WhatsApp payslip sends a summary template plus itemized follow-up.
 
@@ -72,6 +81,7 @@ Weavly workflow:
 - `lib/generate-payslip.ts`
 - `lib/payroll-cycle.ts`
 - `lib/wage-config.ts`
+- `__tests__/payroll-settlement-history.test.ts`
 - `production_logs`
 - `attendance`
 - `payroll_settlements`

@@ -51,7 +51,7 @@ Feature docs:
 - `/owner/stock` - expected/physical godown ledger, manual or source-linked lots, stock sales, adjustments, movements, pending dispatch context.
 - `/owner/dispatches` - party-first stock sale workflow, pending/partial dispatches, order-linked dispatches, receipt reconciliation, tracking links.
 - `/owner/commercials` - source of truth for revenue, gross profit, receivables, payment status, and payment receipts.
-- `/owner/payroll` - meter and fixed payroll, configurable cycle/pay date/reminder window, settlements, WhatsApp payslips.
+- `/owner/payroll` - meter and fixed payroll, configurable cycle/pay date/reminder window, pay-date overview, past settlement audit history, CSV exports, and WhatsApp payslips.
 - `/owner/advances` - worker Upaad tracking and recovery support.
 - `/owner/fixed-workers` - workforce setup and fixed staff management.
 - `/owner/machines` - loom setup and assignment infrastructure.

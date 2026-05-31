@@ -11,7 +11,7 @@ import { formatINR, calculateAdvanceRecovery } from '@/lib/finance'
 import {
     CheckCircle2, Circle, ChevronLeft, ChevronRight,
     HardHat, Briefcase, AlertCircle, Loader2, HandCoins, Download, AlertTriangle,
-    Search, Send, Info, Lock, Check, Plus, Trash2, CalendarClock
+    Search, Send, Info, Lock, Check, Plus, Trash2, CalendarClock, History, ReceiptText, Eye
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -109,6 +109,7 @@ type ProductionLogRow = {
     meters: number | string | null
     worker_rate_snapshot: number | string | null
     order_id: string | number | null
+    date?: string | null
 }
 
 type MeterWorkerDbRow = {
@@ -126,8 +127,35 @@ type MachineRow = {
 }
 
 type PayrollSettlementRow = SettlementRecord & {
+    id: number
+    worker_type?: 'meter' | 'fixed'
+    month?: string
     meter_worker_id?: number | null
     fixed_worker_id?: number | null
+}
+
+type SettlementHistoryItem = PayrollSettlementRow & {
+    worker_type: 'meter' | 'fixed'
+    month: string
+    workerName: string
+    workerDetail: string
+    earningLines: SettlementEarningLine[]
+    earningTotal: number
+}
+
+type SettlementSnapshotRow = PayrollSettlementRow & {
+    worker_type: 'meter' | 'fixed'
+    month: string
+}
+
+type SettlementEarningLine = {
+    label: string
+    subLabel?: string
+    quantityLabel: string
+    rateLabel: string
+    amount: number
+    meters?: number
+    rate?: number
 }
 
 type WorkerAdvanceRow = {
@@ -155,6 +183,21 @@ type FixedWorkerDbRow = {
 
 type AttendanceRow = {
     fixed_worker_id: number
+}
+
+type WorkerNameRow = {
+    id: number
+    name: string
+}
+
+type FixedWorkerNameRow = WorkerNameRow & {
+    role?: string | null
+    monthly_salary?: number | string | null
+}
+
+type AttendanceDateRow = {
+    fixed_worker_id: number
+    date: string
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -415,6 +458,208 @@ async function fetchFixedWorkerPayroll(
         })
 }
 
+async function fetchSettlementHistory(
+    supabase: SupabaseBrowserClient,
+    orgId: string,
+    cycleStartDay: number
+): Promise<SettlementHistoryItem[]> {
+    const { data, error } = await supabase
+        .from('payroll_settlements')
+        .select('id, worker_type, meter_worker_id, fixed_worker_id, month, gross_pay, advance_deducted, net_payout, carried_forward_debt, compliance_flag, is_final_settlement, settled_at, status, itemization_payload, payment_mode')
+        .eq('org_id', orgId)
+        .eq('status', 'paid')
+        .order('settled_at', { ascending: false })
+        .limit(200)
+
+    if (error) throw error
+
+    const settlements = ((data || []) as PayrollSettlementRow[]).filter(
+        (settlement): settlement is SettlementSnapshotRow =>
+            (settlement.worker_type === 'meter' || settlement.worker_type === 'fixed') &&
+            typeof settlement.month === 'string'
+    )
+    const cycleBoundsByMonth = new Map(
+        Array.from(new Set(settlements.map((settlement) => settlement.month))).map((month) => [
+            month,
+            getPayrollCycleBounds(month, cycleStartDay),
+        ])
+    )
+    const cycleStarts = Array.from(cycleBoundsByMonth.values()).map((bounds) => bounds.cycle_start)
+    const cycleEnds = Array.from(cycleBoundsByMonth.values()).map((bounds) => bounds.cycle_end)
+    const minCycleStart = cycleStarts.sort()[0]
+    const maxCycleEnd = cycleEnds.sort().at(-1)
+    const meterIds = Array.from(new Set(
+        settlements
+            .map((settlement) => settlement.meter_worker_id)
+            .filter((id): id is number => typeof id === 'number')
+    ))
+    const fixedIds = Array.from(new Set(
+        settlements
+            .map((settlement) => settlement.fixed_worker_id)
+            .filter((id): id is number => typeof id === 'number')
+    ))
+
+    const [meterWorkersRes, fixedWorkersRes, productionLogsRes, machinesRes, attendanceRes] = await Promise.all([
+        meterIds.length > 0
+            ? supabase.from('workers').select('id, name').eq('org_id', orgId).in('id', meterIds)
+            : Promise.resolve({ data: [], error: null }),
+        fixedIds.length > 0
+            ? supabase.from('fixed_workers').select('id, name, role, monthly_salary').eq('org_id', orgId).in('id', fixedIds)
+            : Promise.resolve({ data: [], error: null }),
+        meterIds.length > 0 && minCycleStart && maxCycleEnd
+            ? supabase.from('production_logs')
+                .select('worker_id, machine_id, meters, worker_rate_snapshot, order_id, date')
+                .eq('org_id', orgId)
+                .in('worker_id', meterIds)
+                .gt('meters', 0)
+                .gte('date', minCycleStart)
+                .lte('date', maxCycleEnd)
+            : Promise.resolve({ data: [], error: null }),
+        meterIds.length > 0
+            ? supabase.from('machines').select('id, name').eq('org_id', orgId)
+            : Promise.resolve({ data: [], error: null }),
+        fixedIds.length > 0 && minCycleStart && maxCycleEnd
+            ? supabase.from('attendance')
+                .select('fixed_worker_id, date')
+                .eq('org_id', orgId)
+                .in('fixed_worker_id', fixedIds)
+                .eq('present', true)
+                .gte('date', minCycleStart)
+                .lte('date', maxCycleEnd)
+            : Promise.resolve({ data: [], error: null }),
+    ])
+
+    if (meterWorkersRes.error) throw meterWorkersRes.error
+    if (fixedWorkersRes.error) throw fixedWorkersRes.error
+    if (productionLogsRes.error) throw productionLogsRes.error
+    if (machinesRes.error) throw machinesRes.error
+    if (attendanceRes.error) throw attendanceRes.error
+
+    const productionLogs = (productionLogsRes.data || []) as ProductionLogRow[]
+    const machineMap = Object.fromEntries(((machinesRes.data || []) as MachineRow[]).map((machine) => [String(machine.id), machine.name]))
+    const orderIds = Array.from(new Set(
+        productionLogs
+            .map((log) => log.order_id)
+            .filter((id): id is string | number => id !== null && id !== undefined)
+    ))
+    const ordersRes = orderIds.length > 0
+        ? await supabase.from('orders').select('id, party_name, quality_label').eq('org_id', orgId).in('id', orderIds)
+        : { data: [], error: null }
+
+    if (ordersRes.error) throw ordersRes.error
+
+    const orderLabelMap = Object.fromEntries(
+        ((ordersRes.data || []) as OrderRow[]).map((order) => [
+            String(order.id),
+            order.quality_label ? `${order.party_name || 'Order'} · ${order.quality_label}` : order.party_name || 'Order',
+        ])
+    )
+    const attendanceRows = (attendanceRes.data || []) as AttendanceDateRow[]
+
+    const meterNameMap = new Map(
+        ((meterWorkersRes.data || []) as WorkerNameRow[]).map((worker) => [worker.id, worker.name])
+    )
+    const fixedWorkerMap = new Map(
+        ((fixedWorkersRes.data || []) as FixedWorkerNameRow[]).map((worker) => [worker.id, worker])
+    )
+
+    return settlements.map((settlement) => {
+        if (settlement.worker_type === 'meter') {
+            const workerId = settlement.meter_worker_id ?? 0
+            const bounds = cycleBoundsByMonth.get(settlement.month)
+            const workerLogs = bounds
+                ? productionLogs.filter((log) =>
+                    log.worker_id === workerId &&
+                    !!log.date &&
+                    log.date >= bounds.cycle_start &&
+                    log.date <= bounds.cycle_end
+                )
+                : []
+            const groupedLines = new Map<string, SettlementEarningLine>()
+
+            workerLogs.forEach((log) => {
+                const meters = toPayrollNumber(log.meters)
+                const rate = toPayrollNumber(log.worker_rate_snapshot)
+                const machineKey = log.machine_id === null || log.machine_id === undefined ? 'unknown-machine' : String(log.machine_id)
+                const orderKey = log.order_id === null || log.order_id === undefined ? 'no-order' : String(log.order_id)
+                const machineName = machineKey === 'unknown-machine' ? 'Unknown machine' : machineMap[machineKey] || 'Unknown machine'
+                const orderLabel = orderKey === 'no-order' ? undefined : orderLabelMap[orderKey]
+                const key = `${machineKey}-${orderKey}-${rate}`
+                const existing = groupedLines.get(key)
+
+                if (existing) {
+                    const nextMeters = (existing.meters || 0) + meters
+                    groupedLines.set(key, {
+                        ...existing,
+                        meters: nextMeters,
+                        quantityLabel: `${nextMeters.toFixed(1)} m`,
+                        amount: nextMeters * rate,
+                    })
+                } else {
+                    groupedLines.set(key, {
+                        label: machineName,
+                        subLabel: orderLabel,
+                        meters,
+                        rate,
+                        quantityLabel: `${meters.toFixed(1)} m`,
+                        rateLabel: `${formatINR(rate)}/m`,
+                        amount: meters * rate,
+                    })
+                }
+            })
+
+            const earningLines = Array.from(groupedLines.values())
+            const earningTotal = earningLines.reduce((sum, line) => sum + line.amount, 0)
+
+            return {
+                ...settlement,
+                workerName: meterNameMap.get(workerId) || `Meter worker #${workerId}`,
+                workerDetail: 'Meter worker',
+                earningLines,
+                earningTotal,
+            }
+        }
+
+        const workerId = settlement.fixed_worker_id ?? 0
+        const worker = fixedWorkerMap.get(workerId)
+        const role = worker?.role || ''
+        const roleLabel = role ? (ROLE_LABELS[role] || role) : 'Fixed worker'
+        const monthlySalary = toPayrollNumber(worker?.monthly_salary)
+        const bounds = cycleBoundsByMonth.get(settlement.month)
+        const daysWorked = bounds
+            ? attendanceRows.filter((attendance) =>
+                attendance.fixed_worker_id === workerId &&
+                attendance.date >= bounds.cycle_start &&
+                attendance.date <= bounds.cycle_end
+            ).length
+            : 0
+        const dailyRate = monthlySalary > 0 ? monthlySalary / 30 : 0
+        const earningLines: SettlementEarningLine[] = role === 'daily'
+            ? [{
+                label: 'Days present',
+                subLabel: roleLabel,
+                quantityLabel: `${daysWorked} day${daysWorked === 1 ? '' : 's'}`,
+                rateLabel: `${formatINR(dailyRate)}/day`,
+                amount: toPayrollNumber(settlement.gross_pay),
+            }]
+            : [{
+                label: 'Monthly salary',
+                subLabel: roleLabel,
+                quantityLabel: '1 cycle',
+                rateLabel: monthlySalary > 0 ? formatINR(monthlySalary) : 'Salary',
+                amount: toPayrollNumber(settlement.gross_pay),
+            }]
+
+        return {
+            ...settlement,
+            workerName: worker?.name || `Fixed worker #${workerId}`,
+            workerDetail: roleLabel,
+            earningLines,
+            earningTotal: earningLines.reduce((sum, line) => sum + line.amount, 0),
+        }
+    })
+}
+
 function dateLabel(dateStr: string, options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }) {
     const [year, month, day] = dateStr.split('-').map(Number)
     return new Date(year, month - 1, day).toLocaleDateString('en-IN', options)
@@ -571,6 +816,185 @@ function getAdvanceRecoveryExplainer(params: {
     }
 
     return `${formatINR(totalDebt)} debt is above the 50% advance recovery cap. Gross pay is ${formatINR(params.gross)}, so the cap allows ${formatINR(params.maxDeduction)} now and ${formatINR(recommendedRemainingDebt)} carries forward.`
+}
+
+function getItemizationObject(payload: unknown): Record<string, unknown> {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+        return {}
+    }
+
+    return payload as Record<string, unknown>
+}
+
+function getItemizationNumber(payload: unknown, key: string) {
+    const value = getItemizationObject(payload)[key]
+    return toPayrollNumber(value)
+}
+
+function getManualAdjustmentRows(payload: unknown) {
+    const rows = getItemizationObject(payload).manual_adjustments
+    if (!Array.isArray(rows)) return []
+
+    return rows
+        .filter((row): row is Record<string, unknown> => !!row && typeof row === 'object' && !Array.isArray(row))
+        .map((row) => ({
+            type: String(row.adjustment_type || ''),
+            reason: String(row.reason || 'Adjustment'),
+            amount: toPayrollNumber(row.amount),
+            note: String(row.note || ''),
+        }))
+}
+
+function settlementDateLabel(dateStr?: string) {
+    if (!dateStr) return 'Date not recorded'
+
+    return new Date(dateStr).toLocaleString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    })
+}
+
+function settlementDateKey(dateStr?: string) {
+    if (!dateStr) return ''
+
+    try {
+        return formatToSurat(dateStr, 'yyyy-MM-dd')
+    } catch {
+        return ''
+    }
+}
+
+function csvCell(value: string | number | boolean | null | undefined) {
+    const raw = value === null || value === undefined ? '' : String(value)
+    return `"${raw.replace(/"/g, '""')}"`
+}
+
+function filenamePart(value: string, fallback: string) {
+    const cleaned = value
+        .trim()
+        .replace(/&/g, 'and')
+        .replace(/[^a-zA-Z0-9]+/g, '')
+
+    return cleaned || fallback
+}
+
+function exportDateLabel(dateStr: string) {
+    const [year, month, day] = dateStr.split('-').map(Number)
+    if (!year || !month || !day) return dateStr.replace(/[^a-zA-Z0-9]+/g, '-')
+
+    return new Date(year, month - 1, day)
+        .toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+        .replace(',', '')
+        .replace(/\s+/g, '-')
+}
+
+function settlementExportCycleLabel({
+    dateFrom,
+    dateTo,
+    monthFilter,
+    cycleStartDay,
+}: {
+    dateFrom: string
+    dateTo: string
+    monthFilter: string
+    cycleStartDay: number
+}) {
+    if (dateFrom || dateTo) {
+        return `${dateFrom ? exportDateLabel(dateFrom) : 'Start'}-${dateTo ? exportDateLabel(dateTo) : 'Latest'}`
+    }
+
+    if (monthFilter !== 'all') {
+        const bounds = getPayrollCycleBounds(monthFilter, cycleStartDay)
+        return `${exportDateLabel(bounds.cycle_start)}-${exportDateLabel(bounds.cycle_end)}`
+    }
+
+    return 'All-Settlements'
+}
+
+function settlementExportFilename(factoryName: string, cycleLabel: string) {
+    return `${filenamePart(factoryName, 'Factory')}_${cycleLabel}.csv`
+}
+
+function buildSettlementCsv(settlements: SettlementHistoryItem[]) {
+    const paymentModeLabels: Record<PaymentMode, string> = {
+        cash: 'Cash',
+        bank_transfer: 'Bank transfer',
+        upi: 'UPI',
+        cheque: 'Cheque',
+    }
+    const headers = [
+        'Settlement ID',
+        'Settlement Date',
+        'Payroll Month',
+        'Worker Name',
+        'Worker Type',
+        'Worker Detail',
+        'Earnings Lines',
+        'Total Meters',
+        'Payment Mode',
+        'Net Revenue Before Deductions',
+        'Inam Bonus',
+        'Kapaat Deduction',
+        'Advance Recovered',
+        'PF',
+        'ESI',
+        'Net Paid',
+        'Carried Debt',
+        'Final Settlement',
+        'Compliance Flag',
+        'Manual Adjustments',
+    ]
+    const rows = settlements.map((settlement) => {
+        const manualAdjustments = getManualAdjustmentRows(settlement.itemization_payload)
+        const paymentMode = settlement.payment_mode ? paymentModeLabels[settlement.payment_mode] : ''
+        const totalMeters = settlement.earningLines.reduce((sum, line) => sum + (line.meters || 0), 0)
+        const earningLines = settlement.earningLines.map((line) => {
+            const detail = line.subLabel ? ` (${line.subLabel})` : ''
+            return `${line.label}${detail}: ${line.quantityLabel} x ${line.rateLabel} = ${line.amount.toFixed(2)}`
+        }).join('; ')
+
+        return [
+            settlement.id,
+            settlementDateKey(settlement.settled_at),
+            settlement.month,
+            settlement.workerName,
+            settlement.worker_type,
+            settlement.workerDetail,
+            earningLines,
+            totalMeters > 0 ? totalMeters.toFixed(1) : '',
+            paymentMode,
+            toPayrollNumber(settlement.gross_pay).toFixed(2),
+            getItemizationNumber(settlement.itemization_payload, 'inamTotal').toFixed(2),
+            getItemizationNumber(settlement.itemization_payload, 'kapaatTotal').toFixed(2),
+            toPayrollNumber(settlement.advance_deducted).toFixed(2),
+            getItemizationNumber(settlement.itemization_payload, 'employee_pf').toFixed(2),
+            getItemizationNumber(settlement.itemization_payload, 'employee_esic').toFixed(2),
+            toPayrollNumber(settlement.net_payout).toFixed(2),
+            toPayrollNumber(settlement.carried_forward_debt).toFixed(2),
+            settlement.is_final_settlement ? 'Yes' : 'No',
+            settlement.compliance_flag ? 'Yes' : 'No',
+            manualAdjustments.map((adjustment) => {
+                const sign = adjustment.type === 'inam' ? '+' : '-'
+                const note = adjustment.note ? ` (${adjustment.note})` : ''
+                return `${adjustment.reason}: ${sign}${adjustment.amount.toFixed(2)}${note}`
+            }).join('; '),
+        ].map(csvCell).join(',')
+    })
+
+    return [headers.map(csvCell).join(','), ...rows].join('\n')
+}
+
+function downloadCsv(filename: string, contents: string) {
+    const blob = new Blob([contents], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(url)
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -2056,6 +2480,454 @@ function PayDateOverview({
     )
 }
 
+function SettlementHistoryDialog({
+    open,
+    onOpenChange,
+    supabase,
+    orgId,
+    factoryName,
+    cycleStartDay,
+    onOpenMonth,
+}: {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    supabase: SupabaseBrowserClient
+    orgId?: string
+    factoryName: string
+    cycleStartDay: number
+    onOpenMonth: (month: string) => void
+}) {
+    const { t } = useTranslation()
+    const tl = useTransliterate()
+    const [search, setSearch] = useState('')
+    const [monthFilter, setMonthFilter] = useState('all')
+    const [dateFrom, setDateFrom] = useState('')
+    const [dateTo, setDateTo] = useState('')
+    const [selectedId, setSelectedId] = useState<number | null>(null)
+    const { data: settlements = [], isLoading, error } = useQuery({
+        queryKey: ['payroll_settlement_history', orgId, cycleStartDay],
+        enabled: open && !!orgId,
+        staleTime: 30_000,
+        queryFn: () => fetchSettlementHistory(supabase, orgId!, cycleStartDay),
+    })
+
+    const monthOptions = useMemo(
+        () => Array.from(new Set(settlements.map((settlement) => settlement.month))),
+        [settlements]
+    )
+    const filteredSettlements = useMemo(() => {
+        const normalizedSearch = search.trim().toLowerCase()
+
+        return settlements.filter((settlement) => {
+            const matchesMonth = monthFilter === 'all' || settlement.month === monthFilter
+            const settledDate = settlementDateKey(settlement.settled_at)
+            const matchesDateFrom = !dateFrom || (settledDate && settledDate >= dateFrom)
+            const matchesDateTo = !dateTo || (settledDate && settledDate <= dateTo)
+            const matchesSearch =
+                normalizedSearch.length === 0 ||
+                settlement.workerName.toLowerCase().includes(normalizedSearch) ||
+                settlement.workerDetail.toLowerCase().includes(normalizedSearch) ||
+                settlement.month.includes(normalizedSearch) ||
+                String(settlement.id).includes(normalizedSearch)
+
+            return matchesMonth && matchesDateFrom && matchesDateTo && matchesSearch
+        })
+    }, [dateFrom, dateTo, monthFilter, search, settlements])
+    const selectedSettlement = useMemo(() => {
+        if (selectedId) {
+            return settlements.find((settlement) => settlement.id === selectedId) || filteredSettlements[0] || null
+        }
+
+        return filteredSettlements[0] || null
+    }, [filteredSettlements, selectedId, settlements])
+    const totals = useMemo(() => {
+        return filteredSettlements.reduce(
+            (sum, settlement) => ({
+                net: sum.net + toPayrollNumber(settlement.net_payout),
+                gross: sum.gross + toPayrollNumber(settlement.gross_pay),
+                recovered: sum.recovered + toPayrollNumber(settlement.advance_deducted),
+            }),
+            { net: 0, gross: 0, recovered: 0 }
+        )
+    }, [filteredSettlements])
+    const manualAdjustments = selectedSettlement ? getManualAdjustmentRows(selectedSettlement.itemization_payload) : []
+    const selectedInam = selectedSettlement ? getItemizationNumber(selectedSettlement.itemization_payload, 'inamTotal') : 0
+    const selectedKapaat = selectedSettlement ? getItemizationNumber(selectedSettlement.itemization_payload, 'kapaatTotal') : 0
+    const selectedPf = selectedSettlement ? getItemizationNumber(selectedSettlement.itemization_payload, 'employee_pf') : 0
+    const selectedEsic = selectedSettlement ? getItemizationNumber(selectedSettlement.itemization_payload, 'employee_esic') : 0
+    const paymentModeLabel = selectedSettlement ? getPaymentModeLabel(selectedSettlement.payment_mode, t) : null
+    const selectedTotalMeters = selectedSettlement
+        ? selectedSettlement.earningLines.reduce((sum, line) => sum + (line.meters || 0), 0)
+        : 0
+    const selectedEarningTotal = selectedSettlement
+        ? selectedSettlement.earningLines.reduce((sum, line) => sum + line.amount, 0)
+        : 0
+    const exportLabel = dateFrom || dateTo
+        ? `${dateFrom || 'start'} to ${dateTo || 'today'}`
+        : monthFilter === 'all'
+            ? 'all dates'
+            : monthLabel(monthFilter)
+    const handleDownloadCsv = () => {
+        if (filteredSettlements.length === 0) {
+            toast.error('No settlements in this range.')
+            return
+        }
+
+        const cycleLabel = settlementExportCycleLabel({
+            dateFrom,
+            dateTo,
+            monthFilter,
+            cycleStartDay,
+        })
+        downloadCsv(
+            settlementExportFilename(factoryName, cycleLabel),
+            buildSettlementCsv(filteredSettlements)
+        )
+        toast.success(`Downloaded ${filteredSettlements.length} settlement${filteredSettlements.length === 1 ? '' : 's'}.`)
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="flex max-h-[92dvh] flex-col overflow-hidden p-0 sm:max-w-5xl">
+                <div className="border-b border-gray-200 bg-gray-50 px-4 py-4 sm:px-6">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-lg font-black text-gray-900">
+                            <History className="h-5 w-5 text-saffron-deep" />
+                            Past settlements
+                        </DialogTitle>
+                        <DialogDescription>
+                            Review paid payroll snapshots for audit and worker questions.
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
+
+                <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(340px,0.95fr)]">
+                    <div className="flex min-h-0 flex-col border-b border-gray-200 lg:border-b-0 lg:border-r">
+                        <div className="grid gap-3 border-b border-gray-100 p-4 lg:grid-cols-[minmax(220px,1fr)_170px_150px_150px_150px]">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <Input
+                                    placeholder="Search worker, month, or settlement ID"
+                                    className="h-10 bg-white pl-9 text-sm"
+                                    value={search}
+                                    onChange={(event) => setSearch(event.target.value)}
+                                />
+                            </div>
+                            <Select value={monthFilter} onValueChange={setMonthFilter}>
+                                <SelectTrigger className="h-10 bg-white text-sm">
+                                    <SelectValue placeholder="All months" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All months</SelectItem>
+                                    {monthOptions.map((month) => (
+                                        <SelectItem key={month} value={month}>
+                                            {monthLabel(month)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <div className="relative">
+                                <Label className="absolute -top-2 left-2 bg-white px-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                    From
+                                </Label>
+                                <Input
+                                    type="date"
+                                    className="h-10 bg-white text-sm"
+                                    value={dateFrom}
+                                    max={dateTo || undefined}
+                                    onChange={(event) => setDateFrom(event.target.value)}
+                                />
+                            </div>
+                            <div className="relative">
+                                <Label className="absolute -top-2 left-2 bg-white px-1 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                    To
+                                </Label>
+                                <Input
+                                    type="date"
+                                    className="h-10 bg-white text-sm"
+                                    value={dateTo}
+                                    min={dateFrom || undefined}
+                                    onChange={(event) => setDateTo(event.target.value)}
+                                />
+                            </div>
+                            <Button
+                                type="button"
+                                className="h-10 bg-saffron text-xs font-black uppercase tracking-widest text-white hover:bg-saffron-deep"
+                                disabled={isLoading || filteredSettlements.length === 0}
+                                onClick={handleDownloadCsv}
+                            >
+                                <Download className="h-4 w-4" />
+                                CSV
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-3 divide-x divide-gray-100 border-b border-gray-100 bg-white">
+                            <div className="p-4">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Paid · {exportLabel}</p>
+                                <p className="mt-1 text-lg font-black text-green-700">{formatINR(totals.net)}</p>
+                            </div>
+                            <div className="p-4">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Gross</p>
+                                <p className="mt-1 text-lg font-black text-gray-900">{formatINR(totals.gross)}</p>
+                            </div>
+                            <div className="p-4">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Recovered</p>
+                                <p className="mt-1 text-lg font-black text-amber-700">{formatINR(totals.recovered)}</p>
+                            </div>
+                        </div>
+
+                        <div className="min-h-0 flex-1 overflow-y-auto">
+                            {isLoading ? (
+                                <div className="space-y-0 divide-y divide-gray-100">
+                                    {[1, 2, 3, 4].map((item) => (
+                                        <div key={item} className="flex items-center justify-between gap-3 p-4">
+                                            <div className="space-y-2">
+                                                <div className="h-4 w-36 animate-pulse rounded bg-gray-100" />
+                                                <div className="h-3 w-48 animate-pulse rounded bg-gray-50" />
+                                            </div>
+                                            <div className="h-8 w-24 animate-pulse rounded bg-gray-100" />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : error ? (
+                                <div className="p-8 text-center">
+                                    <AlertCircle className="mx-auto mb-2 h-8 w-8 text-red-300" />
+                                    <p className="text-sm font-bold text-gray-900">Could not load settlement history</p>
+                                    <p className="mt-1 text-xs text-gray-500">{error.message}</p>
+                                </div>
+                            ) : filteredSettlements.length === 0 ? (
+                                <div className="p-8 text-center">
+                                    <ReceiptText className="mx-auto mb-2 h-8 w-8 text-gray-300" />
+                                    <p className="text-sm font-bold text-gray-900">No paid settlements found</p>
+                                    <p className="mt-1 text-xs text-gray-500">Paid workers will appear here after payroll is settled.</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-gray-100">
+                                    {filteredSettlements.map((settlement) => {
+                                        const isSelected = selectedSettlement?.id === settlement.id
+                                        return (
+                                            <button
+                                                key={settlement.id}
+                                                type="button"
+                                                className={cn(
+                                                    'flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-gray-50',
+                                                    isSelected && 'bg-saffron-soft/30'
+                                                )}
+                                                onClick={() => setSelectedId(settlement.id)}
+                                            >
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <p className="truncate text-sm font-bold text-gray-900">{tl(settlement.workerName)}</p>
+                                                        <Badge variant="outline" className="h-5 border-gray-200 bg-white px-1.5 text-[9px] font-black uppercase tracking-wider text-gray-600">
+                                                            {settlement.worker_type === 'meter' ? 'Meter' : 'Fixed'}
+                                                        </Badge>
+                                                        {settlement.is_final_settlement && (
+                                                            <Badge className="h-5 bg-red-100 px-1.5 text-[9px] font-black uppercase tracking-wider text-red-700 hover:bg-red-100">
+                                                                Final
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <p className="mt-1 text-xs text-gray-500">
+                                                        {monthLabel(settlement.month)} · {settlementDateLabel(settlement.settled_at)}
+                                                    </p>
+                                                </div>
+                                                <div className="shrink-0 text-right">
+                                                    <p className="text-sm font-black text-green-700">{formatINR(settlement.net_payout)}</p>
+                                                    <p className="mt-1 flex items-center justify-end gap-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                                        <Eye className="h-3 w-3" />
+                                                        View
+                                                    </p>
+                                                </div>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="min-h-0 overflow-y-auto bg-white p-4 sm:p-6">
+                        {selectedSettlement ? (
+                            <div className="space-y-5">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                            Settlement #{selectedSettlement.id}
+                                        </p>
+                                        <h3 className="mt-1 truncate text-xl font-black text-gray-900">{tl(selectedSettlement.workerName)}</h3>
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            {selectedSettlement.workerDetail} · {monthLabel(selectedSettlement.month)}
+                                        </p>
+                                    </div>
+                                    <Badge variant="outline" className="shrink-0 border-green-200 bg-green-50 text-[10px] font-black uppercase tracking-widest text-green-700">
+                                        Paid
+                                    </Badge>
+                                </div>
+
+                                <div className="rounded-xl border border-green-100 bg-green-50 p-4">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-green-700">Net paid</p>
+                                    <p className="mt-1 text-3xl font-black text-green-700">{formatINR(selectedSettlement.net_payout)}</p>
+                                    <p className="mt-2 text-xs text-green-800/80">{settlementDateLabel(selectedSettlement.settled_at)}</p>
+                                </div>
+
+                                <div className="overflow-hidden rounded-xl border border-gray-200">
+                                    <div className="flex flex-col gap-2 border-b border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <p className="text-xs font-black uppercase tracking-widest text-gray-500">Earnings overview</p>
+                                            <p className="mt-1 text-xs text-gray-500">
+                                                {selectedSettlement.worker_type === 'meter'
+                                                    ? 'Net revenue before deductions: meters produced x worker rate across machines.'
+                                                    : 'Salary basis used for this settlement.'}
+                                            </p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {selectedTotalMeters > 0 && (
+                                                <Badge variant="outline" className="border-gray-200 bg-white text-[10px] font-black uppercase tracking-widest text-gray-600">
+                                                    {selectedTotalMeters.toFixed(1)} m
+                                                </Badge>
+                                            )}
+                                            <Badge variant="outline" className="border-saffron-soft bg-white text-[10px] font-black uppercase tracking-widest text-saffron-deep">
+                                                Net revenue {formatINR(selectedEarningTotal || selectedSettlement.gross_pay)}
+                                            </Badge>
+                                        </div>
+                                    </div>
+
+                                    {selectedSettlement.earningLines.length > 0 ? (
+                                        <div className="divide-y divide-gray-100">
+                                            {selectedSettlement.earningLines.map((line, index) => (
+                                                <div key={`${line.label}-${line.subLabel || 'line'}-${index}`} className="p-4">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="truncate text-sm font-bold text-gray-900">{line.label}</p>
+                                                            {line.subLabel && <p className="mt-0.5 truncate text-xs text-saffron-deep/80">{line.subLabel}</p>}
+                                                        </div>
+                                                        <p className="shrink-0 text-sm font-black text-gray-900">{formatINR(line.amount)}</p>
+                                                    </div>
+                                                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-bold text-gray-500">
+                                                        <span>{line.quantityLabel}</span>
+                                                        <span className="h-1 w-1 rounded-full bg-gray-300" />
+                                                        <span>{line.rateLabel}</span>
+                                                        <span className="h-1 w-1 rounded-full bg-gray-300" />
+                                                        <span>= {formatINR(line.amount)}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="p-4 text-sm text-gray-500">
+                                            Detailed production lines are not available for this settlement, so the saved gross snapshot is shown below.
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2 rounded-xl border border-gray-200 p-4 text-sm">
+                                    <div className="flex justify-between gap-3">
+                                        <span className="text-gray-500">
+                                            {selectedSettlement.worker_type === 'meter' ? 'Net revenue before deductions' : 'Gross earnings'}
+                                        </span>
+                                        <span className="font-bold text-gray-900">{formatINR(selectedSettlement.gross_pay)}</span>
+                                    </div>
+                                    {selectedInam > 0 && (
+                                        <div className="flex justify-between gap-3 text-green-700">
+                                            <span>Inam / bonus</span>
+                                            <span className="font-bold">+{formatINR(selectedInam)}</span>
+                                        </div>
+                                    )}
+                                    {selectedKapaat > 0 && (
+                                        <div className="flex justify-between gap-3 text-red-700">
+                                            <span>Kapaat / deduction</span>
+                                            <span className="font-bold">-{formatINR(selectedKapaat)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between gap-3 text-amber-700">
+                                        <span>Advance recovered</span>
+                                        <span className="font-bold">-{formatINR(selectedSettlement.advance_deducted)}</span>
+                                    </div>
+                                    {(selectedPf > 0 || selectedEsic > 0) && (
+                                        <div className="flex justify-between gap-3 text-blue-700">
+                                            <span>PF / ESI</span>
+                                            <span className="font-bold">-{formatINR(selectedPf + selectedEsic)}</span>
+                                        </div>
+                                    )}
+                                    <div className="border-t border-gray-100 pt-2">
+                                        <div className="flex justify-between gap-3">
+                                            <span className="font-bold text-gray-700">Final payout</span>
+                                            <span className="font-black text-green-700">{formatINR(selectedSettlement.net_payout)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="rounded-xl border border-gray-200 p-3">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Payment mode</p>
+                                        <p className="mt-1 text-sm font-bold text-gray-900">{paymentModeLabel || 'Not recorded'}</p>
+                                    </div>
+                                    <div className="rounded-xl border border-gray-200 p-3">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Carried debt</p>
+                                        <p className="mt-1 text-sm font-bold text-gray-900">{formatINR(selectedSettlement.carried_forward_debt)}</p>
+                                    </div>
+                                </div>
+
+                                {manualAdjustments.length > 0 && (
+                                    <div className="space-y-2">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Manual adjustments</p>
+                                        <div className="space-y-2">
+                                            {manualAdjustments.map((adjustment, index) => {
+                                                const isInam = adjustment.type === 'inam'
+                                                return (
+                                                    <div key={`${adjustment.reason}-${index}`} className="rounded-lg border border-gray-200 p-3">
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div>
+                                                                <p className="text-xs font-bold text-gray-900">{adjustment.reason}</p>
+                                                                {adjustment.note && <p className="mt-1 text-xs text-gray-500">{adjustment.note}</p>}
+                                                            </div>
+                                                            <p className={cn('text-sm font-black', isInam ? 'text-green-700' : 'text-red-700')}>
+                                                                {isInam ? '+' : '-'}{formatINR(adjustment.amount)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="flex flex-col gap-2 sm:flex-row">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="h-10 flex-1 text-xs font-bold"
+                                        onClick={() => onOpenMonth(selectedSettlement.month)}
+                                    >
+                                        <CalendarClock className="h-4 w-4" />
+                                        Open cycle
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="h-10 flex-1 text-xs font-bold"
+                                        onClick={() => setSelectedId(null)}
+                                    >
+                                        Show latest
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex h-full min-h-[260px] items-center justify-center text-center">
+                                <div>
+                                    <ReceiptText className="mx-auto mb-3 h-9 w-9 text-gray-300" />
+                                    <p className="text-sm font-bold text-gray-900">Select a settlement</p>
+                                    <p className="mt-1 text-xs text-gray-500">The audit snapshot will appear here.</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function PayrollPage() {
     const supabase = createClient()
@@ -2073,6 +2945,7 @@ export default function PayrollPage() {
     const [hasManualCycleSelection, setHasManualCycleSelection] = useState(hasInitialCycleParam)
     const [searchTerm, setSearchTerm] = useState('')
     const [showRulesDialog, setShowRulesDialog] = useState(false)
+    const [showSettlementHistory, setShowSettlementHistory] = useState(false)
     const [showAccessCodeDialog, setShowAccessCodeDialog] = useState(false)
     const [accessCode, setAccessCode] = useState('')
     const [pendingAction, setPendingAction] = useState<{
@@ -2146,6 +3019,7 @@ export default function PayrollPage() {
         const invalidatePayroll = () => {
             void queryClient.invalidateQueries({ queryKey: ['payroll_meter', orgId] })
             void queryClient.invalidateQueries({ queryKey: ['payroll_fixed', orgId] })
+            void queryClient.invalidateQueries({ queryKey: ['payroll_settlement_history', orgId] })
         }
 
         const channel = supabase
@@ -2354,6 +3228,7 @@ export default function PayrollPage() {
             queryClient.invalidateQueries({ queryKey: context?.queryKey })
             queryClient.invalidateQueries({ queryKey: ['payroll_meter'] })
             queryClient.invalidateQueries({ queryKey: ['payroll_fixed'] })
+            queryClient.invalidateQueries({ queryKey: ['payroll_settlement_history'] })
             setShowSettlementDialog(false)
             setPendingSettleWorker(null)
         },
@@ -2554,30 +3429,42 @@ export default function PayrollPage() {
                     <h1 className="text-2xl font-bold text-gray-900">{t('payroll.monthly_payroll')}</h1>
                     <p className="text-sm text-gray-500 mt-0.5">{t('payroll.track_settle')}</p>
                 </div>
-                {/* Month navigator */}
-                <div className="flex items-center gap-2 bg-white border rounded-lg px-3 py-1.5 self-start sm:self-auto">
-                    <button
-                        onClick={() => {
-                            setHasManualCycleSelection(true)
-                            setSelectedMonth(prevMonth(selectedMonth))
-                        }}
-                        className="p-1 hover:bg-gray-100 rounded"
+                <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto sm:justify-end">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-10 gap-2 bg-white text-xs font-bold"
+                        onClick={() => setShowSettlementHistory(true)}
                     >
-                        <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <span className="text-sm font-semibold text-gray-700 min-w-[140px] text-center">
-                        {monthLabel(selectedMonth)}
-                    </span>
-                    <button
-                        onClick={() => {
-                            setHasManualCycleSelection(true)
-                            setSelectedMonth(nextMonth(selectedMonth))
-                        }}
-                        disabled={selectedMonth >= currentMonth}
-                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
-                    >
-                        <ChevronRight className="h-4 w-4" />
-                    </button>
+                        <History className="h-4 w-4" />
+                        Past settlements
+                    </Button>
+                    {/* Month navigator */}
+                    <div className="flex items-center gap-2 rounded-lg border bg-white px-3 py-1.5">
+                        <button
+                            onClick={() => {
+                                setHasManualCycleSelection(true)
+                                setSelectedMonth(prevMonth(selectedMonth))
+                            }}
+                            className="p-1 hover:bg-gray-100 rounded"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <span className="text-sm font-semibold text-gray-700 min-w-[140px] text-center">
+                            {monthLabel(selectedMonth)}
+                        </span>
+                        <button
+                            onClick={() => {
+                                setHasManualCycleSelection(true)
+                                setSelectedMonth(nextMonth(selectedMonth))
+                            }}
+                            disabled={selectedMonth >= currentMonth}
+                            className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -2962,6 +3849,19 @@ export default function PayrollPage() {
                 payReminderDays={payReminderDays}
                 isSaving={configMutation.isPending}
                 onSave={(input) => configMutation.mutate(input)}
+            />
+            <SettlementHistoryDialog
+                open={showSettlementHistory}
+                onOpenChange={setShowSettlementHistory}
+                supabase={supabase}
+                orgId={userProfile?.org_id}
+                factoryName={orgName}
+                cycleStartDay={cycleStartDay}
+                onOpenMonth={(month) => {
+                    setHasManualCycleSelection(true)
+                    setSelectedMonth(month)
+                    setShowSettlementHistory(false)
+                }}
             />
         </div>
     )

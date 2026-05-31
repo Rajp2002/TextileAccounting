@@ -119,7 +119,7 @@ Pain point translated: the owner can answer "Paisa/profit kya hua?" and track re
 
 ### Payroll and Advances
 
-Payroll reads production logs for meter workers and attendance/fixed salary data for fixed workers. The configured cycle start day defines the wage period, and the configured pay date/reminder window controls when normal settlements open. Payroll previews and records settlements, applies advance recovery caps, supports final settlement, PF/ESI deductions, manual adjustments, payment mode capture, payslip PDF generation, WhatsApp sending, and paid/unpaid state.
+Payroll reads production logs for meter workers and attendance/fixed salary data for fixed workers. The configured cycle start day defines the wage period, and the configured pay date/reminder window controls when normal settlements open. Payroll defaults to the current month for live wage accumulation, previews and records settlements, applies advance recovery caps, supports final settlement, PF/ESI deductions, manual adjustments, payment mode capture, payslip PDF generation, WhatsApp sending, and paid/unpaid state. The same surface includes past settlement history with search/date filters, detailed net-revenue-to-net-pay audit views, historical cycle reopening, and CSV downloads named by factory and pay-cycle/range, such as `AshokTextiles_Jan-01-2026-Jan-31-2026.csv`.
 
 Advances track Upaad for meter and fixed workers, pending and deducted balances, debt-to-typical-pay warnings, deletion rules, write-off support, and automatic recovery through settlement.
 

@@ -298,19 +298,21 @@ Pay workers from actual production and recover advances transparently.
 
 1. Owner records advances in `/owner/advances`.
 2. Owner opens `/owner/payroll`.
-3. Owner selects a payroll cycle month.
+3. Owner lands on the current payroll month by default or selects another payroll cycle month.
 4. Owner checks cycle status based on pay date and reminder window.
-5. Owner reviews meter-worker earnings from production logs.
-6. Owner reviews fixed-worker earnings from salary/attendance.
-7. Owner checks advances, PF/ESI, deductions, manual adjustments, net payout, and remaining debt.
-8. Owner toggles final settlement where needed.
-9. Owner selects payment mode and verifies the payout.
-10. Owner settles worker.
-11. Owner generates PDF or sends WhatsApp payslip.
+5. Owner checks the Pay Date Overview for owed, pending, paid, and quick settlement actions on the active due cycle.
+6. Owner reviews meter-worker earnings from production logs.
+7. Owner reviews fixed-worker earnings from salary/attendance.
+8. Owner checks advances, PF/ESI, deductions, manual adjustments, net payout, and remaining debt.
+9. Owner toggles final settlement where needed.
+10. Owner selects payment mode and verifies the payout.
+11. Owner settles worker.
+12. Owner generates PDF or sends WhatsApp payslip.
+13. Owner opens past settlements to search, filter, inspect, reopen historical cycles, or download settlement CSVs named by factory and pay-cycle/range.
 
 ### Pain Point Replaced
 
-Production register plus Upaad notebook becomes itemized settlement and worker communication.
+Production register plus Upaad notebook becomes itemized settlement, worker communication, and downloadable settlement audit history.
 
 ### Outputs
 

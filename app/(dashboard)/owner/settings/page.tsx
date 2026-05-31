@@ -22,7 +22,6 @@ import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
 import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
 import { updateOrganizationName, updateOrganizationProductionMode } from '@/app/(dashboard)/owner/actions'
-import { SupervisorFloatManager } from '@/components/settings/supervisor-float-manager'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PRODUCTION_MODE_OPTIONS, getProductionModeOption, normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 
@@ -370,7 +369,6 @@ export default function SettingsPage() {
             {/* Section 3: Security & Operations */}
             <SettingsCategory title="Account Security & Team" icon={ShieldCheck}>
                 <AccessCodeGenerator />
-                <SupervisorFloatManager />
             </SettingsCategory>
 
             {/* Section 4: Communications */}
