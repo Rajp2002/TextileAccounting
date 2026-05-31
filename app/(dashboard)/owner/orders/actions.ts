@@ -885,7 +885,7 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
             party_phone,
             party_city,
             challan_number,
-            stock_sale:fabric_stock_sales (
+            stock_sale:fabric_stock_sales!dispatches_stock_sale_id_fkey (
                 id,
                 sale_date,
                 meters_sold,

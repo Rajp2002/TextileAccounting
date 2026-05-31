@@ -1008,20 +1008,80 @@ export async function getMarketRunDetail(marketRunId: string) {
 
     if (quoteError) return { error: quoteError.message }
 
-    // Fetch sales with party name
-    const { data: sales, error: salesError } = await supabase
-        .from('market_run_sales')
-        .select(`
-            *,
-            parties ( id, name, phone )
-        `)
-        .eq('market_run_id', marketRunId)
-        .eq('org_id', profile.org_id)
-        .order('sale_date', { ascending: false })
+    // Fetch both direct market run sales and stock sales from fabric_stock_sales
+    const [salesRes, stockSalesRes] = await Promise.all([
+        supabase
+            .from('market_run_sales')
+            .select(`
+                *,
+                parties ( id, name, phone )
+            `)
+            .eq('market_run_id', marketRunId)
+            .eq('org_id', profile.org_id),
+        supabase
+            .from('fabric_stock_sales')
+            .select(`
+                id,
+                sale_date,
+                meters_sold,
+                price_per_meter,
+                cost_per_meter,
+                dispatch_status,
+                party_name,
+                party_phone,
+                notes,
+                fabric_stock_lots!inner (
+                    market_run_id
+                )
+            `)
+            .eq('fabric_stock_lots.market_run_id', marketRunId)
+            .eq('org_id', profile.org_id)
+    ])
 
-    if (salesError) return { error: salesError.message }
+    if (salesRes.error) return { error: salesRes.error.message }
+    if (stockSalesRes.error) return { error: stockSalesRes.error.message }
 
-    return { data: { run, quote: quote ?? null, sales: sales ?? [] } }
+    const directSales = (salesRes.data ?? []).map((s) => ({
+        id: s.id,
+        market_run_id: marketRunId,
+        party_id: s.party_id,
+        invoice_id: s.invoice_id,
+        meters_sold: Number(s.meters_sold),
+        price_per_meter: Number(s.price_per_meter),
+        cost_per_meter: Number(s.cost_per_meter),
+        status: s.status as 'pending' | 'dispatched' | 'settled',
+        sale_date: s.sale_date,
+        notes: s.notes,
+        parties: Array.isArray(s.parties) ? s.parties[0] : s.parties
+    }))
+
+    const stockSalesMapped = (stockSalesRes.data ?? []).map((ss) => ({
+        id: ss.id,
+        market_run_id: marketRunId,
+        party_id: '',
+        invoice_id: null,
+        meters_sold: Number(ss.meters_sold),
+        price_per_meter: Number(ss.price_per_meter),
+        cost_per_meter: Number(ss.cost_per_meter),
+        status: (ss.dispatch_status === 'received'
+            ? 'settled'
+            : (ss.dispatch_status === 'dispatched' || ss.dispatch_status === 'discrepancy')
+                ? 'dispatched'
+                : 'pending') as 'pending' | 'dispatched' | 'settled',
+        sale_date: ss.sale_date,
+        notes: ss.notes,
+        parties: {
+            id: '',
+            name: ss.party_name || 'Stock Sale',
+            phone: ss.party_phone,
+        }
+    }))
+
+    const combinedSales = [...directSales, ...stockSalesMapped].sort(
+        (a, b) => new Date(b.sale_date).getTime() - new Date(a.sale_date).getTime()
+    )
+
+    return { data: { run, quote: quote ?? null, sales: combinedSales } }
 }
 
 // ─── Market Run — Record a Sale ───────────────────────────────────────────────

@@ -77,16 +77,25 @@ const STATUS_CONFIG: Record<MarketRunSummary['status'], { label: string; color: 
 
 function fmtM(n: number) { return `${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m` }
 
+function money(value: number, digits = 0) {
+    return `₹${Number(value || 0).toLocaleString('en-IN', {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+    })}`
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function MarketRunDetailClient({
     run,
     quote,
     initialSales,
+    isArchivedContext = false,
 }: {
     run: MarketRunSummary
     quote: QuoteSnapshot
     initialSales: MarketRunSale[]
+    isArchivedContext?: boolean
 }) {
     const { tx } = useTranslation()
     const router = useRouter()
@@ -119,8 +128,8 @@ export default function MarketRunDetailClient({
         <div className="space-y-6 pb-20">
             {/* Header & Navigation */}
             <div>
-                <Link href="/owner/market-runs" className="inline-flex items-center text-xs font-bold text-muted-foreground hover:text-foreground mb-3 transition-colors">
-                    <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Back to Market Runs
+                <Link href={isArchivedContext ? "/owner/archive" : "/owner/market-runs"} className="inline-flex items-center text-xs font-bold text-muted-foreground hover:text-foreground mb-3 transition-colors">
+                    <ArrowLeft className="mr-1 h-3.5 w-3.5" /> {isArchivedContext ? "Back to Archive" : "Back to Market Runs"}
                 </Link>
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div>
@@ -357,8 +366,19 @@ export default function MarketRunDetailClient({
                                                 <p className="font-bold text-foreground">{fmtM(sale.meters_sold)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-muted-foreground font-medium mb-0.5">Commercials</p>
-                                                <p className="font-bold text-foreground">Tracked in Commercials</p>
+                                                <p className="text-muted-foreground font-medium mb-0.5">Price / Meter</p>
+                                                <p className="font-bold text-foreground">{money(sale.price_per_meter, 2)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-muted-foreground font-medium mb-0.5">Unit Cost</p>
+                                                <p className="font-bold text-muted-foreground">{money(sale.cost_per_meter, 2)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-muted-foreground font-medium mb-0.5">Booked Profit</p>
+                                                <p className={`font-black ${(sale.price_per_meter - sale.cost_per_meter) * sale.meters_sold >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                                                    {((sale.price_per_meter - sale.cost_per_meter) * sale.meters_sold) >= 0 ? '+' : ''}
+                                                    {money((sale.price_per_meter - sale.cost_per_meter) * sale.meters_sold)}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -374,12 +394,14 @@ export default function MarketRunDetailClient({
                                         <th className="px-4 py-3 font-semibold">Date</th>
                                         <th className="px-4 py-3 font-semibold">Direct Trader Invoice</th>
                                         <th className="px-4 py-3 font-semibold text-right">Meters</th>
-                                        <th className="px-4 py-3 font-semibold text-right">Commercials</th>
+                                        <th className="px-4 py-3 font-semibold text-right">Price / Meter</th>
+                                        <th className="px-4 py-3 font-semibold text-right">Booked Profit</th>
                                         <th className="px-4 py-3 font-semibold text-right">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border/50">
                                     {initialSales.map((sale) => {
+                                        const profit = (sale.price_per_meter - sale.cost_per_meter) * sale.meters_sold;
                                         return (
                                             <tr key={sale.id} className="hover:bg-muted/30 transition-colors">
                                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
@@ -396,8 +418,11 @@ export default function MarketRunDetailClient({
                                                 <td className="px-4 py-3 whitespace-nowrap text-right font-medium">
                                                     {fmtM(sale.meters_sold)}
                                                 </td>
-                                                <td className="px-4 py-3 whitespace-nowrap text-right text-xs font-semibold text-muted-foreground">
-                                                    View money details in Commercials
+                                                <td className="px-4 py-3 whitespace-nowrap text-right font-medium">
+                                                    {money(sale.price_per_meter, 2)}
+                                                </td>
+                                                <td className={`px-4 py-3 whitespace-nowrap text-right font-bold ${profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                                                    {profit >= 0 ? '+' : ''}{money(profit)}
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap text-right">
                                                     <Badge variant="outline" className={

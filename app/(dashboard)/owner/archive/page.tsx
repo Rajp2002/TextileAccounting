@@ -96,7 +96,7 @@ function MarketRunArchiveCard({ run }: { run: MarketRunSummary }) {
     const statusLabel = displayStatus === 'closed' ? 'Closed' : 'Sold out'
 
     return (
-        <Link href={`/owner/market-runs/${run.market_run_id}`}>
+        <Link href={`/owner/archive/market-runs/${run.market_run_id}`}>
             <Card className="border-slate-200 transition-colors hover:border-violet-300 hover:bg-violet-50/30">
                 <CardContent className="flex items-start justify-between gap-4 p-4">
                     <div className="min-w-0">

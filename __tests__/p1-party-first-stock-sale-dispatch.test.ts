@@ -168,7 +168,7 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         const receiptMigration = readProjectFile('supabase/migrations/20260531020000_keep_partial_stock_sale_receipt_pending.sql')
 
         expect(action).toContain('stock_sale_id')
-        expect(action).toContain('stock_sale:fabric_stock_sales')
+        expect(action).toContain('stock_sale:fabric_stock_sales!dispatches_stock_sale_id_fkey')
         expect(action).toContain('id: stockSale?.id ?? row.stock_sale_id ?? row.id')
         expect(action).toContain('total_target_meters: stockSale?.meters_sold ?? row.qty_meters_sent')
 
