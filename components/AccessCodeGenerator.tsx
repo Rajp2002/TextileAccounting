@@ -4,13 +4,13 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { generateAccessCode } from '@/app/(dashboard)/owner/actions'
 import { KeyRound, Loader2, Copy, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
+import { cn } from '@/lib/utils'
 
-export function AccessCodeGenerator() {
+export function AccessCodeGenerator({ className }: { className?: string }) {
     const { t } = useTranslation()
     const [loading, setLoading] = useState(false)
     const [generatedCode, setGeneratedCode] = useState<string | null>(null)
@@ -44,17 +44,17 @@ export function AccessCodeGenerator() {
     }
 
     return (
-        <Card className="border-red-100 shadow-sm">
-            <CardHeader className="bg-red-50/50 pb-4">
-                <CardTitle className="text-red-800 flex items-center gap-2">
-                    <KeyRound className="h-5 w-5" />
+        <Card className={cn("overflow-hidden rounded-lg border-risk/20 bg-surface/95 py-0 shadow-[var(--shadow-card)]", className)}>
+            <CardHeader className="border-b border-risk/10 bg-risk-soft/45 p-5">
+                <CardTitle className="flex items-center gap-2 text-base text-risk">
+                    <KeyRound className="h-4 w-4" />
                     {t('settings.access_code.title')}
                 </CardTitle>
-                <CardDescription className="text-red-700/80">
+                <CardDescription className="text-risk/80">
                     {t('settings.access_code.desc')}
                 </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6 space-y-4">
+            <CardContent className="space-y-4 p-5">
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                     <Button
                         onClick={handleGenerate}
@@ -74,7 +74,7 @@ export function AccessCodeGenerator() {
                             <Input
                                 value={generatedCode}
                                 readOnly
-                                className="font-mono font-bold tracking-widest text-center bg-gray-50 border-gray-300"
+                                className="border-hairline bg-canvas/80 text-center font-mono font-bold tracking-widest"
                             />
                             <Button
                                 variant="outline"
@@ -88,7 +88,7 @@ export function AccessCodeGenerator() {
                     )}
                 </div>
                 {generatedCode && (
-                    <p className="text-sm text-yellow-600 font-medium">
+                    <p className="text-sm font-medium text-warning">
                         {t('settings.access_code.warning')}
                     </p>
                 )}

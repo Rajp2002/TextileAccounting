@@ -1,6 +1,6 @@
 # Estimator and Quotes
 
-Last reviewed against the active documentation pass on May 31, 2026.
+Last reviewed against the active codebase on May 31, 2026. Updated May 31, 2026.
 
 ## Phase 1 Status
 
@@ -65,13 +65,21 @@ Weavly workflow:
 
 - `app/(dashboard)/owner/estimator/EstimatorClient.tsx`
 - `app/(dashboard)/owner/estimator/actions.ts`
+  - `saveEstimatorQuoteV3` — creates `estimator_quotes` rows with full snapshot.
+  - `convertAcceptedQuoteToOrder` — server action that calls `executeQuoteConversion`; the underlying `convert_accepted_quote_to_order` RPC had an ambiguous `order_id` column reference (fixed migration `20260531040000`).
+  - `startPartyOrderFromEstimator` — fast-path: creates accepted quote then immediately calls `executeQuoteConversion`.
+  - `getActiveProductionTargets` — returns linkable orders/runs for the loom assignment picker.
 - `app/(dashboard)/owner/quotes/QuotesClient.tsx`
+- `lib/quotes/convert-accepted-quote-to-order.ts`
+  - `executeQuoteConversion` — shared service: validates quote, calls the RPC, rehydrates estimate state, upserts `order_yarn_requirements`.
+  - `hydrateEstimateStateFromQuote` — reconstructs a full `EstimateState` from a stored quote row for yarn requirement computation.
 - `lib/estimator.ts`
 - `lib/finance.ts`
 - `factory_cost_profile`
 - `estimator_templates`
 - `estimator_quotes`
 - `orders`
+- `order_yarn_requirements`
 - `market_runs`
 
 ## Downstream Effects
@@ -86,3 +94,4 @@ Weavly workflow:
 - Formula tests are critical before launch.
 - Quote snapshots must remain stable after template or factory-profile edits.
 - The first-time owner path should remain simple despite the advanced controls.
+- The `convert_accepted_quote_to_order` Supabase RPC returns a table with a column named `order_id`. Any UPDATE inside the function must qualify `estimator_quotes.order_id` explicitly to avoid PostgreSQL ambiguity errors.

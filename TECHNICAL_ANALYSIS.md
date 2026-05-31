@@ -1,6 +1,6 @@
 # Weavly Technical Analysis
 
-Last analyzed from the active codebase on May 31, 2026.
+Last analyzed from the active codebase on May 31, 2026. Updated to reflect bug fixes and performance improvements applied May 31, 2026.
 
 ## Stack
 
@@ -125,6 +125,12 @@ Deferred ERP/governance:
 - `yarn_lots`, `beam_cards`, `beam_card_lots`, `yarn_movements`, `order_yarn_requirements`
 - `audit_log`, `notice_registry`, `grievances`, `dpas`, `organization_dpas`, `breach_reports`
 
+Key views:
+
+- `market_run_summary` — aggregates per-run totals (produced, sold, in-godown, profit) via 8 correlated subqueries. Indexed by `fabric_stock_lots(market_run_id)`, `fabric_stock_sales(stock_lot_id)`, and `orders(market_run_id, status)` (migration `20260531050000`).
+- `fabric_stock_lot_summary` — per-lot sales aggregate with `security_invoker`.
+- `order_progress_view` — per-order production/pace summary.
+
 ## Important Server Actions
 
 Estimator and quotes:
@@ -134,8 +140,10 @@ Estimator and quotes:
 - `getEstimatorTemplates`
 - `saveAsFabricTemplate`
 - `saveEstimatorQuoteV3`
-- `convertAcceptedQuoteToOrder`
+- `convertAcceptedQuoteToOrder` — calls the `convert_accepted_quote_to_order` RPC; ambiguous `order_id` column reference fixed in migration `20260531040000`.
+- `startPartyOrderFromEstimator` — fast-path from Estimator to accepted quote + order in one shot.
 - `createMarketRunFromEstimator`
+- `getActiveProductionTargets` — returns assignable party orders and in-production market runs for the loom cost-analysis picker. Uses `market_run_summary` view; cached on the client for 30 s with `keepPreviousData` to avoid cold-start flicker.
 - `getMarketRuns`
 - `createMarketRunSaleAction`
 
@@ -203,6 +211,9 @@ Billing uses Razorpay:
 - Automated tests are broader than the first Phase 1 pass, but workflow coverage is still uneven relative to complexity.
 - `lib/time.ts` centralizes Surat date helpers, but some client code still uses browser `new Date()` for current shift/date.
 - Large migration history means runtime code and latest migrations should be treated as authoritative.
+- The `convert_accepted_quote_to_order` RPC had an ambiguous `order_id` column reference (fixed `20260531040000`). The function uses a `RETURNS TABLE(... order_id UUID ...)` declaration; the UPDATE WHERE clause must always qualify the column as `estimator_quotes.order_id`.
+- The `market_run_summary` view uses 8 correlated subqueries. Direct queries against this view can be slow without the indexes added in `20260531050000`. Always filter at the application layer where possible and cache results.
+- The loom cost-analysis picker (`getActiveProductionTargets`) is cached client-side for 30 s with TanStack Query `staleTime` and `keepPreviousData`. The cache is invalidated immediately after any assignment change via `queryClient.invalidateQueries`.
 
 ## Phase 1 Technical Risk Areas
 
@@ -214,3 +225,4 @@ Billing uses Razorpay:
 - Dispatch partial dispatch and receipt variance.
 - WhatsApp failure isolation.
 - Archive route/navigation consistency.
+- React hydration mismatches across dashboard/public layout boundary (not yet resolved).

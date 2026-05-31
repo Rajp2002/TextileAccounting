@@ -1,6 +1,6 @@
 # Weavly User Workflows
 
-Last analyzed from the active codebase on May 31, 2026.
+Last updated May 31, 2026.
 
 This document explains how users progress through Weavly in the active product. It is written from the user's workflow outward: what they are trying to do, what pain point it replaces, how they interact with the app, and what records are created.
 
@@ -57,9 +57,9 @@ Turn fabric costing from mental math and Excel into repeatable, auditable quote 
 5. Owner adjusts factory costs: warping, sizing, winding, process costs, finishing, overheads, fixed-worker overhead, commission, transport, monthly output.
 6. Owner reviews landed cost, quote price, margin, and scenarios.
 7. Owner saves or updates a fabric template.
-8. Owner saves the quote: chooses **Save Quote** (saves as Draft for negotiation) or **Save & Accept** (immediately locks the quote, freezing yarn rates and pricing).
+8. Owner saves the quote: chooses **Save Quote** (saves as Draft for negotiation) or **Save & Accept** (immediately locks the quote, freezing yarn rates and pricing, and opens the Start Party Order dialog to optionally create the order in the same step).
 9. Owner manages status in quote history: draft, accepted, or rejected. The manual "Mark as Sent" step is removed from the UI. Accepting a draft quote silently transitions through "sent" in the database audit log and triggers a lightweight locking confirmation modal.
-10. Owner can restore any quote snapshot to re-estimate.
+10. Owner can restore any quote snapshot to re-estimate. A warning banner prevents stale draft collisions when re-estimating from a snapshot.
 
 ### Pain Point Replaced
 
@@ -73,7 +73,7 @@ The handwritten parchi/calculator workflow becomes a structured fabric recipe an
 
 ## 3. Quote to Order Workflow
 
-Entry points: `/owner/quotes`, `/owner/orders`
+Entry points: `/owner/quotes`, `/owner/orders`, `/owner/estimator`
 
 ### Goal
 
@@ -82,12 +82,12 @@ Convert a confirmed party quote into a live production commitment.
 ### Flow
 
 1. Owner accepts a quote in Quote History (or saves it as already accepted using **Save & Accept** directly from the estimator).
-2. Owner clicks **Create Active Order** on the accepted quote card.
-3. Owner confirms target meters, deadline, and notes.
-4. System creates an order with quote snapshot values and tracking token.
-5. Owner opens orders.
+2. **Option A** — Start Party Order fast path: after saving an accepted quote from the estimator, the Start Party Order dialog opens immediately to set target meters, deadline, and notes in one step. The server action `startPartyOrderFromEstimator` calls `executeQuoteConversion` internally.
+3. **Option B** — Owner clicks **Create Active Order** on an accepted quote card in Quote History. The dialog confirms target meters, deadline, and notes, then calls `convertAcceptedQuoteToOrder`, which also routes through `executeQuoteConversion`.
+4. System creates an order via the `convert_accepted_quote_to_order` Supabase RPC with quote snapshot values, tracking token, worker rate snapshot, and yarn requirements. *(The `order_id` ambiguity bug in this RPC was fixed in migration `20260531040000`.)*
+5. Owner opens `/owner/orders`.
 6. Owner reviews progress, pace, deadline, margin, and total order value.
-7. Owner assigns machines.
+7. Owner opens `/owner/machines` and assigns the new order as the cost analysis / quality for one or more looms. The assignment picker (`getActiveProductionTargets`) is cached 30 s to avoid cold-start delays; the new order appears immediately after cache invalidation.
 8. Supervisor sees/selects the order in the production log.
 9. Production logs update progress.
 10. Owner dispatches output when ready.
@@ -99,6 +99,7 @@ The whiteboard order list becomes a tracked production commitment with machine a
 ### Outputs
 
 - `orders`
+- `order_yarn_requirements`
 - `machine_assignments`
 - `shift_assignments`
 - `production_logs`

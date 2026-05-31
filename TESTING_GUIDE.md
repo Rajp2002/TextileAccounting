@@ -1,32 +1,36 @@
 # Weavly Testing Guide
 
-Last analyzed from the active codebase on May 31, 2026.
+Last updated May 31, 2026.
 
 ## Current Automated Coverage
 
-The repo currently has Vitest-style coverage across finance and several Phase 1 regressions, including:
+The repo has Vitest-style coverage across finance and several Phase 1 regressions:
 
-- `__tests__/finance.test.ts`
-- estimator, market runs, stock lifecycle/source validation
-- party-first stock sale and dispatch
+- `__tests__/finance.test.ts` — estimator math, market runs, stock lifecycle/source validation
+- `__tests__/p1-party-first-stock-sale-dispatch.test.ts` — party-first stock sale and dispatch
+- `__tests__/p1-stock-lifecycle.test.ts` — stock lifecycle and source validation (expanded)
+- `__tests__/payroll-cycle.test.ts` — payroll cycle bounds, guards, and pay-date config
+- `__tests__/payroll-pay-date-config.test.ts` — configurable pay-date behavior
+- `__tests__/payroll-settlement-history.test.ts` — settlement history reconstruction: earning lines, CSV export shape, filename format (`FactoryName_CycleStart-CycleEnd.csv`)
 - Commercials read model and payments
-- payroll cycle, guards, manual adjustments, reversals, and pay-date config
 - production log strictness/forgiveness
 - auth/login and billing gates
 - WhatsApp consent
 
-There are also ad hoc scripts in `scripts/` and several test/probe files. Phase 1 still should not assume comprehensive automated end-to-end workflow coverage.
+There are also ad hoc scripts in `scripts/` and a Supabase seed file at `supabase/seed_qa_data.sql`. Phase 1 should not assume comprehensive automated end-to-end workflow coverage.
 
 ## Commands
 
 - `npm run lint`
 - `npm run build`
+- `npx vitest run <file>` — run a specific test file
+- `npx vitest run` — run all test files
 
-There is no dedicated `test` script in `package.json` at the time of this pass. Existing tests can be run with `npx vitest run <file>` or a broader Vitest command. If adding tests, also add a stable package script.
+No dedicated `test` script is in `package.json`; use the Vitest commands above directly. Add a `test` script to `package.json` if CI integration is needed.
 
 ## Phase 1 Test Priorities
 
-### 1. Estimator
+### 1. Estimator and Quote Lifecycle
 
 Validate with real factory examples:
 
@@ -35,13 +39,16 @@ Validate with real factory examples:
 - GST
 - shortage
 - warp crimp
+- float denier input (supported as of May 2026)
 - warping/sizing/winding/process/finishing
 - overhead allocation and override
 - loom RPM/power assumptions
 - commission, transport, margin
 - quote price and landed cost
-- quote snapshot restore
-- accepted quote to order conversion
+- quote snapshot restore (and stale-draft collision warning banner)
+- **accepted quote to order conversion** — verified working; the `convert_accepted_quote_to_order` RPC `order_id` ambiguity bug was fixed in migration `20260531040000`. Regression test should confirm this path end-to-end.
+- Start Party Order fast path (accepted quote + order in one step from estimator)
+- loom cost-analysis picker loads the new order within 30 s (stale cache window); immediate after cache invalidation
 - market run creation from estimator
 
 ### 2. Supervisor Production Log

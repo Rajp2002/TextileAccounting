@@ -1,6 +1,6 @@
 # Weavly Master Product Document
 
-Last analyzed from the active codebase on May 31, 2026.
+Last updated May 31, 2026.
 
 This is the product source of truth for the current Weavly codebase. It describes what the app is, what Phase 1 now includes, how users move through the product, which pain points each feature translates from the existing physical workflow, and how the digital objects connect.
 
@@ -143,17 +143,17 @@ The estimator calculates yarn cost, conversion cost, overhead, landed cost, quot
 
 ### 4.3 Quote
 
-The owner saves a quote (either as Draft, or as already Accepted using the direct **Save & Accept** action on the estimator). The quote stores the commercial values and the estimator snapshot. In `/owner/quotes`, the owner can filter by status, accept a draft quote with a locking warning modal (which silently transitions status through 'sent' in the database for compliance logs), restore a quote into the estimator for rework, or convert an accepted quote into an active order.
+The owner saves a quote (either as Draft, or as already Accepted using the direct **Save & Accept** action on the estimator). The quote stores the commercial values and the estimator snapshot. **Save & Accept** opens the Start Party Order dialog immediately, letting the owner create an order in the same step without revisiting Quote History. In `/owner/quotes`, the owner can filter by status, accept a draft quote with a locking warning modal (which silently transitions status through 'sent' in the database for compliance logs), restore a quote into the estimator for rework (a warning banner prevents stale draft collisions), or convert an accepted quote into an active order.
 
 ### 4.4 Order or Market Run
 
-If a party commits, the accepted quote becomes an order with target meters, deadline, instructions, tracking token, and quote-derived worker-rate snapshots.
+If a party commits, the accepted quote becomes an order with target meters, deadline, instructions, tracking token, and quote-derived worker-rate snapshots. This happens through `executeQuoteConversion` (shared service in `lib/quotes/convert-accepted-quote-to-order.ts`), called either via the **Start Party Order** fast path (directly from the estimator after Save & Accept) or via **Create Active Order** in Quote History. The `convert_accepted_quote_to_order` Supabase RPC had an `order_id` ambiguity bug that was fixed in migration `20260531040000`.
 
 If the factory is producing for stock, the owner creates a market run from estimator mode. Market runs track produced meters, expected in-godown meters, sold meters, revenue, cost, profit, and status.
 
 ### 4.5 Assign and Log Production
 
-The supervisor opens `/supervisor/dashboard`, chooses date and shift, assigns worker and order/run per machine, updates machine status, and enters shift production metres. The UI warns on missing assignments, negative metres, and missing downtime reasons. Copy Previous Shift reduces repeated setup.
+The supervisor opens `/supervisor/dashboard`, chooses date and shift, assigns worker and order/run per machine, updates machine status, and enters shift production metres. The UI warns on missing assignments, negative metres, and missing downtime reasons. Copy Previous Shift reduces repeated setup. Worker and cost-analysis dropdowns are presented as static labels in the shift metre log for clarity.
 
 Submitting logs writes `production_logs` with machine, worker, order, date, shift, metres, synthetic opening/closing reading fields, submitted timestamp, rate snapshots, and actor context. Duplicate and correction flows protect payroll and analytics from accidental rewrites.
 
@@ -196,7 +196,7 @@ Commercials also tracks receivables, payment receipts, collected amount, balance
 
 Payroll aggregates meter-worker production logs and fixed-worker attendance/salary data. It uses `payroll_configs` to derive cycle bounds, pay date, reminder window, and pay-window status. It previews gross/net revenue before deductions, advance deduction, statutory deductions, manual adjustments, net payout, remaining debt, compliance flags, and final-settlement behavior.
 
-The dashboard defaults to the current payroll month for live wage tracking, enables navigation up to the current in-progress month, and highlights the active cycle with a dedicated `PayDateOverview` component. Normal settlement is gated and disabled if the payroll window is not open, displaying a validation reason near the configured pay date. The owner records settlement with payment mode and verification, then can send or generate payslips.
+The dashboard defaults to the current payroll month for live wage tracking, enables navigation up to the current in-progress month, and highlights the active cycle with a dedicated `PayDateOverview` component. Normal settlement is gated and disabled if the payroll window is not open, displaying a validation reason near the configured pay date. Once all workers for the cycle are settled, the cycle status badge updates to **Paid** or **Clear** with a green success indicator. The owner records settlement with payment mode and verification, then can send or generate payslips.
 
 Past settlements are available from `/owner/payroll` as an audit archive. Owners can search, filter by month or settlement date range, inspect paid settlements, reopen the historical cycle, and download CSV exports. Historical meter-worker settlements show earning lines reconstructed from machine/order production logs as metres multiplied by `worker_rate_snapshot`; fixed-worker settlements show salary or attendance basis. Export filenames use the factory and pay-cycle/range, for example `AshokTextiles_Jan-01-2026-Jan-31-2026.csv`.
 

@@ -11,12 +11,13 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { saveWhatsAppPreferences } from '@/app/(dashboard)/owner/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
+import { cn } from '@/lib/utils'
 
 /**
  * WhatsApp opt-in card for the owner settings page.
  * Compliant with WhatsApp's opt-in policy — owner must explicitly save & enable.
  */
-export function WhatsAppOptIn() {
+export function WhatsAppOptIn({ className }: { className?: string }) {
     const queryClient = useQueryClient()
     const { data: userProfile, isLoading } = useUserProfile()
     const [phone, setPhone] = useState('')
@@ -65,9 +66,9 @@ export function WhatsAppOptIn() {
 
     if (isLoading) {
         return (
-            <Card className="shadow-sm border-gray-200">
+            <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
                 <CardContent className="p-6">
-                    <div className="flex items-center gap-2 text-gray-400">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         <span className="text-sm">Loading WhatsApp settings…</span>
                     </div>
@@ -77,15 +78,15 @@ export function WhatsAppOptIn() {
     }
 
     return (
-        <Card className="shadow-sm border-gray-200">
+        <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <MessageCircle className="h-5 w-5 text-green-600" />
+                        <MessageCircle className="h-4 w-4 text-success" />
                         <CardTitle className="text-base font-semibold">Daily WhatsApp Brief</CardTitle>
                     </div>
                     {isOptedIn ? (
-                        <Badge className="bg-green-50 text-green-700 border-green-200 font-medium text-xs gap-1">
+                        <Badge variant="success" className="font-medium text-xs gap-1">
                             <CheckCircle2 className="h-3 w-3" />
                             Active
                         </Badge>
@@ -110,7 +111,7 @@ export function WhatsAppOptIn() {
                         Your WhatsApp Number
                     </Label>
                     <div className="flex gap-2">
-                        <div className="flex items-center px-3 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600 font-medium whitespace-nowrap">
+                        <div className="flex items-center whitespace-nowrap rounded-md border border-hairline bg-surface-soft/55 px-3 text-sm font-medium text-body">
                             +91
                         </div>
                         <Input
@@ -121,10 +122,10 @@ export function WhatsAppOptIn() {
                             value={phone}
                             onChange={handlePhoneChange}
                             maxLength={10}
-                            className="font-mono tracking-wider"
+                            className="border-hairline bg-canvas/80 font-mono tracking-wider"
                         />
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                         10-digit Indian mobile number, without country code.
                     </p>
                 </div>
@@ -135,7 +136,7 @@ export function WhatsAppOptIn() {
                         onClick={handleSave}
                         disabled={isPending}
                         size="sm"
-                        className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                        className="gap-2 bg-success text-white hover:bg-success/90"
                     >
                         {isPending ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -151,7 +152,7 @@ export function WhatsAppOptIn() {
                             disabled={isPending}
                             size="sm"
                             variant="ghost"
-                            className="text-gray-500 hover:text-red-600 hover:bg-red-50"
+                            className="text-muted-foreground hover:bg-risk-soft hover:text-risk"
                         >
                             Disable Notifications
                         </Button>
@@ -159,7 +160,7 @@ export function WhatsAppOptIn() {
                 </div>
 
                 {/* Legal disclaimer */}
-                <p className="text-xs text-gray-400 leading-relaxed border-t border-gray-100 pt-3">
+                <p className="border-t border-hairline/70 pt-3 text-xs leading-relaxed text-subtle">
                     By saving, you agree to receive automated WhatsApp messages from Weavly about
                     your factory activity. Messages are sent only at scheduled times or when
                     critical events occur. Standard WhatsApp rates may apply.

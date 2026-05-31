@@ -1,15 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
     Dialog, DialogContent, DialogDescription, DialogFooter,
     DialogHeader, DialogTitle, DialogTrigger
 } from '@/components/ui/dialog'
-import { Factory, User, ShieldCheck, Loader2, AlertTriangle, Copy, RefreshCw, MessageSquare, Smartphone, SlidersHorizontal } from 'lucide-react'
+import {
+    AlertTriangle,
+    CheckCircle2,
+    Copy,
+    Factory,
+    KeyRound,
+    Loader2,
+    MessageSquare,
+    RefreshCw,
+    ShieldCheck,
+    SlidersHorizontal,
+    Smartphone,
+    User,
+    XCircle,
+    type LucideIcon,
+} from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { AccessCodeGenerator } from '@/components/AccessCodeGenerator'
@@ -24,6 +38,8 @@ import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
 import { updateOrganizationName, updateOrganizationProductionMode } from '@/app/(dashboard)/owner/actions'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PRODUCTION_MODE_OPTIONS, getProductionModeOption, normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -34,21 +50,120 @@ type OrganizationSettings = {
     production_mode: ProductionMode | null
 }
 
+type SettingsSectionMeta = {
+    id: string
+    title: string
+    icon: LucideIcon
+}
+
+const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
+    { id: 'overview', title: 'Overview', icon: SlidersHorizontal },
+    { id: 'factory-identity', title: 'Factory & Identity', icon: Factory },
+    { id: 'production-mode', title: 'Production Mode', icon: SlidersHorizontal },
+    { id: 'automations', title: 'Automations', icon: MessageSquare },
+    { id: 'cost-profile', title: 'Cost Profile', icon: Factory },
+    { id: 'qualities', title: 'Qualities', icon: ShieldCheck },
+    { id: 'security-team', title: 'Security & Team', icon: ShieldCheck },
+]
+
 function getErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback
 }
 
-function SettingsCategory({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
+function formatDate(date: string | null | undefined) {
+    if (!date) return 'Not set'
+    return new Date(date).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Kolkata',
+    })
+}
+
+function SettingsSection({
+    id,
+    title,
+    icon: Icon,
+    children,
+}: {
+    id: string
+    title: string
+    icon: LucideIcon
+    children: ReactNode
+}) {
     return (
-        <div className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-                <Icon className="h-5 w-5 text-gray-400" />
-                <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">{title}</h2>
+        <section id={id} className="scroll-mt-6 space-y-3">
+            <div className="flex items-center gap-2 border-b border-hairline/80 pb-2">
+                <Icon className="h-4 w-4 text-subtle" />
+                <h2 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{title}</h2>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                {children}
-            </div>
+            {children}
+        </section>
+    )
+}
+
+function SettingsPanel({ className, children }: { className?: string; children: ReactNode }) {
+    return (
+        <div
+            className={cn(
+                'rounded-lg border border-hairline bg-surface/95 shadow-[var(--shadow-card)] backdrop-blur-sm',
+                className
+            )}
+        >
+            {children}
         </div>
+    )
+}
+
+function PanelHeading({
+    icon: Icon,
+    title,
+    description,
+    className,
+}: {
+    icon: LucideIcon
+    title: string
+    description?: string
+    className?: string
+}) {
+    return (
+        <div className={cn('space-y-1', className)}>
+            <div className="flex items-center gap-2">
+                <Icon className="h-4 w-4 text-saffron" />
+                <h3 className="text-base font-semibold leading-tight text-ink">{title}</h3>
+            </div>
+            {description && <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>}
+        </div>
+    )
+}
+
+function SectionRail() {
+    return (
+        <aside className="sticky top-6 hidden xl:block">
+            <div className="rounded-lg border border-hairline bg-surface/80 p-2 shadow-[var(--shadow-card)] backdrop-blur-md">
+                <p className="px-3 pb-2 pt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Settings sections
+                </p>
+                <nav className="space-y-1">
+                    {SETTINGS_SECTIONS.map((section, index) => {
+                        const Icon = section.icon
+                        return (
+                            <a
+                                key={section.id}
+                                href={`#${section.id}`}
+                                className={cn(
+                                    'flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold text-body transition-colors hover:bg-saffron-soft/70 hover:text-saffron-deep',
+                                    index === 0 && 'bg-saffron-soft text-saffron-deep'
+                                )}
+                            >
+                                <Icon className="h-4 w-4" />
+                                {section.title}
+                            </a>
+                        )
+                    })}
+                </nav>
+            </div>
+        </aside>
     )
 }
 
@@ -140,257 +255,350 @@ export default function SettingsPage() {
 
     if (isLoading) {
         return (
-            <div className="space-y-10 max-w-6xl pb-10 animate-pulse">
-                <div className="space-y-2">
-                    <Skeleton className="h-8 w-48" />
-                    <Skeleton className="h-4 w-64" />
-                </div>
-                
-                {[1, 2].map(section => (
-                    <div key={section} className="space-y-4">
-                        <Skeleton className="h-6 w-32" />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {[1, 2].map(i => (
-                                <Card key={i}>
-                                    <CardHeader>
-                                        <Skeleton className="h-6 w-32" />
-                                        <Skeleton className="h-4 w-48 mt-2" />
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <Skeleton className="h-10 w-full" />
-                                        <Skeleton className="h-20 w-full" />
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
+            <div className="relative left-1/2 w-full -translate-x-1/2 space-y-5 pb-10 md:w-[calc(100vw-248px-48px)] lg:w-[calc(100vw-248px-64px)] 2xl:max-w-[1640px]">
+                <div className="flex items-end justify-between border-b border-hairline/80 pb-5">
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-48" />
+                        <Skeleton className="h-4 w-64" />
                     </div>
-                ))}
+                    <Skeleton className="hidden h-9 w-24 sm:block" />
+                </div>
+                <div className="grid grid-cols-1 gap-5 xl:grid-cols-[220px_minmax(0,1fr)] 2xl:grid-cols-[220px_minmax(0,1fr)_292px]">
+                    <Skeleton className="hidden h-80 rounded-lg xl:block" />
+                    <div className="space-y-5">
+                        {[1, 2, 3].map(section => (
+                            <div key={section} className="space-y-3">
+                                <Skeleton className="h-5 w-44" />
+                                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                                    <Skeleton className="h-56 rounded-lg" />
+                                    <Skeleton className="h-56 rounded-lg" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <Skeleton className="hidden h-96 rounded-lg 2xl:block" />
+                </div>
             </div>
         )
     }
 
     if (!userProfile) return null
 
+    const productionMode = normalizeProductionMode(org?.production_mode)
+    const productionModeOption = getProductionModeOption(org?.production_mode)
+    const isWhatsAppActive = userProfile.whatsapp_opted_in ?? false
+
+    function copyJoinCode() {
+        if (!org?.join_code) return
+        navigator.clipboard.writeText(org.join_code)
+        toast.success('Join code copied!')
+    }
+
+    function refreshSettings() {
+        queryClient.invalidateQueries({ queryKey: ['organization'] })
+        queryClient.invalidateQueries({ queryKey: ['user_profile_id'] })
+        toast.success('Settings refreshed')
+    }
+
     return (
-        <div className="space-y-12 max-w-6xl pb-10">
-            <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">{t('settings.title')}</h1>
-                <p className="text-gray-500">{t('settings.subtitle')}</p>
+        <div className="relative left-1/2 w-full -translate-x-1/2 pb-10 md:w-[calc(100vw-248px-48px)] lg:w-[calc(100vw-248px-64px)] 2xl:max-w-[1640px]">
+            <div id="overview" className="mb-5 flex flex-col gap-4 border-b border-hairline/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                    <h1 className="text-3xl font-bold tracking-tight text-ink">{t('settings.title')}</h1>
+                    <p className="mt-1 text-base text-muted-foreground">{t('settings.subtitle')}</p>
+                </div>
+                <Button variant="outline" size="sm" className="w-fit gap-2" onClick={refreshSettings}>
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Refresh
+                </Button>
             </div>
 
-            {/* Section 1: Identity & Profile */}
-            <SettingsCategory title="Factory & Identity" icon={Factory}>
-                <Card className="shadow-sm border-gray-200 h-full">
-                    <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <Factory className="h-5 w-5 text-blue-600" />
-                            <CardTitle>{t('settings.factory.title')}</CardTitle>
-                        </div>
-                        <CardDescription>{t('settings.factory.desc')}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label>{t('settings.factory.name')}</Label>
-                                {currentFactoryName !== org?.name && !isEditingName && (
-                                    <Button 
-                                        variant="link" 
-                                        size="sm" 
-                                        className="h-auto p-0 text-blue-600 font-semibold"
-                                        onClick={() => updateNameMutation.mutate(currentFactoryName)}
-                                        disabled={updateNameMutation.isPending}
-                                    >
-                                        {updateNameMutation.isPending ? 'Saving...' : 'Save Changes'}
-                                    </Button>
-                                )}
-                            </div>
-                            <div className="flex gap-2">
-                                <Input 
-                                    value={currentFactoryName} 
-                                    onChange={(e) => {
-                                        setIsEditingName(true)
-                                        setFactoryName(e.target.value)
-                                    }}
-                                    className="flex-1"
-                                    placeholder="Enter factory name"
-                                    disabled={updateNameMutation.isPending}
-                                />
-                                {currentFactoryName !== org?.name && (
-                                    <Button 
-                                        className="bg-blue-600 hover:bg-blue-700 text-white shrink-0" 
-                                        size="sm"
-                                        onClick={() => updateNameMutation.mutate(currentFactoryName)}
-                                        disabled={updateNameMutation.isPending}
-                                    >
-                                        {updateNameMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
+            <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[220px_minmax(0,1fr)] 2xl:grid-cols-[220px_minmax(0,1fr)_292px]">
+                <SectionRail />
 
-                        <div className="space-y-3">
-                            <Label>Factory join code</Label>
-                            <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 space-y-3">
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <p className="flex-1 min-w-[140px] font-mono font-bold tracking-[0.25em] text-2xl text-blue-900 truncate">
-                                        {org?.join_code || '—'}
-                                    </p>
-                                    <div className="flex items-center gap-2 ml-auto shrink-0">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-100 bg-white"
-                                            onClick={() => {
-                                                if (org?.join_code) {
-                                                    navigator.clipboard.writeText(org.join_code)
-                                                    toast.success('Join code copied!')
-                                                }
-                                            }}
-                                        >
-                                            <Copy className="h-3.5 w-3.5" /> Copy
-                                        </Button>
-                                        <Dialog open={regenerateDialogOpen} onOpenChange={setRegenerateDialogOpen}>
-                                            <DialogTrigger asChild>
+                <div className="min-w-0 space-y-5">
+                    <SettingsSection id="factory-identity" title="Factory & Identity" icon={Factory}>
+                        <SettingsPanel className="overflow-hidden">
+                            <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr]">
+                                <div className="space-y-5 border-b border-hairline p-5 lg:border-b-0 lg:border-r sm:p-6">
+                                    <PanelHeading
+                                        icon={Factory}
+                                        title={t('settings.factory.title')}
+                                        description={t('settings.factory.desc')}
+                                    />
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <Label>{t('settings.factory.name')}</Label>
+                                            {currentFactoryName !== org?.name && !isEditingName && (
                                                 <Button
-                                                    variant="outline"
+                                                    variant="link"
                                                     size="sm"
-                                                    className="gap-1.5 border-orange-300 text-orange-700 hover:bg-orange-50 bg-white"
+                                                    className="h-auto p-0 font-semibold"
+                                                    onClick={() => updateNameMutation.mutate(currentFactoryName)}
+                                                    disabled={updateNameMutation.isPending}
                                                 >
-                                                    <RefreshCw className="h-3.5 w-3.5" /> Regenerate
+                                                    {updateNameMutation.isPending ? 'Saving...' : 'Save Changes'}
                                                 </Button>
-                                            </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[420px]">
-                                            <DialogHeader>
-                                                <DialogTitle className="flex items-center gap-2 text-orange-700">
-                                                    <AlertTriangle className="h-5 w-5" />
-                                                    Regenerate join code?
-                                                </DialogTitle>
-                                                <DialogDescription>
-                                                    This will invalidate the current code immediately. Any supervisor currently signing up with the old code will need the new one.
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <DialogFooter>
-                                                <Button variant="outline" onClick={() => setRegenerateDialogOpen(false)}>
-                                                    Cancel
-                                                </Button>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                value={currentFactoryName}
+                                                onChange={(e) => {
+                                                    setIsEditingName(true)
+                                                    setFactoryName(e.target.value)
+                                                }}
+                                                className="flex-1 border-hairline bg-canvas/80"
+                                                placeholder="Enter factory name"
+                                                disabled={updateNameMutation.isPending}
+                                            />
+                                            {currentFactoryName !== org?.name && (
                                                 <Button
-                                                    className="bg-orange-600 hover:bg-orange-700 text-white"
-                                                    disabled={regenerateMutation.isPending}
-                                                    onClick={() => regenerateMutation.mutate()}
+                                                    variant="saffron"
+                                                    size="sm"
+                                                    onClick={() => updateNameMutation.mutate(currentFactoryName)}
+                                                    disabled={updateNameMutation.isPending}
                                                 >
-                                                    {regenerateMutation.isPending ? (<Loader2 className="h-4 w-4 animate-spin mr-1.5" />) : (<RefreshCw className="h-4 w-4 mr-1.5" />)}
-                                                    {regenerateMutation.isPending ? 'Regenerating...' : 'Yes, regenerate'}
+                                                    {updateNameMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
                                                 </Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                        </Dialog>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <Label>Factory join code</Label>
+                                        <div className="rounded-lg border border-info/20 bg-info-soft/55 p-4">
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                <p className="min-w-[150px] flex-1 truncate font-mono text-2xl font-bold tracking-[0.26em] text-info">
+                                                    {org?.join_code || '—'}
+                                                </p>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="border-info/25 bg-white text-info hover:bg-info-soft"
+                                                        onClick={copyJoinCode}
+                                                        disabled={!org?.join_code}
+                                                    >
+                                                        <Copy className="h-3.5 w-3.5" />
+                                                        Copy
+                                                    </Button>
+                                                    <Dialog open={regenerateDialogOpen} onOpenChange={setRegenerateDialogOpen}>
+                                                        <DialogTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="border-saffron/30 bg-white text-saffron-deep hover:bg-saffron-soft"
+                                                            >
+                                                                <RefreshCw className="h-3.5 w-3.5" />
+                                                                Regenerate
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent className="sm:max-w-[420px]">
+                                                            <DialogHeader>
+                                                                <DialogTitle className="flex items-center gap-2 text-saffron-deep">
+                                                                    <AlertTriangle className="h-5 w-5" />
+                                                                    Regenerate join code?
+                                                                </DialogTitle>
+                                                                <DialogDescription>
+                                                                    This will invalidate the current code immediately. Any supervisor currently signing up with the old code will need the new one.
+                                                                </DialogDescription>
+                                                            </DialogHeader>
+                                                            <DialogFooter>
+                                                                <Button variant="outline" onClick={() => setRegenerateDialogOpen(false)}>
+                                                                    Cancel
+                                                                </Button>
+                                                                <Button
+                                                                    variant="saffron"
+                                                                    disabled={regenerateMutation.isPending}
+                                                                    onClick={() => regenerateMutation.mutate()}
+                                                                >
+                                                                    {regenerateMutation.isPending ? (<Loader2 className="h-4 w-4 animate-spin" />) : (<RefreshCw className="h-4 w-4" />)}
+                                                                    {regenerateMutation.isPending ? 'Regenerating...' : 'Yes, regenerate'}
+                                                                </Button>
+                                                            </DialogFooter>
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                </div>
+                                            </div>
+                                            <p className="mt-3 text-xs font-medium text-info">
+                                                Expires: {formatDate(org?.join_code_expires_at)}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                                {org?.join_code_expires_at && (
-                                    <p className="text-xs text-blue-600">
-                                        Expires: <span className="font-medium">{new Date(org.join_code_expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}</span>
-                                    </p>
-                                )}
+
+                                <div className="space-y-5 p-5 sm:p-6">
+                                    <PanelHeading
+                                        icon={User}
+                                        title={t('settings.personal.title')}
+                                        description="View your registered profile details"
+                                    />
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label>{t('settings.personal.name')}</Label>
+                                            <Input value={userProfile.full_name || ''} readOnly className="border-hairline bg-surface-soft/55" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>{t('settings.personal.phone')}</Label>
+                                            <Input value={userProfile.phone || ''} readOnly className="border-hairline bg-surface-soft/55" />
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 rounded-lg border border-success/20 bg-success-soft px-3 py-2.5 text-success">
+                                        <ShieldCheck className="h-4 w-4" />
+                                        <span className="text-xs font-bold uppercase tracking-wide">
+                                            {t('settings.personal.role')} {userProfile.role}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </SettingsPanel>
+                    </SettingsSection>
 
-                <Card className="shadow-sm border-gray-200 h-full">
-                    <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <User className="h-5 w-5 text-teal-600" />
-                            <CardTitle>{t('settings.personal.title')}</CardTitle>
-                        </div>
-                        <CardDescription>View your registered profile details</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>{t('settings.personal.name')}</Label>
-                                <Input value={userProfile.full_name || ''} readOnly className="bg-gray-50 border-gray-200" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>{t('settings.personal.phone')}</Label>
-                                <Input value={userProfile.phone || ''} readOnly className="bg-gray-50 border-gray-200" />
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2 p-3 bg-teal-50 border border-teal-100 rounded-lg text-teal-800">
-                            <ShieldCheck className="h-4 w-4" />
-                            <span className="text-xs font-medium uppercase tracking-wider">{t('settings.personal.role')} {userProfile.role}</span>
-                        </div>
-                    </CardContent>
-                </Card>
-            </SettingsCategory>
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                        <SettingsSection id="production-mode" title="Production Mode" icon={SlidersHorizontal}>
+                            <SettingsPanel className="h-full p-5 sm:p-6">
+                                <PanelHeading
+                                    icon={SlidersHorizontal}
+                                    title="Production Mode"
+                                    description="Choose which workflows Weavly shows first for this factory."
+                                />
+                                <div className="mt-5 space-y-4">
+                                    <div className="space-y-2">
+                                        <Label>Production workflow</Label>
+                                        <Select
+                                            value={productionMode}
+                                            onValueChange={(value) => updateProductionModeMutation.mutate(value as ProductionMode)}
+                                            disabled={updateProductionModeMutation.isPending}
+                                        >
+                                            <SelectTrigger className="w-full border-hairline bg-canvas/80">
+                                                <SelectValue placeholder="Select production mode" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {PRODUCTION_MODE_OPTIONS.map((option) => (
+                                                    <SelectItem key={option.value} value={option.value}>
+                                                        {option.settingsLabel}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="text-sm leading-relaxed text-muted-foreground">
+                                            {productionModeOption.description}
+                                        </p>
+                                    </div>
 
-            {/* Section 2: Security & Operations */}
-            <SettingsCategory title="Business Preferences" icon={SlidersHorizontal}>
-                <Card className="shadow-sm border-gray-200 h-full">
-                    <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <SlidersHorizontal className="h-5 w-5 text-amber-600" />
-                            <CardTitle>Production Mode</CardTitle>
-                        </div>
-                        <CardDescription>Choose which workflows Weavly shows first for this factory.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Production workflow</Label>
-                            <Select
-                                value={normalizeProductionMode(org?.production_mode)}
-                                onValueChange={(value) => updateProductionModeMutation.mutate(value as ProductionMode)}
-                                disabled={updateProductionModeMutation.isPending}
-                            >
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Select production mode" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {PRODUCTION_MODE_OPTIONS.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.settingsLabel}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <p className="text-sm text-gray-500">
-                                {getProductionModeOption(org?.production_mode).description}
-                            </p>
-                        </div>
+                                    <div className="rounded-lg border border-warning/25 bg-warning-soft/80 p-3 text-sm leading-relaxed text-warning">
+                                        Changing this only adjusts which workflows are shown. Existing quotes, orders, market runs, stock, and dispatches will not be deleted.
+                                    </div>
+                                </div>
+                            </SettingsPanel>
+                        </SettingsSection>
 
-                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                            Changing this only adjusts which workflows are shown. Existing quotes, orders, market runs, stock, and dispatches will not be deleted.
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <div className="hidden lg:block" />
-            </SettingsCategory>
-
-            {/* Section 3: Security & Operations */}
-            <SettingsCategory title="Account Security & Team" icon={ShieldCheck}>
-                <AccessCodeGenerator />
-            </SettingsCategory>
-
-            {/* Section 4: Communications */}
-            <SettingsCategory title="Communications & Automation" icon={MessageSquare}>
-                <WhatsAppOptIn />
-                <div className="p-6 rounded-xl border border-dashed border-gray-200 flex flex-col items-center justify-center text-center space-y-2 h-full">
-                    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
-                        <Smartphone className="h-6 w-6 text-gray-300" />
+                        <SettingsSection id="security-team" title="Account Security & Team" icon={ShieldCheck}>
+                            <AccessCodeGenerator className="h-full" />
+                        </SettingsSection>
                     </div>
-                    <p className="text-sm font-medium text-gray-500">More automations coming soon</p>
-                    <p className="text-xs text-gray-400">Request features like weekly email summaries or worker SMS receipts.</p>
-                </div>
-            </SettingsCategory>
 
-            {/* Section 5: Configuration (Full Width Categories) */}
-            <SettingsCategory title="Production Costing & Templates" icon={Factory}>
-                <div className="lg:col-span-2 space-y-6">
-                    <FactoryCostProfile />
-                    <TemplateManager />
-                </div>
-            </SettingsCategory>
+                    <SettingsSection id="automations" title="Communications & Automation" icon={MessageSquare}>
+                        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                            <WhatsAppOptIn className="h-full" />
+                            <SettingsPanel className="flex min-h-[260px] flex-col items-center justify-center p-6 text-center">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-hairline bg-canvas text-muted-foreground">
+                                    <Smartphone className="h-5 w-5" />
+                                </div>
+                                <p className="mt-4 text-sm font-semibold text-body">More automations coming soon</p>
+                                <p className="mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground">
+                                    Request features like weekly email summaries or worker SMS receipts.
+                                </p>
+                            </SettingsPanel>
+                        </div>
+                    </SettingsSection>
 
+                    <SettingsSection id="cost-profile" title="Production Costing & Templates" icon={Factory}>
+                        <FactoryCostProfile />
+                    </SettingsSection>
+
+                    <SettingsSection id="qualities" title="Saved Fabric Qualities" icon={ShieldCheck}>
+                        <TemplateManager />
+                    </SettingsSection>
+                </div>
+
+                <aside className="sticky top-6 hidden space-y-4 2xl:block">
+                    <SettingsPanel className="p-5">
+                        <div className="flex items-center gap-2">
+                            <Factory className="h-4 w-4 text-info" />
+                            <h3 className="text-base font-semibold text-ink">Factory Snapshot</h3>
+                        </div>
+                        <dl className="mt-4 space-y-3 text-sm">
+                            <div>
+                                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Factory</dt>
+                                <dd className="mt-1 font-medium text-ink">{org?.name || 'Weavly'}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Join Code</dt>
+                                <dd className="mt-1 flex items-center gap-2 font-mono font-semibold tracking-wider text-ink">
+                                    {org?.join_code || '—'}
+                                    <Button
+                                        variant="ghost"
+                                        size="icon-xs"
+                                        aria-label="Copy join code"
+                                        onClick={copyJoinCode}
+                                        disabled={!org?.join_code}
+                                    >
+                                        <Copy className="h-3 w-3" />
+                                    </Button>
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Production Mode</dt>
+                                <dd className="mt-1 font-medium text-ink">{productionModeOption.settingsLabel}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">WhatsApp Brief</dt>
+                                <dd className="mt-1">
+                                    {isWhatsAppActive ? (
+                                        <Badge variant="success"><CheckCircle2 className="h-3 w-3" /> Active</Badge>
+                                    ) : (
+                                        <Badge variant="outline"><XCircle className="h-3 w-3" /> Not enrolled</Badge>
+                                    )}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Code Expires</dt>
+                                <dd className="mt-1 font-medium text-ink">{formatDate(org?.join_code_expires_at)}</dd>
+                            </div>
+                        </dl>
+                    </SettingsPanel>
+
+                    <SettingsPanel className="p-5">
+                        <div className="flex items-center gap-2">
+                            <KeyRound className="h-4 w-4 text-saffron" />
+                            <h3 className="text-base font-semibold text-ink">Useful Actions</h3>
+                        </div>
+                        <div className="mt-4 space-y-2">
+                            <Button variant="outline" className="w-full justify-start" onClick={copyJoinCode} disabled={!org?.join_code}>
+                                <Copy className="h-4 w-4" />
+                                Copy Join Code
+                            </Button>
+                            <a
+                                href="#security-team"
+                                className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft"
+                            >
+                                <KeyRound className="h-4 w-4" />
+                                Generate Access Code
+                            </a>
+                            <a
+                                href="#cost-profile"
+                                className="flex min-h-10 items-center gap-2 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink shadow-xs transition-colors hover:bg-surface-soft"
+                            >
+                                <SlidersHorizontal className="h-4 w-4" />
+                                Review Cost Defaults
+                            </a>
+                        </div>
+                    </SettingsPanel>
+                </aside>
+            </div>
         </div>
     )
 }

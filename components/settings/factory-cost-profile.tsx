@@ -10,6 +10,7 @@ import { Loader2, Save, Zap, Percent, TrendingUp, Truck, Users2, Wind, Palette, 
 import { getFactoryCostProfile, upsertFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
 import { toast } from 'sonner'
 import type { FactorySections } from '@/lib/estimator'
+import { cn } from '@/lib/utils'
 
 // ─── Factory type presets ─────────────────────────────────────────────────────
 
@@ -73,8 +74,8 @@ function RateInput({
 }) {
     return (
         <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                {Icon && <Icon className="h-3.5 w-3.5 text-gray-400" />}
+            <Label className="flex items-center gap-1.5 text-xs font-semibold text-body">
+                {Icon && <Icon className="h-3.5 w-3.5 text-subtle" />}
                 {label}
             </Label>
             <div className="relative">
@@ -84,15 +85,15 @@ function RateInput({
                     min={0}
                     value={value}
                     onChange={e => onChange(Number(e.target.value))}
-                    className="h-10 text-sm font-mono pr-12 bg-white border-gray-200 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400/20"
+                    className="h-10 border-hairline bg-canvas/80 pr-12 font-mono text-sm focus-visible:border-saffron"
                 />
                 {unit && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
                         {unit}
                     </span>
                 )}
             </div>
-            {hint && <p className="text-[11px] text-gray-400">{hint}</p>}
+            {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
         </div>
     )
 }
@@ -111,10 +112,10 @@ function SectionToggle({
     onChange:    (v: boolean) => void
 }) {
     return (
-        <div className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">
-            <div>
-                <p className="text-sm font-medium text-gray-800">{label}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+        <div className="flex min-h-[72px] items-center justify-between gap-4 rounded-lg border border-hairline bg-canvas/55 px-4 py-3">
+            <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink">{label}</p>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
             </div>
             <Switch checked={checked} onCheckedChange={onChange} />
         </div>
@@ -123,7 +124,7 @@ function SectionToggle({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function FactoryCostProfile() {
+export function FactoryCostProfile({ className }: { className?: string }) {
     const [loading, setLoading]   = useState(true)
     const [saving, setSaving]     = useState(false)
     const [activePreset, setActivePreset] = useState<string | null>(null)
@@ -195,46 +196,48 @@ export function FactoryCostProfile() {
 
     if (loading) {
         return (
-            <Card className="shadow-sm border-gray-200 mt-6">
+            <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
                 <CardContent className="flex items-center justify-center h-40">
-                    <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                    <Loader2 className="h-6 w-6 animate-spin text-saffron" />
                 </CardContent>
             </Card>
         )
     }
 
     return (
-        <Card className="shadow-sm border-gray-200 mt-6">
-            <CardHeader>
+        <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
+            <CardHeader className="gap-2 border-b border-hairline/70 pb-4">
                 <div className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-indigo-500" />
-                    <CardTitle>Factory Cost Profile</CardTitle>
+                    <Sparkles className="h-4 w-4 text-saffron" />
+                    <CardTitle className="text-base">Factory Cost Profile</CardTitle>
                 </div>
                 <CardDescription>
                     Default rates that pre-fill every new estimate. Change them once here, all new quotes pick up the new values automatically.
                 </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-8">
+            <CardContent className="space-y-6 pt-5">
 
                 {/* ── Factory Type Presets ── */}
                 <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-gray-700">Factory Type</Label>
-                    <p className="text-xs text-gray-400">Select your factory type to configure which cost sections apply. Fine-tune with the toggles below.</p>
-                    <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <Label className="text-sm font-semibold text-body">Factory Type</Label>
+                        <p className="mt-1 text-xs text-muted-foreground">Select your factory type to configure which cost sections apply. Fine-tune with the toggles below.</p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4">
                         {FACTORY_PRESETS.map(preset => (
                             <button
                                 key={preset.id}
                                 onClick={() => applyPreset(preset)}
-                                className={`text-left p-3.5 rounded-xl border-2 transition-all duration-150 ${
+                                className={`min-h-[112px] rounded-lg border p-3.5 text-left transition-all duration-150 ${
                                     activePreset === preset.id
-                                        ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-300'
-                                        : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                                        ? 'border-saffron bg-saffron-soft/65 shadow-sm ring-2 ring-saffron/15'
+                                        : 'border-hairline bg-canvas/55 hover:border-hairline-strong hover:bg-surface'
                                 }`}
                             >
                                 <div className="text-xl mb-1">{preset.emoji}</div>
-                                <div className="font-semibold text-sm text-gray-900">{preset.label}</div>
-                                <div className="text-xs text-gray-500 mt-0.5 leading-snug">{preset.description}</div>
+                                <div className="text-sm font-semibold text-ink">{preset.label}</div>
+                                <div className="mt-0.5 text-xs leading-snug text-muted-foreground">{preset.description}</div>
                             </button>
                         ))}
                     </div>
@@ -242,12 +245,12 @@ export function FactoryCostProfile() {
 
                 {/* ── Pre-Weaving Rates ── */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
-                        <Zap className="h-4 w-4 text-amber-500" />
-                        <Label className="text-sm font-semibold text-gray-700">Pre-Weaving Rates</Label>
+                    <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
+                        <Zap className="h-4 w-4 text-warning" />
+                        <Label className="text-sm font-semibold text-body">Pre-Weaving Rates</Label>
                     </div>
-                    <p className="text-xs text-gray-400">Charged per kg of warp yarn by the warping/sizing unit. The estimator auto-computes the ₹/m cost from total warp KG.</p>
-                    <div className="grid grid-cols-2 gap-4">
+                    <p className="text-xs text-muted-foreground">Charged per kg of warp yarn by the warping/sizing unit. The estimator auto-computes the ₹/m cost from total warp KG.</p>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                         <RateInput
                             label="Warping Rate"
                             value={rates.warping_rate_per_kg}
@@ -279,9 +282,9 @@ export function FactoryCostProfile() {
 
                 {/* ── Overhead ── */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
-                        <Percent className="h-4 w-4 text-violet-500" />
-                        <Label className="text-sm font-semibold text-gray-700">Overhead</Label>
+                    <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
+                        <Percent className="h-4 w-4 text-info" />
+                        <Label className="text-sm font-semibold text-body">Overhead</Label>
                     </div>
                     <RateInput
                         label="Overhead %"
@@ -296,11 +299,11 @@ export function FactoryCostProfile() {
 
                 {/* ── Selling Defaults ── */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
-                        <TrendingUp className="h-4 w-4 text-emerald-500" />
-                        <Label className="text-sm font-semibold text-gray-700">Selling Defaults</Label>
+                    <div className="flex items-center gap-2 border-b border-hairline/70 pb-2">
+                        <TrendingUp className="h-4 w-4 text-success" />
+                        <Label className="text-sm font-semibold text-body">Selling Defaults</Label>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {sections.commission && (
                             <RateInput
                                 label="Commission"
@@ -324,7 +327,7 @@ export function FactoryCostProfile() {
                             />
                         )}
                         {!sections.commission && !sections.transport && (
-                            <p className="text-xs text-gray-400 col-span-2 italic">
+                            <p className="col-span-2 text-xs italic text-muted-foreground">
                                 Enable commission or transport sections below to configure selling defaults.
                             </p>
                         )}
@@ -332,53 +335,58 @@ export function FactoryCostProfile() {
                 </div>
 
                 {/* ── Optional Section Toggles ── */}
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2 pb-1 border-b border-gray-100 mb-2">
-                        <Label className="text-sm font-semibold text-gray-700">Optional Cost Sections</Label>
+                <div className="space-y-3">
+                    <div className="mb-2 border-b border-hairline/70 pb-2">
+                        <Label className="text-sm font-semibold text-body">Optional Cost Sections</Label>
                     </div>
-                    <p className="text-xs text-gray-400 mb-3">
+                    <p className="text-xs text-muted-foreground">
                         Enabled sections appear in the estimator for every new quote. Disabled sections are hidden — keeping the form clean for factories that don't use them.
                     </p>
-                    <SectionToggle
-                        label="Winding"
-                        description="Yarn arrives on hanks and needs rewinding onto cones before warping."
-                        checked={sections.winding}
-                        onChange={updateSection('winding')}
-                    />
-                    <SectionToggle
-                        label="Processing / Dyeing"
-                        description="Fabric is sent for dyeing or printing after weaving."
-                        checked={sections.processing}
-                        onChange={updateSection('processing')}
-                    />
-                    <SectionToggle
-                        label="Finishing"
-                        description="Calendering, heat-setting, or other post-processing."
-                        checked={sections.finishing}
-                        onChange={updateSection('finishing')}
-                    />
-                    <SectionToggle
-                        label="Commission"
-                        description="Broker or agent commission included in the buyer quote."
-                        checked={sections.commission}
-                        onChange={updateSection('commission')}
-                    />
-                    <SectionToggle
-                        label="Transport"
-                        description="Factory delivers fabric directly rather than buyer collecting."
-                        checked={sections.transport}
-                        onChange={updateSection('transport')}
-                    />
+                    <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
+                        <SectionToggle
+                            label="Winding"
+                            description="Yarn arrives on hanks and needs rewinding onto cones before warping."
+                            checked={sections.winding}
+                            onChange={updateSection('winding')}
+                        />
+                        <SectionToggle
+                            label="Processing / Dyeing"
+                            description="Fabric is sent for dyeing or printing after weaving."
+                            checked={sections.processing}
+                            onChange={updateSection('processing')}
+                        />
+                        <SectionToggle
+                            label="Finishing"
+                            description="Calendering, heat-setting, or other post-processing."
+                            checked={sections.finishing}
+                            onChange={updateSection('finishing')}
+                        />
+                        <SectionToggle
+                            label="Commission"
+                            description="Broker or agent commission included in the buyer quote."
+                            checked={sections.commission}
+                            onChange={updateSection('commission')}
+                        />
+                        <SectionToggle
+                            label="Transport"
+                            description="Factory delivers fabric directly rather than buyer collecting."
+                            checked={sections.transport}
+                            onChange={updateSection('transport')}
+                        />
+                    </div>
                 </div>
 
-                <Button
-                    className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold gap-2"
-                    onClick={handleSave}
-                    disabled={saving}
-                >
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    Save Factory Profile
-                </Button>
+                <div className="flex justify-end border-t border-hairline/70 pt-5">
+                    <Button
+                        variant="saffron"
+                        className="w-full gap-2 sm:w-auto"
+                        onClick={handleSave}
+                        disabled={saving}
+                    >
+                        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        Save Factory Profile
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     )

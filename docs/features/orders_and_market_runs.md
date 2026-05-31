@@ -1,6 +1,6 @@
 # Orders and Market Runs
 
-Last analyzed from the active codebase on May 31, 2026.
+Last analyzed from the active codebase on May 31, 2026. Updated May 31, 2026.
 
 ## Phase 1 Status
 
@@ -76,12 +76,17 @@ Weavly workflow:
 - `app/(dashboard)/owner/market-runs/MarketRunsClient.tsx`
 - `app/(dashboard)/owner/market-runs/[id]/MarketRunDetailClient.tsx`
 - `app/(dashboard)/owner/estimator/actions.ts`
+  - `convertAcceptedQuoteToOrder` / `startPartyOrderFromEstimator`
+  - `getActiveProductionTargets` — fetches active party orders and in-production market runs for the cost-analysis picker. Queries `orders` and `market_run_summary`. Cached 30 s in `MachineManagement` via TanStack Query `staleTime`.
+  - `assignMachineProductionTarget` — links a loom to a cost analysis (party order or market run). For market-run targets, calls `ensureActiveOrderForMarketRun` to auto-create or reactivate the backing `orders` row.
+- `components/MachineManagement.tsx` — owner loom management card. Production targets query uses `staleTime: 30_000` and `keepPreviousData` to avoid cold-start blank flicker.
 - `orders`
 - `market_runs`
 - `market_run_sales`
 - `machine_assignments`
 - `shift_assignments`
 - `production_logs`
+- `market_run_summary` view (8 correlated subqueries; indexed by migration `20260531050000`)
 
 ## Downstream Effects
 

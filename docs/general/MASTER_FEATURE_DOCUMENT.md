@@ -1,6 +1,6 @@
 # Weavly Master Feature Document
 
-Last analyzed from the active codebase on May 31, 2026.
+Last updated May 31, 2026.
 
 This document unifies the feature docs under `docs/features/`. It is organized around the user workflow rather than the file tree, because Weavly's value comes from how each feature hands off to the next.
 
@@ -81,8 +81,10 @@ The costing engine for fabric. It models yarn, loom, process, overhead, commissi
 3. Owner enters warp/weft rows and loom assumptions.
 4. Owner reviews cost stack, landed cost, quote price, and margin.
 5. Owner saves a template or quote.
-6. Owner manages quote status in `/owner/quotes`.
-7. Accepted quote becomes an order.
+   - **Save Quote** — saves as Draft.
+   - **Save & Accept** — locks the quote immediately and opens the **Start Party Order** dialog to create an order in the same step (fast path).
+6. Owner manages quote status in `/owner/quotes` (draft, accepted, rejected). Accepting a draft quote triggers a locking confirmation modal; status silently transitions through 'sent' in the DB for audit purposes. A warning banner prevents stale draft collisions when re-estimating from a snapshot.
+7. Accepted quote becomes an order via `executeQuoteConversion` (called through either the Start Party Order fast path or **Create Active Order** in Quote History).
 8. Estimator market mode creates a market run.
 
 ### Pain Points Solved
@@ -99,13 +101,12 @@ The costing engine for fabric. It models yarn, loom, process, overhead, commissi
 
 ### Data and Code
 
-- `lib/estimator.ts`
-- `lib/finance.ts`
-- `/owner/estimator`
-- `/owner/quotes`
-- `factory_cost_profile`
-- `estimator_templates`
-- `estimator_quotes`
+- `lib/estimator.ts`, `lib/finance.ts`
+- `app/(dashboard)/owner/estimator/EstimatorClient.tsx`
+- `app/(dashboard)/owner/estimator/actions.ts` — `saveEstimatorQuoteV3`, `convertAcceptedQuoteToOrder`, `startPartyOrderFromEstimator`, `getActiveProductionTargets`
+- `app/(dashboard)/owner/quotes/QuotesClient.tsx`
+- `lib/quotes/convert-accepted-quote-to-order.ts` — `executeQuoteConversion`, `hydrateEstimateStateFromQuote`
+- `factory_cost_profile`, `estimator_templates`, `estimator_quotes`, `orders`, `order_yarn_requirements`
 
 ## 3. Orders and Market Runs
 
@@ -138,14 +139,11 @@ Orders are party-backed production commitments. Market runs are costed speculati
 
 ### Data and Code
 
-- `/owner/orders`
-- `/owner/market-runs`
-- `/owner/market-runs/[id]`
-- `/owner/estimator/actions.ts`
+- `/owner/orders`, `/owner/market-runs`, `/owner/market-runs/[id]`
+- `app/(dashboard)/owner/estimator/actions.ts` — `startPartyOrderFromEstimator`, `convertAcceptedQuoteToOrder`, `getActiveProductionTargets`, `assignMachineProductionTarget`
 - `/owner/orders/actions.ts`
-- `orders`
-- `market_runs`
-- `market_run_sales`
+- `components/MachineManagement.tsx` — loom cost-analysis picker, `staleTime: 30_000`, `keepPreviousData`
+- `orders`, `market_runs`, `market_run_sales`, `market_run_summary` view (indexed by migration `20260531050000`)
 
 ## 4. Floor Operations and Supervisor Dashboard
 
