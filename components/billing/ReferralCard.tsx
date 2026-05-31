@@ -124,7 +124,8 @@ export function ReferralCard({ stats }: { stats: any }) {
                                 const isFuture = new Date(w.valid_from) > new Date()
                                 const expiryDate = new Date(w.valid_until).toLocaleDateString('en-IN', {
                                     month: 'short',
-                                    year: 'numeric'
+                                    year: 'numeric',
+                                    timeZone: 'Asia/Kolkata',
                                 })
                                 return (
                                     <div key={i} className="flex items-center justify-between bg-emerald-50/50 rounded-xl px-3 py-2 border border-emerald-100/50 text-[11px]">

@@ -69,7 +69,7 @@ export function EmergencyLockdown() {
                 </div>
                 <CardDescription className={isLocked ? 'text-red-700' : ''}>
                     {isLocked 
-                        ? `Platform access was frozen on ${new Date(security.locked_at).toLocaleString('en-IN')}.`
+                        ? `Platform access was frozen on ${new Date(security.locked_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}.`
                         : 'Immediately freeze all data access across the platform in case of a breach.'}
                 </CardDescription>
             </CardHeader>

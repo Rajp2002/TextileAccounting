@@ -215,7 +215,7 @@ const PAYROLL_QUERY_VERSION = 'production-ledger-v3'
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function monthLabel(ym: string) {
     const [y, m] = ym.split('-')
-    return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+    return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' })
 }
 function prevMonth(ym: string) {
     const d = new Date(ym + '-01')
@@ -662,7 +662,7 @@ async function fetchSettlementHistory(
 
 function dateLabel(dateStr: string, options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }) {
     const [year, month, day] = dateStr.split('-').map(Number)
-    return new Date(year, month - 1, day).toLocaleDateString('en-IN', options)
+    return new Date(year, month - 1, day).toLocaleDateString('en-IN', { ...options, timeZone: 'Asia/Kolkata' })
 }
 
 function getPayWindowCopy(status: ReturnType<typeof getPayrollCycleStatus>, payReminderDays: number) {
@@ -854,6 +854,7 @@ function settlementDateLabel(dateStr?: string) {
         year: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
+        timeZone: 'Asia/Kolkata',
     })
 }
 
@@ -886,7 +887,7 @@ function exportDateLabel(dateStr: string) {
     if (!year || !month || !day) return dateStr.replace(/[^a-zA-Z0-9]+/g, '-')
 
     return new Date(year, month - 1, day)
-        .toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+        .toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Kolkata' })
         .replace(',', '')
         .replace(/\s+/g, '-')
 }
@@ -1014,7 +1015,7 @@ function PaidBadge({
                 <div className="flex items-center gap-1.5 text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     <span className="text-[10px] font-bold uppercase tracking-tight">
-                        {t('payroll.status.paid')} {settledAt ? new Date(settledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}
+                        {t('payroll.status.paid')} {settledAt ? new Date(settledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' }) : ''}
                     </span>
                 </div>
                 {paymentMode && (

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { formatDistanceToNow, format } from 'date-fns'
+import { useState, useEffect } from 'react'
+import { formatDistanceToNow } from 'date-fns'
+import { formatToSurat } from '@/lib/time'
 import { 
   Wallet, 
   TrendingUp, 
@@ -51,7 +52,12 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
   const config = CATEGORY_CONFIG[category]
   const Icon = config.icon
   const summary = getAuditSummary(log)
-  const timeAgo = formatDistanceToNow(new Date(log.changed_at), { addSuffix: true })
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const timeAgo = mounted ? formatDistanceToNow(new Date(log.changed_at), { addSuffix: true }) : 'Calculating...'
   const actorName = log.profiles?.full_name || 'System'
   const actorInitial = actorName.charAt(0).toUpperCase()
   const statusValue = typeof log.new_data?.status === 'string' ? log.new_data.status : null
@@ -166,7 +172,7 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
                 </div>
                 <div>
                    <span className="text-gray-400 block mb-1">Precise Timestamp</span>
-                   <span className="text-gray-700 font-semibold">{format(new Date(log.changed_at), 'PPP pp')}</span>
+                   <span className="text-gray-700 font-semibold">{formatToSurat(new Date(log.changed_at), 'PPP pp')}</span>
                 </div>
               </div>
             </div>

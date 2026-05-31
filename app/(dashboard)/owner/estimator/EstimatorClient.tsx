@@ -34,6 +34,7 @@ import {
     AlertCircle,
     Zap,
     Play,
+    CheckCircle2,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
@@ -88,7 +89,6 @@ import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import FactoryCostWizard from './FactoryCostWizard'
-import { StartPartyOrderDialog } from '@/components/estimator/StartPartyOrderDialog'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // REDUCER
@@ -1155,7 +1155,7 @@ export default function EstimatorClient({
         toast.success(t('estimator.quality.deleted'))
     }
 
-    const handleSaveQuote = async (targetMode: 'quote' | 'market' = mode) => {
+    const handleSaveQuote = async (targetMode: 'quote' | 'market' = mode, status: 'draft' | 'accepted' = 'draft') => {
         const resolvedPartyName = targetMode === 'market' 
             ? (qualityLabel.trim() || partyName.trim()) 
             : partyName.trim()
@@ -1200,11 +1200,11 @@ export default function EstimatorClient({
                 estimate:                state,
                 quotePricePerM:          totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM,
                 totalProductionCostPerM: totals.totalProductionCostPerM,
-                status:                  'draft',
+                status:                  status,
             })
             setSavingQuote(false)
             if (res.success) {
-                toast.success(t('estimator.toast.converted_success'))
+                toast.success(status === 'accepted' ? 'Quote saved & accepted!' : t('estimator.toast.converted_success'))
                 router.push('/owner/quotes')
             } else {
                 toast.error(res.error ?? 'Failed to save quote')
@@ -1276,9 +1276,20 @@ export default function EstimatorClient({
                     <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                         <RotateCcw className="h-4 w-4 text-amber-600 shrink-0" />
                         <p className="text-sm text-amber-800 flex-1">
-                            <span className="font-bold">Unsaved draft</span> from{' '}
-                            {new Date(draft.savedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                            {draft.partyName && <span className="text-amber-600"> · {draft.partyName}</span>}
+                            {draft.sourceQuoteId ? (
+                                <>
+                                    Re-estimating from quote for{' '}
+                                    <span className="font-bold">{draft.partyName || 'Unknown Party'}</span>
+                                    {draft.qualityLabel && <span className="text-amber-600"> ({draft.qualityLabel})</span>}
+                                    {' '}— Save Quote to create a new version
+                                </>
+                            ) : (
+                                <>
+                                    <span className="font-bold">Unsaved draft</span> from{' '}
+                                    {new Date(draft.savedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                    {draft.partyName && <span className="text-amber-600"> · {draft.partyName}</span>}
+                                </>
+                            )}
                         </p>
                         <button
                             onClick={() => {
@@ -1289,10 +1300,12 @@ export default function EstimatorClient({
                                 setQualityLabel(d.qualityLabel)
                                 setWarpInstruction(d.warpInstruction)
                                 setWeftInstruction(d.weftInstruction)
-                                toast.success('Draft restored')
+                                toast.success(draft.sourceQuoteId ? 'Quote specs loaded' : 'Draft restored')
                             }}
                             className="text-xs font-bold text-amber-700 hover:text-amber-900 underline underline-offset-2 shrink-0"
-                        >Restore</button>
+                        >
+                            {draft.sourceQuoteId ? 'Load Specs' : 'Restore'}
+                        </button>
                         <button
                             onClick={dismissDraft}
                             className="ml-1 text-amber-500 hover:text-amber-700"
@@ -1338,20 +1351,20 @@ export default function EstimatorClient({
 
                             {mode === 'quote' ? (
                                 <>
-                                    {/* PRIMARY: Start Party Order */}
+                                    {/* PRIMARY: Save & Accept */}
                                     <Button
-                                        id="btn-start-party-order"
+                                        id="btn-save-accept"
                                         size="sm"
                                         className="col-span-2 h-9 rounded-[8px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
-                                        onClick={() => setShowStartPartyOrder(true)}
+                                        onClick={() => handleSaveQuote('quote', 'accepted')}
                                         disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
                                             ? 'Complete party, quality, quantity, and cost result first.'
                                             : undefined
                                         }
                                     >
-                                        <Play className="h-3.5 w-3.5 shrink-0" />
-                                        <span className="truncate">Start Party Order</span>
+                                        {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
+                                        <span className="truncate">Save & Accept</span>
                                     </Button>
 
                                     {/* SECONDARY: Save Quote */}
@@ -1360,11 +1373,11 @@ export default function EstimatorClient({
                                         size="sm"
                                         variant="outline"
                                         className="h-9 rounded-[8px] border border-white/15 bg-transparent px-4 text-[13px] font-medium text-[var(--color-hairline-strong)] hover:bg-white/10"
-                                        onClick={() => handleSaveQuote('quote')}
+                                        onClick={() => handleSaveQuote('quote', 'draft')}
                                         disabled={savingQuote || !orderQuote?.isValid}
                                     >
                                         {savingQuote ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" /> : <Save className="h-3.5 w-3.5 shrink-0" />}
-                                        <span className="truncate">{t('estimator.hud.order_btn')}</span>
+                                        <span className="truncate">Save Quote</span>
                                     </Button>
 
                                     {/* TERTIARY: Switch to Market mode */}
@@ -2774,20 +2787,7 @@ export default function EstimatorClient({
                 </DialogContent>
             </Dialog>
 
-            {/* ── START PARTY ORDER DIALOG ──────────────────────────────────── */}
-            {showStartPartyOrder && (
-                <StartPartyOrderDialog
-                    open={showStartPartyOrder}
-                    onOpenChange={setShowStartPartyOrder}
-                    estimatorState={state}
-                    estimatorTotals={totals}
-                    defaultPartyName={partyName}
-                    defaultQualityLabel={qualityLabel}
-                    defaultTargetMeters={state.orderQuantityM ?? undefined}
-                    defaultWarpInstruction={warpInstruction}
-                    defaultWeftInstruction={weftInstruction}
-                />
-            )}
+
         </div>
     )
 }

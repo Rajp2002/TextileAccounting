@@ -77,11 +77,13 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
+        timeZone: 'Asia/Kolkata',
     })
-    const weekdayLabel = displayDate.toLocaleDateString('en-IN', { weekday: 'long' })
+    const weekdayLabel = displayDate.toLocaleDateString('en-IN', { weekday: 'long', timeZone: 'Asia/Kolkata' })
     const dayMonthLabel = displayDate.toLocaleDateString('en-IN', {
         day: 'numeric',
         month: 'short',
+        timeZone: 'Asia/Kolkata',
     })
 
     // All-clear: every actionable item must be resolved.

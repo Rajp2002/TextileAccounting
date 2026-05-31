@@ -288,7 +288,7 @@ export default function SettingsPage() {
                                 </div>
                                 {org?.join_code_expires_at && (
                                     <p className="text-xs text-blue-600">
-                                        Expires: <span className="font-medium">{new Date(org.join_code_expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                        Expires: <span className="font-medium">{new Date(org.join_code_expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}</span>
                                     </p>
                                 )}
                             </div>

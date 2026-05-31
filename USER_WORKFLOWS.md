@@ -57,9 +57,9 @@ Turn fabric costing from mental math and Excel into repeatable, auditable quote 
 5. Owner adjusts factory costs: warping, sizing, winding, process costs, finishing, overheads, fixed-worker overhead, commission, transport, monthly output.
 6. Owner reviews landed cost, quote price, margin, and scenarios.
 7. Owner saves or updates a fabric template.
-8. Owner saves a quote with party, quality label, quantity, instructions, and snapshot data.
-9. Owner manages status in quote history: draft, sent, accepted, rejected.
-10. Owner can restore the quote snapshot to re-estimate.
+8. Owner saves the quote: chooses **Save Quote** (saves as Draft for negotiation) or **Save & Accept** (immediately locks the quote, freezing yarn rates and pricing).
+9. Owner manages status in quote history: draft, accepted, or rejected. The manual "Mark as Sent" step is removed from the UI. Accepting a draft quote silently transitions through "sent" in the database audit log and triggers a lightweight locking confirmation modal.
+10. Owner can restore any quote snapshot to re-estimate.
 
 ### Pain Point Replaced
 
@@ -81,8 +81,8 @@ Convert a confirmed party quote into a live production commitment.
 
 ### Flow
 
-1. Owner marks a quote accepted.
-2. Owner clicks create active order.
+1. Owner accepts a quote in Quote History (or saves it as already accepted using **Save & Accept** directly from the estimator).
+2. Owner clicks **Create Active Order** on the accepted quote card.
 3. Owner confirms target meters, deadline, and notes.
 4. System creates an order with quote snapshot values and tracking token.
 5. Owner opens orders.

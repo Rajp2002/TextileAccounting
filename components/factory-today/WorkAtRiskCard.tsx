@@ -86,7 +86,7 @@ export function WorkAtRiskCard({ workAtRisk, productionMode }: WorkAtRiskCardPro
                                     </p>
                                     <p className="flex items-center gap-1 text-[11px] text-body">
                                         <Calendar className="h-2.5 w-2.5" />
-                                        {new Date(order.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                        {new Date(order.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })}
                                     </p>
                                 </div>
                             </div>

@@ -740,6 +740,18 @@ export async function updateQuoteStatus(id: string, status: 'draft' | 'sent' | '
     if (currentError || !current) return { error: currentError?.message ?? 'Quote not found.' }
     if (current.order_id) return { error: 'Converted quotes can no longer change status.' }
 
+    // Support silent transition from draft -> sent -> accepted for compliance audit logs
+    if (current.status === 'draft' && status === 'accepted') {
+        const { error: sentError } = await supabase
+            .from('estimator_quotes')
+            .update({ status: 'sent' })
+            .eq('id', id)
+            .eq('org_id', profile.org_id)
+        
+        if (sentError) return { error: sentError.message }
+        current.status = 'sent'
+    }
+
     const allowedTransitions: Record<string, string[]> = {
         draft: ['sent'],
         sent: ['accepted', 'rejected'],

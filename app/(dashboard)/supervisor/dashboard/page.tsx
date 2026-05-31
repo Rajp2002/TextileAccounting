@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { format, subDays } from 'date-fns'
+import { getSuratTodayString, formatToSurat } from '@/lib/time'
 import {
     getShiftSetupData,
     copyPreviousShiftAction,
@@ -75,7 +76,7 @@ function getCurrentShift(): 'day' | 'night' {
 }
 
 function getTodayString() {
-    return format(new Date(), 'yyyy-MM-dd')
+    return getSuratTodayString()
 }
 
 function getRemainingCorrectionMinutes(expiresAt: string | null) {
@@ -88,7 +89,7 @@ function formatShortDate(date: string | null | undefined) {
     if (!date) return null
     const parsed = new Date(`${date}T00:00:00`)
     if (Number.isNaN(parsed.getTime())) return null
-    return format(parsed, 'dd MMM')
+    return formatToSurat(parsed, 'dd MMM')
 }
 
 function formatMeters(value: number | null | undefined) {
@@ -272,7 +273,7 @@ function MachineUnifiedRow({
                             : `Already logged: Downtime (${getDowntimeLabel(existingLog.zero_meter_reason)})`}
                     </span>
                     <span className="text-[10px] text-success/70 font-normal">
-                        {existingLog.submitted_at && `at ${format(new Date(existingLog.submitted_at), 'h:mm a')}`}
+                        {existingLog.submitted_at && `at ${formatToSurat(new Date(existingLog.submitted_at), 'h:mm a')}`}
                     </span>
                 </div>
             )}
@@ -989,7 +990,7 @@ export default function UnifiedDashboard() {
     }
 
     const handleCopyPrevious = async () => {
-        const sourceDate = format(subDays(new Date(date), 1), 'yyyy-MM-dd')
+        const sourceDate = formatToSurat(subDays(new Date(date), 1), 'yyyy-MM-dd')
         setCopying(true)
         const res = await copyPreviousShiftAction(date, shift, sourceDate, shift)
         setCopying(false)

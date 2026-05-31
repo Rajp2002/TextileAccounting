@@ -134,6 +134,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
     const [updatingId, setUpdatingId] = useState<string | null>(null)
     const [filterStatus, setFilterStatus] = useState<string>(initialStatus || 'all')
     const [quoteToConvert, setQuoteToConvert] = useState<QuoteRow | null>(null)
+    const [quoteToAccept, setQuoteToAccept] = useState<QuoteRow | null>(null)
     const [convertMeters, setConvertMeters] = useState('')
     const [convertDeadline, setConvertDeadline] = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
     const [convertNotes, setConvertNotes] = useState('')
@@ -200,6 +201,8 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                 qualityLabel: quote.quality_label || '',
                 warpInstruction: quote.warp_instruction || linkedOrder?.warp_instruction || '',
                 weftInstruction: quote.weft_instruction || linkedOrder?.weft_instruction || '',
+                savedAt: Date.now(),
+                sourceQuoteId: quote.id,
             }
             localStorage.setItem(draftKey, JSON.stringify(newDraft))
             toast.success('Quote snapshot restored')
@@ -306,51 +309,53 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                     <div className="mt-auto pt-4 border-t border-slate-100 space-y-3">
                                         <div className="flex items-center justify-between gap-3">
                                             <div className="flex items-center gap-1">
-                                                {updatingId === quote.id ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                                                ) : (
-                                                    <>
-                                                        {quote.status === 'draft' && (
-                                                            <button onClick={() => handleStatusChange(quote.id, 'sent')} className="flex items-center justify-center h-11 w-11 lg:h-8 lg:w-8 rounded-md hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors" title="Mark as Sent" aria-label="Mark as Sent">
-                                                                <Send className="h-5 w-5 lg:h-4 lg:w-4" />
-                                                            </button>
-                                                        )}
-                                                        {quote.status === 'sent' && (
-                                                            <>
-                                                                <button onClick={() => handleStatusChange(quote.id, 'accepted')} className="flex items-center justify-center h-11 w-11 lg:h-8 lg:w-8 rounded-md hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition-colors" title="Mark as Accepted" aria-label="Mark as Accepted">
-                                                                    <CheckCircle2 className="h-5 w-5 lg:h-4 lg:w-4" />
-                                                                </button>
-                                                                <button onClick={() => handleStatusChange(quote.id, 'rejected')} className="flex items-center justify-center h-11 w-11 lg:h-8 lg:w-8 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors" title="Mark as Rejected" aria-label="Mark as Rejected">
-                                                                    <XCircle className="h-5 w-5 lg:h-4 lg:w-4" />
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                    </>
+                                                {linkedOrder && (
+                                                    <Badge variant="outline" className="bg-emerald-50 border-emerald-200 text-emerald-700 font-bold">
+                                                        Order #{linkedOrder.id.split('-')[0]}
+                                                        {linkedOrder.status === 'completed' && <CheckCircle2 className="h-3 w-3 ml-1" />}
+                                                    </Badge>
                                                 )}
                                             </div>
-                                            {linkedOrder && (
-                                                <Badge variant="outline" className="bg-emerald-50 border-emerald-200 text-emerald-700">
-                                                    Order #{linkedOrder.id.split('-')[0]}
-                                                    {linkedOrder.status === 'completed' && <CheckCircle2 className="h-3 w-3 ml-1" />}
-                                                </Badge>
+                                            {(quote.status === 'draft' || quote.status === 'sent' || quote.status === 'rejected') && (
+                                                <Button
+                                                    variant="ghost"
+                                                    className="h-11 lg:h-7 text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-3 lg:px-2 ml-auto"
+                                                    onClick={() => handleReEstimate(quote)}
+                                                >
+                                                    {(quote.status === 'draft' || quote.status === 'sent') ? 'Edit' : 'Re-estimate'}
+                                                    <ArrowRight className="h-4 w-4 lg:h-3 lg:w-3 ml-1" />
+                                                </Button>
                                             )}
-                                            <Button
-                                                variant="ghost"
-                                                className="h-11 lg:h-7 text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-3 lg:px-2 ml-auto"
-                                                onClick={() => handleReEstimate(quote)}
-                                            >
-                                                Re-estimate
-                                                <ArrowRight className="h-4 w-4 lg:h-3 lg:w-3 ml-1" />
-                                            </Button>
                                         </div>
+
+                                        {(quote.status === 'draft' || quote.status === 'sent') && !linkedOrder && (
+                                            <Button
+                                                size="sm"
+                                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2"
+                                                onClick={() => setQuoteToAccept(quote)}
+                                                disabled={updatingId === quote.id}
+                                            >
+                                                {updatingId === quote.id ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <CheckCircle2 className="h-4 w-4" />
+                                                )}
+                                                Accept Quote
+                                            </Button>
+                                        )}
 
                                         {canCreateOrder && (
                                             <Button
                                                 size="sm"
                                                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2"
                                                 onClick={() => openConvertDialog(quote)}
+                                                disabled={updatingId === quote.id}
                                             >
-                                                <Package className="h-4 w-4" />
+                                                {updatingId === quote.id ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Package className="h-4 w-4" />
+                                                )}
                                                 Create Active Order
                                             </Button>
                                         )}
@@ -440,6 +445,37 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                 <Package className="h-4 w-4 mr-2" />
                             )}
                             Create active order
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!quoteToAccept} onOpenChange={(open) => !open && setQuoteToAccept(null)}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-indigo-600" />
+                            Accept this quote?
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-500 text-sm leading-relaxed">
+                            Yarn rates and price will be locked — this cannot be edited.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex gap-2 justify-end pt-2">
+                        <Button variant="ghost" onClick={() => setQuoteToAccept(null)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
+                            onClick={async () => {
+                                if (quoteToAccept) {
+                                    const id = quoteToAccept.id
+                                    setQuoteToAccept(null)
+                                    await handleStatusChange(id, 'accepted')
+                                }
+                            }}
+                        >
+                            Yes, Accept
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -58,6 +58,7 @@ function formatDate(iso: string | null): string {
     if (!iso) return '—'
     return new Date(iso).toLocaleDateString('en-IN', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        timeZone: 'Asia/Kolkata',
     })
 }
 
@@ -65,6 +66,7 @@ function formatShortDate(iso: string | null): string {
     if (!iso) return '—'
     return new Date(iso).toLocaleDateString('en-IN', {
         day: 'numeric', month: 'short', year: 'numeric',
+        timeZone: 'Asia/Kolkata',
     })
 }
 

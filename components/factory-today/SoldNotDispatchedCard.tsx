@@ -57,7 +57,7 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
                             <div className="flex-1 min-w-0">
                                 <p className="truncate text-sm font-semibold text-ink">{sale.qualityLabel}</p>
                                 <p className="text-[11px] text-body">
-                                    {new Date(sale.saleDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                    {new Date(sale.saleDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })}
                                 </p>
                             </div>
                             <div className="text-right">

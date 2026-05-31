@@ -1,7 +1,7 @@
 'use client'
 
 import { memo } from 'react'
-import { format } from 'date-fns'
+import { formatToSurat } from '@/lib/time'
 
 interface AuditDiffProps {
   oldData: any
@@ -35,7 +35,7 @@ function formatValue(key: string, value: any) {
   const isDate = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(strVal)
   if (isDate) {
     try {
-      return format(new Date(value), 'dd MMM yyyy, hh:mm a')
+      return formatToSurat(new Date(value), 'dd MMM yyyy, hh:mm a')
     } catch {
       // fallback to raw string
     }

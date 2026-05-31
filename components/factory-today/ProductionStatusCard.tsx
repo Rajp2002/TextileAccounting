@@ -83,7 +83,8 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
                     <p className="flex-1 text-xs text-muted">
                         Last log: {new Date(production.lastLogAt).toLocaleTimeString('en-IN', {
                             hour: '2-digit',
-                            minute: '2-digit'
+                            minute: '2-digit',
+                            timeZone: 'Asia/Kolkata'
                         })}
                     </p>
                 )}

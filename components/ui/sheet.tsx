@@ -127,10 +127,13 @@ function SheetDescription({
 }: React.ComponentProps<typeof SheetPrimitive.Description>) {
   return (
     <SheetPrimitive.Description
+      asChild
       data-slot="sheet-description"
       className={cn("text-muted-foreground text-sm", className)}
-      {...props}
-    />
+    >
+      {/* Renders as a div instead of a paragraph to prevent HTML nesting errors when block elements are inside */}
+      <div {...props} />
+    </SheetPrimitive.Description>
   )
 }
 

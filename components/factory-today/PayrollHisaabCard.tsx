@@ -18,6 +18,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
     const payDateLabel = new Date(payroll.payDate).toLocaleDateString('en-IN', {
         day: 'numeric',
         month: 'short',
+        timeZone: 'Asia/Kolkata',
     })
     const statusLabel = (() => {
         if (payroll.isPayWindowOpen && payroll.unsettledWorkerCount === 0) {
@@ -112,7 +113,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                             <>
                                 {' '}· Next cycle starts{' '}
                                 <span className="font-semibold text-ink">
-                                    {new Date(payroll.upcomingSettlementDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                    {new Date(payroll.upcomingSettlementDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })}
                                 </span>
                             </>
                         )}

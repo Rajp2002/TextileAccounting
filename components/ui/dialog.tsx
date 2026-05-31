@@ -137,10 +137,13 @@ function DialogDescription({
 }: React.ComponentProps<typeof DialogPrimitive.Description>) {
   return (
     <DialogPrimitive.Description
+      asChild
       data-slot="dialog-description"
       className={cn("text-muted-foreground text-sm leading-[1.45]", className)}
-      {...props}
-    />
+    >
+      {/* Renders as a div instead of a paragraph to prevent HTML nesting errors when block elements are inside */}
+      <div {...props} />
+    </DialogPrimitive.Description>
   )
 }
 

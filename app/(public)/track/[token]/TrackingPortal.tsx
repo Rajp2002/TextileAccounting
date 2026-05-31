@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { confirmDispatchReceipt } from '@/app/actions/track'
 import type { TrackingData, TrackingDispatch } from './page'
-import { format } from 'date-fns'
+import { formatToSurat } from '@/lib/time'
 import { useTranslation } from '@/lib/i18n/context'
 import { BrandBackground } from '@/components/brand-background'
 
@@ -20,7 +20,7 @@ function formatMeters(n: number) {
 }
 
 function formatDate(iso: string) {
-    try { return format(new Date(iso), 'dd MMM yyyy') }
+    try { return formatToSurat(iso, 'dd MMM yyyy') }
     catch { return iso }
 }
 

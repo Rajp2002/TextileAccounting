@@ -9,6 +9,7 @@ interface AutosaveData {
   warpInstruction: string
   weftInstruction: string
   savedAt: number  // timestamp
+  sourceQuoteId?: string
 }
 
 interface UseAutosaveOptions {

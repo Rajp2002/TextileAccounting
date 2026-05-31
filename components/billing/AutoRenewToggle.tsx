@@ -20,6 +20,7 @@ export function AutoRenewToggle({ currentEnd, subscriptionTier }: AutoRenewToggl
     const endFormatted = currentEnd
         ? new Date(currentEnd).toLocaleDateString('en-IN', {
               day: 'numeric', month: 'long', year: 'numeric',
+              timeZone: 'Asia/Kolkata',
           })
         : 'the end of your current billing period'
 

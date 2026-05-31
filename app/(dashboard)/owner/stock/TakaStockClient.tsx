@@ -686,7 +686,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                         </Button>
                                         <div className="ml-auto flex items-center gap-1 text-xs font-semibold text-muted-foreground">
                                             <CalendarDays className="h-3.5 w-3.5" />
-                                            {new Date(lot.received_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                            {new Date(lot.received_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}
                                         </div>
                                     </div>
 
@@ -714,7 +714,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                                     return (
                                                                         <tr key={movement.id}>
                                                                             <td className="whitespace-nowrap px-4 py-3 font-semibold text-muted-foreground">
-                                                                                {new Date(movement.movement_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                                {new Date(movement.movement_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}
                                                                             </td>
                                                                             <td className="min-w-52 px-4 py-3">
                                                                                 <p className="font-bold text-foreground">
@@ -746,7 +746,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                                                 {movement.reference || movementLabel(movement.movement_type)}
                                                                             </p>
                                                                             <p className="text-xs text-muted-foreground">
-                                                                                {new Date(movement.movement_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                                {new Date(movement.movement_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}
                                                                             </p>
                                                                         </div>
                                                                         <div className="text-right">
@@ -799,7 +799,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                         {initialData.sales.slice(0, 8).map((sale) => (
                                             <tr key={sale.id}>
                                                 <td className="px-4 py-3 text-muted-foreground">
-                                                    {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                    {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' })}
                                                 </td>
                                                 <td className="px-4 py-3 font-bold text-foreground">
                                                     {sale.fabric_stock_lots.quality_label}
@@ -833,7 +833,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-xs text-muted-foreground">
-                                                    {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                    {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' })}
                                                 </p>
                                                 <p className="text-xs font-semibold text-muted-foreground">Commercials</p>
                                             </div>

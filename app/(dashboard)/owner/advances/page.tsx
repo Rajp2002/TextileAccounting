@@ -99,7 +99,7 @@ function DebtBadge({ level, ratio }: { level: 'safe' | 'amber' | 'red'; ratio: n
 }
 
 function formatAdvanceDate(date: string, options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }) {
-    return new Date(date).toLocaleDateString('en-IN', options)
+    return new Date(date).toLocaleDateString('en-IN', { ...options, timeZone: 'Asia/Kolkata' })
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -273,7 +273,7 @@ export default function AdvancesPage() {
                                         phone: selectedWorker.whatsapp_number,
                                         workerName: selectedWorker.name,
                                         amount: parseFloat(newAmount),
-                                        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+                                        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }),
                                         reason: newDescription,
                                         balance: notification?.balance,
                                         factoryName: 'Your Factory'
