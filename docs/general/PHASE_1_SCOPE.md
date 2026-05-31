@@ -60,7 +60,7 @@ In scope:
 - Scenario analysis.
 - Template save/update/rename/delete.
 - Quote save with full snapshot data.
-- Quote status: draft, sent, accepted, rejected.
+- Quote status: draft, accepted, rejected (manual 'sent' is collapsed from the UI but tracked silently in database audit logs).
 - Restoring a quote snapshot into the estimator for re-estimation.
 - Accepted quote to active order conversion.
 - Start Party Order as a fast path from Estimator (wrapper over accepted quote conversion).

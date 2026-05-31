@@ -21,10 +21,10 @@ Quotes save both the final commercial values and the estimator state snapshot so
 5. Owner reviews cost stack and scenarios.
 6. Owner saves a reusable fabric template or updates an existing one.
 7. Owner enters party name, quality label, warp/weft instructions, meters, and margin.
-8. Owner saves the quote.
-9. Owner manages quote status in `/owner/quotes`: draft, sent, accepted, rejected.
-10. Owner re-estimates an old quote by restoring its snapshot into local estimator draft state.
-11. Owner converts an accepted quote into an active order (or uses "Start Party Order" fast path).
+8. Owner saves the quote: chooses **Save Quote** (saves as draft) or **Save & Accept** (immediately locks the costing).
+9. Owner manages quote status in `/owner/quotes`: draft, accepted, or rejected (manual 'sent' step is collapsed from the UI but logged silently in database audit triggers). Accepting a draft quote prompts a locking confirmation dialog.
+10. Owner re-estimates an old quote by restoring its snapshot into local estimator draft state. The UI displays a warning banner to prevent stale draft collisions.
+11. Owner converts an accepted quote into an active order by clicking "Create Active Order" in Quote History.
 12. Owner can create a market run from estimator market mode.
 
 ## Existing Workflow Translation

@@ -143,7 +143,7 @@ The estimator calculates yarn cost, conversion cost, overhead, landed cost, quot
 
 ### 4.3 Quote
 
-The owner saves a quote. The quote stores the commercial values and the estimator snapshot. In `/owner/quotes`, the owner can filter by status, mark draft/sent/accepted/rejected, restore a quote into the estimator for rework, or convert an accepted quote into an active order.
+The owner saves a quote (either as Draft, or as already Accepted using the direct **Save & Accept** action on the estimator). The quote stores the commercial values and the estimator snapshot. In `/owner/quotes`, the owner can filter by status, accept a draft quote with a locking warning modal (which silently transitions status through 'sent' in the database for compliance logs), restore a quote into the estimator for rework, or convert an accepted quote into an active order.
 
 ### 4.4 Order or Market Run
 
