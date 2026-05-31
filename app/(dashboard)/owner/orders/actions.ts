@@ -103,11 +103,11 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
 
     if (error) return { error: error.message }
 
-    // If order is completed, unlink all machines assigned to it
-    if (status === 'completed') {
+    // If order is completed or cancelled, unlink all machines assigned to it and set them to inactive
+    if (status === 'completed' || status === 'cancelled') {
         await supabase
             .from('machines')
-            .update({ current_order_id: null })
+            .update({ current_order_id: null, status: 'inactive' })
             .eq('current_order_id', orderId)
             .eq('org_id', profile.org_id)
     }
@@ -254,10 +254,10 @@ export async function deleteOrder(orderId: string) {
 
     if (error) return { error: error.message }
 
-    // Unlink all machines assigned to this order
+    // Unlink all machines assigned to this order and set them to inactive
     await supabase
         .from('machines')
-        .update({ current_order_id: null })
+        .update({ current_order_id: null, status: 'inactive' })
         .eq('current_order_id', orderId)
         .eq('org_id', profile.org_id)
 

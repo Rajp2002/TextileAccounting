@@ -20,6 +20,9 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
         month: 'short',
     })
     const statusLabel = (() => {
+        if (payroll.isPayWindowOpen && payroll.unsettledWorkerCount === 0) {
+            return 'Paid'
+        }
         if (payroll.payWindowStatus === 'overdue') return `Overdue since ${payDateLabel}`
         if (payroll.payWindowStatus === 'due_today') return `Due today, ${payDateLabel}`
         if (payroll.payWindowStatus === 'approaching') return `Due in ${payroll.daysUntilPayDate} day${payroll.daysUntilPayDate === 1 ? '' : 's'}`

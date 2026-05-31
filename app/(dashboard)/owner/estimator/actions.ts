@@ -1085,6 +1085,32 @@ export async function updateMarketRunStatus(
 
     if (error) return { error: error.message }
 
+    if (status === 'closed') {
+        const { data: backingOrders } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('market_run_id', marketRunId)
+            .eq('org_id', profile.org_id)
+
+        if (backingOrders && backingOrders.length > 0) {
+            const orderIds = backingOrders.map(o => o.id)
+
+            // Set backing orders to completed
+            await supabase
+                .from('orders')
+                .update({ status: 'completed' })
+                .in('id', orderIds)
+                .eq('org_id', profile.org_id)
+
+            // Unlink all machines assigned to these orders and set them to inactive
+            await supabase
+                .from('machines')
+                .update({ current_order_id: null, status: 'inactive' })
+                .in('current_order_id', orderIds)
+                .eq('org_id', profile.org_id)
+        }
+    }
+
     revalidatePath(`/owner/market-runs/${marketRunId}`)
     revalidatePath('/owner/market-runs')
     revalidatePath('/owner/archive')

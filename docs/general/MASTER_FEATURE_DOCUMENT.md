@@ -121,6 +121,8 @@ Orders are party-backed production commitments. Market runs are costed speculati
 4. Alternatively, owner creates a market run from estimator mode.
 5. Supervisor logs production against the order or run.
 6. Owner sees produced meters, remaining meters, pace, godown state, sales, and profit.
+7. Completing, cancelling, or deleting an order automatically unlinks any assigned looms/machines and sets them to `inactive` status.
+8. Closing a market run automatically completes all backing orders, unlinks all assigned machines, and deactivates their status.
 
 ### Pain Points Solved
 
@@ -304,7 +306,7 @@ The worker money layer. It converts production logs and attendance into pay, app
 
 1. Owner opens `/owner/payroll`.
 2. Owner selects a payroll cycle month (can navigate up to the current in-progress month and view live/current month payroll details).
-3. Owner reviews whether the cycle is in progress, scheduled, approaching, due today, or overdue, and views the Pay Date Overview panel showing status and quick actions.
+3. Owner reviews whether the cycle is in progress, scheduled, approaching, due today, overdue, or completed (which displays as **Paid** or **Clear** with a green success badge once all worker settlements are finished), and views the Pay Date Overview panel showing status and quick actions.
 4. Owner reviews meter workers and fixed workers.
 5. Owner expands worker details for machine/order breakdown, gross pay, advances, deductions, manual adjustments, and net.
 6. Owner toggles final settlement where applicable.

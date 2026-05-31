@@ -1141,6 +1141,13 @@ export async function deleteOrder(orderId: string) {
     const parsed = safeParse(UuidSchema, orderId)
     if ('error' in parsed) return { error: parsed.error }
 
+    // Unlink all machines assigned to this order and set them to inactive
+    await supabase
+        .from('machines')
+        .update({ current_order_id: null, status: 'inactive' })
+        .eq('current_order_id', parsed.data)
+        .eq('org_id', profile.org_id)
+
     const { error } = await supabase
         .from('orders')
         .delete()

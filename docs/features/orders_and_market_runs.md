@@ -22,7 +22,7 @@ Orders represent committed party-backed production. Market runs represent specul
 8. Supervisor logs production against that order.
 9. Owner monitors progress and pace.
 10. Owner sells/dispatches order output from sold stock entries when output is ready.
-11. Owner marks the order complete or cancelled where appropriate.
+11. Owner marks the order complete or cancelled where appropriate. Completing, cancelling, or deleting an order automatically unlinks any assigned looms/machines and sets them to `inactive` status.
 
 ## User Workflow: Market Run
 
@@ -33,6 +33,7 @@ Orders represent committed party-backed production. Market runs represent specul
 5. Owner reviews produced meters, expected in-godown meters, sold meters, revenue, cost, profit, and status.
 6. Owner sells market-run stock to a named party, creating a receivable.
 7. Owner dispatches pending sold meters in one or more batches and reviews any receipt variance.
+8. Owner closes the market run when production is complete. Closing a market run automatically sets all backing orders to completed, unlinks all assigned machines/looms, and sets them to `inactive`.
 
 ## Existing Workflow Translation
 
@@ -90,6 +91,7 @@ Weavly workflow:
 - Order-linked dispatches and public tracking attach to orders.
 - Market-run stock can be sold and dispatched without creating a fake party order.
 - Commercials aggregates expected and realized profit.
+- Completing, cancelling, or deleting an order, or closing a market run, automatically triggers unlinking of assigned machines/looms and sets their status to inactive, ensuring clean loom allocation.
 
 ## Readiness Notes
 

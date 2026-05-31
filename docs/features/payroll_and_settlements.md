@@ -59,7 +59,7 @@ Weavly workflow:
 - Payment mode supports cash, bank transfer, UPI, and cheque.
 - Configurable cycle start day, pay date, and reminder window via `payroll_configs`.
 - Normal settlement is gated and disabled if the payroll window is not open, displaying a clear validation reason (e.g., normal settlement opens near the configured pay date).
-- The dashboard highlights the active pay date cycle with a dedicated `PayDateOverview` component, supporting direct toggle payment state and settlement actions.
+- The dashboard highlights the active pay date cycle with a dedicated `PayDateOverview` component, supporting direct toggle payment state and settlement actions. If all workers for the cycle are settled, the status badge updates to **"Paid"** or **"Clear"** with a green success indicator instead of showing a scheduled/overdue status.
 - Owner verification is required before confirming payroll.
 - WhatsApp payslip sends a summary template plus itemized follow-up.
 

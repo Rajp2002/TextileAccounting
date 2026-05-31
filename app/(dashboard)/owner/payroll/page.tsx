@@ -1923,7 +1923,11 @@ function PayDateOverview({
     const paidCount = items.length - pendingItems.length
     const payDateLabel = dateLabel(status.pay_date, { day: 'numeric', month: 'short', year: 'numeric' })
     const cycleLabel = `${dateLabel(status.cycle_start)} to ${dateLabel(status.cycle_end)}`
+    const isCompleted = pendingItems.length === 0
     const statusLabel = (() => {
+        if (isCompleted) {
+            return items.length > 0 ? 'Paid' : 'Clear'
+        }
         if (status.status === 'overdue') return `Overdue since ${payDateLabel}`
         if (status.status === 'due_today') return `Due today, ${payDateLabel}`
         if (status.status === 'approaching') return `Due in ${status.days_until_pay_date} day${status.days_until_pay_date === 1 ? '' : 's'}`
@@ -1940,7 +1944,15 @@ function PayDateOverview({
                     <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                             <p className="text-sm font-black uppercase tracking-widest text-saffron-deep">Pay date hisaab</p>
-                            <Badge variant="outline" className="border-saffron-soft bg-white/70 text-[10px] font-black uppercase tracking-widest text-saffron-deep">
+                            <Badge
+                                variant="outline"
+                                className={cn(
+                                    "bg-white/70 text-[10px] font-black uppercase tracking-widest",
+                                    isCompleted
+                                        ? "border-green-200 text-green-700"
+                                        : "border-saffron-soft text-saffron-deep"
+                                )}
+                            >
                                 {statusLabel}
                             </Badge>
                         </div>
