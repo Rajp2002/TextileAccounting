@@ -1,6 +1,6 @@
 # Inventory and Stock
 
-Last analyzed from the active codebase on May 31, 2026.
+Last analyzed from the active codebase on June 1, 2026.
 
 ## Phase 1 Status
 
@@ -12,7 +12,7 @@ Split status:
 
 ## What Active Stock Does
 
-The active stock board helps owners track what should be available in godown according to production and commercial records. It supports manual/opening stock, order-linked stock, market-run expected stock, adjustments, party-first sales, pending dispatch meters, discrepancy review, and movement history. It is focused on "Maal kya hona chahiye?" and "dispatch pe kya actual nikla?", while profit, receivables, and payment receipts belong to Commercials.
+The active stock board helps owners track what should be available in godown according to production and commercial records. It supports manual/opening stock, order-linked stock, market-run expected stock, adjustments, party-first sales, lightweight saved-party identity, pending dispatch meters, discrepancy review, and movement history. It is focused on "Maal kya hona chahiye?" and "dispatch pe kya actual nikla?", while profit, receivables, payment receipts, and party-level commercial insights belong to Commercials.
 
 Active Stock is intentionally the actionable/saleable view. A lot remains active when it still has available meters, order-reserved meters, or an unresolved stock discrepancy. Closed or sold-out market-run lots with no saleable meters move to Archive / History even if an old sale still has pending dispatch meters. Those pending meters continue to appear in the Sold Pending Dispatch summary and in Dispatches/Commercials until dispatch is completed.
 
@@ -21,7 +21,7 @@ Active Stock is intentionally the actionable/saleable view. A lot remains active
 1. Owner opens `/owner/stock`.
 2. Owner sees expected available meters, ledger value at cost, and movement history.
 3. Market-run production contributes to expected stock automatically from production records.
-4. Owner sells stock to a named party, creating a stock sale and Commercials receivable.
+4. Owner sells stock to a saved or newly captured party, creating a stock sale, party link where available, and Commercials receivable.
 5. If the sale consumes all available meters, the lot stops appearing in Active Stock once its market run is closed or sold out.
 6. Owner dispatches pending sold meters later, either fully or partially.
 7. If received meters differ from sent meters, Weavly records a shortage or excess as a stock discrepancy with `needs_review` status.
@@ -41,6 +41,7 @@ Weavly workflow:
 - Each ledger stock lot has source, cost, units, meters, godown, and movement history.
 - Market-run stock is expected stock until dispatch or owner adjustment reconciles reality.
 - Sales compute revenue, cost, gross profit, credit terms, and pending dispatch meters.
+- Sales resolve party identity by selected `party_id`, exact unique party match, or new party creation with phone/GSTIN when needed.
 - Sold-out closed market-run lots are retained in Archive / History rather than crowding Active Stock.
 - Dispatch checks compare sent meters and received meters, then create discrepancies only for true variance.
 
@@ -77,6 +78,7 @@ Active:
 - `fabric_stock_movements`
 - `fabric_stock_inward_drafts`
 - `stock_discrepancies`
+- `parties`
 - `commercial_receivables`
 
 Deferred:

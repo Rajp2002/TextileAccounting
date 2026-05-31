@@ -12,6 +12,7 @@ export type PaymentStatus = 'unpaid' | 'partial' | 'paid' | 'overdue'
 export type SellAndDispatchInput = {
   sourceType: StockSaleSourceType
   sourceId: string
+  partyId?: string | null
   partyName: string
   partyPhone?: string | null
   partyCity?: string | null

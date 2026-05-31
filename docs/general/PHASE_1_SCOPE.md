@@ -1,6 +1,6 @@
 # Weavly Phase 1 Scope
 
-Last analyzed from the active codebase on May 31, 2026.
+Last analyzed from the active codebase on June 1, 2026.
 
 Phase 1 is a focused launch of Weavly as a weaving-factory operating loop, not a full ERP. The codebase contains ledger, deep inventory, compliance, DPA, admin, audit, and system health surfaces, but Phase 1 readiness should be judged by whether a factory can trust the daily loop from costing to production to worker settlement.
 
@@ -172,7 +172,8 @@ In scope:
 - Pending inward drafts remain optional/legacy support and should not be a required market-run Phase 1 workflow.
 - Unit count, meters per unit, godown, cost per meter, expected available meters, and ledger movements.
 - Stock adjustment add/subtract.
-- Party-first stock sale recording with named party, price, quantity, credit days, and Commercials receivable creation.
+- Party-first stock sale recording with saved or newly captured party, price, quantity, credit days, and Commercials receivable creation.
+- Lightweight party identity for active sales: Sell Stock can select saved parties, auto-link one exact name match, create a new party when needed, and prevent ambiguous duplicate-name sales unless the owner selects a party or supplies phone/GSTIN.
 - Pending dispatch tracking for stock sales, including partial dispatch quantities.
 - Configurable dispatch batches: dispatch date, meters, challan, vehicle, transporter, and notes (the system is meters-only throughout).
 - Stock movements history.
@@ -180,11 +181,12 @@ In scope:
 - Dispatch package/batch rows, transport/GST/e-way metadata, and receipt confirmation.
 - Shortage/extra received tracking.
 - Public `/track/[token]` portal.
-- `/owner/commercials` as the source of truth for realized revenue, gross profit, expected profit, receivables, and payment tracking.
+- `/owner/commercials` as the source of truth for realized revenue, gross profit, expected profit, receivables, payment tracking, and lightweight party-level revenue/profit/open-dues visibility.
 
 Not in scope:
 
 - Full accounting replacement / Tally replacement.
+- Full `/owner/ledger` reactivation.
 - Full supplier ledger readiness.
 - Deep yarn/beam inventory polish.
 - Complex logistics planning.
@@ -296,6 +298,8 @@ Archived routes are documented in `docs/general/PHASE_1_ARCHIVE.md`; the active 
 - Payroll preview matches final settlement.
 - Advance recovery, final settlement, PF/ESI, payment mode, and payslip send are tested.
 - Expected stock, optional inward drafts, lot creation, adjustment, sale, and commercials aggregation are tested.
+- Saved-party selection, unique-name auto-linking, duplicate-name ambiguity handling, and party creation from Sell Stock are tested.
+- Commercials Top Parties, party directory, ID-based grouping, open dues, and legacy name fallback are tested.
 - Party-first stock sale, pending/partial dispatch, direct receipt confirmation, shortage/excess discrepancy, and public tracking are tested.
 - WhatsApp failures are logged and retryable without blocking writes (failure fallback exists so app workflows do not crash).
 - **WhatsApp Pre-Pilot Checklist:**

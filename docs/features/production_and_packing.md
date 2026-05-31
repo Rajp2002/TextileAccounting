@@ -1,6 +1,6 @@
 # Production and Packing
 
-Last analyzed from the active codebase on May 31, 2026.
+Last analyzed from the active codebase on June 1, 2026.
 
 ## Phase 1 Status
 
@@ -16,7 +16,7 @@ Production logging records how many metres were woven by machine, worker, order/
 2. Production logs update order/run progress and payroll earnings.
 3. Market-run output contributes to expected stock without daily inward confirmation.
 4. Optional/order-based output can still be represented as packages or inward drafts.
-5. Stock can be adjusted, sold to a named party, dispatched, or received depending on workflow.
+5. Stock can be adjusted, sold to a saved or newly captured party, dispatched, or received depending on workflow.
 
 ## Existing Workflow Translation
 
@@ -46,7 +46,7 @@ Weavly workflow:
 - `fabric_stock_inward_drafts`: optional/order-based suggested stock inward records.
 - `fabric_stock_lots`: godown inventory with cost per meter.
 - `fabric_stock_movements`: inward, sale, and adjustment history.
-- `fabric_stock_sales`: named sale records with pending dispatch state.
+- `fabric_stock_sales`: party-linked named sale records with pending dispatch state.
 - `stock_discrepancies`: shortage/excess records created during dispatch reconciliation.
 
 ## Data and Code

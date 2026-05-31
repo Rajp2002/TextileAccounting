@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
-import { CalendarDays, ChevronRight, IndianRupee, Loader2, Package, Send, Truck, UserRound } from 'lucide-react'
+import { useCallback, useEffect, useState, useTransition } from 'react'
+import { CalendarDays, Check, ChevronRight, IndianRupee, Loader2, Package, Plus, Send, UserRound } from 'lucide-react'
 import {
     Dialog,
     DialogContent,
@@ -26,6 +26,14 @@ export type SellAndDispatchDialogProps = {
 }
 
 type OrderOption = { id: string; party_name: string; quality_label: string | null; status: string; total_target_meters: number }
+type PartyOption = {
+    id: string
+    name: string
+    phone: string | null
+    gstin: string | null
+    state: string | null
+    default_credit_days: number | null
+}
 type LotOption = {
     stock_lot_id: string
     quality_label: string
@@ -44,14 +52,33 @@ function todayDate() {
     return new Date().toISOString().slice(0, 10)
 }
 
-function addDays(dateString: string, days: number) {
-    const date = new Date(`${dateString}T00:00:00.000Z`)
-    date.setUTCDate(date.getUTCDate() + days)
-    return date.toISOString().slice(0, 10)
-}
-
 function money(value: number) {
     return `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
+}
+
+function normalizePartyName(name: string | null | undefined) {
+    return (name ?? '').trim().replace(/\s+/g, ' ').toLowerCase()
+}
+
+function exactPartyMatchesIn(name: string, candidates: PartyOption[]) {
+    const normalized = normalizePartyName(name)
+    if (!normalized) return []
+    return candidates.filter((party) => normalizePartyName(party.name) === normalized)
+}
+
+function findUniquePartyByNameIn(name: string, candidates: PartyOption[]) {
+    const matches = exactPartyMatchesIn(name, candidates)
+    return matches.length === 1 ? matches[0] : null
+}
+
+function partyDetailLabel(party: PartyOption) {
+    const parts = [
+        party.phone,
+        party.gstin,
+        party.state,
+        `${party.default_credit_days ?? 0}d credit`,
+    ].filter(Boolean)
+    return parts.join(' · ')
 }
 
 export function SellAndDispatchDialog({
@@ -67,8 +94,10 @@ export function SellAndDispatchDialog({
 
     const [orders, setOrders] = useState<OrderOption[]>([])
     const [lots, setLots] = useState<LotOption[]>([])
+    const [parties, setParties] = useState<PartyOption[]>([])
 
     const [sourceId, setSourceId] = useState(defaultStockLotId || '')
+    const [partyId, setPartyId] = useState('')
     const [partyName, setPartyName] = useState('')
     const [partyPhone, setPartyPhone] = useState('')
     const [partyCity, setPartyCity] = useState('')
@@ -86,12 +115,24 @@ export function SellAndDispatchDialog({
     const [challanNumber, setChallanNumber] = useState('')
     const [notes, setNotes] = useState('')
 
+    const findUniquePartyByName = useCallback((name: string) => findUniquePartyByNameIn(name, parties), [parties])
+
+    const applyPartyToForm = useCallback((party: PartyOption) => {
+        setPartyId(party.id)
+        setPartyName(party.name)
+        setPartyPhone(party.phone ?? '')
+        setPartyGstin(party.gstin ?? '')
+        setCreditDays(String(party.default_credit_days ?? 0))
+    }, [])
+
     useEffect(() => {
         if (!open) return
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setStep(1)
         setLoadingData(true)
         setSourceId(defaultStockLotId || '')
+        setPartyId('')
         setPartyName('')
         setPartyPhone('')
         setPartyCity('')
@@ -112,8 +153,10 @@ export function SellAndDispatchDialog({
         getSellAndDispatchOptions().then((data) => {
             const loadedOrders = data.orders as OrderOption[]
             const loadedLots = data.lots as LotOption[]
+            const loadedParties = data.parties as PartyOption[]
             setOrders(loadedOrders)
             setLots(loadedLots)
+            setParties(loadedParties)
 
             const defaultLot = loadedLots.find((lot) => lot.stock_lot_id === defaultStockLotId)
             const defaultOrder = loadedOrders.find((order) => order.id === (defaultOrderId || defaultLot?.order_id || ''))
@@ -123,11 +166,16 @@ export function SellAndDispatchDialog({
                 setActualDispatchedMeters(String(Number(defaultLot.available_meters || 0).toFixed(2)))
             }
             if (defaultOrder) {
-                setPartyName(defaultOrder.party_name)
+                const matchedParty = findUniquePartyByNameIn(defaultOrder.party_name, loadedParties)
+                if (matchedParty) {
+                    applyPartyToForm(matchedParty)
+                } else {
+                    setPartyName(defaultOrder.party_name)
+                }
             }
             setLoadingData(false)
         })
-    }, [open, defaultOrderId, defaultStockLotId])
+    }, [open, defaultOrderId, defaultStockLotId, applyPartyToForm])
 
     const selectedLot = lots.find((lot) => lot.stock_lot_id === sourceId)
     const selectedOrder = selectedLot?.order_id ? orders.find((order) => order.id === selectedLot.order_id) : null
@@ -138,13 +186,20 @@ export function SellAndDispatchDialog({
         const order = lot.order_id ? orders.find((o) => o.id === lot.order_id) : null
 
         const metersVal = Number(lot.available_meters || 0).toFixed(2)
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSoldMeters(String(metersVal))
         setActualDispatchedMeters(String(metersVal))
         if (lot.meters_per_taka > 0) {
             setSoldTakas(String(Math.max(1, Math.round(Number(metersVal) / lot.meters_per_taka))))
         }
-        setPartyName(order?.party_name || '')
-    }, [sourceId, lots, orders])
+        const matchedParty = order?.party_name ? findUniquePartyByName(order.party_name) : null
+        if (matchedParty) {
+            applyPartyToForm(matchedParty)
+        } else {
+            setPartyId('')
+            setPartyName(order?.party_name || '')
+        }
+    }, [sourceId, lots, orders, parties, findUniquePartyByName, applyPartyToForm])
 
     const soldMetersNum = Number(soldMeters) || 0
     const soldTakasNum = Number(soldTakas) || 0
@@ -157,25 +212,29 @@ export function SellAndDispatchDialog({
     const grossCost = soldMetersNum * costPerMeter
     const grossProfit = totalSaleValue - grossCost
     const grossMargin = totalSaleValue > 0 ? (grossProfit / totalSaleValue) * 100 : 0
-    const dueDate = useMemo(() => addDays(saleDate, creditDaysNum), [saleDate, creditDaysNum])
-    const dispatchStatus = !dispatchNow
-        ? 'Not dispatched'
-        : dispatchMetersNum + 0.01 >= soldMetersNum
-            ? 'Dispatched'
-            : 'Partially dispatched'
-    const pendingDispatch = Math.max(soldMetersNum - dispatchMetersNum, 0)
-
     const sourceType = selectedLot?.source_type === 'market_run'
         ? 'market_run'
         : selectedLot?.source_type === 'order'
             ? 'order'
             : 'stock_lot'
 
+    const partyNeedle = normalizePartyName(partyName)
+    const selectedParty = partyId ? parties.find((party) => party.id === partyId) ?? null : null
+    const exactPartyMatches = exactPartyMatchesIn(partyName, parties)
+    const willAutoLinkSingleParty = !selectedParty && exactPartyMatches.length === 1 && !partyPhone.trim() && !partyGstin.trim()
+    const hasAmbiguousPartyName = !selectedParty && exactPartyMatches.length > 1 && !partyPhone.trim() && !partyGstin.trim()
+    const partySuggestions = partyNeedle
+        ? parties
+            .filter((party) => normalizePartyName(party.name).includes(partyNeedle))
+            .slice(0, 5)
+        : parties.slice(0, 5)
+
     const handleSubmit = () => {
         startTransition(async () => {
             const result = await createPartyStockSaleAndOptionalDispatch({
                 sourceType,
                 sourceId,
+                partyId: partyId || null,
                 partyName,
                 partyPhone,
                 partyCity,
@@ -257,8 +316,54 @@ export function SellAndDispatchDialog({
                 <div className="space-y-4 py-2">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1.5 sm:col-span-2">
-                            <Label>Party name</Label>
-                            <Input value={partyName} onChange={(event) => setPartyName(event.target.value)} className="h-11 lg:h-9" />
+                            <Label>Party</Label>
+                            <Input
+                                value={partyName}
+                                onChange={(event) => {
+                                    const nextName = event.target.value
+                                    setPartyName(nextName)
+                                    setPartyId('')
+                                }}
+                                placeholder="Search existing party or type new name"
+                                className="h-11 lg:h-9"
+                            />
+                            {selectedParty ? (
+                                <div className="flex flex-wrap items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+                                    <Check className="h-3.5 w-3.5" />
+                                    <span className="truncate">Saved party</span>
+                                    <span className="text-emerald-700">· {partyDetailLabel(selectedParty)}</span>
+                                </div>
+                            ) : hasAmbiguousPartyName ? (
+                                <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+                                    <UserRound className="h-3.5 w-3.5" />
+                                    <span>Multiple saved parties share this name. Select one below, or add phone/GSTIN for a new party.</span>
+                                </div>
+                            ) : willAutoLinkSingleParty ? (
+                                <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800">
+                                    <Check className="h-3.5 w-3.5" />
+                                    <span>Will link saved party: {partyDetailLabel(exactPartyMatches[0])}</span>
+                                </div>
+                            ) : partyName.trim() ? (
+                                <div className="flex items-center gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+                                    <Plus className="h-3.5 w-3.5" />
+                                    <span>New party will be saved with this sale</span>
+                                </div>
+                            ) : null}
+                            {!selectedParty && partySuggestions.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {partySuggestions.map((party) => (
+                                        <button
+                                            key={party.id}
+                                            type="button"
+                                            onClick={() => applyPartyToForm(party)}
+                                            className="max-w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-left text-xs font-bold text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                                        >
+                                            <span className="block truncate">{party.name}</span>
+                                            <span className="block truncate font-medium text-slate-500">{partyDetailLabel(party)}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-1.5">
                             <Label>Phone</Label>
@@ -356,7 +461,7 @@ export function SellAndDispatchDialog({
     const canContinue = step === 1
         ? Boolean(sourceId)
         : step === 2
-            ? Boolean(partyName.trim()) && soldMetersNum > 0 && saleRateNum > 0 && creditDaysNum >= 0 && Boolean(selectedLot) && soldMetersNum <= Number(selectedLot?.available_meters || 0) + 0.01 && (!hasSoldTakas || (soldTakasNum > 0 && soldTakasNum <= Number(selectedLot?.available_taka_count || 0) + 0.01))
+            ? Boolean(partyName.trim()) && !hasAmbiguousPartyName && soldMetersNum > 0 && saleRateNum > 0 && creditDaysNum >= 0 && Boolean(selectedLot) && soldMetersNum <= Number(selectedLot?.available_meters || 0) + 0.01 && (!hasSoldTakas || (soldTakasNum > 0 && soldTakasNum <= Number(selectedLot?.available_taka_count || 0) + 0.01))
             : step === 3
                 ? !dispatchNow || (dispatchMetersNum > 0 && dispatchMetersNum <= soldMetersNum)
                 : true

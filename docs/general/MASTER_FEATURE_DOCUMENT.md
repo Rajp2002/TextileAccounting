@@ -1,6 +1,6 @@
 # Weavly Master Feature Document
 
-Last updated May 31, 2026.
+Last updated June 1, 2026.
 
 This document unifies the feature docs under `docs/features/`. It is organized around the user workflow rather than the file tree, because Weavly's value comes from how each feature hands off to the next.
 
@@ -12,9 +12,9 @@ This document unifies the feature docs under `docs/features/`. It is organized a
 4. Owner converts accepted quotes to orders (or uses Start Party Order fast path) or starts market runs for speculative stock production.
 5. Supervisor assigns workers and work to machines and logs shift production metres.
 6. Production feeds Factory Today, analytics, payroll, and expected godown stock.
-7. Stock is sold party-first, creating a named sale and Commercials receivable.
+7. Stock is sold party-first against a saved or newly captured party, creating a named sale and Commercials receivable.
 8. Pending stock sales are dispatched in one or more batches, with receipt variance sent to owner review.
-9. Commercials tracks revenue, profit, receivables, payments, and dispatch status context.
+9. Commercials tracks revenue, profit, receivables, payments, dispatch status context, and lightweight party-level sales/profit/open-dues insights.
 10. Owner settles payroll, recovers advances, records payment mode, and sends payslips/receipts over WhatsApp.
 11. Billing, referrals, settings, access codes, audit, and compliance support the operating loop.
 
@@ -31,8 +31,8 @@ This document unifies the feature docs under `docs/features/`. It is organized a
 | Supervisor Production Log | Machines, workers, orders/runs | Production logs, analytics, payroll, expected stock, Factory Today |
 | Analytics | Production logs, orders, machines | Owner decisions, order/run monitoring |
 | Stock | Production output, market runs, orders | Party-first stock sales, pending dispatch, stock differences, commercials |
-| Dispatches | Stock sales, orders, packages/stock, parties | Tracking portal, pending/partial dispatch, receipt/shortage reconciliation |
-| Commercials | Quotes, invoices, stock sales, market-run sales, receivables, payment receipts | Owner profit visibility, collection state, payment history |
+| Dispatches | Stock sales, orders, packages/stock, parties | Tracking portal, pending/partial dispatch, receipt/shortage reconciliation, party identity on stock sales |
+| Commercials | Quotes, invoices, stock sales, market-run sales, parties, receivables, payment receipts | Owner profit visibility, collection state, payment history, party leaderboards/directory |
 | Payroll | Production logs, attendance, worker rates, advances, payroll config | Pay-window-gated settlements, payslips, debt recovery |
 | Advances | Workers, settlements | Payroll deductions, WhatsApp receipts |
 | WhatsApp | Worker/profile numbers, templates, edge functions | Operational communication logs |
@@ -197,7 +197,7 @@ The bridge between logged meters and physical goods. The codebase has both packa
 2. Market-run output becomes expected godown stock from production records.
 3. Optional/order-based inward draft suggestions can still become stock lots.
 4. Owner records godown, unit count, meters per unit, cost per meter, and source.
-5. Owner sells stock to a named party, creating a stock sale and Commercials receivable.
+5. Owner sells stock to a saved or newly captured party, creating a stock sale and Commercials receivable.
 6. Owner dispatches pending sold meters later and reviews shortage/excess discrepancies from receipt confirmation.
 
 ### Pain Points Solved
@@ -231,8 +231,8 @@ The professional handoff layer for sold stock and order output. Dispatches group
 ### User Workflow
 
 1. Owner opens `/owner/dispatches`.
-2. Owner uses Sell Stock to select source stock, enter party details, sold meters, rate, credit days, and notes.
-3. System creates a stock sale, stock movement, and named Commercials receivable.
+2. Owner uses Sell Stock to select source stock, choose an existing party or enter new party details, sold meters, rate, credit days, and notes.
+3. System creates or resolves the lightweight party, then creates a stock sale, stock movement, and named Commercials receivable.
 4. Pending dispatch meters appear in the Pending Dispatches tab.
 5. Owner confirms dispatch for all or part of the pending quantity (using a modernized CreateDispatchModal) with dispatch date, challan, vehicle, and transporter details.
 6. Owner confirms direct receipt of dispatched batches, recording actual received meters.
@@ -272,7 +272,8 @@ Phase 1 keeps the active `/owner/commercials` route as the source of truth for r
 2. Owner reviews realized revenue/profit, expected profit, receivables, collected amount, balances, and payment status.
 3. Owner filters by source: orders, stock, market runs, expected quotes, and payment state.
 4. Owner searches quality/reference/source and reviews revenue, cost, profit, margin, dispatch status, and payment history.
-5. Owner records payments against a receivable.
+5. Owner reviews Top Parties over 7D/30D/year/all-time and uses the Parties tab to inspect saved or legacy party rows by revenue, booked profit, meters sold, open dues, overdue balance, and last sale.
+6. Owner records payments against a receivable.
 
 ### Pain Points Solved
 
@@ -290,9 +291,10 @@ Phase 1 keeps the active `/owner/commercials` route as the source of truth for r
 - `/owner/commercials`
 - `/owner/ledger` archived
 - `app/(dashboard)/owner/commercials/actions.ts`
+- `parties`
 - `commercial_receivables`
 - `commercial_payment_receipts`
-- `party_*` and supplier ledger depth are deferred
+- `party_invoices`, `party_receipts`, `party_adjustments`, payment allocations, and supplier ledger depth are deferred
 
 ## 8. Payroll and Settlements
 

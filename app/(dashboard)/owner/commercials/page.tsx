@@ -1,5 +1,5 @@
 import CommercialsClient from './CommercialsClient'
-import { getCommercialsData, getCommercialReceivables, getCollectedThisMonth } from './actions'
+import { getCommercialsData, getCommercialReceivables, getCollectedThisMonth, getCommercialPartyInsights } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,10 +9,11 @@ export const metadata = {
 }
 
 export default async function CommercialsPage() {
-    const [commercialsRes, receivablesRes, collectedRes] = await Promise.all([
+    const [commercialsRes, receivablesRes, collectedRes, partyInsightsRes] = await Promise.all([
         getCommercialsData(),
         getCommercialReceivables(),
         getCollectedThisMonth(),
+        getCommercialPartyInsights(),
     ])
 
     if ('error' in commercialsRes) {
@@ -26,7 +27,9 @@ export default async function CommercialsPage() {
 
     const receivables = 'error' in receivablesRes ? [] : (receivablesRes.data ?? [])
     const collectedThisMonth = 'error' in collectedRes ? 0 : (collectedRes.data ?? 0)
+    const partyInsights = 'error' in partyInsightsRes
+        ? { leaderboards: { '7d': [], '30d': [], year: [], all: [] }, parties: [] }
+        : partyInsightsRes.data
 
-    return <CommercialsClient initialData={commercialsRes.data} initialReceivables={receivables} collectedThisMonth={collectedThisMonth} />
+    return <CommercialsClient initialData={commercialsRes.data} initialReceivables={receivables} collectedThisMonth={collectedThisMonth} partyInsights={partyInsights} />
 }
-

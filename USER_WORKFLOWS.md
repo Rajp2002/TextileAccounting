@@ -1,6 +1,6 @@
 # Weavly User Workflows
 
-Last updated May 31, 2026.
+Last updated June 1, 2026.
 
 This document explains how users progress through Weavly in the active product. It is written from the user's workflow outward: what they are trying to do, what pain point it replaces, how they interact with the app, and what records are created.
 
@@ -120,7 +120,7 @@ Keep looms productive when client orders are light while still knowing cost, sto
 3. Supervisor logs production against the market-run production anchor.
 4. Owner tracks produced meters, expected in-godown meters, sold meters, revenue, cost, and profit.
 5. Production creates expected stock in the godown ledger; this is not physical inward confirmation.
-6. Owner records a named stock sale, creating a receivable.
+6. Owner records a stock sale against a saved party or newly captured party details, creating a receivable.
 7. Owner dispatches pending sold meters in one or more batches and reviews any shortage or excess at receipt.
 8. Owner closes the run when done.
 
@@ -213,8 +213,8 @@ Know what fabric should exist in godown, what is actually dispatched, and which 
 2. Owner reviews expected available takas/meters and stock value at cost.
 3. Market-run production contributes expected stock automatically from production records.
 4. Owner adds manual/opening/order stock lots where needed.
-5. Owner records a party-first stock sale.
-6. The sale creates a named Commercials receivable and pending dispatch meters.
+5. Owner records a party-first stock sale by selecting a saved party, auto-linking an unambiguous party name, or creating a new party with distinguishing contact details.
+6. The sale creates a named Commercials receivable, a `party_id` link where available, and pending dispatch meters.
 7. If the lot has no saleable meters left and its market run is closed or sold out, it moves from Active Stock to Archive / History.
 8. Owner dispatches sold stock fully or partially.
 9. Any receipt shortage or excess becomes a stock discrepancy with Needs Review status.
@@ -243,7 +243,7 @@ Create a professional handoff for fabric leaving the factory and capture receive
 
 ### Flow
 
-1. Owner sells stock to a named party or selects an order-linked pending sale.
+1. Owner sells stock to a saved/new party or selects an order-linked pending sale.
 2. Owner confirms dispatch with sent meters/takas and transport/GST metadata.
 3. System creates a dispatch batch and keeps package/batch lines.
 4. Owner shares a public tracking link when the dispatch is order-linked.
@@ -276,7 +276,8 @@ Show realized and expected gross profit without requiring full accounting readin
 4. Owner filters by orders, stock, market runs, and expected quotes.
 5. Owner searches by quality/reference/source/party.
 6. Owner reviews row-level revenue, cost, gross profit, margin, dispatch status, and payment state.
-7. Owner records payments and reviews payment history.
+7. Owner opens Top Parties/Parties views to compare revenue, booked gross profit, meters sold, open dues, overdue balance, and last-sale context by saved or legacy party.
+8. Owner records payments and reviews payment history.
 
 ### Pain Point Replaced
 
@@ -288,6 +289,7 @@ Profit visibility no longer waits for a full ledger close.
 - stock sales
 - market-run sales
 - invoice-like records where present
+- `parties` for lightweight party identity and active Commercials grouping
 
 ## 10. Payroll and Advances Workflow
 
@@ -355,7 +357,7 @@ Use the communication channel factories already rely on without making messages 
 These exist in code but are not Phase 1 polish drivers:
 
 - `/owner/inventory` deep yarn/beam inventory.
-- `/owner/ledger` party/supplier accounting.
+- `/owner/ledger` full party/supplier accounting. Lightweight `parties` identity is active only where Sell Stock and Commercials need it.
 - `/owner/settings/audit` audit browsing.
 - `/owner/system-health` delivery/system console.
 - `/admin` compliance dashboard.

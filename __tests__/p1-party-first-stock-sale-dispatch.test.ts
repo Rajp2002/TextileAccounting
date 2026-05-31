@@ -180,4 +180,23 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(receiptMigration).toContain("WHEN pending_dispatch_meters > 0.01 THEN 'partially_dispatched'")
         expect(receiptMigration).toContain("AND d.stock_sale_id = v_sale.id")
     })
+
+    it('selects or creates persistent parties during stock sale entry', () => {
+        const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
+        const dialog = readProjectFile('components/dispatches/SellAndDispatchDialog.tsx')
+        const migration = readProjectFile('supabase/migrations/20260601010000_commercial_party_identity.sql')
+
+        expect(action).toContain(".from('parties')")
+        expect(action).toContain('p_party_id: partyId')
+        expect(dialog).toContain('Search existing party or type new name')
+        expect(dialog).toContain('New party will be saved with this sale')
+        expect(dialog).toContain('applyPartyToForm')
+        expect(dialog).toContain('Multiple saved parties share this name')
+        expect(dialog).toContain('partyDetailLabel')
+        expect(dialog).toContain('hasAmbiguousPartyName')
+        expect(dialog).not.toContain('sell-stock-party-options')
+        expect(migration).toContain('DROP INDEX IF EXISTS idx_parties_org_name_active')
+        expect(migration).toContain('v_party_id := v_party.id')
+        expect(migration).toContain('party_id = EXCLUDED.party_id')
+    })
 })

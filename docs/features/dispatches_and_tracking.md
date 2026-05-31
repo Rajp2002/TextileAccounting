@@ -1,6 +1,6 @@
 # Dispatches and Tracking
 
-Last analyzed from the active codebase on May 31, 2026.
+Last analyzed from the active codebase on June 1, 2026.
 
 ## Phase 1 Status
 
@@ -13,7 +13,7 @@ Dispatches record fabric handoff from factory to party and are the point where s
 ## User Workflow
 
 1. Owner opens `/owner/dispatches`.
-2. Owner uses Sell Stock to choose source stock, enter party details, sold meters, sale rate, credit days, sale date, and notes.
+2. Owner uses Sell Stock to choose source stock, select an existing party or enter a new party, sold meters, sale rate, credit days, sale date, and notes.
 3. System creates a stock sale, stock movement, and named Commercials receivable.
 4. The sale appears as pending dispatch until all sold meters are dispatched.
 5. Owner confirms dispatch for all or part of the pending quantity using a modernized CreateDispatchModal, which supports partial quantities, dispatch date, challan, vehicle, transporter, and notes.
@@ -33,6 +33,7 @@ Old workflow:
 Weavly workflow:
 
 - Stock sale records party, rate, credit terms, and receivable before dispatch.
+- Saved parties prefill phone/GSTIN/credit days. A unique exact-name match can be auto-linked, while ambiguous duplicate names require an explicit selection or phone/GSTIN before a new party is created.
 - Dispatch batch records sent and actual received meters.
 - Stock discrepancy records shortage or excess for owner review when there is a true receipt variance.
 - Tracking portal gives a buyer-facing status surface.
@@ -58,6 +59,7 @@ Weavly workflow:
 - `dispatch_package_lines`
 - `fabric_packages`
 - `fabric_stock_sales`
+- `parties`
 - `commercial_receivables`
 - `party_dispatch_claims`
 - `stock_discrepancies`

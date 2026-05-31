@@ -1,6 +1,6 @@
 # Weavly Technical Analysis
 
-Last analyzed from the active codebase on May 31, 2026. Updated to reflect bug fixes and performance improvements applied May 31, 2026.
+Last analyzed from the active codebase on June 1, 2026. Updated to reflect the Commercials party identity pivot, stock-sale party selection, and May 31 bug fixes/performance improvements.
 
 ## Stack
 
@@ -105,6 +105,7 @@ Stock and dispatch:
 
 Commercials:
 
+- `parties` — active lightweight customer identity for Sell Stock and Commercials grouping; full ledger use remains deferred.
 - `commercial_profit_entries`
 - `commercial_receivables`
 - `commercial_payment_receipts`
@@ -120,7 +121,7 @@ Payroll and advances:
 
 Deferred ERP/governance:
 
-- `parties`, `party_invoices`, `party_receipts`, `party_adjustments`, `payment_allocations`
+- `party_invoices`, `party_receipts`, `party_adjustments`, `payment_allocations`
 - `suppliers`, `supplier_ledger_entries`
 - `yarn_lots`, `beam_cards`, `beam_card_lots`, `yarn_movements`, `order_yarn_requirements`
 - `audit_log`, `notice_registry`, `grievances`, `dpas`, `organization_dpas`, `breach_reports`
@@ -166,6 +167,7 @@ Owner operations:
 - payroll actions in `app/(dashboard)/owner/payroll/actions.ts`
 - advances actions in `app/(dashboard)/owner/advances/actions.ts`
 - commercials actions in `app/(dashboard)/owner/commercials/actions.ts`
+  - `getCommercialPartyInsights` reads realized commercial entries, receivables, and active parties to build 7D/30D/year/all leaderboards plus the party directory.
 
 ## Realtime and Offline
 
@@ -206,6 +208,8 @@ Billing uses Razorpay:
 
 - Documentation must distinguish active `/owner/stock` from archived `/owner/inventory`.
 - Documentation must distinguish party-first stock sale/pending dispatch from the older order-first dispatch-only story.
+- `parties` is no longer wholly deferred: active Phase 1 uses it only for lightweight customer identity, stock-sale party resolution, and Commercials party grouping. Full `/owner/ledger` accounting remains archived.
+- The June 1 party identity migration adds `party_id` to `fabric_stock_sales` and `commercial_receivables`, drops the old active-party unique-name index, backfills unique exact-name matches, and rebuilds `commercial_profit_entries` with party IDs/names.
 - Production mode (`organizations.production_mode`) changes navigation visibility but does not change the underlying database shape.
 - The implementation has been hardened to use direct Meta API. Legacy references to Interakt have been cleaned up.
 - Automated tests are broader than the first Phase 1 pass, but workflow coverage is still uneven relative to complexity.

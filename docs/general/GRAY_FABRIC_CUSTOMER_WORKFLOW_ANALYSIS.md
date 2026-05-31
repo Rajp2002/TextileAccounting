@@ -1,6 +1,6 @@
 # Gray Fabric Customer Workflow Analysis
 
-Date: May 31, 2026
+Date: June 1, 2026
 
 Target customer stance: owner/operator of a Surat-style grey fabric weaving unit or trader-manufacturer who produces market maal, sells through traders/brokers, dispatches takas/rolls, manages worker hisaab, and tracks money mostly through memory, registers, Excel, WhatsApp, and phone calls.
 
@@ -18,7 +18,7 @@ The product is pointed in the right direction. The strongest loop is:
 
 The stock-inward pivot is correct. A grey fabric owner does not want to manually inward every production lot if the same person already has to run the factory, sell the maal, and chase payments. The app now treats stock as an expected ledger from production and checks physical reality at dispatch, which matches the real workflow better than daily manual inward.
 
-The main remaining risk is that several workflows still assume clean, structured data entry at the wrong moment. A real user will tolerate one quick shift log and one sale/dispatch entry. They will not maintain perfect day/night worker assignments, order anchors, quality masters, party records, physical stock counts, and discrepancy reviews unless those are embedded into the exact moment they already do the work.
+The main remaining risk is that several workflows still assume clean, structured data entry at the wrong moment. A real user will tolerate one quick shift log and one sale/dispatch entry. They will not maintain perfect day/night worker assignments, order anchors, quality masters, physical stock counts, and discrepancy reviews unless those are embedded into the exact moment they already do the work. The June 1 party-identity refinement improves this by embedding saved-party lookup and new-party creation directly into Sell Stock.
 
 ## Customer Reality
 
@@ -57,7 +57,7 @@ Factory Today puts production, loom assignment, work at risk, sold-not-dispatche
 
 ### 4. Party-first Sell Stock plus Dispatch is now the right workflow shape
 
-Combining sale, stock depletion, dispatch metadata, tracking, and receivable creation is right. The implementation has now moved the primary stock sale flow to a party-first shape: sell stock to a named party, create the receivable, then dispatch pending meters in one or more batches. The user does not think "first create a fake order, then create a dispatch row, then create a receivable." They think "maal becha, rate kya, maal kab jayega, paisa kab ayega?"
+Combining sale, stock depletion, dispatch metadata, tracking, and receivable creation is right. The implementation has now moved the primary stock sale flow to a party-first shape: select or create the party during Sell Stock, create the receivable, then dispatch pending meters in one or more batches. The user does not think "first create a fake order, then create a dispatch row, then create a receivable." They think "maal becha, rate kya, maal kab jayega, paisa kab ayega?"
 
 ### 5. Payroll from production logs is a strong anchor
 
@@ -146,14 +146,14 @@ Remaining risk:
 
 Recommendation:
 
-- Keep the lightweight party capture in Sell Stock.
+- Keep lightweight party capture in Sell Stock and continue grouping Commercials by durable `party_id` where available.
 - Add optional broker/commission and claim/deduction flows to receivables.
 - Use the existing party ledger schema concepts when ledger reactivation becomes worth the complexity. The schema already supports party type, broker name, credit days, credit limit, invoices, receipts, and adjustments (`supabase/migrations/20260428120000_party_ledger.sql:13-79`).
 - Surface overdue buckets: due today, 1-7 days overdue, 8-30, 30+.
 
 ### Gap 5: Discrepancy creation exists, but the owner review loop is incomplete
 
-Sell & Dispatch inserts `stock_discrepancies` when actual dispatched meters differ from expected meters (`app/(dashboard)/owner/dispatches/actions.ts:147-166`). Dispatch overview surfaces open discrepancy counts in parts of the app, but there is no obvious first-class workflow to resolve, write off, convert to party claim, or adjust receivable.
+Receipt confirmation inserts `stock_discrepancies` when received meters differ from sent meters. Intentional partial dispatch does not create a discrepancy; it remains pending dispatch. Dispatch overview surfaces open discrepancy counts in parts of the app, but there is no obvious first-class workflow to resolve, write off, convert to party claim, or adjust receivable.
 
 Why this is a problem:
 
@@ -214,7 +214,7 @@ Recommendation:
 
 ### Gap 9: Claims and rate differences need a path into money
 
-The party ledger schema already names claim/deduction adjustments, but the active Commercials surface mostly handles simple receipt recording. Real payment collection often includes shortage, damage, late discount, rate difference, or claim deduction.
+The party ledger schema already names claim/deduction adjustments, but the active Commercials surface handles operational receivables, receipts, and party-level profit/open-dues visibility rather than claim settlement. Real payment collection often includes shortage, damage, late discount, rate difference, or claim deduction.
 
 Recommendation:
 

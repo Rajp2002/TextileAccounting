@@ -1,6 +1,6 @@
 # Weavly Project Overview
 
-Last analyzed from the active codebase on May 31, 2026.
+Last analyzed from the active codebase on June 1, 2026.
 
 Weavly is a multi-tenant operating system for Indian weaving factories. It is designed around the way a small or mid-sized weaving unit actually works: an owner prices fabric from yarn and loom assumptions, converts confirmed work into orders or speculative market runs, assigns looms on the floor, captures shift production, turns output into stock or dispatches, and settles workers with transparent wage and advance recovery.
 
@@ -19,7 +19,7 @@ The loop is:
 5. Assign machines, workers, and order/run work on the supervisor production log screen.
 6. Capture day/night shift production from produced metre totals, with correction windows, duplicate protection, rate snapshots, downtime reasons, and machine status.
 7. Convert production into Factory Today signals, analytics, order progress, market-run progress, expected godown stock, payroll earnings, and sale/dispatch readiness.
-8. Sell stock to a named party, create a receivable, dispatch in one or more batches, confirm receipt, and review shortages/excesses.
+8. Sell stock to a saved or newly captured party, create a receivable, dispatch in one or more batches, confirm receipt, and review shortages/excesses.
 9. Settle payroll and advances with deduction caps, PF/ESI fields, final settlement behavior, payment modes, payslip generation, and WhatsApp communication.
 10. Use Commercials, billing, referrals, and settings as supporting surfaces where they make the core loop more professional and monetizable.
 
@@ -109,13 +109,13 @@ Pain point translated: the owner can answer "what should be in godown, what was 
 
 ### Dispatches
 
-Dispatches turn sold stock into professional handoff. The current visible flow is party-first: the owner sells stock to a named party, which creates a stock sale and receivable, then dispatches pending meters later from `/owner/dispatches`. Dispatch supports configurable batch meters and date, order-linked dispatches, GST/e-way metadata, package lines, direct receipt confirmation, shortage/extra received variance, owner-confirmed receipt, and public order tracking links (the system is meters-only throughout).
+Dispatches turn sold stock into professional handoff. The current visible flow is party-first: the owner sells stock to a saved party or creates a lightweight party record from the sale, which creates a stock sale and receivable, then dispatches pending meters later from `/owner/dispatches`. The Sell Stock dialog searches active parties, pre-fills phone/GSTIN/credit days when a party is selected, auto-links a unique name match when unambiguous, and blocks ambiguous duplicate names unless the owner selects the party or adds phone/GSTIN. Dispatch supports configurable batch meters and date, order-linked dispatches, GST/e-way metadata, package lines, direct receipt confirmation, shortage/extra received variance, owner-confirmed receipt, and public order tracking links (the system is meters-only throughout).
 
 Pain point translated: informal transport handoff becomes a traceable dispatch with client-facing status and shortage reconciliation.
 
 ### Commercials
 
-Commercials is the source of truth for revenue, gross profit, receivables, and payment tracking across realized and expected sources: stock sales, market-run sales, order invoices, and expected order quotes. Named party-first stock sales create receivables immediately; payments are recorded as receipts and update unpaid/partial/paid state. It is not a full accounting ledger; it is an operational gross-profit and collection dashboard.
+Commercials is the source of truth for revenue, gross profit, receivables, and payment tracking across realized and expected sources: stock sales, market-run sales, order invoices, and expected order quotes. Named party-first stock sales create receivables immediately; payments are recorded as receipts and update unpaid/partial/paid state. Commercials now also uses `parties` as lightweight customer identity for saved-party display, open dues by party, Top Parties leaderboards, and a searchable party directory. It is not a full accounting ledger; it is an operational gross-profit and collection dashboard.
 
 Pain point translated: the owner can answer "Paisa/profit kya hua?" and track receivables without waiting for a full accounting workflow.
 
@@ -159,5 +159,5 @@ Pain point translated: customer onboarding, monetization, and worker communicati
 ## Important Product Boundaries
 
 - Phase 1 is estimator, production logging/tracking, payroll/advances, market runs, dispatch professionalism, expected stock/commercials support, WhatsApp communication, billing/referrals, and the setup/settings needed for those flows.
-- Deep yarn/beam inventory, party ledger, supplier ledger, audit registry, system health, DPA, grievances, language requests, and admin governance are implemented or partially implemented but should not drive Phase 1 polish unless they unblock a core workflow.
+- Deep yarn/beam inventory, full party ledger, supplier ledger, audit registry, system health, DPA, grievances, language requests, and admin governance are implemented or partially implemented but should not drive Phase 1 polish unless they unblock a core workflow. The active exception is lightweight `parties` identity used by Sell Stock and Commercials.
 - If documentation and code disagree, the active route tree, server actions, schema migrations, and `lib/phase1-scope.ts` should be treated as the current implementation.

@@ -1,8 +1,8 @@
 # Weavly Documentation Index
 
-Last analyzed from the active codebase on May 31, 2026.
+Last analyzed from the active codebase on June 1, 2026.
 
-Weavly is a multi-tenant operating system for Indian weaving factories. The current Phase 1 source of truth is the factory loop from production-mode setup to estimating, orders or market runs, supervisor shift logging, expected godown stock, party-first stock sale, dispatch/receipt tracking, Commercials receivables/payments, and payroll/advances.
+Weavly is a multi-tenant operating system for Indian weaving factories. The current Phase 1 source of truth is the factory loop from production-mode setup to estimating, orders or market runs, supervisor shift logging, expected godown stock, party-first stock sale with saved customer identity, dispatch/receipt tracking, Commercials receivables/payments/party insights, and payroll/advances.
 
 ## Documentation Source of Truth
 
@@ -50,7 +50,7 @@ Feature docs:
 - `/owner/market-runs` - speculative production tracking.
 - `/owner/stock` - expected/physical godown ledger, manual or source-linked lots, stock sales, adjustments, movements, pending dispatch context.
 - `/owner/dispatches` - party-first stock sale workflow, pending/partial dispatches, order-linked dispatches, receipt reconciliation, tracking links.
-- `/owner/commercials` - source of truth for revenue, gross profit, receivables, payment status, and payment receipts.
+- `/owner/commercials` - source of truth for revenue, gross profit, receivables, payment status, payment receipts, and lightweight party-level sales/profit visibility.
 - `/owner/payroll` - meter and fixed payroll, configurable cycle/pay date/reminder window, pay-date overview, past settlement audit history, CSV exports, and WhatsApp payslips.
 - `/owner/advances` - worker Upaad tracking and recovery support.
 - `/owner/fixed-workers` - workforce setup and fixed staff management.
@@ -82,4 +82,4 @@ The active archive gate is in `lib/phase1-scope.ts`.
 - `/owner/settings/audit`
 - `/owner/system-health`
 
-These should not define Phase 1 readiness unless a specific slice directly supports the core loop.
+These should not define Phase 1 readiness unless a specific slice directly supports the core loop. `parties` is now used by active stock-sale and Commercials workflows as lightweight customer identity; full party/supplier ledger accounting remains archived under `/owner/ledger`.

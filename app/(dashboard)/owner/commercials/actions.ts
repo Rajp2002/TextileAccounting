@@ -12,6 +12,8 @@ export type CommercialSourceKind = 'stock_sale' | 'market_run_sale' | 'order_inv
 export interface CommercialProfitEntry {
     source_id: string
     org_id: string
+    party_id: string | null
+    party_name: string | null
     source_kind: CommercialSourceKind
     source_label: string
     stage: CommercialStage
@@ -42,9 +44,44 @@ export interface CommercialsData {
     }
 }
 
+export type CommercialPartyPeriod = '7d' | '30d' | 'year' | 'all'
+
+export interface CommercialPartyInsightRow {
+    partyKey: string
+    partyId: string | null
+    partyName: string
+    phone: string | null
+    gstin: string | null
+    defaultCreditDays: number | null
+    isSavedParty: boolean
+    revenue: number
+    bookedGrossProfit: number
+    metersSold: number
+    salesCount: number
+    outstanding: number
+    overdue: number
+    lastSaleDate: string | null
+    marginPct: number | null
+}
+
+export interface CommercialPartyInsights {
+    leaderboards: Record<CommercialPartyPeriod, CommercialPartyInsightRow[]>
+    parties: CommercialPartyInsightRow[]
+}
+
 function toNumber(value: unknown): number {
     const parsed = Number(value ?? 0)
     return Number.isFinite(parsed) ? parsed : 0
+}
+
+function normalizePartyName(value: unknown): string {
+    return String(value ?? '').trim().replace(/\s+/g, ' ').toLowerCase()
+}
+
+function addDays(dateString: string, days: number) {
+    const date = new Date(`${dateString}T00:00:00.000Z`)
+    date.setUTCDate(date.getUTCDate() + days)
+    return date.toISOString().slice(0, 10)
 }
 
 export async function getCommercialsData(): Promise<{ data: CommercialsData } | { error: string }> {
@@ -66,6 +103,8 @@ export async function getCommercialsData(): Promise<{ data: CommercialsData } | 
         return {
             source_id: String(item.source_id),
             org_id: String(item.org_id),
+            party_id: item.party_id == null ? null : String(item.party_id),
+            party_name: item.party_name == null ? null : String(item.party_name),
             source_kind: item.source_kind as CommercialSourceKind,
             source_label: String(item.source_label ?? ''),
             stage: item.stage as CommercialStage,
@@ -139,6 +178,9 @@ export async function getCommercialReceivables(filters?: { status?: 'unpaid' | '
             .from('fabric_stock_sales')
             .select(`
                 id,
+                party_id,
+                party_phone,
+                party_gstin,
                 sale_date,
                 taka_sold,
                 meters_sold,
@@ -184,6 +226,9 @@ export async function getCommercialReceivables(filters?: { status?: 'unpaid' | '
                 const order = Array.isArray(orderRaw) ? orderRaw[0] : orderRaw
                 return {
                     ...rec,
+                    party_id: rec.party_id ?? sale?.party_id ?? null,
+                    party_phone: sale?.party_phone ?? null,
+                    party_gstin: sale?.party_gstin ?? null,
                     sale_date: sale?.sale_date ?? rec.source_date ?? null,
                     taka_sold: sale?.taka_sold ?? null,
                     meters_sold: sale?.meters_sold ?? null,
@@ -207,6 +252,9 @@ export async function getCommercialReceivables(filters?: { status?: 'unpaid' | '
             }
             return {
                 ...rec,
+                party_id: rec.party_id ?? null,
+                party_phone: null,
+                party_gstin: null,
                 sale_date: rec.source_date ?? null,
                 taka_sold: null,
                 meters_sold: null,
@@ -234,6 +282,9 @@ export async function getCommercialReceivables(filters?: { status?: 'unpaid' | '
 
     const simpleMapped = (receivables ?? []).map((rec) => ({
         ...rec,
+        party_id: rec.party_id ?? null,
+        party_phone: null,
+        party_gstin: null,
         sale_date: rec.source_date ?? null,
         taka_sold: null,
         meters_sold: null,
@@ -256,6 +307,224 @@ export async function getCommercialReceivables(filters?: { status?: 'unpaid' | '
     }))
 
     return { data: simpleMapped }
+}
+
+type PartyLookup = {
+    id: string
+    name: string
+    phone: string | null
+    gstin: string | null
+    default_credit_days: number | null
+    is_active: boolean
+}
+
+function makeEmptyPartyInsight(
+    key: string,
+    name: string,
+    party: PartyLookup | null
+): CommercialPartyInsightRow {
+    return {
+        partyKey: key,
+        partyId: party?.id ?? null,
+        partyName: party?.name ?? name,
+        phone: party?.phone ?? null,
+        gstin: party?.gstin ?? null,
+        defaultCreditDays: party?.default_credit_days ?? null,
+        isSavedParty: Boolean(party),
+        revenue: 0,
+        bookedGrossProfit: 0,
+        metersSold: 0,
+        salesCount: 0,
+        outstanding: 0,
+        overdue: 0,
+        lastSaleDate: null,
+        marginPct: null,
+    }
+}
+
+function finalizePartyRows(rows: CommercialPartyInsightRow[]) {
+    return rows
+        .map((row) => ({
+            ...row,
+            revenue: toNumber(row.revenue),
+            bookedGrossProfit: toNumber(row.bookedGrossProfit),
+            metersSold: toNumber(row.metersSold),
+            outstanding: toNumber(row.outstanding),
+            overdue: toNumber(row.overdue),
+            marginPct: row.revenue > 0 ? (row.bookedGrossProfit / row.revenue) * 100 : null,
+        }))
+        .sort((a, b) => {
+            if (b.bookedGrossProfit !== a.bookedGrossProfit) return b.bookedGrossProfit - a.bookedGrossProfit
+            if (b.revenue !== a.revenue) return b.revenue - a.revenue
+            return a.partyName.localeCompare(b.partyName)
+        })
+}
+
+export async function getCommercialPartyInsights(): Promise<{ data: CommercialPartyInsights } | { error: string }> {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const [entriesResult, receivablesResult, partiesResult] = await Promise.all([
+        supabase
+            .from('commercial_profit_entries')
+            .select('*')
+            .eq('org_id', profile.org_id)
+            .eq('stage', 'realized')
+            .order('event_date', { ascending: false })
+            .limit(5000),
+        supabase
+            .from('commercial_receivables')
+            .select('id, party_id, party_name, total_amount, balance_amount, due_date, payment_status')
+            .eq('org_id', profile.org_id),
+        supabase
+            .from('parties')
+            .select('id, name, phone, gstin, default_credit_days, is_active')
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .order('name', { ascending: true }),
+    ])
+
+    const firstError = entriesResult.error || receivablesResult.error || partiesResult.error
+    if (firstError) return { error: firstError.message }
+
+    const parties = (partiesResult.data ?? []) as PartyLookup[]
+    const partyById = new Map(parties.map((party) => [party.id, party]))
+    const partiesByName = parties.reduce((acc, party) => {
+        const key = normalizePartyName(party.name)
+        const list = acc.get(key) ?? []
+        list.push(party)
+        acc.set(key, list)
+        return acc
+    }, new Map<string, PartyLookup[]>())
+
+    function resolveParty(rawPartyId: unknown, rawName: unknown) {
+        const explicitParty = rawPartyId == null ? null : partyById.get(String(rawPartyId)) ?? null
+        if (explicitParty) {
+            return {
+                key: `id:${explicitParty.id}`,
+                name: explicitParty.name,
+                party: explicitParty,
+            }
+        }
+
+        const normalizedName = normalizePartyName(rawName)
+        const nameMatches = normalizedName ? partiesByName.get(normalizedName) ?? [] : []
+        if (nameMatches.length === 1) {
+            const matchedParty = nameMatches[0]
+            return {
+                key: `id:${matchedParty.id}`,
+                name: matchedParty.name,
+                party: matchedParty,
+            }
+        }
+
+        const displayName = String(rawName ?? '').trim() || 'Unknown Party'
+        return {
+            key: `name:${normalizePartyName(displayName) || 'unknown'}`,
+            name: displayName,
+            party: null,
+        }
+    }
+
+    const today = getSuratTodayString()
+    const periodStarts: Record<CommercialPartyPeriod, string | null> = {
+        '7d': addDays(today, -6),
+        '30d': addDays(today, -29),
+        year: `${today.slice(0, 4)}-01-01`,
+        all: null,
+    }
+
+    const periodMaps: Record<CommercialPartyPeriod, Map<string, CommercialPartyInsightRow>> = {
+        '7d': new Map(),
+        '30d': new Map(),
+        year: new Map(),
+        all: new Map(),
+    }
+
+    const ensureRow = (
+        map: Map<string, CommercialPartyInsightRow>,
+        key: string,
+        name: string,
+        party: PartyLookup | null
+    ) => {
+        const existing = map.get(key)
+        if (existing) return existing
+        const created = makeEmptyPartyInsight(key, name, party)
+        map.set(key, created)
+        return created
+    }
+
+    for (const party of parties) {
+        ensureRow(periodMaps.all, `id:${party.id}`, party.name, party)
+    }
+
+    for (const rawEntry of entriesResult.data ?? []) {
+        const entry = rawEntry as Record<string, unknown>
+        const eventDate = String(entry.event_date ?? '')
+        const resolved = resolveParty(
+            entry.party_id,
+            entry.party_name ?? entry.source_label ?? entry.reference
+        )
+
+        ;(Object.keys(periodStarts) as CommercialPartyPeriod[]).forEach((period) => {
+            const startDate = periodStarts[period]
+            if (startDate && eventDate < startDate) return
+
+            const row = ensureRow(periodMaps[period], resolved.key, resolved.name, resolved.party)
+            row.revenue += toNumber(entry.revenue_amount)
+            row.bookedGrossProfit += toNumber(entry.gross_profit_amount)
+            row.metersSold += toNumber(entry.meters_sold)
+            row.salesCount += 1
+            if (eventDate && (!row.lastSaleDate || eventDate > row.lastSaleDate)) {
+                row.lastSaleDate = eventDate
+            }
+        })
+    }
+
+    const outstandingByKey = new Map<string, { outstanding: number; overdue: number }>()
+    for (const rawReceivable of receivablesResult.data ?? []) {
+        const rec = rawReceivable as Record<string, unknown>
+        const resolved = resolveParty(rec.party_id, rec.party_name)
+        const current = outstandingByKey.get(resolved.key) ?? { outstanding: 0, overdue: 0 }
+        const balance = toNumber(rec.balance_amount)
+        current.outstanding += balance
+        if (balance > 0 && rec.due_date && String(rec.due_date) < today) {
+            current.overdue += balance
+        }
+        outstandingByKey.set(resolved.key, current)
+
+        ensureRow(periodMaps.all, resolved.key, resolved.name, resolved.party)
+    }
+
+    ;(Object.keys(periodMaps) as CommercialPartyPeriod[]).forEach((period) => {
+        periodMaps[period].forEach((row, key) => {
+            const outstanding = outstandingByKey.get(key)
+            if (!outstanding) return
+            row.outstanding = outstanding.outstanding
+            row.overdue = outstanding.overdue
+        })
+    })
+
+    const leaderboards: Record<CommercialPartyPeriod, CommercialPartyInsightRow[]> = {
+        '7d': finalizePartyRows(Array.from(periodMaps['7d'].values())).slice(0, 10),
+        '30d': finalizePartyRows(Array.from(periodMaps['30d'].values())).slice(0, 10),
+        year: finalizePartyRows(Array.from(periodMaps.year.values())).slice(0, 10),
+        all: finalizePartyRows(Array.from(periodMaps.all.values())).slice(0, 10),
+    }
+
+    const partiesDirectory = finalizePartyRows(Array.from(periodMaps.all.values()))
+        .sort((a, b) => {
+            if ((b.lastSaleDate || '') !== (a.lastSaleDate || '')) return (b.lastSaleDate || '').localeCompare(a.lastSaleDate || '')
+            if (b.outstanding !== a.outstanding) return b.outstanding - a.outstanding
+            return a.partyName.localeCompare(b.partyName)
+        })
+
+    return {
+        data: {
+            leaderboards,
+            parties: partiesDirectory,
+        },
+    }
 }
 
 export async function recordCommercialPaymentAction(input: RecordPaymentInput) {

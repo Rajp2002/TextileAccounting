@@ -15,6 +15,7 @@ import {
     ArrowRight,
     AlertTriangle,
     ReceiptText,
+    Trophy,
     Users,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +30,9 @@ import type {
     CommercialSourceKind,
     CommercialStage,
     CommercialPayment,
+    CommercialPartyInsights,
+    CommercialPartyInsightRow,
+    CommercialPartyPeriod,
 } from './actions'
 import { recordCommercialPaymentAction, getCommercialPayments } from './actions'
 import { useRouter } from 'next/navigation'
@@ -81,6 +85,10 @@ function money(value: number, digits = 0) {
 
 function meters(value: number) {
     return `${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}m`
+}
+
+function normalizePartyName(value: string | null | undefined) {
+    return (value ?? '').trim().replace(/\s+/g, ' ').toLowerCase() || 'unknown-party'
 }
 
 function MetricCard({
@@ -228,7 +236,10 @@ interface Receivable {
     source_date?: string | null
     sale_date?: string | null
     order_id?: string | null
+    party_id?: string | null
     party_name: string
+    party_phone?: string | null
+    party_gstin?: string | null
     quality_label: string
     reference_label?: string | null
     payment_status: 'unpaid' | 'partial' | 'paid'
@@ -275,7 +286,10 @@ interface CommercialGroup {
 }
 
 interface PartyReceivableSummary {
+    partyKey: string
     partyName: string
+    partyPhone: string | null
+    partyGstin: string | null
     receivables: Receivable[]
     totalBalance: number
     totalSales: number
@@ -537,9 +551,13 @@ function buildPartyReceivableSummaries(receivables: Receivable[]): PartyReceivab
     receivables
         .filter((rec) => Number(rec.balance_amount ?? 0) > 0)
         .forEach((rec) => {
-            const key = rec.party_name?.trim() || 'Unknown Party'
+            const displayName = rec.party_name?.trim() || 'Unknown Party'
+            const key = rec.party_id ? `id:${rec.party_id}` : normalizePartyName(displayName)
             const existing = parties.get(key) ?? {
-                partyName: key,
+                partyKey: key,
+                partyName: displayName,
+                partyPhone: rec.party_phone?.trim() || null,
+                partyGstin: rec.party_gstin?.trim() || null,
                 receivables: [],
                 totalBalance: 0,
                 totalSales: 0,
@@ -550,6 +568,8 @@ function buildPartyReceivableSummaries(receivables: Receivable[]): PartyReceivab
             }
 
             existing.receivables.push(rec)
+            existing.partyPhone ||= rec.party_phone?.trim() || null
+            existing.partyGstin ||= rec.party_gstin?.trim() || null
             existing.totalBalance += Number(rec.balance_amount ?? 0)
             existing.totalSales += Number(rec.total_amount ?? 0)
             existing.totalPaid += Number(rec.received_amount ?? 0)
@@ -611,6 +631,7 @@ interface CommercialsClientProps {
     initialData: CommercialsData
     initialReceivables: Receivable[]
     collectedThisMonth: number
+    partyInsights: CommercialPartyInsights
 }
 
 function CommercialGroupCard({
@@ -857,7 +878,7 @@ function CommercialGroupCard({
 
 function PartiesOwingPanel({
     parties,
-    expandedPartyName,
+    expandedPartyKey,
     onToggleParty,
     onRecordPayment,
     onToggleHistory,
@@ -866,8 +887,8 @@ function PartiesOwingPanel({
     loadingHistoryId,
 }: {
     parties: PartyReceivableSummary[]
-    expandedPartyName: string | null
-    onToggleParty: (partyName: string) => void
+    expandedPartyKey: string | null
+    onToggleParty: (partyKey: string) => void
     onRecordPayment: (rec: Receivable) => void
     onToggleHistory: (receivableId: string) => void
     expandedHistoryId: string | null
@@ -903,14 +924,15 @@ function PartiesOwingPanel({
                 ) : (
                     <div className="max-h-[680px] divide-y divide-border/40 overflow-y-auto">
                         {parties.map((party) => {
-                            const expanded = expandedPartyName === party.partyName
+                            const expanded = expandedPartyKey === party.partyKey
+                            const partyDetail = [party.partyPhone, party.partyGstin].filter(Boolean).join(' · ')
 
                             return (
-                                <div key={party.partyName}>
+                                <div key={party.partyKey}>
                                     <button
                                         type="button"
                                         className="w-full p-4 text-left transition hover:bg-muted/25"
-                                        onClick={() => onToggleParty(party.partyName)}
+                                        onClick={() => onToggleParty(party.partyKey)}
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
@@ -918,6 +940,9 @@ function PartiesOwingPanel({
                                                 <p className="mt-1 text-xs font-semibold text-muted-foreground">
                                                     {party.openSalesCount} open sale{party.openSalesCount === 1 ? '' : 's'} · due {formatDate(party.earliestDueDate)}
                                                 </p>
+                                                {partyDetail && (
+                                                    <p className="mt-1 truncate text-[11px] font-semibold text-muted-foreground">{partyDetail}</p>
+                                                )}
                                             </div>
                                             <ChevronDown className={cn('mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform', expanded && 'rotate-180')} />
                                         </div>
@@ -1210,14 +1235,211 @@ function ProfitSnapshotPanel({ data }: { data: CommercialsData }) {
     )
 }
 
-export default function CommercialsClient({ initialData, initialReceivables, collectedThisMonth }: CommercialsClientProps) {
+const leaderboardPeriods: Array<{ value: CommercialPartyPeriod; label: string }> = [
+    { value: '7d', label: '7D' },
+    { value: '30d', label: '30D' },
+    { value: 'year', label: 'Year' },
+    { value: 'all', label: 'All' },
+]
+
+function PartyStatLine({ row, rank }: { row: CommercialPartyInsightRow; rank: number }) {
+    const identityLine = [row.phone, row.gstin, row.defaultCreditDays == null ? null : `${row.defaultCreditDays}d credit`]
+        .filter(Boolean)
+        .join(' · ')
+
+    return (
+        <div className="rounded-lg border border-border/60 bg-white px-3 py-3">
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-black text-slate-700">
+                            {rank}
+                        </span>
+                        <p className="truncate text-sm font-black text-foreground">{row.partyName}</p>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        {meters(row.metersSold)} · {row.salesCount} sale{row.salesCount === 1 ? '' : 's'}
+                    </p>
+                    {identityLine && (
+                        <p className="mt-1 truncate text-[11px] font-semibold text-muted-foreground">{identityLine}</p>
+                    )}
+                </div>
+                <p className={cn('shrink-0 text-sm font-black tabular-nums', row.bookedGrossProfit >= 0 ? 'text-emerald-700' : 'text-rose-700')}>
+                    {row.bookedGrossProfit >= 0 ? '+' : ''}{money(row.bookedGrossProfit)}
+                </p>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                <div>
+                    <p className="font-bold uppercase tracking-wider text-muted-foreground">Revenue</p>
+                    <p className="mt-0.5 font-black text-foreground">{money(row.revenue)}</p>
+                </div>
+                <div>
+                    <p className="font-bold uppercase tracking-wider text-muted-foreground">Margin</p>
+                    <p className={cn('mt-0.5 font-black', row.marginPct == null || row.marginPct >= 0 ? 'text-emerald-700' : 'text-rose-700')}>
+                        {row.marginPct == null ? '—' : `${row.marginPct.toFixed(1)}%`}
+                    </p>
+                </div>
+                <div>
+                    <p className="font-bold uppercase tracking-wider text-muted-foreground">Open</p>
+                    <p className={cn('mt-0.5 font-black', row.outstanding > 0 ? 'text-rose-700' : 'text-foreground')}>
+                        {money(row.outstanding)}
+                    </p>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function PartyLeaderboardPanel({ insights }: { insights: CommercialPartyInsights }) {
+    const [period, setPeriod] = useState<CommercialPartyPeriod>('30d')
+    const rows = insights.leaderboards[period] ?? []
+
+    return (
+        <Card className="border-border/60 bg-white/95 shadow-sm">
+            <CardContent className="p-4">
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2">
+                        <div className="rounded-lg bg-indigo-50 p-1.5 text-indigo-700">
+                            <Trophy className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-sm font-black text-foreground">Top Parties</p>
+                            <p className="text-xs text-muted-foreground">Ranked by booked gross profit</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-4 gap-1 rounded-lg border border-border/60 bg-slate-50 p-1">
+                    {leaderboardPeriods.map((item) => (
+                        <button
+                            key={item.value}
+                            type="button"
+                            onClick={() => setPeriod(item.value)}
+                            className={cn(
+                                'h-8 rounded-md text-xs font-black transition',
+                                period === item.value ? 'bg-white text-slate-950 shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                            )}
+                        >
+                            {item.label}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="mt-4 space-y-2">
+                    {rows.length === 0 ? (
+                        <div className="rounded-lg border border-dashed border-border/70 px-3 py-6 text-center">
+                            <p className="text-sm font-bold text-foreground">No party sales yet</p>
+                            <p className="mt-1 text-xs text-muted-foreground">Saved parties will rank here after sales are booked.</p>
+                        </div>
+                    ) : (
+                        rows.slice(0, 5).map((row, index) => (
+                            <PartyStatLine key={row.partyKey} row={row} rank={index + 1} />
+                        ))
+                    )}
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
+function PartiesDirectory({ insights }: { insights: CommercialPartyInsights }) {
+    const [search, setSearch] = useState('')
+    const rows = useMemo(() => {
+        const needle = search.trim().toLowerCase()
+        if (!needle) return insights.parties
+        return insights.parties.filter((row) => {
+            return [
+                row.partyName,
+                row.phone ?? '',
+                row.gstin ?? '',
+                row.isSavedParty ? 'saved' : 'legacy',
+            ].join(' ').toLowerCase().includes(needle)
+        })
+    }, [insights.parties, search])
+
+    return (
+        <div className="space-y-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <h2 className="text-xl font-black text-foreground">Parties</h2>
+                    <p className="text-sm text-muted-foreground">Saved party records with sales, profit, meters, and open dues.</p>
+                </div>
+                <div className="relative w-full lg:w-80">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Search party, phone, GSTIN..."
+                        className="pl-9"
+                    />
+                </div>
+            </div>
+
+            <Card className="overflow-hidden border-border/60 bg-white/95 shadow-sm">
+                <CardContent className="p-0">
+                    {rows.length === 0 ? (
+                        <div className="px-4 py-12 text-center">
+                            <Users className="mx-auto h-8 w-8 text-muted-foreground" />
+                            <p className="mt-3 text-lg font-bold text-foreground">No parties found</p>
+                            <p className="mt-1 text-sm text-muted-foreground">Parties are created when a stock sale is saved.</p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-border/60">
+                            {rows.map((row) => (
+                                <div key={row.partyKey} className="grid gap-3 px-4 py-4 lg:grid-cols-[minmax(220px,1.3fr)_repeat(5,minmax(100px,1fr))] lg:items-center">
+                                    <div className="min-w-0">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <p className="truncate text-sm font-black text-foreground">{row.partyName}</p>
+                                            <Badge variant="outline" className={cn('text-[10px] font-black', row.isSavedParty ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-600')}>
+                                                {row.isSavedParty ? 'Saved' : 'Legacy'}
+                                            </Badge>
+                                        </div>
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            {row.phone || 'No phone'}{row.gstin ? ` · ${row.gstin}` : ''}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Revenue</p>
+                                        <p className="mt-1 font-black text-foreground">{money(row.revenue)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Profit</p>
+                                        <p className={cn('mt-1 font-black', row.bookedGrossProfit >= 0 ? 'text-emerald-700' : 'text-rose-700')}>
+                                            {row.bookedGrossProfit >= 0 ? '+' : ''}{money(row.bookedGrossProfit)}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Meters</p>
+                                        <p className="mt-1 font-black text-foreground">{meters(row.metersSold)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Open</p>
+                                        <p className={cn('mt-1 font-black', row.outstanding > 0 ? 'text-rose-700' : 'text-foreground')}>
+                                            {money(row.outstanding)}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Last Sale</p>
+                                        <p className="mt-1 font-black text-foreground">{formatDate(row.lastSaleDate)}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    )
+}
+
+export default function CommercialsClient({ initialData, initialReceivables, collectedThisMonth, partyInsights }: CommercialsClientProps) {
     const router = useRouter()
     const [query, setQuery] = useState('')
     const [stage, setStage] = useState<StageFilter>('all')
     const [source, setSource] = useState<SourceFilter>('all')
     const [activeTab, setActiveTab] = useState('overview')
     const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null)
-    const [expandedPartyName, setExpandedPartyName] = useState<string | null>(null)
+    const [expandedPartyKey, setExpandedPartyKey] = useState<string | null>(null)
 
     const [dueTab, setDueTab] = useState<'all' | DueBucket>('all')
     const [receivableSearch, setReceivableSearch] = useState('')
@@ -1417,6 +1639,7 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                 <TabsList className="mb-4">
                     <TabsTrigger value="overview">Collect</TabsTrigger>
                     <TabsTrigger value="receivables">Sales ({collectionGroups.length})</TabsTrigger>
+                    <TabsTrigger value="parties">Parties ({partyInsights.parties.length})</TabsTrigger>
                     <TabsTrigger value="profit_entries">Profit Ledger ({initialData.entries.length})</TabsTrigger>
                 </TabsList>
 
@@ -1459,11 +1682,11 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                         />
                     </div>
 
-                    <div className="grid gap-4 xl:grid-cols-[420px_minmax(0,1fr)]">
+                    <div className="grid gap-4 xl:grid-cols-[420px_minmax(0,1fr)] 2xl:grid-cols-[420px_minmax(0,1fr)_360px]">
                         <PartiesOwingPanel
                             parties={partySummaries}
-                            expandedPartyName={expandedPartyName}
-                            onToggleParty={(partyName) => setExpandedPartyName(expandedPartyName === partyName ? null : partyName)}
+                            expandedPartyKey={expandedPartyKey}
+                            onToggleParty={(partyKey) => setExpandedPartyKey(expandedPartyKey === partyKey ? null : partyKey)}
                             onRecordPayment={openPaymentDialog}
                             onToggleHistory={togglePaymentHistory}
                             expandedHistoryId={expandedHistoryId}
@@ -1482,7 +1705,15 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                             />
                             <ProfitSnapshotPanel data={initialData} />
                         </div>
+
+                        <div className="xl:col-span-2 2xl:col-span-1">
+                            <PartyLeaderboardPanel insights={partyInsights} />
+                        </div>
                     </div>
+                </TabsContent>
+
+                <TabsContent value="parties" className="space-y-6">
+                    <PartiesDirectory insights={partyInsights} />
                 </TabsContent>
 
                 <TabsContent value="receivables" className="space-y-6">
@@ -1551,8 +1782,8 @@ export default function CommercialsClient({ initialData, initialReceivables, col
 
                         <PartiesOwingPanel
                             parties={partySummaries}
-                            expandedPartyName={expandedPartyName}
-                            onToggleParty={(partyName) => setExpandedPartyName(expandedPartyName === partyName ? null : partyName)}
+                            expandedPartyKey={expandedPartyKey}
+                            onToggleParty={(partyKey) => setExpandedPartyKey(expandedPartyKey === partyKey ? null : partyKey)}
                             onRecordPayment={openPaymentDialog}
                             onToggleHistory={togglePaymentHistory}
                             expandedHistoryId={expandedHistoryId}

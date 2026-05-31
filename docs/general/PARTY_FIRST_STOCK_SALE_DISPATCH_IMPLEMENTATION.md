@@ -1,11 +1,11 @@
 # Weavly Phase 1 Refinement #1: Party-First Stock Sale / Sell & Dispatch
 
-Current status as of May 31, 2026: implemented, with the visible UI now split into "Sell Stock" first and "Confirm Dispatch" later. The original May 17 implementation supported an immediate `Dispatch now` path, but the current dialog saves a named stock sale and receivable, then the Dispatches page handles pending/partial dispatch batches.
+Current status as of June 1, 2026: implemented, with the visible UI now split into "Sell Stock" first and "Confirm Dispatch" later. The original May 17 implementation supported an immediate `Dispatch now` path, but the current dialog saves a stock sale, resolves or creates lightweight party identity, creates a named receivable, then the Dispatches page handles pending/partial dispatch batches.
 
 Current visible flow:
 
 1. Select available source stock.
-2. Enter party details.
+2. Select a saved party or enter new party details.
 3. Enter sold meters, optional takas, sale rate, credit days, sale date, and notes.
 4. Save the stock sale and named Commercials receivable.
 5. Confirm pending dispatch later from `/owner/dispatches`, fully or partially.
@@ -18,17 +18,18 @@ Later migrations added configurable stock-sale dispatch quantities/dates and kep
 - `supabase/migrations/20260531000000_configurable_stock_sale_dispatch.sql`
 - `supabase/migrations/20260531010000_configurable_batch_dispatch.sql`
 - `supabase/migrations/20260531020000_keep_partial_stock_sale_receipt_pending.sql`
+- `supabase/migrations/20260601010000_commercial_party_identity.sql`
 
 ## Summary
 
-This implementation refines Weavly Phase 1's Sell & Dispatch workflow so market-run factories can sell godown or expected stock directly to a named party without creating a fake order.
+This implementation refines Weavly Phase 1's Sell & Dispatch workflow so market-run factories can sell godown or expected stock directly to a saved or newly captured party without creating a fake order.
 
 The previous flow was order-first. It required the owner to select an order before selling and dispatching stock. That worked for order-based factories, but it blocked the market-run operating model where fabric is produced first, stored in godown, and later sold directly to a party.
 
 The implemented model is party-first:
 
 1. Select available source stock.
-2. Enter party details.
+2. Select an existing party or enter new party details.
 3. Enter sold meters/takas and sale rate.
 4. Enter credit days and sale date.
 5. Create a stock sale and named Commercials receivable.
@@ -44,8 +45,11 @@ This is still a Phase 1 operating loop, not a full ERP or accounting module.
 Implemented:
 
 - Party-first stock sale flow.
+- Persistent lightweight party identity for active stock-sale and Commercials workflows.
+- Saved-party selection, unique-name auto-linking, duplicate-name ambiguity protection, and new-party creation from Sell Stock.
 - Market-run stock sales without orders.
 - Named commercial receivables for stock sales.
+- `party_id` links on stock sales and Commercials receivables where a durable party is resolved.
 - Gross profit snapshot at sale time.
 - Simple credit terms and due date calculation.
 - Immediate dispatch support exists in RPC/type history, but the current visible dialog saves sale first and dispatches later.
@@ -73,10 +77,16 @@ The implementation changed or added the following files:
 
 - `components/dispatches/SellAndDispatchDialog.tsx`
 - `app/(dashboard)/owner/dispatches/actions.ts`
+- `app/(dashboard)/owner/commercials/page.tsx`
+- `app/(dashboard)/owner/commercials/actions.ts`
+- `app/(dashboard)/owner/commercials/CommercialsClient.tsx`
+- `app/(dashboard)/owner/ledger/actions.ts`
 - `app/(dashboard)/owner/orders/actions.ts`
 - `lib/dispatch/sell-and-dispatch-types.ts`
 - `lib/commercials/receivables.ts`
 - `supabase/migrations/20260517090000_party_first_stock_sale_dispatch.sql`
+- `supabase/migrations/20260601010000_commercial_party_identity.sql`
+- `__tests__/commercials-read-model.test.ts`
 - `__tests__/p1-party-first-stock-sale-dispatch.test.ts`
 
 ## UI Implementation
@@ -127,14 +137,22 @@ The flow does not require an order. If an order-linked stock lot is selected, th
 
 ## Step 2: Party and Sale Terms
 
-The owner enters party and sale data.
+The owner selects an active saved party or enters party and sale data. Saved party suggestions come from `getSellAndDispatchOptions()`, which now returns active parties along with source stock and active orders.
 
 Captured party fields:
 
+- `party_id` when a saved party is selected
 - party name
 - phone
 - city
 - GSTIN
+
+Current identity behavior:
+
+- selecting a saved party fills the name, phone, GSTIN, and default credit days
+- a single exact saved-party name match can be auto-linked when the owner has not typed phone/GSTIN
+- multiple active saved parties with the same normalized name require explicit selection or phone/GSTIN before continuing
+- if no saved party matches, the sale RPC creates a lightweight `parties` row using the sale's name, phone, GSTIN, and bounded default credit days
 
 Captured sale fields:
 
@@ -153,7 +171,8 @@ due_date = dispatch_date + credit_days
 Validation enforced by the UI:
 
 - source stock must be selected
-- party name is required
+- party name is required unless a saved party is selected
+- ambiguous duplicate party names are blocked until resolved
 - sold meters must be greater than zero
 - sale rate must be greater than zero
 - credit days must be zero or positive
@@ -224,7 +243,7 @@ Updated file:
 app/(dashboard)/owner/dispatches/actions.ts
 ```
 
-Added the new party-first server action:
+Added the party-first server action:
 
 ```ts
 createPartyStockSaleAndOptionalDispatch(input)
@@ -236,7 +255,7 @@ This action validates request shape, then delegates the write sequence to the at
 create_party_stock_sale_dispatch_v1
 ```
 
-The RPC owns the transactional creation of the stock sale, guarded stock decrement, stock movement, optional dispatch, and commercial receivable.
+The RPC owns the transactional creation or resolution of lightweight party identity, stock sale, guarded stock decrement, stock movement, optional dispatch, and commercial receivable.
 
 ## Server Action Validation
 
@@ -245,7 +264,7 @@ The action validates:
 - authenticated user is an owner
 - organization context exists through `requireRole(['owner'])`
 - source type and source ID are present
-- party name is required
+- party name or selected party is required
 - sold meters are greater than zero
 - sale rate per meter is greater than zero
 - credit days are zero or positive
@@ -253,6 +272,14 @@ The action validates:
 - if sold takas are provided, sold takas are greater than zero
 - when dispatching now, actual dispatched meters are greater than zero
 - when dispatching now, actual dispatched meters do not exceed sold meters
+
+The database RPC adds identity validation that cannot be trusted to the client:
+
+- selected `p_party_id` must belong to the org and be active
+- a GSTIN/name match wins before a phone/name match
+- one exact active name match can be auto-linked
+- multiple exact active name matches without phone/GSTIN raise an ambiguity error
+- unmatched party details create a new `parties` row
 
 The RPC also validates stock availability, cost snapshot, and organization ownership. Over-selling is blocked by the database update condition, not only by a pre-read in application code.
 
@@ -297,6 +324,7 @@ Inserted sale fields include:
 - `meters_sold`
 - `price_per_meter`
 - `cost_per_meter`
+- `party_id`
 - `party_name`
 - `party_phone`
 - `party_city`
@@ -516,13 +544,13 @@ The existing order-linked dispatch reconciliation path still uses `stock_discrep
 
 ## Commercial Receivable Creation
 
-After the stock sale is created, the action calls:
+After the stock sale is created, the RPC inserts or updates a lightweight Commercials receivable directly. Older helper paths still document the same intent through:
 
 ```ts
 ensureReceivableForCommercialEntry('fabric_stock_sale', saleId)
 ```
 
-This ensures Commercials gets a named receivable for the sale.
+This ensures Commercials gets a named receivable for the sale. In the current party-identity RPC, the receivable also receives `party_id` when the party was selected, auto-linked, or created.
 
 The action revalidates:
 
@@ -615,6 +643,7 @@ Added unified party-first input:
 export type SellAndDispatchInput = {
   sourceType: StockSaleSourceType
   sourceId: string
+  partyId?: string | null
   partyName: string
   partyPhone?: string | null
   partyCity?: string | null
@@ -732,6 +761,15 @@ The receivable upsert now includes:
 
 The commercial receivable remains lightweight and does not become a full ledger.
 
+June 1 refinement:
+
+- `commercial_profit_entries` now exposes `party_id` and `party_name`.
+- Stock-sale receivables and sales carry `party_id` when resolved.
+- `/owner/commercials` fetches `getCommercialPartyInsights()` alongside the existing profit and receivable read models.
+- The Top Parties panel ranks parties by booked gross profit for 7D, 30D, year, and all time.
+- The Parties tab shows saved and legacy party rows with revenue, booked gross profit, meters sold, open dues, overdue balance, and last sale.
+- Legacy rows are grouped by explicit `party_id` first, a single exact active party-name match second, and a normalized legacy name key only when no durable party match is safe.
+
 ## Dispatches Page Compatibility
 
 Updated file:
@@ -796,6 +834,23 @@ Added migration:
 ```text
 supabase/migrations/20260517090000_party_first_stock_sale_dispatch.sql
 ```
+
+Added identity refinement migration:
+
+```text
+supabase/migrations/20260601010000_commercial_party_identity.sql
+```
+
+That migration:
+
+- adds `party_id` to `fabric_stock_sales`
+- adds `party_id` to `commercial_receivables`
+- drops the old active-party unique-name index
+- adds active-party search indexes for normalized name, GSTIN, and phone
+- backfills stock sales and receivables when exactly one active party matches the legacy name
+- updates `create_party_stock_sale_dispatch_v1` to accept optional `p_party_id`
+- creates or links parties during stock sale entry
+- rebuilds `commercial_profit_entries` with `party_id` and `party_name`
 
 ## `fabric_stock_sales` Changes
 
@@ -1074,6 +1129,7 @@ Commercials now shows stock sales as named receivable/profit entries.
 
 The Commercials view receives:
 
+- party ID where resolved
 - party name
 - quality
 - sold meters
@@ -1083,6 +1139,7 @@ The Commercials view receives:
 - due date
 - balance through `commercial_receivables`
 - dispatch status source data through `fabric_stock_sales`
+- party-level insight rows from `getCommercialPartyInsights`
 
 Commercial profit continues to be based on gross commercial values, not full accounting.
 
@@ -1129,12 +1186,15 @@ The tests cover:
 - partial dispatch
 - pending dispatch calculation
 - commercial receivable/profit visibility
+- saved-party selection and creation
+- duplicate-name ambiguity handling
+- Commercials party leaderboard/directory visibility
 - validation for missing party
 - validation for over-selling stock
 - no fake order required for market-run stock
 - order-based dispatch regression
 - both-mode/order path preservation
-- stock discrepancy creation when actual dispatched differs
+- stock discrepancy creation when receipt variance exists
 - `/owner/ledger` remains archived/deferred
 - Commercials view update
 
@@ -1198,16 +1258,16 @@ Only small schema refinements were added. No new full accounting module was intr
 
 ## Final Behavior Summary
 
-Market-run-only organizations can now sell stock directly to a named party without creating an order.
+Market-run-only organizations can now sell stock directly to a saved or newly captured party without creating an order.
 
 Order-based organizations can continue using the existing order dispatch flow.
 
 Both-mode organizations can use both workflows.
 
-Commercials now receives named receivable/profit entries for stock sales.
+Commercials now receives named receivable/profit entries for stock sales and groups repeat business by `party_id` where available.
 
 Partial dispatch and pending dispatch quantities are tracked directly on the stock sale.
 
-Stock discrepancies are created through the existing lean discrepancy table when actual dispatch quantity differs.
+Stock discrepancies are created through the existing lean discrepancy table when receipt reconciliation finds shortage or excess.
 
 The ledger remains archived/deferred.

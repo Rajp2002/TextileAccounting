@@ -614,7 +614,7 @@ export async function createParty(input: unknown): Promise<{ success: true } | {
         risk_note: toDbText(data.risk_note),
     })
 
-    if (error) return { error: error.code === '23505' ? 'An active party with this name already exists.' : error.message }
+    if (error) return { error: error.code === '23505' ? 'A party with these details already exists.' : error.message }
 
     revalidatePath(LEDGER_PATH)
     return { success: true }
@@ -651,7 +651,7 @@ export async function updateParty(partyId: string, input: unknown): Promise<{ su
         .eq('id', id.data)
         .eq('org_id', profile.org_id)
 
-    if (error) return { error: error.code === '23505' ? 'An active party with this name already exists.' : error.message }
+    if (error) return { error: error.code === '23505' ? 'A party with these details already exists.' : error.message }
 
     revalidatePath(LEDGER_PATH)
     return { success: true }

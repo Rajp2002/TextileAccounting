@@ -1,6 +1,6 @@
 # Current Product Implementation Analysis
 
-Last analyzed from the active codebase on May 31, 2026.
+Last analyzed from the active codebase on June 1, 2026.
 
 This document is intended to be the source of truth for the current implementation of the product. It describes what the app actually does today, how the features connect, what records are created, what outputs users get, and where current implementation realities differ from the ideal product narrative.
 
@@ -23,9 +23,9 @@ Weavly is a multi-tenant textile operations SaaS for weaving factories. It is no
 - fixed-worker attendance and salary payroll
 - worker advances and kharchi
 - takas and stock in godown as physical inventory
-- party-first stock sale as the primary stock sale entry point
+- party-first stock sale with saved-party lookup/creation as the primary stock sale entry point
 - pending and partial dispatch batches, public tracking where order-linked, and receipt reconciliation
-- Commercials receivables and payment tracking
+- Commercials receivables, payment tracking, and lightweight party-level profit/open-dues visibility
 - gross profit visibility and money source of truth
 - WhatsApp-based operational messaging
 - owner access codes for protected actions
@@ -40,7 +40,7 @@ The product center is a production-to-money loop:
 5. Accepted quotes become orders; market runs create speculative production anchors.
 6. Supervisor logs shift production against machines, workers, and orders/runs.
 7. Production feeds Factory Today, analytics, payroll, stock inward drafts, and progress tracking.
-8. Stock is confirmed or represented in the godown ledger, sold to a named party, dispatched through pending/partial workflows, and reconciled.
+8. Stock is confirmed or represented in the godown ledger, sold to a saved or newly captured party, dispatched through pending/partial workflows, and reconciled.
 9. Commercials and payroll turn operational events into money visibility and payment tracking.
 
 ## 2. Implementation Architecture
@@ -168,16 +168,17 @@ The current implementation revolves around these records and relationships.
 
 ### Stock, Dispatch, and Sales
 
+- `parties`: active lightweight customer identity for stock-sale party selection, sale links, receivables, and Commercials grouping. The full party-ledger accounting workflow remains archived.
 - `fabric_stock_inward_drafts`: production-to-stock staging records generated from production logs.
 - `fabric_stock_lots`: physical godown stock lots, usually takas.
-- `fabric_stock_sales`: stock sale records with revenue, cost, profit, and optional dispatch link.
+- `fabric_stock_sales`: stock sale records with revenue, cost, profit, `party_id` where resolved, and optional dispatch link.
 - `fabric_stock_movements`: inward, sale, adjustment, and audit movement trail.
 - `dispatches`: dispatch batches for orders, including tracking token context and e-way fields.
 - `dispatch_package_lines`: link between dispatches and physical/sold-stock package lines.
 - `fabric_packages`: legacy and bridge package records, still used by dispatch creation.
 - `market_run_sales`: direct market-run sales path at the database/action level.
 - `party_invoices`: invoice records used by ledger/commercials flows.
-- `commercial_receivables`: lightweight receivables across stock sales, market-run sales, and party invoices.
+- `commercial_receivables`: lightweight receivables across stock sales, market-run sales, and party invoices, with `party_id` where available.
 - `commercial_payment_receipts`: payment receipt rows that update receivable status and balance.
 
 ### Payroll and Cash
@@ -206,8 +207,8 @@ The current implementation revolves around these records and relationships.
 | Market runs | `/owner/market-runs`, `/owner/market-runs/[id]` | `market_runs`, `market_run_summary`, `createMarketRunFromEstimator`, `create_market_run_sale` |
 | Supervisor production | `/supervisor/dashboard`, `/supervisor/production` | `getShiftSetupData`, `upsertShiftAssignment`, `bulkLogProduction`, `replace_shift_production_logs` |
 | Stock and godown | `/owner/stock`, `TakaStockClient.tsx` | Physical inventory, `fabric_stock_lot_summary`, `fabric_stock_inward_drafts`, `confirm_stock_inward_draft` |
-| Dispatch and tracking | `/owner/dispatches`, Sell Stock UI, Pending Dispatches tab, order dispatch UI, `/track/[token]` | `createPartyStockSaleAndOptionalDispatch`, `confirmPendingSaleDispatch`, `create_stock_sale_dispatch`, `confirm_stock_sale_dispatch_receipt_v1`, `get_order_tracking_data` |
-| Commercials | `/owner/commercials` | Money source of truth, receivables, payment receipts, `lib/commercials/receivables.ts`, `record_commercial_payment_v1` |
+| Dispatch and tracking | `/owner/dispatches`, Sell Stock UI, Pending Dispatches tab, order dispatch UI, `/track/[token]` | `getSellAndDispatchOptions` loads source stock plus active parties; `createPartyStockSaleAndOptionalDispatch`, `confirmPendingSaleDispatch`, `create_stock_sale_dispatch`, `confirm_stock_sale_dispatch_receipt_v1`, `get_order_tracking_data` |
+| Commercials | `/owner/commercials` | Money source of truth, receivables, payment receipts, party leaderboards/directory, `lib/commercials/receivables.ts`, `record_commercial_payment_v1`, `getCommercialPartyInsights` |
 | Payroll | `/owner/payroll` | `toggleWorkerPaid`, pay-window gating, `settle_worker_payroll`, `unsettle_worker_payroll`, `lib/payroll-cycle.ts` |
 | Advances and kharchi | `/owner/advances`, supervisor kharchi dialog | `worker_advances`, `recordKharchi`, supervisor float actions |
 | Workers and machines | `/owner/machines`, `/owner/fixed-workers`, `/supervisor/workers`, `/supervisor/attendance` | owner/supervisor actions, `machines`, `workers`, `fixed_workers`, attendance tables |
@@ -546,7 +547,7 @@ Active stock visibility is derived by `isStockLotActionable` in `lib/stock-lifec
 
 `createTakaStockLot` can add opening/manual/order/market-run/adjustment stock after validating the source belongs to the organization.
 
-The older `recordTakaStockSale` path calls `record_fabric_stock_sale`, which requires whole unit count, calculates meters, revenue, cost, and profit, decrements available stock, writes a sale movement, and ensures a receivable where possible. The current primary UI path for stock sales is the party-first Sell Stock dialog on `/owner/dispatches`, which records party details, sold meters, sale rate, credit days, a stock movement, and a Commercials receivable in one owner action.
+The older `recordTakaStockSale` path calls `record_fabric_stock_sale`, which requires whole unit count, calculates meters, revenue, cost, and profit, decrements available stock, writes a sale movement, and ensures a receivable where possible. The current primary UI path for stock sales is the party-first Sell Stock dialog on `/owner/dispatches`, which records a saved `party_id` or new party details, sold meters, sale rate, credit days, a stock movement, and a Commercials receivable in one owner action.
 
 `adjustTakaStockLot` calls `adjust_fabric_stock_lot`, which adds or subtracts physical units and records the movement.
 
@@ -567,6 +568,7 @@ Dispatches appear inside order drawers and on `/owner/dispatches`, but the main 
 The owner can:
 
 - create a named stock sale from available source stock
+- search/select an active saved party, auto-link one exact name match, or create a new party when needed
 - see pending dispatch meters and value from saved stock sales
 - confirm dispatch for all or part of a pending stock sale
 - group dispatched batches by order or fallback stock-sale party
@@ -587,14 +589,17 @@ The current dispatch path dispatches sold stock entries, not arbitrary unsold pr
 The visible Sell Stock workflow uses `createPartyStockSaleAndOptionalDispatch` and `create_party_stock_sale_dispatch_v1` to:
 
 - select available source stock
-- capture party name, phone, city, and GSTIN
+- capture selected `party_id` or party name, phone, city, and GSTIN
 - capture sold meters, optional taka count, sale rate, credit days, sale date, and notes
+- create or resolve a lightweight `parties` record when the sale is saved
 - decrement stock meters
 - write a stock sale and stock movement
 - create a named `commercial_receivables` row
 - keep the sale in `not_dispatched` or `partially_dispatched` state until dispatch batches are confirmed
 
 The current dialog saves the sale first. Pending dispatch is then handled from the Pending Dispatches tab through `confirmPendingSaleDispatch`, which calls `confirm_party_stock_sale_dispatch_v1` with dispatch date, meters, takas, challan, vehicle, transporter, and notes. Later migrations made this configurable, so one sale can be dispatched in multiple batches. Receiving one batch does not remove the remaining pending quantity.
+
+The June 1 party identity migration changed the sale RPC so `p_party_id` is optional. When supplied, it must belong to the current organization and be active. When not supplied, the RPC tries to resolve by GSTIN/name, phone/name, then a single exact name match. If multiple active saved parties share the same normalized name and the owner has not supplied phone/GSTIN, the RPC raises an ambiguity error instead of silently attaching the sale to the wrong party. If no party matches, it creates a new active party with the sale's name, phone, GSTIN, and bounded default credit days.
 
 Order-linked dispatch creation also exists where the owner selects pending sold stock entries for an order. The dispatch RPC `create_stock_sale_dispatch`:
 
@@ -632,6 +637,8 @@ The owner can:
 - track receivables and money to collect
 - record payments and view payment history
 - see dispatch status and pending dispatch meters for stock-sale receivables
+- review Top Parties for 7D, 30D, year, or all time, ranked by booked gross profit
+- search a party directory with revenue, booked gross profit, meters sold, open dues, overdue balance, and last sale
 - follow up on overdue amounts
 - filter by realized or expected stage
 - filter by source type
@@ -647,17 +654,19 @@ The main source is the database view `commercial_profit_entries`. It combines:
 - realized order invoices from `party_invoices`
 - expected order profit from converted quotes/orders that do not yet have a non-cancelled invoice
 
-The action aggregates realized and expected values and returns summary metrics plus row-level entries.
+The June 1 rebuild adds `party_id` and `party_name` to the view so stock sales, market-run sales, order invoices, and expected order profit can be grouped by party where a durable party record exists. The action aggregates realized and expected values and returns summary metrics plus row-level entries.
 
 Receivables are stored separately in `commercial_receivables`. Party-first stock sales create named fabric-stock-sale receivables directly. The receivables action enriches stock-sale rows with sale date, sold meters, sale rate, cost, booked gross profit, dispatch status, pending dispatch meters, market-run/order context, and godown. Payment recording goes through `record_commercial_payment_v1`, which inserts `commercial_payment_receipts`, increments `received_amount`, and changes `payment_status` to `partial` or `paid`.
 
+`getCommercialPartyInsights` reads realized commercial entries, receivables, and active parties. It resolves rows by explicit `party_id`, by a single exact active party-name match for legacy rows, or by a legacy normalized name key when no safe party match exists. It returns leaderboards for `7d`, `30d`, `year`, and `all`, plus a searchable party directory. Saved parties with no sale yet are included in the all-time directory so the active customer list stays visible.
+
 #### Value Provided
 
-Commercials gives the owner a gross-profit and collection lens across multiple ways value is created: order work, stock sales, market-run sales, and expected quote/order value. It is not currently a full accounting ledger and does not replace claim/deduction settlement, supplier ledger, GST filing, or bank reconciliation.
+Commercials gives the owner a gross-profit and collection lens across multiple ways value is created: order work, stock sales, market-run sales, and expected quote/order value. The active party layer is customer identity and grouping, not accounting depth. Commercials is not currently a full ledger and does not replace claim/deduction settlement, supplier ledger, GST filing, or bank reconciliation.
 
 #### Connected Features
 
-Commercials consumes estimator quote snapshots, invoices, stock sales, market-run sales, orders, receivables, and payment receipts. It is downstream of sales and production economics.
+Commercials consumes estimator quote snapshots, invoices, stock sales, market-run sales, orders, parties, receivables, and payment receipts. It is downstream of sales and production economics.
 
 ### 4.11 Payroll, Advances, and Supervisor Float
 
@@ -983,7 +992,7 @@ Confirmation creates `fabric_stock_lots` and `fabric_stock_movements`. This step
 
 The owner records stock sales from available lots or uses the party-first Sell Stock workflow.
 - The older standard sale path consumes whole units, calculates meters, revenue, cost, and profit, decrements available stock, writes a sale movement, and can ensure a receivable.
-- The current primary Sell Stock workflow captures named party and credit terms, creates a stock sale, decrements stock, writes the sale movement, and creates a Commercials receivable.
+- The current primary Sell Stock workflow captures a saved or newly created party identity plus credit terms, creates a stock sale, decrements stock, writes the sale movement, and creates a Commercials receivable.
 - The visible dialog saves the sale first; pending dispatch is confirmed later from `/owner/dispatches`.
 - Partial dispatch is represented by `partially_dispatched` plus `pending_dispatch_meters`; intentional partial dispatch is not treated as a stock discrepancy.
 
@@ -1122,7 +1131,7 @@ That path can create direct trader/party market-run sales and invoices, and the 
 
 ### Step 7: Market Stock Can Be Sold and Dispatched Without Fake Orders
 
-Market-run stock sales are reflected in stock, dispatches, and Commercials. The party-first Sell Stock flow lets the owner sell market-run stock directly to a named party without creating an order first. The sale creates a named receivable and pending dispatch meters.
+Market-run stock sales are reflected in stock, dispatches, and Commercials. The party-first Sell Stock flow lets the owner sell market-run stock directly to a saved or newly captured party without creating an order first. The sale creates a named receivable, a `party_id` link where available, and pending dispatch meters.
 
 Dispatch is then confirmed from `/owner/dispatches`. The owner can dispatch the pending quantity fully or partially, with dispatch date, meters, takas, challan, vehicle, transporter, and notes. The order-based dispatch flow still exists for pre-committed party orders, but market-run stock no longer needs a fake order to enter the money/dispatch loop.
 

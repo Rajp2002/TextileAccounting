@@ -1,18 +1,18 @@
 # Weavly Testing Guide
 
-Last updated May 31, 2026.
+Last updated June 1, 2026.
 
 ## Current Automated Coverage
 
 The repo has Vitest-style coverage across finance and several Phase 1 regressions:
 
 - `__tests__/finance.test.ts` — estimator math, market runs, stock lifecycle/source validation
-- `__tests__/p1-party-first-stock-sale-dispatch.test.ts` — party-first stock sale and dispatch
+- `__tests__/p1-party-first-stock-sale-dispatch.test.ts` — party-first stock sale, saved-party selection/creation, and dispatch
 - `__tests__/p1-stock-lifecycle.test.ts` — stock lifecycle and source validation (expanded)
 - `__tests__/payroll-cycle.test.ts` — payroll cycle bounds, guards, and pay-date config
 - `__tests__/payroll-pay-date-config.test.ts` — configurable pay-date behavior
 - `__tests__/payroll-settlement-history.test.ts` — settlement history reconstruction: earning lines, CSV export shape, filename format (`FactoryName_CycleStart-CycleEnd.csv`)
-- Commercials read model and payments
+- Commercials read model, payments, and party insights
 - production log strictness/forgiveness
 - auth/login and billing gates
 - WhatsApp consent
@@ -96,7 +96,10 @@ Scenarios:
 - adjust stock up
 - adjust stock down
 - prevent invalid negative stock
-- create party-first stock sale with named party and credit days
+- create party-first stock sale with saved/new party and credit days
+- create party-first stock sale by selecting a saved party
+- create a new party from Sell Stock when no saved match exists
+- block ambiguous duplicate party names unless a saved party is selected or phone/GSTIN distinguishes the new party
 - verify receivable creation and due-date behavior
 - dispatch pending sold meters fully
 - dispatch pending sold meters partially
@@ -104,6 +107,7 @@ Scenarios:
 - record receipt shortage/excess as a stock discrepancy
 - verify revenue/cost/gross profit
 - verify Commercials filtering and summary totals
+- verify Commercials Top Parties period filters, party directory search, party_id grouping, legacy name fallback, open dues, and overdue totals
 
 ### 5. Dispatches and Tracking
 
@@ -181,11 +185,11 @@ Minimum release smoke:
 7. Payroll previews worker earnings.
 8. Advance is recorded and deducted.
 9. Market-run production creates expected stock, or optional/order-based inward flow still works.
-10. Party-first stock sale appears in Commercials as a receivable.
+10. Party-first stock sale appears in Commercials as a receivable and under the correct party insight row.
 11. Pending stock sale is dispatched and receipt is confirmed.
 12. Order-linked tracking link opens where applicable.
 13. Billing page shows plan/trial state.
 
 ## Release Confidence Gap
 
-Before declaring Phase 1 production-ready, keep automated tests strong around estimator math, production logging guards, payroll pay-window/settlement behavior, party-first stock sale math, partial dispatch, and receipt variance. These are the areas with the highest trust impact.
+Before declaring Phase 1 production-ready, keep automated tests strong around estimator math, production logging guards, payroll pay-window/settlement behavior, party-first stock sale math, saved-party identity resolution, Commercials party grouping, partial dispatch, and receipt variance. These are the areas with the highest trust impact.

@@ -10,7 +10,7 @@ export async function getSellAndDispatchOptions() {
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
-    const [ordersRes, lotsRes] = await Promise.all([
+    const [ordersRes, lotsRes, partiesRes] = await Promise.all([
         supabase
             .from('orders')
             .select('id, party_name, quality_label, status, total_target_meters')
@@ -22,12 +22,19 @@ export async function getSellAndDispatchOptions() {
             .select('stock_lot_id, quality_label, godown, source_type, market_run_id, available_taka_count, available_meters, meters_per_taka, cost_per_meter, order_id, unit_label')
             .eq('org_id', profile.org_id)
             .gt('available_meters', 0)
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false }),
+        supabase
+            .from('parties')
+            .select('id, name, phone, gstin, state, default_credit_days')
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .order('name', { ascending: true })
     ])
 
     return {
         orders: ordersRes.data || [],
-        lots: lotsRes.data || []
+        lots: lotsRes.data || [],
+        parties: partiesRes.data || []
     }
 }
 
@@ -50,6 +57,7 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
     const supabase = await createServerClient()
 
     const partyName = cleanText(input.partyName)
+    const partyId = cleanText(input.partyId)
     const saleDate = normalizeDate(input.saleDate)
     const creditDays = Math.trunc(toFiniteNumber(input.creditDays))
     const soldMeters = toFiniteNumber(input.soldMeters)
@@ -59,7 +67,7 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
     if (!input.sourceId || !input.sourceType) {
         return { success: false, stage: 'validation', message: 'Source stock is required' }
     }
-    if (!partyName) {
+    if (!partyName && !partyId) {
         return { success: false, stage: 'validation', message: 'Party name is required' }
     }
     if (soldMeters <= 0) {
@@ -99,6 +107,7 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
         p_vehicle_number: cleanText(input.vehicleNumber),
         p_challan_number: cleanText(input.challanNumber),
         p_notes: cleanText(input.notes),
+        p_party_id: partyId,
     })
 
     if (error) {

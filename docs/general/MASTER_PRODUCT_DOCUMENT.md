@@ -1,6 +1,6 @@
 # Weavly Master Product Document
 
-Last updated May 31, 2026.
+Last updated June 1, 2026.
 
 This is the product source of truth for the current Weavly codebase. It describes what the app is, what Phase 1 now includes, how users move through the product, which pain points each feature translates from the existing physical workflow, and how the digital objects connect.
 
@@ -18,15 +18,15 @@ Phase 1 is a focused operating loop for Surat grey fabric manufacturers/traders.
 - Start Party Order fast path
 - market runs
 - expected godown ledger for market-run stock
-- party-first stock sale and pending/partial dispatch workflow
+- party-first stock sale with saved-party identity and pending/partial dispatch workflow
 - dispatches, public tracking where order-linked, and owner receipt confirmation
-- Commercials receivables and payment tracking
+- Commercials receivables, payment tracking, and party-level profit/open-dues visibility
 - gross profit visibility and money source of truth
 - workers, machines, attendance, settings, access codes
 - WhatsApp notifications
 - billing/subscriptions and referrals
 
-The broader codebase also includes deep inventory, party ledger, supplier ledger, audit registry, system health, DPA, grievances, compliance, language requests, and admin dashboards. Those are valuable future modules but should not drive Phase 1 polish unless a slice directly supports the core loop.
+The broader codebase also includes deep inventory, full party ledger, supplier ledger, audit registry, system health, DPA, grievances, compliance, language requests, and admin dashboards. Those are valuable future modules but should not drive Phase 1 polish unless a slice directly supports the core loop. The active exception is `parties` as lightweight customer identity for stock sale and Commercials workflows.
 
 ## 2. Product Thesis
 
@@ -179,7 +179,7 @@ The Active Stock tab shows lots with remaining saleable stock or owner action re
 
 Stock Inward is not a mandatory Phase 1 workflow for market-run mode. It may remain available for legacy/direct-access or order-based support, but the core market-run journey is production ledger -> dispatch check -> discrepancy review. The older `/owner/inventory` deep yarn/beam module is archived.
 
-Dispatches turn sold stock into tracked shipment batches with transport/GST/e-way metadata, package rows, sent meters, received meters, shortage/extra variance, and public token tracking where the dispatch is order-linked. Market-run stock can now be sold and dispatched without creating a fake party order. The owner confirms dispatch for all or part of the pending quantity using a modernized CreateDispatchModal, and confirms receipt directly on `/owner/dispatches` (which records shortages/excesses and defers credit due dates relative to the receipt date). The system uses meters-only throughout.
+Dispatches turn sold stock into tracked shipment batches with transport/GST/e-way metadata, package rows, sent meters, received meters, shortage/extra variance, and public token tracking where the dispatch is order-linked. Market-run stock can now be sold and dispatched without creating a fake party order. The Sell Stock dialog searches active saved parties, pre-fills contact/GSTIN/credit days, auto-links a single exact party-name match when unambiguous, and requires explicit selection or phone/GSTIN when duplicate party names exist. The owner confirms dispatch for all or part of the pending quantity using a modernized CreateDispatchModal, and confirms receipt directly on `/owner/dispatches` (which records shortages/excesses and defers credit due dates relative to the receipt date). The system uses meters-only throughout.
 
 ### 4.8 Commercial View
 
@@ -190,7 +190,7 @@ Dispatches turn sold stock into tracked shipment batches with transport/GST/e-wa
 - market-run sales
 - stock sales
 
-Commercials also tracks receivables, payment receipts, collected amount, balance, and dispatch status context for stock-sale receivables. This is a Phase 1 profit and collection lens, not a full accounting ledger.
+Commercials also tracks receivables, payment receipts, collected amount, balance, and dispatch status context for stock-sale receivables. The Parties tab and Top Parties panel use `party_id` where available, a safe unique-name fallback for legacy rows, and a legacy name key where no durable party match exists. This is a Phase 1 profit and collection lens, not a full accounting ledger.
 
 ### 4.9 Payroll and Settlements
 
@@ -224,7 +224,7 @@ Billing manages trial and Razorpay subscription state. Referrals support lightwe
 | Analytics | Progress, pace, worker and machine signals | Indirect | Dashboard RPCs, realtime production inserts |
 | Stock | Expected godown quantity, cost, sale, dispatch difference review | Optional packaging support | `fabric_stock_lots`, `fabric_stock_sales`, `fabric_stock_movements`, `fabric_stock_inward_drafts`, `stock_discrepancies` |
 | Dispatch | Professional handoff, pending/partial dispatch, shortage/excess control | Indirect | `dispatches`, `dispatch_package_lines`, `fabric_packages`, tracking token |
-| Commercials | Realized/expected gross profit, receivables, payment tracking | None | `commercial_profit_entries`, `commercial_receivables`, `commercial_payment_receipts` |
+| Commercials | Realized/expected gross profit, receivables, payment tracking, party-level sales/profit visibility | None | `commercial_profit_entries`, `commercial_receivables`, `commercial_payment_receipts`, `parties` |
 | Payroll | Trustworthy settlement timing and payout | Production logs become wages | `payroll_configs`, `payroll_settlements`, `payroll_adjustments`, `production_logs`, `attendance` |
 | Advances | Upaad visibility and recovery | Worker trust | `worker_advances`, payroll RPCs |
 | Workers/Machines | Operating baseline | Floor selection lists | `workers`, `fixed_workers`, `machines` |
@@ -296,6 +296,7 @@ Owner navigation is production-mode aware. `market_run` hides Quotes/Orders, `or
 - `factory_cost_profile`
 - `estimator_templates`
 - `estimator_quotes`
+- `parties` for active lightweight customer identity
 - `orders`
 - `market_runs`
 - `market_run_sales`
@@ -330,7 +331,7 @@ Owner navigation is production-mode aware. `market_run` hides Quotes/Orders, `or
 
 ### Deferred ERP and Governance
 
-- `parties`, `party_invoices`, `party_receipts`, `party_adjustments`, `payment_allocations`
+- `party_invoices`, `party_receipts`, `party_adjustments`, `payment_allocations`
 - `suppliers`, `supplier_ledger_entries`
 - `yarn_lots`, `beam_cards`, `beam_card_lots`, `yarn_movements`, `order_yarn_requirements`
 - `audit_log`

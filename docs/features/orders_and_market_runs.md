@@ -1,6 +1,6 @@
 # Orders and Market Runs
 
-Last analyzed from the active codebase on May 31, 2026. Updated May 31, 2026.
+Last analyzed from the active codebase on June 1, 2026.
 
 ## Phase 1 Status
 
@@ -31,7 +31,7 @@ Orders represent committed party-backed production. Market runs represent specul
 3. Supervisor logs production against the run/order anchor.
 4. Production creates expected godown stock from the production ledger.
 5. Owner reviews produced meters, expected in-godown meters, sold meters, revenue, cost, profit, and status.
-6. Owner sells market-run stock to a named party, creating a receivable.
+6. Owner sells market-run stock to a saved or newly captured party, creating a receivable and `party_id` link where available.
 7. Owner dispatches pending sold meters in one or more batches and reviews any receipt variance.
 8. Owner closes the market run when production is complete. Closing a market run automatically sets all backing orders to completed, unlinks all assigned machines/looms, and sets them to `inactive`.
 9. Closed/sold-out market-run stock lots with no saleable meters move out of Active Stock; pending dispatch remains tracked from Dispatches and Commercials.
@@ -96,6 +96,7 @@ Weavly workflow:
 - Order-based/direct workflows may still use inward drafts where needed.
 - Order-linked dispatches and public tracking attach to orders.
 - Market-run stock can be sold and dispatched without creating a fake party order.
+- Sell Stock resolves active party identity through selected party, unique exact-name match, or new-party creation with phone/GSTIN where needed.
 - Commercials aggregates expected and realized profit.
 - Completing, cancelling, or deleting an order, or closing a market run, automatically triggers unlinking of assigned machines/looms and sets their status to inactive, ensuring clean loom allocation.
 
