@@ -42,7 +42,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { deleteMachineWithCode, requestAccessCode } from '@/app/(dashboard)/supervisor/actions'
 import {
     addMachine,
@@ -187,6 +187,8 @@ export function MachineManagement({
     })
 
     // Fetch assignable cost analyses / qualities across party orders and market runs.
+    // staleTime: 30 s — avoids re-running the heavy market_run_summary view query on every
+    // mount or tab switch. The query is invalidated immediately after any assignment change.
     const { data: productionTargets } = useQuery({
         queryKey: ['production_targets', orgId],
         queryFn: async () => {
@@ -194,7 +196,9 @@ export function MachineManagement({
             if ('error' in res) throw new Error(res.error)
             return res.data
         },
-        enabled: !!orgId && (userProfile?.role === 'owner' || userProfile?.role === 'supervisor')
+        enabled: !!orgId && (userProfile?.role === 'owner' || userProfile?.role === 'supervisor'),
+        staleTime: 30_000,           // keep fresh for 30 s before background refetch
+        placeholderData: keepPreviousData, // show last result while refetching (no blank flash)
     })
 
     const { data: assignments } = useQuery({
