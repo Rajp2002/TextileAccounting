@@ -28,8 +28,8 @@ export function AccessCodeGenerator({ className }: { className?: string }) {
             }
             setGeneratedCode(result.code ?? null)
             toast.success(t('settings.access_code.success'))
-        } catch (error: any) {
-            toast.error(error.message || t('settings.access_code.error'))
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : t('settings.access_code.error'))
         } finally {
             setLoading(false)
         }

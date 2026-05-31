@@ -12,7 +12,7 @@ import LandingFooter from "@/components/landing/footer";
 
 export default function Home() {
   return (
-    <main className="h-screen w-full overflow-x-hidden overflow-y-auto bg-white font-sans text-zinc-950 selection:bg-orange-500/20 scroll-smooth snap-y snap-proximity">
+    <main className="h-[100svh] w-full overflow-x-hidden overflow-y-auto bg-white font-sans text-zinc-950 selection:bg-orange-500/20 scroll-smooth snap-y snap-proximity">
       <div className="relative w-full min-h-max">
         <LandingBackground />
         <LandingHeader />
@@ -41,7 +41,7 @@ export default function Home() {
               <p className="text-xs font-black uppercase tracking-[0.28em] text-orange-300">
                 Start with one factory floor
               </p>
-              <h2 className="mx-auto mt-5 max-w-4xl text-4xl font-black tracking-tight text-white sm:text-6xl">
+              <h2 className="mx-auto mt-5 max-w-4xl text-3xl font-black tracking-normal text-white xs:text-4xl sm:text-6xl">
                 Bring your active orders, supervisors, looms, and payroll into one record.
                 <br />
                 <span className="text-orange-300">See the difference in the first week.</span>

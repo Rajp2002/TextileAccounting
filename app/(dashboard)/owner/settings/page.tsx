@@ -50,22 +50,6 @@ type OrganizationSettings = {
     production_mode: ProductionMode | null
 }
 
-type SettingsSectionMeta = {
-    id: string
-    title: string
-    icon: LucideIcon
-}
-
-const SETTINGS_SECTIONS: SettingsSectionMeta[] = [
-    { id: 'overview', title: 'Overview', icon: SlidersHorizontal },
-    { id: 'factory-identity', title: 'Factory & Identity', icon: Factory },
-    { id: 'production-mode', title: 'Production Mode', icon: SlidersHorizontal },
-    { id: 'automations', title: 'Automations', icon: MessageSquare },
-    { id: 'cost-profile', title: 'Cost Profile', icon: Factory },
-    { id: 'qualities', title: 'Qualities', icon: ShieldCheck },
-    { id: 'security-team', title: 'Security & Team', icon: ShieldCheck },
-]
-
 function getErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback
 }
@@ -134,36 +118,6 @@ function PanelHeading({
             </div>
             {description && <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>}
         </div>
-    )
-}
-
-function SectionRail() {
-    return (
-        <aside className="sticky top-6 hidden xl:block">
-            <div className="rounded-lg border border-hairline bg-surface/80 p-2 shadow-[var(--shadow-card)] backdrop-blur-md">
-                <p className="px-3 pb-2 pt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                    Settings sections
-                </p>
-                <nav className="space-y-1">
-                    {SETTINGS_SECTIONS.map((section, index) => {
-                        const Icon = section.icon
-                        return (
-                            <a
-                                key={section.id}
-                                href={`#${section.id}`}
-                                className={cn(
-                                    'flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold text-body transition-colors hover:bg-saffron-soft/70 hover:text-saffron-deep',
-                                    index === 0 && 'bg-saffron-soft text-saffron-deep'
-                                )}
-                            >
-                                <Icon className="h-4 w-4" />
-                                {section.title}
-                            </a>
-                        )
-                    })}
-                </nav>
-            </div>
-        </aside>
     )
 }
 
@@ -255,7 +209,7 @@ export default function SettingsPage() {
 
     if (isLoading) {
         return (
-            <div className="relative left-1/2 w-full -translate-x-1/2 space-y-5 pb-10 md:w-[calc(100vw-248px-48px)] lg:w-[calc(100vw-248px-64px)] 2xl:max-w-[1640px]">
+            <div className="settings-page-frame space-y-5">
                 <div className="flex items-end justify-between border-b border-hairline/80 pb-5">
                     <div className="space-y-2">
                         <Skeleton className="h-8 w-48" />
@@ -263,8 +217,7 @@ export default function SettingsPage() {
                     </div>
                     <Skeleton className="hidden h-9 w-24 sm:block" />
                 </div>
-                <div className="grid grid-cols-1 gap-5 xl:grid-cols-[220px_minmax(0,1fr)] 2xl:grid-cols-[220px_minmax(0,1fr)_292px]">
-                    <Skeleton className="hidden h-80 rounded-lg xl:block" />
+                <div className="settings-layout-grid">
                     <div className="space-y-5">
                         {[1, 2, 3].map(section => (
                             <div key={section} className="space-y-3">
@@ -276,7 +229,7 @@ export default function SettingsPage() {
                             </div>
                         ))}
                     </div>
-                    <Skeleton className="hidden h-96 rounded-lg 2xl:block" />
+                    <Skeleton className="settings-right-rail h-96 rounded-lg" />
                 </div>
             </div>
         )
@@ -301,7 +254,7 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="relative left-1/2 w-full -translate-x-1/2 pb-10 md:w-[calc(100vw-248px-48px)] lg:w-[calc(100vw-248px-64px)] 2xl:max-w-[1640px]">
+        <div className="settings-page-frame">
             <div id="overview" className="mb-5 flex flex-col gap-4 border-b border-hairline/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
                 <div className="min-w-0">
                     <h1 className="text-3xl font-bold tracking-tight text-ink">{t('settings.title')}</h1>
@@ -313,9 +266,7 @@ export default function SettingsPage() {
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[220px_minmax(0,1fr)] 2xl:grid-cols-[220px_minmax(0,1fr)_292px]">
-                <SectionRail />
-
+            <div className="settings-layout-grid">
                 <div className="min-w-0 space-y-5">
                     <SettingsSection id="factory-identity" title="Factory & Identity" icon={Factory}>
                         <SettingsPanel className="overflow-hidden">
@@ -435,7 +386,7 @@ export default function SettingsPage() {
                                         title={t('settings.personal.title')}
                                         description="View your registered profile details"
                                     />
-                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-1 min-[1700px]:grid-cols-2">
                                         <div className="space-y-2">
                                             <Label>{t('settings.personal.name')}</Label>
                                             <Input value={userProfile.full_name || ''} readOnly className="border-hairline bg-surface-soft/55" />
@@ -524,7 +475,7 @@ export default function SettingsPage() {
                     </SettingsSection>
                 </div>
 
-                <aside className="sticky top-6 hidden space-y-4 2xl:block">
+                <aside className="settings-right-rail sticky top-6 space-y-4">
                     <SettingsPanel className="p-5">
                         <div className="flex items-center gap-2">
                             <Factory className="h-4 w-4 text-info" />

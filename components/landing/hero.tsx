@@ -14,18 +14,18 @@ const proofItems = ['7-day Premium trial', 'No credit card', 'Floor-ready PWA']
 
 export default function LandingHero() {
     return (
-        <section className="relative z-10 isolate overflow-hidden pt-24 snap-start scroll-mt-28">
-            <div className="mx-auto max-w-7xl px-6 pb-16 pt-14 sm:pb-24 lg:px-8 lg:pb-28 lg:pt-24">
+        <section className="relative z-10 isolate overflow-hidden pt-[calc(5.5rem+env(safe-area-inset-top,0px))] snap-start scroll-mt-28 xs:pt-24">
+            <div className="mx-auto max-w-7xl px-3 pb-14 pt-8 xs:px-6 xs:pb-16 xs:pt-14 sm:pb-24 lg:px-8 lg:pb-28 lg:pt-24">
                 <div className="mx-auto max-w-6xl text-center">
-                    <p className="text-xs font-black uppercase tracking-[0.32em] text-orange-700 dark:text-orange-400">
+                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-orange-700 dark:text-orange-400 xs:text-xs xs:tracking-[0.32em]">
                         Built for grey fabric weaving factories
                     </p>
 
-                    <h1 className="mx-auto mt-7 max-w-6xl text-5xl font-black leading-[0.94] tracking-tight text-zinc-950 sm:text-7xl lg:text-8xl dark:text-white">
+                    <h1 className="mx-auto mt-5 max-w-6xl text-4xl font-black leading-[1.02] tracking-normal text-zinc-950 xs:mt-7 xs:text-5xl sm:text-7xl lg:text-8xl dark:text-white">
                         One system for the whole factory floor. No notebook. No WhatsApp. No missed meters.
                     </h1>
 
-                    <p className="mx-auto mt-7 max-w-3xl text-lg leading-8 text-zinc-600 dark:text-zinc-300">
+                    <p className="mx-auto mt-5 max-w-3xl text-base leading-7 text-zinc-600 xs:mt-7 sm:text-lg sm:leading-8 dark:text-zinc-300">
                         Weavly connects fabric estimates, loom assignments, shift meter logs, dispatches, advances, and payroll so owners know what happened on the floor without chasing registers and WhatsApp messages.
                     </p>
 
@@ -53,11 +53,11 @@ export default function LandingHero() {
                         </Link>
                     </div>
 
-                    <div className="mx-auto mt-6 grid max-w-2xl gap-2 text-left text-sm font-semibold text-zinc-600 dark:text-zinc-400 sm:grid-cols-3 sm:text-center">
+                    <div className="mx-auto mt-6 grid max-w-2xl gap-2 text-left text-sm font-semibold text-zinc-600 dark:text-zinc-400 xs:grid-cols-3 xs:text-center">
                         {proofItems.map((item) => (
-                            <p key={item} className="flex items-center gap-2 sm:justify-center">
+                            <p key={item} className="flex min-w-0 items-center gap-2 xs:justify-center">
                                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                                {item}
+                                <span className="min-w-0">{item}</span>
                             </p>
                         ))}
                     </div>
@@ -108,18 +108,18 @@ export default function LandingHero() {
 
                                 <div className="grid gap-0 xl:grid-cols-[1fr_18rem]">
                                     <div className="p-4 sm:p-6">
-                                        <div className="grid gap-2 sm:grid-cols-4">
+                                        <div className="grid gap-2 xs:grid-cols-2 sm:grid-cols-4">
                                             {loopSteps.map((step, index) => (
-                                                <div key={step} className={`border px-4 py-4 ${index === 2 ? 'border-orange-300 bg-orange-50 text-orange-700' : 'border-zinc-200 bg-white text-zinc-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200'}`}>
+                                                <div key={step} className={`min-w-0 border px-3 py-3 xs:px-4 xs:py-4 ${index === 2 ? 'border-orange-300 bg-orange-50 text-orange-700' : 'border-zinc-200 bg-white text-zinc-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200'}`}>
                                                     <p className="text-[10px] font-black uppercase tracking-[0.22em] opacity-50">0{index + 1}</p>
                                                     <p className="mt-1 text-sm font-black">{step}</p>
                                                 </div>
                                             ))}
                                         </div>
 
-                                        <div className="mt-5 overflow-hidden border border-zinc-200 dark:border-white/10">
+                                        <div className="mobile-scroll-x mt-5 overflow-y-hidden border border-zinc-200 dark:border-white/10">
                                             {loomRows.map((row) => (
-                                                <div key={row.loom} className="grid grid-cols-[0.72fr_1.15fr_0.56fr_0.72fr] items-center gap-2 border-b border-zinc-200 bg-white px-3 py-4 text-sm last:border-b-0 dark:border-white/10 dark:bg-zinc-900/80 sm:px-4">
+                                                <div key={row.loom} className="grid min-w-[36rem] grid-cols-[0.72fr_1.15fr_0.56fr_0.72fr] items-center gap-2 border-b border-zinc-200 bg-white px-3 py-4 text-sm last:border-b-0 dark:border-white/10 dark:bg-zinc-900/80 sm:min-w-0 sm:px-4">
                                                     <div>
                                                         <p className="font-black text-zinc-950 dark:text-white">{row.loom}</p>
                                                         <p className="text-xs text-zinc-500">{row.shift}</p>

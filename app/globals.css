@@ -238,8 +238,12 @@
 
   html, body {
     @apply bg-background text-foreground;
+    min-width: 0;
+    min-height: 100%;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
     touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
     color: var(--color-body);
     font-size: 14px;
   }
@@ -306,6 +310,49 @@
       linear-gradient(to bottom, rgba(126, 91, 47, 0.045) 1px, transparent 1px);
   }
 
+  .settings-page-frame {
+    --settings-sidebar-guard: max(0px, calc(248px - ((100vw - 1120px) / 2)));
+    width: 100%;
+    padding-bottom: 2.5rem;
+  }
+
+  .settings-layout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 1.25rem;
+  }
+
+  .settings-right-rail {
+    display: none;
+  }
+
+  @media (min-width: 768px) and (max-width: 1699.98px) {
+    .settings-page-frame {
+      margin-left: var(--settings-sidebar-guard);
+      width: calc(100% - var(--settings-sidebar-guard));
+    }
+  }
+
+  @media (min-width: 1700px) {
+    .settings-page-frame {
+      --settings-frame-width: min(calc(100vw - 312px), 1640px);
+      width: var(--settings-frame-width);
+      max-width: 1640px;
+      margin-left: calc(
+        248px + ((100vw - 248px - var(--settings-frame-width)) / 2) - ((100vw - 1120px) / 2) - 28px
+      );
+    }
+
+    .settings-layout-grid {
+      grid-template-columns: minmax(0, 1fr) 292px;
+    }
+
+    .settings-right-rail {
+      display: block;
+    }
+  }
+
   /* Safe Area Padding Utilities for Mobile Apps */
   .pb-safe { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px)); }
   .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
@@ -340,6 +387,34 @@
   /* Specific padding for floating buttons above the mobile bottom nav */
   .pb-floating-button {
     padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .mobile-scroll-x {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  @media (max-width: 339px) {
+    .mobile-nav-label {
+      display: none;
+    }
+
+    .mobile-nav-item {
+      min-height: 48px;
+    }
+
+    .mobile-nav-icon-pill {
+      margin-bottom: 0;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
   }
   
   @media (min-width: 768px) {

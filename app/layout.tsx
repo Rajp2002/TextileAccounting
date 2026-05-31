@@ -16,14 +16,15 @@ export const viewport: Viewport = {
   themeColor: "#FFF8EA",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  minimumScale: 1,
   viewportFit: "cover",
 }
 
 export const metadata: Metadata = {
+  applicationName: "Weavly",
   title: "Weavly — Factory OS for Textile Weaving Units",
   description: "Weavly connects fabric costing, loom production logs, dispatches, advances, payroll, and WhatsApp briefs for grey fabric weaving factories.",
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     title: "Weavly",
@@ -32,6 +33,14 @@ export const metadata: Metadata = {
   },
   icons: {
     apple: "/apple-icon.png?v=3",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "msapplication-TileColor": "#FFF8EA",
+    "msapplication-tap-highlight": "no",
   },
 }
 

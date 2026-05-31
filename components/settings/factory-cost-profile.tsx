@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Loader2, Save, Zap, Percent, TrendingUp, Truck, Users2, Wind, Palette, Sparkles } from 'lucide-react'
+import { Loader2, Save, Zap, Percent, TrendingUp, Truck, Users2, Wind, Sparkles } from 'lucide-react'
 import { getFactoryCostProfile, upsertFactoryCostProfile } from '@/app/(dashboard)/owner/estimator/actions'
 import { toast } from 'sonner'
 import type { FactorySections } from '@/lib/estimator'
@@ -340,7 +340,7 @@ export function FactoryCostProfile({ className }: { className?: string }) {
                         <Label className="text-sm font-semibold text-body">Optional Cost Sections</Label>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Enabled sections appear in the estimator for every new quote. Disabled sections are hidden — keeping the form clean for factories that don't use them.
+                        Enabled sections appear in the estimator for every new quote. Disabled sections are hidden, keeping the form clean for factories that do not use them.
                     </p>
                     <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
                         <SectionToggle

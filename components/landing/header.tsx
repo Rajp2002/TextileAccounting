@@ -17,13 +17,13 @@ export default function LandingHeader() {
 
     return (
         <header
-            className="fixed top-0 left-0 right-0 z-50 pt-0 px-4 pb-4 sm:px-6 lg:px-8"
+            className="fixed top-0 left-0 right-0 z-50 px-3 pb-3 pt-safe xs:px-4 xs:pb-4 sm:px-6 lg:px-8"
         >
             <div className="mx-auto max-w-7xl">
                 <div className="rounded-b-xl border border-t-0 border-gray-200/80 bg-white/85 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/85 transition-all dark:bg-zinc-950/80 dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]">
-                    <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+                    <div className="flex min-w-0 items-center justify-between px-3 py-2 xs:px-4 xs:py-3 sm:px-6 lg:px-8">
                     <Link href="/" className="flex items-center group">
-                            <div className="relative h-16 w-40 sm:h-20 sm:w-56 group-hover:opacity-80 transition-opacity duration-200">
+                            <div className="relative h-12 w-32 xs:h-16 xs:w-40 sm:h-20 sm:w-56 group-hover:opacity-80 transition-opacity duration-200">
                                 <Image src="/images/WeavlyLogo.png" alt="Weavly Logo" fill sizes="(max-width: 640px) 10rem, 14rem" className="object-contain object-left" priority />
                             </div>
                         </Link>
@@ -75,7 +75,7 @@ export default function LandingHeader() {
 
                 {/* Mobile Menu */}
                 {mobileMenuOpen && (
-                    <div className="absolute top-24 left-4 right-4 z-50 md:hidden">
+                    <div className="absolute left-3 right-3 top-[calc(4.5rem+env(safe-area-inset-top,0px))] z-50 xs:left-4 xs:right-4 xs:top-[calc(6rem+env(safe-area-inset-top,0px))] md:hidden">
                         <div className="overflow-hidden rounded-xl bg-white/95 shadow-2xl ring-1 ring-gray-900/5 backdrop-blur-2xl dark:bg-zinc-900/95 dark:ring-zinc-800">
                             <div className="p-5 space-y-4">
                                 {navLinks.map((link) => (

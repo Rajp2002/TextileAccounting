@@ -8,6 +8,7 @@ import { getEstimatorTemplates, deleteTemplate } from '@/app/(dashboard)/owner/e
 import { toast } from 'sonner'
 import { useTranslation } from '@/lib/i18n/context'
 import type { WarpRow, WeftRow } from '@/lib/estimator'
+import { cn } from '@/lib/utils'
 
 interface TemplateV3 {
     id:         string
@@ -23,7 +24,7 @@ interface TemplateV3 {
     tape_length_m?:     number
 }
 
-export function TemplateManager() {
+export function TemplateManager({ className }: { className?: string }) {
     const { t } = useTranslation()
     const [loading,   setLoading]   = useState(true)
     const [qualities, setQualities] = useState<TemplateV3[]>([])
@@ -74,47 +75,47 @@ export function TemplateManager() {
 
     if (loading && qualities.length === 0) {
         return (
-            <Card className="shadow-sm border-gray-200 mt-6">
+            <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
                 <CardContent className="flex items-center justify-center h-24">
-                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                    <Loader2 className="h-5 w-5 animate-spin text-saffron" />
                 </CardContent>
             </Card>
         )
     }
 
     return (
-        <Card className="shadow-sm border-gray-200 mt-6">
-            <CardHeader>
+        <Card className={cn("rounded-lg border-hairline bg-surface/95 shadow-[var(--shadow-card)]", className)}>
+            <CardHeader className="gap-2 border-b border-hairline/70 pb-4">
                 <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-blue-500" />
-                    <CardTitle>{t('estimator.quality.settingsTitle')}</CardTitle>
+                    <FileText className="h-4 w-4 text-info" />
+                    <CardTitle className="text-base">{t('estimator.quality.settingsTitle')}</CardTitle>
                 </div>
                 <CardDescription>
                     {t('estimator.quality.settingsDescription')}
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-5">
                 {qualities.length === 0 ? (
-                    <div className="py-10 text-center border-2 border-dashed rounded-2xl bg-gray-50/50">
-                        <p className="text-sm text-gray-400 italic">
+                    <div className="rounded-lg border border-dashed border-hairline bg-canvas/55 py-10 text-center">
+                        <p className="text-sm italic text-muted-foreground">
                             {t('estimator.quality.settingsEmpty')}
                         </p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                         {qualities.map(quality => {
                             const summary = qualitySummary(quality)
                             const isV3 = !!(quality.warp_rows && quality.warp_rows.length > 0)
                             return (
                                 <div
                                     key={quality.id}
-                                    className="group p-3 rounded-xl border border-gray-100 bg-gray-50/30 hover:bg-white hover:border-gray-200 hover:shadow-sm transition-all duration-200"
+                                    className="group rounded-lg border border-hairline bg-canvas/55 p-3 transition-all duration-200 hover:border-hairline-strong hover:bg-surface hover:shadow-sm"
                                 >
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
-                                            <h5 className="font-bold text-gray-900 group-hover:text-indigo-700 text-sm">{quality.name}</h5>
+                                            <h5 className="text-sm font-bold text-ink group-hover:text-saffron-deep">{quality.name}</h5>
                                             {isV3 && (
-                                                <span className="text-[10px] bg-indigo-100 text-indigo-600 rounded-full px-1.5 py-0.5 font-semibold">
+                                                <span className="rounded-full bg-info-soft px-1.5 py-0.5 text-[10px] font-semibold text-info">
                                                     V3 · {summary.warpLayers}W + {summary.weftLayers}F
                                                 </span>
                                             )}
@@ -122,23 +123,23 @@ export function TemplateManager() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-7 w-7 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="h-7 w-7 text-subtle opacity-0 transition-opacity hover:bg-risk-soft hover:text-risk group-hover:opacity-100"
                                             onClick={() => handleDelete(quality.id)}
                                         >
                                             <Trash2 className="h-3.5 w-3.5" />
                                         </Button>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-y-1 text-[11px] text-gray-500 font-medium">
+                                    <div className="grid grid-cols-2 gap-y-1 text-[11px] font-medium text-muted-foreground">
                                         <span className="flex items-center gap-1">
                                             <Hash className="h-2.5 w-2.5" />
-                                            Ends: <b className="text-gray-700">{summary.totalEnds}</b>
+                                            Ends: <b className="text-body">{summary.totalEnds}</b>
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <Layers className="h-2.5 w-2.5" />
-                                            Picks: <b className="text-gray-700">{summary.firstPicks} PPI</b>
+                                            Picks: <b className="text-body">{summary.firstPicks} PPI</b>
                                         </span>
                                         {isV3 && quality.warp_rows && (
-                                            <span className="col-span-2 text-gray-400 truncate">
+                                            <span className="col-span-2 truncate text-subtle">
                                                 {quality.warp_rows.map(r => `${r.beamEnds}×${r.calcDenier}D`).join(' + ')}
                                             </span>
                                         )}

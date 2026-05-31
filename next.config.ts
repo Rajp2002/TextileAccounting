@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import withPWAInit from "next-pwa";
 
 // ─── Security Headers ─────────────────────────────────────────────────────────
 const cspHeader = `
@@ -25,6 +26,26 @@ const securityHeaders = [
   { key: 'Content-Security-Policy', value: cspHeader },
 ]
 
+const withPWA = withPWAInit({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  skipWaiting: true,
+  clientsClaim: true,
+  cleanupOutdatedCaches: true,
+  cacheStartUrl: false,
+  dynamicStartUrl: true,
+  reloadOnOnline: false,
+  fallbacks: {
+    document: '/_offline',
+  },
+  publicExcludes: [
+    '!videos/**/*',
+    '!**/*.map',
+    '!.DS_Store',
+  ],
+  buildExcludes: [/\.map$/],
+})
 
 const nextConfig: NextConfig = {
   async headers() {
@@ -49,7 +70,7 @@ const nextConfig: NextConfig = {
   images: { formats: ['image/avif', 'image/webp'] },
 };
 
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withPWA(nextConfig), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   // Upload source maps silently (they're hidden from the browser, only for readable stack traces)

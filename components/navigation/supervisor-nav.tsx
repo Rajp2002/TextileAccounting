@@ -255,7 +255,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
             <div className={cn(
                 "md:hidden fixed bottom-0 left-0 right-0 z-50",
                 "bg-canvas/92 backdrop-blur-xl border-t border-border",
-                "flex justify-around items-stretch",
+                "grid auto-cols-fr grid-flow-col items-stretch",
                 "pb-safe pt-2 pl-safe pr-safe",
                 "shadow-[0_-8px_24px_-4px_rgba(30,37,40,0.10)]",
                 "min-h-[64px] landscape:min-h-[52px] select-none"
@@ -269,14 +269,16 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                             href={item.href}
                             className={cn(
                                 "flex flex-col items-center justify-center min-w-0 w-full relative",
+                                "mobile-nav-item",
                                 "py-1 px-0.5 transition-all duration-300",
                                 isActive ? "text-saffron-deep" : "text-body"
                             )}
+                            aria-label={t(`nav.${item.translationKey}`) || item.name}
                         >
                             {/* Active scale is applied to the icon pill only to avoid
                                 layout shift on very narrow screens */}
                             <div className={cn(
-                                "py-1 px-3 rounded-xl mb-0.5 transition-all duration-300",
+                                "mobile-nav-icon-pill py-1 px-2 xs:px-3 rounded-xl mb-0.5 transition-all duration-300",
                                 "landscape:py-0.5 landscape:px-2",
                                 isActive
                                     ? "bg-saffron-soft scale-105"
@@ -288,7 +290,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                                 )} />
                             </div>
                             <span className={cn(
-                                "text-[10px] landscape:text-[9px] font-semibold leading-none truncate max-w-full px-0.5",
+                                "mobile-nav-label text-[10px] landscape:text-[9px] font-semibold leading-none truncate max-w-full px-0.5",
                                 isActive ? "opacity-100" : "opacity-80"
                             )}>
                                 {t(`nav.${item.translationKey}`) || item.name}
@@ -302,16 +304,18 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
 
                 {/* More button — opens the sheet drawer for secondary nav items */}
                 <button
+                    type="button"
                     onClick={() => setIsOpen(true)}
+                    aria-label={t("common.navigation")}
                     className={cn(
-                        "flex flex-col items-center justify-center min-w-0 w-full relative",
+                        "mobile-nav-item flex flex-col items-center justify-center min-w-0 w-full relative",
                         "py-1 px-0.5 text-body"
                     )}
                 >
-                    <div className="mb-0.5 rounded-xl px-3 py-1 transition-all hover:bg-surface-soft landscape:px-2 landscape:py-0.5">
+                    <div className="mobile-nav-icon-pill mb-0.5 rounded-xl px-2 py-1 transition-all hover:bg-surface-soft xs:px-3 landscape:px-2 landscape:py-0.5">
                         <Menu className="h-5 w-5 landscape:h-4 landscape:w-4" />
                     </div>
-                    <span className="text-[10px] font-semibold leading-none opacity-80 landscape:text-[9px]">
+                    <span className="mobile-nav-label text-[10px] font-semibold leading-none opacity-80 landscape:text-[9px]">
                         {t("common.menu")}
                     </span>
                 </button>
