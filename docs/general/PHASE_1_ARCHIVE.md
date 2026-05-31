@@ -18,7 +18,7 @@ Routes currently redirected to `/feature-archived`:
 
 ## Not Archived in Current Code
 
-`/owner/stock` is not in `PHASE_1_ARCHIVED_ROUTES` and is present in owner navigation. This reflects the Phase 1 extension around taka/godown stock, inward drafts, stock sales, and commercials support. The older deep yarn/beam inventory route remains archived through `/owner/inventory`.
+`/owner/stock` is not in `PHASE_1_ARCHIVED_ROUTES` and is present in owner navigation. This reflects the Phase 1 extension around godown stock, inward drafts, stock sales, and commercials support. The older deep yarn/beam inventory route remains archived through `/owner/inventory`.
 
 ## Product Areas Deferred From Phase 1 Polish
 
@@ -40,7 +40,7 @@ Routes currently redirected to `/feature-archived`:
 - Orders and market runs.
 - Supervisor production log.
 - Owner production analytics.
-- Godown/taka stock board (expected ledger and dispatch reconciliation focus).
+- Godown stock board (expected ledger and dispatch reconciliation focus).
 - Dispatches and public tracking (Sell & Dispatch).
 - Commercials receivables and payment tracking.
 - Payroll and advances.

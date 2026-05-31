@@ -28,10 +28,13 @@ describe('payroll pay date configuration', () => {
         expect(schemas).toContain('Reminder window must be between 0 and 14 days')
     })
 
-    it('uses due-window helpers on payroll and today screens', () => {
-        expect(payrollPage).toContain('getLatestOpenPayrollMonth')
+    it('defaults payroll to current cycle while surfacing previous pay-date cycle', () => {
+        expect(payrollPage).toContain('setSelectedMonth(currentMonth)')
+        expect(payrollPage).toContain('PayDateOverview')
+        expect(payrollPage).toContain('payDateCycleMonth')
         expect(payrollPage).toContain('selectedCycleStatus.is_payroll_window_open')
-        expect(todayActions).toContain('getLatestOpenPayrollMonth')
+        expect(todayActions).toContain('getPayrollMonthForDate')
+        expect(todayActions).toContain('getPreviousPayrollMonth')
         expect(todayActions).toContain('isPayWindowOpen')
     })
 })

@@ -104,7 +104,7 @@ Scenarios:
 
 - create order-linked dispatch from sold stock
 - create orderless stock-sale dispatch from pending sale
-- create partial dispatch batch with selected meters/takas/date
+- create partial dispatch batch with selected meters and dispatch date
 - include transport/GST/e-way metadata
 - public tracking token loads without login
 - owner confirms exact received meters

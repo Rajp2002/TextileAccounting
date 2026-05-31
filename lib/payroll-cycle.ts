@@ -28,6 +28,10 @@ function previousMonth(ym: string) {
     return format(date, 'yyyy-MM')
 }
 
+export function getPreviousPayrollMonth(monthStr: string) {
+    return previousMonth(monthStr)
+}
+
 /**
  * Returns the cycle bounds for a cycle starting in the given month.
  * e.g. For "2026-05" and cycleStartDay 15, returns bounds for 2026-05-15 to 2026-06-14.

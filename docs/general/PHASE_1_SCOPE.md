@@ -174,7 +174,7 @@ In scope:
 - Stock adjustment add/subtract.
 - Party-first stock sale recording with named party, price, quantity, credit days, and Commercials receivable creation.
 - Pending dispatch tracking for stock sales, including partial dispatch quantities.
-- Configurable dispatch batches: dispatch date, meters, takas, challan, vehicle, transporter, and notes.
+- Configurable dispatch batches: dispatch date, meters, challan, vehicle, transporter, and notes (the system is meters-only throughout).
 - Stock movements history.
 - Dispatches for order-linked output.
 - Dispatch package/batch rows, transport/GST/e-way metadata, and receipt confirmation.
@@ -296,7 +296,7 @@ Archived routes are documented in `docs/general/PHASE_1_ARCHIVE.md`; the active 
 - Payroll preview matches final settlement.
 - Advance recovery, final settlement, PF/ESI, payment mode, and payslip send are tested.
 - Expected stock, optional inward drafts, lot creation, adjustment, sale, and commercials aggregation are tested.
-- Party-first stock sale, pending/partial dispatch, receipt confirmation, shortage/excess discrepancy, and public tracking are tested.
+- Party-first stock sale, pending/partial dispatch, direct receipt confirmation, shortage/excess discrepancy, and public tracking are tested.
 - WhatsApp failures are logged and retryable without blocking writes (failure fallback exists so app workflows do not crash).
 - **WhatsApp Pre-Pilot Checklist:**
   - [ ] Meta Business account configured

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { formatINR, calculateAdvanceRecovery } from '@/lib/finance'
@@ -21,7 +21,6 @@ import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTransliterate } from '@/hooks/use-transliterate'
 import { useMutation } from '@tanstack/react-query'
 import { generateMeterPayslip, generateFixedPayslip } from '@/lib/generate-payslip'
-import { MIN_WAGE_DAILY, isBelowMinWage } from '@/lib/wage-config'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { sendPayslipWhatsApp } from './whatsapp-actions'
@@ -39,13 +38,12 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp'
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from 'input-otp'
-import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { setWorkerActiveStatus } from '@/app/(dashboard)/owner/actions'
-import { getLatestOpenPayrollMonth, getPayrollCycleBounds, getPayrollCycleStatus, getPayrollMonthForDate } from '@/lib/payroll-cycle'
+import { getPayrollCycleBounds, getPayrollCycleStatus, getPayrollMonthForDate } from '@/lib/payroll-cycle'
 import { formatToSurat } from '@/lib/time'
 import {
     PAYROLL_MANUAL_ADJUSTMENT_REASONS,
@@ -58,18 +56,19 @@ import {
 
 type PaymentMode = 'cash' | 'bank_transfer' | 'upi' | 'cheque'
 type PendingPayrollManualAdjustment = PayrollManualAdjustment & { id: string }
+type SupabaseBrowserClient = ReturnType<typeof createClient>
 
 interface SettlementRecord {
-    id: number
+    id?: number
     gross_pay: number
     advance_deducted: number
     net_payout: number
     carried_forward_debt: number
     compliance_flag: boolean
     is_final_settlement: boolean
-    settled_at: string
+    settled_at?: string
     status: 'paid' | 'pending'
-    itemization_payload?: any
+    itemization_payload?: unknown
     payment_mode?: PaymentMode | null
 }
 
@@ -94,6 +93,68 @@ interface FixedWorkerPayroll extends WorkerBase {
     monthly_salary: number
     daysWorked?: number       // only for 'daily' role
     earnedPay: number         // gross pay
+}
+
+type PayrollWorker = MeterWorkerPayroll | FixedWorkerPayroll
+type SettlementDialogWorker = PayrollWorker & {
+    type: 'meter' | 'fixed'
+    targetMonth?: string
+    initialIsFinal?: boolean
+    deactivateAfterExit?: boolean
+}
+
+type ProductionLogRow = {
+    worker_id: number
+    machine_id: string | number | null
+    meters: number | string | null
+    worker_rate_snapshot: number | string | null
+    order_id: string | number | null
+}
+
+type MeterWorkerDbRow = {
+    id: number
+    name: string
+    whatsapp_number: string | null
+    is_active: boolean
+    pf_esi_enrolled?: boolean | null
+    pf_esi_eligible?: boolean | null
+}
+
+type MachineRow = {
+    id: string | number
+    name: string
+}
+
+type PayrollSettlementRow = SettlementRecord & {
+    meter_worker_id?: number | null
+    fixed_worker_id?: number | null
+}
+
+type WorkerAdvanceRow = {
+    meter_worker_id?: number | null
+    fixed_worker_id?: number | null
+    amount: number | string | null
+}
+
+type OrderRow = {
+    id: string | number
+    party_name: string | null
+    quality_label: string | null
+}
+
+type FixedWorkerDbRow = {
+    id: number
+    name: string
+    whatsapp_number: string | null
+    role: string
+    monthly_salary: number | string | null
+    start_date?: string | null
+    pf_esi_enrolled?: boolean | null
+    pf_esi_eligible?: boolean | null
+}
+
+type AttendanceRow = {
+    fixed_worker_id: number
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -130,6 +191,228 @@ function payrollMeterQueryKey(orgId: string | undefined, month: string, cycleSta
 
 function payrollFixedQueryKey(orgId: string | undefined, month: string, cycleStartDay: number) {
     return ['payroll_fixed', orgId, month, cycleStartDay, PAYROLL_QUERY_VERSION] as const
+}
+
+function toPayrollNumber(value: unknown) {
+    const parsed = Number(value ?? 0)
+    return Number.isFinite(parsed) ? parsed : 0
+}
+
+async function fetchMeterWorkerPayroll(
+    supabase: SupabaseBrowserClient,
+    orgId: string,
+    month: string,
+    cycleStartDay: number
+): Promise<MeterWorkerPayroll[]> {
+    const bounds = getPayrollCycleBounds(month, cycleStartDay)
+    const monthStart = bounds.cycle_start
+    const monthEnd = bounds.cycle_end
+
+    const [logsRes, workersRes, machinesRes, settlementsRes, advancesRes, ordersRes] = await Promise.all([
+        supabase.from('production_logs')
+            .select('worker_id, machine_id, meters, worker_rate_snapshot, order_id')
+            .eq('org_id', orgId)
+            .gt('meters', 0)
+            .gte('date', monthStart)
+            .lte('date', monthEnd),
+        supabase.from('workers')
+            .select('id, name, whatsapp_number, is_active, pf_esi_enrolled, pf_esi_eligible')
+            .eq('org_id', orgId),
+        supabase.from('machines')
+            .select('id, name')
+            .eq('org_id', orgId),
+        supabase.from('payroll_settlements')
+            .select('*')
+            .eq('org_id', orgId)
+            .eq('worker_type', 'meter')
+            .eq('month', month),
+        supabase.from('worker_advances')
+            .select('meter_worker_id, amount')
+            .eq('org_id', orgId)
+            .eq('status', 'pending')
+            .is('writeoff_at', null)
+            .not('meter_worker_id', 'is', null),
+        supabase.from('orders')
+            .select('id, party_name, quality_label')
+            .eq('org_id', orgId)
+            .in('status', ['active', 'completed', 'cancelled']),
+    ])
+
+    if (logsRes.error) throw logsRes.error
+    if (workersRes.error) throw workersRes.error
+    if (machinesRes.error) throw machinesRes.error
+    if (settlementsRes.error) throw settlementsRes.error
+    if (advancesRes.error) throw advancesRes.error
+    if (ordersRes.error) throw ordersRes.error
+
+    const logs = (logsRes.data || []) as ProductionLogRow[]
+    const workers = (workersRes.data || []) as MeterWorkerDbRow[]
+    const machines = (machinesRes.data || []) as MachineRow[]
+    const settlements = (settlementsRes.data || []) as PayrollSettlementRow[]
+    const advances = (advancesRes.data || []) as WorkerAdvanceRow[]
+    const orders = (ordersRes.data || []) as OrderRow[]
+
+    const advanceMap: Record<number, number> = {}
+    advances.forEach((advance) => {
+        if (!advance.meter_worker_id) return
+        advanceMap[advance.meter_worker_id] = (advanceMap[advance.meter_worker_id] || 0) + toPayrollNumber(advance.amount)
+    })
+
+    const machineMap = Object.fromEntries(machines.map((machine) => [String(machine.id), machine]))
+    const settlementMap = Object.fromEntries(
+        settlements
+            .filter((settlement) => settlement.meter_worker_id)
+            .map((settlement) => [settlement.meter_worker_id as number, settlement])
+    )
+    const orderLabelMap = Object.fromEntries(
+        orders.map((order) => [
+            String(order.id),
+            order.quality_label ? `${order.party_name || 'Order'} · ${order.quality_label}` : order.party_name || 'Order',
+        ])
+    )
+    const workerIdsWithLogs = new Set(logs.map((log) => log.worker_id))
+
+    const result: MeterWorkerPayroll[] = []
+    for (const worker of workers) {
+        if (!worker.is_active && !workerIdsWithLogs.has(worker.id)) continue
+
+        const workerLogs = logs.filter((log) => log.worker_id === worker.id)
+        if (workerLogs.length === 0 && !settlementMap[worker.id]) continue
+
+        const machineGroups: Record<string, { meters: number; rate: number; name: string; orderLabel?: string }> = {}
+        for (const log of workerLogs) {
+            const machine = log.machine_id ? machineMap[String(log.machine_id)] : null
+            const rate = toPayrollNumber(log.worker_rate_snapshot)
+            const orderId = log.order_id || '__no_order__'
+            const key = `${orderId}-${log.machine_id}-${rate}`
+
+            if (!machineGroups[key]) {
+                machineGroups[key] = {
+                    meters: 0,
+                    rate,
+                    name: machine?.name || 'Unknown',
+                    orderLabel: log.order_id ? orderLabelMap[String(log.order_id)] : undefined,
+                }
+            }
+            machineGroups[key].meters += toPayrollNumber(log.meters)
+        }
+
+        const machineBreakdown = Object.values(machineGroups).map((group) => ({
+            machineName: group.name,
+            orderLabel: group.orderLabel,
+            meters: group.meters,
+            rate: group.rate,
+            pay: group.meters * group.rate,
+        }))
+        const totalMeters = machineBreakdown.reduce((sum, item) => sum + item.meters, 0)
+        const totalPay = machineBreakdown.reduce((sum, item) => sum + item.pay, 0)
+
+        result.push({
+            id: worker.id,
+            name: worker.name,
+            whatsapp_number: worker.whatsapp_number ?? null,
+            pf_esi_enrolled: worker.pf_esi_enrolled ?? undefined,
+            pf_esi_eligible: worker.pf_esi_eligible ?? undefined,
+            machines: machineBreakdown,
+            totalMeters,
+            totalPay,
+            totalAdvances: advanceMap[worker.id] || 0,
+            settlement: settlementMap[worker.id],
+        })
+    }
+
+    return result.sort((a, b) => b.totalPay - a.totalPay)
+}
+
+async function fetchFixedWorkerPayroll(
+    supabase: SupabaseBrowserClient,
+    orgId: string,
+    month: string,
+    cycleStartDay: number
+): Promise<FixedWorkerPayroll[]> {
+    const bounds = getPayrollCycleBounds(month, cycleStartDay)
+    const monthStart = bounds.cycle_start
+    const monthEnd = bounds.cycle_end
+
+    const workersRes = await supabase
+        .from('fixed_workers')
+        .select('*')
+        .eq('org_id', orgId)
+        .order('role')
+        .order('name')
+
+    if (workersRes.error) throw workersRes.error
+
+    const workers = (workersRes.data || []) as FixedWorkerDbRow[]
+    const dailyIds = workers.filter((worker) => worker.role === 'daily').map((worker) => worker.id)
+
+    const [attRes, settlementsRes, advancesRes] = await Promise.all([
+        dailyIds.length > 0
+            ? supabase.from('attendance')
+                .select('fixed_worker_id, present')
+                .eq('org_id', orgId)
+                .in('fixed_worker_id', dailyIds)
+                .gte('date', monthStart)
+                .lte('date', monthEnd)
+                .eq('present', true)
+            : Promise.resolve({ data: [], error: null }),
+        supabase.from('payroll_settlements')
+            .select('*')
+            .eq('org_id', orgId)
+            .eq('worker_type', 'fixed')
+            .eq('month', month),
+        supabase.from('worker_advances')
+            .select('fixed_worker_id, amount')
+            .eq('org_id', orgId)
+            .eq('status', 'pending')
+            .is('writeoff_at', null)
+            .not('fixed_worker_id', 'is', null),
+    ])
+
+    if (attRes.error) throw attRes.error
+    if (settlementsRes.error) throw settlementsRes.error
+    if (advancesRes.error) throw advancesRes.error
+
+    const attendanceMap: Record<number, number> = {}
+    ;((attRes.data || []) as AttendanceRow[]).forEach((attendance) => {
+        attendanceMap[attendance.fixed_worker_id] = (attendanceMap[attendance.fixed_worker_id] || 0) + 1
+    })
+
+    const settlementMap = Object.fromEntries(
+        ((settlementsRes.data || []) as PayrollSettlementRow[])
+            .filter((settlement) => settlement.fixed_worker_id)
+            .map((settlement) => [settlement.fixed_worker_id as number, settlement])
+    )
+
+    const advanceMap: Record<number, number> = {}
+    ;((advancesRes.data || []) as WorkerAdvanceRow[]).forEach((advance) => {
+        if (!advance.fixed_worker_id) return
+        advanceMap[advance.fixed_worker_id] = (advanceMap[advance.fixed_worker_id] || 0) + toPayrollNumber(advance.amount)
+    })
+
+    return workers
+        .filter((worker) => !worker.start_date || worker.start_date <= monthEnd)
+        .map((worker) => {
+            const monthlySalary = toPayrollNumber(worker.monthly_salary)
+            const daysWorked = worker.role === 'daily' ? (attendanceMap[worker.id] || 0) : undefined
+            const earnedPay = worker.role === 'daily'
+                ? Math.min(monthlySalary, (monthlySalary / 30) * (daysWorked ?? 0))
+                : monthlySalary
+
+            return {
+                id: worker.id,
+                name: worker.name,
+                whatsapp_number: worker.whatsapp_number ?? null,
+                pf_esi_enrolled: worker.pf_esi_enrolled ?? undefined,
+                pf_esi_eligible: worker.pf_esi_eligible ?? undefined,
+                role: worker.role,
+                monthly_salary: monthlySalary,
+                daysWorked,
+                earnedPay,
+                totalAdvances: advanceMap[worker.id] || 0,
+                settlement: settlementMap[worker.id],
+            } as FixedWorkerPayroll
+        })
 }
 
 function dateLabel(dateStr: string, options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }) {
@@ -341,17 +624,20 @@ function MeterWorkerRow({
     isMutating,
     selectedMonth,
     factoryName,
+    canSettle,
+    settleDisabledReason,
 }: {
     worker: MeterWorkerPayroll
     onToggle: (isFinal?: boolean) => void
     isMutating?: boolean
     selectedMonth: string
     factoryName: string
+    canSettle: boolean
+    settleDisabledReason?: string
 }) {
     const [expanded, setExpanded] = useState(false)
     const [isFinalSettlement, setIsFinalSettlement] = useState(false)
     const [waSending, setWaSending] = useState(false)
-    const { t } = useTranslation()
     const tl = useTransliterate()
     const isPaid = worker.settlement?.status === 'paid'
     const hasAdvances = worker.totalAdvances > 0
@@ -438,7 +724,8 @@ function MeterWorkerRow({
                                 : 'bg-saffron hover:bg-saffron-deep text-white shadow-sm hover:shadow-md active:scale-95'
                         )}
                         onClick={() => onToggle(false)}
-                        disabled={isMutating}
+                        disabled={isMutating || (!isPaid && !canSettle)}
+                        title={!isPaid && !canSettle ? settleDisabledReason : undefined}
                     >
                         {isMutating ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -668,12 +955,16 @@ function FixedWorkerRow({
     isMutating,
     selectedMonth,
     factoryName,
+    canSettle,
+    settleDisabledReason,
 }: {
     worker: FixedWorkerPayroll
     onToggle: (isFinal?: boolean) => void
     isMutating?: boolean
     selectedMonth: string
     factoryName: string
+    canSettle: boolean
+    settleDisabledReason?: string
 }) {
     const [expanded, setExpanded] = useState(false)
     const [isFinalSettlement, setIsFinalSettlement] = useState(false)
@@ -761,7 +1052,8 @@ function FixedWorkerRow({
                                 : 'bg-saffron hover:bg-saffron-deep text-white shadow-sm hover:shadow-md active:scale-95'
                         )}
                         onClick={() => onToggle(false)}
-                        disabled={isMutating}
+                        disabled={isMutating || (!isPaid && !canSettle)}
+                        title={!isPaid && !canSettle ? settleDisabledReason : undefined}
                     >
                         {isMutating ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -993,6 +1285,7 @@ function SettlementDialog({
     const [adjNote, setAdjNote] = useState('')
     const [paymentMode, setPaymentMode] = useState<PaymentMode | ''>('')
     const [showAdvanceConfirm, setShowAdvanceConfirm] = useState(false)
+    const adjustmentIdRef = useRef(0)
     const parsedManualDeduction = parseFloat(manualDeduction)
     const manualDeductionValue = manualDeduction.trim() === '' || !Number.isFinite(parsedManualDeduction) ? null : parsedManualDeduction
     const {
@@ -1025,9 +1318,12 @@ function SettlementDialog({
     })
 
     useEffect(() => {
-        if (!advanceEdited) {
-            setManualDeduction(formatRecoveryInput(autoDeduction))
-        }
+        if (advanceEdited) return undefined
+        let disposed = false
+        queueMicrotask(() => {
+            if (!disposed) setManualDeduction(formatRecoveryInput(autoDeduction))
+        })
+        return () => { disposed = true }
     }, [advanceEdited, autoDeduction])
 
     const handleAddAdjustment = () => {
@@ -1043,8 +1339,9 @@ function SettlementDialog({
             return
         }
 
+        adjustmentIdRef.current += 1
         const nextAdjustment: PendingPayrollManualAdjustment = {
-            id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
+            id: globalThis.crypto?.randomUUID?.() || `adjustment-${adjustmentIdRef.current}`,
             ...parsed.data,
         }
         const nextAdjustments = [...manualAdjustments, nextAdjustment]
@@ -1089,7 +1386,12 @@ function SettlementDialog({
             isFinal,
             manualDeduction: manualDeductionValue,
             paymentMode,
-            manualAdjustments: manualAdjustments.map(({ id, ...adjustment }) => adjustment),
+            manualAdjustments: manualAdjustments.map((adjustment) => ({
+                adjustment_type: adjustment.adjustment_type,
+                reason: adjustment.reason,
+                amount: adjustment.amount,
+                note: adjustment.note,
+            })),
             verifiedByOwner: confirmed,
         })
         setShowAdvanceConfirm(false)
@@ -1518,6 +1820,230 @@ function PayrollRulesDialog({
     )
 }
 
+type PayDateWorkerItem = {
+    key: string
+    workerType: 'meter' | 'fixed'
+    worker: MeterWorkerPayroll | FixedWorkerPayroll
+    name: string
+    detail: string
+    gross: number
+    netPayout: number
+    advanceDeducted: number
+    isPaid: boolean
+    settledAt?: string
+}
+
+function buildPayDateItems(
+    meterWorkers: MeterWorkerPayroll[] = [],
+    fixedWorkers: FixedWorkerPayroll[] = []
+): PayDateWorkerItem[] {
+    const meterItems = meterWorkers.map((worker) => {
+        const isPaid = worker.settlement?.status === 'paid'
+        const preview = getSettlementPreview({
+            gross: worker.totalPay,
+            totalAdvances: worker.totalAdvances,
+            isFinal: false,
+            enrolled: isPfEsiEnrolled(worker),
+        })
+
+        return {
+            key: `meter-${worker.id}`,
+            workerType: 'meter' as const,
+            worker,
+            name: worker.name,
+            detail: `${worker.totalMeters.toFixed(1)}m · ${worker.machines.length} ${worker.machines.length === 1 ? 'machine' : 'machines'}`,
+            gross: worker.totalPay,
+            netPayout: isPaid ? worker.settlement!.net_payout : preview.netPayout,
+            advanceDeducted: isPaid ? worker.settlement!.advance_deducted : preview.advanceDeducted,
+            isPaid,
+            settledAt: worker.settlement?.settled_at,
+        }
+    })
+
+    const fixedItems = fixedWorkers.map((worker) => {
+        const isPaid = worker.settlement?.status === 'paid'
+        const preview = getSettlementPreview({
+            gross: worker.earnedPay,
+            totalAdvances: worker.totalAdvances,
+            isFinal: false,
+            enrolled: isPfEsiEnrolled(worker),
+        })
+        const roleLabel = ROLE_LABELS[worker.role] || worker.role
+
+        return {
+            key: `fixed-${worker.id}`,
+            workerType: 'fixed' as const,
+            worker,
+            name: worker.name,
+            detail: worker.role === 'daily' ? `${roleLabel} · ${worker.daysWorked ?? 0} days` : roleLabel,
+            gross: worker.earnedPay,
+            netPayout: isPaid ? worker.settlement!.net_payout : preview.netPayout,
+            advanceDeducted: isPaid ? worker.settlement!.advance_deducted : preview.advanceDeducted,
+            isPaid,
+            settledAt: worker.settlement?.settled_at,
+        }
+    })
+
+    return [...meterItems, ...fixedItems].sort((a, b) => {
+        if (a.isPaid !== b.isPaid) return a.isPaid ? 1 : -1
+        return b.netPayout - a.netPayout
+    })
+}
+
+function PayDateOverview({
+    month,
+    status,
+    meterWorkers,
+    fixedWorkers,
+    isLoading,
+    isSelected,
+    canSettle,
+    onOpenMonth,
+    onMarkPaid,
+    isItemMutating,
+}: {
+    month: string
+    status: ReturnType<typeof getPayrollCycleStatus>
+    meterWorkers?: MeterWorkerPayroll[]
+    fixedWorkers?: FixedWorkerPayroll[]
+    isLoading: boolean
+    isSelected: boolean
+    canSettle: boolean
+    onOpenMonth: () => void
+    onMarkPaid: (item: PayDateWorkerItem) => void
+    isItemMutating: (item: PayDateWorkerItem) => boolean
+}) {
+    const tl = useTransliterate()
+    const items = useMemo(
+        () => buildPayDateItems(meterWorkers, fixedWorkers),
+        [fixedWorkers, meterWorkers]
+    )
+    const pendingItems = items.filter((item) => !item.isPaid)
+    const owedTotal = pendingItems.reduce((sum, item) => sum + item.netPayout, 0)
+    const paidCount = items.length - pendingItems.length
+    const payDateLabel = dateLabel(status.pay_date, { day: 'numeric', month: 'short', year: 'numeric' })
+    const cycleLabel = `${dateLabel(status.cycle_start)} to ${dateLabel(status.cycle_end)}`
+    const statusLabel = (() => {
+        if (status.status === 'overdue') return `Overdue since ${payDateLabel}`
+        if (status.status === 'due_today') return `Due today, ${payDateLabel}`
+        if (status.status === 'approaching') return `Due in ${status.days_until_pay_date} day${status.days_until_pay_date === 1 ? '' : 's'}`
+        return `Pay date ${payDateLabel}`
+    })()
+
+    return (
+        <div className="overflow-hidden rounded-xl border border-saffron-soft bg-white shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-saffron-soft/70 bg-saffron-soft/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-saffron-deep shadow-sm">
+                        <CalendarClock className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-black uppercase tracking-widest text-saffron-deep">Pay date hisaab</p>
+                            <Badge variant="outline" className="border-saffron-soft bg-white/70 text-[10px] font-black uppercase tracking-widest text-saffron-deep">
+                                {statusLabel}
+                            </Badge>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600">
+                            {monthLabel(month)} cycle · {cycleLabel}
+                        </p>
+                    </div>
+                </div>
+                {!isSelected && (
+                    <Button
+                        type="button"
+                        size="sm"
+                        className="h-9 bg-saffron text-xs font-bold text-white hover:bg-saffron-deep"
+                        onClick={onOpenMonth}
+                    >
+                        Open payroll
+                    </Button>
+                )}
+            </div>
+
+            <div className="grid grid-cols-3 divide-x divide-saffron-soft/60 border-b border-saffron-soft/60">
+                <div className="p-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Owed</p>
+                    <p className="mt-1 text-xl font-black text-gray-900">{formatINR(owedTotal)}</p>
+                </div>
+                <div className="p-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pending</p>
+                    <p className="mt-1 text-xl font-black text-amber-700">{pendingItems.length}</p>
+                </div>
+                <div className="p-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Paid</p>
+                    <p className="mt-1 text-xl font-black text-green-700">{paidCount}</p>
+                </div>
+            </div>
+
+            <div className="divide-y divide-gray-100">
+                {isLoading ? (
+                    [1, 2, 3].map((item) => (
+                        <div key={item} className="flex items-center justify-between gap-3 p-4">
+                            <div className="min-w-0 flex-1 space-y-2">
+                                <div className="h-4 w-32 animate-pulse rounded bg-gray-100" />
+                                <div className="h-3 w-44 animate-pulse rounded bg-gray-50" />
+                            </div>
+                            <div className="h-9 w-24 animate-pulse rounded bg-gray-100" />
+                        </div>
+                    ))
+                ) : pendingItems.length === 0 ? (
+                    <div className="flex items-center justify-between gap-3 p-4">
+                        <div className="flex items-center gap-3">
+                            <CheckCircle2 className="h-5 w-5 text-green-600" />
+                            <div>
+                                <p className="text-sm font-bold text-gray-900">All workers are marked paid</p>
+                                <p className="text-xs text-gray-500">This pay-date cycle is clear.</p>
+                            </div>
+                        </div>
+                        {!isSelected && (
+                            <Button type="button" variant="outline" size="sm" className="h-9 text-xs font-bold" onClick={onOpenMonth}>
+                                View details
+                            </Button>
+                        )}
+                    </div>
+                ) : (
+                    pendingItems.map((item) => {
+                        const mutating = isItemMutating(item)
+                        return (
+                            <div key={item.key} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <p className="truncate text-sm font-bold text-gray-900">{tl(item.name)}</p>
+                                        <Badge variant="outline" className="h-5 border-gray-200 bg-gray-50 px-1.5 text-[9px] font-black uppercase tracking-wider text-gray-600">
+                                            {item.workerType === 'meter' ? 'Meter' : 'Fixed'}
+                                        </Badge>
+                                    </div>
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        {item.detail} · Gross {formatINR(item.gross, { hideDecimals: true })}
+                                        {item.advanceDeducted > 0 && ` · advance ${formatINR(item.advanceDeducted, { hideDecimals: true })}`}
+                                    </p>
+                                </div>
+                                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                                    <div className="text-right">
+                                        <p className="text-base font-black text-gray-900">{formatINR(item.netPayout)}</p>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">net payout</p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        className="h-9 w-[100px] bg-saffron text-xs font-bold text-white hover:bg-saffron-deep disabled:bg-gray-200 disabled:text-gray-500"
+                                        disabled={!canSettle || mutating}
+                                        title={!canSettle ? 'Payroll opens near the configured pay date.' : undefined}
+                                        onClick={() => onMarkPaid(item)}
+                                    >
+                                        {mutating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Mark Paid'}
+                                    </Button>
+                                </div>
+                            </div>
+                        )
+                    })
+                )}
+            </div>
+        </div>
+    )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function PayrollPage() {
     const supabase = createClient()
@@ -1529,7 +2055,7 @@ export default function PayrollPage() {
     const hasInitialCycleParam = Boolean(cycleParam && /^\d{4}-(?:0[1-9]|1[0-2])$/.test(cycleParam))
     const initialCycleMonth = hasInitialCycleParam && cycleParam
         ? cycleParam
-        : new Date().toISOString().substring(0, 7)
+        : formatToSurat(new Date(), 'yyyy-MM')
     const [activeTab, setActiveTab] = useState<'meter' | 'fixed'>('meter')
     const [selectedMonth, setSelectedMonth] = useState(initialCycleMonth)
     const [hasManualCycleSelection, setHasManualCycleSelection] = useState(hasInitialCycleParam)
@@ -1542,6 +2068,7 @@ export default function PayrollPage() {
         workerId: number,
         currentPaid: boolean,
         isFinal: boolean
+        targetMonth: string
     } | null>(null)
 
     const { data: userProfile } = useUserProfile()
@@ -1559,27 +2086,31 @@ export default function PayrollPage() {
     const cycleStartDay = cycleConfig?.cycle_start_day || 1
     const payDateDay = cycleConfig?.pay_date_day || 10
     const payReminderDays = cycleConfig?.pay_reminder_days ?? 3
-    const latestOpenMonth = useMemo(
-        () => getLatestOpenPayrollMonth(todayStr, cycleStartDay, payDateDay, payReminderDays),
-        [cycleStartDay, payDateDay, payReminderDays, todayStr]
-    )
     const currentMonth = useMemo(
         () => getPayrollMonthForDate(todayStr, cycleStartDay),
         [cycleStartDay, todayStr]
     )
+    const payDateCycleMonth = useMemo(
+        () => prevMonth(currentMonth),
+        [currentMonth]
+    )
     const selectedCycleStatus = useMemo(
         () => getPayrollCycleStatus(selectedMonth, cycleStartDay, payDateDay, todayStr, payReminderDays),
         [cycleStartDay, payDateDay, payReminderDays, selectedMonth, todayStr]
+    )
+    const payDateCycleStatus = useMemo(
+        () => getPayrollCycleStatus(payDateCycleMonth, cycleStartDay, payDateDay, todayStr, payReminderDays),
+        [cycleStartDay, payDateCycleMonth, payDateDay, payReminderDays, todayStr]
     )
 
     useEffect(() => {
         if (!userProfile?.org_id || hasManualCycleSelection) return
         let disposed = false
         queueMicrotask(() => {
-            if (!disposed) setSelectedMonth(latestOpenMonth)
+            if (!disposed) setSelectedMonth(currentMonth)
         })
         return () => { disposed = true }
-    }, [hasManualCycleSelection, latestOpenMonth, userProfile?.org_id])
+    }, [currentMonth, hasManualCycleSelection, userProfile?.org_id])
 
     // Org name for payslip headers
     const { data: orgData } = useQuery({
@@ -1636,131 +2167,7 @@ export default function PayrollPage() {
         staleTime: 0,
         refetchOnMount: 'always',
         refetchOnWindowFocus: true,
-        queryFn: async () => {
-            const bounds = getPayrollCycleBounds(selectedMonth, cycleStartDay)
-            const monthStart = bounds.cycle_start
-            const monthEnd = bounds.cycle_end
-
-            const [logsRes, workersRes, machinesRes, settlementsRes, advancesRes, ordersRes] = await Promise.all([
-                // Fetch order_id too — needed for order attribution per wage line
-                supabase.from('production_logs')
-                    .select('worker_id, machine_id, meters, worker_rate_snapshot, order_id')
-                    .eq('org_id', userProfile!.org_id)
-                    .gt('meters', 0)
-                    .gte('date', monthStart)
-                    .lte('date', monthEnd),
-                // Fetch ALL workers (active + inactive) — inactive workers who worked this month must still appear
-                supabase.from('workers')
-                    .select('id, name, whatsapp_number, is_active, pf_esi_enrolled, pf_esi_eligible')
-                    .eq('org_id', userProfile!.org_id),
-                supabase.from('machines')
-                    .select('id, name')
-                    .eq('org_id', userProfile!.org_id),
-                supabase.from('payroll_settlements')
-                    .select('*')
-                    .eq('org_id', userProfile!.org_id)
-                    .eq('worker_type', 'meter')
-                    .eq('month', selectedMonth),
-                supabase.from('worker_advances')
-                    .select('meter_worker_id, amount')
-                    .eq('org_id', userProfile!.org_id)
-                    .eq('status', 'pending')
-                    .is('writeoff_at', null)
-                    .not('meter_worker_id', 'is', null),
-                // Fetch all orders (active + recently completed) for order label lookup
-                supabase.from('orders')
-                    .select('id, party_name, quality_label')
-                    .eq('org_id', userProfile!.org_id)
-                    .in('status', ['active', 'completed', 'cancelled'])
-            ])
-
-            if (logsRes.error) throw logsRes.error
-            if (workersRes.error) throw workersRes.error
-            if (machinesRes.error) throw machinesRes.error
-
-            const logs = logsRes.data
-            const workers = workersRes.data
-            const machines = machinesRes.data
-            const settlements = settlementsRes.data
-            const advances = advancesRes.data
-            const orders = ordersRes.data
-
-            // Build maps
-            const advanceMap: Record<number, number> = {}
-            ;(advances || []).forEach((a: any) => {
-                advanceMap[a.meter_worker_id] = (advanceMap[a.meter_worker_id] || 0) + parseFloat(a.amount)
-            })
-
-            const machineMap = Object.fromEntries((machines || []).map((m: any) => [m.id, m]))
-            const settlementMap = Object.fromEntries((settlements || []).map((s: any) => [s.meter_worker_id, s]))
-            // Order label: prefer quality_label, fall back to party_name alone
-            const orderLabelMap = Object.fromEntries(
-                (orders || []).map((o: any) => [
-                    o.id,
-                    o.quality_label ? `${o.party_name} · ${o.quality_label}` : o.party_name
-                ])
-            )
-
-            // Determine which worker IDs actually have logs this month (for inactive worker inclusion)
-            const workerIdsWithLogs = new Set((logs || []).map((l: any) => l.worker_id))
-
-            // Group logs by worker → order + machine + rate
-            const result: MeterWorkerPayroll[] = []
-            for (const worker of (workers || [])) {
-                // Include worker if active OR if they have logs this period (handles mid-cycle deactivation)
-                if (!worker.is_active && !workerIdsWithLogs.has(worker.id)) continue
-
-                const workerLogs = (logs || []).filter((l: any) => l.worker_id === worker.id)
-                if (workerLogs.length === 0 && !settlementMap[worker.id]) continue
-
-                // Group by order + machine + rate — separates wage lines per order
-                const machineGroups: Record<string, { meters: number; rate: number; name: string; orderLabel?: string }> = {}
-                for (const log of workerLogs) {
-                    const machine = machineMap[log.machine_id]
-                    const rate = log.worker_rate_snapshot || 0
-                    const orderId = log.order_id || '__no_order__'
-                    // Key on order + machine + rate so different orders on same machine split cleanly
-                    const key = `${orderId}-${log.machine_id}-${rate}`
-                    
-                    if (!machineGroups[key]) {
-                        machineGroups[key] = {
-                            meters: 0,
-                            rate,
-                            name: machine?.name || 'Unknown',
-                            orderLabel: log.order_id ? orderLabelMap[log.order_id] : undefined,
-                        }
-                    }
-                    machineGroups[key].meters += parseFloat(log.meters) || 0
-                }
-                
-                const machineBreakdown = Object.values(machineGroups).map(mg => ({
-                    machineName: mg.name,
-                    orderLabel: mg.orderLabel,
-                    meters: mg.meters,
-                    rate: mg.rate,
-                    pay: mg.meters * mg.rate,
-                }))
-
-                const totalMeters = machineBreakdown.reduce((s, m) => s + m.meters, 0)
-                const totalPay = machineBreakdown.reduce((s, m) => s + m.pay, 0)
-                const totalAdvances = advanceMap[worker.id] || 0
-
-                result.push({
-                    id: worker.id,
-                    name: worker.name,
-                    whatsapp_number: worker.whatsapp_number ?? null,
-                    pf_esi_enrolled: worker.pf_esi_enrolled,
-                    pf_esi_eligible: worker.pf_esi_eligible,
-                    machines: machineBreakdown,
-                    totalMeters,
-                    totalPay,
-                    totalAdvances,
-                    settlement: settlementMap[worker.id],
-                })
-            }
-
-            return result.sort((a, b) => b.totalPay - a.totalPay)
-        }
+        queryFn: () => fetchMeterWorkerPayroll(supabase, userProfile!.org_id, selectedMonth, cycleStartDay)
     })
 
     const { data: fixedWorkers, isLoading: fixedLoading } = useQuery({
@@ -1769,86 +2176,39 @@ export default function PayrollPage() {
         staleTime: 0,
         refetchOnMount: 'always',
         refetchOnWindowFocus: true,
-        queryFn: async () => {
-            const bounds = getPayrollCycleBounds(selectedMonth, cycleStartDay)
-            const monthStart = bounds.cycle_start
-            const monthEnd = bounds.cycle_end
-
-            const workersRes = await supabase
-                .from('fixed_workers')
-                .select('*')
-                .eq('org_id', userProfile!.org_id)
-                .order('role').order('name')
-            if (workersRes.error) throw workersRes.error
-            const workers = workersRes.data
-
-            const dailyIds = (workers || []).filter((w: any) => w.role === 'daily').map((w: any) => w.id)
-
-            const [attRes, settlementsRes, advancesRes] = await Promise.all([
-                dailyIds.length > 0
-                    ? supabase.from('attendance')
-                        .select('fixed_worker_id, present')
-                        .eq('org_id', userProfile!.org_id)
-                        .in('fixed_worker_id', dailyIds)
-                        .gte('date', monthStart)
-                        .lte('date', monthEnd)
-                        .eq('present', true)
-                    : Promise.resolve({ data: [] }),
-                supabase.from('payroll_settlements')
-                    .select('*')
-                    .eq('org_id', userProfile!.org_id)
-                    .eq('worker_type', 'fixed')
-                    .eq('month', selectedMonth),
-                supabase.from('worker_advances')
-                    .select('fixed_worker_id, amount')
-                    .eq('org_id', userProfile!.org_id)
-                    .eq('status', 'pending')
-                    .is('writeoff_at', null)
-                    .not('fixed_worker_id', 'is', null)
-            ])
-
-            const att = attRes.data
-            const settlements = settlementsRes.data
-            const advances = advancesRes.data
-
-            const attendanceMap: Record<number, number> = {}
-            ;(att || []).forEach((a: any) => {
-                attendanceMap[a.fixed_worker_id] = (attendanceMap[a.fixed_worker_id] || 0) + 1
-            })
-
-            const settlementMap = Object.fromEntries((settlements || []).map((s: any) => [s.fixed_worker_id, s]))
-
-            const advanceMap: Record<number, number> = {}
-            ;(advances || []).forEach((a: any) => {
-                advanceMap[a.fixed_worker_id] = (advanceMap[a.fixed_worker_id] || 0) + parseFloat(a.amount)
-            })
-
-            return (workers || [])
-                // Only show workers who had joined on or before the last day of the selected month.
-                // This prevents a supervisor added in March 2026 from appearing in December 2025 payroll.
-                .filter((w: any) => !w.start_date || w.start_date <= monthEnd)
-                .map((w: any) => {
-                const daysWorked = w.role === 'daily' ? (attendanceMap[w.id] || 0) : undefined
-                const earnedPay = w.role === 'daily'
-                    ? Math.min(w.monthly_salary, (w.monthly_salary / 30) * (daysWorked ?? 0))
-                    : w.monthly_salary
-                const totalAdvances = advanceMap[w.id] || 0
-                return {
-                    id: w.id,
-                    name: w.name,
-                    whatsapp_number: w.whatsapp_number ?? null,
-                    pf_esi_enrolled: w.pf_esi_enrolled,
-                    pf_esi_eligible: w.pf_esi_eligible,
-                    role: w.role,
-                    monthly_salary: w.monthly_salary,
-                    daysWorked,
-                    earnedPay,
-                    totalAdvances,
-                    settlement: settlementMap[w.id],
-                } as FixedWorkerPayroll
-            })
-        }
+        queryFn: () => fetchFixedWorkerPayroll(supabase, userProfile!.org_id, selectedMonth, cycleStartDay)
     })
+
+    const isPayDateCycleSelected = selectedMonth === payDateCycleMonth
+    const shouldLoadPayDateCycle =
+        !!userProfile?.org_id &&
+        !!payDateCycleMonth &&
+        !isPayDateCycleSelected &&
+        payDateCycleStatus.status !== 'not_started'
+
+    const { data: payDateMeterWorkers, isLoading: payDateMeterLoading } = useQuery({
+        queryKey: payrollMeterQueryKey(userProfile?.org_id, payDateCycleMonth, cycleStartDay),
+        enabled: shouldLoadPayDateCycle,
+        staleTime: 0,
+        refetchOnMount: 'always',
+        refetchOnWindowFocus: true,
+        queryFn: () => fetchMeterWorkerPayroll(supabase, userProfile!.org_id, payDateCycleMonth, cycleStartDay),
+    })
+
+    const { data: payDateFixedWorkers, isLoading: payDateFixedLoading } = useQuery({
+        queryKey: payrollFixedQueryKey(userProfile?.org_id, payDateCycleMonth, cycleStartDay),
+        enabled: shouldLoadPayDateCycle,
+        staleTime: 0,
+        refetchOnMount: 'always',
+        refetchOnWindowFocus: true,
+        queryFn: () => fetchFixedWorkerPayroll(supabase, userProfile!.org_id, payDateCycleMonth, cycleStartDay),
+    })
+
+    const payDateMeterSource = isPayDateCycleSelected ? meterWorkers : payDateMeterWorkers
+    const payDateFixedSource = isPayDateCycleSelected ? fixedWorkers : payDateFixedWorkers
+    const isPayDateLoading = isPayDateCycleSelected
+        ? meterLoading || fixedLoading
+        : payDateMeterLoading || payDateFixedLoading
 
     const configMutation = useMutation({
         mutationFn: async (input: { cycleStartDay: number; payDateDay: number; payReminderDays: number }) => {
@@ -1908,13 +2268,13 @@ export default function PayrollPage() {
                 : payrollFixedQueryKey(orgId, targetMonth, cycleStartDay)
 
             await queryClient.cancelQueries({ queryKey })
-            const previousData = queryClient.getQueryData(queryKey)
+            const previousData = queryClient.getQueryData<PayrollWorker[]>(queryKey)
 
-            queryClient.setQueryData(queryKey, (old: any) => {
+            queryClient.setQueryData<PayrollWorker[]>(queryKey, (old) => {
                 if (!old) return old
-                return old.map((w: any) => {
+                return old.map((w) => {
                     if (w.id === variables.workerId) {
-                        const gross = w.totalPay || w.earnedPay || 0
+                        const gross = 'totalPay' in w ? w.totalPay : w.earnedPay
                         const enrolled = isPfEsiEnrolled(w)
                         const manualAdjustments = variables.manualAdjustments ?? []
                         const preview = getSettlementPreview({
@@ -1963,7 +2323,7 @@ export default function PayrollPage() {
                                     payment_mode: variables.paymentMode ?? null,
                                     verifiedByOwner: variables.verifiedByOwner ?? false,
                                 },
-                            } : null
+                            } : undefined
                         }
                     }
                     return w
@@ -2010,19 +2370,30 @@ export default function PayrollPage() {
     })
 
     const [showSettlementDialog, setShowSettlementDialog] = useState(false)
-    const [pendingSettleWorker, setPendingSettleWorker] = useState<any>(null)
+    const [pendingSettleWorker, setPendingSettleWorker] = useState<SettlementDialogWorker | null>(null)
     const [handledExitLaunch, setHandledExitLaunch] = useState(false)
 
-    const handleTogglePaid = (workerType: 'meter' | 'fixed', workerId: number, currentPaid: boolean, isFinal: boolean = false) => {
-        // Find worker data to pre-fill dialog
-        const source = workerType === 'meter' ? meterWorkers : fixedWorkers
-        const worker = (source || []).find((w: any) => w.id === workerId)
+    const handleTogglePaid = (
+        workerType: 'meter' | 'fixed',
+        workerId: number,
+        currentPaid: boolean,
+        isFinal: boolean = false,
+        targetMonth: string = selectedMonth,
+        workerOverride?: MeterWorkerPayroll | FixedWorkerPayroll
+    ) => {
+        const source = (workerType === 'meter' ? meterWorkers : fixedWorkers) as PayrollWorker[] | undefined
+        const worker = workerOverride || (source || []).find((w) => w.id === workerId)
+
+        if (!worker) {
+            toast.error('Worker payroll row is still loading.')
+            return
+        }
 
         if (currentPaid) {
-            setPendingAction({ workerType, workerId, currentPaid, isFinal })
+            setPendingAction({ workerType, workerId, currentPaid, isFinal, targetMonth })
             setShowAccessCodeDialog(true)
         } else {
-            setPendingSettleWorker({ ...worker, type: workerType })
+            setPendingSettleWorker({ ...worker, type: workerType, targetMonth })
             setShowSettlementDialog(true)
         }
     }
@@ -2039,7 +2410,7 @@ export default function PayrollPage() {
             workerType: pendingAction.workerType, 
             workerId: pendingAction.workerId, 
             currentPaid: pendingAction.currentPaid, 
-            targetMonth: selectedMonth, 
+            targetMonth: pendingAction.targetMonth, 
             isFinal: false,
             accessCode: accessCode
         })
@@ -2102,6 +2473,13 @@ export default function PayrollPage() {
             return undefined
         }
 
+        if (exitWorkerType !== 'meter' && exitWorkerType !== 'fixed') {
+            queueMicrotask(() => {
+                if (!disposed) setHandledExitLaunch(true)
+            })
+            return () => { disposed = true }
+        }
+
         const parsedWorkerId = Number(exitWorkerId)
         if (!Number.isFinite(parsedWorkerId)) {
             queueMicrotask(() => {
@@ -2151,9 +2529,10 @@ export default function PayrollPage() {
         amber: 'text-amber-600',
         slate: 'text-slate-500',
     }[payWindowCopy.tone]
-
-    // Keep this check for compatibility with unit tests:
-    const _unused = selectedCycleStatus.is_payroll_window_open;
+    const settleDisabledReason = selectedCycleStatus.is_payroll_window_open
+        ? undefined
+        : `${payWindowCopy.title}. Normal settlement opens near the configured pay date.`
+    const shouldShowPayDateOverview = payDateCycleStatus.status !== 'not_started'
 
     return (
         <div className="p-4 md:p-6 space-y-6 pb-8">
@@ -2213,6 +2592,38 @@ export default function PayrollPage() {
                     </Button>
                 </div>
             </div>
+
+            {shouldShowPayDateOverview && (
+                <PayDateOverview
+                    month={payDateCycleMonth}
+                    status={payDateCycleStatus}
+                    meterWorkers={payDateMeterSource}
+                    fixedWorkers={payDateFixedSource}
+                    isLoading={isPayDateLoading}
+                    isSelected={isPayDateCycleSelected}
+                    canSettle={payDateCycleStatus.is_payroll_window_open}
+                    onOpenMonth={() => {
+                        setHasManualCycleSelection(true)
+                        setSelectedMonth(payDateCycleMonth)
+                    }}
+                    onMarkPaid={(item) => {
+                        handleTogglePaid(
+                            item.workerType,
+                            item.worker.id,
+                            item.isPaid,
+                            false,
+                            payDateCycleMonth,
+                            item.worker
+                        )
+                    }}
+                    isItemMutating={(item) =>
+                        mutation.isPending &&
+                        mutation.variables?.workerType === item.workerType &&
+                        mutation.variables?.workerId === item.worker.id &&
+                        mutation.variables?.targetMonth === payDateCycleMonth
+                    }
+                />
+            )}
 
             {selectedCycleStatus.status === 'not_started' && (
                 <Card>
@@ -2382,6 +2793,8 @@ export default function PayrollPage() {
                                     isMutating={mutation.isPending && mutation.variables?.workerId === w.id && mutation.variables?.workerType === 'meter'}
                                     selectedMonth={selectedMonth}
                                     factoryName={orgName}
+                                    canSettle={selectedCycleStatus.is_payroll_window_open}
+                                    settleDisabledReason={settleDisabledReason}
                                 />
                             ))}
                         </>
@@ -2440,6 +2853,8 @@ export default function PayrollPage() {
                                     isMutating={mutation.isPending && mutation.variables?.workerId === w.id && mutation.variables?.workerType === 'fixed'}
                                     selectedMonth={selectedMonth}
                                     factoryName={orgName}
+                                    canSettle={selectedCycleStatus.is_payroll_window_open}
+                                    settleDisabledReason={settleDisabledReason}
                                 />
                             ))}
                         </>
@@ -2508,7 +2923,7 @@ export default function PayrollPage() {
                     open={showSettlementDialog}
                     onOpenChange={setShowSettlementDialog}
                     worker={pendingSettleWorker}
-                    selectedMonth={selectedMonth}
+                    selectedMonth={pendingSettleWorker.targetMonth ?? selectedMonth}
                     initialIsFinal={!!pendingSettleWorker.initialIsFinal}
                     isMutating={mutation.isPending}
                     onSettle={({ isFinal, manualDeduction, paymentMode, manualAdjustments, verifiedByOwner }) => {
@@ -2516,7 +2931,7 @@ export default function PayrollPage() {
                             workerType: pendingSettleWorker.type, 
                             workerId: pendingSettleWorker.id, 
                             currentPaid: false, 
-                            targetMonth: selectedMonth, 
+                            targetMonth: pendingSettleWorker.targetMonth ?? selectedMonth, 
                             isFinal,
                             manualDeductionOverride: manualDeduction,
                             paymentMode,

@@ -17,7 +17,7 @@ The active stock board helps owners track what should be available in godown acc
 ## User Workflow
 
 1. Owner opens `/owner/stock`.
-2. Owner sees expected available takas/meters, ledger value at cost, and movement history.
+2. Owner sees expected available meters, ledger value at cost, and movement history.
 3. Market-run production contributes to expected stock automatically from production records.
 4. Owner sells stock to a named party, creating a stock sale and Commercials receivable.
 5. Owner dispatches pending sold meters later, either fully or partially.
@@ -29,7 +29,7 @@ The active stock board helps owners track what should be available in godown acc
 
 Old workflow:
 
-- Godown takas are counted on paper or from memory, usually when dispatch-ready rather than every shift.
+- Godown stock is counted on paper or from memory, usually when dispatch-ready rather than every shift.
 - Owner may know the selling rate but not the exact production cost basis.
 - Stock produced for market is hard to connect to original costing.
 
@@ -43,7 +43,7 @@ Weavly workflow:
 ## Pain Points Solved
 
 - Unclear godown quantity.
-- Lost taka-level stock memory.
+- Lost stock-level memory.
 - Profit uncertainty on stock sales.
 - Manual reconciliation between production and sale.
 - Avoids forcing a daily physical Stock Inward role in market-run factories.

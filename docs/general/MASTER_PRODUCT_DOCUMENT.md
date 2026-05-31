@@ -8,7 +8,7 @@ For launch prioritization, `docs/general/PHASE_1_SCOPE.md` remains the most auth
 
 ## 1. Executive Summary
 
-Weavly is a multi-tenant textile operations SaaS for Indian weaving factories. It is not a generic ERP. The product is shaped around weaving-factory realities: yarn and loom math, piece-rate workers, day/night shift logging, shift-metre capture, speculative market production, takas in godown, worker advances, payroll settlement, party-first stock sale, dispatch shortages, and WhatsApp-based communication.
+Weavly is a multi-tenant textile operations SaaS for Indian weaving factories. It is not a generic ERP. The product is shaped around weaving-factory realities: yarn and loom math, piece-rate workers, day/night shift logging, shift-metre capture, speculative market production, stock in godown, worker advances, payroll settlement, party-first stock sale, dispatch shortages, and WhatsApp-based communication.
 
 Phase 1 is a focused operating loop for Surat grey fabric manufacturers/traders. The active Phase 1 surface includes the supporting features needed to make that loop useful in a real factory:
 
@@ -17,7 +17,7 @@ Phase 1 is a focused operating loop for Surat grey fabric manufacturers/traders.
 - quotes and orders
 - Start Party Order fast path
 - market runs
-- expected taka/godown ledger for market-run stock
+- expected godown ledger for market-run stock
 - party-first stock sale and pending/partial dispatch workflow
 - dispatches, public tracking where order-linked, and owner receipt confirmation
 - Commercials receivables and payment tracking
@@ -177,7 +177,7 @@ For market-run factories, production creates expected stock context in the godow
 
 Stock Inward is not a mandatory Phase 1 workflow for market-run mode. It may remain available for legacy/direct-access or order-based support, but the core market-run journey is production ledger -> dispatch check -> discrepancy review. The older `/owner/inventory` deep yarn/beam module is archived.
 
-Dispatches turn sold stock into tracked shipment batches with transport/GST/e-way metadata, package rows, sent meters, received meters, shortage/extra variance, owner receipt confirmation, and public token tracking where the dispatch is order-linked. Market-run stock can now be sold and dispatched without creating a fake party order.
+Dispatches turn sold stock into tracked shipment batches with transport/GST/e-way metadata, package rows, sent meters, received meters, shortage/extra variance, and public token tracking where the dispatch is order-linked. Market-run stock can now be sold and dispatched without creating a fake party order. The owner confirms dispatch for all or part of the pending quantity using a modernized CreateDispatchModal, and confirms receipt directly on `/owner/dispatches` (which records shortages/excesses and defers credit due dates relative to the receipt date). The system uses meters-only throughout.
 
 ### 4.8 Commercial View
 
@@ -190,9 +190,11 @@ Dispatches turn sold stock into tracked shipment batches with transport/GST/e-wa
 
 Commercials also tracks receivables, payment receipts, collected amount, balance, and dispatch status context for stock-sale receivables. This is a Phase 1 profit and collection lens, not a full accounting ledger.
 
-### 4.9 Payroll and Advances
+### 4.9 Payroll and Settlements
 
-Payroll aggregates meter-worker production logs and fixed-worker attendance/salary data. It uses `payroll_configs` to derive cycle bounds, pay date, reminder window, and pay-window status. It previews gross, advance deduction, statutory deductions, manual adjustments, net payout, remaining debt, compliance flags, and final-settlement behavior. The owner records settlement with payment mode and verification, then can send or generate payslips.
+Payroll aggregates meter-worker production logs and fixed-worker attendance/salary data. It uses `payroll_configs` to derive cycle bounds, pay date, reminder window, and pay-window status. It previews gross, advance deduction, statutory deductions, manual adjustments, net payout, remaining debt, compliance flags, and final-settlement behavior. 
+
+The dashboard enables navigation up to the current in-progress month for live wage tracking, and highlights the active cycle with a dedicated `PayDateOverview` component. Normal settlement is gated and disabled if the payroll window is not open, displaying a validation reason near the configured pay date. The owner records settlement with payment mode and verification, then can send or generate payslips.
 
 Advances tracks pending and deducted Upaad for both meter and fixed workers, estimates debt burden against typical pay, and feeds payroll recovery.
 

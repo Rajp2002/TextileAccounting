@@ -16,10 +16,10 @@ Dispatches record fabric handoff from factory to party and are the point where s
 2. Owner uses Sell Stock to choose source stock, enter party details, sold meters, sale rate, credit days, sale date, and notes.
 3. System creates a stock sale, stock movement, and named Commercials receivable.
 4. The sale appears as pending dispatch until all sold meters are dispatched.
-5. Owner confirms dispatch for all or part of the pending quantity, with dispatch date, meters/takas, challan, vehicle, transporter, and notes.
+5. Owner confirms dispatch for all or part of the pending quantity using a modernized CreateDispatchModal, which supports partial quantities, dispatch date, challan, vehicle, transporter, and notes.
 6. Order-linked dispatches can share a public tracking link from the order token.
-7. Party or owner records received meters.
-8. System marks batches delivered and records shortage/excess discrepancies when receipt quantity differs from sent quantity.
+7. Owner confirms direct receipt of dispatched batches, entering actual received meters.
+8. System marks batches delivered, defers the credit due date relative to the receipt confirmation date, and records shortage/excess discrepancies when receipt quantity differs from sent quantity.
 9. Partially dispatched sales remain available for later batches.
 
 ## Existing Workflow Translation
@@ -73,4 +73,5 @@ Weavly workflow:
 ## Readiness Notes
 
 - Keep dispatch useful without requiring the full ledger.
-- Party-first sale, pending/partial dispatch, receipt confirmation, and shortage/excess behavior need manual and automated testing.
+- Party-first sale, pending/partial dispatch, direct receipt confirmation, and shortage/excess behavior need manual and automated testing.
+- The system is meters-only throughout (takas display has been completely removed to avoid confusion).

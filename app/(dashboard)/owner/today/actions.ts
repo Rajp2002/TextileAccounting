@@ -2,7 +2,7 @@
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
-import { getLatestOpenPayrollMonth, getPayrollCycleDetails, getPayrollCycleStatus } from '@/lib/payroll-cycle'
+import { getPayrollCycleDetails, getPayrollCycleStatus, getPayrollMonthForDate, getPreviousPayrollMonth } from '@/lib/payroll-cycle'
 import { normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { formatToSurat, getSuratTodayString } from '@/lib/time'
 
@@ -461,7 +461,8 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
     const cycleStartDay = payrollConfigRes.data?.cycle_start_day ?? 1
     const payDateDay = payrollConfigRes.data?.pay_date_day ?? 10
     const payReminderDays = payrollConfigRes.data?.pay_reminder_days ?? 3
-    const payrollCycleMonth = getLatestOpenPayrollMonth(today, cycleStartDay, payDateDay, payReminderDays)
+    const currentPayrollMonth = getPayrollMonthForDate(today, cycleStartDay)
+    const payrollCycleMonth = getPreviousPayrollMonth(currentPayrollMonth)
     const bounds = getPayrollCycleDetails(payrollCycleMonth, cycleStartDay, payDateDay)
     const payrollStatus = getPayrollCycleStatus(payrollCycleMonth, cycleStartDay, payDateDay, today, payReminderDays)
 
@@ -497,7 +498,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         unsettledWorkerCount: uniqueWorkerIds.size,
         grossWagesSoFar: 0, // summary-only; full calc lives in payroll page
         pendingAdvanceTotal,
-        upcomingSettlementDate: bounds.next_cycle_start,
+        upcomingSettlementDate: null,
     }
 
     // ── 7. Action Counts ───────────────────────────────────────────────────────

@@ -13,16 +13,17 @@ Payroll converts production logs, worker rates, fixed-worker setup, attendance, 
 ## User Workflow
 
 1. Owner opens `/owner/payroll`.
-2. Owner selects a payroll cycle month (can navigate up to the current in-progress month).
+2. Owner selects a payroll cycle month (can navigate up to the current in-progress month and view live/current month payroll details).
 3. Owner sees cycle status: in progress, scheduled, approaching, due today, or overdue.
-4. Owner reviews meter workers and fixed workers (visible at any time once the cycle has started to track live payroll/wage updates).
-5. Meter workers show meters, machine/order rows, rate, gross pay, advances, deductions, manual adjustments, and net pay.
-6. Fixed workers show role, salary/daily earnings, attendance where applicable, advances, deductions, manual adjustments, and net pay.
-7. Owner expands a worker row to inspect itemization.
-8. Owner toggles final settlement if the worker is exiting.
-9. Owner selects payment mode and verifies the payout.
-10. Owner settles or un-settles where allowed.
-11. Owner generates a payslip PDF or sends the WhatsApp payslip.
+4. Owner sees the Pay Date Overview panel showing status, bounds, and quick actions for the current/previous payroll cycle.
+5. Owner reviews meter workers and fixed workers (visible at any time once the cycle has started to track live payroll/wage updates).
+6. Meter workers show meters, machine/order rows, rate, gross pay, advances, deductions, manual adjustments, and net pay.
+7. Fixed workers show role, salary/daily earnings, attendance where applicable, advances, deductions, manual adjustments, and net pay.
+8. Owner expands a worker row to inspect itemization.
+9. Owner toggles final settlement if the worker is exiting.
+10. Owner selects payment mode and verifies the payout.
+11. Owner settles or un-settles (normal settlement is gated and only enabled when the pay window is open near the configured pay date; final settlement is always allowed).
+12. Owner generates a payslip PDF or sends the WhatsApp payslip.
 
 ## Existing Workflow Translation
 
@@ -56,8 +57,9 @@ Weavly workflow:
 - Advance deduction caps apply, with final settlement behavior where enabled.
 - PF/ESI deductions are computed for enrolled workers.
 - Payment mode supports cash, bank transfer, UPI, and cheque.
-- `payroll_configs.pay_date_day` chooses the first configured pay date after cycle close.
-- `payroll_configs.pay_reminder_days` opens normal settlement shortly before the pay date.
+- Configurable cycle start day, pay date, and reminder window via `payroll_configs`.
+- Normal settlement is gated and disabled if the payroll window is not open, displaying a clear validation reason (e.g., normal settlement opens near the configured pay date).
+- The dashboard highlights the active pay date cycle with a dedicated `PayDateOverview` component, supporting direct toggle payment state and settlement actions.
 - Owner verification is required before confirming payroll.
 - WhatsApp payslip sends a summary template plus itemized follow-up.
 

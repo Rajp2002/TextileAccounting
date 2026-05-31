@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
     getCycleBoundsForDate,
     getLatestOpenPayrollMonth,
+    getPreviousPayrollMonth,
     getPayrollCycleBounds,
     getPayrollCycleDetails,
     getPayrollCycleStatus,
@@ -75,9 +76,14 @@ describe('Payroll Cycle Helpers', () => {
             expect(getPayrollCycleStatus('2026-01', 1, 10, '2026-02-12', 3).status).toBe('overdue')
         })
 
-        it('should choose the latest open cycle for the payroll page default', () => {
+        it('should choose the latest open cycle when looking for a payable cycle', () => {
             expect(getLatestOpenPayrollMonth('2026-05-31', 1, 10, 3)).toBe('2026-04')
             expect(getLatestOpenPayrollMonth('2026-06-07', 1, 10, 3)).toBe('2026-05')
+        })
+
+        it('should derive the previous payroll month for the pay-date panel', () => {
+            expect(getPreviousPayrollMonth('2026-06')).toBe('2026-05')
+            expect(getPreviousPayrollMonth('2026-01')).toBe('2025-12')
         })
 
         it('should reject invalid pay date and reminder settings', () => {

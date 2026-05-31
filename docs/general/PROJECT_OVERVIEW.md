@@ -107,7 +107,7 @@ Pain point translated: the owner can answer "what should be in godown, what was 
 
 ### Dispatches
 
-Dispatches turn sold stock into professional handoff. The current visible flow is party-first: the owner sells stock to a named party, which creates a stock sale and receivable, then dispatches pending meters later from `/owner/dispatches`. Dispatch supports configurable batch meters/takas/date, order-linked dispatches, GST/e-way metadata, package lines, receipt confirmation, shortage/extra received variance, owner-confirmed receipt, and public order tracking links.
+Dispatches turn sold stock into professional handoff. The current visible flow is party-first: the owner sells stock to a named party, which creates a stock sale and receivable, then dispatches pending meters later from `/owner/dispatches`. Dispatch supports configurable batch meters and date, order-linked dispatches, GST/e-way metadata, package lines, direct receipt confirmation, shortage/extra received variance, owner-confirmed receipt, and public order tracking links (the system is meters-only throughout).
 
 Pain point translated: informal transport handoff becomes a traceable dispatch with client-facing status and shortage reconciliation.
 

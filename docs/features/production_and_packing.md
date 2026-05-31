@@ -23,7 +23,7 @@ Production logging records how many metres were woven by machine, worker, order/
 Old workflow:
 
 - Supervisor writes meters in a production register.
-- Physical rolls or takas are counted separately.
+- Physical rolls are counted separately.
 - The owner later reconciles produced meters against godown stock.
 
 Weavly workflow:
@@ -35,7 +35,7 @@ Weavly workflow:
 ## Pain Points Solved
 
 - Produced meters not matching actual dispatch stock.
-- Lost roll/taka counts.
+- Lost roll counts.
 - Delayed dispatch readiness.
 - Payroll disconnected from actual production.
 
@@ -44,7 +44,7 @@ Weavly workflow:
 - `production_logs`: the payroll and progress source of truth.
 - `fabric_packages`: package-style stock for rolls/bales/bulk output.
 - `fabric_stock_inward_drafts`: optional/order-based suggested stock inward records.
-- `fabric_stock_lots`: taka/godown inventory with cost per meter.
+- `fabric_stock_lots`: godown inventory with cost per meter.
 - `fabric_stock_movements`: inward, sale, and adjustment history.
 - `fabric_stock_sales`: named sale records with pending dispatch state.
 - `stock_discrepancies`: shortage/excess records created during dispatch reconciliation.

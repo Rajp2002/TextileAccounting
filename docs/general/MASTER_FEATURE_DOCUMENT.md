@@ -189,13 +189,13 @@ The supervisor's primary shift workspace for assignments, machine status, downti
 
 ### What It Is
 
-The bridge between logged meters and physical goods. The codebase has both package-style stock (`fabric_packages`) and the newer Phase 1 taka/godown stock board (`fabric_stock_lots` and related tables).
+The bridge between logged meters and physical goods. The codebase has both package-style stock (`fabric_packages`) and the newer Phase 1 godown stock board (`fabric_stock_lots` and related tables).
 
 ### User Workflow
 
 1. Production logs establish that meters were woven.
 2. Market-run output becomes expected godown stock from production records.
-3. Optional/order-based inward draft suggestions can still become taka lots.
+3. Optional/order-based inward draft suggestions can still become stock lots.
 4. Owner records godown, unit count, meters per unit, cost per meter, and source.
 5. Owner sells stock to a named party, creating a stock sale and Commercials receivable.
 6. Owner dispatches pending sold meters later and reviews shortage/excess discrepancies from receipt confirmation.
@@ -208,7 +208,7 @@ The bridge between logged meters and physical goods. The codebase has both packa
 
 ### Digital Translation
 
-- Taka lists become stock lots.
+- Stock lists become stock lots.
 - Physical corrections become stock movements.
 - Godown sale notes become named stock sale records and receivables (profit and payment state live in Commercials).
 
@@ -234,9 +234,9 @@ The professional handoff layer for sold stock and order output. Dispatches group
 2. Owner uses Sell Stock to select source stock, enter party details, sold meters, rate, credit days, and notes.
 3. System creates a stock sale, stock movement, and named Commercials receivable.
 4. Pending dispatch meters appear in the Pending Dispatches tab.
-5. Owner confirms dispatch for all or part of the pending quantity with dispatch date, meters/takas, challan, vehicle, and transporter details.
-6. Party or owner records received meters.
-7. Shortage or extra received meters are visible for reconciliation.
+5. Owner confirms dispatch for all or part of the pending quantity (using a modernized CreateDispatchModal) with dispatch date, challan, vehicle, and transporter details.
+6. Owner confirms direct receipt of dispatched batches, recording actual received meters.
+7. Shortage or extra received meters are calculated and logged as stock discrepancies, and credit due dates are deferred relative to receipt.
 
 ### Pain Points Solved
 
@@ -303,12 +303,12 @@ The worker money layer. It converts production logs and attendance into pay, app
 ### User Workflow
 
 1. Owner opens `/owner/payroll`.
-2. Owner chooses a payroll cycle month.
-3. Owner reviews whether the cycle is in progress, scheduled, approaching, due today, or overdue.
+2. Owner selects a payroll cycle month (can navigate up to the current in-progress month and view live/current month payroll details).
+3. Owner reviews whether the cycle is in progress, scheduled, approaching, due today, or overdue, and views the Pay Date Overview panel showing status and quick actions.
 4. Owner reviews meter workers and fixed workers.
 5. Owner expands worker details for machine/order breakdown, gross pay, advances, deductions, manual adjustments, and net.
 6. Owner toggles final settlement where applicable.
-7. Owner records payment mode and settles after owner verification.
+7. Owner records payment mode and settles after owner verification (normal settlement is gated and only enabled when the pay window is open near the configured pay date; final settlement is always allowed).
 8. Owner generates PDF or sends WhatsApp payslip.
 
 ### Pain Points Solved
