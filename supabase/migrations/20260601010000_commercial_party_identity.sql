@@ -36,7 +36,7 @@ WITH unique_name_parties AS (
   SELECT
     p.org_id,
     LOWER(BTRIM(p.name)) AS normalized_name,
-    MIN(p.id) AS party_id
+    (ARRAY_AGG(p.id ORDER BY p.id::TEXT))[1] AS party_id
   FROM parties p
   WHERE p.is_active = true
   GROUP BY p.org_id, LOWER(BTRIM(p.name))
@@ -63,7 +63,7 @@ WITH unique_name_parties AS (
   SELECT
     p.org_id,
     LOWER(BTRIM(p.name)) AS normalized_name,
-    MIN(p.id) AS party_id
+    (ARRAY_AGG(p.id ORDER BY p.id::TEXT))[1] AS party_id
   FROM parties p
   WHERE p.is_active = true
   GROUP BY p.org_id, LOWER(BTRIM(p.name))

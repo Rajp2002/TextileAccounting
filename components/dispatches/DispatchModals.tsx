@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { QRCodeSVG } from 'qrcode.react'
+import { getCurrentIsoString } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import { createDispatch, type DispatchRow, type AvailableFabricPackage } from '@/app/(dashboard)/owner/orders/actions'
 
@@ -136,7 +137,7 @@ export function CreateDispatchModal({
                 transporter_name: transporterName,
                 transporter_id: transporterId,
                 approximate_distance_km: parsedDistance,
-                eway_bill_generated_at: ewayNumber.trim() ? new Date().toISOString() : '',
+                eway_bill_generated_at: ewayNumber.trim() ? getCurrentIsoString() : '',
             }, dispatchMetersObj, dispatchTakasObj, dispatchDate)
             
             if ('error' in res) {

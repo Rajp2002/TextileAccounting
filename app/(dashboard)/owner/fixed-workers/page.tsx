@@ -902,6 +902,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>{editingWorker ? t('fixed_page.edit_worker') : t('fixed_page.add_title')}</DialogTitle>
+                            <DialogDescription>Add or update a fixed salary staff member.</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 pt-2">
                             <div className="space-y-2">

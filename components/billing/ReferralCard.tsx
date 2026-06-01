@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Copy, Gift, CheckCircle2, Share2 } from 'lucide-react'
+import { formatToSurat, getCurrentTimestampMs } from '@/lib/time'
 
 export function ReferralCard({ stats }: { stats: any }) {
     const [copied, setCopied] = useState(false)
@@ -121,12 +122,8 @@ export function ReferralCard({ stats }: { stats: any }) {
                         <p className="text-[10px] font-black text-emerald-900/40 uppercase tracking-widest mb-3">Active Schedule</p>
                         <div className="space-y-2">
                             {stats.activeWindows.slice(0, 3).map((w: any, i: number) => {
-                                const isFuture = new Date(w.valid_from) > new Date()
-                                const expiryDate = new Date(w.valid_until).toLocaleDateString('en-IN', {
-                                    month: 'short',
-                                    year: 'numeric',
-                                    timeZone: 'Asia/Kolkata',
-                                })
+                                const isFuture = Date.parse(w.valid_from) > getCurrentTimestampMs()
+                                const expiryDate = formatToSurat(w.valid_until, 'MMM yyyy')
                                 return (
                                     <div key={i} className="flex items-center justify-between bg-emerald-50/50 rounded-xl px-3 py-2 border border-emerald-100/50 text-[11px]">
                                         <div className="flex items-center gap-2">

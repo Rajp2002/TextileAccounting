@@ -1,6 +1,16 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import type { User } from '@supabase/supabase-js'
+
+type JsonRecord = Record<string, unknown>
+type AuthClaims = {
+    role?: string
+    user_role?: string
+    org_id?: string
+    full_name?: string
+    onboarding_complete?: boolean
+}
 
 export function getRoleHomePath(role?: string) {
     if (role === 'owner') return '/owner/today'
@@ -14,23 +24,56 @@ export function getRoleHomePath(role?: string) {
  * that Supabase Auth already validated server-side).
  * Uses `atob` instead of Buffer for cross-environment safety.
  */
-export function parseJWT(token: string): Record<string, any> {
+function asRecord(value: unknown): JsonRecord {
+    return value && typeof value === 'object' && !Array.isArray(value)
+        ? value as JsonRecord
+        : {}
+}
+
+function asString(value: unknown): string | undefined {
+    return typeof value === 'string' ? value : undefined
+}
+
+function asBoolean(value: unknown): boolean | undefined {
+    return typeof value === 'boolean' ? value : undefined
+}
+
+export function parseJWT(token: string): AuthClaims & JsonRecord {
     try {
         let payload = token.split('.')[1]
         payload = payload.replace(/-/g, '+').replace(/_/g, '/')
-        const parsed = JSON.parse(atob(payload))
+        const parsed = asRecord(JSON.parse(atob(payload)))
         
-        const customClaims = parsed.app_metadata?.custom_claims || parsed
+        const appMetadata = asRecord(parsed.app_metadata)
+        const userMetadata = asRecord(parsed.user_metadata)
+        const customClaims = Object.keys(asRecord(appMetadata.custom_claims)).length > 0
+            ? asRecord(appMetadata.custom_claims)
+            : parsed
         
         return {
             ...parsed,
             ...customClaims,
-            user_role: customClaims.user_role ?? parsed.user_metadata?.role,
-            org_id: customClaims.org_id ?? parsed.user_metadata?.org_id,
-            onboarding_complete: customClaims.onboarding_complete ?? false
+            user_role: asString(customClaims.user_role) ?? asString(userMetadata.role),
+            org_id: asString(customClaims.org_id) ?? asString(userMetadata.org_id),
+            onboarding_complete: asBoolean(customClaims.onboarding_complete) ?? false
         }
     } catch {
         return {}
+    }
+}
+
+export function getUserClaims(user: User): AuthClaims {
+    const appMetadata = asRecord(user.app_metadata)
+    const userMetadata = asRecord(user.user_metadata)
+    const customClaims = asRecord(appMetadata.custom_claims)
+    const role = asString(appMetadata.role) ?? asString(customClaims.user_role) ?? asString(userMetadata.role)
+
+    return {
+        role,
+        user_role: role,
+        org_id: asString(appMetadata.org_id) ?? asString(customClaims.org_id) ?? asString(userMetadata.org_id),
+        full_name: asString(appMetadata.full_name) ?? asString(customClaims.full_name) ?? asString(userMetadata.full_name),
+        onboarding_complete: asBoolean(appMetadata.onboarding_complete) ?? asBoolean(customClaims.onboarding_complete) ?? false
     }
 }
 
@@ -47,16 +90,17 @@ export function parseJWT(token: string): Record<string, any> {
  */
 export async function requireRole(allowedRoles: string[]) {
     const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!session) {
+    if (!user) {
         redirect('/login')
     }
 
     // Fast path: JWT already has claims
-    let role: string | undefined = session.user.app_metadata?.role
-    let org_id: string | undefined = session.user.app_metadata?.org_id
-    let full_name: string | undefined = session.user.app_metadata?.full_name
+    const claims = getUserClaims(user)
+    let role = claims.role
+    let org_id = claims.org_id
+    let full_name = claims.full_name
 
     // Slow path: JWT is stale (race condition on new signup).
     // The custom_access_token_hook fired before the profile row was committed.
@@ -66,7 +110,7 @@ export async function requireRole(allowedRoles: string[]) {
         const { data: profile } = await admin
             .from('profiles')
             .select('role, org_id, full_name')
-            .eq('id', session.user.id)
+            .eq('id', user.id)
             .maybeSingle()
         role = profile?.role ?? undefined
         org_id = profile?.org_id ?? undefined
@@ -83,7 +127,7 @@ export async function requireRole(allowedRoles: string[]) {
     }
 
     return {
-        user: session.user,
+        user,
         profile: { role, org_id, full_name }
     }
 }
@@ -95,19 +139,20 @@ export async function requireRole(allowedRoles: string[]) {
  */
 export async function getAuthenticatedUser() {
     const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!session) redirect('/login')
+    if (!user) redirect('/login')
 
-    let role: string | undefined = session.user.app_metadata?.role
-    let org_id: string | undefined = session.user.app_metadata?.org_id
+    const claims = getUserClaims(user)
+    let role = claims.role
+    let org_id = claims.org_id
 
     if (!role || !org_id) {
         const admin = createAdminClient()
         const { data: profile } = await admin
             .from('profiles')
             .select('role, org_id')
-            .eq('id', session.user.id)
+            .eq('id', user.id)
             .maybeSingle()
         role = profile?.role ?? undefined
         org_id = profile?.org_id ?? undefined
@@ -116,7 +161,7 @@ export async function getAuthenticatedUser() {
     if (!role || !org_id) redirect('/login')
 
     return {
-        user: session.user,
+        user,
         profile: { role, org_id },
         supabase
     }

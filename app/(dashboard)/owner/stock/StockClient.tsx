@@ -723,6 +723,10 @@ export default function StockClient({
             {/* Quick Dispatch Modal Flow */}
             <Dialog open={fetchingSummary} onOpenChange={() => {}}>
                 <DialogContent className="max-w-sm text-center py-10">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Preparing dispatch batch</DialogTitle>
+                        <DialogDescription>Loading the package summary before creating a dispatch.</DialogDescription>
+                    </DialogHeader>
                     <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mx-auto mb-4" />
                     <p className="text-sm font-bold text-slate-600">Preparing dispatch batch...</p>
                 </DialogContent>

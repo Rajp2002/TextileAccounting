@@ -86,7 +86,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+    Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import FactoryCostWizard from './FactoryCostWizard'
 
@@ -2612,6 +2612,9 @@ export default function EstimatorClient({
                         <DialogTitle className="text-center text-lg font-bold text-slate-900">
                             Start new quality / Reset?
                         </DialogTitle>
+                        <DialogDescription className="text-center">
+                            Clear the current estimator inputs while keeping saved qualities.
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="text-center text-sm text-slate-500 py-2 leading-relaxed">
                         This will clear the current estimator inputs. Saved qualities will not be affected.
@@ -2639,6 +2642,7 @@ export default function EstimatorClient({
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>{t('estimator.quality.saveDialogTitle')}</DialogTitle>
+                        <DialogDescription>Save the current warp and weft setup as a reusable quality.</DialogDescription>
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-1.5">
@@ -2674,6 +2678,7 @@ export default function EstimatorClient({
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-brand-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             {t('estimator.quality.editDialogTitle')} {editRatesTpl?.name}
                         </DialogTitle>
+                        <DialogDescription>Update the saved quality label and default rates.</DialogDescription>
                     </DialogHeader>
                     <div className="py-3 space-y-5">
                         <div className="space-y-1.5">

@@ -13,6 +13,7 @@ import { savePastAttendance, verifyAccessCode } from '@/app/(dashboard)/supervis
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
+import { getSuratTodayString } from '@/lib/time'
 import {
     Dialog,
     DialogContent,
@@ -55,7 +56,7 @@ export default function AttendancePage() {
     const [verifying, setVerifying] = useState(false)
 
     useEffect(() => {
-        setSelectedDate(new Date().toISOString().split('T')[0])
+        setSelectedDate(getSuratTodayString())
     }, [])
 
     useEffect(() => {
@@ -135,7 +136,7 @@ export default function AttendancePage() {
     const prepareSaveFlow = () => {
         if (!dailyWorkers || dailyWorkers.length === 0) return
 
-        const today = new Date().toISOString().split('T')[0]
+        const today = getSuratTodayString()
         const isPastDate = selectedDate < today
 
         // SEC-002: Supervisors editing past dates require an access code
@@ -192,7 +193,7 @@ export default function AttendancePage() {
     }
 
     const setToday = () => {
-        setSelectedDate(new Date().toISOString().split('T')[0])
+        setSelectedDate(getSuratTodayString())
     }
 
     const presentCount = Object.values(localAttendance).filter(Boolean).length
@@ -221,7 +222,7 @@ export default function AttendancePage() {
                         <Input
                             type="date"
                             value={selectedDate}
-                            max={new Date().toISOString().split('T')[0]} // Prevent future dates
+                            max={getSuratTodayString()} // Prevent future dates
                             onChange={(e) => setSelectedDate(e.target.value)}
                             className="h-10 flex-1 rounded-lg text-sm font-semibold sm:w-[150px]"
                         />

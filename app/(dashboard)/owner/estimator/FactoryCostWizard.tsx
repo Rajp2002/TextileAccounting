@@ -115,7 +115,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                     <div className="space-y-2">
                                         <h2 className="text-2xl font-black tracking-tight text-slate-900">Configure Your Factory</h2>
                                         <p className="text-slate-500 text-sm leading-relaxed">
-                                            To give you accurate per-meter profits, we need to know your factory's baseline monthly expenses and capacity.
+                                            To give you accurate per-meter profits, we need to know your factory&apos;s baseline monthly expenses and capacity.
                                         </p>
                                     </div>
                                     <Button 
@@ -156,7 +156,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                             </div>
                                             <div>
                                                 <div className="font-black text-slate-900">Help me calculate it</div>
-                                                <div className="text-xs text-slate-500">We'll guide you through loom count and monthly expenses</div>
+                                                <div className="text-xs text-slate-500">We&apos;ll guide you through loom count and monthly expenses</div>
                                             </div>
                                         </button>
                                     </div>
@@ -186,7 +186,7 @@ export default function FactoryCostWizard({ initialState, onComplete, saving }: 
                                             </div>
                                         </div>
                                         <p className="text-[11px] text-slate-500 leading-relaxed italic">
-                                            "This should include rent, power, staff salaries, and repairs divided by your average monthly production."
+                                            &quot;This should include rent, power, staff salaries, and repairs divided by your average monthly production.&quot;
                                         </p>
                                     </div>
                                     <Button 

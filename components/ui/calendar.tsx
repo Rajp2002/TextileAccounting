@@ -20,6 +20,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { getSuratDate } from "@/lib/time"
 
 export type CalendarProps = {
   selected?: Date
@@ -34,7 +35,7 @@ export function Calendar({
   disabled, 
   className 
 }: CalendarProps) {
-  const [currentMonth, setCurrentMonth] = React.useState(selected || new Date())
+  const [currentMonth, setCurrentMonth] = React.useState(selected || getSuratDate())
 
   const headerDate = format(currentMonth, "MMMM yyyy")
   
@@ -89,7 +90,7 @@ export function Calendar({
         {calendarDays.map((day, i) => {
           const isSelected = selected && isSameDay(day, selected)
           const isCurrentMonth = isSameMonth(day, monthStart)
-          const isToday = isSameDay(day, new Date())
+          const isToday = isSameDay(day, getSuratDate())
           const isDisabled = disabled ? disabled(day) : false
 
           return (

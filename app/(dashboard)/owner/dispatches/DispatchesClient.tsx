@@ -1340,6 +1340,10 @@ function GlobalDispatchModal({
             {/* Step 2: Loading Summary */}
             <Dialog open={step === 'loading_summary'} onOpenChange={() => {}}>
                 <DialogContent className="max-w-sm text-center py-10">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Fetching pending stock dispatches</DialogTitle>
+                        <DialogDescription>Loading sold stock that is pending dispatch.</DialogDescription>
+                    </DialogHeader>
                     <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mx-auto mb-4" />
                     <p className="text-sm font-bold text-slate-600">Fetching sold stock pending dispatch...</p>
                 </DialogContent>

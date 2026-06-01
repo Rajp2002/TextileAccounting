@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { format, subDays } from 'date-fns'
-import { getSuratTodayString, formatToSurat } from '@/lib/time'
+import { getCurrentSuratHour, getCurrentTimestampMs, getSuratTodayString, formatToSurat } from '@/lib/time'
 import {
     getShiftSetupData,
     copyPreviousShiftAction,
@@ -71,7 +71,7 @@ import { useQueryClient } from '@tanstack/react-query'
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
 function getCurrentShift(): 'day' | 'night' {
-    const hour = new Date().getHours()
+    const hour = getCurrentSuratHour()
     return hour >= 6 && hour < 18 ? 'day' : 'night'
 }
 
@@ -79,9 +79,10 @@ function getTodayString() {
     return getSuratTodayString()
 }
 
-function getRemainingCorrectionMinutes(expiresAt: string | null) {
+function getRemainingCorrectionMinutes(expiresAt: string | null, nowMs: number | null) {
     if (!expiresAt) return 0
-    const remainingMs = new Date(expiresAt).getTime() - Date.now()
+    if (!nowMs) return 0
+    const remainingMs = Date.parse(expiresAt) - nowMs
     return Math.max(0, Math.ceil(remainingMs / 60000))
 }
 
@@ -680,7 +681,7 @@ export default function UnifiedDashboard() {
     const { data: userProfile } = useUserProfile()
     const queryClient = useQueryClient()
     const [date, setDate] = useState(getTodayString())
-    const [shift, setShift] = useState<'day' | 'night'>(getCurrentShift())
+    const [shift, setShift] = useState<'day' | 'night'>('day')
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [copying, setCopying] = useState(false)
@@ -695,7 +696,7 @@ export default function UnifiedDashboard() {
     // Bulk Entry state
     const [productionMeters, setProductionMeters] = useState<Record<string, number>>({})
     const [correctionWindowExpiresAt, setCorrectionWindowExpiresAt] = useState<string | null>(null)
-    const [, setCountdownTick] = useState(0)
+    const [correctionClockMs, setCorrectionClockMs] = useState<number | null>(null)
 
     // Optimistic / Sync markers
     const [syncingState, setSyncingState] = useState<Record<string, 'syncing' | 'saved' | null>>({})
@@ -718,6 +719,10 @@ export default function UnifiedDashboard() {
     const [isRefreshing, setIsRefreshing] = useState(false)
     const touchStartRef = useRef<number | null>(null)
     const containerRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        setShift(getCurrentShift())
+    }, [])
 
     const handleTouchStart = (e: React.TouchEvent) => {
         if (typeof window !== 'undefined' && window.scrollY === 0) {
@@ -768,10 +773,14 @@ export default function UnifiedDashboard() {
     }, [productionMeters, date, shift, loading])
 
     useEffect(() => {
-        if (!correctionWindowExpiresAt) return
+        if (!correctionWindowExpiresAt) {
+            setCorrectionClockMs(null)
+            return
+        }
 
+        setCorrectionClockMs(getCurrentTimestampMs())
         const interval = window.setInterval(() => {
-            setCountdownTick((prev) => prev + 1)
+            setCorrectionClockMs(getCurrentTimestampMs())
         }, 30000)
 
         return () => window.clearInterval(interval)
@@ -1059,7 +1068,7 @@ export default function UnifiedDashboard() {
         },
     ]
     const readinessIssues = readinessChecks.filter((issue) => issue.count > 0)
-    const remainingCorrectionMinutes = getRemainingCorrectionMinutes(correctionWindowExpiresAt)
+    const remainingCorrectionMinutes = getRemainingCorrectionMinutes(correctionWindowExpiresAt, correctionClockMs)
     const correctionBannerText = remainingCorrectionMinutes > 0
         ? t('floor.correction.windowOpen').replace('{minutes}', remainingCorrectionMinutes.toString())
         : t('floor.correction.windowClosed')

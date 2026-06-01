@@ -30,6 +30,22 @@ export function getSuratTodayString(): string {
     return formatToSurat(new Date(), 'yyyy-MM-dd')
 }
 
+export function getCurrentSuratHour(): number {
+    return Number(formatToSurat(new Date(), 'H'))
+}
+
+export function getCurrentSuratYear(): string {
+    return formatToSurat(new Date(), 'yyyy')
+}
+
+export function getCurrentTimestampMs(): number {
+    return Date.now()
+}
+
+export function getCurrentIsoString(): string {
+    return new Date().toISOString()
+}
+
 /**
  * Helper to get strictly yesterday's date formatted as YYYY-MM-DD in Surat.
  * Fixes timezone drift where yesterday might compute incorrectly.

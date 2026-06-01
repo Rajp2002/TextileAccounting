@@ -54,7 +54,8 @@ export default function AuditActivityItem({ log, isLast }: AuditActivityItemProp
   const summary = getAuditSummary(log)
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
-    setMounted(true)
+    const timer = window.setTimeout(() => setMounted(true), 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   const timeAgo = mounted ? formatDistanceToNow(new Date(log.changed_at), { addSuffix: true }) : 'Calculating...'

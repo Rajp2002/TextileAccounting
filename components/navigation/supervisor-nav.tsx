@@ -12,7 +12,7 @@ import {
     Menu,
     Factory,
 } from "lucide-react"
-import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import LogoutButton from "@/components/auth/logout-button"
@@ -224,6 +224,7 @@ export function SupervisorSidebar({ factoryName, userName }: SupervisorSidebarPr
                     <SheetContent side="left" className="w-[min(280px,85vw)] border-white/10 bg-[#111111] p-0">
                         <SheetHeader className="sr-only">
                             <SheetTitle>{t("common.navigation")}</SheetTitle>
+                            <SheetDescription>Supervisor navigation menu</SheetDescription>
                         </SheetHeader>
                         <NavContent
                             factoryName={factoryName}

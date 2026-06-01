@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getOnboardingStatus } from '@/app/(auth)/actions/auth'
+import { getUserClaims } from '@/lib/auth'
 import OnboardingChecklist from './checklist'
 
 /**
@@ -14,26 +15,20 @@ import OnboardingChecklist from './checklist'
  */
 export default async function OnboardingPage() {
     const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!session) redirect('/login')
+    if (!user) redirect('/login')
 
-    // Decode JWT claims (fast path — avoids DB lookup when claims are present)
-    const jwtPayload = (() => {
-        try {
-            const b64 = session.access_token.split('.')[1]
-            return JSON.parse(Buffer.from(b64, 'base64url').toString('utf-8'))
-        } catch { return {} }
-    })()
+    const userClaims = getUserClaims(user)
 
     // Fast path: JWT already has claims — use them directly
-    if (jwtPayload.onboarding_complete === true) {
+    if (userClaims.onboarding_complete === true) {
         redirect('/owner/today')
     }
 
     // Determine role: prefer JWT claim, fall back to DB (handles JWT race condition
     // where custom_access_token_hook fires before the profile row is visible).
-    let role: string | undefined = jwtPayload.user_role
+    let role = userClaims.user_role
 
     if (!role) {
         // JWT is stale (race condition on new signup) — fetch role from DB directly
@@ -41,7 +36,7 @@ export default async function OnboardingPage() {
         const { data: profile } = await admin
             .from('profiles')
             .select('role')
-            .eq('id', session.user.id)
+            .eq('id', user.id)
             .maybeSingle()
         role = profile?.role ?? undefined
     }

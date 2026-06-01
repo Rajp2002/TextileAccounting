@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { FactoryTodayData } from '@/app/(dashboard)/owner/today/actions'
 import { CalendarClock, DollarSign, Users, HandCoins } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatToSurat } from '@/lib/time'
 
 interface PayrollHisaabCardProps {
     payroll: FactoryTodayData['payroll']
@@ -15,11 +16,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
     const isOverdue = payroll.payWindowStatus === 'overdue' && hasUnsettled
 
     const color = isOverdue ? 'red' : hasAdvances || hasUnsettled ? 'amber' : 'emerald'
-    const payDateLabel = new Date(payroll.payDate).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        timeZone: 'Asia/Kolkata',
-    })
+    const payDateLabel = formatToSurat(payroll.payDate, 'd MMM')
     const statusLabel = (() => {
         if (payroll.isPayWindowOpen && payroll.unsettledWorkerCount === 0) {
             return 'Paid'
@@ -113,7 +110,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                             <>
                                 {' '}· Next cycle starts{' '}
                                 <span className="font-semibold text-ink">
-                                    {new Date(payroll.upcomingSettlementDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })}
+                                    {formatToSurat(payroll.upcomingSettlementDate, 'd MMM')}
                                 </span>
                             </>
                         )}

@@ -21,6 +21,7 @@ import { useOnlineStatus } from '@/hooks/use-online-status'
 import { queueMutation } from '@/lib/db'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTransliterate } from '@/hooks/use-transliterate'
+import { getCurrentTimestampMs } from '@/lib/time'
 
 export function KharchiDialog({
     open,
@@ -78,7 +79,7 @@ export function KharchiDialog({
                     amount: dispersalAmount,
                     description,
                     supervisor_id: userProfile?.id,
-                    timestamp: Date.now()
+                    timestamp: getCurrentTimestampMs()
                 })
                 toast.success('Kharchi queued for sync')
             }

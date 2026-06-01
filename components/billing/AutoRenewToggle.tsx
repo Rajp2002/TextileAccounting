@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { RefreshCw, AlertTriangle, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { formatToSurat } from '@/lib/time'
 
 interface AutoRenewToggleProps {
     /** ISO date string for subscription end, used in the confirmation message */
@@ -18,10 +19,7 @@ export function AutoRenewToggle({ currentEnd, subscriptionTier }: AutoRenewToggl
     const router = useRouter()
 
     const endFormatted = currentEnd
-        ? new Date(currentEnd).toLocaleDateString('en-IN', {
-              day: 'numeric', month: 'long', year: 'numeric',
-              timeZone: 'Asia/Kolkata',
-          })
+        ? formatToSurat(currentEnd, 'd MMMM yyyy')
         : 'the end of your current billing period'
 
     async function handleConfirm() {

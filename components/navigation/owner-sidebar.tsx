@@ -22,7 +22,7 @@ import {
     Factory,
     Archive,
 } from "lucide-react"
-import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { useState } from "react"
 import LogoutButton from "@/components/auth/logout-button"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
@@ -200,6 +200,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode }: OwnerSid
                 >
                     <SheetHeader className="sr-only">
                         <SheetTitle>{t('common.navigation')}</SheetTitle>
+                        <SheetDescription>Owner navigation menu</SheetDescription>
                     </SheetHeader>
                     <NavContent
                         factoryName={factoryName}

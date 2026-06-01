@@ -16,6 +16,7 @@ type LocalizedTextState = {
   source: string
   applied: string
 }
+type ElementAttributeStates = Map<string, LocalizedTextState>
 
 interface I18nContextProps {
   language: Language
@@ -193,49 +194,59 @@ function translateTextNode(node: Text, language: Language, phraseMap: Map<string
   originals.set(node, { source: state.source, applied: nextValue })
 }
 
-function translateElementAttributes(element: Element, language: Language, phraseMap: Map<string, string>) {
+function translateElementAttributes(
+  element: Element,
+  language: Language,
+  phraseMap: Map<string, string>,
+  originals: WeakMap<Element, ElementAttributeStates>,
+) {
   for (const attribute of TRANSLATABLE_ATTRIBUTES) {
     const value = element.getAttribute(attribute)
-    const originalAttribute = `data-i18n-original-${attribute}`
-    const appliedAttribute = `data-i18n-applied-${attribute}`
-    const original = element.getAttribute(originalAttribute)
-    const applied = element.getAttribute(appliedAttribute)
-    if (!value || (!original && !/[A-Za-z]/.test(value))) continue
+    let states = originals.get(element)
+    let state = states?.get(attribute)
+    if (!value || (!state && !/[A-Za-z]/.test(value))) continue
 
     const valueKey = value.trim().replace(/\s+/g, " ")
     const knownCurrentEnglish = phraseMap.has(valueKey)
     const translatedSource = language === "en" ? undefined : getReversePhraseMap(phraseMap).get(valueKey)
-    let source = original
 
-    if (!source) {
-      source = translatedSource ?? value
-      element.setAttribute(originalAttribute, source)
-    } else if (knownCurrentEnglish || (applied !== null && value !== applied && value !== source && !translatedSource)) {
-      source = value
-      element.setAttribute(originalAttribute, source)
+    if (!state) {
+      state = { source: translatedSource ?? value, applied: value }
+      states = states ?? new Map<string, LocalizedTextState>()
+      states.set(attribute, state)
+      originals.set(element, states)
+    } else if (knownCurrentEnglish || (value !== state.applied && value !== state.source && !translatedSource)) {
+      state = { source: value, applied: value }
+      states?.set(attribute, state)
     }
 
-    const originalKey = source.trim().replace(/\s+/g, " ")
+    const originalKey = state.source.trim().replace(/\s+/g, " ")
     const translated = translateSourceText(originalKey, language, phraseMap)
     if (translated && value !== translated) {
       element.setAttribute(attribute, translated)
-      element.setAttribute(appliedAttribute, translated)
+      states?.set(attribute, { source: state.source, applied: translated })
     } else if (translated) {
-      element.setAttribute(appliedAttribute, value)
+      states?.set(attribute, { source: state.source, applied: value })
     }
   }
 }
 
-function translateSubtree(root: Node, language: Language, phraseMap: Map<string, string>, originals: WeakMap<Text, LocalizedTextState>) {
+function translateSubtree(
+  root: Node,
+  language: Language,
+  phraseMap: Map<string, string>,
+  textOriginals: WeakMap<Text, LocalizedTextState>,
+  attributeOriginals: WeakMap<Element, ElementAttributeStates>,
+) {
   if (root.nodeType === Node.TEXT_NODE) {
-    translateTextNode(root as Text, language, phraseMap, originals)
+    translateTextNode(root as Text, language, phraseMap, textOriginals)
     return
   }
 
   if (root.nodeType !== Node.ELEMENT_NODE && root.nodeType !== Node.DOCUMENT_NODE) return
 
   if (root.nodeType === Node.ELEMENT_NODE) {
-    translateElementAttributes(root as Element, language, phraseMap)
+    translateElementAttributes(root as Element, language, phraseMap, attributeOriginals)
   }
 
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT)
@@ -243,34 +254,35 @@ function translateSubtree(root: Node, language: Language, phraseMap: Map<string,
 
   while (current) {
     if (current.nodeType === Node.TEXT_NODE) {
-      translateTextNode(current as Text, language, phraseMap, originals)
+      translateTextNode(current as Text, language, phraseMap, textOriginals)
     } else if (current.nodeType === Node.ELEMENT_NODE) {
-      translateElementAttributes(current as Element, language, phraseMap)
+      translateElementAttributes(current as Element, language, phraseMap, attributeOriginals)
     }
     current = walker.nextNode()
   }
 }
 
 function LegacyTextLocalizer({ language, phraseMap }: { language: Language; phraseMap: Map<string, string> }) {
-  const originals = useRef(new WeakMap<Text, LocalizedTextState>())
+  const textOriginals = useRef(new WeakMap<Text, LocalizedTextState>())
+  const attributeOriginals = useRef(new WeakMap<Element, ElementAttributeStates>())
 
   useEffect(() => {
     if (typeof document === "undefined" || !document.body) return
 
-    translateSubtree(document.body, language, phraseMap, originals.current)
+    translateSubtree(document.body, language, phraseMap, textOriginals.current, attributeOriginals.current)
 
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.type === "characterData") {
-          translateTextNode(mutation.target as Text, language, phraseMap, originals.current)
+          translateTextNode(mutation.target as Text, language, phraseMap, textOriginals.current)
         }
 
         if (mutation.type === "attributes" && mutation.target instanceof Element) {
-          translateElementAttributes(mutation.target, language, phraseMap)
+          translateElementAttributes(mutation.target, language, phraseMap, attributeOriginals.current)
         }
 
         mutation.addedNodes.forEach((node) => {
-          translateSubtree(node, language, phraseMap, originals.current)
+          translateSubtree(node, language, phraseMap, textOriginals.current, attributeOriginals.current)
         })
       }
     })

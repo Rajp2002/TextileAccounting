@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getSuratTodayString, getSuratYesterdayString, formatToSurat } from '@/lib/time'
-import { parseJWT } from '@/lib/auth'
+import { getAuthenticatedUser } from '@/lib/auth'
 import { getDaysInMonth, subDays, parseISO } from 'date-fns'
 
 export type WorkerBreakdownEntry = {
@@ -200,12 +200,8 @@ async function getKpiForDate(
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) throw new Error('Unauthorized')
-
-  const { org_id } = parseJWT(session.access_token)
+  const { supabase, profile } = await getAuthenticatedUser()
+  const org_id = profile.org_id
   const today     = getSuratTodayString()
   const yesterday = getSuratYesterdayString()
 
@@ -264,12 +260,8 @@ export async function getDashboardData(): Promise<DashboardData> {
 }
 
 export async function refreshLiveDashboard() {
-  const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) throw new Error('Unauthorized')
-
-  const { org_id } = parseJWT(session.access_token)
+  const { supabase, profile } = await getAuthenticatedUser()
+  const org_id = profile.org_id
   const today = getSuratTodayString()
 
   const results = await Promise.allSettled([
@@ -296,12 +288,8 @@ export async function refreshLiveDashboard() {
 }
 
 export async function fetchHistoricalData(targetDate: string) {
-  const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  
-  if (!session) throw new Error('Unauthorized')
-
-  const { org_id } = parseJWT(session.access_token)
+  const { supabase, profile } = await getAuthenticatedUser()
+  const org_id = profile.org_id
 
   const results = await Promise.allSettled([
     getKpiForDate(supabase, org_id, targetDate),

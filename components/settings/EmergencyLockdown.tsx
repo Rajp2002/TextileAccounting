@@ -85,7 +85,7 @@ export function EmergencyLockdown() {
                     <div className="flex flex-col gap-4">
                         <div className="p-4 rounded-lg bg-orange-50 border border-orange-100 text-xs text-orange-800">
                             <p className="font-bold mb-1 uppercase tracking-wider">Breach Response Protocol (DPDP 2026):</p>
-                            <p>Triggering a lockdown provides "Immediate Containment" proof for the Data Protection Board. This action is irreversible via the UI for safety.</p>
+                            <p>Triggering a lockdown provides &quot;Immediate Containment&quot; proof for the Data Protection Board. This action is irreversible via the UI for safety.</p>
                         </div>
                         
                         <Dialog open={lockdownDialogOpen} onOpenChange={(val) => { setLockdownDialogOpen(val); if (!val) setConfirmText('') }}>

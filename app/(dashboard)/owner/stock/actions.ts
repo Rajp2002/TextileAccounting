@@ -218,6 +218,7 @@ export async function getFabricStockBoard(): Promise<FabricStockBoardData | { er
                 )
             `)
             .eq('org_id', profile.org_id)
+            .not('order_id', 'is', null)
             .order('created_at', { ascending: false }),
         supabase
             .from('orders')

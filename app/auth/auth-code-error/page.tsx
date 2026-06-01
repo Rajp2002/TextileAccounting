@@ -18,7 +18,7 @@ export default function AuthCodeError() {
                         Authentication Error
                     </h2>
                     <p className="mt-2 text-sm text-gray-600">
-                        We couldn't verify your login link. It may have expired or already been used.
+                        We couldn&apos;t verify your login link. It may have expired or already been used.
                     </p>
                 </div>
                 <div className="mt-8 space-y-4">

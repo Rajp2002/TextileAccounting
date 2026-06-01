@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { createPartyStockSaleAndOptionalDispatch, getSellAndDispatchOptions } from '@/app/(dashboard)/owner/dispatches/actions'
+import { getSuratTodayString } from '@/lib/time'
 
 export type SellAndDispatchDialogProps = {
     open: boolean
@@ -48,8 +49,16 @@ type LotOption = {
     unit_label: string
 }
 
+function estimateSoldTakas(meters: number, lot: LotOption) {
+    if (lot.meters_per_taka <= 0) return ''
+
+    const estimatedTakas = meters / lot.meters_per_taka
+    const availableTakas = Number(lot.available_taka_count || 0)
+    return String(availableTakas >= 1 ? Math.max(1, Math.round(estimatedTakas)) : estimatedTakas)
+}
+
 function todayDate() {
-    return new Date().toISOString().slice(0, 10)
+    return getSuratTodayString()
 }
 
 function money(value: number) {
@@ -189,9 +198,7 @@ export function SellAndDispatchDialog({
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setSoldMeters(String(metersVal))
         setActualDispatchedMeters(String(metersVal))
-        if (lot.meters_per_taka > 0) {
-            setSoldTakas(String(Math.max(1, Math.round(Number(metersVal) / lot.meters_per_taka))))
-        }
+        setSoldTakas(estimateSoldTakas(Number(metersVal), lot))
         const matchedParty = order?.party_name ? findUniquePartyByName(order.party_name) : null
         if (matchedParty) {
             applyPartyToForm(matchedParty)
@@ -389,9 +396,8 @@ export function SellAndDispatchDialog({
                                 onChange={(event) => {
                                     const val = event.target.value
                                     setSoldMeters(val)
-                                    if (selectedLot && selectedLot.meters_per_taka > 0) {
-                                        const metersVal = Number(val) || 0
-                                        setSoldTakas(String(Math.max(1, Math.round(metersVal / selectedLot.meters_per_taka))))
+                                    if (selectedLot) {
+                                        setSoldTakas(estimateSoldTakas(Number(val) || 0, selectedLot))
                                     }
                                 }}
                                 className="h-11 lg:h-9"
@@ -461,7 +467,7 @@ export function SellAndDispatchDialog({
     const canContinue = step === 1
         ? Boolean(sourceId)
         : step === 2
-            ? Boolean(partyName.trim()) && !hasAmbiguousPartyName && soldMetersNum > 0 && saleRateNum > 0 && creditDaysNum >= 0 && Boolean(selectedLot) && soldMetersNum <= Number(selectedLot?.available_meters || 0) + 0.01 && (!hasSoldTakas || (soldTakasNum > 0 && soldTakasNum <= Number(selectedLot?.available_taka_count || 0) + 0.01))
+            ? Boolean(partyName.trim()) && !hasAmbiguousPartyName && soldMetersNum > 0 && saleRateNum > 0 && creditDaysNum >= 0 && Boolean(selectedLot) && soldMetersNum <= Number(selectedLot?.available_meters || 0) + 0.01 && (!hasSoldTakas || (soldTakasNum > 0 && soldTakasNum <= Number(selectedLot?.available_taka_count || 0) + 0.001))
             : step === 3
                 ? !dispatchNow || (dispatchMetersNum > 0 && dispatchMetersNum <= soldMetersNum)
                 : true

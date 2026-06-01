@@ -755,7 +755,7 @@ export function AdminDashboardUI({
                         <CardTitle className="text-red-700 dark:text-red-400 flex items-center gap-2">
                             <ShieldAlert className="h-5 w-5" /> Emergency Lockdown
                         </CardTitle>
-                        <CardDescription className="text-red-600/80">THE "BIG RED BUTTON": Instantly freeze all platform operations in case of a verified mass breach.</CardDescription>
+                        <CardDescription className="text-red-600/80">THE &quot;BIG RED BUTTON&quot;: Instantly freeze all platform operations in case of a verified mass breach.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button variant="destructive" className="font-bold tracking-widest uppercase py-6 px-10 h-auto text-lg" onClick={() => {

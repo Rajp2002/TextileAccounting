@@ -55,8 +55,8 @@ export default async function TrackingPage({ params }: { params: Promise<{ token
     // Check if the current visitor is an internal team member (Owner/Supervisor)
     // to enable "Preview Mode" and disable actions like "Confirm Receipt"
     const authSupabase = await createClient()
-    const { data: { session } } = await authSupabase.auth.getSession()
-    const isInternalUser = !!session
+    const { data: { user } } = await authSupabase.auth.getUser()
+    const isInternalUser = !!user
 
     // Fetch tracking data via the SECURITY DEFINER RPC
     // Uses service_role client — bypasses RLS, returns only safe fields

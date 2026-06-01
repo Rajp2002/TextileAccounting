@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { FactoryTodayData } from '@/app/(dashboard)/owner/today/actions'
 import { Truck, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatToSurat } from '@/lib/time'
 
 interface SoldNotDispatchedCardProps {
     sales: FactoryTodayData['dispatch']['soldNotDispatched']
@@ -57,7 +58,7 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
                             <div className="flex-1 min-w-0">
                                 <p className="truncate text-sm font-semibold text-ink">{sale.qualityLabel}</p>
                                 <p className="text-[11px] text-body">
-                                    {new Date(sale.saleDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })}
+                                    {formatToSurat(sale.saleDate, 'd MMM')}
                                 </p>
                             </div>
                             <div className="text-right">

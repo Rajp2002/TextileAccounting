@@ -6,6 +6,7 @@ import { Loader2, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { cn } from '@/lib/utils'
+import { formatToSurat } from '@/lib/time'
 
 interface TrialButtonProps {
     onSuccess?: (trialEnd: string) => void
@@ -39,9 +40,7 @@ export function TrialButton({ onSuccess, compact, className }: TrialButtonProps)
                 throw new Error(body.error ?? 'Failed to start trial')
             }
 
-            const endDate = new Date(body.trialEnd).toLocaleDateString('en-IN', {
-                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-            })
+            const endDate = formatToSurat(body.trialEnd, 'EEEE, d MMMM yyyy')
 
             toast.success(`🎉 Trial activated! Enjoy Premium access until ${endDate}.`)
             onSuccess?.(body.trialEnd)

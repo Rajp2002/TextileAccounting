@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 import { Plus, Minus } from 'lucide-react'
+import { getCurrentSuratYear } from '@/lib/time'
 
 const footerSections = [
     {
@@ -119,7 +120,7 @@ export default function LandingFooter() {
                     {/* Bottom border + Copyright */}
                     <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
                         <p className="text-gray-400 text-sm">
-                            &copy; {new Date().getFullYear()} Weavly. All rights reserved.
+                            &copy; {getCurrentSuratYear()} Weavly. All rights reserved.
                         </p>
                         <div className="flex items-center gap-6 text-sm text-gray-500">
                             <span>Built securely for Indian textile factory operations.</span>

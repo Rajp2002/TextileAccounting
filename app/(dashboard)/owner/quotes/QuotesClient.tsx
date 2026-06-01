@@ -20,6 +20,7 @@ import {
 import { convertAcceptedQuoteToOrder, updateQuoteStatus } from '../estimator/actions'
 import { toast } from 'sonner'
 import { addDays, format } from 'date-fns'
+import { getCurrentTimestampMs } from '@/lib/time'
 import {
     History,
     CheckCircle2,
@@ -201,7 +202,7 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                 qualityLabel: quote.quality_label || '',
                 warpInstruction: quote.warp_instruction || linkedOrder?.warp_instruction || '',
                 weftInstruction: quote.weft_instruction || linkedOrder?.weft_instruction || '',
-                savedAt: Date.now(),
+                savedAt: getCurrentTimestampMs(),
                 sourceQuoteId: quote.id,
             }
             localStorage.setItem(draftKey, JSON.stringify(newDraft))

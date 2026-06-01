@@ -5,6 +5,7 @@ import type { FactoryTodayData } from '@/app/(dashboard)/owner/today/actions'
 import { TrendingDown, Calendar, Package, Store, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getWorkflowVisibility, type ProductionMode } from '@/lib/production-mode'
+import { formatToSurat } from '@/lib/time'
 
 interface WorkAtRiskCardProps {
     workAtRisk: FactoryTodayData['workAtRisk']
@@ -86,7 +87,7 @@ export function WorkAtRiskCard({ workAtRisk, productionMode }: WorkAtRiskCardPro
                                     </p>
                                     <p className="flex items-center gap-1 text-[11px] text-body">
                                         <Calendar className="h-2.5 w-2.5" />
-                                        {new Date(order.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' })}
+                                        {formatToSurat(order.deadline, 'd MMM')}
                                     </p>
                                 </div>
                             </div>

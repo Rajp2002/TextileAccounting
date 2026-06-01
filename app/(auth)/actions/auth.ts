@@ -15,6 +15,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { getUserClaims } from '@/lib/auth'
 import { CreateOrgSchema, JoinOrgSchema, PasswordResetRequestSchema, SignInSchema, safeParse } from '@/lib/schemas'
 import { hasExplicitProductionMode } from '@/lib/production-mode'
 
@@ -445,12 +446,13 @@ export async function signIn(input: { email: string; password: string }) {
  */
 export async function regenerateJoinCode() {
     const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!session) return { error: 'Not authenticated' }
+    if (!user) return { error: 'Not authenticated' }
 
-    let userRole = session.user.app_metadata?.role
-    let orgId = session.user.app_metadata?.org_id
+    const claims = getUserClaims(user)
+    let userRole = claims.role
+    let orgId = claims.org_id
 
     const adminClient = createAdminClient()
 
@@ -458,7 +460,7 @@ export async function regenerateJoinCode() {
         const { data: profile } = await adminClient
             .from('profiles')
             .select('role, org_id')
-            .eq('id', session.user.id)
+            .eq('id', user.id)
             .maybeSingle()
         if (profile) {
             userRole = userRole || profile.role
@@ -507,20 +509,20 @@ export async function getOnboardingStatus(): Promise<{
     isComplete: boolean
 }> {
     const supabase = await createClient()
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    if (!session) redirect('/login')
+    if (!user) redirect('/login')
 
     // Prefer org_id from JWT (fast path). Fall back to DB lookup when JWT is
     // stale (race condition: hook fires before profile row is visible on fresh signup).
-    let orgId: string | undefined = session.user.app_metadata?.org_id
+    let orgId = getUserClaims(user).org_id
 
     if (!orgId) {
         const admin = createAdminClient()
         const { data: profile } = await admin
             .from('profiles')
             .select('org_id')
-            .eq('id', session.user.id)
+            .eq('id', user.id)
             .maybeSingle()
         orgId = profile?.org_id ?? undefined
     }
@@ -595,20 +597,20 @@ export async function getOnboardingStatus(): Promise<{
 export async function markOnboardingComplete(): Promise<{ success?: boolean; error?: string }> {
     try {
         const supabase = await createClient()
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) return { error: 'Not authenticated' }
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'Not authenticated' }
 
         // Use admin client to bypass RLS for the org update.
         // The organizations UPDATE policy relies on auth.jwt() org_id claim which
         // may be absent on a fresh signup (stale JWT race condition).
         const admin = createAdminClient()
 
-        let orgId: string | undefined = session.user.app_metadata?.org_id
+        let orgId = getUserClaims(user).org_id
         if (!orgId) {
             const { data: profile } = await admin
                 .from('profiles')
                 .select('org_id')
-                .eq('id', session.user.id)
+                .eq('id', user.id)
                 .maybeSingle()
             orgId = profile?.org_id ?? undefined
         }

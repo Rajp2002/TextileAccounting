@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { FactoryTodayData } from '@/app/(dashboard)/owner/today/actions'
 import { CheckCircle2, AlertCircle, XCircle, Sun, Moon, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { formatToSurat } from '@/lib/time'
 
 interface ProductionStatusCardProps {
     production: FactoryTodayData['production']
@@ -81,11 +82,7 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
             <div className="flex items-center gap-2 border-t border-white/[0.06] px-4 py-3">
                 {production.lastLogAt && (
                     <p className="flex-1 text-xs text-muted">
-                        Last log: {new Date(production.lastLogAt).toLocaleTimeString('en-IN', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            timeZone: 'Asia/Kolkata'
-                        })}
+                        Last log: {formatToSurat(production.lastLogAt, 'hh:mm a')}
                     </p>
                 )}
                 <Link

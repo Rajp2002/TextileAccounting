@@ -39,6 +39,7 @@ import {
 import {
     Sheet,
     SheetContent,
+    SheetDescription,
     SheetHeader,
     SheetTitle,
     SheetFooter,
@@ -680,6 +681,10 @@ function OrderDetailDrawer({
                 side="right"
                 className="w-full sm:max-w-md bg-card border-l border-border text-slate-900 flex flex-col"
             >
+                <SheetHeader className="sr-only">
+                    <SheetTitle>Order details</SheetTitle>
+                    <SheetDescription>Review order progress, assigned machines, and editable order fields.</SheetDescription>
+                </SheetHeader>
                 {loading || !order ? (
                     <div className="flex-1 flex items-center justify-center">
                         {loading

@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { checkAuthRateLimit } from '@/lib/rate-limit'
 import { PHASE_1_ARCHIVE_REDIRECT, isPhase1ArchivedRoute } from '@/lib/phase1-scope'
+import type { User } from '@supabase/supabase-js'
 
 function getRoleHomePath(role?: string): string {
     if (role === 'owner') return '/owner/today'
@@ -43,6 +44,27 @@ function parseJWTClaims(token: string): Record<string, unknown> {
         }
     } catch {
         return {}
+    }
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+    return value && typeof value === 'object' && !Array.isArray(value)
+        ? value as Record<string, unknown>
+        : {}
+}
+
+function getClaimsFromUser(user: User): Record<string, unknown> {
+    const appMetadata = asRecord(user.app_metadata)
+    const userMetadata = asRecord(user.user_metadata)
+    const customClaims = asRecord(appMetadata.custom_claims)
+    const role = appMetadata.role ?? customClaims.user_role ?? userMetadata.role
+
+    return {
+        ...appMetadata,
+        ...customClaims,
+        user_role: role,
+        org_id: appMetadata.org_id ?? customClaims.org_id ?? userMetadata.org_id,
+        onboarding_complete: appMetadata.onboarding_complete ?? customClaims.onboarding_complete ?? false,
     }
 }
 
@@ -110,8 +132,8 @@ export async function updateSession(request: NextRequest) {
                 },
             }
         )
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 })
         }
     }
@@ -220,10 +242,7 @@ export async function updateSession(request: NextRequest) {
         
         // If cookie parsing failed, rely on getting session from supabase
         if(Object.keys(jwt).length === 0){
-             const { data: { session } } = await supabase.auth.getSession()
-             if(session) {
-                 jwt = parseJWTClaims(session.access_token)
-             }
+             jwt = getClaimsFromUser(user)
         }
         
         const role = typeof jwt.user_role === 'string' ? jwt.user_role : undefined
@@ -268,12 +287,7 @@ export async function updateSession(request: NextRequest) {
         }
         
         if(Object.keys(jwt).length === 0){
-             const { data: { session } } = await supabase.auth.getSession()
-             if (session) {
-                 jwt = parseJWTClaims(session.access_token)
-             } else {
-                 return NextResponse.redirect(new URL('/login', request.url))
-             }
+             jwt = getClaimsFromUser(user)
         }
 
         const role = typeof jwt.user_role === 'string' ? jwt.user_role : undefined
@@ -408,12 +422,12 @@ export async function updateSession(request: NextRequest) {
     return response
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     return await updateSession(request)
 }
 
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|sw\\.js|sw\\.js\\.map|workbox-.*\\.js|workbox-.*\\.js\\.map|worker-.*\\.js|worker-.*\\.js\\.map|fallback-.*\\.js|fallback-.*\\.js\\.map|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mov|mp4|webm|ogg|mp3|wav|flac|webmanifest|ico)$).*)',
+        '/((?!monitoring|_next/static|_next/image|favicon.ico|sw\\.js|sw\\.js\\.map|workbox-.*\\.js|workbox-.*\\.js\\.map|worker-.*\\.js|worker-.*\\.js\\.map|fallback-.*\\.js|fallback-.*\\.js\\.map|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mov|mp4|webm|ogg|mp3|wav|flac|webmanifest|ico)$).*)',
     ],
 }

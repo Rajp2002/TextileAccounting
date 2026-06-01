@@ -240,7 +240,7 @@ export default async function BillingPage() {
                                         </div>
                                         <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1]">Your factory is coming online.</h2>
                                         <p className="text-indigo-100 text-lg font-medium">
-                                            We've received your payment. Your <strong>{subscription?.plan_tier?.toUpperCase()}</strong> subscription is being configured. Refresh in a few seconds.
+                                            We&apos;ve received your payment. Your <strong>{subscription?.plan_tier?.toUpperCase()}</strong> subscription is being configured. Refresh in a few seconds.
                                         </p>
                                     </>
                                 ) : subscription ? (
@@ -310,7 +310,7 @@ export default async function BillingPage() {
                                     <div>
                                         <p className="text-sm font-bold text-amber-900">Full Access Unlocked</p>
                                         <p className="text-sm text-amber-700/80 leading-relaxed">
-                                            You are enjoying full Premium features. To prevent service disruption after the trial ends, you can subscribe to a plan below today. You won't be charged until your trial expires.
+                                            You are enjoying full Premium features. To prevent service disruption after the trial ends, you can subscribe to a plan below today. You won&apos;t be charged until your trial expires.
                                         </p>
                                     </div>
                                 </div>

@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { KeyRound, Copy, Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { getCurrentTimestampMs } from '@/lib/time'
 
 function calculateTimeLeft(expiresAt: string) {
-    const difference = new Date(expiresAt).getTime() - new Date().getTime()
+    const difference = Date.parse(expiresAt) - getCurrentTimestampMs()
     return Math.max(0, Math.floor(difference / 1000))
 }
 
@@ -18,17 +19,19 @@ interface AccessCodeBannerProps {
 export function AccessCodeBanner({ code, expiresAt }: AccessCodeBannerProps) {
     const [isVisible, setIsVisible] = useState(true)
     const [copied, setCopied] = useState(false)
-    const [timeLeft, setTimeLeft] = useState<number>(() => calculateTimeLeft(expiresAt))
+    const [timeLeft, setTimeLeft] = useState(0)
 
     useEffect(() => {
-        const timer = setInterval(() => {
+        const updateTimeLeft = () => {
             const remaining = calculateTimeLeft(expiresAt)
             setTimeLeft(remaining)
             if (remaining <= 0) {
                 setIsVisible(false)
-                clearInterval(timer)
             }
-        }, 1000)
+        }
+        updateTimeLeft()
+
+        const timer = setInterval(updateTimeLeft, 1000)
 
         return () => clearInterval(timer)
     }, [expiresAt])

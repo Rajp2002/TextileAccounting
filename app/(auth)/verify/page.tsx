@@ -93,7 +93,7 @@ function VerifyContent() {
                 </div>
 
                 <p className="text-center text-xs text-gray-400">
-                    Didn't receive anything? Check your spam folder or try resending.
+                    Didn&apos;t receive anything? Check your spam folder or try resending.
                 </p>
             </div>
         </AuthLayout>
