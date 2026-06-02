@@ -53,7 +53,7 @@ LANGUAGE sql
 VOLATILE
 SET search_path = public, pg_temp
 AS $$
-  SELECT rtrim(translate(encode(gen_random_bytes(32), 'base64'), '+/', '-_'), '=');
+  SELECT rtrim(translate(encode(extensions.gen_random_bytes(32), 'base64'), '+/', '-_'), '=');
 $$;
 
 ALTER TABLE IF EXISTS public.orders
