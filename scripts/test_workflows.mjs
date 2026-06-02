@@ -2,8 +2,16 @@
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://vzhwahudircrpgtitwzd.supabase.co'
-const ANON_KEY = '***REMOVED_JWT***'
-const SERVICE_KEY = '***REMOVED_JWT***'
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const OWNER_EMAIL = process.env.OWNER_QA_EMAIL
+const OWNER_PASSWORD = process.env.OWNER_QA_PASSWORD
+const SUPERVISOR_EMAIL = process.env.SUPERVISOR_QA_EMAIL
+const SUPERVISOR_PASSWORD = process.env.SUPERVISOR_QA_PASSWORD
+
+if (!ANON_KEY || !SERVICE_KEY || !OWNER_EMAIL || !OWNER_PASSWORD || !SUPERVISOR_EMAIL || !SUPERVISOR_PASSWORD) {
+    throw new Error('Set NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, OWNER_QA_EMAIL, OWNER_QA_PASSWORD, SUPERVISOR_QA_EMAIL, and SUPERVISOR_QA_PASSWORD before running this script.')
+}
 
 const results = { pass: 0, fail: 0, issues: [] }
 
@@ -32,7 +40,7 @@ async function run() {
     console.log('═══════════════════════════════════════════')
 
     // ═══════════════ OWNER TESTS ═══════════════
-    const owner = await testAs('***REMOVED_QA_EMAIL***', '***REMOVED_QA_PASSWORD***', 'Owner')
+    const owner = await testAs(OWNER_EMAIL, OWNER_PASSWORD, 'Owner')
     if (!owner) return
     const { supabase: ownerSb, jwt: ownerJwt } = owner
     const orgId = ownerJwt.org_id
@@ -112,7 +120,7 @@ async function run() {
     else pass(`Org: ${org.name}, join_code: ${org.join_code}`)
 
     // ═══════════════ SUPERVISOR TESTS ═══════════════
-    const supervisor = await testAs('***REMOVED_QA_EMAIL***', '***REMOVED_QA_PASSWORD***', 'Supervisor')
+    const supervisor = await testAs(SUPERVISOR_EMAIL, SUPERVISOR_PASSWORD, 'Supervisor')
     if (!supervisor) return
     const { supabase: supSb, jwt: supJwt } = supervisor
 

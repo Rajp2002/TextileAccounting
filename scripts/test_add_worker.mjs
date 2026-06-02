@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://vzhwahudircrpgtitwzd.supabase.co'
-const ANON_KEY = '***REMOVED_JWT***'
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const OWNER_EMAIL = process.env.OWNER_QA_EMAIL
+const OWNER_PASSWORD = process.env.OWNER_QA_PASSWORD
+
+if (!ANON_KEY || !OWNER_EMAIL || !OWNER_PASSWORD) {
+    throw new Error('Set NEXT_PUBLIC_SUPABASE_ANON_KEY, OWNER_QA_EMAIL, and OWNER_QA_PASSWORD before running this script.')
+}
 
 const supabase = createClient(SUPABASE_URL, ANON_KEY)
 
@@ -9,8 +15,8 @@ async function test() {
     // Sign in as owner
     console.log('🔐 Signing in as owner...')
     const { data: { session }, error: signInErr } = await supabase.auth.signInWithPassword({
-        email: '***REMOVED_QA_EMAIL***',
-        password: '***REMOVED_QA_PASSWORD***'
+        email: OWNER_EMAIL,
+        password: OWNER_PASSWORD
     })
     if (signInErr) { console.error('Sign in failed:', signInErr.message); return }
     console.log('✅ Signed in!')

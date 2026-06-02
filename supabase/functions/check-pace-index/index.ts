@@ -7,30 +7,24 @@
 // it fills the gaps between the nightly brief (20:00 IST) so that
 // orders falling behind pace are flagged within 6 hours, not 24.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   sendWhatsAppTemplate,
   logDelivery,
   makeCallbackData,
 } from "../_shared/whatsapp.ts";
+import {
+  createSupabaseAdminClient,
+  requireCronOrInternalAuthorization,
+} from "../_shared/secrets.ts";
 
 const TEMPLATE_NAME = "weavly_deadline_risk";
 
 Deno.serve(async (req) => {
-  // Only service_role (pg_cron) may call this.
-  // The cron passes Authorization: Bearer <service_role_key>.
-  // Public callers are rejected.
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  if (authHeader !== `Bearer ${serviceRoleKey}`) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-  }
+  const authError = requireCronOrInternalAuthorization(req);
+  if (authError) return authError;
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      serviceRoleKey,
-    );
+    const supabase = createSupabaseAdminClient();
     const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
     const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
 

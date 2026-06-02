@@ -6,7 +6,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createSupabaseAdminClient } from "../_shared/secrets.ts";
 
 // STATUS_RANK: Priority mapping to ensure we don't regress status (read > delivered > sent)
 const STATUS_RANK: Record<string, number> = {
@@ -113,10 +113,7 @@ Deno.serve(async (req) => {
 
     console.log(`[whatsapp-webhook] Status update received: ${status}`);
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const supabase = createSupabaseAdminClient();
 
     // 1. Fetch existing log record
     const { data: existing, error: fetchError } = await supabase

@@ -4,7 +4,11 @@
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://vzhwahudircrpgtitwzd.supabase.co'
-const SERVICE_KEY = '***REMOVED_JWT***'
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!SERVICE_KEY) {
+    throw new Error('Set SUPABASE_SERVICE_ROLE_KEY before running this script.')
+}
 
 // Extract project ref from URL
 const projectRef = SUPABASE_URL.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1]

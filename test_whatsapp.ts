@@ -1,7 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://vzhwahudircrpgtitwzd.supabase.co'
-const supabaseKey = '***REMOVED_JWT***'
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseKey) {
+  throw new Error('Set SUPABASE_SERVICE_ROLE_KEY before running this script.')
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 

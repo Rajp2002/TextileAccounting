@@ -1,7 +1,25 @@
 'use client'
 
+import { useSyncExternalStore } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+
+function subscribeToHydration(callback: () => void) {
+    const timeout = window.setTimeout(callback, 0)
+    return () => window.clearTimeout(timeout)
+}
+
+function getClientSnapshot() {
+    return true
+}
+
+function getServerSnapshot() {
+    return false
+}
+
+function useHydrated() {
+    return useSyncExternalStore(subscribeToHydration, getClientSnapshot, getServerSnapshot)
+}
 
 /**
  * Shared hook for the user profile query.
@@ -10,9 +28,11 @@ import { createClient } from '@/lib/supabase/client'
  */
 export function useUserProfile() {
     const supabase = createClient()
+    const mounted = useHydrated()
 
-    return useQuery({
+    const query = useQuery({
         queryKey: ['user_profile_id'], // Placeholder key we'll refresh
+        enabled: mounted,
         queryFn: async () => {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Not authenticated')
@@ -28,4 +48,11 @@ export function useUserProfile() {
         },
         staleTime: 1000 * 60 * 30, // 30 minutes — profile rarely changes
     })
+
+    return {
+        ...query,
+        data: mounted ? query.data : undefined,
+        isLoading: !mounted || query.isLoading,
+        isPending: !mounted || query.isPending,
+    }
 }

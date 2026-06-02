@@ -3,7 +3,6 @@
 // Sends Weavly Daily Brief WhatsApp to all opted-in owners.
 // Also checks active orders pace_index and sends deadline risk alerts.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   sendWhatsAppTemplate,
   logDelivery,
@@ -12,11 +11,15 @@ import {
   getSuratTodayString,
   makeCallbackData,
 } from "../_shared/whatsapp.ts";
+import {
+  createSupabaseAdminClient,
+  requireCronOrInternalAuthorization,
+} from "../_shared/secrets.ts";
 
 const TEMPLATE_PIVOT_BRIEF = "weavly_daily_brief_v2";
 const TEMPLATE_DEADLINE = "weavly_deadline_risk";
 
-type EdgeSupabaseClient = ReturnType<typeof createClient>;
+type EdgeSupabaseClient = ReturnType<typeof createSupabaseAdminClient>;
 type OwnerProfile = {
   id: string;
   org_id: string;
@@ -24,12 +27,12 @@ type OwnerProfile = {
   organizations?: { name?: string | null } | null;
 };
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  const authError = requireCronOrInternalAuthorization(req);
+  if (authError) return authError;
+
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const supabase = createSupabaseAdminClient();
     const metaAccessToken = Deno.env.get("META_WHATSAPP_TOKEN") ?? Deno.env.get("META_ACCESS_TOKEN");
     const metaPhoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID") ?? Deno.env.get("META_PHONE_NUMBER_ID");
     const todayStr = getSuratTodayString();

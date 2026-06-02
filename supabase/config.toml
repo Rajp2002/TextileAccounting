@@ -1,1 +1,34 @@
 project_id = "vzhwahudircrpgtitwzd"
+
+[functions.check-pace-index]
+verify_jwt = false
+
+[functions.monthly-brief]
+verify_jwt = false
+
+[functions.retry-failed-messages]
+verify_jwt = false
+
+[functions.send-access-code]
+verify_jwt = false
+
+[functions.send-advance-receipt]
+verify_jwt = false
+
+[functions.send-daily-brief]
+verify_jwt = false
+
+[functions.send-deadline-alert]
+verify_jwt = false
+
+[functions.send-lockdown-alert]
+verify_jwt = false
+
+[functions.send-payslip]
+verify_jwt = false
+
+[functions.whatsapp-summary]
+verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false

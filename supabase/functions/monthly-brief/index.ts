@@ -2,16 +2,19 @@
 // Scheduled by pg_cron on the 28th of every month at 18:00 UTC (23:30 IST).
 // Sends a monthly production + payroll summary to all opted-in org owners.
 //
-// Auth: Bearer <SUPABASE_SERVICE_ROLE_KEY>
+// Auth: Bearer <CRON_SECRET> or the current Supabase secret key during migration.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
 import {
     sendWhatsAppTemplate,
     logDelivery,
     makeCallbackData,
     formatInr,
 } from "../_shared/whatsapp.ts"
+import {
+    createSupabaseAdminClient,
+    requireCronOrInternalAuthorization,
+} from "../_shared/secrets.ts"
 
 const ALLOWED_ORIGIN = Deno.env.get('SITE_URL') ?? 'https://weavly.app'
 
@@ -34,18 +37,11 @@ serve(async (req) => {
         return new Response('ok', { headers: corsHeaders })
     }
 
-    // Auth: must supply service_role key (set by pg_cron)
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    const authHeader = req.headers.get('Authorization') ?? ''
-    if (authHeader !== `Bearer ${serviceRoleKey}`) {
-        return new Response('Unauthorized', { status: 401, headers: corsHeaders })
-    }
+    const authError = requireCronOrInternalAuthorization(req, corsHeaders)
+    if (authError) return authError
 
     try {
-        const supabase = createClient(
-            Deno.env.get('SUPABASE_URL') ?? '',
-            serviceRoleKey
-        )
+        const supabase = createSupabaseAdminClient()
 
         // Calculate report month (default: previous month, or override with ?month=2026-02)
         const now = new Date()

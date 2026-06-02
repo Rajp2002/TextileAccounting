@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
+import {
+    createSupabaseAdminClient,
+    requireCronOrInternalAuthorization,
+} from "../_shared/secrets.ts"
 
 // Restrict CORS: these functions are called by the server cron, not the browser.
 // Only allowing our own site origin prevents stray browser calls.
@@ -16,17 +19,11 @@ serve(async (req) => {
         return new Response('ok', { headers: corsHeaders })
     }
 
-    // 🔐 Security gate: verify CRON_SECRET
-    const authHeader = req.headers.get('Authorization')
-    if (authHeader !== `Bearer ${Deno.env.get('CRON_SECRET')}`) {
-        return new Response('Unauthorized', { status: 401, headers: corsHeaders })
-    }
+    const authError = requireCronOrInternalAuthorization(req, corsHeaders)
+    if (authError) return authError
 
     try {
-        const supabaseClient = createClient(
-            Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-        )
+        const supabaseClient = createSupabaseAdminClient()
 
         // 1. Get all organizations
         const { data: orgs, error: orgError } = await supabaseClient

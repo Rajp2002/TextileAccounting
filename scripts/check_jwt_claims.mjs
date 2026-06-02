@@ -2,15 +2,21 @@
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://vzhwahudircrpgtitwzd.supabase.co'
-const ANON_KEY = '***REMOVED_JWT***'
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const SUPERVISOR_EMAIL = process.env.SUPERVISOR_QA_EMAIL
+const SUPERVISOR_PASSWORD = process.env.SUPERVISOR_QA_PASSWORD
+
+if (!ANON_KEY || !SUPERVISOR_EMAIL || !SUPERVISOR_PASSWORD) {
+    throw new Error('Set NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPERVISOR_QA_EMAIL, and SUPERVISOR_QA_PASSWORD before running this script.')
+}
 
 const supabase = createClient(SUPABASE_URL, ANON_KEY)
 
 async function test() {
     console.log('🔐 Signing in as supervisor...')
     const { data: { session }, error: signInErr } = await supabase.auth.signInWithPassword({
-        email: '***REMOVED_QA_EMAIL***',
-        password: '***REMOVED_QA_PASSWORD***'
+        email: SUPERVISOR_EMAIL,
+        password: SUPERVISOR_PASSWORD
     })
 
     if (signInErr) { console.error('Sign in failed:', signInErr.message); return }

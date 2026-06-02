@@ -438,11 +438,16 @@ export async function lockdownTenant(orgId: string, reason: string, severity: st
 
     // Trigger WhatsApp Notification (Legally Required)
     try {
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        if (!serviceRoleKey) {
+            throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY')
+        }
+
         await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-lockdown-alert`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+                'Authorization': `Bearer ${serviceRoleKey}`
             },
             body: JSON.stringify({ org_id: orgId, reason, severity })
         })

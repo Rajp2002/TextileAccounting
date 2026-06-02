@@ -8,17 +8,23 @@
 // Template: weavly_floor_approval (UTILITY, English, 3 variables)
 //   Body: "Weavly — {{1}}\n\nFloor Reference: *{{2}}*\n\nThis approval is valid until {{3}}. Please forward this to your supervisor for field entry."
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   sendWhatsAppTemplate,
   logDelivery,
   makeCallbackData,
 } from "../_shared/whatsapp.ts";
+import {
+  createSupabaseAdminClient,
+  requireInternalAuthorization,
+} from "../_shared/secrets.ts";
 
 // Changed name to clear old rejection history and match "Approval" context
 const TEMPLATE_NAME = "weavly_floor_approval";
 
 Deno.serve(async (req) => {
+  const authError = requireInternalAuthorization(req);
+  if (authError) return authError;
+
   try {
     const body = await req.json();
     const { org_id, code, expires_at } = body;
@@ -27,10 +33,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing org_id or code" }), { status: 400 });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const supabase = createSupabaseAdminClient();
     const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
     const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
 

@@ -7,16 +7,22 @@
 // Template: weavly_tenant_lockdown (UTILITY, English, 2 variables)
 //   Body: "🚨 *URGENT: Factory Lockdown — {{1}}*\n\nYour factory floor access has been temporarily suspended due to a security or compliance detection.\n\n*Reason:* {{2}}\n*Action:* Platform isolation triggered to protect data integrity.\n\nTo request an unlock, please log in to the Weavly dashboard and use the \"Request Unlock\" button to contact the Grievance Officer.\n\n_Weavly Compliance Detection_"
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   sendWhatsAppTemplate,
   logDelivery,
   makeCallbackData,
 } from "../_shared/whatsapp.ts";
+import {
+  createSupabaseAdminClient,
+  requireInternalAuthorization,
+} from "../_shared/secrets.ts";
 
 const TEMPLATE_NAME = "weavly_tenant_lockdown";
 
 Deno.serve(async (req) => {
+  const authError = requireInternalAuthorization(req);
+  if (authError) return authError;
+
   try {
     const body = await req.json();
     const { org_id, reason, severity } = body;
@@ -25,10 +31,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing org_id or reason" }), { status: 400 });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const supabase = createSupabaseAdminClient();
     const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
     const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
 

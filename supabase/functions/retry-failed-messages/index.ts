@@ -14,21 +14,18 @@
 // The delivery log row is UPDATED (not inserted) so the audit trail
 // shows the full retry history via retry_count + last_retry_at.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendWhatsAppTemplate } from "../_shared/whatsapp.ts";
+import {
+  createSupabaseAdminClient,
+  requireCronOrInternalAuthorization,
+} from "../_shared/secrets.ts";
 
 Deno.serve(async (req) => {
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  if (authHeader !== `Bearer ${serviceRoleKey}`) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-  }
+  const authError = requireCronOrInternalAuthorization(req);
+  if (authError) return authError;
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      serviceRoleKey,
-    );
+    const supabase = createSupabaseAdminClient();
     const metaAccessToken = Deno.env.get("META_WHATSAPP_TOKEN") ?? Deno.env.get("META_ACCESS_TOKEN");
     const metaPhoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID") ?? Deno.env.get("META_PHONE_NUMBER_ID");
 

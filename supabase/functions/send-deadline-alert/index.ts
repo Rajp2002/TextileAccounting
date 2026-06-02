@@ -2,16 +2,22 @@
 // Event-driven: called from production log writes (via DailyEntry server action).
 // Checks order pace_index and fires weavly_deadline_risk with 24h cooldown per order.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   sendWhatsAppTemplate,
   logDelivery,
   makeCallbackData,
 } from "../_shared/whatsapp.ts";
+import {
+  createSupabaseAdminClient,
+  requireInternalAuthorization,
+} from "../_shared/secrets.ts";
 
 const TEMPLATE_NAME = "weavly_deadline_risk";
 
 Deno.serve(async (req) => {
+  const authError = requireInternalAuthorization(req);
+  if (authError) return authError;
+
   try {
     const body = await req.json();
     const { org_id, order_id } = body;
@@ -20,10 +26,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing org_id or order_id" }), { status: 400 });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const supabase = createSupabaseAdminClient();
     const metaAccessToken = Deno.env.get("META_ACCESS_TOKEN")!;
     const metaPhoneNumberId = Deno.env.get("META_PHONE_NUMBER_ID")!;
 

@@ -3,13 +3,16 @@
 // Sends a personalised payslip to the worker's WhatsApp number via Meta WhatsApp Cloud API.
 // Multi-machine breakdown is newline-joined into a single template variable.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   sendWhatsAppTemplate,
   logDelivery,
   formatInr,
   makeCallbackData,
 } from "../_shared/whatsapp.ts";
+import {
+  createSupabaseAdminClient,
+  requireInternalAuthorization,
+} from "../_shared/secrets.ts";
 
 // Template names must match exactly what is approved in Meta
 const TEMPLATES: Record<string, string> = {
@@ -44,6 +47,9 @@ type PayslipItemizationPayload = {
 };
 
 Deno.serve(async (req) => {
+  const authError = requireInternalAuthorization(req);
+  if (authError) return authError;
+
   try {
     const body = await req.json();
     const { org_id, worker_id, worker_type, settlement_id } = body;
@@ -52,10 +58,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const supabase = createSupabaseAdminClient();
     const metaAccessToken = Deno.env.get("META_WHATSAPP_TOKEN") ?? Deno.env.get("META_ACCESS_TOKEN");
     const metaPhoneNumberId = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID") ?? Deno.env.get("META_PHONE_NUMBER_ID");
 

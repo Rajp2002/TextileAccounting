@@ -1,7 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://vzhwahudircrpgtitwzd.supabase.co'
-const SERVICE_ROLE_KEY = '***REMOVED_JWT***'
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!SERVICE_ROLE_KEY) {
+    throw new Error('Set SUPABASE_SERVICE_ROLE_KEY before running this script.')
+}
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false }

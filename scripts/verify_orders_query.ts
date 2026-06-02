@@ -1,9 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://vzhwahudircrpgtitwzd.supabase.co'
-const ANON_KEY = '***REMOVED_JWT***'
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
-const org_id = '38932c6c-526d-40fd-bb3b-6054d72036a7' // Anil/Sunil's Org
+const orgId = process.env.VERIFY_ORDERS_ORG_ID ?? ''
+
+if (!ANON_KEY || !orgId) {
+    throw new Error('Set NEXT_PUBLIC_SUPABASE_ANON_KEY and VERIFY_ORDERS_ORG_ID before running this script.')
+}
 
 async function verify() {
     const supabase = createClient(SUPABASE_URL, ANON_KEY)
@@ -12,7 +16,7 @@ async function verify() {
     const { data, error } = await supabase
         .from('orders')
         .select('id, party_name, quality_id, qualities(name), status')
-        .eq('org_id', org_id)
+        .eq('org_id', orgId)
         .eq('status', 'active')
         .order('party_name', { ascending: true })
 
