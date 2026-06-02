@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { razorpay } from '@/lib/razorpay'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import * as Sentry from '@sentry/nextjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -132,17 +133,15 @@ export async function POST(req: NextRequest) {
             })
 
         if (insertError) {
-            console.error('[subscriptions/create] Supabase insert failed:', insertError)
+            Sentry.captureException(insertError, { tags: { route: 'subscriptions_create', phase: 'subscription_insert' } })
         }
 
         // ── If user opted out of auto-renew, tell Razorpay to cancel at cycle end ──
         if (!autoRenew) {
             try {
                 await razorpay.subscriptions.cancel(subscription.id, true)
-                console.log(`[subscriptions/create] cancel_at_cycle_end set for ${subscription.id}`)
-            } catch (cancelErr: any) {
-                // Non-fatal — DB already records the intent; log and move on
-                console.error('[subscriptions/create] Failed to set cancel_at_cycle_end on Razorpay:', cancelErr?.message)
+            } catch (cancelErr) {
+                Sentry.captureException(cancelErr, { tags: { route: 'subscriptions_create', phase: 'cancel_at_cycle_end' } })
             }
         }
 
@@ -150,10 +149,10 @@ export async function POST(req: NextRequest) {
             subscriptionId: subscription.id,
             keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         })
-    } catch (err: any) {
-        console.error('[subscriptions/create] Razorpay error:', err)
+    } catch (err) {
+        Sentry.captureException(err, { tags: { route: 'subscriptions_create', phase: 'create_razorpay_subscription' } })
         return NextResponse.json(
-            { error: err?.error?.description ?? err.message ?? 'Failed to create subscription' },
+            { error: 'Failed to create subscription. Please try again.' },
             { status: 500 }
         )
     }

@@ -37,7 +37,7 @@ function DispatchCard({
     trackingToken: string
     orderCompleted: boolean
     isPreview?: boolean
-    onConfirmed: (id: string, qty: number) => void
+    onConfirmed: (dispatchNumber: number, qty: number) => void
 }) {
     const { t } = useTranslation()
     const [expanded, setExpanded] = useState(false)
@@ -59,13 +59,13 @@ function DispatchCard({
         }
         setLocalError(null)
         startTransition(async () => {
-            const res = await confirmDispatchReceipt(dispatch.id, trackingToken, qty)
+            const res = await confirmDispatchReceipt(dispatch.dispatch_number, trackingToken, qty)
             if ('error' in res) {
                 setLocalError(res.error)
             } else {
                 setConfirmed(true)
                 setExpanded(false)
-                onConfirmed(dispatch.id, res.qty_received)
+                onConfirmed(dispatch.dispatch_number, res.qty_received)
             }
         })
     }
@@ -266,11 +266,11 @@ export default function TrackingPortal({
     // Local state for optimistic updates after Trader confirms receipt
     const [data, setData] = useState<TrackingData>(initialData)
 
-    const handleConfirmed = (id: string, qtyReceived: number) => {
+    const handleConfirmed = (dispatchNumber: number, qtyReceived: number) => {
         setData(prev => ({
             ...prev,
             dispatches: prev.dispatches.map(d =>
-                d.id === id
+                d.dispatch_number === dispatchNumber
                     ? { ...d, status: 'delivered', qty_meters_received: qtyReceived, received_at: new Date().toISOString(), receipt_confirmed_by_owner: false }
                     : d
             ),
@@ -281,7 +281,6 @@ export default function TrackingPortal({
         ? Math.min(100, (data.meters_produced / data.total_target_meters) * 100)
         : 0
 
-    const totalSent = data.dispatches.reduce((s, d) => s + Number(d.qty_meters_sent), 0)
     const allDelivered = data.dispatches.length > 0 && data.dispatches.every(d => d.status === 'delivered')
     const orderCompleted = data.status === 'completed' || data.status === 'cancelled'
 
@@ -495,7 +494,7 @@ export default function TrackingPortal({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         {data.dispatches.map(dispatch => (
                             <DispatchCard
-                                key={dispatch.id}
+                                key={dispatch.dispatch_number}
                                 dispatch={dispatch}
                                 trackingToken={trackingToken}
                                 orderCompleted={orderCompleted}

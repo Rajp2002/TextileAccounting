@@ -8,28 +8,24 @@
  * capability token before any mutation.
  *
  * Security model:
- *   - Knowing only a dispatchId (UUID) is NOT sufficient to confirm a dispatch.
- *   - The tracking_token of the parent order must also match.
- *   - This prevents a Trader from confirming a different factory's dispatch
- *     by guessing a UUID — even via a brute-force attempt.
+ *   - The client never receives or submits the internal dispatch UUID.
+ *   - Confirmation uses the tracking token plus the human dispatch number.
+ *   - The database wrapper resolves the UUID only after validating the token.
  */
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { checkTrackingRateLimit } from '@/lib/rate-limit'
+import { checkTrackingRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
+import { isValidTrackingToken, normalizeTrackingToken } from '@/lib/tracking-token'
 import { headers } from 'next/headers'
 
-const DISPATCH_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-const TRACKING_TOKEN_RE = /^[A-Za-z0-9_-]{12}$/
-
 export async function confirmDispatchReceipt(
-    dispatchId: string,
+    dispatchNumber: number,
     trackingToken: string,
     qtyReceived: number | null  // null = accept the sent qty (no shortage)
 ): Promise<{ success: true; qty_received: number } | { error: string }> {
-    const normalizedDispatchId = dispatchId.trim()
-    const normalizedTrackingToken = trackingToken.trim()
+    const normalizedTrackingToken = normalizeTrackingToken(trackingToken)
 
-    if (!DISPATCH_ID_RE.test(normalizedDispatchId) || !TRACKING_TOKEN_RE.test(normalizedTrackingToken)) {
+    if (!Number.isInteger(dispatchNumber) || dispatchNumber <= 0 || !isValidTrackingToken(normalizedTrackingToken)) {
         return { error: 'Invalid tracking link' }
     }
 
@@ -38,9 +34,7 @@ export async function confirmDispatchReceipt(
     }
 
     const headerList = await headers()
-    const clientIp = headerList.get('x-forwarded-for')?.split(',')[0]?.trim()
-        || headerList.get('x-real-ip')
-        || 'unknown'
+    const clientIp = getClientIpFromHeaders(headerList)
     const rateLimitReset = await checkTrackingRateLimit(clientIp, normalizedTrackingToken)
     if (rateLimitReset) {
         const retryInSeconds = Math.max(1, Math.ceil((rateLimitReset - Date.now()) / 1000))
@@ -48,8 +42,8 @@ export async function confirmDispatchReceipt(
     }
 
     const supabase = createAdminClient()
-    const { data, error } = await supabase.rpc('confirm_fabric_dispatch_receipt', {
-        p_dispatch_id: normalizedDispatchId,
+    const { data, error } = await supabase.rpc('confirm_fabric_dispatch_receipt_by_number', {
+        p_dispatch_number: dispatchNumber,
         p_tracking_token: normalizedTrackingToken,
         p_qty_received: qtyReceived,
     })

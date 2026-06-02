@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import Razorpay from 'razorpay';
+import * as Sentry from '@sentry/nextjs';
 
 export async function processReferralConversion(refereeOrgId: string) {
     const supabase = createAdminClient();
@@ -26,12 +27,12 @@ export async function processReferralConversion(refereeOrgId: string) {
         .maybeSingle();
 
     if (existingWindow) {
-        console.log(`[referral] Discount window already exists for referral use ${usage.id} — skipping`);
+        Sentry.captureMessage(`Discount window already exists for referral use ${usage.id}`, 'info');
         return;
     }
     
-    // Type casting to handle the join return type
-    const codeInfo = usage.referral_codes as any as { org_id: string };
+    const codeInfo = Array.isArray(usage.referral_codes) ? usage.referral_codes[0] : usage.referral_codes;
+    if (!codeInfo?.org_id) return;
     const referrerOrgId = codeInfo.org_id;
 
     // 1. Mark as converted
@@ -68,10 +69,10 @@ export async function processReferralConversion(refereeOrgId: string) {
 
     if (insertError) {
         if (insertError.code === '23505') {
-            console.log(`[referral] Concurrent insert prevented by unique constraint for use ${usage.id}`);
+            Sentry.captureMessage('Concurrent insert prevented by unique constraint', 'warning');
             return;
         }
-        console.error("Failed to insert referral discount window:", insertError);
+        Sentry.captureException(insertError, { tags: { component: 'referral_webhook', phase: 'discount_window_insert' } });
         return;
     }
 }
@@ -87,7 +88,7 @@ export async function issueReferralRefund(orgId: string, paymentId: string, amou
         .maybeSingle()
 
     if (existingRefund) {
-        console.log(`[referral] Refund already processed for payment ${paymentId} — skipping`)
+        Sentry.captureMessage(`Refund already processed for payment ${paymentId}`, 'info')
         return
     }
     
@@ -129,11 +130,11 @@ export async function issueReferralRefund(orgId: string, paymentId: string, amou
                 refundId = refund.id;
                 status = 'issued';
             } catch (error) {
-                console.error("Failed to issue Razorpay refund:", error);
+                Sentry.captureException(error, { tags: { component: 'referral_webhook', phase: 'razorpay_refund' } });
                 status = 'failed';
             }
         } else {
-             console.warn("Razorpay keys missing, skipping actual refund API call");
+            Sentry.captureMessage('Razorpay keys missing for referral refund', 'warning');
         }
         
         // Log it

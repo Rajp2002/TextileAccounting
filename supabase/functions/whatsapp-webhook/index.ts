@@ -16,6 +16,13 @@ const STATUS_RANK: Record<string, number> = {
   failed: 2, // failed is terminal
 };
 
+type DeliveryLogUpdatePayload = {
+  status: string;
+  delivered_at?: string;
+  read_at?: string;
+  error_message?: string;
+};
+
 Deno.serve(async (req) => {
   const url = new URL(req.url);
 
@@ -79,7 +86,7 @@ Deno.serve(async (req) => {
       return new Response("Invalid signature", { status: 401 });
     }
   } else {
-    console.log("[whatsapp-webhook] META_APP_SECRET not set, signature verification disabled");
+    console.warn("[whatsapp-webhook] META_APP_SECRET not set, signature verification disabled");
   }
 
   try {
@@ -104,7 +111,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
     }
 
-    console.log(`[whatsapp-webhook] Status update: ${metaMessageId} -> ${status}`);
+    console.log(`[whatsapp-webhook] Status update received: ${status}`);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -119,7 +126,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (fetchError || !existing) {
-      console.warn(`[whatsapp-webhook] No record found for meta_message_id: ${metaMessageId}`);
+      console.warn("[whatsapp-webhook] No delivery log record found for provider message id");
       return new Response(JSON.stringify({ ok: true, warning: "Not found" }), { status: 200 });
     }
 
@@ -133,7 +140,7 @@ Deno.serve(async (req) => {
 
     // 3. Update status and timestamps
     const now = new Date().toISOString();
-    const updatePayload: any = { status };
+    const updatePayload: DeliveryLogUpdatePayload = { status };
     if (status === "delivered") updatePayload.delivered_at = now;
     if (status === "read") updatePayload.read_at = now;
     if (status === "failed") {

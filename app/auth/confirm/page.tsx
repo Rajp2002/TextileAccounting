@@ -7,8 +7,9 @@ import { Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { BrandBackground } from '@/components/brand-background'
+import type { Session } from '@supabase/supabase-js'
 
-function parseJWTClaims(token: string): Record<string, any> {
+function parseJWTClaims(token: string): Record<string, unknown> {
     try {
         const payload = token.split('.')[1]
         return JSON.parse(Buffer.from(payload, 'base64url').toString('utf-8'))
@@ -25,7 +26,7 @@ function ConfirmContent() {
     const [error, setError] = useState<string | null>(null)
     const processingRef = useRef(false)
 
-    const redirectByRole = async (session: any) => {
+    const redirectByRole = async (session: Session) => {
         const jwt = parseJWTClaims(session.access_token)
         const role = jwt.user_role
         const onboardingComplete = jwt.onboarding_complete
@@ -43,15 +44,15 @@ function ConfirmContent() {
         }
     }
 
-    const finalizeLogin = async (session: any) => {
+    const finalizeLogin = async (session: Session) => {
         if (processingRef.current) return
         processingRef.current = true
 
         setStatus('Redirecting to dashboard...')
         try {
             await redirectByRole(session)
-        } catch (e: any) {
-            setError(e.message)
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Unable to finish login')
             processingRef.current = false
         }
     }
@@ -86,12 +87,20 @@ function ConfirmContent() {
                 }
             }
 
-            // Step 2: Check for existing session (cookie-based)
+            // Step 2: Check for existing authenticated user (cookie-based)
             setStatus('Checking session...')
-            const { data: { session } } = await supabase.auth.getSession()
+            const { data: { user } } = await supabase.auth.getUser()
 
-            if (session) {
-                await finalizeLogin(session)
+            if (user) {
+                const role = user.app_metadata?.role ?? user.app_metadata?.user_role
+                const onboardingComplete = user.app_metadata?.onboarding_complete === true
+                if (role === 'owner') {
+                    router.push(onboardingComplete ? '/owner/today' : '/onboarding')
+                } else if (role === 'supervisor') {
+                    router.push('/supervisor/production')
+                } else {
+                    router.push('/login')
+                }
                 return
             }
 

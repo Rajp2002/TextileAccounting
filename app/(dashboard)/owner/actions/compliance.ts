@@ -4,6 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import crypto from 'crypto'
+import * as Sentry from '@sentry/nextjs'
 
 /**
  * Fetches the active notice for a specific type and language.
@@ -70,8 +71,8 @@ export async function logWorkerConsent(
     })
 
     if (error) {
-        console.error('[logWorkerConsent] Error:', error.message)
-        return { error: error.message }
+        Sentry.captureException(error, { tags: { action: 'log_worker_consent' } })
+        return { error: 'Failed to log consent. Please try again.' }
     }
 
     return { success: true, hash: auditHash }
@@ -91,7 +92,8 @@ export async function requestOtherLanguage(languageCode: string, workerNameHint?
     })
 
     if (error) {
-        return { error: error.message }
+        Sentry.captureException(error, { tags: { action: 'request_notice_language' } })
+        return { error: 'Failed to request this language. Please try again.' }
     }
 
     revalidatePath('/owner/settings/audit')
@@ -102,9 +104,26 @@ export async function requestOtherLanguage(languageCode: string, workerNameHint?
  * Implements "Right to Erasure" — Anonymizes worker records while preserving audit trails.
  */
 export async function eraseWorkerPII(workerId: number, workerType: 'meter' | 'fixed') {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
     const orgId = profile.org_id
+    const table = workerType === 'meter' ? 'workers' : 'fixed_workers'
+
+    const { data: worker, error: workerLookupError } = await supabase
+        .from(table)
+        .select('id')
+        .eq('id', workerId)
+        .eq('org_id', orgId)
+        .maybeSingle()
+
+    if (workerLookupError) {
+        Sentry.captureException(workerLookupError, { tags: { action: 'erase_worker_pii', phase: 'worker_lookup' } })
+        return { error: 'Failed to process erasure request. Please try again.' }
+    }
+
+    if (!worker) {
+        return { error: 'Worker not found.' }
+    }
 
     // 1. Anonymize the consent artifacts
     const { error: artifactError } = await supabase
@@ -117,26 +136,48 @@ export async function eraseWorkerPII(workerId: number, workerType: 'meter' | 'fi
         .eq('org_id', orgId)
 
     if (artifactError) {
-        console.error('[eraseWorkerPII] Artifact Error:', artifactError.message)
+        Sentry.captureException(artifactError, { tags: { action: 'erase_worker_pii', phase: 'consent_artifacts' } })
     }
 
     // 2. Anonymize the worker record
-    const table = workerType === 'meter' ? 'workers' : 'fixed_workers'
     const { error: workerError } = await supabase
         .from(table)
         .update({
             name: 'ERASED WORKER',
             is_active: false,
-            // Nullify other PII if exists
-            ...(workerType === 'meter' ? { whatsapp_number: null } : { esi_number: null, pf_number: null })
+            whatsapp_number: null,
+            esi_number: null,
+            pf_number: null,
         })
         .eq('id', workerId)
         .eq('org_id', orgId)
 
     if (workerError) {
-        return { error: workerError.message }
+        Sentry.captureException(workerError, { tags: { action: 'erase_worker_pii', phase: 'worker_update' } })
+        return { error: 'Failed to process erasure request. Please try again.' }
+    }
+
+    const { error: auditError } = await supabase
+        .from('audit_log')
+        .insert({
+            org_id: orgId,
+            table_name: table,
+            record_id: String(workerId),
+            action: 'dpdp.erasure',
+            new_data: {
+                worker_type: workerType,
+                erased_fields: ['name', 'whatsapp_number', 'esi_number', 'pf_number'],
+                erased_at: new Date().toISOString(),
+            },
+            changed_by: user.id,
+        })
+
+    if (auditError) {
+        Sentry.captureException(auditError, { tags: { action: 'erase_worker_pii', phase: 'audit_log' } })
+        return { error: 'Failed to process erasure request. Please try again.' }
     }
 
     revalidatePath(workerType === 'meter' ? '/owner/workers' : '/owner/fixed-workers')
+    revalidatePath('/owner/payroll')
     return { success: true }
 }

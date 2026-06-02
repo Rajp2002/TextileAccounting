@@ -105,11 +105,10 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
       .channel(channelName)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'production_logs' },
+        { event: 'INSERT', schema: 'public', table: 'production_logs', filter: `org_id=eq.${orgId}` },
         handleRealtimeUpdate
       )
       .subscribe((status: string) => {
-        console.log(`[Dashboard] Realtime status for ${channelName}:`, status)
         if (status === 'SUBSCRIBED') {
           setConnectionStatus((prev) => {
             if (prev === 'reconnecting' || prev === 'error' || prev === 'offline') {

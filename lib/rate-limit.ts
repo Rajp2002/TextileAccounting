@@ -118,6 +118,16 @@ export function getTrackingLimiter() {
     return _trackingLimiter
 }
 
+/**
+ * Public POST limiter. Used for unauthenticated endpoints before expensive work
+ * or signature parsing.
+ */
+let _publicPostLimiter: Ratelimit | null | undefined = undefined
+export function getPublicPostLimiter() {
+    if (_publicPostLimiter === undefined) _publicPostLimiter = createLimiter(120, 60)
+    return _publicPostLimiter
+}
+
 // ─── Core Check Function ──────────────────────────────────────────────────────
 
 /**
@@ -177,6 +187,20 @@ export async function checkAccessCodeRateLimit(userId: string): Promise<number |
 export async function checkTrackingRateLimit(ip: string, trackingToken: string): Promise<number | null> {
     const result = await checkRateLimit(getTrackingLimiter, `tracking:${ip}:${trackingToken}`)
     return result.success ? null : result.reset
+}
+
+/**
+ * Pre-built helper: check public POST routes by IP and route bucket.
+ */
+export async function checkPublicPostRateLimit(ip: string, bucket: string): Promise<number | null> {
+    const result = await checkRateLimit(getPublicPostLimiter, `public-post:${bucket}:${ip}`)
+    return result.success ? null : result.reset
+}
+
+export function getClientIpFromHeaders(headerList: { get(name: string): string | null }): string {
+    return headerList.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || headerList.get('x-real-ip')
+        || 'unknown'
 }
 
 // ─── Phase 3: Advanced Redis Controls ─────────────────────────────────────────

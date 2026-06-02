@@ -107,8 +107,9 @@ export async function sendWhatsAppTemplate(
   templateName: string,
   languageCode: string = "en",
   bodyValues: string[],
-  callbackData: string,
+  _callbackData: string,
 ): Promise<WhatsAppResult> {
+  void _callbackData;
   // Ensure phone has Indian country code prefix
   const formattedPhone = phone.startsWith("91") && phone.length === 12 
     ? phone 
@@ -151,7 +152,7 @@ export async function sendWhatsAppTemplate(
     // Support for provider simulation (testing mode)
     const provider = Deno.env.get("WHATSAPP_PROVIDER") || "meta";
     if (provider === "simulate") {
-      console.log(`[SIMULATE] WhatsApp to ${formattedPhone}: ${templateName}`);
+      console.log(`[SIMULATE] WhatsApp template: ${templateName}`);
       return { 
         success: true, 
         responseBody: { simulated: true }, 
@@ -219,7 +220,7 @@ export async function sendWhatsAppFreeform(
   try {
     const provider = Deno.env.get("WHATSAPP_PROVIDER") || "meta";
     if (provider === "simulate") {
-      console.log(`[SIMULATE FREEFORM] WhatsApp to ${formattedPhone}: ${message}`);
+      console.log("[SIMULATE FREEFORM] WhatsApp freeform message queued");
       return { 
         success: true, 
         responseBody: { simulated: true }, 

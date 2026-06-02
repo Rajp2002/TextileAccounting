@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { razorpay } from '@/lib/razorpay'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import * as Sentry from '@sentry/nextjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,7 @@ export const dynamic = 'force-dynamic'
  *   409 — already set to cancel at cycle end
  *   500 — Razorpay or Supabase error
  */
-export async function POST(_req: NextRequest) {
+export async function POST() {
     const supabase = await createClient()
 
     // ── Auth check ────────────────────────────────────────────────────────────
@@ -74,11 +75,10 @@ export async function POST(_req: NextRequest) {
     // ── Tell Razorpay to cancel at cycle end ──────────────────────────────────
     try {
         await razorpay.subscriptions.cancel(sub.razorpay_subscription_id!, true)
-        console.log(`[auto-renew] cancel_at_cycle_end set for ${sub.razorpay_subscription_id}`)
-    } catch (err: any) {
-        console.error('[auto-renew] Razorpay cancel failed:', err?.error?.description ?? err.message)
+    } catch (err) {
+        Sentry.captureException(err, { tags: { route: 'subscriptions_auto_renew', phase: 'cancel_razorpay_subscription' } })
         return NextResponse.json(
-            { error: err?.error?.description ?? 'Failed to update subscription on payment gateway.' },
+            { error: 'Failed to update subscription. Please try again.' },
             { status: 500 }
         )
     }
@@ -93,7 +93,7 @@ export async function POST(_req: NextRequest) {
         .eq('id', sub.id)
 
     if (updateError) {
-        console.error('[auto-renew] DB update failed:', updateError)
+        Sentry.captureException(updateError, { tags: { route: 'subscriptions_auto_renew', phase: 'subscription_update' } })
         // Razorpay is already updated — flag mismatch, but non-fatal
     }
 

@@ -15,7 +15,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { getUserClaims } from '@/lib/auth'
+import { requireRole } from '@/lib/auth'
 import { CreateOrgSchema, JoinOrgSchema, PasswordResetRequestSchema, SignInSchema, safeParse } from '@/lib/schemas'
 import { hasExplicitProductionMode } from '@/lib/production-mode'
 
@@ -445,31 +445,9 @@ export async function signIn(input: { email: string; password: string }) {
  * Called from Owner Settings page.
  */
 export async function regenerateJoinCode() {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) return { error: 'Not authenticated' }
-
-    const claims = getUserClaims(user)
-    let userRole = claims.role
-    let orgId = claims.org_id
-
+    const { profile } = await requireRole(['owner'])
+    const orgId = profile.org_id
     const adminClient = createAdminClient()
-
-    if (!userRole || !orgId) {
-        const { data: profile } = await adminClient
-            .from('profiles')
-            .select('role, org_id')
-            .eq('id', user.id)
-            .maybeSingle()
-        if (profile) {
-            userRole = userRole || profile.role
-            orgId = orgId || profile.org_id
-        }
-    }
-
-    if (userRole !== 'owner') return { error: 'Unauthorized' }
-    if (!orgId) return { error: 'Organization not found' }
 
     const newCode = generateJoinCode()
     const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -508,27 +486,9 @@ export async function getOnboardingStatus(): Promise<{
     hasPlan: boolean
     isComplete: boolean
 }> {
+    const { profile } = await requireRole(['owner'])
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) redirect('/login')
-
-    // Prefer org_id from JWT (fast path). Fall back to DB lookup when JWT is
-    // stale (race condition: hook fires before profile row is visible on fresh signup).
-    let orgId = getUserClaims(user).org_id
-
-    if (!orgId) {
-        const admin = createAdminClient()
-        const { data: profile } = await admin
-            .from('profiles')
-            .select('org_id')
-            .eq('id', user.id)
-            .maybeSingle()
-        orgId = profile?.org_id ?? undefined
-    }
-
-    // If we still have no org_id after the DB fallback, the account is truly broken
-    if (!orgId) redirect('/login')
+    const orgId = profile.org_id
 
     const [machines, workers, payrollConfig, subscription] = await Promise.all([
         supabase.from('machines').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
@@ -595,26 +555,13 @@ export async function getOnboardingStatus(): Promise<{
  * server action boundary and crash the client-side call.
  */
 export async function markOnboardingComplete(): Promise<{ success?: boolean; error?: string }> {
+    const { profile } = await requireRole(['owner'])
     try {
-        const supabase = await createClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return { error: 'Not authenticated' }
-
         // Use admin client to bypass RLS for the org update.
         // The organizations UPDATE policy relies on auth.jwt() org_id claim which
         // may be absent on a fresh signup (stale JWT race condition).
         const admin = createAdminClient()
-
-        let orgId = getUserClaims(user).org_id
-        if (!orgId) {
-            const { data: profile } = await admin
-                .from('profiles')
-                .select('org_id')
-                .eq('id', user.id)
-                .maybeSingle()
-            orgId = profile?.org_id ?? undefined
-        }
-        if (!orgId) return { error: 'No org found — profile may still be loading' }
+        const orgId = profile.org_id
 
         const { error } = await admin
             .from('organizations')

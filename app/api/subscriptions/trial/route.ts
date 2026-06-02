@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import * as Sentry from '@sentry/nextjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +18,7 @@ export const dynamic = 'force-dynamic'
  *   409 — trial or active subscription already exists
  *   500 — Supabase error
  */
-export async function POST(_req: NextRequest) {
+export async function POST() {
     const supabase = await createClient()
 
     // ── Auth check ────────────────────────────────────────────────────────────
@@ -42,7 +43,6 @@ export async function POST(_req: NextRequest) {
     }
 
     // ── Check for any existing ACTIVE (non-expired) subscription ─────────────────
-    const now = new Date().toISOString()
     const { data: existing } = await supabase
         .from('org_subscriptions')
         .select('status, plan_tier, current_end')
@@ -78,7 +78,7 @@ export async function POST(_req: NextRequest) {
         })
 
     if (error) {
-        console.error('[subscriptions/trial] Insert failed:', error)
+        Sentry.captureException(error, { tags: { route: 'subscriptions_trial', phase: 'trial_insert' } })
         return NextResponse.json({ error: 'Failed to start trial. Please try again.' }, { status: 500 })
     }
 

@@ -74,9 +74,9 @@ export default function ResetPasswordForm() {
             setStatus('invalid')
         }
 
-        const getCurrentSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession()
-            return session
+        const getCurrentUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser()
+            return user
         }
 
         const establishRecoverySession = async () => {
@@ -116,8 +116,8 @@ export default function ResetPasswordForm() {
                         return
                     }
 
-                    const session = await getCurrentSession()
-                    if (session && hasRecoveryHint) {
+                    const user = await getCurrentUser()
+                    if (user && hasRecoveryHint) {
                         markReady()
                         return
                     }
@@ -127,8 +127,8 @@ export default function ResetPasswordForm() {
                 }
 
                 if (hasRecoveryHint) {
-                    const session = await getCurrentSession()
-                    if (session) {
+                    const user = await getCurrentUser()
+                    if (user) {
                         markReady()
                         return
                     }

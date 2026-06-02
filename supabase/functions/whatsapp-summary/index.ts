@@ -52,7 +52,7 @@ serve(async (req) => {
                 .maybeSingle()
 
             if (existingLog) {
-                console.log(`[SKIP] Summary already sent for ${org.name} on ${todayIST}`)
+                console.log(`[SKIP] Summary already sent for org ${org.id} on ${todayIST}`)
                 results.push({ org: org.name, status: 'skipped', reason: 'already_sent' })
                 continue
             }
@@ -87,7 +87,7 @@ serve(async (req) => {
             // 4. Send WhatsApp (Mock implementation for now)
             const message = `*Daily Summary for ${org.name}*\nDate: ${todayIST}\nTotal Production: ${totalMeters} meters`
 
-            console.log(`Sending to ${owners[0].phone}: ${message}`)
+            console.log(`[whatsapp-summary] Sending daily summary for org ${org.id}`)
 
             // 🛡️ C-2 Fix: Log the send (UNIQUE constraint prevents duplicates)
             await supabaseClient.from('daily_brief_logs').insert({
@@ -97,7 +97,7 @@ serve(async (req) => {
                 details: { totalMeters, sentTo: owners[0].phone },
             })
 
-            results.push({ org: org.name, total: totalMeters, sentTo: owners[0].phone })
+            results.push({ org: org.name, total: totalMeters, status: 'sent' })
         }
 
         return new Response(

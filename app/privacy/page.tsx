@@ -2,7 +2,6 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Database, LockKeyhole, Mail, ShieldCheck } from 'lucide-react'
 import { PolicyCallout, PolicyContactPanel, PolicyPage, PolicySection } from '@/components/policies/legal-page'
-import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
     title: 'Privacy Policy — Weavly',
@@ -26,19 +25,9 @@ const sections = [
 ]
 
 export default async function PrivacyPolicyPage() {
-    const supabase = await createClient()
-    const { data: settings } = await supabase
-        .from('compliance_settings')
-        .select('*')
-        .single()
-
-    const gro = settings || {
-        gro_name: 'Raj Patel',
-        gro_email: 'rajpatel86420@gmail.com',
-    }
-
-    const groName = gro.gro_name ?? 'Raj Patel'
-    const groEmail = gro.gro_email ?? 'privacy@weavly.app'
+    const groName = 'Raj Patel'
+    const groEmail = 'privacy@weavly.app'
+    const groPhone: string | null = null
 
     return (
         <PolicyPage
@@ -216,8 +205,8 @@ export default async function PrivacyPolicyPage() {
                             value: (
                                 <>
                                     <a href={`mailto:${groEmail}`} className="text-orange-700 hover:underline dark:text-orange-300">{groEmail}</a>
-                                    {gro.gro_phone && (
-                                        <span className="block text-sm font-medium text-zinc-500 dark:text-zinc-400">Phone: {gro.gro_phone}</span>
+                                    {groPhone && (
+                                        <span className="block text-sm font-medium text-zinc-500 dark:text-zinc-400">Phone: {groPhone}</span>
                                     )}
                                 </>
                             ),

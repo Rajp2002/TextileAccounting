@@ -3,11 +3,14 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import TrackingPortal from './TrackingPortal'
 import type { Metadata } from 'next'
 import { I18nProvider } from '@/lib/i18n/context'
+import { headers } from 'next/headers'
+import * as Sentry from '@sentry/nextjs'
+import { checkTrackingRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
+import { isValidTrackingToken, normalizeTrackingToken } from '@/lib/tracking-token'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 export interface TrackingDispatch {
-    id: string
     dispatch_number: number
     qty_meters_sent: number
     qty_meters_received: number | null
@@ -29,26 +32,30 @@ export interface TrackingData {
 
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
     const { token } = await params
-    const supabase = createAdminClient()
-    const { data } = await supabase.rpc('get_order_tracking_data', { p_token: token })
-
-    if (!data) {
+    if (!isValidTrackingToken(token)) {
         return { title: 'Order Not Found · Weavly' }
     }
 
     return {
-        title: `${data.party_name}'s Order · Weavly Tracking`,
-        description: `Track fabric order for ${data.party_name} — ${data.meters_produced} of ${data.total_target_meters} metres produced.`,
+        title: 'Order Tracking · Weavly',
+        description: 'Track your fabric dispatch and confirm received quantities.',
     }
 }
 
 import { createClient } from '@/lib/supabase/server'
 
 export default async function TrackingPage({ params }: { params: Promise<{ token: string }> }) {
-    const { token } = await params
+    const { token: rawToken } = await params
+    const token = normalizeTrackingToken(rawToken)
 
-    // Basic token format validation — prevents trivially malformed lookups
-    if (!token || token.length < 8 || token.length > 64) {
+    if (!isValidTrackingToken(token)) {
+        notFound()
+    }
+
+    const headerList = await headers()
+    const clientIp = getClientIpFromHeaders(headerList)
+    const rateLimitReset = await checkTrackingRateLimit(clientIp, token)
+    if (rateLimitReset) {
         notFound()
     }
 
@@ -65,7 +72,7 @@ export default async function TrackingPage({ params }: { params: Promise<{ token
         .rpc('get_order_tracking_data', { p_token: token })
 
     if (error) {
-        console.error('[TrackingPage] RPC error:', error.message)
+        Sentry.captureException(error, { tags: { route: 'public_tracking' } })
         notFound()
     }
 

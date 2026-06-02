@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
-import withPWAInit from "next-pwa";
+import withPWAInit from "@ducanh2912/next-pwa";
 
 // ─── Security Headers ─────────────────────────────────────────────────────────
 const cspHeader = `
@@ -30,9 +30,6 @@ const withPWA = withPWAInit({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
   register: true,
-  skipWaiting: true,
-  clientsClaim: true,
-  cleanupOutdatedCaches: true,
   cacheStartUrl: false,
   dynamicStartUrl: true,
   reloadOnOnline: false,
@@ -44,7 +41,12 @@ const withPWA = withPWAInit({
     '!**/*.map',
     '!.DS_Store',
   ],
-  buildExcludes: [/\.map$/],
+  workboxOptions: {
+    exclude: [/\.map$/],
+    skipWaiting: true,
+    clientsClaim: true,
+    cleanupOutdatedCaches: true,
+  },
 })
 
 const nextConfig: NextConfig = {

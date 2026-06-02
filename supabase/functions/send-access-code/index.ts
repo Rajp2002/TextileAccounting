@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[send-access-code] Sending to owner: ${owner.full_name} (${owner.whatsapp_number})`);
+    console.log(`[send-access-code] Sending owner access-code template for org ${org_id}`);
 
     // 2. Fetch factory name
     const { data: org } = await supabase.from("organizations").select("name").eq("id", org_id).single();

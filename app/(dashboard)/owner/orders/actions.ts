@@ -300,7 +300,14 @@ export async function getOrderWithQuote(orderId: string) {
         .eq('status', 'active')
         .order('name', { ascending: true })
 
-    return { order, quote: quote ?? null, machines: machines ?? [] }
+    const normalizedMachines = (machines ?? []).map((machine) => ({
+        ...machine,
+        linked_order: Array.isArray(machine.linked_order)
+            ? machine.linked_order[0] ?? null
+            : machine.linked_order ?? null,
+    }))
+
+    return { order, quote: quote ?? null, machines: normalizedMachines }
 }
 
 export async function getActiveMachinesList() {
@@ -315,7 +322,14 @@ export async function getActiveMachinesList() {
         .order('name', { ascending: true })
 
     if (error) return { error: error.message }
-    return { data: data ?? [] }
+    return {
+        data: (data ?? []).map((machine) => ({
+            ...machine,
+            linked_order: Array.isArray(machine.linked_order)
+                ? machine.linked_order[0] ?? null
+                : machine.linked_order ?? null,
+        }))
+    }
 }
 
 /** Assign machines to an order */

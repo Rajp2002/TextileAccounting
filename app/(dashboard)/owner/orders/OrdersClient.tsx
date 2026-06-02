@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useTransition, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslation } from '@/lib/i18n/context'
 import { Button } from '@/components/ui/button'
@@ -22,7 +22,6 @@ import {
     X,
     Server,
     Calculator,
-    TrendingUp,
     ArrowUpRight,
     Pencil,
     Check,
@@ -32,7 +31,6 @@ import {
     RefreshCw,
     Send,
     QrCode,
-    Copy,
     Truck,
     Archive,
 } from 'lucide-react'
@@ -42,7 +40,6 @@ import {
     SheetDescription,
     SheetHeader,
     SheetTitle,
-    SheetFooter,
 } from '@/components/ui/sheet'
 import {
     Dialog,
@@ -59,7 +56,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
-import { format, differenceInDays, addDays } from 'date-fns'
+import { format, differenceInDays } from 'date-fns'
 import {
     getOrdersWithProgress,
     updateOrderStatus,
@@ -69,18 +66,46 @@ import {
     updateOrderDetails,
     requestAccessCodeAsOwner,
     getDispatchesForOrder,
-    createDispatch,
     getTrackingToken,
     type DispatchRow,
     type DispatchSummary,
-    type AvailableFabricPackage,
 } from './actions'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { QRCodeSVG } from 'qrcode.react'
 import { CostAnalysisDetails } from '@/components/cost-analysis-details'
 
 // ─── Utility helpers ─────────────────────────────────────────────────────────
+
+type MachineOption = {
+    id: string
+    name: string
+    current_order_id: string | null
+    linked_order?: { status: string } | { status: string }[] | null
+}
+
+type OrderProgressRow = {
+    order_id: string
+    deadline: string
+    status: 'active' | 'completed' | 'cancelled' | string
+    party_name: string
+    quality_label: string | null
+    display_quality_name?: string | null
+    warp_instruction?: string | null
+    weft_instruction?: string | null
+    total_target_meters: number | string
+    total_meters_produced?: number | string | null
+    progress_percent?: number | string | null
+    pace_index?: number | string | null
+    worker_rate_per_m?: number | string | null
+    assigned_machines_count: number
+    has_quote?: boolean
+}
+
+type OrderDetailData = {
+    order: OrderProgressRow
+    quote: Record<string, unknown> | null
+    machines: MachineOption[]
+}
 
 function paceColor(paceIndex: number | null) {
     if (paceIndex === null) return 'text-slate-400'
@@ -102,6 +127,10 @@ function daysLabel(daysRemaining: number) {
     return { text: `${daysRemaining}d left`, cls: 'text-slate-400' }
 }
 
+function getLinkedOrderStatus(linkedOrder: MachineOption['linked_order']) {
+    return Array.isArray(linkedOrder) ? linkedOrder[0]?.status : linkedOrder?.status
+}
+
 // ─── Machine Assign Inline ───────────────────────────────────────────────────
 
 function MachineAssignInline({
@@ -112,7 +141,7 @@ function MachineAssignInline({
 }: {
     orderId: string
     currentMachineIds: string[]
-    allMachines: Array<{ id: string; name: string; current_order_id: string | null }>
+    allMachines: MachineOption[]
     onSuccess: () => void
 }) {
     const { t } = useTranslation()
@@ -151,11 +180,11 @@ function MachineAssignInline({
     return (
         <div className="space-y-2">
             <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                {allMachines.map((m: any) => {
+                {allMachines.map((m) => {
                     const isSelected = selected.has(m.id)
                     const linkedToOther = m.current_order_id && 
                                         m.current_order_id !== orderId && 
-                                        m.linked_order?.status === 'active'
+                                        getLinkedOrderStatus(m.linked_order) === 'active'
                     return (
                         <div
                             key={m.id}
@@ -559,7 +588,7 @@ function OrderDetailDrawer({
     onRefresh: () => void
 }) {
     const { t } = useTranslation()
-    const [data, setData] = useState<any>(null)
+    const [data, setData] = useState<OrderDetailData | null>(null)
     const [loading, setLoading] = useState(false)
     const [editingDeadline, setEditingDeadline] = useState(false)
     const [deadlineVal, setDeadlineVal] = useState('')
@@ -646,7 +675,7 @@ function OrderDetailDrawer({
         const res = await updateOrderDetails(orderId, { total_target_meters: t }, accessCode)
         setSavingEdit(false)
         if (res.success) {
-            if ((res as any).reactivated) {
+            if ('reactivated' in res && res.reactivated) {
                 toast.success('Target updated · Order reactivated — machines can now be reassigned')
             } else {
                 toast.success('Target updated')
@@ -671,8 +700,8 @@ function OrderDetailDrawer({
     const target = Number(order?.total_target_meters ?? 0)
     const paceIndex = order?.pace_index ? Number(order.pace_index) : null
     const currentMachineIds: string[] = machines
-        .filter((m: any) => m.current_order_id === orderId)
-        .map((m: any) => m.id)
+        .filter((m) => m.current_order_id === orderId)
+        .map((m) => m.id)
 
     return (
         <>
@@ -1006,7 +1035,7 @@ function OrderDetailDrawer({
 // ─── Order Card ───────────────────────────────────────────────────────────────
 
 interface OrderCardProps {
-    order: any
+    order: OrderProgressRow
     onSelect: (id: string) => void
     onComplete: (id: string) => void
     onCancel: (id: string) => void
@@ -1020,8 +1049,6 @@ function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
     const paceIndex = order.pace_index ? Number(order.pace_index) : null
     const metersProduced = Number(order.total_meters_produced ?? 0)
     const target = Number(order.total_target_meters)
-    const hasQuote = Boolean(order.has_quote) // if we add this to view later
-
     return (
         <div
             className="bg-card border border-border shadow-sm rounded-2xl p-4 space-y-3 hover:border-primary/40 hover:shadow-md transition-all cursor-pointer group"
@@ -1172,29 +1199,23 @@ function KanbanColumn({
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
-export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
+export function OrdersClient({ initialOrders, orgId }: { initialOrders: OrderProgressRow[], orgId: string }) {
     const { t } = useTranslation()
     const searchParams = useSearchParams()
     const [loading, setLoading] = useState(false)
-    const [orders, setOrders] = useState<any[]>(initialOrders)
+    const [orders, setOrders] = useState<OrderProgressRow[]>(initialOrders)
+    const initialOrderId = searchParams.get('orderId')
+    const showCreatedToast = Boolean(initialOrderId) && searchParams.get('created') === '1'
+    const hasShownCreatedToast = useRef(false)
 
-    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(() => initialOrderId)
 
     // Auto-open drawer if ?orderId= is in URL (e.g. from Start Party Order redirect)
-    const hasAutoOpened = useRef(false)
     useEffect(() => {
-        if (hasAutoOpened.current) return
-        const urlOrderId = searchParams.get('orderId')
-        const wasCreated  = searchParams.get('created') === '1'
-        if (urlOrderId) {
-            hasAutoOpened.current = true
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-            setSelectedOrderId(urlOrderId)
-            if (wasCreated) {
-                toast.success('Party order started! Assign machines to begin production.')
-            }
-        }
-    }, [searchParams])
+        if (!showCreatedToast || hasShownCreatedToast.current) return
+        hasShownCreatedToast.current = true
+        toast.success('Party order started! Assign machines to begin production.')
+    }, [showCreatedToast])
 
     const fetchOrders = useCallback(async () => {
         // Suppress loading flicker if we already have data
@@ -1211,12 +1232,12 @@ export function OrdersClient({ initialOrders }: { initialOrders: any[] }) {
     useEffect(() => {
         const supabase = createClient()
         const channel = supabase
-            .channel('orders-realtime')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'production_logs' }, fetchOrders)
+            .channel(`orders-realtime:${orgId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `org_id=eq.${orgId}` }, fetchOrders)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'production_logs', filter: `org_id=eq.${orgId}` }, fetchOrders)
             .subscribe()
         return () => { supabase.removeChannel(channel) }
-    }, [fetchOrders])
+    }, [fetchOrders, orgId])
 
     const handleComplete = async (id: string) => {
         const res = await updateOrderStatus(id, 'completed')

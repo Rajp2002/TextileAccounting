@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getOrCreateReferralCode, getReferralStats } from '@/lib/referral';
 import { requireRole } from '@/lib/auth';
+import * as Sentry from '@sentry/nextjs';
 
-export async function GET(req: Request) {
+export async function GET() {
     try {
         const { profile } = await requireRole(['owner']);
         
@@ -21,13 +22,13 @@ export async function GET(req: Request) {
         }
 
         return NextResponse.json(stats);
-    } catch (error: any) {
-         console.error("Fetch referral stats error:", error);
-         return NextResponse.json({ error: 'Failed to fetch referral profile' }, { status: 500 });
+    } catch (error) {
+        Sentry.captureException(error, { tags: { route: 'referrals_generate', method: 'GET' } });
+        return NextResponse.json({ error: 'Failed to fetch referral profile' }, { status: 500 });
     }
 }
 
-export async function POST(req: Request) {
+export async function POST() {
      try {
         const { profile } = await requireRole(['owner']);
         
@@ -38,8 +39,8 @@ export async function POST(req: Request) {
         const code = await getOrCreateReferralCode(profile.org_id);
 
         return NextResponse.json({ code });
-    } catch (error: any) {
-        console.error("Generate referral code error:", error);
+    } catch (error) {
+        Sentry.captureException(error, { tags: { route: 'referrals_generate', method: 'POST' } });
         return NextResponse.json({ error: 'Failed to generate referral code' }, { status: 500 });
     }
 }
