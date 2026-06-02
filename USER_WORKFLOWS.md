@@ -84,7 +84,7 @@ Convert a confirmed party quote into a live production commitment.
 1. Owner accepts a quote in Quote History (or saves it as already accepted using **Save & Accept** directly from the estimator).
 2. **Option A** — Start Party Order fast path: after saving an accepted quote from the estimator, the Start Party Order dialog opens immediately to set target meters, deadline, and notes in one step. The server action `startPartyOrderFromEstimator` calls `executeQuoteConversion` internally.
 3. **Option B** — Owner clicks **Create Active Order** on an accepted quote card in Quote History. The dialog confirms target meters, deadline, and notes, then calls `convertAcceptedQuoteToOrder`, which also routes through `executeQuoteConversion`.
-4. System creates an order via the `convert_accepted_quote_to_order` Supabase RPC with quote snapshot values, tracking token, worker rate snapshot, and yarn requirements. *(The `order_id` ambiguity bug in this RPC was fixed in migration `20260531040000`.)*
+4. System creates an order via the `convert_accepted_quote_to_order` Supabase RPC with quote snapshot values, internal order token, worker rate snapshot, and yarn requirements. *(The `order_id` ambiguity bug in this RPC was fixed in migration `20260531040000`.)*
 5. Owner opens `/owner/orders`.
 6. Owner reviews progress, pace, deadline, margin, and total order value.
 7. Owner opens `/owner/machines` and assigns the new order as the cost analysis / quality for one or more looms. The assignment picker (`getActiveProductionTargets`) is cached 30 s to avoid cold-start delays; the new order appears immediately after cache invalidation.
@@ -235,7 +235,7 @@ Pending dispatch is tracked separately from Active Stock so sold-out closed runs
 
 ## 8. Dispatch and Tracking Workflow
 
-Entry points: `/owner/dispatches`, `/owner/orders`, `/track/[token]`
+Entry points: `/owner/dispatches`, `/owner/orders`
 
 ### Goal
 
@@ -244,15 +244,16 @@ Create a professional handoff for fabric leaving the factory and capture receive
 ### Flow
 
 1. Owner sells stock to a saved/new party or selects an order-linked pending sale.
-2. Owner confirms dispatch with sent meters/takas and transport/GST metadata.
-3. System creates a dispatch batch and keeps package/batch lines.
-4. Owner shares a public tracking link when the dispatch is order-linked.
-5. Party or owner confirms received meters.
-6. System records delivered, shortage, or extra received state, and keeps partially dispatched stock sales pending for the next batch.
+2. Sale stays in Pending Dispatches until the first batch leaves the factory.
+3. Owner confirms dispatch with sent meters, dispatch date, user-provided challan number, and transport/GST metadata.
+4. Credit days start from that first dispatch date.
+5. Party later sends their received challan/confirmation through WhatsApp, paper, or another channel.
+6. Owner records received meters, shortage, or extra from that returned challan.
+7. System records delivered, shortage, or extra received state, and keeps partially dispatched stock sales pending for the next batch.
 
 ### Pain Point Replaced
 
-Challan-plus-phone-call handoff becomes tracked dispatch and receipt reconciliation.
+Paper challan plus phone-call handoff becomes tracked dispatch and receipt reconciliation.
 
 ### Outputs
 

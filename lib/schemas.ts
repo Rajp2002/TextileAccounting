@@ -516,6 +516,7 @@ export const AdjustTakaStockLotSchema = z.object({
 export const CreateFabricDispatchSchema = z.object({
     order_id: UuidSchema,
     package_ids: z.array(UuidSchema).min(1, 'Select at least one sold stock entry').max(200, 'Too many stock sales selected'),
+    challan_number: z.string().trim().max(80, 'Challan number too long').optional().or(z.literal('')),
     notes: z.string().trim().max(300, 'Notes too long').optional().or(z.literal('')),
     eway_bill_number: z.string().trim().max(30, 'E-way bill number too long').optional().or(z.literal('')),
     vehicle_number: z.string().trim().max(20, 'Vehicle number too long').optional().or(z.literal('')),

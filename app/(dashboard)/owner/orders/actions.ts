@@ -356,6 +356,7 @@ export interface DispatchRow {
     receipt_confirmed_by: string | null
     status: 'in_transit' | 'delivered' | 'disputed'
     notes: string | null
+    challan_number: string | null
     eway_bill_number: string | null
     eway_bill_required: boolean
     vehicle_number: string | null
@@ -568,6 +569,7 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
             receipt_confirmed_by,
             status,
             notes,
+            challan_number,
             eway_bill_number,
             eway_bill_required,
             vehicle_number,
@@ -697,7 +699,8 @@ export async function getDispatchesForOrder(orderId: string): Promise<DispatchSu
 /**
  * Create a new dispatch entry for an order.
  * Atomically assigns the next dispatch number via RPC.
- * Returns the created dispatch + tracking_token for invoice/challan PDF generation.
+ * Returns the created dispatch. The challan number is stored only as an
+ * internal reference from the user's own paperwork.
  */
 export async function createDispatch(
     orderId: string,
@@ -713,13 +716,15 @@ export async function createDispatch(
     },
     dispatchMeters?: Record<string, number>,
     dispatchTakas?: Record<string, number>,
-    dispatchDate?: string
-): Promise<{ dispatch: DispatchRow; tracking_token: string; party_name: string; org_name: string; dispatch_number: number } | { error: string }> {
+    dispatchDate?: string,
+    challanNumber?: string
+): Promise<{ dispatch: DispatchRow; dispatch_number: number } | { error: string }> {
     const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
     const parsed = safeParse(CreateFabricDispatchSchema, {
         order_id: orderId,
         package_ids: packageIds,
+        challan_number: challanNumber ?? '',
         notes: notes ?? '',
         eway_bill_number: ewayDetails?.eway_bill_number ?? '',
         vehicle_number: ewayDetails?.vehicle_number ?? '',
@@ -776,6 +781,17 @@ export async function createDispatch(
     const dispatchMeta = Array.isArray(rpcData) ? rpcData[0] : rpcData
     if (!dispatchMeta?.dispatch_id) return { error: 'Failed to create dispatch' }
 
+    const cleanedChallanNumber = parsed.data.challan_number?.trim() || null
+    if (cleanedChallanNumber) {
+        const { error: challanError } = await supabase
+            .from('dispatches')
+            .update({ challan_number: cleanedChallanNumber })
+            .eq('id', dispatchMeta.dispatch_id)
+            .eq('org_id', profile.org_id)
+
+        if (challanError) return { error: challanError.message }
+    }
+
     const { data: dispatch, error: dispatchError } = await supabase
         .from('dispatches')
         .select(`
@@ -789,6 +805,7 @@ export async function createDispatch(
             receipt_confirmed_by,
             status,
             notes,
+            challan_number,
             eway_bill_number,
             eway_bill_required,
             vehicle_number,
@@ -829,32 +846,7 @@ export async function createDispatch(
     revalidatePath('/owner/stock')
     return {
         dispatch: normalizeDispatchRow(dispatch as RawDispatchRow),
-        tracking_token: dispatchMeta.tracking_token,
-        party_name: dispatchMeta.party_name,
-        org_name: dispatchMeta.org_name ?? 'Factory',
         dispatch_number: dispatchMeta.dispatch_number,
-    }
-}
-
-/**
- * Get the tracking token for an order — for the Share Modal.
- * Returns only the token and the full tracking URL.
- */
-export async function getTrackingToken(orderId: string): Promise<{ tracking_token: string } | { error: string }> {
-    const { profile } = await requireRole(['owner', 'supervisor'])
-    const supabase = await createServerClient()
-
-    const { data, error } = await supabase
-        .from('orders')
-        .select('tracking_token')
-        .eq('id', orderId)
-        .eq('org_id', profile.org_id)
-        .single()
-
-    if (error || !data) return { error: 'Order not found' }
-
-    return {
-        tracking_token: data.tracking_token,
     }
 }
 

@@ -71,6 +71,7 @@ interface Dispatch {
     dispatched_at: string
     received_at: string | null
     notes: string | null
+    challan_number?: string | null
     eway_bill_number: string | null
     eway_bill_required: boolean
     vehicle_number: string | null
@@ -117,7 +118,6 @@ interface OrderGroup {
     orderId: string
     partyName: string
     qualityLabel: string | null
-    trackingToken: string
     totalTargetMeters: number
     remainingToDispatch: number
     orderStatus: string
@@ -273,6 +273,9 @@ function DispatchBatchRow({
                 <div className={cn("w-2 h-2 rounded-full flex-shrink-0", status.dotColor)} />
                 <div>
                     <p className="text-xs font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">Batch #{dispatch.dispatch_number}</p>
+                    {dispatch.challan_number && (
+                        <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">Challan {dispatch.challan_number}</p>
+                    )}
                     <Badge className={cn("mt-0.5 text-[10px] font-bold px-2 py-0 rounded-full border", status.className)}>
                         <status.icon className="h-2.5 w-2.5 mr-1" />
                         {status.label}
@@ -737,7 +740,6 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                     orderId: groupId,
                     partyName: d.stock_sale?.party_name ?? d.orders.party_name,
                     qualityLabel: d.stock_sale?.quality_label ?? d.orders.quality_label,
-                    trackingToken: d.orders.tracking_token,
                     totalTargetMeters: totalSaleMeters,
                     remainingToDispatch: pendingSaleMeters,
                     orderStatus: d.orders.status,
@@ -1062,7 +1064,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                     <h3 className="text-xl font-black text-foreground">No dispatches found</h3>
                                     <p className="text-muted-foreground font-medium max-w-xs mx-auto">
                                         {dispatches.length === 0
-                                            ? 'Create a dispatch from an active order to generate a professional challan.'
+                                            ? 'Create a dispatch from an active order or pending stock sale.'
                                             : 'Try adjusting your search or filters.'}
                                     </p>
                                     {dispatches.length === 0 && (
@@ -1092,7 +1094,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                 }}
                 dispatchSummary={dispatchSummary}
                 selectedOrder={selectedOrder}
-                onDispatchCreated={(dispatch, trackingToken) => {
+                onDispatchCreated={(dispatch) => {
                     if (!selectedOrder) return
                     setDispatches((prev) => [
                         {
@@ -1101,7 +1103,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                 id: selectedOrder.id,
                                 party_name: selectedOrder.party_name,
                                 quality_label: selectedOrder.quality_label,
-                                tracking_token: trackingToken,
+                                tracking_token: '',
                                 total_target_meters: selectedOrder.total_target_meters,
                                 status: selectedOrder.status,
                             },
@@ -1261,20 +1263,24 @@ function GlobalDispatchModal({
     onOrderSelected: (order: OrderSummary) => void
     dispatchSummary: DispatchSummary | null
     selectedOrder: OrderSummary | null
-    onDispatchCreated: (dispatch: DispatchRow, trackingToken: string) => void
+    onDispatchCreated: (dispatch: DispatchRow) => void
 }) {
     const [orders, setOrders] = useState<OrderSummary[]>([])
     const [loadingOrders, setLoadingOrders] = useState(false)
 
     // Load active orders when step is select_order
     useEffect(() => {
-        if (step === 'select_order') {
+        const timer = setTimeout(() => {
+            if (step !== 'select_order') return
+
             setLoadingOrders(true)
             getActiveOrders().then(res => {
                 if (res.data) setOrders(res.data)
                 setLoadingOrders(false)
             })
-        }
+        }, 0)
+
+        return () => clearTimeout(timer)
     }, [step])
 
     if (step === 'idle') return null
@@ -1350,46 +1356,8 @@ function GlobalDispatchModal({
                     orderId={selectedOrder.id}
                     availablePackages={dispatchSummary.available_packages}
                     onClose={onClose}
-                    onCreated={async (dispatch, trackingToken, partyName, orgName) => {
-                        // Handle invoice/challan PDF generation (reusing the logic from OrdersClient)
-                        try {
-                            const { generateChallan } = await import('@/lib/generate-challan')
-                            await generateChallan({
-                                org_name: orgName || 'Factory',
-                                party_name: partyName || selectedOrder.party_name,
-                                quality_label: selectedOrder.quality_label || null,
-                                dispatch_number: dispatch.dispatch_number,
-                                qty_meters_sent: Number(dispatch.qty_meters_sent),
-                                total_target_meters: Number(selectedOrder.total_target_meters || 0),
-                                package_lines: dispatch.package_lines.map((line) => ({
-                                    package_no: line.package_no,
-                                    package_type: line.package_type,
-                                    units_count: line.units_count,
-                                    grade: line.grade,
-                                    metres: Number(line.qty_meters_sent),
-                                })),
-                                notes: dispatch.notes,
-                                eway_bill_number: dispatch.eway_bill_number,
-                                eway_bill_required: dispatch.eway_bill_required,
-                                vehicle_number: dispatch.vehicle_number,
-                                transporter_name: dispatch.transporter_name,
-                                transporter_id: dispatch.transporter_id,
-                                approximate_distance_km: dispatch.approximate_distance_km,
-                                eway_bill_generated_at: dispatch.eway_bill_generated_at,
-                                hsn_code: dispatch.hsn_code,
-                                taxable_value: dispatch.taxable_value,
-                                gst_percent: dispatch.gst_percent,
-                                cgst_amount: dispatch.cgst_amount,
-                                sgst_amount: dispatch.sgst_amount,
-                                igst_amount: dispatch.igst_amount,
-                                total_invoice_value: dispatch.total_invoice_value,
-                                dispatched_at: dispatch.dispatched_at,
-                                tracking_token: trackingToken,
-                            })
-                        } catch {
-                            toast.error('Failed to generate invoice PDF')
-                        }
-                        onDispatchCreated(dispatch, trackingToken)
+                    onCreated={(dispatch) => {
+                        onDispatchCreated(dispatch)
                         onClose()
                         // Next.js will revalidate the path via the server action
                     }}

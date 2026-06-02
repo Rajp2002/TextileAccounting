@@ -144,9 +144,11 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(action).toContain('dispatchMeters?: Record<string, number>')
         expect(action).toContain('dispatchTakas?: Record<string, number>')
         expect(action).toContain('dispatchDate?: string')
+        expect(action).toContain('challanNumber?: string')
         expect(action).toContain("p_dispatch_meters: finalMeters")
         expect(action).toContain("p_dispatch_takas: finalTakas")
         expect(action).toContain("p_dispatch_date: finalDispatchDate")
+        expect(action).toContain('.update({ challan_number: cleanedChallanNumber })')
 
         // Check SQL function signature
         expect(migration).toContain('CREATE OR REPLACE FUNCTION create_stock_sale_dispatch')
@@ -158,8 +160,10 @@ describe('P1 party-first stock sale dispatch refinement', () => {
         expect(modal).toContain('const [dispatchDate, setDispatchDate]')
         expect(modal).toContain('const [customMeters, setCustomMeters]')
         expect(modal).toContain('const [customTakas, setCustomTakas]')
+        expect(modal).toContain('const [challanNumber, setChallanNumber]')
         expect(modal).toContain('dispatchMetersObj')
         expect(modal).toContain('dispatchTakasObj')
+        expect(modal).not.toContain('Create & Download Invoice')
     })
 
     it('groups multiple batches for the same party stock sale and shows sale progress', () => {

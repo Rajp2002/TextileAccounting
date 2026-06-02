@@ -30,7 +30,6 @@ import {
     Lock,
     RefreshCw,
     Send,
-    QrCode,
     Truck,
     Archive,
 } from 'lucide-react'
@@ -66,7 +65,6 @@ import {
     updateOrderDetails,
     requestAccessCodeAsOwner,
     getDispatchesForOrder,
-    getTrackingToken,
     type DispatchRow,
     type DispatchSummary,
 } from './actions'
@@ -240,14 +238,12 @@ function QuoteCostBreakdown({ quote, targetMeters }: { quote: Record<string, unk
 
 /**
  * Single dispatch card for the Weaver's internal Order Detail drawer.
- * Shows sent/received meters, status badge, and a re-print invoice button.
+ * Shows sent/received meters, status badge, and challan reference.
  */
 function DispatchItemRow({
     dispatch,
-    onReprint,
 }: {
     dispatch: DispatchRow
-    onReprint: (d: DispatchRow) => void
 }) {
     const isDelivered = dispatch.status === 'delivered'
     const isInTransit = dispatch.status === 'in_transit'
@@ -271,6 +267,11 @@ function DispatchItemRow({
                         <p className="text-xs text-slate-500 font-mono">
                             {format(new Date(dispatch.dispatched_at), 'dd MMM yyyy')}
                         </p>
+                        {dispatch.challan_number && (
+                            <p className="text-xs text-slate-500 font-mono">
+                                Challan {dispatch.challan_number}
+                            </p>
+                        )}
                     </div>
                 </div>
                 <div className="text-right shrink-0">
@@ -296,12 +297,6 @@ function DispatchItemRow({
                     ))}
                 </div>
             )}
-            <button
-                onClick={() => onReprint(dispatch)}
-                className="text-xs text-slate-400 hover:text-indigo-600 flex items-center gap-1 transition-colors"
-            >
-                <QrCode className="h-3 w-3" /> Re-print Invoice
-            </button>
         </div>
     )
 }
@@ -313,18 +308,13 @@ function DispatchItemRow({
 function DispatchSection({
     orderId,
     isCompleted,
-    totalTargetMeters,
-    onReprintChallan,
 }: {
     orderId: string
     isCompleted: boolean
-    totalTargetMeters: number
-    onReprintChallan: (dispatch: DispatchRow, trackingToken: string, partyName: string, orgName: string, totalTarget: number) => void
 }) {
     const [summary, setSummary] = useState<DispatchSummary | null>(null)
     const [loadingDispatches, setLoadingDispatches] = useState(true)
     const [showCreateModal, setShowCreateModal] = useState(false)
-    const [trackingToken, setTrackingToken] = useState<string | null>(null)
 
     const loadDispatches = useCallback(async () => {
         const res = await getDispatchesForOrder(orderId)
@@ -358,11 +348,9 @@ function DispatchSection({
         return () => { supabase.removeChannel(channel) }
     }, [orderId, loadDispatches])
 
-    const handleDispatchCreated = async (newDispatch: DispatchRow, token: string, partyName: string, orgName: string) => {
+    const handleDispatchCreated = async () => {
         await loadDispatches()
         setShowCreateModal(false)
-        // Trigger invoice/challan PDF (client-side)
-        onReprintChallan(newDispatch, token, partyName, orgName, totalTargetMeters)
     }
 
     if (loadingDispatches) {
@@ -412,18 +400,6 @@ function DispatchSection({
                         <DispatchItemRow
                             key={d.id}
                             dispatch={d}
-                            onReprint={(dispatch) => {
-                                if (trackingToken) {
-                                    onReprintChallan(dispatch, trackingToken, '', '', 0)
-                                } else {
-                                    getTrackingToken(orderId).then(res => {
-                                        if (!('error' in res)) {
-                                            setTrackingToken(res.tracking_token)
-                                            onReprintChallan(dispatch, res.tracking_token, '', '', 0)
-                                        }
-                                    })
-                                }
-                            }}
                         />
                     ))}
 
@@ -615,8 +591,12 @@ function OrderDetailDrawer({
     }, [orderId])
 
     useEffect(() => {
-        if (open && orderId) load()
-        else setData(null)
+        const timer = setTimeout(() => {
+            if (open && orderId) void load()
+            else setData(null)
+        }, 0)
+
+        return () => clearTimeout(timer)
     }, [open, orderId, load])
 
     const handleComplete = async () => {
@@ -894,46 +874,6 @@ function OrderDetailDrawer({
                                 <DispatchSection
                                     orderId={order.order_id}
                                     isCompleted={isCompleted}
-                                    totalTargetMeters={Number(order.total_target_meters || 0)}
-                                    onReprintChallan={async (dispatch, trackingToken, partyName, orgName, totalTarget) => {
-                                        try {
-                                            const { generateChallan } = await import('@/lib/generate-challan')
-                                            await generateChallan({
-                                                org_name: orgName || 'Factory',
-                                                party_name: partyName || order.party_name,
-                                                quality_label: order.display_quality_name ?? order.quality_label ?? null,
-                                                dispatch_number: dispatch.dispatch_number,
-                                                qty_meters_sent: Number(dispatch.qty_meters_sent),
-                                                total_target_meters: totalTarget || Number(order.total_target_meters || 0),
-                                                package_lines: dispatch.package_lines.map((line) => ({
-                                                    package_no: line.package_no,
-                                                    package_type: line.package_type,
-                                                    units_count: line.units_count,
-                                                    grade: line.grade,
-                                                    metres: Number(line.qty_meters_sent),
-                                                })),
-                                                notes: dispatch.notes,
-                                                eway_bill_number: dispatch.eway_bill_number,
-                                                eway_bill_required: dispatch.eway_bill_required,
-                                                vehicle_number: dispatch.vehicle_number,
-                                                transporter_name: dispatch.transporter_name,
-                                                transporter_id: dispatch.transporter_id,
-                                                approximate_distance_km: dispatch.approximate_distance_km,
-                                                eway_bill_generated_at: dispatch.eway_bill_generated_at,
-                                                hsn_code: dispatch.hsn_code,
-                                                taxable_value: dispatch.taxable_value,
-                                                gst_percent: dispatch.gst_percent,
-                                                cgst_amount: dispatch.cgst_amount,
-                                                sgst_amount: dispatch.sgst_amount,
-                                                igst_amount: dispatch.igst_amount,
-                                                total_invoice_value: dispatch.total_invoice_value,
-                                                dispatched_at: dispatch.dispatched_at,
-                                                tracking_token: trackingToken,
-                                            })
-                                        } catch {
-                                            toast.error('Failed to generate invoice PDF')
-                                        }
-                                    }}
                                 />
                             </div>
 

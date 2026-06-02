@@ -68,7 +68,6 @@ export type FactoryTodayData = {
             partyName: string
             sentMeters: number
             sentDate: string
-            trackingToken: string
             daysPending: number
         }>
     }
@@ -196,7 +195,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         // 7. In-transit dispatches (pending receipt)
         supabase
             .from('dispatches')
-            .select('id, dispatch_number, qty_meters_sent, dispatched_at, orders!inner(party_name, tracking_token)')
+            .select('id, dispatch_number, qty_meters_sent, dispatched_at, orders!inner(party_name)')
             .eq('org_id', orgId)
             .eq('status', 'in_transit')
             .order('dispatched_at', { ascending: true })
@@ -450,7 +449,6 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             partyName: String(orderTyped?.party_name || 'Party'),
             sentMeters: toNum(raw.qty_meters_sent),
             sentDate,
-            trackingToken: String(orderTyped?.tracking_token || ''),
             daysPending: daysBetween(sentDate, today),
         }
     })

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -39,10 +39,27 @@ describe('P1 production and dispatch regressions', () => {
         expect(page).toContain("table: 'production_logs'")
     })
 
-    it('returns public dispatch links under /track/[token]', () => {
+    it('keeps third-party dispatch verification deferred', () => {
         const action = readProjectFile('app/(dashboard)/owner/dispatches/actions.ts')
-        expect(action).toContain('`/track/${dispatchMeta.tracking_token}`')
-        expect(action).not.toContain('/tracking/${dispatchMeta.tracking_token}')
+        const dispatchModal = readProjectFile('components/dispatches/DispatchModals.tsx')
+        const ordersClient = readProjectFile('app/(dashboard)/owner/orders/OrdersClient.tsx')
+        const dispatchesClient = readProjectFile('app/(dashboard)/owner/dispatches/DispatchesClient.tsx')
+        const stockClient = readProjectFile('app/(dashboard)/owner/stock/StockClient.tsx')
+        const proxy = readProjectFile('proxy.ts')
+        const trackingPage = readProjectFile('app/(public)/track/[token]/page.tsx')
+        const activeDispatchClients = [dispatchModal, ordersClient, dispatchesClient, stockClient].join('\n')
+
+        expect(action).toContain('trackingUrl: null')
+        expect(action).not.toContain('`/track/${dispatchMeta.tracking_token}`')
+        expect(existsSync(join(root, 'lib/generate-challan.ts'))).toBe(false)
+        expect(dispatchModal).toContain('Challan Number')
+        expect(dispatchModal).toContain('Create Dispatch')
+        expect(activeDispatchClients).not.toContain('generateChallan')
+        expect(activeDispatchClients).not.toContain('Failed to generate invoice PDF')
+        expect(activeDispatchClients).not.toContain('Create & Download Invoice')
+        expect(activeDispatchClients).not.toContain('Re-print Invoice')
+        expect(proxy).not.toContain("pathname.startsWith('/track')")
+        expect(trackingPage).toContain('notFound()')
     })
 
     it('keeps dispatches page usable when stock discrepancy migration is pending', () => {

@@ -109,9 +109,9 @@ Pain point translated: the owner can answer "what should be in godown, what was 
 
 ### Dispatches
 
-Dispatches turn sold stock into professional handoff. The current visible flow is party-first: the owner sells stock to a saved party or creates a lightweight party record from the sale, which creates a stock sale and receivable, then dispatches pending meters later from `/owner/dispatches`. The Sell Stock dialog searches active parties, pre-fills phone/GSTIN/credit days when a party is selected, auto-links a unique name match when unambiguous, and blocks ambiguous duplicate names unless the owner selects the party or adds phone/GSTIN. Dispatch supports configurable batch meters and date, order-linked dispatches, GST/e-way metadata, package lines, direct receipt confirmation, shortage/extra received variance, owner-confirmed receipt, and public order tracking links (the system is meters-only throughout).
+Dispatches turn sold stock into professional handoff. The current visible flow is party-first: the owner sells stock to a saved party or creates a lightweight party record from the sale, which creates a stock sale and receivable, then dispatches pending meters later from `/owner/dispatches`. The Sell Stock dialog searches active parties, pre-fills phone/GSTIN/credit days when a party is selected, auto-links a unique name match when unambiguous, and blocks ambiguous duplicate names unless the owner selects the party or adds phone/GSTIN. Dispatch supports configurable batch meters and date, user-entered challan references, order-linked dispatches, GST/e-way metadata, package lines, owner-recorded receipt confirmation from returned challans, and shortage/extra received variance. Public third-party tracking and generated challan paperwork are deferred.
 
-Pain point translated: informal transport handoff becomes a traceable dispatch with client-facing status and shortage reconciliation.
+Pain point translated: informal transport handoff becomes a traceable dispatch with owner-side receipt reconciliation.
 
 ### Commercials
 

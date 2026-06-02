@@ -117,18 +117,18 @@ Before you sit down, ensure:
 
 ### 🔍 What to Showcase:
 1. **Expected Stock**: Show how completed production automatically creates a draft stock lot in the Godown list.
-2. **Dispatch Challan**: Create a dispatch batch with package lines (Taka rolls, weights, meters) and generate a public tracking link.
-3. **Receipt Reconciliation**: Show how the buyer or owner inputs the *received* meters, generating a "Needs Review" flag if there is a shortage or weight discrepancy.
+2. **Dispatch Reference**: Record a dispatch batch with package lines, meters, and the challan number from the user's own paperwork.
+3. **Receipt Reconciliation**: Show how the owner records *received* meters from the buyer's returned challan, generating a "Needs Review" flag if there is a shortage or weight discrepancy.
 
 ### 💬 Questions to Ask:
 - How do you track stock in the godown? Do you count in "Takas" (bolts), total meters, or total weight (kg)?
 - How common are shortages where the buyer claims they received fewer meters than you dispatched? How do you resolve those disputes today?
-- Is a public tracking link shared via WhatsApp something your buyers would use, or do they only care about the physical paper challan?
+- Do buyers actually send a returned challan/confirmation over WhatsApp or paper, and what shortage details do they include?
 
 ### 📝 Stock & Dispatch Feedback Capture:
 ```markdown
 [ ] We track stock by: [ ] Meters  [ ] Takas  [ ] Kilograms  [ ] Combination of all
-[ ] Public tracking link is: [ ] Highly valuable  [ ] Unlikely to be used
+[ ] Returned challan confirmation is: [ ] Reliable  [ ] Inconsistent  [ ] Usually verbal
 [ ] Dispute tracking logic (Sent vs Received) matches real-world pain points: [ ] Yes [ ] No
 [ ] Notes on godown flows: ____________________________________________________________________
 ```

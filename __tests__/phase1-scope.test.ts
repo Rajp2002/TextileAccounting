@@ -16,7 +16,11 @@ describe('Phase 1 route archive gate', () => {
         expect(isPhase1ArchivedRoute('/owner/market-runs')).toBe(false)
         expect(isPhase1ArchivedRoute('/owner/settings')).toBe(false)
         expect(isPhase1ArchivedRoute('/supervisor/dashboard')).toBe(false)
-        expect(isPhase1ArchivedRoute('/track/abc123TOKEN_')).toBe(false)
+    })
+
+    it('keeps public tracking deferred', () => {
+        expect(isPhase1ArchivedRoute('/track')).toBe(true)
+        expect(isPhase1ArchivedRoute('/track/abc123TOKEN_')).toBe(true)
     })
 
     it('uses the documented archived redirect target', () => {

@@ -9,20 +9,6 @@ interface PendingReceiptsCardProps {
     receipts: FactoryTodayData['dispatch']['pendingReceipts']
 }
 
-function TrackingLink({ token, dispatchNumber }: { token: string; dispatchNumber: number }) {
-    return (
-        <Link
-            href={`/track/${token}`}
-            target="_blank"
-            className="flex items-center gap-1 rounded border border-hairline bg-surface px-2 py-1 text-[11px] font-medium text-body transition hover:bg-surface-soft"
-            title={`Track Dispatch #${dispatchNumber}`}
-        >
-            <MapPin className="h-2.5 w-2.5" />
-            Track
-        </Link>
-    )
-}
-
 export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
     const hasReceipts = receipts.length > 0
     const longPending = receipts.filter((r) => r.daysPending > 5)
@@ -88,9 +74,6 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
                                 )}>
                                     {r.daysPending}d ago
                                 </span>
-                                {r.trackingToken && (
-                                    <TrackingLink token={r.trackingToken} dispatchNumber={r.dispatchNumber} />
-                                )}
                             </div>
                         </div>
                     ))}

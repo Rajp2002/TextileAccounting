@@ -110,7 +110,8 @@ export function getDestructiveLimiter() {
 }
 
 /**
- * Public tracking limiter. Used by unauthenticated trader confirmation links.
+ * Retained for legacy tracking endpoints. Public dispatch confirmation is
+ * currently deferred; owner receipt recording uses authenticated actions.
  */
 let _trackingLimiter: Ratelimit | null | undefined = undefined
 export function getTrackingLimiter() {
@@ -182,7 +183,7 @@ export async function checkAccessCodeRateLimit(userId: string): Promise<number |
 }
 
 /**
- * Pre-built helper: check public tracking confirmations by IP and token.
+ * Pre-built helper: check legacy public tracking requests by IP and token.
  */
 export async function checkTrackingRateLimit(ip: string, trackingToken: string): Promise<number | null> {
     const result = await checkRateLimit(getTrackingLimiter, `tracking:${ip}:${trackingToken}`)

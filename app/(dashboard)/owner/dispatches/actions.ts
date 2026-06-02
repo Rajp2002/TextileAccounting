@@ -259,6 +259,25 @@ export async function sellAndDispatchTakas(input: LegacyOrderSellAndDispatchInpu
     }
 
     const dispatchMeta = Array.isArray(dispatchData) ? dispatchData[0] : dispatchData
+    const challanNumber = cleanText(input.dispatch.challanNumber)
+    if (challanNumber) {
+        const { error: challanError } = await supabase
+            .from('dispatches')
+            .update({ challan_number: challanNumber })
+            .eq('id', dispatchMeta.dispatch_id)
+            .eq('org_id', profile.org_id)
+
+        if (challanError) {
+            return {
+                success: false,
+                stage: 'dispatch',
+                message: challanError.message || 'Sale was saved, but challan reference could not be recorded.',
+                saleIds,
+                recoverable: true
+            }
+        }
+    }
+
     const actualDispatchedMeters = Number(input.dispatch.actualDispatchedMeters ?? expectedDispatchMeters)
     const differenceMeters = actualDispatchedMeters - expectedDispatchMeters
 
@@ -288,7 +307,7 @@ export async function sellAndDispatchTakas(input: LegacyOrderSellAndDispatchInpu
         saleIds,
         dispatchId: dispatchMeta.dispatch_id,
         dispatchNumber: dispatchMeta.dispatch_number,
-        trackingUrl: dispatchMeta.tracking_token ? `/track/${dispatchMeta.tracking_token}` : null,
+        trackingUrl: null,
         dispatchStatus: 'dispatched',
         pendingDispatchMeters: 0,
     }

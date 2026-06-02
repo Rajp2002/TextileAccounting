@@ -19,7 +19,7 @@ Phase 1 is a focused operating loop for Surat grey fabric manufacturers/traders.
 - market runs
 - expected godown ledger for market-run stock
 - party-first stock sale with saved-party identity and pending/partial dispatch workflow
-- dispatches, public tracking where order-linked, and owner receipt confirmation
+- dispatches and owner receipt confirmation from returned challans; public tracking is deferred
 - Commercials receivables, payment tracking, and party-level profit/open-dues visibility
 - gross profit visibility and money source of truth
 - workers, machines, attendance, settings, access codes
@@ -179,7 +179,7 @@ The Active Stock tab shows lots with remaining saleable stock or owner action re
 
 Stock Inward is not a mandatory Phase 1 workflow for market-run mode. It may remain available for legacy/direct-access or order-based support, but the core market-run journey is production ledger -> dispatch check -> discrepancy review. The older `/owner/inventory` deep yarn/beam module is archived.
 
-Dispatches turn sold stock into tracked shipment batches with transport/GST/e-way metadata, package rows, sent meters, received meters, shortage/extra variance, and public token tracking where the dispatch is order-linked. Market-run stock can now be sold and dispatched without creating a fake party order. The Sell Stock dialog searches active saved parties, pre-fills contact/GSTIN/credit days, auto-links a single exact party-name match when unambiguous, and requires explicit selection or phone/GSTIN when duplicate party names exist. The owner confirms dispatch for all or part of the pending quantity using a modernized CreateDispatchModal, and confirms receipt directly on `/owner/dispatches` (which records shortages/excesses and defers credit due dates relative to the receipt date). The system uses meters-only throughout.
+Dispatches turn sold stock into tracked shipment batches with transport/GST/e-way metadata, user-entered challan references, package rows, sent meters, received meters, and shortage/extra variance. Market-run stock can now be sold and dispatched without creating a fake party order. The Sell Stock dialog searches active saved parties, pre-fills contact/GSTIN/credit days, auto-links a single exact party-name match when unambiguous, and requires explicit selection or phone/GSTIN when duplicate party names exist. The owner confirms dispatch for all or part of the pending quantity using a modernized CreateDispatchModal, then records receipt on `/owner/dispatches` after the party returns their challan/confirmation. Public third-party tracking and generated challan paperwork are deferred. The system uses meters-only throughout.
 
 ### 4.8 Commercial View
 
@@ -240,7 +240,7 @@ Billing manages trial and Razorpay subscription state. Referrals support lightwe
 - `/onboarding`
 - `/auth/callback`, `/auth/confirm`, `/auth/auth-code-error`
 - `/privacy`, `/terms`, `/refund-policy`
-- `/track/[token]` - public dispatch tracking portal
+- `/track/[token]` - deferred public dispatch verification route
 - `/locked`, `/feature-archived`
 
 ### Owner

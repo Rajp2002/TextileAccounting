@@ -180,7 +180,7 @@ In scope:
 - Dispatches for order-linked output.
 - Dispatch package/batch rows, transport/GST/e-way metadata, and receipt confirmation.
 - Shortage/extra received tracking.
-- Public `/track/[token]` portal.
+- Public `/track/[token]` dispatch verification is deferred.
 - `/owner/commercials` as the source of truth for realized revenue, gross profit, expected profit, receivables, payment tracking, and lightweight party-level revenue/profit/open-dues visibility.
 
 Not in scope:
@@ -300,7 +300,7 @@ Archived routes are documented in `docs/general/PHASE_1_ARCHIVE.md`; the active 
 - Expected stock, optional inward drafts, lot creation, adjustment, sale, and commercials aggregation are tested.
 - Saved-party selection, unique-name auto-linking, duplicate-name ambiguity handling, and party creation from Sell Stock are tested.
 - Commercials Top Parties, party directory, ID-based grouping, open dues, and legacy name fallback are tested.
-- Party-first stock sale, pending/partial dispatch, direct receipt confirmation, shortage/excess discrepancy, and public tracking are tested.
+- Party-first stock sale, pending/partial dispatch, owner-recorded returned-challan receipt confirmation, and shortage/excess discrepancy are tested.
 - WhatsApp failures are logged and retryable without blocking writes (failure fallback exists so app workflows do not crash).
 - **WhatsApp Pre-Pilot Checklist:**
   - [ ] Meta Business account configured

@@ -740,44 +740,7 @@ export default function StockClient({
                         setDispatchingOrder(null)
                         setDispatchSummary(null)
                     }}
-                    onCreated={async (dispatch, trackingToken, partyName, orgName) => {
-                        try {
-                            const { generateChallan } = await import('@/lib/generate-challan')
-                            await generateChallan({
-                                org_name: orgName || 'Factory',
-                                party_name: partyName || dispatchingOrder.party_name,
-                                quality_label: dispatchingOrder.quality_label || null,
-                                dispatch_number: dispatch.dispatch_number,
-                                qty_meters_sent: Number(dispatch.qty_meters_sent),
-                                total_target_meters: dispatchingOrder.total_target_meters,
-                                package_lines: dispatch.package_lines.map((line) => ({
-                                    package_no: line.package_no,
-                                    package_type: line.package_type,
-                                    units_count: line.units_count,
-                                    grade: line.grade,
-                                    metres: Number(line.qty_meters_sent),
-                                })),
-                                notes: dispatch.notes,
-                                eway_bill_number: dispatch.eway_bill_number,
-                                eway_bill_required: dispatch.eway_bill_required,
-                                vehicle_number: dispatch.vehicle_number,
-                                transporter_name: dispatch.transporter_name,
-                                transporter_id: dispatch.transporter_id,
-                                approximate_distance_km: dispatch.approximate_distance_km,
-                                eway_bill_generated_at: dispatch.eway_bill_generated_at,
-                                hsn_code: dispatch.hsn_code,
-                                taxable_value: dispatch.taxable_value,
-                                gst_percent: dispatch.gst_percent,
-                                cgst_amount: dispatch.cgst_amount,
-                                sgst_amount: dispatch.sgst_amount,
-                                igst_amount: dispatch.igst_amount,
-                                total_invoice_value: dispatch.total_invoice_value,
-                                dispatched_at: dispatch.dispatched_at,
-                                tracking_token: trackingToken,
-                            })
-                        } catch {
-                            toast.error('Failed to generate invoice PDF')
-                        }
+                    onCreated={() => {
                         setDispatchingOrder(null)
                         setDispatchSummary(null)
                         refresh()

@@ -4,6 +4,7 @@ export const PHASE_1_ARCHIVED_ROUTES = [
     '/owner/ledger',
     '/owner/settings/audit',
     '/owner/system-health',
+    '/track',
 ] as const
 
 export const PHASE_1_ARCHIVE_REDIRECT = '/feature-archived'

@@ -115,12 +115,14 @@ Scenarios:
 
 - create order-linked dispatch from sold stock
 - create orderless stock-sale dispatch from pending sale
-- create partial dispatch batch with selected meters and dispatch date
+- record sale on day 1 and verify it remains in Pending Dispatches until the first dispatch leaves
+- create partial dispatch batch with selected meters, dispatch date, and user-entered challan number
+- verify credit days start from the first dispatch date, not the sale date
 - include transport/GST/e-way metadata
-- public tracking token loads without login
-- owner confirms exact received meters
-- owner confirms shortage
-- owner confirms extra received with confirmation
+- owner records exact received meters after receiving the party challan/confirmation
+- owner records shortage from the returned challan
+- owner records extra received with confirmation
+- public `/track/[token]` links do not drive receipt confirmation while third-party verification is deferred
 - status transitions to delivered/disputed
 - stock-sale status transitions across not_dispatched, partially_dispatched, dispatched, and received
 
@@ -187,7 +189,7 @@ Minimum release smoke:
 9. Market-run production creates expected stock, or optional/order-based inward flow still works.
 10. Party-first stock sale appears in Commercials as a receivable and under the correct party insight row.
 11. Pending stock sale is dispatched and receipt is confirmed.
-12. Order-linked tracking link opens where applicable.
+12. Public tracking links and generated challans stay deferred; receipt is recorded from the owner Dispatches page after the party returns their challan/confirmation.
 13. Billing page shows plan/trial state.
 
 ## Release Confidence Gap

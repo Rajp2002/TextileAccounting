@@ -47,6 +47,7 @@ export type LegacyOrderSellAndDispatchInput = {
     dispatchDate: string
     transporterName?: string | null
     vehicleNumber?: string | null
+    challanNumber?: string | null
     ewayBillNumber?: string | null
     ewayBillDate?: string | null
     approximateDistanceKm?: number | null

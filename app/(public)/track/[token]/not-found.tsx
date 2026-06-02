@@ -31,7 +31,7 @@ export default function NotFound() {
                 lineHeight: 1.6,
                 margin: '0 0 32px',
             }}>
-                This tracking link is invalid or has expired. Please ask your weaver for a fresh link or scan the QR code on your invoice/challan again.
+                Public dispatch receipt confirmation is currently disabled. Please send the received challan to the factory owner so they can record received meters in Weavly.
             </p>
 
             <div style={{
@@ -45,7 +45,7 @@ export default function NotFound() {
                     🧵 Powered by Weavly
                 </p>
                 <p style={{ fontSize: 11, color: '#4ade80', margin: 0 }}>
-                    Real-time fabric order tracking
+                    Factory-recorded dispatch receipts
                 </p>
             </div>
         </div>

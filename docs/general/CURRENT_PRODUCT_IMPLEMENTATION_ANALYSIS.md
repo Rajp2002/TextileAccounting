@@ -24,7 +24,7 @@ Weavly is a multi-tenant textile operations SaaS for weaving factories. It is no
 - worker advances and kharchi
 - takas and stock in godown as physical inventory
 - party-first stock sale with saved-party lookup/creation as the primary stock sale entry point
-- pending and partial dispatch batches, public tracking where order-linked, and receipt reconciliation
+- pending and partial dispatch batches with owner-recorded receipt reconciliation
 - Commercials receivables, payment tracking, and lightweight party-level profit/open-dues visibility
 - gross profit visibility and money source of truth
 - WhatsApp-based operational messaging
@@ -64,7 +64,7 @@ Supporting libraries and services include:
 - Meta WhatsApp Cloud API through Supabase Edge Functions.
 - Upstash rate limiting for auth, access-code, and tracking surfaces.
 - Sentry for application monitoring.
-- jsPDF and qrcode for generated documents and tracking shares.
+- jsPDF for payslip documents.
 
 ### Tenant Model
 
@@ -207,7 +207,7 @@ The current implementation revolves around these records and relationships.
 | Market runs | `/owner/market-runs`, `/owner/market-runs/[id]` | `market_runs`, `market_run_summary`, `createMarketRunFromEstimator`, `create_market_run_sale` |
 | Supervisor production | `/supervisor/dashboard`, `/supervisor/production` | `getShiftSetupData`, `upsertShiftAssignment`, `bulkLogProduction`, `replace_shift_production_logs` |
 | Stock and godown | `/owner/stock`, `TakaStockClient.tsx` | Physical inventory, `fabric_stock_lot_summary`, `fabric_stock_inward_drafts`, `confirm_stock_inward_draft` |
-| Dispatch and tracking | `/owner/dispatches`, Sell Stock UI, Pending Dispatches tab, order dispatch UI, `/track/[token]` | `getSellAndDispatchOptions` loads source stock plus active parties; `createPartyStockSaleAndOptionalDispatch`, `confirmPendingSaleDispatch`, `create_stock_sale_dispatch`, `confirm_stock_sale_dispatch_receipt_v1`, `get_order_tracking_data` |
+| Dispatch and tracking | `/owner/dispatches`, Sell Stock UI, Pending Dispatches tab, order dispatch UI | `getSellAndDispatchOptions` loads source stock plus active parties; `createPartyStockSaleAndOptionalDispatch`, `confirmPendingSaleDispatch`, `create_stock_sale_dispatch`, `confirm_stock_sale_dispatch_receipt_v1` |
 | Commercials | `/owner/commercials` | Money source of truth, receivables, payment receipts, party leaderboards/directory, `lib/commercials/receivables.ts`, `record_commercial_payment_v1`, `getCommercialPartyInsights` |
 | Payroll | `/owner/payroll` | `toggleWorkerPaid`, pay-window gating, `settle_worker_payroll`, `unsettle_worker_payroll`, `lib/payroll-cycle.ts` |
 | Advances and kharchi | `/owner/advances`, supervisor kharchi dialog | `worker_advances`, `recordKharchi`, supervisor float actions |
@@ -574,13 +574,11 @@ The owner can:
 - group dispatched batches by order or fallback stock-sale party
 - create an order-linked dispatch from sold stock entries
 - enter e-way bill information where needed
-- generate a challan
-- copy/share a tracking link
-- view QR code
-- confirm receipt on behalf of the receiver
+- record the user's challan number/reference
+- record receipt after the receiver returns a challan/confirmation
 - record shortages or extra received quantity
 
-The public tracking portal lives at `/track/[token]` for order-linked dispatches. A party can open the link without login, see safe order/dispatch details, and confirm receipt for in-transit order batches. Orderless stock-sale batches are confirmed by the owner from `/owner/dispatches`.
+Public third-party verification is deferred. Receipt confirmation is owner-recorded from `/owner/dispatches` after the party returns their challan/confirmation.
 
 #### Logic and Output
 
@@ -619,11 +617,11 @@ Order tracking uses order tracking tokens. `get_order_tracking_data` returns saf
 
 #### Value Provided
 
-Dispatches create a controlled bridge between sold stock and delivery. The party-first split lets owners book a sale and receivable before the fabric physically leaves, then dispatch and receive it in batches. Tracking replaces WhatsApp-only follow-up for order-linked shipments, while owner receipt confirmation preserves visibility into shortages and delivered state.
+Dispatches create a controlled bridge between sold stock and delivery. The party-first split lets owners book a sale and receivable before the fabric physically leaves, then dispatch and receive it in batches. Owner-recorded returned challans preserve visibility into shortages and delivered state.
 
 #### Connected Features
 
-Dispatch connects orders, stock sales, packages, challans, tracking links, owner/public receipt confirmation, shortages, and commercials.
+Dispatch connects orders, stock sales, packages, challans, owner-recorded receipt confirmation, shortages, and commercials.
 
 ### 4.10 Commercials
 
@@ -1013,11 +1011,11 @@ From `/owner/dispatches`, the owner can dispatch pending party-first stock sales
 - creates dispatch-package bridge lines
 - links stock sales to the dispatch
 
-The UI can generate a challan. Order-linked dispatches can share a tracking link. Orderless stock-sale dispatches are still visible in the dispatch list with party fallback data.
+The UI records the user's challan reference instead of generating challan paperwork. Order-linked and orderless stock-sale dispatches are visible in the dispatch list with party fallback data.
 
-### Step 12: Party Tracks and Confirms Receipt
+### Step 12: Owner Records Returned Challan Receipt
 
-The public link `/track/[token]` shows safe order and dispatch details without exposing internal app data. The recipient can confirm received quantity for in-transit order-linked dispatches. Owners can also confirm receipt from `/owner/dispatches`; orderless stock-sale receipts use `confirm_stock_sale_dispatch_receipt_v1`.
+The party sends their received challan/confirmation outside the app. The owner records received quantity from `/owner/dispatches`; orderless stock-sale receipts use `confirm_stock_sale_dispatch_receipt_v1`.
 
 Receipt confirmation updates dispatch state. For stock-sale dispatches, a received batch can move the sale to `received` only when no pending dispatch meters remain and all linked batches are delivered. Shortages or extra quantities become visible for owner reconciliation.
 
@@ -1233,11 +1231,11 @@ Primary value: physical godown is tied to production cost and sale economics.
 
 ### Dispatch and Tracking Workflow
 
-Entry points: `/owner/orders`, `/owner/dispatches`, `/track/[token]`
+Entry points: `/owner/orders`, `/owner/dispatches`
 
-Outcome: dispatches from sold stock, challan data, public tracking link, receipt confirmation, shortage reconciliation.
+Outcome: dispatches from sold stock, challan data, owner-recorded receipt confirmation, shortage reconciliation.
 
-Primary value: delivery leaves a trace and receipt is confirmed outside the app login wall.
+Primary value: delivery leaves a trace and receipt is reconciled when the buyer returns their challan/confirmation.
 
 ### Payroll Workflow
 

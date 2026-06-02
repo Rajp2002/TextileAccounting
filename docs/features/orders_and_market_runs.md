@@ -94,7 +94,7 @@ Weavly workflow:
 - Owner analytics summarizes order health.
 - Market-run production contributes to expected stock without requiring daily Stock Inward confirmation.
 - Order-based/direct workflows may still use inward drafts where needed.
-- Order-linked dispatches and public tracking attach to orders.
+- Order-linked dispatches attach to orders; public third-party tracking is deferred.
 - Market-run stock can be sold and dispatched without creating a fake party order.
 - Sell Stock resolves active party identity through selected party, unique exact-name match, or new-party creation with phone/GSTIN where needed.
 - Commercials aggregates expected and realized profit.

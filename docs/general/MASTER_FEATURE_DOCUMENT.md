@@ -234,7 +234,7 @@ The professional handoff layer for sold stock and order output. Dispatches group
 2. Owner uses Sell Stock to select source stock, choose an existing party or enter new party details, sold meters, rate, credit days, and notes.
 3. System creates or resolves the lightweight party, then creates a stock sale, stock movement, and named Commercials receivable.
 4. Pending dispatch meters appear in the Pending Dispatches tab.
-5. Owner confirms dispatch for all or part of the pending quantity (using a modernized CreateDispatchModal) with dispatch date, challan, vehicle, and transporter details.
+5. Owner confirms dispatch for all or part of the pending quantity (using a modernized CreateDispatchModal) with dispatch date, user-entered challan number, vehicle, and transporter details.
 6. Owner confirms direct receipt of dispatched batches, recording actual received meters.
 7. Shortage or extra received meters are calculated and logged as stock discrepancies, and credit due dates are deferred relative to receipt.
 
@@ -248,12 +248,11 @@ The professional handoff layer for sold stock and order output. Dispatches group
 
 - Delivery/challan handoff becomes dispatch records.
 - Shortage notes become sent-versus-received variance.
-- Customer calls become a public tracking portal.
+- Returned party challans become owner-recorded receipt confirmations.
 
 ### Data and Code
 
 - `/owner/dispatches`
-- `/track/[token]`
 - `components/dispatches/DispatchModals.tsx`
 - `dispatches`
 - `dispatch_package_lines`

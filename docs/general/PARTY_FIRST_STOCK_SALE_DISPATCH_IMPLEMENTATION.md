@@ -594,7 +594,7 @@ This preserves:
 - active order validation
 - same-quality unlinked lot handling
 - order tracking token behavior
-- `/track/[token]` links
+- public tracking links deferred
 
 The old RPC path was not replaced.
 
@@ -682,6 +682,7 @@ export type LegacyOrderSellAndDispatchInput = {
     dispatchDate: string
     transporterName?: string | null
     vehicleNumber?: string | null
+    challanNumber?: string | null
     ewayBillNumber?: string | null
     ewayBillDate?: string | null
     approximateDistanceKm?: number | null
@@ -1108,7 +1109,7 @@ It still:
 - records stock sales through `record_fabric_stock_sale`
 - creates dispatch through `create_stock_sale_dispatch`
 - creates discrepancies for dispatch meter differences
-- returns `/track/[token]` links
+- keeps public tracking links deferred
 
 The order dispatch RPC still owns order-linked dispatch behavior.
 

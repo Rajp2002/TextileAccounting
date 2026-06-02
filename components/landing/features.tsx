@@ -31,7 +31,7 @@ const workflow = [
     },
     {
         title: 'Dispatch and settle',
-        description: 'Create challans, share tracking links, record shortages, settle advances, and send payroll summaries on WhatsApp.',
+        description: 'Record challan references, returned receipt confirmations, shortages, advances, and payroll summaries.',
         outcome: 'Close the loop from produced meters to party records and worker payments.',
         icon: Truck,
     },

@@ -49,7 +49,7 @@ Feature docs:
 - `/owner/orders` - active order board, progress, pace, assignment, dispatch section.
 - `/owner/market-runs` - speculative production tracking.
 - `/owner/stock` - expected/physical godown ledger, manual or source-linked lots, stock sales, adjustments, movements, pending dispatch context.
-- `/owner/dispatches` - party-first stock sale workflow, pending/partial dispatches, order-linked dispatches, receipt reconciliation, tracking links.
+- `/owner/dispatches` - party-first stock sale workflow, pending/partial dispatches, order-linked dispatches, and owner-recorded receipt reconciliation.
 - `/owner/commercials` - source of truth for revenue, gross profit, receivables, payment status, payment receipts, and lightweight party-level sales/profit visibility.
 - `/owner/payroll` - meter and fixed payroll, configurable cycle/pay date/reminder window, pay-date overview, past settlement audit history, CSV exports, and WhatsApp payslips.
 - `/owner/advances` - worker Upaad tracking and recovery support.

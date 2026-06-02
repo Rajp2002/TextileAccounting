@@ -116,7 +116,7 @@ The current Sell Stock dialog selects available source stock and captures party 
 Remaining caveat:
 
 - The visible Sell Stock dialog currently saves the sale first; dispatch happens as a second step from Pending Dispatches. This is acceptable for accuracy, but the button text and "Sell & Dispatch" naming should stay clear.
-- Order-linked public tracking still uses order tokens. Orderless stock-sale dispatches are owner-confirmed from the dispatch page.
+- Public third-party tracking is deferred; stock-sale and order-linked dispatch receipts are owner-confirmed from the dispatch page after the party returns a challan/confirmation.
 
 Current flow:
 
