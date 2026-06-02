@@ -7,6 +7,7 @@ import crypto from 'crypto'
 import { checkAccessCodeRateLimit, checkAccessCodeLockout, recordAccessCodeFailure, resetAccessCodeFailures } from '@/lib/rate-limit'
 import { assignMachinesToOrderForOrg, type AssignmentResult } from '@/lib/actions/order-assignment'
 import { CreateFabricDispatchSchema, safeParse } from '@/lib/schemas'
+import { shouldArchiveDispatchGroup } from '@/lib/dispatch/archive'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -474,6 +475,14 @@ export interface DispatchWithOrder {
         pending_dispatch_meters: number
         party_name: string | null
         quality_label: string | null
+        source_type: string | null
+        market_run_id: string | null
+        market_run_label: string | null
+        market_run_status: string | null
+        order_id: string | null
+        order_party_name: string | null
+        order_quality_label: string | null
+        order_status: string | null
     } | null
     party_name?: string | null
     party_phone?: string | null
@@ -488,6 +497,29 @@ export interface DispatchWithOrder {
         total_target_meters: number
         status: string
     }
+}
+
+export type DispatchListScope = 'active' | 'archived' | 'all'
+
+export interface ArchivedDispatchGroup {
+    id: string
+    partyName: string
+    qualityLabel: string | null
+    sourceType: 'order' | 'market_run' | 'stock_sale'
+    sourceId: string | null
+    sourceLabel: string
+    sourceStatus: string | null
+    sourceIsActive: boolean
+    totalSaleMeters: number
+    totalDispatchedMeters: number
+    totalConfirmedMeters: number
+    pendingDispatchMeters: number
+    batchCount: number
+    lastDispatchedAt: string
+    lastReceivedAt: string | null
+    hasOpenDiscrepancy: boolean
+    hasEwayGap: boolean
+    dispatches: DispatchWithOrder[]
 }
 
 export interface DispatchOverviewStats {
@@ -506,13 +538,36 @@ type DispatchOverviewResult =
     | { data: DispatchOverviewStats; error?: never }
     | { data?: never; error: string }
 
+type RawRelatedMarketRun = {
+    id: string
+    fabric_label: string | null
+    quality_label: string | null
+    status: string | null
+}
+
+type RawRelatedOrder = {
+    id: string
+    party_name: string | null
+    quality_label: string | null
+    status: string | null
+}
+
+type RawStockSaleLot = {
+    quality_label: string | null
+    source_type: string | null
+    market_run_id: string | null
+    order_id: string | null
+    market_runs?: RawRelatedMarketRun | RawRelatedMarketRun[] | null
+    orders?: RawRelatedOrder | RawRelatedOrder[] | null
+}
+
+type RawDispatchStockSale = Omit<NonNullable<DispatchWithOrder['stock_sale']>, 'quality_label'> & {
+    fabric_stock_lots?: RawStockSaleLot | RawStockSaleLot[] | null
+}
+
 type RawDispatchWithOrder = Omit<DispatchWithOrder, 'orders'> & {
     orders: DispatchWithOrder['orders'] | DispatchWithOrder['orders'][]
-    stock_sale?: (Omit<NonNullable<DispatchWithOrder['stock_sale']>, 'quality_label'> & {
-        fabric_stock_lots?: { quality_label: string | null } | { quality_label: string | null }[] | null
-    }) | Array<Omit<NonNullable<DispatchWithOrder['stock_sale']>, 'quality_label'> & {
-        fabric_stock_lots?: { quality_label: string | null } | { quality_label: string | null }[] | null
-    }> | null
+    stock_sale?: RawDispatchStockSale | RawDispatchStockSale[] | null
 }
 
 type RawDispatchRow = Omit<DispatchRow, 'package_lines'> & {
@@ -535,6 +590,86 @@ function isMissingStockDiscrepanciesTable(error: MaybeSupabaseError | null | und
     return error?.code === '42P01'
         || error?.code === 'PGRST205'
         || /stock_discrepancies/i.test(error?.message ?? '') && /does not exist|schema cache|could not find/i.test(error?.message ?? '')
+}
+
+function getDispatchGroupId(dispatch: DispatchWithOrder) {
+    return dispatch.stock_sale?.id ?? dispatch.stock_sale_id ?? dispatch.orders.id
+}
+
+function getDispatchSaleMeters(dispatch: DispatchWithOrder) {
+    return Number(dispatch.stock_sale?.meters_sold ?? dispatch.orders.total_target_meters ?? dispatch.qty_meters_sent)
+}
+
+function getPendingDispatchMeters(dispatch: DispatchWithOrder) {
+    return Number(dispatch.stock_sale?.pending_dispatch_meters ?? 0)
+}
+
+function buildDispatchArchiveGroups(
+    dispatches: DispatchWithOrder[],
+    openDiscrepancyDispatchIds: Set<string>
+) {
+    const groups = new Map<string, {
+        dispatches: DispatchWithOrder[]
+        totalSaleMeters: number
+        totalDispatchedMeters: number
+        pendingDispatchMeters: number
+        hasUnconfirmedReceipt: boolean
+        hasDisputedDispatch: boolean
+        hasOpenDiscrepancy: boolean
+        hasEwayGap: boolean
+    }>()
+
+    for (const dispatch of dispatches) {
+        const groupId = getDispatchGroupId(dispatch)
+        if (!groups.has(groupId)) {
+            groups.set(groupId, {
+                dispatches: [],
+                totalSaleMeters: getDispatchSaleMeters(dispatch),
+                totalDispatchedMeters: 0,
+                pendingDispatchMeters: getPendingDispatchMeters(dispatch),
+                hasUnconfirmedReceipt: false,
+                hasDisputedDispatch: false,
+                hasOpenDiscrepancy: false,
+                hasEwayGap: false,
+            })
+        }
+
+        const group = groups.get(groupId)!
+        group.dispatches.push(dispatch)
+        group.totalSaleMeters = Math.max(group.totalSaleMeters, getDispatchSaleMeters(dispatch))
+        group.totalDispatchedMeters += Number(dispatch.qty_meters_sent ?? 0)
+        group.pendingDispatchMeters = Math.max(group.pendingDispatchMeters, getPendingDispatchMeters(dispatch))
+        group.hasUnconfirmedReceipt = group.hasUnconfirmedReceipt
+            || dispatch.status === 'in_transit'
+            || dispatch.qty_meters_received === null
+        group.hasDisputedDispatch = group.hasDisputedDispatch || dispatch.status === 'disputed'
+        group.hasOpenDiscrepancy = group.hasOpenDiscrepancy || openDiscrepancyDispatchIds.has(dispatch.id)
+        group.hasEwayGap = group.hasEwayGap || Boolean(dispatch.eway_bill_required && !dispatch.eway_bill_number)
+    }
+
+    return groups
+}
+
+function filterDispatchesByScope(
+    dispatches: DispatchWithOrder[],
+    openDiscrepancyDispatchIds: Set<string>,
+    scope: DispatchListScope
+) {
+    if (scope === 'all') return dispatches
+
+    const groups = buildDispatchArchiveGroups(dispatches, openDiscrepancyDispatchIds)
+    const archivedGroupIds = new Set<string>()
+
+    for (const [groupId, group] of groups.entries()) {
+        if (shouldArchiveDispatchGroup(group)) {
+            archivedGroupIds.add(groupId)
+        }
+    }
+
+    return dispatches.filter((dispatch) => {
+        const isArchived = archivedGroupIds.has(getDispatchGroupId(dispatch))
+        return scope === 'archived' ? isArchived : !isArchived
+    })
 }
 
 /**
@@ -844,6 +979,7 @@ export async function createDispatch(
     revalidatePath('/owner/orders')
     revalidatePath('/owner/dispatches')
     revalidatePath('/owner/stock')
+    revalidatePath('/owner/archive')
     return {
         dispatch: normalizeDispatchRow(dispatch as RawDispatchRow),
         dispatch_number: dispatchMeta.dispatch_number,
@@ -854,9 +990,10 @@ export async function createDispatch(
  * Fetch all dispatches across all orders for the org.
  * Includes order total_target_meters and status for grouped progress view.
  */
-export async function getAllDispatches(): Promise<DispatchesResult> {
+export async function getAllDispatches(options: { scope?: DispatchListScope } = {}): Promise<DispatchesResult> {
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
+    const scope = options.scope ?? 'active'
 
     const { data, error } = await supabase
         .from('dispatches')
@@ -899,7 +1036,22 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
                 pending_dispatch_meters,
                 party_name,
                 fabric_stock_lots (
-                    quality_label
+                    quality_label,
+                    source_type,
+                    market_run_id,
+                    order_id,
+                    market_runs (
+                        id,
+                        fabric_label,
+                        quality_label,
+                        status
+                    ),
+                    orders (
+                        id,
+                        party_name,
+                        quality_label,
+                        status
+                    )
                 )
             ),
             dispatch_package_lines (
@@ -929,12 +1081,17 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
     if (error) return { error: error.message }
 
     const rows = (data ?? []) as unknown as RawDispatchWithOrder[]
-    return {
-        data: rows.map((row) => {
+    const mappedDispatches = rows.map((row) => {
             const rawStockSale = Array.isArray(row.stock_sale) ? row.stock_sale[0] : row.stock_sale
             const rawStockSaleLot = Array.isArray(rawStockSale?.fabric_stock_lots)
                 ? rawStockSale?.fabric_stock_lots[0]
                 : rawStockSale?.fabric_stock_lots
+            const rawMarketRun = Array.isArray(rawStockSaleLot?.market_runs)
+                ? rawStockSaleLot?.market_runs[0]
+                : rawStockSaleLot?.market_runs
+            const rawOrder = Array.isArray(rawStockSaleLot?.orders)
+                ? rawStockSaleLot?.orders[0]
+                : rawStockSaleLot?.orders
             const stockSale = rawStockSale
                 ? {
                     id: rawStockSale.id,
@@ -944,6 +1101,14 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
                     pending_dispatch_meters: Number(rawStockSale.pending_dispatch_meters ?? 0),
                     party_name: rawStockSale.party_name ?? null,
                     quality_label: rawStockSaleLot?.quality_label ?? null,
+                    source_type: rawStockSaleLot?.source_type ?? null,
+                    market_run_id: rawStockSaleLot?.market_run_id ?? null,
+                    market_run_label: rawMarketRun?.fabric_label ?? rawMarketRun?.quality_label ?? null,
+                    market_run_status: rawMarketRun?.status ?? null,
+                    order_id: rawStockSaleLot?.order_id ?? null,
+                    order_party_name: rawOrder?.party_name ?? null,
+                    order_quality_label: rawOrder?.quality_label ?? null,
+                    order_status: rawOrder?.status ?? null,
                 }
                 : null
 
@@ -960,8 +1125,138 @@ export async function getAllDispatches(): Promise<DispatchesResult> {
                     status: 'stock_sale',
                 },
             }
-        }),
+    })
+
+    const dispatchIds = mappedDispatches.map((dispatch) => dispatch.id)
+    let openDiscrepancyDispatchIds = new Set<string>()
+    if (dispatchIds.length > 0) {
+        const { data: discrepancies, error: discrepancyError } = await supabase
+            .from('stock_discrepancies')
+            .select('dispatch_id')
+            .eq('org_id', profile.org_id)
+            .eq('status', 'needs_review')
+            .in('dispatch_id', dispatchIds)
+
+        if (discrepancyError && !isMissingStockDiscrepanciesTable(discrepancyError)) {
+            return { error: discrepancyError.message }
+        }
+
+        openDiscrepancyDispatchIds = new Set(
+            (discrepancies ?? [])
+                .map((row) => row.dispatch_id)
+                .filter((id): id is string => Boolean(id))
+        )
     }
+
+    return {
+        data: filterDispatchesByScope(mappedDispatches, openDiscrepancyDispatchIds, scope),
+    }
+}
+
+function getLatestIsoDate(values: Array<string | null | undefined>) {
+    const timestamps = values
+        .filter((value): value is string => Boolean(value))
+        .map((value) => new Date(value).getTime())
+        .filter((value) => Number.isFinite(value))
+
+    if (timestamps.length === 0) return null
+    return new Date(Math.max(...timestamps)).toISOString()
+}
+
+function getArchivedDispatchSource(dispatch: DispatchWithOrder): Pick<ArchivedDispatchGroup, 'sourceType' | 'sourceId' | 'sourceLabel' | 'sourceStatus' | 'sourceIsActive'> {
+    const stockSale = dispatch.stock_sale
+
+    if (stockSale?.market_run_id) {
+        const status = stockSale.market_run_status
+        return {
+            sourceType: 'market_run',
+            sourceId: stockSale.market_run_id,
+            sourceLabel: stockSale.market_run_label ?? stockSale.quality_label ?? 'Market run sale',
+            sourceStatus: status,
+            sourceIsActive: !['closed', 'sold_out'].includes(status ?? ''),
+        }
+    }
+
+    if (dispatch.orders.status !== 'stock_sale') {
+        return {
+            sourceType: 'order',
+            sourceId: dispatch.orders.id,
+            sourceLabel: dispatch.orders.quality_label
+                ? `${dispatch.orders.party_name} - ${dispatch.orders.quality_label}`
+                : dispatch.orders.party_name,
+            sourceStatus: dispatch.orders.status,
+            sourceIsActive: dispatch.orders.status === 'active',
+        }
+    }
+
+    if (stockSale?.order_id) {
+        const status = stockSale.order_status
+        const party = stockSale.order_party_name ?? dispatch.orders.party_name
+        const quality = stockSale.order_quality_label ?? stockSale.quality_label
+        return {
+            sourceType: 'order',
+            sourceId: stockSale.order_id,
+            sourceLabel: quality ? `${party} - ${quality}` : party,
+            sourceStatus: status,
+            sourceIsActive: status === 'active',
+        }
+    }
+
+    return {
+        sourceType: 'stock_sale',
+        sourceId: stockSale?.id ?? dispatch.stock_sale_id ?? dispatch.id,
+        sourceLabel: stockSale?.quality_label ?? dispatch.orders.quality_label ?? 'Stock sale',
+        sourceStatus: 'completed',
+        sourceIsActive: false,
+    }
+}
+
+export async function getArchivedDispatchGroups(): Promise<{ data: ArchivedDispatchGroup[]; error?: string }> {
+    const result = await getAllDispatches({ scope: 'archived' })
+    if (result.error) return { data: [], error: result.error }
+
+    const groups = new Map<string, DispatchWithOrder[]>()
+    for (const dispatch of result.data ?? []) {
+        const groupId = getDispatchGroupId(dispatch)
+        const current = groups.get(groupId) ?? []
+        current.push(dispatch)
+        groups.set(groupId, current)
+    }
+
+    const archivedGroups = Array.from(groups.entries()).map(([id, dispatches]) => {
+        const sortedDispatches = [...dispatches].sort((a, b) => {
+            return new Date(b.dispatched_at).getTime() - new Date(a.dispatched_at).getTime()
+        })
+        const firstDispatch = sortedDispatches[0]
+        const source = getArchivedDispatchSource(firstDispatch)
+        const totalDispatchedMeters = sortedDispatches.reduce((sum, dispatch) => sum + Number(dispatch.qty_meters_sent ?? 0), 0)
+        const totalConfirmedMeters = sortedDispatches.reduce((sum, dispatch) => sum + Number(dispatch.qty_meters_received ?? 0), 0)
+        const totalSaleMeters = Math.max(...sortedDispatches.map(getDispatchSaleMeters), totalDispatchedMeters)
+        const pendingDispatchMeters = Math.max(...sortedDispatches.map(getPendingDispatchMeters), 0)
+        const lastDispatchedAt = getLatestIsoDate(sortedDispatches.map((dispatch) => dispatch.dispatched_at)) ?? firstDispatch.dispatched_at
+        const lastReceivedAt = getLatestIsoDate(sortedDispatches.map((dispatch) => dispatch.received_at))
+
+        return {
+            id,
+            partyName: firstDispatch.stock_sale?.party_name ?? firstDispatch.orders.party_name,
+            qualityLabel: firstDispatch.stock_sale?.quality_label ?? firstDispatch.orders.quality_label,
+            ...source,
+            totalSaleMeters,
+            totalDispatchedMeters,
+            totalConfirmedMeters,
+            pendingDispatchMeters,
+            batchCount: sortedDispatches.length,
+            lastDispatchedAt,
+            lastReceivedAt,
+            hasOpenDiscrepancy: false,
+            hasEwayGap: false,
+            dispatches: sortedDispatches,
+        }
+    })
+
+    archivedGroups.sort((a, b) => new Date(b.lastDispatchedAt).getTime() - new Date(a.lastDispatchedAt).getTime())
+
+    return { data: archivedGroups }
 }
 
 export async function getDispatchOverviewStats(): Promise<DispatchOverviewResult> {
@@ -1091,6 +1386,7 @@ export async function confirmDispatchReceiptByOwner(
     }
 
     revalidatePath('/owner/dispatches')
+    revalidatePath('/owner/archive')
 
     return { success: true, qty_received: resultQty }
 }
@@ -1230,6 +1526,7 @@ export async function confirmPendingSaleDispatch(
     revalidatePath('/owner/dispatches')
     revalidatePath('/owner/stock')
     revalidatePath('/owner/commercials')
+    revalidatePath('/owner/archive')
 
     return {
         success: true,
@@ -1282,6 +1579,7 @@ export async function confirmPendingSaleReceived(
     revalidatePath('/owner/dispatches')
     revalidatePath('/owner/stock')
     revalidatePath('/owner/commercials')
+    revalidatePath('/owner/archive')
 
     return {
         success: true,

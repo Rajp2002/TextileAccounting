@@ -55,6 +55,7 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
+import { isDispatchGroupActionable } from '@/lib/dispatch/archive'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -199,6 +200,60 @@ const getReceiptBadge = (dispatch: Dispatch, t: (key: string) => string) => {
         label: t('dispatch.shortage.received'),
         className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     }
+}
+
+function getClientDispatchGroupId(dispatch: Dispatch) {
+    return dispatch.stock_sale?.id ?? dispatch.stock_sale_id ?? dispatch.orders.id
+}
+
+function filterArchivedDispatchRows(dispatches: Dispatch[]) {
+    const groups = new Map<string, {
+        dispatches: Dispatch[]
+        totalSaleMeters: number
+        totalDispatchedMeters: number
+        pendingDispatchMeters: number
+        hasUnconfirmedReceipt: boolean
+        hasDisputedDispatch: boolean
+        hasOpenDiscrepancy: boolean
+        hasEwayGap: boolean
+    }>()
+
+    for (const dispatch of dispatches) {
+        const groupId = getClientDispatchGroupId(dispatch)
+        if (!groups.has(groupId)) {
+            groups.set(groupId, {
+                dispatches: [],
+                totalSaleMeters: Number(dispatch.stock_sale?.meters_sold ?? dispatch.orders.total_target_meters ?? dispatch.qty_meters_sent),
+                totalDispatchedMeters: 0,
+                pendingDispatchMeters: Number(dispatch.stock_sale?.pending_dispatch_meters ?? 0),
+                hasUnconfirmedReceipt: false,
+                hasDisputedDispatch: false,
+                hasOpenDiscrepancy: false,
+                hasEwayGap: false,
+            })
+        }
+
+        const group = groups.get(groupId)!
+        const received = dispatch.qty_meters_received
+        const receiptDifference = received !== null
+            ? Math.abs(Number(dispatch.qty_meters_sent ?? 0) - Number(received)) > 0.01
+            : false
+        group.dispatches.push(dispatch)
+        group.totalSaleMeters = Math.max(group.totalSaleMeters, Number(dispatch.stock_sale?.meters_sold ?? dispatch.orders.total_target_meters ?? dispatch.qty_meters_sent))
+        group.totalDispatchedMeters += Number(dispatch.qty_meters_sent ?? 0)
+        group.pendingDispatchMeters = Math.max(group.pendingDispatchMeters, Number(dispatch.stock_sale?.pending_dispatch_meters ?? 0))
+        group.hasUnconfirmedReceipt = group.hasUnconfirmedReceipt || dispatch.status === 'in_transit' || received === null
+        group.hasDisputedDispatch = group.hasDisputedDispatch || dispatch.status === 'disputed'
+        group.hasOpenDiscrepancy = group.hasOpenDiscrepancy || receiptDifference
+        group.hasEwayGap = group.hasEwayGap || Boolean(dispatch.eway_bill_required && !dispatch.eway_bill_number)
+    }
+
+    const activeGroupIds = new Set<string>()
+    for (const [groupId, group] of groups.entries()) {
+        if (isDispatchGroupActionable(group)) activeGroupIds.add(groupId)
+    }
+
+    return dispatches.filter((dispatch) => activeGroupIds.has(getClientDispatchGroupId(dispatch)))
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -712,7 +767,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
 
     const handleOwnerReceiptConfirmed = (dispatchId: string, qtyReceived: number, note: string) => {
         setDispatches((prev) =>
-            prev.map((dispatch) =>
+            filterArchivedDispatchRows(prev.map((dispatch) =>
                 dispatch.id === dispatchId
                     ? {
                         ...dispatch,
@@ -723,7 +778,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                         receipt_confirmation_note: note.trim() || null,
                     }
                     : dispatch
-            )
+            ))
         )
     }
 

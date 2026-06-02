@@ -125,6 +125,7 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
     revalidatePath('/owner/dispatches')
     revalidatePath('/owner/market-runs')
     revalidatePath('/owner/commercials')
+    revalidatePath('/owner/archive')
 
     return {
         success: true,
@@ -301,6 +302,7 @@ export async function sellAndDispatchTakas(input: LegacyOrderSellAndDispatchInpu
     revalidatePath('/owner/dispatches')
     revalidatePath('/owner/stock')
     revalidatePath('/owner/orders')
+    revalidatePath('/owner/archive')
     
     return {
         success: true,
