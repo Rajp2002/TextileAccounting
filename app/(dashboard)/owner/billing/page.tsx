@@ -9,8 +9,9 @@ import { getReferralStatsAction } from '../actions'
 import {
     CheckCircle2, AlertCircle, Clock, XCircle,
     ShieldCheck, ReceiptText, Star, Zap, Timer, Lock, RefreshCw, ArrowRight,
+    type LucideIcon,
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { redirect } from 'next/navigation'
 
 // ─── Plan definitions ─────────────────────────────────────────────────────────
@@ -54,6 +55,15 @@ const PLANS = [
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+type SubscriptionPaymentRow = {
+    id: string
+    status: string
+    created_at: string | null
+    razorpay_payment_id?: string | null
+    amount_paise: number
+    method?: string | null
+}
+
 function formatDate(iso: string | null): string {
     if (!iso) return '—'
     return new Date(iso).toLocaleDateString('en-IN', {
@@ -89,7 +99,7 @@ function trialProgressPct(currentEnd: string | null): number {
 }
 
 function StatusBadge({ status }: { status: string }) {
-    const config: Record<string, { label: string; icon: any; classes: string }> = {
+    const config: Record<string, { label: string; icon: LucideIcon; classes: string }> = {
         active:        { label: 'Active',          icon: CheckCircle2, classes: 'bg-emerald-50 text-emerald-700 border-emerald-100 ring-2 ring-emerald-500/10' },
         authenticated: { label: 'Activating',      icon: Clock,        classes: 'bg-blue-50 text-blue-700 border-blue-100 ring-2 ring-blue-500/10' },
         created:       { label: 'Pending Payment', icon: Clock,        classes: 'bg-amber-50 text-amber-700 border-amber-100 ring-2 ring-amber-500/10' },
@@ -403,7 +413,7 @@ export default async function BillingPage() {
                             </div>
                             <div className="rounded-[2rem] border border-gray-100 bg-white shadow-sm overflow-hidden">
                                 <div className="divide-y divide-gray-50">
-                                    {payments.map((p: any) => (
+                                    {(payments as SubscriptionPaymentRow[]).map((p) => (
                                         <div key={p.id} className="group flex items-center justify-between p-5 hover:bg-gray-50 transition-colors">
                                             <div className="flex items-center gap-5">
                                                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${

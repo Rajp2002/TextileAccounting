@@ -15,6 +15,18 @@ import { validateJoinCode, joinOrganization } from '@/app/(auth)/actions/auth'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 
+type RedirectError = {
+    digest?: string
+}
+
+function isNextRedirect(error: unknown) {
+    return typeof error === 'object'
+        && error !== null
+        && 'digest' in error
+        && typeof (error as RedirectError).digest === 'string'
+        && (error as RedirectError).digest?.startsWith('NEXT_REDIRECT')
+}
+
 export default function JoinPage() {
     const [loading, setLoading] = useState(false)
 
@@ -118,8 +130,8 @@ export default function JoinPage() {
                 toast.error(result.error)
                 setLoading(false)
             }
-        } catch (err: any) {
-            if (err?.digest?.startsWith('NEXT_REDIRECT')) return
+        } catch (err) {
+            if (isNextRedirect(err)) return
             toast.error('Something went wrong. Please try again.')
             setLoading(false)
         }

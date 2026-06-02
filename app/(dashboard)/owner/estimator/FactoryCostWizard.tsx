@@ -4,13 +4,10 @@ import { useState } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
 import { 
     Calculator, 
-    Factory, 
     Zap, 
-    Coins, 
     ArrowRight, 
     CheckCircle2, 
     Settings2,
-    Gauge,
     Building2,
     Briefcase
 } from 'lucide-react'
@@ -18,9 +15,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { toast } from 'sonner'
-import { type EstimateState, type OverheadItem, ensureOverheadIntegrity, DEFAULT_OVERHEAD_ITEMS } from '@/lib/estimator'
+import { type EstimateState, type OverheadItem, ensureOverheadIntegrity } from '@/lib/estimator'
 import { nanoid } from 'nanoid'
 
 interface FactoryCostWizardProps {

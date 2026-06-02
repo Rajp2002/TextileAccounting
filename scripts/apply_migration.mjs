@@ -58,7 +58,7 @@ async function runViaSupabaseRPC() {
 
     // Last resort: Check if we can check existing constraints to confirm the problem
     console.log('\nVerifying current constraint state on machine_assignments...')
-    const { data: constraintCheck, error } = await supabase
+    const { error } = await supabase
         .from('machine_assignments')
         .select('id')
         .limit(1)

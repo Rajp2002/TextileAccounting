@@ -35,6 +35,9 @@ interface ProductionLogRow {
     zero_meter_reason: string | null
 }
 
+type MessageError = { message?: string }
+type WorkerIdLogRow = { worker_id: number | null }
+
 // ─── Internal Helpers ──────────────────────────────────────────────────────────
 
 /**
@@ -62,6 +65,10 @@ function getLatestSubmittedAt(logs: Array<{ submitted_at: string | null }>) {
 
     if (validTimestamps.length === 0) return null
     return new Date(Math.max(...validTimestamps)).toISOString()
+}
+
+function getErrorMessage(error: unknown, fallback = 'Unexpected error') {
+    return error instanceof Error ? error.message : fallback
 }
 
 async function supervisorWorkerHasHistory(
@@ -109,8 +116,8 @@ export async function savePastAttendance(
     let isCodeValid = false
     try {
         isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, parsed.data.accessCode)
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (e) {
+        return { error: getErrorMessage(e, 'Invalid or expired access code') }
     }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
@@ -166,8 +173,8 @@ export async function deleteMachineWithCode(machineId: string, accessCode: strin
     let isCodeValid = false
     try {
         isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (e) {
+        return { error: getErrorMessage(e, 'Invalid or expired access code') }
     }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
@@ -245,8 +252,8 @@ export async function deleteWorkerWithCode(workerId: number, accessCode: string)
     let isCodeValid = false
     try {
         isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (e) {
+        return { error: getErrorMessage(e, 'Invalid or expired access code') }
     }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
@@ -289,8 +296,8 @@ export async function verifyAccessCode(accessCode: string) {
     let isCodeValid = false
     try {
         isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, codeParsed.data)
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (e) {
+        return { error: getErrorMessage(e, 'Invalid or expired access code') }
     }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
@@ -331,9 +338,6 @@ export async function startBeam(batchId: string, machineId: string) {
         console.error('Error fetching batch:', batchError)
         return { error: 'Failed to fetch batch data. Please try again.' }
     }
-
-    const qualityData = Array.isArray(batchData.qualities) ? batchData.qualities[0] : batchData.qualities
-    const defaultRate = (qualityData as any)?.default_worker_rate_per_m || 0
 
     // Set audit actor before service-role DML
     await serviceClient.rpc('set_actor_for_audit', { p_actor_id: user.id })
@@ -496,8 +500,8 @@ export async function unconsumeBatchWithCode(batchId: string, accessCode: string
     let isCodeValid = false
     try {
         isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (e) {
+        return { error: getErrorMessage(e, 'Invalid or expired access code') }
     }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
@@ -631,7 +635,7 @@ export async function assignWorker(
     const machineParsed = safeParse(UuidSchema, machineId)
     if ('error' in machineParsed) return { error: machineParsed.error }
 
-    let error: any
+    let error: MessageError | null = null
     if (isExisting) {
         const { error: updateError } = await supabase
             .from('machine_assignments')
@@ -966,7 +970,7 @@ export async function copyPreviousShiftAction(
     sourceDate: string,
     sourceShift: 'day' | 'night'
 ) {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
     const { data, error } = await supabase.rpc('copy_previous_shift', {
@@ -1212,7 +1216,7 @@ export async function bulkLogProduction(entries: {
     if (cycleStart) {
         const payrollWorkerIds = [...new Set([
             ...logs.map((l) => l.worker_id),
-            ...(existingLogs?.map((l) => (l as any).worker_id) || [])
+            ...(existingLogs?.map((l) => (l as WorkerIdLogRow).worker_id) || [])
         ])].filter((id): id is number => id != null)
 
         if (payrollWorkerIds.length > 0) {

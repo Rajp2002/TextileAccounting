@@ -16,7 +16,15 @@ import {
 const TEMPLATE_PIVOT_BRIEF = "weavly_daily_brief_v2";
 const TEMPLATE_DEADLINE = "weavly_deadline_risk";
 
-Deno.serve(async (_req) => {
+type EdgeSupabaseClient = ReturnType<typeof createClient>;
+type OwnerProfile = {
+  id: string;
+  org_id: string;
+  whatsapp_number: string;
+  organizations?: { name?: string | null } | null;
+};
+
+Deno.serve(async () => {
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -56,8 +64,8 @@ Deno.serve(async (_req) => {
 });
 
 async function processOwner(
-  owner: any,
-  supabase: any,
+  owner: OwnerProfile,
+  supabase: EdgeSupabaseClient,
   metaAccessToken: string,
   metaPhoneNumberId: string,
   todayStr: string,
@@ -143,7 +151,7 @@ async function processOwner(
 }
 
 async function checkAndSendDeadlineAlerts(
-  supabase: any,
+  supabase: EdgeSupabaseClient,
   metaAccessToken: string,
   metaPhoneNumberId: string,
   orgId: string,

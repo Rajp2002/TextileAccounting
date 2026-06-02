@@ -185,10 +185,7 @@ export function CreateDispatchModal({
                                 const unitsVal = customTakas[pkg.id] ?? ''
                                 
                                 const metersNum = Number(metersVal) || 0
-                                const unitsNum = Number(unitsVal) || 0
-                                
                                 const isMetersInvalid = checked && (metersNum <= 0 || metersNum > maxMetres + 0.01)
-                                const isUnitsInvalid = checked && (unitsNum <= 0 || unitsNum > maxUnits)
 
                                 return (
                                     <div

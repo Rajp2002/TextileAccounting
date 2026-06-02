@@ -12,6 +12,8 @@ import {
 } from "../_shared/whatsapp.ts";
 
 const TEMPLATE_NAME = "weavly_advance_receipt";
+type PendingAdvanceRow = { amount: number | string | null };
+type WorkerWithLanguage = { whatsapp_language?: string | null };
 
 Deno.serve(async (req) => {
   try {
@@ -102,8 +104,8 @@ Deno.serve(async (req) => {
       .eq(idField, worker_id)
       .eq("status", "pending");
 
-    const runningBalance = (pendingAdvances ?? []).reduce(
-      (sum: number, a: any) => sum + Number(a.amount),
+    const runningBalance = ((pendingAdvances ?? []) as PendingAdvanceRow[]).reduce(
+      (sum: number, a) => sum + Number(a.amount),
       0,
     );
 
@@ -120,7 +122,7 @@ Deno.serve(async (req) => {
     const callbackData = makeCallbackData("advance", org_id);
 
     // 6. Send — use worker's language preference
-    const langCode = (worker as any).whatsapp_language ?? "en";
+    const langCode = (worker as WorkerWithLanguage).whatsapp_language ?? "en";
     const result = await sendWhatsAppTemplate(
       metaAccessToken,
       metaPhoneNumberId,

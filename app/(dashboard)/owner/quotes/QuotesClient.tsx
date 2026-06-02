@@ -24,8 +24,6 @@ import { getCurrentTimestampMs } from '@/lib/time'
 import {
     History,
     CheckCircle2,
-    XCircle,
-    Send,
     FileText,
     ArrowRight,
     Loader2,

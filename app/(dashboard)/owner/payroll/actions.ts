@@ -4,7 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { calculateTotalPay, calculateDailyPay } from '@/lib/finance'
-import { ToggleWorkerPaidSchema, PayrollConfigSchema, safeParse } from '@/lib/schemas'
+import { PayrollConfigSchema, safeParse } from '@/lib/schemas'
 import { getPayrollCycleBounds, getPayrollCycleStatus } from '@/lib/payroll-cycle'
 import { getSuratTodayString } from '@/lib/time'
 import { validateAndConsumeAccessCode } from '@/lib/access-codes'
@@ -13,6 +13,19 @@ import {
     sanitizePayrollManualAdjustments,
     type PayrollManualAdjustment,
 } from '@/lib/payroll-manual-adjustments'
+
+type PayrollProductionLog = {
+    meters: number
+    worker_rate_snapshot: number | null
+}
+
+type PayrollSettlementResult = {
+    settlement_id?: string
+}
+
+type PayrollReversalResult = {
+    reverted_advances?: number
+}
 
 export async function toggleWorkerPaid(
     workerType: 'meter' | 'fixed',
@@ -80,7 +93,7 @@ export async function toggleWorkerPaid(
             .gte('date', monthStart)
             .lte('date', monthEnd)
 
-        const payItems = (logs || []).map((log: any) => ({
+        const payItems = ((logs || []) as PayrollProductionLog[]).map((log) => ({
             meters: log.meters,
             rate: log.worker_rate_snapshot || 0,
         }))
@@ -160,7 +173,7 @@ export async function toggleWorkerPaid(
         }
 
         // ── Fire-and-forget: send payslip WhatsApp to worker ─────────────────
-        const settlementId = (data as any)?.settlement_id
+        const settlementId = (data as PayrollSettlementResult | null)?.settlement_id
         if (settlementId) {
             const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
             const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -207,7 +220,7 @@ export async function toggleWorkerPaid(
         return {
             success: true,
             status: 'pending',
-            reverted_advances: (data as any)?.reverted_advances ?? 0
+            reverted_advances: (data as PayrollReversalResult | null)?.reverted_advances ?? 0
         }
     }
 }

@@ -9,7 +9,7 @@ import {
     Dialog, DialogContent, DialogDescription, DialogFooter,
     DialogHeader, DialogTitle, DialogTrigger
 } from '@/components/ui/dialog'
-import { ShieldAlert, Lock, Unlock, AlertOctagon, Loader2 } from 'lucide-react'
+import { ShieldAlert, Lock, AlertOctagon, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 
@@ -46,8 +46,8 @@ export function EmergencyLockdown() {
                 duration: 10000,
             })
         },
-        onError: (err: any) => {
-            toast.error(err.message || 'Failed to trigger lockdown')
+        onError: (err) => {
+            toast.error(err instanceof Error ? err.message : 'Failed to trigger lockdown')
         }
     })
 

@@ -6,16 +6,30 @@ import { Button } from '@/components/ui/button'
 import { Copy, Gift, CheckCircle2, Share2 } from 'lucide-react'
 import { formatToSurat, getCurrentTimestampMs } from '@/lib/time'
 
-export function ReferralCard({ stats }: { stats: any }) {
+type ReferralWindow = {
+    valid_from: string
+    valid_until: string
+}
+
+type ReferralStats = {
+    code?: string | null
+    total?: number
+    converted?: number
+    currentDiscountPct?: number
+    activeWindows?: ReferralWindow[]
+}
+
+export function ReferralCard({ stats }: { stats: ReferralStats | null }) {
     const [copied, setCopied] = useState(false)
 
     if (!stats || !stats.code) {
         return null
     }
+    const referralCode = stats.code
 
     const copyToClipboard = async () => {
         try {
-            await navigator.clipboard.writeText(stats.code)
+            await navigator.clipboard.writeText(referralCode)
             setCopied(true)
             setTimeout(() => setCopied(false), 2000)
         } catch (err) {
@@ -24,7 +38,7 @@ export function ReferralCard({ stats }: { stats: any }) {
     }
 
     const shareWhatsApp = () => {
-        const text = `Join Weavly using my referral code %2a${stats.code}%2a to manage your textile factory!`
+        const text = `Join Weavly using my referral code %2a${referralCode}%2a to manage your textile factory!`
         window.open(`https://wa.me/?text=${text}`, '_blank')
     }
 
@@ -90,7 +104,7 @@ export function ReferralCard({ stats }: { stats: any }) {
                         <div className="flex items-center gap-2 p-1.5 rounded-2xl border border-emerald-100 bg-emerald-50/20 group-focus-within:border-emerald-400 transition-all shadow-sm">
                             <input 
                                 readOnly 
-                                value={stats.code} 
+                                value={referralCode}
                                 className="flex-1 min-w-0 bg-transparent text-emerald-900 font-black text-sm tracking-[0.25em] outline-none pl-3 uppercase h-10"
                                 onClick={(e) => (e.target as HTMLInputElement).select()}
                             />
@@ -121,7 +135,7 @@ export function ReferralCard({ stats }: { stats: any }) {
                     <div className="pt-2 border-t border-emerald-50">
                         <p className="text-[10px] font-black text-emerald-900/40 uppercase tracking-widest mb-3">Active Schedule</p>
                         <div className="space-y-2">
-                            {stats.activeWindows.slice(0, 3).map((w: any, i: number) => {
+                            {stats.activeWindows.slice(0, 3).map((w, i: number) => {
                                 const isFuture = Date.parse(w.valid_from) > getCurrentTimestampMs()
                                 const expiryDate = formatToSurat(w.valid_until, 'MMM yyyy')
                                 return (

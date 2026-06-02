@@ -88,8 +88,8 @@ export function KharchiDialog({
             setDescription('')
             onOpenChange(false)
             queryClient.invalidateQueries({ queryKey: ['supervisor_balance'] })
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to record Kharchi')
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Failed to record Kharchi')
         } finally {
             setIsSubmitting(false)
         }

@@ -59,6 +59,10 @@ import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
 import { cn } from '@/lib/utils'
 
+function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback
+}
+
 interface Worker {
     id: number
     name: string
@@ -223,8 +227,8 @@ export function MachineManagement({
             toast.success(target ? 'Cost analysis linked to loom' : 'Cost analysis unlinked from loom')
             queryClient.invalidateQueries({ queryKey: ['machines'] })
             queryClient.invalidateQueries({ queryKey: ['production_targets', orgId] })
-        } catch (error: any) {
-            toast.error(error.message || t('machines.order_assign_failed'))
+        } catch (error) {
+            toast.error(getErrorMessage(error, t('machines.order_assign_failed')))
         }
     }
 
@@ -246,8 +250,8 @@ export function MachineManagement({
             setNewMachineName('')
             setNewMachineLoomType('')
             setNewMachineCustomLabel('')
-        } catch (error: any) {
-            toast.error(t('machines.machine_add_failed') + ': ' + error.message)
+        } catch (error) {
+            toast.error(t('machines.machine_add_failed') + ': ' + getErrorMessage(error, t('machines.machine_add_failed')))
         } finally {
             setIsAddingMachine(false)
         }
@@ -281,8 +285,8 @@ export function MachineManagement({
             toast.success(t('machines.machine_deleted'))
             setMachineToDelete(null)
             queryClient.invalidateQueries({ queryKey: ['machines'] })
-        } catch (error: any) {
-            toast.error(error.message || t('machines.machine_delete_failed'))
+        } catch (error) {
+            toast.error(getErrorMessage(error, t('machines.machine_delete_failed')))
         } finally {
             setDeleting(false)
         }
@@ -294,8 +298,8 @@ export function MachineManagement({
             const result = await requestAccessCode()
             if (result.error) throw new Error(result.error)
             toast.success(t('auth.code_requested_success') || 'Request sent to owner via WhatsApp')
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to request code')
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to request code'))
         } finally {
             setRequestingCode(false)
         }
@@ -377,7 +381,7 @@ export function MachineManagement({
             if (result.error) throw new Error(result.error)
             toast.success(t('machines.worker_assigned'))
             queryClient.invalidateQueries({ queryKey: ['machine_assignments'] })
-        } catch (error: any) {
+        } catch (error) {
             console.error(error)
             toast.error(t('machines.worker_assign_failed'))
         }

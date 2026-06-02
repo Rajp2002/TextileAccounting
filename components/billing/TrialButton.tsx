@@ -14,6 +14,11 @@ interface TrialButtonProps {
     className?: string
 }
 
+type TrialResponse = {
+    error?: string
+    trialEnd?: string
+}
+
 export function TrialButton({ onSuccess, compact, className }: TrialButtonProps) {
     const [loading, setLoading] = useState(false)
 
@@ -33,21 +38,25 @@ export function TrialButton({ onSuccess, compact, className }: TrialButtonProps)
                 throw new Error(`Server returned ${res.status} (${contentType}). Please refresh and try again.`)
             }
 
-            const body = await res.json()
+            const body = await res.json() as TrialResponse
             console.log('[TrialButton] Response body:', body)
 
             if (!res.ok || body.error) {
                 throw new Error(body.error ?? 'Failed to start trial')
             }
 
+            if (!body.trialEnd) {
+                throw new Error('Trial response did not include an end date.')
+            }
+
             const endDate = formatToSurat(body.trialEnd, 'EEEE, d MMMM yyyy')
 
             toast.success(`🎉 Trial activated! Enjoy Premium access until ${endDate}.`)
             onSuccess?.(body.trialEnd)
-        } catch (err: any) {
+        } catch (err) {
             console.error('[TrialButton] Error:', err)
             // Show the actual error message or the Safari-specific error with context
-            const msg = err.message || 'Something went wrong'
+            const msg = err instanceof Error ? err.message : 'Something went wrong'
             toast.error(msg === 'The string did not match the expected pattern.' 
                 ? 'Browser error: Connection interrupted. Please try again.' 
                 : msg)

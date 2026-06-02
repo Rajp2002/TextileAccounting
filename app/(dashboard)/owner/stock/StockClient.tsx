@@ -403,7 +403,7 @@ export default function StockClient({
     const [dispatchSummary, setDispatchSummary] = useState<DispatchSummary | null>(null)
     const [fetchingSummary, setFetchingSummary] = useState(false)
 
-    const handleStartDispatch = async (pkg: any) => {
+    const handleStartDispatch = async (pkg: FabricPackageRow) => {
         setDispatchingOrder({
             id: pkg.orders.id,
             party_name: pkg.orders.party_name,

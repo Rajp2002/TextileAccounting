@@ -362,3 +362,12 @@ These exist in code but are not Phase 1 polish drivers:
 - `/owner/system-health` delivery/system console.
 - `/admin` compliance dashboard.
 - DPA, grievance, language request, and broader governance workflows.
+
+## 13. Lint Warning Baseline
+
+ESLint warning remediation baseline captured on 2026-06-02:
+
+- Initial warning count: 278 warnings, 0 errors.
+- Baseline categories: `@typescript-eslint/no-explicit-any` 171, `@typescript-eslint/no-unused-vars` 106, unused ESLint directive 1.
+- Final warning count: 0 warnings, 0 errors.
+- Suppression comments added for `@typescript-eslint/no-explicit-any`: 0.

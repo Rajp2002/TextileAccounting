@@ -11,11 +11,6 @@ export type SubscriptionTier = 'none' | 'trial' | 'base' | 'premium'
 
 // ─── Tier helpers ─────────────────────────────────────────────────────────────
 
-/** Returns the access weight of a tier (higher = more access) */
-function tierWeight(tier: SubscriptionTier): number {
-    return { none: 0, trial: 3, base: 1, premium: 3 }[tier] ?? 0
-}
-
 /** Returns true if `actual` meets or exceeds `required` access. */
 export function tierSatisfies(actual: SubscriptionTier, required: 'base' | 'premium'): boolean {
     if (actual === 'none') return false

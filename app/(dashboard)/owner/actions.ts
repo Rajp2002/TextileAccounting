@@ -54,6 +54,9 @@ function numericValue(value: unknown): number {
     return Number.isFinite(parsed) ? parsed : 0
 }
 
+type DbPrimitivePayload = Record<string, string | number | boolean | null>
+type DbMutationError = { message?: string } | null
+
 // ─── Machine Management (Server Actions) ──────────────────────────────────────
 // These run server-side so auth.uid() is always set in the audit trigger,
 // giving the owner a complete actor trail for every machine change.
@@ -65,7 +68,7 @@ export async function addMachine(name: string, loomType?: string, customLabel?: 
     const trimmedName = name.trim()
     if (!trimmedName) return { error: 'Machine name is required.' }
 
-    const insertData: Record<string, any> = { name: trimmedName, org_id: profile.org_id, status: 'inactive' }
+    const insertData: DbPrimitivePayload = { name: trimmedName, org_id: profile.org_id, status: 'inactive' }
     
     if (loomType) {
         insertData.loom_type = loomType
@@ -106,7 +109,7 @@ export async function updateMachine(machineId: string, name: string, loomType?: 
 
     // Build update object — always update name; loom_type only when explicitly passed
     // (undefined = caller didn't touch it; null = caller explicitly cleared it)
-    const updateData: Record<string, any> = { name: trimmedName }
+    const updateData: DbPrimitivePayload = { name: trimmedName }
     
     if (loomType !== undefined) {
         updateData.loom_type = loomType ?? null
@@ -242,7 +245,7 @@ export async function updateMachineAssignment(
     const machineParsed = safeParse(UuidSchema, machineId)
     if ('error' in machineParsed) return { error: machineParsed.error }
 
-    let error: any
+    let error: DbMutationError = null
     if (isExisting) {
         const { error: updateError } = await supabase
             .from('machine_assignments')
@@ -293,7 +296,7 @@ export async function upsertFixedWorker(data: {
     const name = data.name.trim()
     if (!name || !data.role || !data.monthly_salary) return { error: 'All fields are required.' }
 
-    const updatePayload: Record<string, any> = {
+    const updatePayload: DbPrimitivePayload = {
         name,
         role: data.role,
         monthly_salary: data.monthly_salary,
@@ -420,7 +423,7 @@ export async function updateMeterWorker(data: {
     const name = data.name.trim()
     if (!name) return { error: 'Worker name is required.' }
 
-    const updatePayload: Record<string, any> = {
+    const updatePayload: DbPrimitivePayload = {
         name,
         pf_esi_enrolled: !!data.pf_esi_enrolled,
         pf_esi_eligible: !!data.pf_esi_enrolled,
@@ -1082,7 +1085,7 @@ export async function closeYarnBatch(batchId: string, leftoverWeightKg: number =
 }
 
 export async function settleBatchAudit(batchId: string, status: 'settled' | 'dismissed') {
-    const { profile } = await requireRole(['owner'])
+    await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const { error } = await supabase
@@ -1218,7 +1221,7 @@ export async function saveWhatsAppPreferences(
         return { error: 'Please enter a valid 10-digit Indian mobile number.' }
     }
 
-    const updateData: Record<string, any> = {
+    const updateData: DbPrimitivePayload = {
         whatsapp_opted_in: optedIn,
     }
 

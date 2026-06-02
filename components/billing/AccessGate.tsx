@@ -45,17 +45,15 @@ export default async function AccessGate({ requiredTier, children }: AccessGateP
     }
 
     // Tier is insufficient (base trying to access premium) → show upgrade wall
-    return <UpgradeWall currentTier={tier} requiredTier={requiredTier} />
+    return <UpgradeWall currentTier={tier} />
 }
 
 // ─── Upgrade Wall UI ──────────────────────────────────────────────────────────
 
 function UpgradeWall({
     currentTier,
-    requiredTier,
 }: {
     currentTier: SubscriptionTier
-    requiredTier: 'base' | 'premium'
 }) {
     return (
         <div className="flex items-center justify-center min-h-[60vh] p-6">

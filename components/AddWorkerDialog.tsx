@@ -75,6 +75,10 @@ const workerSchema = z.object({
 });
 
 type WorkerFormValues = z.infer<typeof workerSchema>
+type AddWorkerResult = {
+    error?: string
+    workerId?: number
+}
 
 interface AddWorkerDialogProps {
     orgId: string
@@ -123,7 +127,7 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
 
     const mutation = useMutation({
         mutationFn: async (data: WorkerFormValues) => {
-            let result;
+            let result: AddWorkerResult;
             if (data.workerType === 'meter') {
                 result = await addMeterWorker({
                     name: data.name.trim(),
@@ -142,7 +146,7 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                 })
             }
             if (result.error) throw new Error(result.error)
-            const workerId = (result as any).workerId as number
+            const workerId = result.workerId
 
             return { ...data, workerId }
         },
@@ -275,19 +279,19 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
                                             </Select>
                                         )}
                                     />
-                                    {(errors as any).role && <span className="text-xs text-risk">{(errors as any).role.message}</span>}
+                                    {errors.role && <span className="text-xs text-risk">{errors.role.message}</span>}
                                 </div>
                                 {selectedRole === 'other' && (
                                     <div className="grid gap-2">
                                         <Label>{t('workers.custom_role_name')} <span className="text-risk">*</span></Label>
                                         <Input placeholder={t('workers.custom_role_placeholder')} {...register('customRole')} />
-                                        {(errors as any).customRole && <span className="text-xs text-risk">{(errors as any).customRole.message}</span>}
+                                        {errors.customRole && <span className="text-xs text-risk">{errors.customRole.message}</span>}
                                     </div>
                                 )}
                                 <div className="grid gap-2">
                                     <Label>{t('workers.monthly_salary')} <span className="text-risk">*</span></Label>
                                     <Input type="number" placeholder={t('workers.salary_placeholder')} {...register('salary')} />
-                                    {(errors as any).salary && <span className="text-xs text-risk">{(errors as any).salary.message}</span>}
+                                    {errors.salary && <span className="text-xs text-risk">{errors.salary.message}</span>}
                                     {watchedSalary && Number(watchedSalary) > 0 && Number(watchedSalary) < MIN_WAGE_MONTHLY && (
                                         <div className="mt-1 flex items-center gap-1.5 text-warning">
                                             <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />

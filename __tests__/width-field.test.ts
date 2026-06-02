@@ -126,20 +126,38 @@ describe('3. Estimator mathematical parity', () => {
 describe('4. WidthField state persistence', () => {
     it('should save weavly-estimator-width-unit = inch in localStorage and restore it', () => {
         const store: Record<string, string> = {}
-        const localStorageMock = {
+        const localStorageMock: Storage = {
+            get length() {
+                return Object.keys(store).length
+            },
             getItem: vi.fn((key: string) => store[key] || null),
             setItem: vi.fn((key: string, value: string) => {
                 store[key] = value
             }),
+            removeItem: vi.fn((key: string) => {
+                delete store[key]
+            }),
             clear: vi.fn(() => {
                 for (const key in store) delete store[key]
-            })
+            }),
+            key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
         }
 
-        global.window = {
+        Object.defineProperty(globalThis, 'window', {
+            configurable: true,
+            value: {
+                localStorage: localStorageMock,
+            },
+        })
+        Object.defineProperty(globalThis, 'localStorage', {
+            configurable: true,
+            value: localStorageMock,
+        })
+
+        const windowWithStorage = {
             localStorage: localStorageMock
-        } as any
-        global.localStorage = localStorageMock as any
+        }
+        expect(windowWithStorage.localStorage).toBe(localStorageMock)
 
         // Switching unit to inch should save to localStorage
         const unitToPersist = 'inch'
@@ -153,7 +171,7 @@ describe('4. WidthField state persistence', () => {
         expect(restoredUnit).toBe('inch')
 
         // Clean up globals
-        delete (global as any).window
-        delete (global as any).localStorage
+        Reflect.deleteProperty(globalThis, 'window')
+        Reflect.deleteProperty(globalThis, 'localStorage')
     })
 })

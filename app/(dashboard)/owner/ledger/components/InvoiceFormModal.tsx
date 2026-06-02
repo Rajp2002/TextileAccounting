@@ -22,13 +22,20 @@ import { InvoiceFormType } from '../types'
 import { shortMoney, toNumber } from '../utils'
 import { Field } from './Field'
 
+type InvoiceOrderOption = {
+    id: string
+    party_name: string
+    quality_label: string | null
+    total_target_meters: number
+}
+
 interface InvoiceFormModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     invoiceForm: InvoiceFormType
     setInvoiceForm: Dispatch<SetStateAction<InvoiceFormType>>
     activeParties: LedgerParty[]
-    orders: any[]
+    orders: InvoiceOrderOption[]
     isPending: boolean
     onSubmit: () => void
     onPartyChange: (partyId: string) => void

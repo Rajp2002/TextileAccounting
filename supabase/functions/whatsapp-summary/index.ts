@@ -94,7 +94,7 @@ serve(async (req) => {
                 org_id: org.id,
                 report_date: todayIST,
                 status: 'success',
-                details: { totalMeters, sentTo: owners[0].phone },
+                details: { totalMeters, sentTo: owners[0].phone, message },
             })
 
             results.push({ org: org.name, total: totalMeters, status: 'sent' })

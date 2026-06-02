@@ -15,6 +15,10 @@ export const metadata: Metadata = {
     description: 'Central command center for DPDP 2026 and Gujarat IT Policy compliance.',
 }
 
+type FactoryDpaStatusSummary = {
+    is_locked_down?: boolean
+}
+
 export default async function AdminDashboardPage() {
     const [
         grievances, 
@@ -33,6 +37,7 @@ export default async function AdminDashboardPage() {
         getFactoryDpaStatus(),
         getBreachReports()
     ])
+    const hasLockedFactory = (factoryDpaStatus as FactoryDpaStatusSummary[]).some((f) => f.is_locked_down)
 
     return (
         <div className="p-6 lg:p-10 space-y-8">
@@ -47,11 +52,11 @@ export default async function AdminDashboardPage() {
                 </div>
                 <div className="flex items-center gap-3">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                        factoryDpaStatus.some((f: any) => f.is_locked_down) 
+                        hasLockedFactory
                         ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' 
                         : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
                     }`}>
-                        {factoryDpaStatus.some((f: any) => f.is_locked_down) ? 'Incident Active' : 'Operational'}
+                        {hasLockedFactory ? 'Incident Active' : 'Operational'}
                     </span>
                 </div>
             </header>

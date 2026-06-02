@@ -20,7 +20,7 @@ import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTransliterate } from '@/hooks/use-transliterate'
 import { useMutation } from '@tanstack/react-query'
-import { generateMeterPayslip, generateFixedPayslip } from '@/lib/generate-payslip'
+import { generateMeterPayslip, generateFixedPayslip, type PayslipItemization } from '@/lib/generate-payslip'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { sendPayslipWhatsApp } from './whatsapp-actions'
@@ -831,6 +831,11 @@ function getItemizationNumber(payload: unknown, key: string) {
     return toPayrollNumber(value)
 }
 
+function getPayslipItemization(payload: unknown): PayslipItemization | undefined {
+    const itemization = getItemizationObject(payload)
+    return Object.keys(itemization).length > 0 ? itemization as PayslipItemization : undefined
+}
+
 function getManualAdjustmentRows(payload: unknown) {
     const rows = getItemizationObject(payload).manual_adjustments
     if (!Array.isArray(rows)) return []
@@ -1291,7 +1296,7 @@ function MeterWorkerRow({
                                             totalPay: worker.totalPay,
                                             totalAdvances: worker.totalAdvances,
                                             netPay: displayNet,
-                                            itemization: worker.settlement?.itemization_payload,
+                                            itemization: getPayslipItemization(worker.settlement?.itemization_payload),
                                         })}
                                     >
                                         <Download className="h-3.5 w-3.5" />
@@ -1585,7 +1590,7 @@ function FixedWorkerRow({
                                             earnedPay: worker.earnedPay,
                                             totalAdvances: worker.totalAdvances,
                                             netPay: displayNet,
-                                            itemization: worker.settlement?.itemization_payload,
+                                            itemization: getPayslipItemization(worker.settlement?.itemization_payload),
                                         })}
                                     >
                                         <Download className="h-3.5 w-3.5" />

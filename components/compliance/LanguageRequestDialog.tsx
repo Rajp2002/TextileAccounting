@@ -53,8 +53,8 @@ export function LanguageRequestDialog({ open, onOpenChange, workerName }: Langua
             
             toast.success('Language request logged. We will notify you when the translation is ready.')
             onOpenChange(false)
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to log request')
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Failed to log request')
         } finally {
             setIsPending(false)
         }

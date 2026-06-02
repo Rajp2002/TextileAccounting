@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-import { formatINR } from '@/lib/finance'
 import { Pencil, Trash2, Users, Briefcase, KeyRound, AlertCircle, Loader2, Gauge, MessageCircle, ShieldCheck } from 'lucide-react'
 import { getWorkerDebt } from '@/app/(dashboard)/supervisor/actions'
 import { deleteFixedWorker, deleteFixedWorkerWithCode, upsertFixedWorker, updateMeterWorker, deleteMeterWorker, deleteMeterWorkerWithCode, writeOffWorkerAdvanceBalance, setWorkerActiveStatus } from '@/app/(dashboard)/owner/actions'
@@ -61,6 +60,10 @@ interface MeterWorker {
     pf_number?: string | null
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback
+}
+
 async function hasMeterWorkerHistory(supabase: ReturnType<typeof createClient>, orgId: string, workerId: number) {
     const [{ data: settlements, error: settlementsError }, { data: advances, error: advancesError }] = await Promise.all([
         supabase.from('payroll_settlements').select('id').eq('org_id', orgId).eq('meter_worker_id', workerId).limit(1),
@@ -89,10 +92,6 @@ async function hasFixedWorkerHistory(supabase: ReturnType<typeof createClient>, 
     if (attendanceError) throw attendanceError
 
     return (settlements?.length ?? 0) > 0 || (advances?.length ?? 0) > 0 || (attendance?.length ?? 0) > 0
-}
-
-function getRoleLabel(role: string, t: any) {
-    return t(`workers.roles.${role}`) || role
 }
 
 function getRoleColor(role: string) {
@@ -154,7 +153,7 @@ function EditMeterWorkerDialog({
             queryClient.invalidateQueries({ queryKey: ['workers'] })
             onClose()
         },
-        onError: (err: any) => toast.error(err.message || 'Failed to update worker'),
+        onError: (err) => toast.error(getErrorMessage(err, 'Failed to update worker')),
     })
 
     const canSave =
@@ -340,8 +339,8 @@ function PieceRateTab({ orgId }: { orgId: string }) {
             } else {
                 setConfirmDeleteOpen(true)
             }
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to prepare worker deletion')
+        } catch (err) {
+            toast.error(getErrorMessage(err, 'Failed to prepare worker deletion'))
         } finally {
             setFetchingDebt(false)
         }
@@ -361,8 +360,8 @@ function PieceRateTab({ orgId }: { orgId: string }) {
             setWorkerToDelete(null)
             queryClient.invalidateQueries({ queryKey: ['meter_workers'] })
             queryClient.invalidateQueries({ queryKey: ['workers'] })
-        } catch (err: any) {
-            toast.error(err.message)
+        } catch (err) {
+            toast.error(getErrorMessage(err, 'Failed to delete worker'))
         } finally {
             setDeleting(false)
         }
@@ -409,8 +408,8 @@ function PieceRateTab({ orgId }: { orgId: string }) {
             setWorkerToDelete(null)
             queryClient.invalidateQueries({ queryKey: ['meter_workers'] })
             queryClient.invalidateQueries({ queryKey: ['workers'] })
-        } catch (err: any) {
-            toast.error(err.message)
+        } catch (err) {
+            toast.error(getErrorMessage(err, 'Failed to delete worker'))
         } finally {
             setDeleting(false)
         }
@@ -653,7 +652,6 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const [accessCode, setAccessCode] = useState('')
     const [erasePII, setErasePII] = useState(false)
     const [deleting, setDeleting] = useState(false)
-    const [fetchingDebt, setFetchingDebt] = useState(false)
     const [verificationOpen, setVerificationOpen] = useState(false)
     const [writingOff, setWritingOff] = useState(false)
 
@@ -765,15 +763,14 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
             toast.success(editingWorker ? t('common.updated') : t('common.added'))
             setDialogOpen(false)
             queryClient.invalidateQueries({ queryKey: ['fixed_workers'] })
-        } catch (err: any) {
-            toast.error(err.message)
+        } catch (err) {
+            toast.error(getErrorMessage(err, 'Failed to save worker'))
         } finally {
             setSaving(false)
         }
     }
 
     const handleDelete = async (worker: FixedWorker) => {
-        setFetchingDebt(true)
         try {
             const res = await getWorkerDebt(worker.id, 'fixed')
             setWorkerDebt(res.balance || 0)
@@ -789,10 +786,8 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
             } else {
                 setConfirmDeleteOpen(true)
             }
-        } catch (err: any) {
-            toast.error(err.message || 'Failed to prepare worker deletion')
-        } finally {
-            setFetchingDebt(false)
+        } catch (err) {
+            toast.error(getErrorMessage(err, 'Failed to prepare worker deletion'))
         }
     }
 
@@ -809,8 +804,8 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
             setConfirmDeleteOpen(false)
             setWorkerToDelete(null)
             queryClient.invalidateQueries({ queryKey: ['fixed_workers'] })
-        } catch (err: any) {
-            toast.error(err.message)
+        } catch (err) {
+            toast.error(getErrorMessage(err, 'Failed to delete worker'))
         } finally {
             setDeleting(false)
         }
@@ -855,8 +850,8 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
             setVerificationOpen(false)
             setWorkerToDelete(null)
             queryClient.invalidateQueries({ queryKey: ['fixed_workers'] })
-        } catch (err: any) {
-            toast.error(err.message)
+        } catch (err) {
+            toast.error(getErrorMessage(err, 'Failed to delete worker'))
         } finally {
             setDeleting(false)
         }

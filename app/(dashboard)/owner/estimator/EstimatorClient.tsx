@@ -36,7 +36,7 @@ import {
     Play,
     CheckCircle2,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
 import {
     calcFullTotals,
@@ -57,7 +57,6 @@ import {
     type DepreciationMeta,
     type FactorySections,
     type EstimatorV3Totals,
-    type ScenarioResult,
 } from '@/lib/estimator'
 import { LoomConfigSection } from './LoomConfigSection'
 import {
@@ -75,16 +74,8 @@ import {
     upsertFactoryCostProfile,
     createMarketRunFromEstimator,
 } from './actions'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { useAutosave } from '@/hooks/useAutosave'
-import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { format } from 'date-fns'
 import {
     Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
@@ -94,34 +85,117 @@ import FactoryCostWizard from './FactoryCostWizard'
 // REDUCER
 // ─────────────────────────────────────────────────────────────────────────────
 
+type FixedWorkerOverhead = { id: number; name: string; role: string; monthly_salary: number }
+
+type FactoryCostProfile = Partial<{
+    factory_id: string
+    warping_rate_per_kg: number | string | null
+    sizing_rate_per_kg: number | string | null
+    winding_rate_per_kg: number | string | null
+    overhead_pct: number | string | null
+    default_commission_pct: number | string | null
+    default_transport_per_m: number | string | null
+    enabled_sections: FactorySections
+    overhead_items: unknown[]
+    monthly_output_m: number | string | null
+    overhead_override_per_m: number | string | null
+    loom_count: number | string | null
+    monthly_working_days: number | string | null
+    avg_output_per_loom_per_day: number | string | null
+    yarn_shortage_pct: number | string | null
+    warp_crimp_pct: number | string | null
+    is_configured: boolean
+}>
+
+type EstimatorTemplate = {
+    id: string
+    name: string
+    warp_rows?: WarpRow[] | null
+    weft_rows?: WeftRow[] | null
+    loom_type?: LoomType | null
+    loom_rpm?: number | string | null
+    loom_power_kw?: number | string | null
+    sizing_mode?: 'in_house' | 'outsourced' | null
+    hours_per_shift?: number | string | null
+    tape_length_m?: number | string | null
+    warp_crimp_pct?: number | string | null
+    per_pick_cost_paise?: number | string | null
+    yarn_shortage_pct?: number | string | null
+    overhead_override_per_m?: number | string | null
+    calculated_yarn_denier?: number | string | null
+    yarn_denier?: number | string | null
+    beam_ends?: number | string | null
+    ppi?: number | string | null
+    reed_space?: number | string | null
+    weft_denier?: number | string | null
+    default_yarn_rate?: number | string | null
+    is_active?: boolean
+    content_text?: string
+}
+
+type QualityOption = {
+    id: string
+    name: string
+    target_yield: number
+    avg_sale_price_per_m: number
+    default_worker_rate_per_m: number
+}
+
+type EstimateStatePatch = Partial<EstimateState>
+type EstimateStateValue = EstimateState[keyof EstimateState]
+type WarpRowValue = WarpRow[keyof WarpRow]
+type WeftRowValue = WeftRow[keyof WeftRow]
+type OverheadItemValue = OverheadItem['label'] | OverheadItem['monthlyAmount'] | OverheadItem['isLocked']
+type OverheadMetaPatch =
+    | ({ type: 'electricity' } & Partial<Omit<ElectricityMeta, 'type'>>)
+    | ({ type: 'depreciation' } & Partial<Omit<DepreciationMeta, 'type'>>)
+
+function mergeOverheadMeta(current: OverheadItem['meta'], patch: OverheadMetaPatch): OverheadItem['meta'] {
+    if (patch.type === 'electricity') {
+        const base: ElectricityMeta = current?.type === 'electricity'
+            ? current
+            : { type: 'electricity', mode: patch.mode ?? 'manual' }
+        return { ...base, ...patch }
+    }
+
+    const base: DepreciationMeta = current?.type === 'depreciation'
+        ? current
+        : {
+            type: 'depreciation',
+            avgCostPerLoom: patch.avgCostPerLoom ?? 0,
+            usefulLifeYears: patch.usefulLifeYears ?? 10,
+        }
+    return { ...base, ...patch }
+}
+
 type Action =
-    | { type: 'INIT_FROM_PROFILE'; data: { profile: any; sections: FactorySections } }
-    | { type: 'MERGE_FIXED_WORKERS'; workers: { id: number; name: string; role: string; monthly_salary: number }[] }
-    | { type: 'APPLY_TEMPLATE'; template: any }
-    | { type: 'SET'; field: keyof EstimateState; value: any }
+    | { type: 'INIT_FROM_PROFILE'; data: { profile: FactoryCostProfile; sections: FactorySections } }
+    | { type: 'MERGE_FIXED_WORKERS'; workers: FixedWorkerOverhead[] }
+    | { type: 'APPLY_TEMPLATE'; template: EstimatorTemplate }
+    | { type: 'SET'; field: keyof EstimateState; value: EstimateStateValue }
     | { type: 'SET_LOOM_TYPE'; loomType: LoomType | null }
     | { type: 'SET_LOOM_RPM'; rpm: number | null }
     | { type: 'SET_LOOM_POWER_KW'; kw: number | null }
     | { type: 'ADD_WARP_ROW' }
-    | { type: 'UPDATE_WARP_ROW'; id: string; field: keyof WarpRow; value: any }
+    | { type: 'UPDATE_WARP_ROW'; id: string; field: keyof WarpRow; value: WarpRowValue }
     | { type: 'REMOVE_WARP_ROW'; id: string }
     | { type: 'ADD_WEFT_ROW' }
-    | { type: 'UPDATE_WEFT_ROW'; id: string; field: keyof WeftRow; value: any }
+    | { type: 'UPDATE_WEFT_ROW'; id: string; field: keyof WeftRow; value: WeftRowValue }
     | { type: 'REMOVE_WEFT_ROW'; id: string }
     | { type: 'ENABLE_SECTION'; section: keyof FactorySections }
     | { type: 'ADD_OVERHEAD_ITEM' }
-    | { type: 'UPDATE_OVERHEAD_ITEM'; id: string; field: 'label' | 'monthlyAmount' | 'isLocked'; value: any }
-    | { type: 'UPDATE_OVERHEAD_ITEM_META'; id: string; meta: any }
+    | { type: 'UPDATE_OVERHEAD_ITEM'; id: string; field: 'label' | 'monthlyAmount' | 'isLocked'; value: OverheadItemValue }
+    | { type: 'UPDATE_OVERHEAD_ITEM_META'; id: string; meta: OverheadMetaPatch }
     | { type: 'REMOVE_OVERHEAD_ITEM'; id: string }
     | { type: 'RESTORE_DRAFT'; draftState: EstimateState }
-    | { type: 'RESET'; data: { profile: any; sections: FactorySections; workers: any[] } }
+    | { type: 'RESET'; data: { profile?: FactoryCostProfile; sections: FactorySections; workers: FixedWorkerOverhead[] } }
 
 function estimateReducer(state: EstimateState, action: Action): EstimateState {
     switch (action.type) {
         case 'INIT_FROM_PROFILE': {
             const { profile, sections } = action.data
             // Hydrate overhead items from saved profile if present, else keep defaults
-            const savedItems: OverheadItem[] | undefined =
+            const savedItems =
                 Array.isArray(profile.overhead_items) && profile.overhead_items.length > 0
                     ? profile.overhead_items
                     : undefined
@@ -145,7 +219,6 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
         case 'MERGE_FIXED_WORKERS': {
             const { workers } = action
             // Remove any existing fixed_worker_derived items, then re-add freshly from DB
-            const manualItems = state.overheadItems.filter(i => i.source !== 'fixed_worker_derived')
             const workerItems: OverheadItem[] = workers.map(w => ({
                 id:            `fw-${w.id}`,
                 label:         `${w.name} (${w.role})`,
@@ -286,7 +359,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             return {
                 ...state,
                 overheadItems: state.overheadItems.map(item =>
-                    item.id === action.id ? { ...item, meta: { ...item.meta, ...action.meta } } : item
+                    item.id === action.id ? { ...item, meta: mergeOverheadMeta(item.meta, action.meta) } : item
                 ),
             }
         case 'REMOVE_OVERHEAD_ITEM':
@@ -295,7 +368,8 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
                 overheadItems: state.overheadItems.filter(item => item.id !== action.id),
             }
         case 'RESET': {
-            const { profile, sections, workers } = action.data
+            const { sections, workers } = action.data
+            const profile = action.data.profile ?? {}
             const base = makeDefaultEstimateState()
             
             // Create the profile-synced default state (same logic as initialState useMemo)
@@ -321,7 +395,7 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
             if (Array.isArray(profile.overhead_items) && profile.overhead_items.length > 0) {
                 next = { ...next, overheadItems: ensureOverheadIntegrity(profile.overhead_items) }
             } else if (workers && workers.length > 0) {
-                const fixedItems = workers.map((w: any) => ({
+                const fixedItems = workers.map((w) => ({
                     id:            `fw-${w.id}`,
                     label:         `${w.name} (${w.role})`,
                     monthlyAmount: Number(w.monthly_salary),
@@ -692,12 +766,11 @@ export default function EstimatorClient({
     initialProfile,
     initialTemplates,
     initialWorkers,
-    initialQualities = [],
 }: {
-    initialProfile?: any
-    initialTemplates?: any[]
-    initialWorkers?: { id: number; name: string; role: string; monthly_salary: number }[]
-    initialQualities?: { id: string; name: string; target_yield: number; avg_sale_price_per_m: number; default_worker_rate_per_m: number }[]
+    initialProfile?: FactoryCostProfile
+    initialTemplates?: EstimatorTemplate[]
+    initialWorkers?: FixedWorkerOverhead[]
+    initialQualities?: QualityOption[]
 }) {
     const { t, tx } = useTranslation()
     const searchParams = useSearchParams()
@@ -773,11 +846,9 @@ export default function EstimatorClient({
     const [saving,    setSaving]    = useState(false)
     const [savingQuote, setSavingQuote] = useState(false)
     const [savingTemplate, setSavingTemplate] = useState(false)
-    const [templates, setTemplates] = useState<any[]>(initialTemplates ?? [])
-    const qualities = initialQualities
+    const [templates, setTemplates] = useState<EstimatorTemplate[]>(initialTemplates ?? [])
     const [outputSuggestion, setOutputSuggestion] = useState<EstimateState['outputSuggestion'] | null>(null)
     const [isSuggestingOutput, setIsSuggestingOutput] = useState(false)
-    const [showStartPartyOrder, setShowStartPartyOrder] = useState(false)
 
     // Loom wage per meter input — bidirectional with perPickCostPaisa
     const [wagePerMInput, setWagePerMInput] = useState<string>('')
@@ -791,13 +862,13 @@ export default function EstimatorClient({
     const [templateName,     setTemplateName]     = useState('')
 
     // Template management — "edit rates" sheet
-    const [editRatesTpl,     setEditRatesTpl]     = useState<any | null>(null)
+    const [editRatesTpl,     setEditRatesTpl]     = useState<EstimatorTemplate | null>(null)
     const [editingTplName,   setEditingTplName]   = useState('')
     const [editingWarpRates, setEditingWarpRates] = useState<{ id: string; yarnRate: number }[]>([])
     const [editingWeftRates, setEditingWeftRates] = useState<{ id: string; yarnRate: number }[]>([])
     const [savingRates,      setSavingRates]      = useState(false)
     const [deletingTpl,      setDeletingTpl]      = useState<string | null>(null)
-    const [appliedTemplate,   setAppliedTemplate]   = useState<any>(null)
+    const [appliedTemplate,   setAppliedTemplate]   = useState<EstimatorTemplate | null>(null)
     const [dismissedWarnings, setDismissedWarnings] = useState<string[]>([])
     const [showConfirmNewQuality, setShowConfirmNewQuality] = useState(false)
 
@@ -819,7 +890,7 @@ export default function EstimatorClient({
     const userId = typeof window !== 'undefined'
         ? (() => { try { return localStorage.getItem('weavly-uid') ?? '' } catch { return '' } })()
         : ''
-    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft } = useAutosave({
+    const { hasDraft, draft, restoreDraft, dismissDraft, clearDraft, saveDraft } = useAutosave<EstimateState>({
         orgId, userId, debounceMs: 2000,
     })
 
@@ -896,14 +967,6 @@ export default function EstimatorClient({
             : templates,
     [templates, templateSearch])
 
-    const basicQualityOptions = useMemo(() => {
-        const templateNames = new Set(templates.map(t => String(t.name).trim().toLowerCase()).filter(Boolean))
-        return qualities.filter(q => {
-            const name = String(q.name ?? '').trim()
-            return name && !templateNames.has(name.toLowerCase())
-        })
-    }, [qualities, templates])
-
     const handleAutoSuggestOutput = async () => {
         setIsSuggestingOutput(true)
         try {
@@ -913,14 +976,14 @@ export default function EstimatorClient({
             } else if (res.data) {
                 setOutputSuggestion(res.data)
             }
-        } catch (e) {
+        } catch {
             toast.error('Error fetching suggestion')
         } finally {
             setIsSuggestingOutput(false)
         }
     }
 
-    const applyTemplate = useCallback((tpl: any) => {
+    const applyTemplate = useCallback((tpl: EstimatorTemplate) => {
         dispatch({ type: 'APPLY_TEMPLATE', template: tpl })
         setAppliedTemplate(tpl)
         setQualityLabel(tpl.name)
@@ -935,15 +998,6 @@ export default function EstimatorClient({
         )
         setShowSaveTemplate(true)
     }, [appliedTemplate?.name, mode, partyName, qualityLabel])
-
-    const handleQualityLabelSelect = useCallback((value: string) => {
-        const selectedTemplate = templates.find(t => t.name === value)
-        if (selectedTemplate) {
-            applyTemplate(selectedTemplate)
-            return
-        }
-        setQualityLabel(value)
-    }, [applyTemplate, templates])
 
     const handleSaveProfile = async () => {
         setSaving(true)
@@ -971,7 +1025,7 @@ export default function EstimatorClient({
             } else {
                 toast.error(res.error || 'Failed to save profile')
             }
-        } catch (e) {
+        } catch {
             toast.error('Error saving profile')
         } finally {
             setSaving(false)
@@ -1084,7 +1138,7 @@ export default function EstimatorClient({
     }
 
     /** Open the "update rates" sheet for a template. */
-    const openEditRates = useCallback((tpl: any) => {
+    const openEditRates = useCallback((tpl: EstimatorTemplate) => {
         const warpRows: WarpRow[] = tpl.warp_rows ?? []
         const weftRows: WeftRow[] = tpl.weft_rows ?? []
         setEditRatesTpl(tpl)
@@ -1258,7 +1312,7 @@ export default function EstimatorClient({
                         if (res.success) {
                             // Update local state and close wizard
                             Object.entries(data).forEach(([key, val]) => {
-                                dispatch({ type: 'SET', field: key as any, value: val })
+                                dispatch({ type: 'SET', field: key as keyof EstimateStatePatch, value: val as EstimateStateValue })
                             })
                             dispatch({ type: 'SET', field: 'isConfigured', value: true })
                             toast.success('Factory baseline configured successfully!')

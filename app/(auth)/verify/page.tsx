@@ -9,6 +9,11 @@ import { Loader2, Mail, ArrowLeft, RefreshCw } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
 import Link from 'next/link'
 
+type AuthResendError = {
+    message?: string
+    status?: number
+}
+
 function VerifyContent() {
     const [resending, setResending] = useState(false)
     const searchParams = useSearchParams()
@@ -33,11 +38,12 @@ function VerifyContent() {
 
             if (error) throw error
             toast.success('Verification email resent! Check your inbox.')
-        } catch (error: any) {
-            if (error.message?.includes('rate limit') || error.status === 429) {
+        } catch (error) {
+            const resendError = error as AuthResendError
+            if (resendError.message?.includes('rate limit') || resendError.status === 429) {
                 toast.error('Too many requests. Please wait a minute before trying again.')
             } else {
-                toast.error(error.message || 'Failed to resend email')
+                toast.error(resendError.message || 'Failed to resend email')
             }
         } finally {
             setResending(false)

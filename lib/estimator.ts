@@ -149,6 +149,10 @@ export interface OverheadItem {
   workerId?:    number        // fixed_workers.id — present only for derived items
 }
 
+type OverheadItemInput = Partial<OverheadItem> & {
+  meta?: OverheadItemMeta
+}
+
 /** Complete client-side estimate state (what the estimator page manages) */
 export interface EstimateState {
   warpRows:            WarpRow[]
@@ -414,19 +418,22 @@ export function calcWindingCostPerMeter(
  * Populates missing fields (category, isPreset, isLocked) with safe defaults.
  * Essential for loading legacy data from DB or templates.
  */
-export function ensureOverheadIntegrity(items: any[]): OverheadItem[] {
+export function ensureOverheadIntegrity(items: unknown[]): OverheadItem[] {
   if (!Array.isArray(items)) return []
-  return items.map(item => ({
-    id:            item.id || nanoid(),
-    label:         item.label || 'Unnamed Item',
-    monthlyAmount: Number(item.monthlyAmount || 0),
-    category:      item.category || 'custom',
-    isPreset:      item.isPreset ?? false,
-    isLocked:      item.isLocked ?? false,
-    source:        item.source || 'manual',
-    workerId:      item.workerId || undefined,
-    meta:          item.meta || undefined
-  }))
+  return items.map(rawItem => {
+    const item = (typeof rawItem === 'object' && rawItem !== null ? rawItem : {}) as OverheadItemInput
+    return {
+      id:            item.id || nanoid(),
+      label:         item.label || 'Unnamed Item',
+      monthlyAmount: Number(item.monthlyAmount || 0),
+      category:      item.category || 'custom',
+      isPreset:      item.isPreset ?? false,
+      isLocked:      item.isLocked ?? false,
+      source:        item.source || 'manual',
+      workerId:      item.workerId || undefined,
+      meta:          item.meta || undefined
+    }
+  })
 }
 
 

@@ -5,7 +5,7 @@ import { getAuthenticatedUser } from '@/lib/auth'
 export default async function QuotesPage(props: { searchParams: Promise<{ status?: string }> }) {
     const searchParams = await props.searchParams;
     const status = searchParams.status || undefined
-    const { data: quotes, error } = await getEstimatorQuotes(status ? { status } : undefined)
+    const { data: quotes } = await getEstimatorQuotes(status ? { status } : undefined)
     const { user, profile } = await getAuthenticatedUser()
 
     return (

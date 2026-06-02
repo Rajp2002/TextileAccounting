@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { AddWorkerDialog } from '@/components/AddWorkerDialog'
 import { Loader2, Trash2, KeyRound, Users } from 'lucide-react'
 import {
@@ -37,6 +36,19 @@ const ROLE_COLORS: Record<string, string> = {
     daily: 'bg-surface-soft text-body',
 }
 
+type SupervisorWorker = {
+    id: number
+    name: string
+    role?: string | null
+    is_active: boolean
+    pf_esi_enrolled?: boolean | null
+    pf_esi_eligible?: boolean | null
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback
+}
+
 export default function SupervisorWorkersPage() {
     const supabase = createClient()
     const queryClient = useQueryClient()
@@ -47,7 +59,6 @@ export default function SupervisorWorkersPage() {
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
     const [accessCode, setAccessCode] = useState('')
     const [deleting, setDeleting] = useState(false)
-    const [fetchingDebt, setFetchingDebt] = useState(false)
 
     const { data: userProfile } = useUserProfile()
     const { t } = useTranslation()
@@ -64,7 +75,7 @@ export default function SupervisorWorkersPage() {
                 .eq('org_id', userProfile!.org_id)
                 .order('name')
             if (error) throw error
-            return data
+            return data as SupervisorWorker[]
         }
     })
 
@@ -75,7 +86,6 @@ export default function SupervisorWorkersPage() {
 
     const confirmDelete = async (id: number) => {
         if (!userProfile?.org_id) return
-        setFetchingDebt(true)
         try {
             const res = await getWorkerDebt(id, 'meter')
             setWorkerDebt(res.balance || 0)
@@ -92,10 +102,8 @@ export default function SupervisorWorkersPage() {
             } else {
                 setConfirmDeleteOpen(true)
             }
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to prepare worker deletion')
-        } finally {
-            setFetchingDebt(false)
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to prepare worker deletion'))
         }
     }
 
@@ -110,8 +118,8 @@ export default function SupervisorWorkersPage() {
             setConfirmDeleteOpen(false)
             setWorkerToDelete(null)
             queryClient.invalidateQueries({ queryKey: ['workers'] })
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to delete worker')
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to delete worker'))
         } finally {
             setDeleting(false)
         }
@@ -127,8 +135,8 @@ export default function SupervisorWorkersPage() {
             toast.success('Worker deleted successfully')
             setWorkerToDelete(null)
             queryClient.invalidateQueries({ queryKey: ['workers'] })
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to delete worker')
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to delete worker'))
         } finally {
             setDeleting(false)
         }
@@ -142,8 +150,8 @@ export default function SupervisorWorkersPage() {
             
             toast.success(t('workers.status_updated'))
             queryClient.invalidateQueries({ queryKey: [table === 'workers' ? 'workers' : 'fixed_workers', userProfile?.org_id] })
-        } catch (error: any) {
-            toast.error(error.message || t('workers.status_update_failed'))
+        } catch (error) {
+            toast.error(getErrorMessage(error, t('workers.status_update_failed')))
         }
     }
 
@@ -180,7 +188,7 @@ export default function SupervisorWorkersPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {workers?.map((worker: any) => (
+                        {workers?.map((worker) => (
                             <div key={worker.id} className="group relative overflow-hidden rounded-xl border border-hairline bg-surface shadow-[var(--shadow-card)] transition-all duration-200 hover:border-hairline-strong">
                                 <div className="p-4 flex justify-between items-center">
                                     <div className="flex items-center gap-3">

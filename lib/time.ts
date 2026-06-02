@@ -1,5 +1,4 @@
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz'
-import { format } from 'date-fns'
 
 export const SURAT_TIMEZONE = 'Asia/Kolkata'
 

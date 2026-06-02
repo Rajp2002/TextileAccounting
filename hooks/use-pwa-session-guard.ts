@@ -25,6 +25,7 @@ import { useRouter } from 'next/navigation'
  */
 
 const SESSION_KEY = 'weavly_pwa_session_alive'
+type NavigatorWithStandalone = Navigator & { standalone?: boolean }
 
 export function usePwaSessionGuard() {
     const router = useRouter()
@@ -33,7 +34,7 @@ export function usePwaSessionGuard() {
         // Only activate in standalone PWA mode
         const isStandalone =
             window.matchMedia('(display-mode: standalone)').matches ||
-            (window.navigator as any).standalone === true
+            (window.navigator as NavigatorWithStandalone).standalone === true
 
         if (!isStandalone) return
 

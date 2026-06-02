@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import type { FactoryTodayData } from '@/app/(dashboard)/owner/today/actions'
-import { MapPin, Clock, CheckCircle2, Copy } from 'lucide-react'
+import { MapPin, Clock, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
 
 interface PendingReceiptsCardProps {
     receipts: FactoryTodayData['dispatch']['pendingReceipts']

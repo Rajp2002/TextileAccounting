@@ -4,8 +4,8 @@ import { memo } from 'react'
 import { formatToSurat } from '@/lib/time'
 
 interface AuditDiffProps {
-  oldData: any
-  newData: any
+  oldData: Record<string, unknown> | null | undefined
+  newData: Record<string, unknown> | null | undefined
 }
 
 function formatKey(key: string) {
@@ -21,7 +21,7 @@ function formatKey(key: string) {
     .join(' ')
 }
 
-function formatValue(key: string, value: any) {
+function formatValue(key: string, value: unknown) {
   if (value === null || value === undefined || value === '') return '—'
   
   const strVal = String(value)
@@ -35,7 +35,7 @@ function formatValue(key: string, value: any) {
   const isDate = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(strVal)
   if (isDate) {
     try {
-      return formatToSurat(new Date(value), 'dd MMM yyyy, hh:mm a')
+      return formatToSurat(new Date(strVal), 'dd MMM yyyy, hh:mm a')
     } catch {
       // fallback to raw string
     }
@@ -73,7 +73,7 @@ function AuditDiff({ oldData, newData }: AuditDiffProps) {
     ...Object.keys(newData || {})
   ]))
 
-  const changes: { key: string; oldVal: any; newVal: any; type: 'added' | 'removed' | 'changed' }[] = []
+  const changes: { key: string; oldVal: unknown; newVal: unknown; type: 'added' | 'removed' | 'changed' }[] = []
 
   // Skip certain internal generated fields to keep diff clean
   const skipFields = ['id', 'org_id', 'created_at', 'updated_at', 'is_deleted']

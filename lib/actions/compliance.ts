@@ -27,7 +27,7 @@ export async function logOfflineGrievance(formData: {
     subject: string
     description: string
     target_entity?: 'WEAVLY' | 'FACTORY_OWNER'
-    grievance_type?: 'DATA_PRIVACY' | 'OPERATIONAL' | 'OTHER'
+    grievance_type?: 'DATA_PRIVACY' | 'OPERATIONAL' | 'UNLOCK_REQUEST' | 'OTHER'
     filed_by_role?: 'worker' | 'supervisor' | 'owner' | 'admin'
 }) {
     await requireRole(['admin'])

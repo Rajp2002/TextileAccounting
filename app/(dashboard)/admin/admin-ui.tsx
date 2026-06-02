@@ -22,7 +22,6 @@ import {
     Users, 
     Globe, 
     Download, 
-    History, 
     Settings, 
     Search,
     Clock,
@@ -46,14 +45,84 @@ import {
 } from '@/lib/actions/compliance'
 import { toast } from 'sonner'
 
+type OfflineTarget = 'WEAVLY' | 'FACTORY_OWNER'
+type OfflineType = 'DATA_PRIVACY' | 'OPERATIONAL' | 'UNLOCK_REQUEST' | 'OTHER'
+
+type AdminGrievance = {
+    id: string
+    target_resolution_date: string
+    target_entity: OfflineTarget | string
+    subject: string
+    sla_applies?: boolean
+    grievance_type: string
+    status: string
+    resolved_at: string
+    resolution_proof_url?: string | null
+}
+
+type AdminNotice = {
+    id: string
+    version_string: string
+    notice_type: string
+    content_audio_url?: string | null
+    is_active: boolean
+}
+
+type AdminExportLog = {
+    id: string
+    changed_at: string
+    table_name: string
+    new_data?: { description?: string } | null
+    changed_by: string | null
+}
+
+type AdminSettings = {
+    gro_name: string
+    gro_email: string
+    gro_phone?: string | null
+}
+
+type DpaTemplate = {
+    id: string
+    version_string: string
+    content_text: string
+    is_active: boolean
+}
+
+type OrganizationDpa = {
+    status: string
+    signed_at: string
+    proof_url?: string | null
+    dpas?: { version_string?: string | null } | { version_string?: string | null }[] | null
+}
+
+type FactoryDpaStatus = {
+    id: string
+    name: string
+    is_locked_down?: boolean
+    organization_dpas?: OrganizationDpa[]
+}
+
+type BreachReport = {
+    id: string
+    affected_users_count: number
+    organizations: { name: string }
+}
+
+type AttendanceExportRow = {
+    date: string
+    worker_id: number | string
+    client_ip: string | null
+}
+
 interface Props {
-    initialGrievances: any[]
-    initialNotices: any[]
-    initialExportLogs: any[]
-    initialSettings: any
-    initialDpaTemplates: any[]
-    initialFactoryDpaStatus: any[]
-    initialBreachReports: any[]
+    initialGrievances: AdminGrievance[]
+    initialNotices: AdminNotice[]
+    initialExportLogs: AdminExportLog[]
+    initialSettings: AdminSettings
+    initialDpaTemplates: DpaTemplate[]
+    initialFactoryDpaStatus: FactoryDpaStatus[]
+    initialBreachReports: BreachReport[]
 }
 
 export function AdminDashboardUI({ 
@@ -67,15 +136,11 @@ export function AdminDashboardUI({
 }: Props) {
     const [workerIdSearch, setWorkerIdSearch] = useState('')
     const [exportDateRange, setExportDateRange] = useState({ start: '', end: '' })
-    const [groDetails, setGroDetails] = useState(initialSettings)
+    const [groDetails, setGroDetails] = useState<AdminSettings>(initialSettings)
     
     // Offline form state
-    const [offlineTarget, setOfflineTarget] = useState<'WEAVLY' | 'FACTORY_OWNER'>('FACTORY_OWNER')
-    const [offlineType, setOfflineType] = useState<'DATA_PRIVACY' | 'OPERATIONAL' | 'OTHER'>('OPERATIONAL')
-
-    // Lockdown form state
-    const [lockdownReason, setLockdownReason] = useState('')
-    const [lockdownSeverity, setLockdownSeverity] = useState<'low' | 'medium' | 'high' | 'critical'>('medium')
+    const [offlineTarget, setOfflineTarget] = useState<OfflineTarget>('FACTORY_OWNER')
+    const [offlineType, setOfflineType] = useState<OfflineType>('OPERATIONAL')
 
     // Helper: Calculate days left for grievance
     const getDaysLeft = (targetDate: string) => {
@@ -108,9 +173,10 @@ export function AdminDashboardUI({
         toast.promise(exportAttendanceLogs(exportDateRange.start, exportDateRange.end), {
             loading: 'Exporting IP logs...',
             success: (data) => {
+                const rows = data as AttendanceExportRow[]
                 const csv = [
                     ['Date', 'Worker ID', 'IP Address'],
-                    ...data.map((r: any) => [r.date, r.worker_id, r.client_ip])
+                    ...rows.map((r) => [r.date, r.worker_id, r.client_ip])
                 ].map(e => e.join(',')).join('\n')
                 const blob = new Blob([csv], { type: 'text/csv' })
                 const url = URL.createObjectURL(blob)
@@ -125,7 +191,11 @@ export function AdminDashboardUI({
     }
 
     const handleGROUpdate = async () => {
-        toast.promise(updateGRODetails(groDetails), {
+        toast.promise(updateGRODetails({
+            gro_name: groDetails.gro_name,
+            gro_email: groDetails.gro_email,
+            gro_phone: groDetails.gro_phone ?? undefined,
+        }), {
             loading: 'Updating GRO details...',
             success: 'Grievance Officer details updated.',
             error: 'Failed to update.'
@@ -294,7 +364,7 @@ export function AdminDashboardUI({
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-bold uppercase text-zinc-500">Target Entity</label>
-                                    <Select value={offlineTarget} onValueChange={(val: any) => setOfflineTarget(val)}>
+                                    <Select value={offlineTarget} onValueChange={(val) => setOfflineTarget(val as OfflineTarget)}>
                                         <SelectTrigger className="h-9 text-xs">
                                             <SelectValue placeholder="Target" />
                                         </SelectTrigger>
@@ -306,7 +376,7 @@ export function AdminDashboardUI({
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-[10px] font-bold uppercase text-zinc-500">Grievance Type</label>
-                                    <Select value={offlineType} onValueChange={(val: any) => setOfflineType(val)}>
+                                    <Select value={offlineType} onValueChange={(val) => setOfflineType(val as OfflineType)}>
                                         <SelectTrigger className="h-9 text-xs">
                                             <SelectValue placeholder="Type" />
                                         </SelectTrigger>
@@ -424,8 +494,11 @@ export function AdminDashboardUI({
                             </TableHeader>
                             <TableBody>
                                 {initialFactoryDpaStatus?.map((org) => {
-                                    const activeDpa = initialDpaTemplates?.find((d: any) => d.is_active)
-                                    const orgDpa = org.organization_dpas?.find((d: any) => d.dpas?.version_string === activeDpa?.version_string)
+                                    const activeDpa = initialDpaTemplates?.find((d) => d.is_active)
+                                    const orgDpa = org.organization_dpas?.find((d) => {
+                                        const dpa = Array.isArray(d.dpas) ? d.dpas[0] : d.dpas
+                                        return dpa?.version_string === activeDpa?.version_string
+                                    })
                                     const isSigned = orgDpa?.status === 'signed'
 
                                     return (
@@ -482,7 +555,7 @@ export function AdminDashboardUI({
                         <CardDescription>Manage the active legal text for the Data Processing Agreement.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {initialDpaTemplates?.map((template: any) => (
+                        {initialDpaTemplates?.map((template) => (
                             <div key={template.id} className="p-4 border rounded-md space-y-3">
                                 <div className="flex justify-between items-center">
                                     <div className="font-bold">{template.version_string} {template.is_active && <Badge variant="default" className="ml-2">Active</Badge>}</div>
@@ -664,7 +737,7 @@ export function AdminDashboardUI({
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {initialBreachReports.map((report: any) => (
+                                    {initialBreachReports.map((report) => (
                                         <TableRow key={report.id}>
                                             <TableCell className="text-sm">{report.organizations.name}</TableCell>
                                             <TableCell><Badge variant="secondary">{report.affected_users_count} Users</Badge></TableCell>

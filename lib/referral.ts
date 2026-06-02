@@ -1,6 +1,26 @@
 import { createClient } from '@/lib/supabase/server';
 import crypto from 'crypto';
 
+type ReferralDiscountWindow = {
+    discount_pct: number
+    valid_from: string
+    valid_until: string
+}
+
+type ReferralUseStatsRow = {
+    status: string
+    signed_up_at: string
+    converted_at: string | null
+    organizations?: { name?: string | null } | null
+    referral_discount_windows?: ReferralDiscountWindow[] | null
+}
+
+type ReferralHistoryRow = {
+    factoryName: string
+    status: string
+    date: string | null
+}
+
 export async function getOrCreateReferralCode(orgId: string): Promise<string> {
     const supabase = await createClient();
 
@@ -73,25 +93,26 @@ export async function getReferralStats(orgId: string) {
         return { code: codeData.code, total: 0, converted: 0, activeWindows: [], currentDiscountPct: 0 };
     }
 
-    const total = referrees.length;
-    const converted = referrees.filter(r => r.status === 'converted').length;
+    const typedReferrees = referrees as ReferralUseStatsRow[];
+    const total = typedReferrees.length;
+    const converted = typedReferrees.filter(r => r.status === 'converted').length;
     
     const now = new Date();
     
     // We want all active and future windows to visualize on the UI
-    const upcomingAndActiveWindows = referrees.flatMap(r => r.referral_discount_windows || []).filter((w: any) => {
+    const upcomingAndActiveWindows = typedReferrees.flatMap(r => r.referral_discount_windows || []).filter((w) => {
         return new Date(w.valid_until) >= now;
     });
 
     const currentDiscountPct = upcomingAndActiveWindows
-        .filter((w: any) => new Date(w.valid_from) <= now && new Date(w.valid_until) >= now)
-        .reduce((sum, w: any) => sum + w.discount_pct, 0);
+        .filter((w) => new Date(w.valid_from) <= now && new Date(w.valid_until) >= now)
+        .reduce((sum, w) => sum + w.discount_pct, 0);
 
-    const history = referrees.map((r: any) => ({
+    const history = typedReferrees.map((r): ReferralHistoryRow => ({
         factoryName: r.organizations?.name || 'Unknown Factory',
         status: r.status,
         date: r.status === 'converted' ? r.converted_at : r.signed_up_at
-    })).sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    })).sort((a, b) => new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime());
 
     return {
         code: codeData.code,

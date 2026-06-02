@@ -112,11 +112,11 @@ function MachineForm({ onDone }: { onDone: () => void }) {
 
     const addGroup = () => setLoomGroups(g => [...g, { loomType: '', customLabel: '', count: 1 }])
     const removeGroup = (i: number) => setLoomGroups(g => g.filter((_, idx) => idx !== i))
-    const updateGroup = (i: number, field: keyof LoomGroup, val: any) =>
+    const updateGroup = (i: number, field: keyof LoomGroup, val: LoomGroup[keyof LoomGroup]) =>
         setLoomGroups(g => g.map((r, idx) => {
             if (idx === i) {
                 const updated = { ...r, [field]: val }
-                if (field === 'loomType' && val !== 'other') {
+                if (field === 'loomType' && String(val) !== 'other') {
                     updated.customLabel = ''
                 }
                 return updated

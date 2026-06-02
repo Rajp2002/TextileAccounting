@@ -8,6 +8,8 @@ import { ChevronRight, ChevronDown, Lock, Users } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import { motion, AnimatePresence } from 'framer-motion'
 
+type WorkerBreakdownLogEntry = WorkerBreakdownEntry['entries'][number]
+
 export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] | null }) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const { language, t } = useTranslation()
@@ -96,7 +98,7 @@ export function WorkerBreakdown({ entries }: { entries: WorkerBreakdownEntry[] |
                           <span key={h} className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground/50 last:text-right">{h}</span>
                         ))}
                       </div>
-                      {w.entries.map((entry: any, idx: number) => {
+                      {w.entries.map((entry: WorkerBreakdownLogEntry, idx: number) => {
                         const logDateFormatted = formatDate(entry.logged_at)
                         return (
                           <div

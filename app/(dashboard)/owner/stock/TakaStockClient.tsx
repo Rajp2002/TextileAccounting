@@ -74,10 +74,6 @@ function stockUnits(value: number, unitLabel = 'taka') {
     return `${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })} ${unitLabel || 'taka'}`
 }
 
-function stockQuantity(unitCount: number, meterCount: number, unitLabel = 'taka') {
-    return `${stockUnits(unitCount, unitLabel)} (${meters(meterCount)})`
-}
-
 function MetricCard({
     label,
     value,

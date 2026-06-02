@@ -2,6 +2,16 @@ import { jsPDF } from 'jspdf'
 import { formatINR } from './finance'
 import { formatToSurat } from './time'
 
+export type PayslipAdvanceRecovery = {
+    date?: string | null
+    label?: string | null
+    recovered: number
+}
+
+export type PayslipItemization = {
+    advances_recovered?: PayslipAdvanceRecovery[]
+}
+
 /**
  * Generate a PDF payslip for a meter-based worker.
  * Downloads the file in the browser.
@@ -15,7 +25,7 @@ export function generateMeterPayslip(data: {
     totalPay: number
     totalAdvances: number
     netPay: number
-    itemization?: any
+    itemization?: PayslipItemization
 }) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' })
     const pageWidth = doc.internal.pageSize.getWidth()
@@ -108,7 +118,7 @@ export function generateMeterPayslip(data: {
         if (advances.length > 0) {
             doc.setFontSize(8)
             doc.setFont('helvetica', 'normal')
-            advances.forEach((a: any) => {
+            advances.forEach((a) => {
                 const date = a.date ? new Date(a.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''
                 doc.text(`• ${date ? date + ': ' : ''}${a.label || 'Upaad'}`, 25, y)
                 doc.text(`- ${formatINR(a.recovered)}`, pageWidth - 25, y, { align: 'right' })
@@ -154,7 +164,7 @@ export function generateFixedPayslip(data: {
     earnedPay: number
     totalAdvances: number
     netPay: number
-    itemization?: any
+    itemization?: PayslipItemization
 }) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' })
     const pageWidth = doc.internal.pageSize.getWidth()
@@ -243,7 +253,7 @@ export function generateFixedPayslip(data: {
         if (advances.length > 0) {
             doc.setFontSize(8)
             doc.setFont('helvetica', 'normal')
-            advances.forEach((a: any) => {
+            advances.forEach((a) => {
                 const date = a.date ? new Date(a.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''
                 doc.text(`• ${date ? date + ': ' : ''}${a.label || 'Upaad'}`, 25, y)
                 doc.text(`- ${formatINR(a.recovered)}`, pageWidth - 25, y, { align: 'right' })

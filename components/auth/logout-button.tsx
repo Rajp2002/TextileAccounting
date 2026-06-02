@@ -18,7 +18,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
     const [isLoggingOut, setIsLoggingOut] = useState(false)
     const { t } = useTranslation()
 
-    const handleLogout = async (e: React.FormEvent) => {
+    const handleLogout = async () => {
         setIsLoggingOut(true)
         // Clear React Query cache immediately to prevent session leakage
         if (globalQueryClient) {

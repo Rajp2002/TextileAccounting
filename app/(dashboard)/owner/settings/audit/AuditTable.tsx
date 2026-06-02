@@ -3,19 +3,9 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useQuery } from '@tanstack/react-query'
-import { format } from 'date-fns'
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Users, Factory, Package, Shield, Calculator, Tags, CalendarDays, X, Search, Filter } from 'lucide-react'
-import AuditDiff from '@/components/ui/audit-diff'
 import {
     Select,
     SelectContent,
@@ -24,8 +14,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Button } from '@/components/ui/button'
-import { getAuditSummary } from '@/lib/audit-summaries'
-import { Info, History, ArrowRight } from 'lucide-react'
+import { History, ArrowRight } from 'lucide-react'
 import AuditActivityItem from './AuditActivityItem'
 import { cn } from '@/lib/utils'
 
@@ -85,66 +74,6 @@ const CATEGORIES: Record<CategoryKey, CategoryConfig> = {
         borderColor: 'border-emerald-200',
         icon: Calculator,
     },
-}
-
-// Human-readable table name mapping
-const TABLE_LABELS: Record<string, string> = {
-    attendance: 'Attendance',
-    workers: 'Worker',
-    fixed_workers: 'Fixed Worker',
-    payroll_settlements: 'Payroll Settlement',
-    payroll_payments: 'Payroll Payment',
-    worker_advances: 'Advance (Upaad)',
-    payroll_configs: 'Payroll Config',
-    production_logs: 'Production Log',
-    machines: 'Machine',
-    machine_assignments: 'Machine Assignment',
-    orders: 'Order',
-    yarn_batches: 'Yarn Batch',
-    yarn_lots: 'Yarn Lot',
-    yarn_movements: 'Yarn Movement',
-    beam_cards: 'Beam Card',
-    beam_card_lots: 'Beam Lot Usage',
-    order_yarn_requirements: 'Order Yarn Target',
-    qualities: 'Quality',
-    profiles: 'User Profile',
-    factory_cost_profile: 'Factory Cost Profile',
-    estimator_templates: 'Quality',
-    estimator_quotes: 'Quote',
-}
-
-function getCategoryForTable(tableName: string): CategoryKey | null {
-    for (const [key, config] of Object.entries(CATEGORIES)) {
-        if (config.tables.includes(tableName)) {
-            return key as CategoryKey
-        }
-    }
-    return null
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-const ActionBadge = ({ action }: { action: string }) => {
-    switch (action) {
-        case 'INSERT': return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200/50 hover:bg-emerald-100 font-bold text-[10px] px-1.5 shadow-sm">INSERT</Badge>
-        case 'UPDATE': return <Badge className="bg-amber-50 text-amber-700 border-amber-200/50 hover:bg-amber-100 font-bold text-[10px] px-1.5 shadow-sm">UPDATE</Badge>
-        case 'DELETE': return <Badge className="bg-rose-50 text-rose-700 border-rose-200/50 hover:bg-rose-100 font-bold text-[10px] px-1.5 shadow-sm">DELETE</Badge>
-        default: if (action.includes('.')) return <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200/50 font-bold text-[10px] px-1.5 shadow-sm uppercase">{action.split('.').pop()}</Badge>
-                 return <Badge className="text-[10px] px-1.5 shadow-sm">{action}</Badge>
-    }
-}
-
-const CategoryBadge = ({ tableName }: { tableName: string }) => {
-    const catKey = getCategoryForTable(tableName)
-    if (!catKey) return null
-    const cat = CATEGORIES[catKey]
-    const Icon = cat.icon
-    return (
-        <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded border ${cat.color} ${cat.bgColor} ${cat.borderColor}`}>
-            <Icon className="h-3 w-3" />
-            {cat.label}
-        </span>
-    )
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────

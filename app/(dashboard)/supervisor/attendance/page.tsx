@@ -24,6 +24,10 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from '@/components/ui/label'
 
+function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback
+}
+
 interface DailyWorker {
     id: number
     name: string
@@ -126,8 +130,8 @@ export default function AttendancePage() {
             setVerificationOpen(false)
             setAccessCode('')
             toast.success('Edit mode unlocked')
-        } catch (error: any) {
-            toast.error(error.message || 'Invalid access code')
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Invalid access code'))
         } finally {
             setVerifying(false)
         }
@@ -185,8 +189,8 @@ export default function AttendancePage() {
 
             toast.success('Attendance saved!')
             queryClient.invalidateQueries({ queryKey: ['attendance'] })
-        } catch (err: any) {
-            toast.error('Failed: ' + err.message)
+        } catch (err) {
+            toast.error('Failed: ' + getErrorMessage(err, 'Unable to save attendance'))
         } finally {
             setSaving(false)
         }

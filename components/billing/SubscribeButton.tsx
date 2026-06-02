@@ -7,10 +7,42 @@ import { Loader2, CreditCard, RefreshCw, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+type RazorpayCheckoutOptions = {
+    key: string
+    subscription_id: string
+    name: string
+    description: string
+    image: string
+    handler: (response: {
+        razorpay_payment_id: string
+        razorpay_subscription_id: string
+        razorpay_signature: string
+    }) => void
+    modal: {
+        ondismiss: () => void
+    }
+    theme: { color: string }
+}
+
+type RazorpayCheckout = {
+    on: (event: 'payment.failed', handler: () => void) => void
+    open: () => void
+}
+
 declare global {
     interface Window {
-        Razorpay: any
+        Razorpay: new (options: RazorpayCheckoutOptions) => RazorpayCheckout
     }
+}
+
+type CreateSubscriptionResponse = {
+    error?: string
+    subscriptionId?: string
+    keyId?: string
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback
 }
 
 interface SubscribeButtonProps {
@@ -64,7 +96,7 @@ export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, cl
                 throw new Error(`Server returned ${res.status} (${contentType}). Please refresh and try again.`)
             }
 
-            const data = await res.json()
+            const data = await res.json() as CreateSubscriptionResponse
             console.log('[SubscribeButton] API response:', data)
 
             if (!res.ok || data.error) {
@@ -72,6 +104,9 @@ export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, cl
             }
 
             const { subscriptionId, keyId } = data
+            if (!subscriptionId || !keyId) {
+                throw new Error('Payment setup response was incomplete.')
+            }
 
             const rzp = new window.Razorpay({
                 key: keyId,
@@ -104,8 +139,8 @@ export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, cl
             })
 
             rzp.open()
-        } catch (err: any) {
-            toast.error(err.message ?? 'Something went wrong. Please try again.')
+        } catch (err) {
+            toast.error(getErrorMessage(err, 'Something went wrong. Please try again.'))
             setLoading(false)
         }
     }

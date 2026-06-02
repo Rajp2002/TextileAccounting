@@ -6,18 +6,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Wallet, Plus, History, Loader2, ArrowUpRight, ArrowDownLeft } from 'lucide-react'
+import { Wallet, Plus, Loader2 } from 'lucide-react'
 import { formatINR } from '@/lib/finance'
 import { toast } from 'sonner'
 import { refillSupervisorFloat, getSupervisorBalance } from '@/app/(dashboard)/supervisor/actions'
-import { useTranslation } from '@/lib/i18n/context'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTransliterate } from '@/hooks/use-transliterate'
 import { Badge } from '@/components/ui/badge'
 
 export function SupervisorFloatManager() {
-    const { t } = useTranslation()
     const tl = useTransliterate()
     const supabase = createClient()
     const queryClient = useQueryClient()
@@ -61,8 +58,8 @@ export function SupervisorFloatManager() {
             toast.success('Float refilled successfully')
             setRefillAmounts({})
         },
-        onError: (err: any) => {
-            toast.error(err.message)
+        onError: (err) => {
+            toast.error(err instanceof Error ? err.message : 'Failed to refill float')
         }
     })
 

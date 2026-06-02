@@ -12,6 +12,18 @@ import AuthLayout from '@/components/auth/auth-layout'
 import { createOrganizationAndRedirect } from '@/app/(auth)/actions/auth'
 import { cn } from '@/lib/utils'
 
+type RedirectError = {
+    message?: string
+    digest?: string
+}
+
+function isNextRedirect(error: unknown) {
+    if (typeof error !== 'object' || error === null) return false
+    const redirectError = error as RedirectError
+    return redirectError.message === 'NEXT_REDIRECT'
+        || Boolean(redirectError.digest?.startsWith('NEXT_REDIRECT'))
+}
+
 // ── Password strength scorer ───────────────────────────────────────────────────
 
 function getPasswordStrength(password: string): {
@@ -90,9 +102,9 @@ function SignupForm() {
                 toast.error(result.error)
                 setLoading(false)
             }
-        } catch (err: any) {
+        } catch (err) {
             // NEXT_REDIRECT is not an actual error — it means redirect() was called
-            if (err?.message === 'NEXT_REDIRECT' || err?.digest?.startsWith('NEXT_REDIRECT')) {
+            if (isNextRedirect(err)) {
                 // redirect in progress — don't reset loading state
                 return
             }

@@ -32,7 +32,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { format, subDays } from 'date-fns'
+import { subDays } from 'date-fns'
 import { getCurrentSuratHour, getCurrentTimestampMs, getSuratTodayString, formatToSurat } from '@/lib/time'
 import {
     getShiftSetupData,
@@ -103,11 +103,57 @@ function formatLoomName(name: string) {
     return name.replace(/^Machine\b/i, 'Loom')
 }
 
+const PRODUCTION_LOG_FALLBACK_ERROR = 'Could not save production log. Your entry is still saved as a draft. Check your connection and try again.'
+
 interface ReadinessIssue {
     id: string
     label: string
     count: number
     tone: 'blocker' | 'warning'
+}
+
+type MachineStatus = 'running' | 'idle' | 'maintenance'
+
+type ShiftMachine = {
+    id: string
+    name: string
+    status: string
+    machine_status: MachineStatus | null
+    default_rate_per_m?: number | null
+    current_order_id?: string | null
+}
+
+type ShiftWorker = {
+    id: number
+    name: string
+}
+
+type ShiftOrder = {
+    id: string
+    quality_label: string | null
+    party_name: string
+    deadline: string
+    market_run_id?: string | null
+    remaining_meters: number
+}
+
+type ShiftAssignment = {
+    id: string | null
+    machine_id: string
+    worker_id: number | null
+    order_id: string | null
+    rate_per_m: number
+    breakdown_category: string | null
+    breakdown_notes: string | null
+}
+
+type ShiftExistingLog = {
+    id: number
+    machine_id: string
+    worker_id?: number | null
+    meters: number
+    submitted_at: string | null
+    zero_meter_reason: string | null
 }
 
 function ShiftReadinessPanel({
@@ -200,13 +246,13 @@ function MachineStatusBadge({ status }: { status: 'running' | 'idle' | 'maintena
 // ─── Unified Machine Row ──────────────────────────────────────────────────────
 
 interface MachineUnifiedRowProps {
-    machine: any
-    workers: any[]
-    orders: any[]
-    assignment: any
+    machine: ShiftMachine
+    workers: ShiftWorker[]
+    orders: ShiftOrder[]
+    assignment: ShiftAssignment | undefined
     producedMeters: number
     onProducedMetersChange: (v: number) => void
-    onStatusClick: (machine: any) => void
+    onStatusClick: (machine: ShiftMachine) => void
     isSyncing?: boolean
     isSaved?: boolean
     loggingMode: 'production' | 'downtime'
@@ -215,7 +261,7 @@ interface MachineUnifiedRowProps {
     onDowntimeReasonChange: (reason: string) => void
     downtimeNote: string
     onDowntimeNoteChange: (note: string) => void
-    existingLog?: any
+    existingLog?: ShiftExistingLog
 }
 
 function MachineUnifiedRow({
@@ -246,7 +292,7 @@ function MachineUnifiedRow({
     const isDowntime = loggingMode === 'downtime'
     const deadlineLabel = selectedTarget ? formatShortDate(selectedTarget.deadline) : null
 
-    const getDowntimeLabel = (reasonStr: string) => {
+    const getDowntimeLabel = (reasonStr: string | null) => {
         if (!reasonStr) return 'Downtime'
         const parts = reasonStr.split(':')
         const code = parts[0].trim()
@@ -515,15 +561,15 @@ function MachineDetailSheet({
     initialCategory,
     initialNotes,
 }: {
-    machine: any,
+    machine: ShiftMachine,
     date: string,
     shift: 'day' | 'night',
     onClose: () => void,
-    onStatusChange: (status: 'running' | 'idle' | 'maintenance') => void,
+    onStatusChange: (status: MachineStatus) => void,
     initialCategory?: string | null,
-    initialNotes?: string
+    initialNotes?: string | null
 }) {
-    const [notes, setNotes] = useState(initialNotes || '')
+    const [notes, setNotes] = useState(initialNotes ?? '')
     const [category, setCategory] = useState<string | null>(initialCategory || null)
     const [saving, setSaving] = useState(false)
 
@@ -687,11 +733,11 @@ export default function UnifiedDashboard() {
     const [copying, setCopying] = useState(false)
     const submitLockRef = useRef(false)
 
-    const [machines, setMachines] = useState<any[]>([])
-    const [workers, setWorkers] = useState<any[]>([])
-    const [orders, setOrders] = useState<any[]>([])
-    const [assignments, setAssignments] = useState<any[]>([])
-    const [existingLogs, setExistingLogs] = useState<any[]>([])
+    const [machines, setMachines] = useState<ShiftMachine[]>([])
+    const [workers, setWorkers] = useState<ShiftWorker[]>([])
+    const [orders, setOrders] = useState<ShiftOrder[]>([])
+    const [assignments, setAssignments] = useState<ShiftAssignment[]>([])
+    const [existingLogs, setExistingLogs] = useState<ShiftExistingLog[]>([])
 
     // Bulk Entry state
     const [productionMeters, setProductionMeters] = useState<Record<string, number>>({})
@@ -699,10 +745,10 @@ export default function UnifiedDashboard() {
     const [correctionClockMs, setCorrectionClockMs] = useState<number | null>(null)
 
     // Optimistic / Sync markers
-    const [syncingState, setSyncingState] = useState<Record<string, 'syncing' | 'saved' | null>>({})
+    const [syncingState] = useState<Record<string, 'syncing' | 'saved' | null>>({})
 
     // Detail Sheet state
-    const [selectedMachine, setSelectedMachine] = useState<any | null>(null)
+    const [selectedMachine, setSelectedMachine] = useState<ShiftMachine | null>(null)
 
     // Duplicate Guard State
     const [showDuplicateDialog, setShowDuplicateDialog] = useState(false)
@@ -799,7 +845,7 @@ export default function UnifiedDashboard() {
             : null
         )
 
-        const existingProductionMeters = (data.existingLogs ?? []).reduce((acc: Record<string, number>, log: any) => {
+        const existingProductionMeters = (data.existingLogs ?? []).reduce((acc: Record<string, number>, log: ShiftExistingLog) => {
             if (typeof log.meters === 'number') {
                 acc[log.machine_id] = log.meters
             }
@@ -976,8 +1022,10 @@ export default function UnifiedDashboard() {
             const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined
             if (code === 'DUPLICATE_LOG_DETECTED' || message === 'DUPLICATE_LOG_DETECTED') {
                 setShowDuplicateDialog(true)
+            } else if (error instanceof Error) {
+                toast.error(error.message || PRODUCTION_LOG_FALLBACK_ERROR)
             } else {
-                toast.error(message || 'Could not save production log. Your entry is still saved as a draft. Check your connection and try again.')
+                toast.error(PRODUCTION_LOG_FALLBACK_ERROR)
             }
         } finally {
             setSubmitting(false)
@@ -991,8 +1039,8 @@ export default function UnifiedDashboard() {
             const result = await requestAccessCode()
             if (result.error) throw new Error(result.error)
             toast.success(t('auth.code_requested_success') || 'Request sent to owner via WhatsApp')
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to request code')
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Failed to request code')
         } finally {
             setRequestingCode(false)
         }

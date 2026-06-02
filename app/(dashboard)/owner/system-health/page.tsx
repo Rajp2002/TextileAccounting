@@ -24,6 +24,7 @@ interface WhatsAppDeliveryLog {
     error_message: string | null
     retry_count: number
     sent_at: string
+    meta_message_id?: string | null
 }
 
 function ResendButton({ logId, onComplete }: { logId: string, onComplete: () => void }) {
@@ -155,7 +156,7 @@ export default function SystemHealthPage() {
                                                     {log.retry_count > 0 && ` (Retries: ${log.retry_count})`}
                                                 </div>
                                                 <div className="truncate text-[10px] text-gray-400 mt-0.5 font-mono">
-                                                    {(log as any).meta_message_id || 'Internal System'}
+                                                    {log.meta_message_id || 'Internal System'}
                                                 </div>
                                                 <div className="truncate text-xs mt-1">
                                                     {log.status === 'failed' && log.error_message ? (

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { RefreshCw, AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatToSurat } from '@/lib/time'
 
@@ -11,6 +11,14 @@ interface AutoRenewToggleProps {
     /** ISO date string for subscription end, used in the confirmation message */
     currentEnd: string | null
     subscriptionTier?: string
+}
+
+type AutoRenewResponse = {
+    error?: string
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback
 }
 
 export function AutoRenewToggle({ currentEnd, subscriptionTier }: AutoRenewToggleProps) {
@@ -35,7 +43,7 @@ export function AutoRenewToggle({ currentEnd, subscriptionTier }: AutoRenewToggl
                 throw new Error('Unexpected server response. Please refresh and try again.')
             }
 
-            const data = await res.json()
+            const data = await res.json() as AutoRenewResponse
             if (!res.ok || data.error) {
                 throw new Error(data.error ?? 'Failed to turn off auto-renewal.')
             }
@@ -44,8 +52,8 @@ export function AutoRenewToggle({ currentEnd, subscriptionTier }: AutoRenewToggl
             setShowConfirm(false)
             // Refresh the server component to reflect the updated state
             setTimeout(() => router.refresh(), 800)
-        } catch (err: any) {
-            toast.error(err.message ?? 'Something went wrong. Please try again.')
+        } catch (err) {
+            toast.error(getErrorMessage(err, 'Something went wrong. Please try again.'))
         } finally {
             setLoading(false)
         }

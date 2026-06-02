@@ -23,6 +23,10 @@ const corsHeaders = {
 
 const TEMPLATE_NAME = 'weavly_monthly_brief'
 
+type OrganizationJoin = { name?: string | null }
+type ProductionMetricRow = { meters: number | string | null; worker_rate_snapshot?: number | string | null }
+type PayrollSettlementMetricRow = { gross_pay: number | string | null; net_payout: number | string | null }
+
 // ─── Main Handler ──────────────────────────────────────────────
 
 serve(async (req) => {
@@ -79,7 +83,7 @@ serve(async (req) => {
 
         for (const owner of owners) {
             const orgId = owner.org_id
-            const factoryName = (owner.organizations as any)?.name ?? 'Your Factory'
+            const factoryName = (owner.organizations as OrganizationJoin | null)?.name ?? 'Your Factory'
             const ownerPhone = owner.whatsapp_number as string
 
             // ── Idempotency: skip if already sent for this month ──────────────
@@ -104,9 +108,10 @@ serve(async (req) => {
                 .gte('date', startDate)
                 .lte('date', endDate)
 
-            const totalMeters = (prodRows ?? []).reduce((s: number, r: any) => s + Number(r.meters), 0)
-            const totalLaborCost = (prodRows ?? []).reduce(
-                (s: number, r: any) => s + Number(r.meters) * Number(r.worker_rate_snapshot ?? 0),
+            const productionRows = (prodRows ?? []) as ProductionMetricRow[]
+            const totalMeters = productionRows.reduce((s: number, r) => s + Number(r.meters), 0)
+            const totalLaborCost = productionRows.reduce(
+                (s: number, r) => s + Number(r.meters) * Number(r.worker_rate_snapshot ?? 0),
                 0
             )
 
@@ -117,9 +122,10 @@ serve(async (req) => {
                 .eq('org_id', orgId)
                 .eq('month', reportMonth)
 
-            const settledCount = (settlements ?? []).length
-            const totalGrossPay = (settlements ?? []).reduce((s: number, r: any) => s + Number(r.gross_pay), 0)
-            const totalNetPaid = (settlements ?? []).reduce((s: number, r: any) => s + Number(r.net_payout), 0)
+            const settlementRows = (settlements ?? []) as PayrollSettlementMetricRow[]
+            const settledCount = settlementRows.length
+            const totalGrossPay = settlementRows.reduce((s: number, r) => s + Number(r.gross_pay), 0)
+            const totalNetPaid = settlementRows.reduce((s: number, r) => s + Number(r.net_payout), 0)
 
             // ── C. Format month label ─────────────────────────────────────────
             const monthLabel = new Date(`${reportMonth}-01`).toLocaleDateString('en-IN', {

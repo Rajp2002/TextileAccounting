@@ -13,8 +13,15 @@ interface ComplianceNoticeProps {
     onConsentChange: (given: boolean, noticeId: string, granular?: Record<string, boolean>) => void
 }
 
+type ComplianceNoticeRecord = {
+    id: string
+    body_text: string
+    english_transcript?: string | null
+    content_audio_url?: string | null
+}
+
 export function ComplianceNotice({ type, workerName, onConsentChange }: ComplianceNoticeProps) {
-    const [notice, setNotice] = useState<any>(null)
+    const [notice, setNotice] = useState<ComplianceNoticeRecord | null>(null)
     const [lang, setLang] = useState('en')
     const [loading, setLoading] = useState(true)
     const [requestDialogOpen, setRequestDialogOpen] = useState(false)
@@ -50,10 +57,11 @@ export function ComplianceNotice({ type, workerName, onConsentChange }: Complian
     }, [type, lang])
 
     const toggleConsent = (key: string) => {
+        if (!notice) return
         const next = { ...granularConsent, [key]: !granularConsent[key] }
         setGranularConsent(next)
         const allGiven = Object.values(next).every(v => v === true)
-        onConsentChange(allGiven, notice?.id, next)
+        onConsentChange(allGiven, notice.id, next)
     }
 
     if (loading) {

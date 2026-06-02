@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 
-interface AutosaveData {
-  state: any
+interface AutosaveData<TState = unknown> {
+  state: TState
   partyName: string
   qualityLabel: string
   warpInstruction: string
@@ -19,19 +19,19 @@ interface UseAutosaveOptions {
   maxAgeMs?: number  // max age before draft is considered stale (default 24h)
 }
 
-interface UseAutosaveReturn {
+interface UseAutosaveReturn<TState = unknown> {
   /** Whether a recoverable draft was found on mount */
   hasDraft: boolean
   /** The draft data if found */
-  draft: AutosaveData | null
+  draft: AutosaveData<TState> | null
   /** Restore the draft (call this when user clicks "Restore") */
-  restoreDraft: () => AutosaveData | null
+  restoreDraft: () => AutosaveData<TState> | null
   /** Dismiss the draft (clear from localStorage) */
   dismissDraft: () => void
   /** Clear the autosaved draft (call on successful save/convert) */
   clearDraft: () => void
   /** Save current state (called automatically via debounce, but exposed for manual use) */
-  saveDraft: (data: Omit<AutosaveData, 'savedAt'>) => void
+  saveDraft: (data: Omit<AutosaveData<TState>, 'savedAt'>) => void
 }
 
 function getStorageKey(orgId: string, userId: string): string {
@@ -47,14 +47,14 @@ function getStorageKey(orgId: string, userId: string): string {
  * - Clears draft on successful save/convert
  * - Draft expires after 24 hours
  */
-export function useAutosave({
+export function useAutosave<TState = unknown>({
   orgId,
   userId,
   debounceMs = 2000,
   maxAgeMs = 24 * 60 * 60 * 1000,  // 24 hours
-}: UseAutosaveOptions): UseAutosaveReturn {
+}: UseAutosaveOptions): UseAutosaveReturn<TState> {
   const [hasDraft, setHasDraft] = useState(false)
-  const [draft, setDraft] = useState<AutosaveData | null>(null)
+  const [draft, setDraft] = useState<AutosaveData<TState> | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const keyRef = useRef(getStorageKey(orgId, userId))
 
@@ -64,7 +64,7 @@ export function useAutosave({
       const raw = localStorage.getItem(keyRef.current)
       if (!raw) return
 
-      const parsed: AutosaveData = JSON.parse(raw)
+      const parsed = JSON.parse(raw) as AutosaveData<TState>
       const age = Date.now() - parsed.savedAt
 
       if (age > maxAgeMs) {
@@ -83,13 +83,13 @@ export function useAutosave({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const saveDraft = useCallback((data: Omit<AutosaveData, 'savedAt'>) => {
+  const saveDraft = useCallback((data: Omit<AutosaveData<TState>, 'savedAt'>) => {
     // Cancel any pending save
     if (timerRef.current) clearTimeout(timerRef.current)
 
     timerRef.current = setTimeout(() => {
       try {
-        const payload: AutosaveData = { ...data, savedAt: Date.now() }
+        const payload: AutosaveData<TState> = { ...data, savedAt: Date.now() }
         localStorage.setItem(keyRef.current, JSON.stringify(payload))
       } catch {
         // localStorage full or unavailable — fail silently
@@ -104,7 +104,7 @@ export function useAutosave({
     setDraft(null)
   }, [])
 
-  const restoreDraft = useCallback((): AutosaveData | null => {
+  const restoreDraft = useCallback((): AutosaveData<TState> | null => {
     const current = draft
     setHasDraft(false)
     // Don't clear from localStorage — keep it until next save or explicit dismiss

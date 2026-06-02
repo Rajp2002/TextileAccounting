@@ -25,6 +25,24 @@ const LANG_CODES: Record<string, string> = {
   gu: "gu",
 };
 
+type PayslipAdjustment = {
+  category: string;
+  amount: number;
+};
+
+type PayslipAdvanceRecovery = {
+  date?: string | null;
+  label?: string | null;
+  recovered: number;
+  carried_forward?: number;
+};
+
+type PayslipItemizationPayload = {
+  bonuses?: PayslipAdjustment[];
+  fines?: PayslipAdjustment[];
+  advances_recovered?: PayslipAdvanceRecovery[];
+};
+
 Deno.serve(async (req) => {
   try {
     const body = await req.json();
@@ -53,7 +71,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Settlement not found" }), { status: 404 });
     }
 
-    const payload = settlement.itemization_payload || {};
+    const payload = (settlement.itemization_payload || {}) as PayslipItemizationPayload;
 
     // 2. Fetch factory name
     const { data: org } = await supabase
@@ -114,7 +132,7 @@ Deno.serve(async (req) => {
     // Bonuses
     if (payload.bonuses?.length > 0) {
       detailMessage += `*Earnings:*\n`;
-      payload.bonuses.forEach((b: any) => {
+      payload.bonuses.forEach((b) => {
         detailMessage += `• ${b.category}: ₹${formatInr(b.amount)}\n`;
       });
       detailMessage += `\n`;
@@ -123,7 +141,7 @@ Deno.serve(async (req) => {
     // Fines
     if (payload.fines?.length > 0) {
       detailMessage += `*Deductions/Fines:*\n`;
-      payload.fines.forEach((f: any) => {
+      payload.fines.forEach((f) => {
         detailMessage += `• ${f.category}: ₹${formatInr(f.amount)}\n`;
       });
       detailMessage += `\n`;
@@ -132,7 +150,7 @@ Deno.serve(async (req) => {
     // Advances Recovered
     if (payload.advances_recovered?.length > 0) {
       detailMessage += `*Advance Recovered:*\n`;
-      payload.advances_recovered.forEach((a: any) => {
+      payload.advances_recovered.forEach((a) => {
         // Format date as "15 Apr"
         const dateStr = a.date 
           ? new Date(a.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) 

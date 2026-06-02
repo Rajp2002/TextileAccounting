@@ -10,7 +10,6 @@ import {
     Search,
     ArrowRight,
     Calendar,
-    ExternalLink,
     Layers,
     User,
     ChevronDown,
@@ -32,7 +31,6 @@ import {
     type DispatchRow,
     type DispatchOverviewStats,
     confirmPendingSaleDispatch,
-    confirmPendingSaleReceived,
     type PendingStockSale,
 } from '@/app/(dashboard)/owner/orders/actions'
 import { confirmDispatchReceiptByOwner } from '@/app/(dashboard)/owner/orders/actions'
@@ -620,7 +618,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
     const { t } = useTranslation()
     const [dispatches, setDispatches] = useState(initialDispatches)
     const [overview, setOverview] = useState(initialOverview)
-    const [pendingSales, setPendingSales] = useState(initialPendingSales)
+    const pendingSales = initialPendingSales
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<'all' | 'in_transit' | 'delivered' | 'disputed'>('all')
     const [pendingReceiptOnly, setPendingReceiptOnly] = useState(false)
@@ -631,7 +629,6 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
 
     // Confirm dispatch modal states
     const [confirmingSale, setConfirmingSale] = useState<PendingStockSale | null>(null)
-    const [confirmMode, setConfirmMode] = useState<'dispatch' | null>(null)
     const [dispatchDate, setDispatchDate] = useState(todayDate())
     const [transportName, setTransportName] = useState('')
     const [vehicleNumber, setVehicleNumber] = useState('')
@@ -671,7 +668,6 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
             } else {
                 toast.success(`Dispatch #${res.dispatchNumber} confirmed!`)
                 setConfirmingSale(null)
-                setConfirmMode(null)
                 // Reload the page to refresh stats and list
                 window.location.reload()
             }
@@ -1006,7 +1002,6 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                             <Button
                                                 onClick={() => {
                                                     setConfirmingSale(sale)
-                                                    setConfirmMode('dispatch')
                                                     setDispatchDate(todayDate())
                                                     setTransportName('')
                                                     setVehicleNumber('')
@@ -1125,13 +1120,13 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                 <SellAndDispatchDialog
                     open={sellAndDispatchOpen}
                     onOpenChange={setSellAndDispatchOpen}
-                    onSuccess={(dispatchId) => {
+                    onSuccess={() => {
                         setSellAndDispatchOpen(false)
                     }}
                 />
             )}
             {confirmingSale && (
-                <Dialog open={confirmingSale !== null} onOpenChange={(v) => { if (!v) { setConfirmingSale(null); setConfirmMode(null); } }}>
+                <Dialog open={confirmingSale !== null} onOpenChange={(v) => { if (!v) setConfirmingSale(null) }}>
                     <DialogContent className="max-w-md">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
@@ -1234,7 +1229,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                             </div>
                         </div>
                         <DialogFooter className="gap-2">
-                            <Button variant="outline" onClick={() => { setConfirmingSale(null); setConfirmMode(null); }} disabled={confirmPending}>
+                            <Button variant="outline" onClick={() => setConfirmingSale(null)} disabled={confirmPending}>
                                 Cancel
                             </Button>
                             <Button
