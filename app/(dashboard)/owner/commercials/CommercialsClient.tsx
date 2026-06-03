@@ -54,6 +54,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
+import { getSuratTodayString } from '@/lib/time'
 
 const PAYMENT_MODE_LABELS: Record<string, string> = {
     bank: 'Bank Transfer',
@@ -1449,7 +1450,7 @@ export default function CommercialsClient({ initialData, initialReceivables, col
     const [selectedReceivable, setSelectedReceivable] = useState<Receivable | null>(null)
     const [paymentAmount, setPaymentAmount] = useState('')
     const [paymentMode, setPaymentMode] = useState('bank')
-    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0])
+    const [paymentDate, setPaymentDate] = useState(getSuratTodayString())
     const [reference, setReference] = useState('')
     const [notes, setNotes] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -1462,7 +1463,7 @@ export default function CommercialsClient({ initialData, initialReceivables, col
     const resetPaymentForm = () => {
         setPaymentAmount('')
         setPaymentMode('bank')
-        setPaymentDate(new Date().toISOString().split('T')[0])
+        setPaymentDate(getSuratTodayString())
         setReference('')
         setNotes('')
         setSelectedReceivable(null)

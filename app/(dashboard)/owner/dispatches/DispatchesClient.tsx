@@ -56,6 +56,7 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
 import { isDispatchGroupActionable } from '@/lib/dispatch/archive'
+import { getSuratTodayString } from '@/lib/time'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -669,7 +670,7 @@ function MetricCard({
 }
 
 function todayDate() {
-    return new Date().toISOString().slice(0, 10)
+    return getSuratTodayString()
 }
 
 export default function DispatchesClient({ initialDispatches, initialOverview, initialPendingSales = [] }: DispatchesClientProps) {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -795,6 +796,7 @@ const STEPS = [
 // ─── Main Component ───────────────────────────────────────────────────────────────
 
 export default function OnboardingChecklist({ initialStatus }: Props) {
+    const queryClient = useQueryClient()
     const [status, setStatus] = useState<OnboardingStatus>(initialStatus)
     const [openStep, setOpenStep] = useState<string | null>(
         // Auto-open the first incomplete step
@@ -870,6 +872,13 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
             await supabase.auth.refreshSession()
         } catch (err) {
             console.warn('[OnboardingChecklist] Session refresh failed, proceeding anyway:', err)
+        }
+
+        // Step 2.5: Invalidate/clear queries before redirecting to dashboard
+        try {
+            queryClient.clear()
+        } catch (err) {
+            console.warn('[OnboardingChecklist] Failed to clear query client:', err)
         }
 
         // Step 3: Hard navigation — gives middleware a fresh full-page request

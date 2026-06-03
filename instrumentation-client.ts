@@ -9,6 +9,7 @@ function redactSensitiveText(value: string) {
 
 Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    tunnel: '/api/sentry-tunnel',
     tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 0.1,

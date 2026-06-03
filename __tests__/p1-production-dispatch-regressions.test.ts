@@ -58,7 +58,7 @@ describe('P1 production and dispatch regressions', () => {
         expect(activeDispatchClients).not.toContain('Failed to generate invoice PDF')
         expect(activeDispatchClients).not.toContain('Create & Download Invoice')
         expect(activeDispatchClients).not.toContain('Re-print Invoice')
-        expect(proxy).not.toContain("pathname.startsWith('/track')")
+        expect(proxy).toContain("pathname.startsWith('/track/')")
         expect(trackingPage).toContain('notFound()')
     })
 

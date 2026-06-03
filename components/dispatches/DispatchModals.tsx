@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { getCurrentIsoString } from '@/lib/time'
+import { getCurrentIsoString, getSuratTodayString } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import { createDispatch, type DispatchRow, type AvailableFabricPackage } from '@/app/(dashboard)/owner/orders/actions'
 
@@ -48,7 +48,7 @@ export function CreateDispatchModal({
     const [pending, startTransition] = useTransition()
 
     // ── Configurable Batch Dispatch Date, Meters & Takas State ──
-    const [dispatchDate, setDispatchDate] = useState(() => new Date().toISOString().slice(0, 10))
+    const [dispatchDate, setDispatchDate] = useState(() => getSuratTodayString())
     const [customMeters, setCustomMeters] = useState<Record<string, string>>(() => {
         const initial: Record<string, string> = {}
         availablePackages.forEach((pkg) => {

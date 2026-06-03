@@ -17,6 +17,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { createPartyStockSaleAndOptionalDispatch, getSellAndDispatchOptions } from '@/app/(dashboard)/owner/dispatches/actions'
 import { getSuratTodayString } from '@/lib/time'
+import Decimal from 'decimal.js'
 
 export type SellAndDispatchDialogProps = {
     open: boolean
@@ -52,9 +53,11 @@ type LotOption = {
 function estimateSoldTakas(meters: number, lot: LotOption) {
     if (lot.meters_per_taka <= 0) return ''
 
-    const estimatedTakas = meters / lot.meters_per_taka
-    const availableTakas = Number(lot.available_taka_count || 0)
-    return String(availableTakas >= 1 ? Math.max(1, Math.round(estimatedTakas)) : estimatedTakas)
+    const estimatedTakas = new Decimal(meters)
+        .dividedBy(new Decimal(lot.meters_per_taka))
+        .toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+        .toNumber()
+    return String(estimatedTakas)
 }
 
 function todayDate() {

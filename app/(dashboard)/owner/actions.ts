@@ -20,6 +20,7 @@ import {
     safeParse,
 } from '@/lib/schemas'
 import { eraseWorkerPII } from './actions/compliance'
+import { formatToSurat } from '@/lib/time'
 
 export type ProductionTargetOption = {
     source_type: 'order' | 'market_run'
@@ -46,7 +47,9 @@ function generateOrderTrackingToken(): string {
 }
 
 function addDaysIsoDate(days: number): string {
-    return new Date(Date.now() + days * 86400000).toISOString().split('T')[0]
+    const d = new Date()
+    d.setDate(d.getDate() + days)
+    return formatToSurat(d, 'yyyy-MM-dd')
 }
 
 function numericValue(value: unknown): number {

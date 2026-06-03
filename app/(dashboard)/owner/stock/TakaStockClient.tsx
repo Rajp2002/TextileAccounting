@@ -53,11 +53,12 @@ import {
 } from './actions'
 import { SellAndDispatchDialog } from '@/components/dispatches/SellAndDispatchDialog'
 import { isMarketRunOnlyMode } from '@/lib/production-mode'
+import { getSuratTodayString } from '@/lib/time'
 
 type SourceType = 'opening' | 'market_run' | 'order' | 'manual' | 'adjustment'
 type AdjustmentMode = 'add' | 'subtract'
 
-const today = () => new Date().toISOString().split('T')[0]
+const today = () => getSuratTodayString()
 
 function money(value: number, digits = 0) {
     return `₹${Number(value || 0).toLocaleString('en-IN', {
@@ -160,7 +161,7 @@ function AddStockDialog({
         quality_label: '',
         godown: 'Main Godown',
         taka_count: '',
-        meters_per_taka: '',
+        meters_per_taka: '50',
         unit_label: 'taka',
         cost_per_meter: '',
         received_date: today(),
@@ -188,7 +189,7 @@ function AddStockDialog({
             quality_label: '',
             godown: 'Main Godown',
             taka_count: '',
-            meters_per_taka: '',
+            meters_per_taka: '50',
             unit_label: 'taka',
             cost_per_meter: '',
             received_date: today(),
@@ -222,7 +223,7 @@ function AddStockDialog({
         })
     }
 
-    const totalMeters = Number(form.taka_count || 0) * Number(form.meters_per_taka || 0)
+    const totalMeters = Number(form.taka_count || 0)
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -300,13 +301,25 @@ function AddStockDialog({
                             onChange={(event) => setForm((prev) => ({
                                 ...prev,
                                 taka_count: event.target.value,
-                                meters_per_taka: '1'
                             }))}
                             placeholder="e.g. 1250"
                         />
                     </div>
+                    <div className="space-y-1.5">
+                        <Label>Meters per Taka</Label>
+                        <Input
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            value={form.meters_per_taka}
+                            onChange={(event) => setForm((prev) => ({
+                                ...prev,
+                                meters_per_taka: event.target.value,
+                            }))}
+                            placeholder="e.g. 50"
+                        />
+                    </div>
                     <div className="hidden">
-                        <Input value={form.meters_per_taka} readOnly />
                         <Input value={form.unit_label} readOnly />
                     </div>
 

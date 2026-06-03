@@ -188,10 +188,13 @@ export function AddWorkerDialog({ onWorkerAdded }: AddWorkerDialogProps) {
     const handleRoleChange = (val: string) => {
         setValue('role', val)
         const defaultSalary = FIXED_ROLES.find(r => r.value === val)?.defaultSalary
-        if (defaultSalary !== undefined && val !== 'other') {
-            setValue('salary', defaultSalary)
-        } else if (val === 'other') {
-            setValue('salary', 0)
+        const currentSalary = Number(watchedSalary || 0)
+        if (currentSalary === 0) {
+            if (defaultSalary !== undefined && val !== 'other') {
+                setValue('salary', defaultSalary)
+            } else if (val === 'other') {
+                setValue('salary', 0)
+            }
         }
     }
 

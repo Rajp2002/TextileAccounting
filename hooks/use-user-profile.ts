@@ -30,29 +30,38 @@ export function useUserProfile() {
     const supabase = createClient()
     const mounted = useHydrated()
 
-    const query = useQuery({
-        queryKey: ['user_profile_id'], // Placeholder key we'll refresh
+    const userQuery = useQuery({
+        queryKey: ['auth_user_id'],
         enabled: mounted,
         queryFn: async () => {
             const { data: { user } } = await supabase.auth.getUser()
-            if (!user) throw new Error('Not authenticated')
+            return user?.id || null
+        },
+        staleTime: 1000 * 60 * 30,
+    })
 
+    const userId = userQuery.data
+
+    const query = useQuery({
+        queryKey: ['user_profile_id', userId],
+        enabled: mounted && !!userId,
+        queryFn: async () => {
             const { data, error } = await supabase
                 .from('profiles')
                 .select('org_id, role, full_name, phone, whatsapp_number, whatsapp_opted_in')
-                .eq('id', user.id)
+                .eq('id', userId!)
                 .single()
 
             if (error) throw error
-            return { ...data, userId: user.id }
+            return { ...data, userId }
         },
-        staleTime: 1000 * 60 * 30, // 30 minutes — profile rarely changes
+        staleTime: 1000 * 60 * 30,
     })
 
     return {
         ...query,
         data: mounted ? query.data : undefined,
-        isLoading: !mounted || query.isLoading,
-        isPending: !mounted || query.isPending,
+        isLoading: !mounted || userQuery.isLoading || query.isLoading,
+        isPending: !mounted || userQuery.isPending || query.isPending,
     }
 }

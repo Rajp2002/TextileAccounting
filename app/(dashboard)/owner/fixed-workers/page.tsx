@@ -23,6 +23,7 @@ import { Amount } from '@/components/ui/amount'
 import { AddWorkerDialog } from '@/components/AddWorkerDialog'
 import { WorkerExitDialog } from '@/components/advances/WorkerExitDialog'
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog'
+import { getSuratTodayString } from '@/lib/time'
 
 const ROLES = [
     { value: 'master', defaultSalary: 30000 },
@@ -636,7 +637,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const [formName, setFormName] = useState('')
     const [formRole, setFormRole] = useState('')
     const [formSalary, setFormSalary] = useState('')
-    const [formStartDate, setFormStartDate] = useState(new Date().toISOString().substring(0, 10))
+    const [formStartDate, setFormStartDate] = useState(getSuratTodayString())
     const [formPfEsiEnrolled, setFormPfEsiEnrolled] = useState(false)
     const [formEsiNumber, setFormEsiNumber] = useState('')
     const [formPfNumber, setFormPfNumber] = useState('')
@@ -696,7 +697,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormName('')
         setFormRole('')
         setFormSalary('')
-        setFormStartDate(new Date().toISOString().substring(0, 10))
+        setFormStartDate(getSuratTodayString())
         setFormPfEsiEnrolled(false)
         setFormEsiNumber('')
         setFormPfNumber('')
@@ -711,7 +712,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
         setFormName(worker.name)
         setFormRole(worker.role)
         setFormSalary(worker.monthly_salary.toString())
-        setFormStartDate(worker.start_date || new Date().toISOString().substring(0, 10))
+        setFormStartDate(worker.start_date || getSuratTodayString())
         setFormPfEsiEnrolled(worker.pf_esi_enrolled ?? worker.pf_esi_eligible ?? false)
         setFormEsiNumber(worker.esi_number || '')
         setFormPfNumber(worker.pf_number || '')
@@ -734,8 +735,11 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
     const handleRoleChange = (role: string) => {
         setFormRole(role)
         if (!editingWorker) {
-            const defaultSalary = ROLES.find((r) => r.value === role)?.defaultSalary
-            if (defaultSalary) setFormSalary(defaultSalary.toString())
+            const currentSalary = Number(formSalary || 0)
+            if (currentSalary === 0) {
+                const defaultSalary = ROLES.find((r) => r.value === role)?.defaultSalary
+                if (defaultSalary) setFormSalary(defaultSalary.toString())
+            }
         }
     }
 
@@ -946,7 +950,7 @@ function FixedWorkersTab({ orgId }: { orgId: string }) {
                                     type="date"
                                     value={formStartDate}
                                     onChange={(e) => setFormStartDate(e.target.value)}
-                                    max={new Date().toISOString().substring(0, 10)}
+                                    max={getSuratTodayString()}
                                 />
                             </div>
 

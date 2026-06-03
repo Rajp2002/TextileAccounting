@@ -1,5 +1,6 @@
 'use server'
 import { revalidatePath } from 'next/cache'
+import Decimal from 'decimal.js'
 import { requireRole } from '@/lib/auth'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { ensureReceivableForCommercialEntry } from '@/lib/commercials/receivables'
@@ -606,6 +607,13 @@ export async function createTakaStockLot(input: unknown) {
         }
     }
 
+    const meters = parsed.data.taka_count
+    const metersPerTaka = parsed.data.meters_per_taka
+    const takaCount = new Decimal(meters)
+        .dividedBy(new Decimal(metersPerTaka))
+        .toDecimalPlaces(4, Decimal.ROUND_HALF_UP)
+        .toNumber()
+
     const { data: lot, error } = await supabase
         .from('fabric_stock_lots')
         .insert({
@@ -616,12 +624,12 @@ export async function createTakaStockLot(input: unknown) {
             market_run_id: marketRunId,
             order_id: orderId,
             quote_id: quoteId,
-            original_taka_count: parsed.data.taka_count,
-            available_taka_count: parsed.data.taka_count,
-            meters_per_taka: parsed.data.meters_per_taka,
+            original_taka_count: takaCount,
+            available_taka_count: takaCount,
+            meters_per_taka: metersPerTaka,
             unit_label: parsed.data.unit_label,
-            original_meters: parsed.data.taka_count * parsed.data.meters_per_taka,
-            available_meters: parsed.data.taka_count * parsed.data.meters_per_taka,
+            original_meters: meters,
+            available_meters: meters,
             stock_purpose: sourceType === 'market_run'
                 ? 'sellable'
                 : sourceType === 'order'
@@ -644,8 +652,8 @@ export async function createTakaStockLot(input: unknown) {
             stock_lot_id: lot.id,
             movement_type: 'inward',
             movement_date: parsed.data.received_date,
-            taka_delta: parsed.data.taka_count,
-            meters_delta: parsed.data.taka_count * parsed.data.meters_per_taka,
+            taka_delta: takaCount,
+            meters_delta: meters,
             reference: sourceType === 'opening' ? 'Opening stock' : 'Stock inward',
             notes: parsed.data.notes || null,
             created_by: user.id,
