@@ -99,6 +99,58 @@ export async function addMachine(name: string, loomType?: string, customLabel?: 
     return { success: true }
 }
 
+/**
+ * Bulk-add machines in a single roundtrip.
+ * Used by the onboarding checklist to avoid N serial server-action calls.
+ */
+export async function addMachinesBulk(
+    machines: { name: string; loomType: string; customLabel: string }[]
+) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    if (!machines.length) return { error: 'No machines to add.' }
+    if (machines.length > 50) return { error: 'Cannot add more than 50 machines at once.' }
+
+    // Validate all entries upfront before any DB work
+    const rows: DbPrimitivePayload[] = []
+    for (const m of machines) {
+        const trimmedName = m.name.trim()
+        if (!trimmedName) return { error: `Machine name is required for every entry.` }
+
+        const row: DbPrimitivePayload = {
+            name: trimmedName,
+            org_id: profile.org_id,
+            status: 'inactive',
+        }
+
+        if (m.loomType) {
+            row.loom_type = m.loomType
+            if (m.loomType === 'other') {
+                if (!m.customLabel?.trim()) {
+                    return { error: `Custom label is required for "${trimmedName}".` }
+                }
+                row.loom_type_custom_label = m.customLabel.trim()
+            } else {
+                row.loom_type_custom_label = null
+            }
+        }
+
+        rows.push(row)
+    }
+
+    const { error } = await supabase
+        .from('machines')
+        .insert(rows)
+
+    if (error) {
+        console.error('Failed to bulk-add machines:', error)
+        return { error: 'Failed to add machines. Please try again.' }
+    }
+
+    revalidatePath('/owner/machines')
+    return { success: true, count: rows.length }
+}
 
 export async function updateMachine(machineId: string, name: string, loomType?: string | null, customLabel?: string | null) {
     const { profile } = await requireRole(['owner'])
@@ -1321,6 +1373,80 @@ export async function saveWorkerWhatsApp(data: {
 
         if (consentError) {
             console.error('Failed to save consent:', consentError);
+        }
+    }
+
+    revalidatePath('/owner/payroll')
+    revalidatePath('/owner/advances')
+    return { success: true }
+}
+
+/**
+ * Bulk-save WhatsApp details for multiple workers in a single roundtrip.
+ * Used by the onboarding checklist after bulk-inserting workers.
+ * Skips the per-worker "fetch existing consent" query since these are brand-new workers.
+ */
+export async function saveWorkerWhatsAppBulk(data: {
+    workers: { workerId: number; phone: string }[]
+    workerType: 'meter' | 'fixed'
+    language: 'en' | 'hi' | 'gu'
+    consentGiven: boolean
+}) {
+    const { profile, user } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    if (!data.workers.length) return { success: true }
+
+    const table = data.workerType === 'meter' ? 'workers' : 'fixed_workers'
+
+    // Validate all phones upfront
+    const validEntries = data.workers
+        .map(w => ({ ...w, cleanPhone: w.phone.replace(/\D/g, '') }))
+        .filter(w => w.cleanPhone)
+
+    const badPhones = validEntries.filter(w => w.cleanPhone.length !== 10)
+    if (badPhones.length > 0) {
+        return { error: 'All phone numbers must be exactly 10 digits.' }
+    }
+
+    // Batch update: update each worker's WhatsApp fields
+    // Supabase JS doesn't support bulk-update-by-different-IDs in one call,
+    // so we parallelize the updates on a single auth'd client (no extra auth overhead).
+    const updatePromises = validEntries.map(w =>
+        supabase
+            .from(table)
+            .update({ whatsapp_number: w.cleanPhone, whatsapp_language: data.language })
+            .eq('id', w.workerId)
+            .eq('org_id', profile.org_id)
+    )
+
+    const updateResults = await Promise.all(updatePromises)
+    const updateErrors = updateResults.filter(r => r.error)
+    if (updateErrors.length > 0) {
+        console.error('Some WhatsApp updates failed:', updateErrors.map(r => r.error))
+    }
+
+    // Batch upsert consent records (these are new workers, so no need to fetch existing)
+    if (data.consentGiven && validEntries.length > 0) {
+        const now = new Date().toISOString()
+        const consentRows = validEntries.map(w => ({
+            org_id: profile.org_id,
+            person_type: 'worker' as const,
+            person_id: String(w.workerId),
+            phone: w.cleanPhone,
+            consent_status: 'opted_in' as const,
+            consent_source: 'owner_worker_form' as const,
+            consented_at: now,
+            withdrawn_at: null,
+            captured_by_user_id: user.id,
+        }))
+
+        const { error: consentError } = await supabase
+            .from('notification_consents')
+            .upsert(consentRows, { onConflict: 'org_id, person_type, person_id, channel' })
+
+        if (consentError) {
+            console.error('Failed to bulk-save consents:', consentError)
         }
     }
 

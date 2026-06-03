@@ -566,6 +566,53 @@ export async function addMeterWorker(data: {
     return { success: true, workerId: inserted.id as number }
 }
 
+/**
+ * Bulk-add piece-rate workers in a single roundtrip.
+ * Used by the onboarding checklist to avoid N parallel server-action calls.
+ * Returns all inserted worker IDs for subsequent phone-number saves.
+ */
+export async function addMeterWorkersBulk(
+    workers: { name: string; pf_esi_enrolled: boolean }[]
+) {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+
+    if (!workers.length) return { error: 'No workers to add.' }
+    if (workers.length > 100) return { error: 'Cannot add more than 100 workers at once.' }
+
+    // Validate all names upfront
+    const rows = workers.map(w => {
+        const name = w.name.trim()
+        if (!name) return null
+        return {
+            name,
+            is_active: true,
+            pf_esi_enrolled: w.pf_esi_enrolled,
+            pf_esi_eligible: w.pf_esi_enrolled,
+            org_id: profile.org_id,
+        }
+    })
+
+    if (rows.some(r => r === null)) {
+        return { error: 'All workers must have a name.' }
+    }
+
+    const { data: inserted, error } = await supabase
+        .from('workers')
+        .insert(rows as NonNullable<(typeof rows)[number]>[])
+        .select('id')
+
+    if (error) {
+        console.error('Failed to bulk-add workers:', error)
+        return { error: 'Failed to add workers. Please try again.' }
+    }
+
+    return {
+        success: true,
+        workerIds: (inserted ?? []).map(r => r.id as number),
+    }
+}
+
 export async function addFixedWorker(data: {
     name: string
     role: string

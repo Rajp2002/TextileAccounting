@@ -14,9 +14,9 @@ import {
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
-import { addMachine, saveWorkerWhatsApp } from '@/app/(dashboard)/owner/actions'
+import { addMachinesBulk, saveWorkerWhatsAppBulk } from '@/app/(dashboard)/owner/actions'
 import { updateOrganizationProductionMode } from '@/app/(dashboard)/owner/actions'
-import { addMeterWorker } from '@/app/(dashboard)/supervisor/actions'
+import { addMeterWorkersBulk } from '@/app/(dashboard)/supervisor/actions'
 import { savePayrollConfig } from '@/app/(dashboard)/owner/payroll/actions'
 import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/actions/auth'
 import { TrialButton } from '@/components/billing/TrialButton'
@@ -170,19 +170,16 @@ function MachineForm({ onDone }: { onDone: () => void }) {
         }
 
         setSaving(true)
-        let allOk = true
-        for (const m of machinesToAdd) {
-            const res = await addMachine(m.name, m.loomType, m.customLabel)
-            if (res?.error) {
-                toast.error(`"${m.name}": ${res.error}`)
-                allOk = false
-            }
-        }
+        const res = await addMachinesBulk(machinesToAdd)
         setSaving(false)
-        if (allOk) {
-            toast.success(`Successfully added ${machinesToAdd.length} machine${machinesToAdd.length > 1 ? 's' : ''}!`)
-            onDone()
+
+        if (res?.error) {
+            toast.error(res.error)
+            return
         }
+
+        toast.success(`Successfully added ${machinesToAdd.length} machine${machinesToAdd.length > 1 ? 's' : ''}!`)
+        onDone()
     }
 
     const totalCount = loomGroups.reduce((acc, curr) => {
@@ -329,38 +326,33 @@ function WorkerForm({ onDone }: { onDone: () => void }) {
 
         setSaving(true)
 
-        // Phase 1: Insert all workers in parallel (eliminates N serial roundtrips)
-        const results = await Promise.all(
-            valid.map(worker => addMeterWorker({ name: worker.name.trim(), pf_esi_enrolled: false }))
+        // Phase 1: Bulk-insert all workers in a single roundtrip
+        const bulkRes = await addMeterWorkersBulk(
+            valid.map(w => ({ name: w.name.trim(), pf_esi_enrolled: false }))
         )
 
-        // Check for any insert errors
-        const errors = results
-            .map((res, i) => res?.error ? `"${valid[i].name}": ${res.error}` : null)
-            .filter(Boolean) as string[]
-
-        if (errors.length > 0) {
-            errors.forEach(e => toast.error(e))
+        if (bulkRes?.error) {
+            toast.error(bulkRes.error)
             setSaving(false)
             return
         }
 
-        // Phase 2: Save phone numbers in parallel (non-fatal — workers already created)
-        if (phoneWorkers.length > 0) {
-            await Promise.all(
-                valid.map((worker, i) => {
-                    const cleanPhone = worker.phone.replace(/\D/g, '')
-                    const workerId = results[i]?.workerId
-                    if (!cleanPhone || !workerId) return Promise.resolve()
-                    return saveWorkerWhatsApp({
-                        workerId,
-                        workerType: 'meter',
-                        phone: cleanPhone,
-                        language: 'hi',
-                        consentGiven: true,
-                    }).catch(err => console.warn(`Phone save failed for ${worker.name}:`, err))
-                })
-            )
+        const workerIds = bulkRes.workerIds ?? []
+
+        // Phase 2: Save phone numbers in bulk (non-fatal — workers already created)
+        if (phoneWorkers.length > 0 && workerIds.length === valid.length) {
+            const phonesToSave = valid
+                .map((worker, i) => ({ workerId: workerIds[i], phone: worker.phone }))
+                .filter(w => w.phone.replace(/\D/g, '') && w.workerId)
+
+            if (phonesToSave.length > 0) {
+                await saveWorkerWhatsAppBulk({
+                    workers: phonesToSave,
+                    workerType: 'meter',
+                    language: 'hi',
+                    consentGiven: true,
+                }).catch(err => console.warn('Bulk phone save failed:', err))
+            }
         }
 
         setSaving(false)
@@ -596,34 +588,6 @@ function PayrollCycleForm({ onDone }: { onDone: () => void }) {
                 </div>
             </div>
 
-            <div className="flex flex-col gap-3">
-                <p className="text-[10px] text-gray-400 font-medium uppercase tracking-tight text-center">Common Settings</p>
-                <div className="flex gap-2">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setCycleStartDay(15)
-                            setPayDateDay(10)
-                            setPayReminderDays(3)
-                        }}
-                        className="flex-1 py-2.5 rounded-xl border border-dashed border-violet-300 bg-violet-50/30 text-violet-700 text-xs font-bold hover:bg-violet-50 transition-colors flex items-center justify-center gap-2"
-                    >
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Surat Style
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setCycleStartDay(1)
-                            setPayDateDay(10)
-                            setPayReminderDays(3)
-                        }}
-                        className="flex-1 py-2.5 rounded-xl border border-dashed border-gray-300 bg-gray-50/30 text-gray-700 text-xs font-bold hover:bg-gray-50 transition-colors"
-                    >
-                        Month-end + 10th
-                    </button>
-                </div>
-            </div>
 
             <Button 
                 onClick={handleSave} 
