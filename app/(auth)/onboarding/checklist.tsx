@@ -612,37 +612,6 @@ const BASE_PLAN_ID    = process.env.NEXT_PUBLIC_RAZORPAY_PLAN_ID_BASE    ?? ''
 const PREMIUM_PLAN_ID = process.env.NEXT_PUBLIC_RAZORPAY_PLAN_ID_PREMIUM ?? ''
 
 function PlanSelectionForm({ onDone }: { onDone: () => void }) {
-    const [trialEnd, setTrialEnd] = useState<string | null>(null)
-
-    const trialEndFormatted = trialEnd
-        ? new Date(trialEnd).toLocaleDateString('en-IN', {
-            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-        })
-        : null
-
-    if (trialEnd) {
-        return (
-            <div className="pt-4 border-t border-gray-100 space-y-4">
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                    <p className="text-sm font-semibold text-emerald-900 flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4" />
-                        7-day Premium trial activated!
-                    </p>
-                    <p className="text-sm text-emerald-700 mt-1">
-                        Your trial ends on <strong>{trialEndFormatted}</strong>.
-                        You can subscribe anytime from the Billing page.
-                    </p>
-                </div>
-                <Button
-                    onClick={onDone}
-                    className="w-full bg-amber-600 hover:bg-amber-700 text-white h-10 font-semibold"
-                >
-                    Continue to dashboard <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-            </div>
-        )
-    }
-
     return (
         <div className="pt-4 border-t border-gray-100 space-y-4">
             <p className="text-sm text-gray-500">Choose how you&apos;d like to get started</p>
@@ -657,7 +626,7 @@ function PlanSelectionForm({ onDone }: { onDone: () => void }) {
                 <p className="text-xs text-emerald-700">Full Premium access for 7 days. No credit card required.</p>
                 <TrialButton
                     compact
-                    onSuccess={(end) => { setTrialEnd(end) }}
+                    onSuccess={() => onDone()}
                 />
             </div>
 
@@ -788,27 +757,7 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
         }
     }
 
-    const handleStepDone = (key: string) => {
-        // Update state LOCALLY — do NOT call getOnboardingStatus() here.
-        // It's a server action; Next.js triggers router.refresh() after it,
-        // which re-renders page.tsx on the server and causes the auto-redirect
-        // blank-page issue. Local state is sufficient: each form only calls
-        // this after its own save succeeds, so we know that step is complete.
-        const newStatus = { ...status, [key]: true }
-        newStatus.isComplete = newStatus.hasProductionMode && newStatus.hasMachine && newStatus.hasWorker && newStatus.hasPayrollConfig && newStatus.hasPlan
-        setStatus(newStatus)
-        if (newStatus.isComplete) {
-            toast.success('All done! 🎉 Click "Go to dashboard" to continue.')
-            setOpenStep(null)
-        } else {
-            const next = STEPS.find(s => !newStatus[s.key as keyof OnboardingStatus])
-            setOpenStep(next?.key ?? null)
-        }
-    }
-
-
-    const handleGoToDashboard = async () => {
-        if (!status.isComplete) return
+    const executeGoToDashboard = async () => {
         setCompleting(true)
 
         // Step 1: Mark onboarding complete in DB (non-fatal).
@@ -848,6 +797,31 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
         // Step 3: Hard navigation — gives middleware a fresh full-page request
         // so the DB fallback (reading onboarding_complete from DB) runs correctly.
         window.location.href = '/owner/today'
+    }
+
+    const handleStepDone = async (key: string) => {
+        // Update state LOCALLY — do NOT call getOnboardingStatus() here.
+        // It's a server action; Next.js triggers router.refresh() after it,
+        // which re-renders page.tsx on the server and causes the auto-redirect
+        // blank-page issue. Local state is sufficient: each form only calls
+        // this after its own save succeeds, so we know that step is complete.
+        const newStatus = { ...status, [key]: true }
+        newStatus.isComplete = newStatus.hasProductionMode && newStatus.hasMachine && newStatus.hasWorker && newStatus.hasPayrollConfig && newStatus.hasPlan
+        setStatus(newStatus)
+        if (newStatus.isComplete) {
+            toast.success('All done! Redirecting to dashboard...')
+            setOpenStep(null)
+            await executeGoToDashboard()
+        } else {
+            const next = STEPS.find(s => !newStatus[s.key as keyof OnboardingStatus])
+            setOpenStep(next?.key ?? null)
+        }
+    }
+
+
+    const handleGoToDashboard = async () => {
+        if (!status.isComplete) return
+        await executeGoToDashboard()
     }
 
     return (
