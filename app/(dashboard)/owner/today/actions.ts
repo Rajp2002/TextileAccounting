@@ -1,9 +1,10 @@
 'use server'
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { getPayrollCycleDetails, getPayrollCycleStatus, getPayrollMonthForDate, getPreviousPayrollMonth } from '@/lib/payroll-cycle'
-import { normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
+import { normalizeProductionMode, hasExplicitProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { formatToSurat, getSuratTodayString } from '@/lib/time'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -99,6 +100,17 @@ export type FactoryTodayData = {
         hasStockEntry: boolean
         hasMarketRun: boolean
     }
+
+    setupChecklist: {
+        hasProductionMode: boolean
+        hasMachine: boolean
+        hasQuality: boolean
+        hasMeterWorker: boolean
+        hasFixedWorker: boolean
+        hasSupervisor: boolean
+        hasPayrollConfig: boolean
+        hasPlan: boolean
+    }
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -146,6 +158,10 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         hasStockRes,
         hasMarketRunRes,
         orgSettingsRes,
+        hasFixedWorkerRes,
+        hasSupervisorRes,
+        subscriptionRes,
+        hasMeterWorkerRes,
     ] = await Promise.all([
         // 1. Production logs today
         supabase
@@ -277,9 +293,49 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
 
         supabase
             .from('organizations')
-            .select('production_mode')
+            .select('production_mode, onboarding_complete')
             .eq('id', orgId)
             .maybeSingle(),
+
+        // 17. Setup Checklist: Has Fixed Worker
+        (async () => {
+            try {
+                const { count } = await supabase.from('fixed_workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                return { count }
+            } catch {
+                return { count: 0 }
+            }
+        })(),
+
+        // 18. Setup Checklist: Has Supervisor
+        (async () => {
+            try {
+                const admin = createAdminClient()
+                const { count } = await admin.from('profiles').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('role', 'supervisor').limit(1)
+                return { count }
+            } catch {
+                return { count: 0 }
+            }
+        })(),
+
+        // 19. Setup Checklist: Has Plan (subscription)
+        supabase.from('org_subscriptions')
+            .select('status, plan_tier, current_end')
+            .eq('org_id', orgId)
+            .in('status', ['active', 'authenticated'])
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+
+        // 20. Setup Checklist: Has Meter Worker
+        (async () => {
+            try {
+                const { count } = await supabase.from('workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                return { count }
+            } catch {
+                return { count: 0 }
+            }
+        })(),
     ])
 
     const hasEstimate = hasAnyCount(hasEstimateRes)
@@ -288,7 +344,28 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
     const hasProductionLog = hasAnyCount(hasProductionRes)
     const hasStockEntry = hasAnyCount(hasStockRes)
     const hasMarketRun = hasAnyCount(hasMarketRunRes)
+    const hasFixedWorker = hasAnyCount(hasFixedWorkerRes)
+    const hasSupervisor = hasAnyCount(hasSupervisorRes)
+    const hasMeterWorker = hasAnyCount(hasMeterWorkerRes)
     const productionMode = normalizeProductionMode(orgSettingsRes.data?.production_mode)
+
+    // Setup checklist: production mode check mirrors onboarding logic
+    const setupHasProductionMode = orgSettingsRes.data?.onboarding_complete === true
+        ? true
+        : hasExplicitProductionMode(orgSettingsRes.data?.production_mode)
+    const setupHasMachine = (machinesRes.data ?? []).length > 0
+    const setupHasPayrollConfig = !!payrollConfigRes.data
+
+    // Check subscription validity
+    let setupHasPlan = false
+    if (subscriptionRes.data) {
+        const sub = subscriptionRes.data
+        if (sub.current_end) {
+            setupHasPlan = new Date(sub.current_end).getTime() > Date.now()
+        } else {
+            setupHasPlan = true
+        }
+    }
 
     // ── 1. Production ──────────────────────────────────────────────────────────
     const logs = productionRes.data ?? []
@@ -536,6 +613,16 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             hasProductionLog,
             hasStockEntry,
             hasMarketRun,
+        },
+        setupChecklist: {
+            hasProductionMode: setupHasProductionMode,
+            hasMachine: setupHasMachine,
+            hasQuality,
+            hasMeterWorker,
+            hasFixedWorker,
+            hasSupervisor,
+            hasPayrollConfig: setupHasPayrollConfig,
+            hasPlan: setupHasPlan,
         },
     }
 }

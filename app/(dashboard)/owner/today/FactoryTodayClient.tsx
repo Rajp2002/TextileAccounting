@@ -9,9 +9,8 @@ import { SoldNotDispatchedCard } from '@/components/factory-today/SoldNotDispatc
 import { PendingReceiptsCard } from '@/components/factory-today/PendingReceiptsCard'
 import { PayrollHisaabCard } from '@/components/factory-today/PayrollHisaabCard'
 import { QuickActionsCard } from '@/components/factory-today/QuickActionsCard'
-import { ActivationChecklistCard } from '@/components/factory-today/ActivationChecklistCard'
+import { SetupPanel, SetupFloatingButton } from '@/components/factory-today/SetupPanel'
 import { CheckCircle2, Factory } from 'lucide-react'
-import { getWorkflowVisibility } from '@/lib/production-mode'
 import { cn } from '@/lib/utils'
 
 interface FactoryTodayClientProps {
@@ -70,7 +69,6 @@ function AllClearState() {
 export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
     const data = initialData
     const { actionCounts } = data
-    const visibility = getWorkflowVisibility(data.productionMode)
 
     const displayDate = getDisplayDate(data.date)
     const dateLabel = displayDate.toLocaleDateString('en-IN', {
@@ -87,8 +85,6 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
     })
 
     // All-clear: every actionable item must be resolved.
-    // Adding night shift to the check would be too strict (many factories run day-only).
-    // We check: production logged, all looms assigned, no risks, no pending dispatch, no pending advances.
     const isAllClear =
         data.production.hasLogsToday &&
         data.machines.unassigned === 0 &&
@@ -98,21 +94,20 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
         data.dispatch.pendingReceipts.length === 0 &&
         (!data.payroll.isPayWindowOpen || data.payroll.unsettledWorkerCount === 0) &&
         data.payroll.pendingAdvanceTotal === 0
-    const checklist = data.activationChecklist || {
-        hasEstimate: false,
-        hasQuality: false,
-        hasOrder: false,
-        hasProductionLog: false,
-        hasStockEntry: false,
-        hasMarketRun: false,
-    }
 
-    const isCollapsed = visibility.estimator
-        ? checklist.hasEstimate && checklist.hasQuality
-        : checklist.hasMarketRun || checklist.hasStockEntry
-    const isHidden = visibility.estimator
-        ? checklist.hasEstimate && checklist.hasQuality && (checklist.hasOrder || checklist.hasProductionLog)
-        : (checklist.hasMarketRun || checklist.hasStockEntry) && checklist.hasProductionLog
+    // Setup panel visibility — check if any setup step is incomplete
+    // Note: fixed_worker skip is handled client-side in SetupPanel via localStorage
+    const setupChecklist = data.setupChecklist
+    const hasAnyIncompleteSetup = !setupChecklist.hasProductionMode ||
+        !setupChecklist.hasMachine ||
+        !setupChecklist.hasQuality ||
+        !setupChecklist.hasMeterWorker ||
+        !setupChecklist.hasSupervisor ||
+        !setupChecklist.hasPayrollConfig ||
+        !setupChecklist.hasPlan
+    // hasFixedWorker is skippable so we don't include it in the server check —
+    // the SetupPanel component handles it via localStorage
+    const showSetupPanel = hasAnyIncompleteSetup || !setupChecklist.hasFixedWorker
 
     return (
         <div className="space-y-6">
@@ -159,11 +154,6 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                 </div>
             </div>
 
-            {/* Activation Checklist */}
-            {!isHidden && (
-                <ActivationChecklistCard checklist={checklist} isCollapsed={isCollapsed} productionMode={data.productionMode} />
-            )}
-
             {/* KPI Strip */}
             <TodayKpiStrip
                 productionMode={data.productionMode}
@@ -176,9 +166,14 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
             {/* All clear state */}
             {isAllClear && <AllClearState />}
 
-            {/* Main Grid */}
+            {/* Main Grid — 3 columns when setup panel is active, 2 columns otherwise */}
             {!isAllClear && (
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className={cn(
+                    'grid gap-4',
+                    showSetupPanel
+                        ? 'lg:grid-cols-[1fr_1fr_340px]'
+                        : 'lg:grid-cols-2'
+                )}>
                     {/* Left Column */}
                     <div className="space-y-4">
                         <ProductionStatusCard production={data.production} />
@@ -186,19 +181,37 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                         <WorkAtRiskCard workAtRisk={data.workAtRisk} productionMode={data.productionMode} />
                     </div>
 
-                    {/* Right Column */}
+                    {/* Middle Column */}
                     <div className="space-y-4">
                         <SoldNotDispatchedCard sales={data.dispatch.soldNotDispatched} />
                         <PendingReceiptsCard receipts={data.dispatch.pendingReceipts} />
                         <PayrollHisaabCard payroll={data.payroll} />
                         <QuickActionsCard productionMode={data.productionMode} />
                     </div>
+
+                    {/* Right Column — Setup Panel (desktop only) */}
+                    {showSetupPanel && (
+                        <SetupPanel checklist={setupChecklist} />
+                    )}
                 </div>
             )}
 
-            {/* Quick Actions always visible on all-clear */}
-            {isAllClear && (
+            {/* Setup panel for all-clear state — still show setup if incomplete */}
+            {isAllClear && showSetupPanel && (
+                <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
+                    <QuickActionsCard productionMode={data.productionMode} />
+                    <SetupPanel checklist={setupChecklist} />
+                </div>
+            )}
+
+            {/* Quick Actions always visible on all-clear (without setup panel) */}
+            {isAllClear && !showSetupPanel && (
                 <QuickActionsCard productionMode={data.productionMode} />
+            )}
+
+            {/* Mobile floating setup button */}
+            {showSetupPanel && (
+                <SetupFloatingButton checklist={setupChecklist} />
             )}
         </div>
     )
