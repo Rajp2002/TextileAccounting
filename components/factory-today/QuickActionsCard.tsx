@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Calculator, Package, Truck, DollarSign, Store, Zap } from 'lucide-react'
 import { getWorkflowVisibility, type ProductionMode, type WorkflowKey } from '@/lib/production-mode'
+import { useTranslation } from '@/lib/i18n/context'
 
 const actions = [
     {
@@ -62,14 +63,15 @@ const actions = [
 ]
 
 export function QuickActionsCard({ productionMode }: { productionMode?: ProductionMode | null }) {
+    const { tx } = useTranslation()
     const visibility = getWorkflowVisibility(productionMode)
     const visibleActions = actions.filter((action) => visibility[action.workflow as WorkflowKey])
 
     return (
-        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
+        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden" data-i18n-skip="true">
             <div className="border-b border-hairline px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink">Quick Actions</p>
-                <p className="text-sm font-bold text-ink">Jump to a workflow</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink">{tx("Quick Actions")}</p>
+                <p className="text-sm font-bold text-ink">{tx("Jump to a workflow")}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3">
@@ -87,9 +89,9 @@ export function QuickActionsCard({ productionMode }: { productionMode?: Producti
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-ink group-hover:text-saffron transition-colors">
-                                    {action.label}
+                                    {tx(action.label)}
                                 </p>
-                                <p className="text-[11px] text-body">{action.description}</p>
+                                <p className="text-[11px] text-body">{tx(action.description)}</p>
                             </div>
                         </Link>
                     )

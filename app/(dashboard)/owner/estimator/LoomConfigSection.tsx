@@ -96,15 +96,19 @@ export function LoomConfigSection({
     const isOtherKwMissing  = isOther && (!loomPowerKw || loomPowerKw <= 0)
 
     return (
-        <div className="rounded-xl border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50/40 p-4 space-y-4">
+        <div className="space-y-4 rounded-[13px] border border-[#EFD7A4] bg-[#FFFBF2] p-4">
             {/* ── Header ── */}
-            <div className="flex items-center gap-2">
-                <Cpu className="h-4 w-4 text-violet-600" />
-                <p className="text-[11px] uppercase tracking-widest font-black text-violet-700">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-[9px] border border-[#EFD7A4] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]">
+                        <Cpu className="h-4 w-4" />
+                    </span>
+                    <p className="text-[11px] uppercase tracking-[0.06em] font-semibold text-[var(--color-warning-amber)]">
                     Loom Type & Output
-                </p>
+                    </p>
+                </div>
                 {loomType && (
-                    <span className="ml-auto text-[10px] font-bold bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full border border-violet-200">
+                    <span className="text-[10px] font-semibold bg-white text-[var(--color-warning-amber)] px-2.5 py-1 rounded-full border border-[#EFD7A4] sm:ml-auto">
                         {LOOM_TYPE_DEFAULTS[loomType].label}
                     </span>
                 )}
@@ -112,7 +116,7 @@ export function LoomConfigSection({
 
             {/* ── Loom Type Dropdown ── */}
             <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase tracking-wider font-semibold text-violet-700/80">
+                <Label className="text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-warning-amber)]">
                     Loom Type
                 </Label>
                 <select
@@ -122,7 +126,7 @@ export function LoomConfigSection({
                         const val = e.target.value as LoomType | ''
                         onSetLoomType(val === '' ? null : val)
                     }}
-                    className="w-full h-10 px-3 text-sm font-semibold border border-violet-200 rounded-xl bg-white focus:border-violet-400 focus:ring-1 focus:ring-violet-300/30 focus:outline-none transition-all appearance-none cursor-pointer text-slate-700"
+                    className="w-full h-11 px-3 text-sm font-semibold border border-[#EFD7A4] rounded-[10px] bg-white focus:border-[var(--color-warning-amber)] focus:ring-1 focus:ring-[var(--color-warning-amber)]/20 focus:outline-none transition-all appearance-none cursor-pointer text-[var(--color-ink)]"
                     style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem', paddingRight: '2.5rem' }}
                 >
                     {LOOM_TYPE_OPTIONS.map(opt => (
@@ -130,7 +134,7 @@ export function LoomConfigSection({
                     ))}
                 </select>
                 {!loomType && (
-                    <p className="text-[9.5px] text-violet-600/70 font-medium">
+                    <p className="text-[11px] text-[var(--color-muted)] font-medium">
                         Select your loom type to auto-fill RPM and power draw defaults.
                     </p>
                 )}
@@ -138,15 +142,15 @@ export function LoomConfigSection({
 
             {/* ── RPM + Power + Hours grid ── */}
             {loomType && (
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     {/* RPM */}
                     <div className="space-y-1.5">
                         <div className="flex items-center gap-1">
-                            <Label className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
+                            <Label className="text-[10px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)]">
                                 RPM
                             </Label>
                             {loomRpmIsCustomised && (
-                                <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-amber-300 bg-amber-50 text-amber-700 font-bold ml-auto">
+                                <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-[#EFD7A4] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] font-bold ml-auto">
                                     custom
                                 </Badge>
                             )}
@@ -166,7 +170,7 @@ export function LoomConfigSection({
                                 className={`h-9 text-xs font-mono font-bold text-center pr-10 bg-white transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-xl ${
                                     isOtherRpmMissing
                                         ? 'border-red-300 focus:border-red-400 focus:ring-red-200/30'
-                                        : 'border-violet-200 focus:border-violet-400 focus:ring-violet-200/30'
+                                        : 'border-[#EFD7A4] focus:border-[var(--color-warning-amber)] focus:ring-[var(--color-warning-amber)]/20'
                                 }`}
                             />
                             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">
@@ -181,7 +185,7 @@ export function LoomConfigSection({
                         {!isOther && loomRpmIsCustomised && classDefaults?.rpm && (
                             <button
                                 onClick={() => onSetLoomRpm(classDefaults.rpm)}
-                                className="text-[9px] text-violet-500 hover:text-violet-700 underline flex items-center gap-0.5"
+                                className="text-[9px] text-[var(--color-warning-amber)] hover:text-[var(--color-yarn-orange-dark)] underline flex items-center gap-0.5"
                             >
                                 <RotateCcw className="h-2.5 w-2.5" /> Reset to {classDefaults.rpm}
                             </button>
@@ -191,11 +195,11 @@ export function LoomConfigSection({
                     {/* Power kW */}
                     <div className="space-y-1.5">
                         <div className="flex items-center gap-1">
-                            <Label className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
+                            <Label className="text-[10px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)]">
                                 Power
                             </Label>
                             {loomPowerKwIsCustomised && (
-                                <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-amber-300 bg-amber-50 text-amber-700 font-bold ml-auto">
+                                <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 border-[#EFD7A4] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] font-bold ml-auto">
                                     custom
                                 </Badge>
                             )}
@@ -215,7 +219,7 @@ export function LoomConfigSection({
                                 className={`h-9 text-xs font-mono font-bold text-center pr-10 bg-white transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-xl ${
                                     isOtherKwMissing
                                         ? 'border-red-300 focus:border-red-400 focus:ring-red-200/30'
-                                        : 'border-violet-200 focus:border-violet-400 focus:ring-violet-200/30'
+                                        : 'border-[#EFD7A4] focus:border-[var(--color-warning-amber)] focus:ring-[var(--color-warning-amber)]/20'
                                 }`}
                             />
                             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">
@@ -230,7 +234,7 @@ export function LoomConfigSection({
                         {!isOther && loomPowerKwIsCustomised && classDefaults?.powerKw && (
                             <button
                                 onClick={() => onSetLoomPowerKw(classDefaults.powerKw)}
-                                className="text-[9px] text-violet-500 hover:text-violet-700 underline flex items-center gap-0.5"
+                                className="text-[9px] text-[var(--color-warning-amber)] hover:text-[var(--color-yarn-orange-dark)] underline flex items-center gap-0.5"
                             >
                                 <RotateCcw className="h-2.5 w-2.5" /> Reset to {classDefaults.powerKw}
                             </button>
@@ -239,7 +243,7 @@ export function LoomConfigSection({
 
                     {/* Hours per Shift */}
                     <div className="space-y-1.5">
-                        <Label className="text-[10px] uppercase tracking-wider font-semibold text-slate-500">
+                        <Label className="text-[10px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)]">
                             Shift Hrs
                         </Label>
                         <div className="relative group">
@@ -252,7 +256,7 @@ export function LoomConfigSection({
                                 value={hoursPerShift ?? ''}
                                 placeholder="12"
                                 onChange={e => onSetHoursPerShift(e.target.value === '' ? null : Number(e.target.value))}
-                                className="h-9 text-xs font-mono font-bold text-center pr-10 bg-white border-violet-200 focus:border-violet-400 focus:ring-1 focus:ring-violet-200/30 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-xl"
+                                className="h-9 text-xs font-mono font-bold text-center pr-10 bg-white border-[#EFD7A4] focus:border-[var(--color-warning-amber)] focus:ring-1 focus:ring-[var(--color-warning-amber)]/20 transition-all shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[10px]"
                             />
                             <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold pointer-events-none">
                                 h
@@ -265,14 +269,14 @@ export function LoomConfigSection({
 
             {/* ── Daily Output Preview ── */}
             {loomType && (
-                <div className="flex items-center justify-between bg-white/80 border border-violet-100 rounded-xl px-4 py-3">
+                <div className="flex flex-col gap-3 rounded-[12px] border border-[#EFD7A4] bg-white/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <p className="text-[9px] uppercase font-black text-violet-600/70 tracking-wider mb-0.5">
+                        <p className="text-[9px] uppercase font-semibold text-[var(--color-warning-amber)] tracking-[0.06em] mb-0.5">
                             Est. Daily Output per Loom
                         </p>
                         {dailyOutputM !== null ? (
                             <div className="flex items-baseline gap-1">
-                                <span className="text-2xl font-black font-mono text-violet-700 leading-none">
+                                <span className="text-2xl font-semibold font-mono text-[var(--color-warning-amber)] leading-none">
                                     {Math.round(dailyOutputM).toLocaleString('en-IN')}
                                 </span>
                                 <span className="text-xs font-bold text-slate-500">m/loom/day</span>
@@ -292,7 +296,7 @@ export function LoomConfigSection({
                         <button
                             id="suggest-output-btn"
                             onClick={() => onSuggestOutput(Math.round(dailyOutputM))}
-                            className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-700 text-white text-[10px] font-bold px-3 py-2 rounded-lg transition-colors shadow-sm shrink-0"
+                            className="flex items-center justify-center gap-1.5 bg-[var(--color-warning-amber)] hover:bg-[var(--color-yarn-orange)] text-white text-[10px] font-bold px-3 py-2 rounded-lg transition-colors shadow-sm shrink-0"
                             title="Push this value into 'Avg Daily Output' in the Overhead section"
                         >
                             <Zap className="h-3 w-3" />
@@ -305,8 +309,8 @@ export function LoomConfigSection({
 
             {/* ── Context note: why this matters ── */}
             {loomType && (
-                <div className="bg-violet-50/60 border border-violet-100 rounded-lg px-3 py-2">
-                    <p className="text-[9.5px] text-violet-700/80 font-medium leading-snug">
+                <div className="bg-white/65 border border-[#EFD7A4] rounded-lg px-3 py-2">
+                    <p className="text-[10px] text-[var(--color-muted)] font-medium leading-snug">
                         <span className="font-black">Note:</span> Loom type here is a costing input — independent of which machines are assigned to this order. 
                         Use the <span className="font-bold">Suggest →</span> button to sync daily output into the Overhead section so overhead/m and electricity/m 
                         reflect your actual loom class, not a generic default.

@@ -1,0 +1,65 @@
+{
+  "quality": "AMY_QA_20260603_0218 QA Sub-Taka Quality",
+  "godown": "Main Godown",
+  "lotMetersBefore": 0,
+  "lotTakasBefore": 0,
+  "createdMeters": 25,
+  "createdTakas": 0.5,
+  "costPerM": 28,
+  "saleMeters": 10,
+  "saleTakas": 0.2,
+  "salePricePerM": 42,
+  "lotId": "5485d113-55c6-4fa9-9edc-f98eb9cd3f0b",
+  "beforeSale": {
+    "available_meters": 25,
+    "available_taka_count": 25,
+    "meters_per_taka": 1
+  },
+  "saleId": "d9a06b19-26d8-4157-8c52-a744688ffcff",
+  "receivableId": "8f2a2e70-517d-474b-947d-5c15cd04385f",
+  "afterSale": {
+    "available_meters": 15,
+    "available_taka_count": 15,
+    "pending_dispatch_meters": 10,
+    "dispatch_status": "not_dispatched",
+    "receivable_amount": 420,
+    "receivable_due_date": null
+  },
+  "dispatchId": "e9cedcfd-31a5-4da2-a138-3a5d05df6458",
+  "dispatchNumber": 1,
+  "visibleBatchId": "SS-D9A06B19-1",
+  "afterDispatch": {
+    "pending_dispatch_meters": 0,
+    "dispatched_meters": 10,
+    "status": "in_transit",
+    "tracking_token": null,
+    "receivable_due_date": "2026-06-17",
+    "dispatch_display_date": "02 Jun 2026",
+    "dispatch_id": "e9cedcfd-31a5-4da2-a138-3a5d05df6458"
+  },
+  "afterReceipt": {
+    "sale_dispatch_status": "received",
+    "dispatch_status": "delivered",
+    "qty_meters_received": 10,
+    "receivable_balance": 420,
+    "tracking_token": null
+  },
+  "afterPayment": {
+    "receivable_status": "paid",
+    "received_amount": 420,
+    "balance_amount": 0,
+    "payment_receipt_id": "2a64e304-32f6-4991-9a44-f71f9f94a8da",
+    "submitted_payment_date": "2026-06-03",
+    "persisted_payment_date": "2026-06-02"
+  },
+  "final": {
+    "lot_available_meters": 15,
+    "lot_available_taka_count": 15,
+    "sale_meters_sold": 10,
+    "sale_taka_sold": 10,
+    "pending_dispatch_meters": 0,
+    "dispatched_meters": 10,
+    "received_meters": 10,
+    "receivable_balance": 0
+  }
+}

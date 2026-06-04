@@ -1,0 +1,28 @@
+{
+  "captured_at": "2026-06-02T21:32:50.947Z",
+  "browser_warning_error_count": 0,
+  "browser_warning_error_entries": [],
+  "console_expectations": {
+    "hydration_errors": 0,
+    "supabase_getSession_warnings": 0,
+    "radix_warnings": 0,
+    "unhandled_react_errors": 0
+  },
+  "network_server_summary_sanitized": [
+    "Development server route/action requests completed with 200/303 statuses for tested workflows.",
+    "Server terminal repeatedly logged failed proxy attempts to Sentry ingest with read ECONNRESET.",
+    "Server terminal logged one generic aborted ECONNRESET during owner route smoke.",
+    "No raw DB/Postgres error text was observed in captured client UI screenshots; DB query errors only occurred in QA read-only probes for non-existent/incorrectly selected evidence tables/columns.",
+    "npm run lint completed with exit code 0."
+  ],
+  "finding_ids": [
+    "BUG-001",
+    "BUG-002",
+    "BUG-003",
+    "BUG-004",
+    "BUG-005",
+    "BUG-006",
+    "BUG-007",
+    "BUG-008"
+  ]
+}

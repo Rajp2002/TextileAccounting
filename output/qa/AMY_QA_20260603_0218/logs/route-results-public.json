@@ -1,0 +1,674 @@
+[
+  {
+    "label": "AUTH-01 landing logged out",
+    "route": "/",
+    "finalUrl": "http://localhost:3000/",
+    "navError": null,
+    "info": {
+      "body": "Workflow Pricing FAQ Log in Request Pilot BUILT FOR GREY FABRIC WEAVING FACTORIES One system for the whole factory floor. No notebook. No WhatsApp. No missed meters. Weavly connects fabric estimates, loom assignments, shift meter logs, dispatches, advances, and payroll so owners know what happened on the floor without chasing registers and WhatsApp messages. Request pilot access See factory workflow 7-day Premium trial No credit card Floor-ready PWA Already have an account? Log in|Supervisor join W 01 02 03 04 OWNER FLOOR VIEW Shift production workspace Synced Today, 8 May 01 Estimate 02 Assign looms 03 Log shift 04 Settle Loom 04 Day Canvas Shine 100D 186 m On pace Loom 11 Night Order #214 142 m Needs worker Loom 18 Day Market run 201 m Payroll ready ORDER #214 PROGRESS 34,820 m of 50,000",
+      "h1": "One system for the whole factory floor. No notebook. No WhatsApp. No missed meters.",
+      "h2": "Stop running the factory from registers, memory, and missed calls.",
+      "href": "http://localhost:3000/",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/002-auth-01-landing-logged-out.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "AUTH-02 login page",
+    "route": "/login",
+    "finalUrl": "http://localhost:3000/login",
+    "navError": null,
+    "info": {
+      "body": "English Welcome back Sign in to your Weavly account Email Password Forgot password? Sign in Don't have an account? Start as owner or join with a code Weavly © 2026• Built for India",
+      "h1": "Welcome back",
+      "h2": "",
+      "href": "http://localhost:3000/login",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/003-auth-02-login-page.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "AUTH-03 signup page",
+    "route": "/signup",
+    "finalUrl": "http://localhost:3000/signup",
+    "navError": null,
+    "info": {
+      "body": "English Create your factory Get started as a factory owner Factory name Your name Email Phone Number +91 Password Referral Code (Optional) I agree to the Terms of Service and Privacy Policy Create factory Already have an account? Log in Joining as a supervisor? Enter your join code → Weavly © 2026• Built for India",
+      "h1": "Create your factory",
+      "h2": "",
+      "href": "http://localhost:3000/signup",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/004-auth-03-signup-page.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "AUTH-04 join page",
+    "route": "/join",
+    "finalUrl": "http://localhost:3000/join",
+    "navError": null,
+    "info": {
+      "body": "English Join your factory Enter your join code to get started Join code Already have an account? Log in Creating a factory? Start as owner → Weavly © 2026• Built for India",
+      "h1": "Join your factory",
+      "h2": "",
+      "href": "http://localhost:3000/join",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/005-auth-04-join-page.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "AUTH-05 forgot password page",
+    "route": "/forgot-password",
+    "finalUrl": "http://localhost:3000/forgot-password",
+    "navError": null,
+    "info": {
+      "body": "English Reset your password Enter your account email Email Send instructions Back to login Weavly © 2026• Built for India",
+      "h1": "Reset your password",
+      "h2": "",
+      "href": "http://localhost:3000/forgot-password",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/006-auth-05-forgot-password-page.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "AUTH-06 reset password invalid state",
+    "route": "/reset-password",
+    "finalUrl": "http://localhost:3000/reset-password",
+    "navError": null,
+    "info": {
+      "body": "English Reset link expired Request a fresh link This reset link is invalid or expired. Please request a new password reset link. Request new link Back to login Weavly © 2026• Built for India",
+      "h1": "Reset link expired",
+      "h2": "",
+      "href": "http://localhost:3000/reset-password",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/007-auth-06-reset-password-invalid-state.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "AUTH-07 terms page",
+    "route": "/terms",
+    "finalUrl": "http://localhost:3000/terms",
+    "navError": null,
+    "info": {
+      "body": "Terms Privacy Refunds Home Back to Weavly Terms of Service The operating agreement for using Weavly: what the platform provides, what factory owners remain responsible for, and how billing, data, and disputes are handled. Last updated March 25, 2026 Trial 7 days with all features Billing Monthly plans plus GST Data export 30-day window after termination Jurisdiction Surat, Gujarat, India Terms Privacy Refunds In this document Service Description Account Registration Subscription & Payment Data Ownership Acceptable Use Labor Compliance Analytics Disclaimer Liability Intellectual Property Termination Indemnification Modifications Disputes Severability Contact These Terms of Service (\"Terms\") govern your use of the Weavly platform (\"Service\"), operated by Weavly (\"we\", \"us\", \"our\"). By creati",
+      "h1": "Terms of Service",
+      "h2": "1. Service Description",
+      "href": "http://localhost:3000/terms",
+      "title": "Terms of Service — Weavly"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/008-auth-07-terms-page.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "AUTH-08 privacy page",
+    "route": "/privacy",
+    "finalUrl": "http://localhost:3000/privacy",
+    "navError": null,
+    "info": {
+      "body": "Terms Privacy Refunds Home Back to Weavly Privacy Policy A plain-language view of what Weavly collects, why it is needed for factory operations, and how worker and business data is protected under Indian privacy law. Last updated April 26, 2026 Primary law DPDP Act 2023 Data role Weavly acts as processor for factory owners Security model Tenant isolation, RLS, encryption, and access codes Grievance contact privacy@weavly.app Terms Privacy Refunds In this document Data We Collect Purpose Consent Storage & Security Retention Your Rights Processors Breach Notification Children's Data Offline Data Grievance Redressal Changes Governing Law Weavly (\"we\", \"us\", \"our\") is committed to protecting the personal data of our users. This Privacy Policy explains how we collect, use, store, and protect yo",
+      "h1": "Privacy Policy",
+      "h2": "1. Data We Collect",
+      "href": "http://localhost:3000/privacy",
+      "title": "Privacy Policy — Weavly"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/009-auth-08-privacy-page.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "AUTH-09 refund policy page",
+    "route": "/refund-policy",
+    "finalUrl": "http://localhost:3000/refund-policy",
+    "navError": null,
+    "info": {
+      "body": "Terms Privacy Refunds Home Back to Weavly Refund & Cancellation Policy Clear rules for trials, cancellations, first-payment refunds, setup services, and data export after a subscription ends. Last updated March 25, 2026 Free trial 7 days, no payment required First payment refund Full refund within 7 days Refund timing 5-7 business days to original method Support support@weavly.app Terms Privacy Refunds In this document Free Trial Cancellation Refund Policy Plan Downgrades Data Export Exceptional Circumstances Changes Contact This Refund & Cancellation Policy applies to all paid subscriptions and services offered by Weavly. We aim to make our policies transparent and fair in compliance with the Consumer Protection Act, 2019 and the Consumer Protection (E-Commerce) Rules, 2020. 1. Free Trial",
+      "h1": "Refund & Cancellation Policy",
+      "h2": "1. Free Trial",
+      "href": "http://localhost:3000/refund-policy",
+      "title": "Refund & Cancellation Policy — Weavly"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/010-auth-09-refund-policy-page.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "TRACK-01 invalid token logged out",
+    "route": "/track/not-a-real-token",
+    "finalUrl": "http://localhost:3000/feature-archived",
+    "navError": null,
+    "info": {
+      "body": "Feature archived for Phase 1 This module is preserved for a future release, but it is not active in the focused Phase 1 workflow. Back to production overview",
+      "h1": "Feature archived for Phase 1",
+      "h2": "",
+      "href": "http://localhost:3000/feature-archived",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/011-track-01-invalid-token-logged-out.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-01 owner protected route logged out",
+    "route": "/owner/today",
+    "finalUrl": "http://localhost:3000/owner/today",
+    "navError": null,
+    "info": {
+      "body": "Ashok textile pvt Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings Bobby b English Log out Factory Today WEDNESDAY 3 Jun 1 critical 1 warnings Your factory is ready. Start with your first estimate. Create your first estimate to add a fabric quality, calculate pricing, and see expected profit. Create first estimate Start first market run Plan fabric that will create expected godown stock. Create first estimate Calculate pricing and expected profit. Add/select first quality High Priority This happens inside the estimator flow. Convert quote to order Move from estimate to production. Log first production Record meters produced o",
+      "h1": "Factory Today",
+      "h2": "Your factory is ready. Start with your first estimate.",
+      "href": "http://localhost:3000/owner/today",
+      "title": "Factory Today — Weavly"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/012-sec-01-owner-protected-route-logged-out.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-02 supervisor protected route logged out",
+    "route": "/supervisor/dashboard",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "Ashok textile pvt Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms Bobby b English Log out PULL TO REFRESH Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs SYNCING FLOOR DATA... Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/013-sec-02-supervisor-protected-route-logged-out.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "TRACK-01R invalid token logged out retest",
+    "route": "/track/not-a-real-token",
+    "finalUrl": "http://localhost:3000/login",
+    "navError": null,
+    "info": {
+      "body": "English Welcome back Sign in to your Weavly account Email Password Forgot password? Sign in Don't have an account? Start as owner or join with a code Weavly © 2026• Built for India",
+      "h1": "Welcome back",
+      "h2": "",
+      "href": "http://localhost:3000/login",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/015-track-01r-invalid-token-logged-out-retest.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-01R owner protected route logged out retest",
+    "route": "/owner/today",
+    "finalUrl": "http://localhost:3000/login",
+    "navError": null,
+    "info": {
+      "body": "English Welcome back Sign in to your Weavly account Email Password Forgot password? Sign in Don't have an account? Start as owner or join with a code Weavly © 2026• Built for India",
+      "h1": "Welcome back",
+      "h2": "",
+      "href": "http://localhost:3000/login",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/016-sec-01r-owner-protected-route-logged-out-retest.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-02R supervisor protected route logged out retest",
+    "route": "/supervisor/dashboard",
+    "finalUrl": "http://localhost:3000/login",
+    "navError": null,
+    "info": {
+      "body": "English Welcome back Sign in to your Weavly account Email Password Forgot password? Sign in Don't have an account? Start as owner or join with a code Weavly © 2026• Built for India",
+      "h1": "Welcome back",
+      "h2": "",
+      "href": "http://localhost:3000/login",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/017-sec-02r-supervisor-protected-route-logged-out-retest.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-03R owner commercials logged out retest",
+    "route": "/owner/commercials",
+    "finalUrl": "http://localhost:3000/login",
+    "navError": null,
+    "info": {
+      "body": "English Welcome back Sign in to your Weavly account Email Password Forgot password? Sign in Don't have an account? Start as owner or join with a code Weavly © 2026• Built for India",
+      "h1": "Welcome back",
+      "h2": "",
+      "href": "http://localhost:3000/login",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/018-sec-03r-owner-commercials-logged-out-retest.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SUP-01 supervisor dashboard QA",
+    "route": "/supervisor/dashboard",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/052-sup-01-supervisor-dashboard-qa.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SUP-02 supervisor production route QA",
+    "route": "/supervisor/production",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/053-sup-02-supervisor-production-route-qa.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SUP-03 supervisor workers route QA",
+    "route": "/supervisor/workers",
+    "finalUrl": "http://localhost:3000/supervisor/workers",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out Worker Directory Meter workers, Upaad, and payroll records Add Worker Meter Workers No meter workers yet. Add workers to start linking shift meters, Upaad, and payroll records.",
+      "h1": "Worker Directory",
+      "h2": "Meter Workers",
+      "href": "http://localhost:3000/supervisor/workers",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/054-sup-03-supervisor-workers-route-qa.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SUP-04 supervisor attendance route QA",
+    "route": "/supervisor/attendance",
+    "finalUrl": "http://localhost:3000/supervisor/attendance",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out Daily Attendance Fixed salary staff Today PRESENT 0/0 No day-to-day workers Add daily workers to start attendance-linked payroll. Save Attendance",
+      "h1": "Daily Attendance",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/attendance",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/055-sup-04-supervisor-attendance-route-qa.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SUP-05 supervisor machines route QA",
+    "route": "/supervisor/machines",
+    "finalUrl": "http://localhost:3000/supervisor/machines",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out Loom Board Review running, idle, and assigned looms for the factory floor. Loom Assignments Review worker and shift assignments for each loom. No looms found. Contact the owner to add looms.",
+      "h1": "Loom Board",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/machines",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/056-sup-05-supervisor-machines-route-qa.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-04 supervisor direct owner today",
+    "route": "/owner/today",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/057-sec-04-supervisor-direct-owner-today.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-05 supervisor direct owner commercials",
+    "route": "/owner/commercials",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/058-sec-05-supervisor-direct-owner-commercials.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-06 supervisor direct owner billing",
+    "route": "/owner/billing",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/059-sec-06-supervisor-direct-owner-billing.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-07 supervisor direct owner settings",
+    "route": "/owner/settings",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/060-sec-07-supervisor-direct-owner-settings.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "dispatch-01-after-sale-pending-list",
+    "route": "/owner/dispatches",
+    "finalUrl": "http://localhost:3000/owner/dispatches",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Dispatches Monitor fabric shipments grouped by order — track progress and verify trader confirmations. New Sell & Dispatch New Dispatch 1 sale PENDING DISPATCH 10 m Rs. 420 sold value Clear IN TRANSIT 0 batches 0 m awaiting receipt E-WAY ATTENTION Clear No required EWB gaps STOCK DIFFERENCES Clear No dispatch differences Dispatched Batches (0) Pending Dispatches (1) Pending Receipt All In Transit Delivered Disputed No dispatches found Create a dispatch from an active order or pending stock sale. Open Orders",
+      "h1": "Dispatches",
+      "h2": "",
+      "href": "http://localhost:3000/owner/dispatches",
+      "title": "Dispatches | Owner Dashboard"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/104-dispatch-01-after-sale-pending-list.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "archive-01-after-delivered-stock-dispatch",
+    "route": "/owner/archive",
+    "finalUrl": "http://localhost:3000/owner/archive",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Archive Closed production history stays accessible without crowding active work. Orders Market Runs ARCHIVED ITEMS 1 ORDERS 0 MARKET RUNS 0 DISPATCHES 1 Completed orders No completed orders yet. Closed market runs No closed or sold-out market runs yet. Completed dispatches AMY_QA_20260603_0218 QA Stock Buyer Finished dispatch 1 batch AMY_QA_20260603_0218 QA Sub-Taka Quality Stock sale: AMY_QA_20260603_0218 QA Sub-Taka Quality · completed SALE 10m DISPATCHED 10m CONFIRMED 10m LAST DISPATCH 02 Jun 2026",
+      "h1": "Archive",
+      "h2": "Completed orders",
+      "href": "http://localhost:3000/owner/archive",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/115-archive-01-after-delivered-stock-dispatch.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "commercials-01-after-sale-dispatch-receipt",
+    "route": "/owner/commercials",
+    "finalUrl": "http://localhost:3000/owner/commercials",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Commercials Party dues, collection priority, and booked profit. Collect Sales (1) Parties (1) Profit Ledger (2) TOTAL TO COLLECT ₹420 Unpaid balance amount COLLECTED THIS MONTH ₹0 Payment received this month OVERDUE ₹0 Due before today DUE THIS WEEK ₹0 Due in next 7 days BOOKED GROSS PROFIT ₹140 33.3% gross margin Parties Owing 1 open parties ₹420 AMY_QA_20260603_0218 QA Stock Buyer 1 open sale · due 17 Jun 2026 9106020221 ₹420 On credit Collect First 1 open sale ₹420 OVERDUE ₹0 7 DAYS ₹0 LATER ₹420 AMY_QA_",
+      "h1": "Commercials",
+      "h2": "",
+      "href": "http://localhost:3000/owner/commercials",
+      "title": "Commercials | Owner Dashboard"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/116-commercials-01-after-sale-dispatch-receipt.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "workers-01-owner-workers-after-onboarding",
+    "route": "/owner/workers",
+    "finalUrl": "http://localhost:3000/owner/workers",
+    "navError": null,
+    "info": {
+      "body": "404 This page could not be found.",
+      "h1": "404",
+      "h2": "This page could not be found.",
+      "href": "http://localhost:3000/owner/workers",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/120-workers-01-owner-workers-after-onboarding.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "advances-01-owner-advances-initial",
+    "route": "/owner/advances",
+    "finalUrl": "http://localhost:3000/owner/advances",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Advances (Upaad) Track and manage worker advances. Deducted automatically during payroll settlement. Give Advance Select Worker 0 No workers found No advances yet Select a worker above to manage their advances Give First Advance Add Worker",
+      "h1": "Advances (Upaad)",
+      "h2": "No advances yet",
+      "href": "http://localhost:3000/owner/advances",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/121-advances-01-owner-advances-initial.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "payroll-01-owner-payroll-preview-after-blocked-production",
+    "route": "/owner/payroll",
+    "finalUrl": "http://localhost:3000/owner/payroll",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Monthly Payroll Track and settle worker payments Past settlements June 2026 Current cycle is still in progress This cycle closes on 30 Jun 2026 and pays on 10 Jul 2026. PAY DAY 10 Edit rules PAY DATE HISAAB PAY DATE 10 JUN 2026 May 2026 cycle · 1 May to 31 May Open payroll OWED ₹99,242.28 PENDING 8 PAID 1 Pradeep FIXED Master · Gross ₹30,000 ₹30,000.00 NET PAYOUT Mark Paid sunil FIXED Supervisor · Gross ₹30,000 ₹30,000.00 NET PAYOUT Mark Paid Vinod FIXED Helper · Gross ₹15,000 ₹15,000.00 NET PAYOUT Mark Pai",
+      "h1": "Monthly Payroll",
+      "h2": "",
+      "href": "http://localhost:3000/owner/payroll",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/122-payroll-01-owner-payroll-preview-after-blocked-production.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "workers-02-owner-fixed-workers-route",
+    "route": "/owner/fixed-workers",
+    "finalUrl": "http://localhost:3000/owner/fixed-workers",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Workers Manage piece rate and salaried staff Piece Rate Fixed Salary PIECE RATE WORKERS 0 active piece rate workers Add Worker No piece rate workers yet Add workers who are paid per meter woven",
+      "h1": "Workers",
+      "h2": "",
+      "href": "http://localhost:3000/owner/fixed-workers",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/123-workers-02-owner-fixed-workers-route.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "today-02-after-stock-commercials-regression",
+    "route": "/owner/today",
+    "finalUrl": "http://localhost:3000/owner/today",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Factory Today WEDNESDAY 3 Jun 1 critical Your factory is ready. Start with your first estimate. Create your first estimate to add a fabric quality, calculate pricing, and see expected profit. Create first estimate Start first market run High Priority Plan fabric that will create expected godown stock. Create first estimate Calculate pricing and expected profit. Add/select first quality High Priority This happens inside the estimator flow. Convert quote to order Move from estimate to production. Log first pr",
+      "h1": "Factory Today",
+      "h2": "Your factory is ready. Start with your first estimate.",
+      "href": "http://localhost:3000/owner/today",
+      "title": "Factory Today — Weavly"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/132-today-02-after-stock-commercials-regression.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "analytics-01-after-stock-commercials-regression",
+    "route": "/owner/analytics",
+    "finalUrl": "http://localhost:3000/owner/analytics",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Production Overview Orders, market runs, machines, and payroll signals ● Connecting to live feed... YESTERDAY · 2 JUN FINALIZED METERS PRODUCED — FLOOR WAGES — SALARY BURDEN ₹1.0k OVERALL EFFICIENCY — TODAY · 3 JUN LIVE METERS PRODUCED — FLOOR WAGES —est. MACHINES RUNNING —machines Health Index(1) Manage 1 ACTIVE 0 AT RISK 0 OVERDUE AMY_QA_20260603_0218 Buyer Alpha 0% Machine Utilisation 0% No machines configured 7-Day Production Trend Steady 0 0 0 0 0 0 0 THU 28 FRI 29 SAT 30 SUN 31 MON 1 TUE 2 WED 3 7-day",
+      "h1": "Production Overview",
+      "h2": "Quick actions",
+      "href": "http://localhost:3000/owner/analytics",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/133-analytics-01-after-stock-commercials-regression.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "market-01-market-runs-route",
+    "route": "/owner/market-runs",
+    "finalUrl": "http://localhost:3000/owner/market-runs",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Market Runs Plan speculative grey fabric production, then manage finished takas from Stock Archive New Run No market runs yet Start a market run to keep looms productive when client orders are light, then manage physical takas from Stock. New Market Run",
+      "h1": "Market Runs",
+      "h2": "",
+      "href": "http://localhost:3000/owner/market-runs",
+      "title": "Market Runs — Weavly"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/134-market-01-market-runs-route.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "billing-01-billing-smoke-owner",
+    "route": "/owner/billing",
+    "finalUrl": "http://localhost:3000/owner/billing",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Billing & Subscription Manage your Weavly factory operations plan Active FREE TRIAL ACTIVE Experience Weavly Premium Full access until Wednesday, 10 June 2026 TIME REMAINING 7 DAYS TRIAL STARTED 0% ELAPSED Full Access Unlocked You are enjoying full Premium features. To prevent service disruption after the trial ends, you can subscribe to a plan below today. You won't be charged until your trial expires. Select your Weavly Plan All prices include 18% GST. Cancel anytime. Base ₹2,360 /month ₹2,000 + ₹360 GST ",
+      "h1": "Billing & Subscription",
+      "h2": "Experience Weavly Premium",
+      "href": "http://localhost:3000/owner/billing",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/135-billing-01-billing-smoke-owner.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "settings-02-settings-and-production-mode-after-regression",
+    "route": "/owner/settings",
+    "finalUrl": "http://localhost:3000/owner/settings",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Settings Factory configuration and access codes Refresh FACTORY & IDENTITY Factory Information Manage your factory details and access codes Factory Name Factory join code 32HYKD9A Copy Regenerate Expires: 26 Jun 2026 Personal Information View your registered profile details Full Name Phone Number ROLE: OWNER PRODUCTION MODE Production Mode Choose which workflows Weavly shows first for this factory. Production workflow Both We handle both market runs and customer-specific orders. Changing this only adjusts w",
+      "h1": "Settings",
+      "h2": "Factory & Identity",
+      "href": "http://localhost:3000/owner/settings",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/136-settings-02-settings-and-production-mode-after-regression.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "health-01-system-health-route",
+    "route": "/owner/system-health",
+    "finalUrl": "http://localhost:3000/feature-archived",
+    "navError": null,
+    "info": {
+      "body": "Feature archived for Phase 1 This module is preserved for a future release, but it is not active in the focused Phase 1 workflow. Back to production overview",
+      "h1": "Feature archived for Phase 1",
+      "h2": "",
+      "href": "http://localhost:3000/feature-archived",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/137-health-01-system-health-route.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "market-02-market-runs-before-new-run",
+    "route": "/owner/market-runs",
+    "finalUrl": "http://localhost:3000/owner/market-runs",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Owner control CONTROL Factory Today Estimator Quotes Dashboard FACTORY FLOW Orders Market Runs Godown Stock Dispatches MONEY Commercials Billing WORKFORCE Workers Payroll Advances LOOMS Looms SYSTEM Archive Settings AMY_QA_20260603_0218 Owner English Log out Market Runs Plan speculative grey fabric production, then manage finished takas from Stock Archive New Run No market runs yet Start a market run to keep looms productive when client orders are light, then manage physical takas from Stock. New Market Run",
+      "h1": "Market Runs",
+      "h2": "",
+      "href": "http://localhost:3000/owner/market-runs",
+      "title": "Market Runs — Weavly"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/138-market-02-market-runs-before-new-run.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "mobile-01-owner-stock-page-390x844",
+    "route": "/owner/stock",
+    "finalUrl": "http://localhost:3000/owner/stock",
+    "navError": null,
+    "info": {
+      "body": "Factory Today Orders Market Runs Godown Stock Estimator Menu Godown Stock Ledger stock, godown balance, optional inward review, and stock-sale entry. Use Commercials for revenue, profit, and payment collection. Sell & Dispatch Add Stock AVAILABLE FOR SALE 15m Available for sale SOLD PENDING DISPATCH 0m sold fabric still awaiting dispatch STOCK COST ₹420 available stock value Active Stock Archive / History All godowns AMY_QA_20260603_0218 QA Sub-Taka Quality Manual Manual Partially Sold Main Godown AMY_QA_20260603_0218 sub-taka regression lot; UI hidden taka_count default observed AVAILABLE FOR SALE 15m COST ₹28.00 per meter Sell & Dispatch Sell by Meters Adjust Entries 2 02 Jun 2026 RECENT STOCK SALES AMY_QA_20260603_0218 QA Sub-Taka Quality Main Godown 03 Jun Commercials Approx units 10 t",
+      "h1": "Godown Stock",
+      "h2": "AMY_QA_20260603_0218 QA Sub-Taka Quality",
+      "href": "http://localhost:3000/owner/stock",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/143-mobile-01-owner-stock-page-390x844.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "mobile-06-supervisor-production-390x844",
+    "route": "/supervisor/production",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "Shift Meters Workers Attendance Menu PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs SYNCING FLOOR DATA... Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/148-mobile-06-supervisor-production-390x844.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "tablet-01-supervisor-production-768x1024",
+    "route": "/supervisor/production",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs SYNCING FLOOR DATA... Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/149-tablet-01-supervisor-production-768x1024.png",
+    "warnErrorCount": 0,
+    "logs": []
+  }
+]

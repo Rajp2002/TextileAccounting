@@ -1,0 +1,436 @@
+[
+  {
+    "disabled": false,
+    "idx": 0,
+    "placeholder": null,
+    "tag": "input",
+    "text": "Log out",
+    "type": "hidden",
+    "value": ""
+  },
+  {
+    "disabled": false,
+    "idx": 1,
+    "placeholder": "e.g. Sundaram Textiles",
+    "tag": "input",
+    "text": "PARTY / CUSTOMER",
+    "type": null,
+    "value": "AMY_QA_20260603_0218 Buyer Alpha"
+  },
+  {
+    "disabled": false,
+    "idx": 2,
+    "placeholder": "e.g. 60g Georgette, D.246, Japan Satin",
+    "tag": "input",
+    "text": "FABRIC / QUALITY NAME Name this estimate, e.g. 60g Georgette or D.246.",
+    "type": null,
+    "value": "AMY_QA_20260603_0218 QA Cotton Plain 60x60"
+  },
+  {
+    "disabled": false,
+    "idx": 3,
+    "placeholder": "50/48 + Rainbow",
+    "tag": "input",
+    "text": "WARP CONSTRUCTION",
+    "type": null,
+    "value": "60x60 cotton warp"
+  },
+  {
+    "disabled": false,
+    "idx": 4,
+    "placeholder": "50/48 - 68 Picks",
+    "tag": "input",
+    "text": "WEFT CONSTRUCTION",
+    "type": null,
+    "value": "60x60 cotton weft - 68 picks"
+  },
+  {
+    "disabled": false,
+    "idx": 5,
+    "placeholder": null,
+    "tag": "input",
+    "text": "%",
+    "type": "number",
+    "value": "5"
+  },
+  {
+    "disabled": false,
+    "idx": 6,
+    "placeholder": null,
+    "tag": "input",
+    "text": "%",
+    "type": "number",
+    "value": "10"
+  },
+  {
+    "disabled": false,
+    "idx": 7,
+    "placeholder": "Warp Layer 1",
+    "tag": "input",
+    "text": "LAYER NAME",
+    "type": null,
+    "value": "Cotton Warp 60D"
+  },
+  {
+    "disabled": false,
+    "idx": 8,
+    "placeholder": null,
+    "tag": "input",
+    "text": "D",
+    "type": "number",
+    "value": "60"
+  },
+  {
+    "disabled": false,
+    "idx": 9,
+    "placeholder": null,
+    "tag": "input",
+    "text": "",
+    "type": "number",
+    "value": "5200"
+  },
+  {
+    "disabled": false,
+    "idx": 10,
+    "placeholder": null,
+    "tag": "input",
+    "text": "%",
+    "type": "number",
+    "value": "10"
+  },
+  {
+    "disabled": false,
+    "idx": 11,
+    "placeholder": null,
+    "tag": "input",
+    "text": "",
+    "type": "number",
+    "value": "250"
+  },
+  {
+    "disabled": false,
+    "idx": 12,
+    "placeholder": null,
+    "tag": "input",
+    "text": "",
+    "type": "number",
+    "value": "5"
+  },
+  {
+    "disabled": false,
+    "idx": 13,
+    "placeholder": null,
+    "tag": "input",
+    "text": "m",
+    "type": "number",
+    "value": "1500"
+  },
+  {
+    "disabled": false,
+    "idx": 14,
+    "placeholder": "Weft Layer 1",
+    "tag": "input",
+    "text": "LAYER NAME",
+    "type": null,
+    "value": "Cotton Weft 60D"
+  },
+  {
+    "disabled": false,
+    "idx": 15,
+    "placeholder": null,
+    "tag": "input",
+    "text": "",
+    "type": "number",
+    "value": "68"
+  },
+  {
+    "disabled": false,
+    "idx": 16,
+    "placeholder": null,
+    "tag": "input",
+    "text": "cm",
+    "type": "number",
+    "value": "112"
+  },
+  {
+    "disabled": false,
+    "idx": 17,
+    "placeholder": null,
+    "tag": "input",
+    "text": "D",
+    "type": "number",
+    "value": "60"
+  },
+  {
+    "disabled": false,
+    "idx": 18,
+    "placeholder": null,
+    "tag": "input",
+    "text": "%",
+    "type": "number",
+    "value": "10"
+  },
+  {
+    "disabled": false,
+    "idx": 19,
+    "placeholder": null,
+    "tag": "input",
+    "text": "",
+    "type": "number",
+    "value": "250"
+  },
+  {
+    "disabled": false,
+    "idx": 20,
+    "placeholder": null,
+    "tag": "input",
+    "text": "",
+    "type": "number",
+    "value": "5"
+  },
+  {
+    "disabled": false,
+    "idx": 21,
+    "options": [
+      {
+        "text": "— Select loom type —",
+        "value": ""
+      },
+      {
+        "text": "Jacquard (Electronic) — 250 RPM",
+        "value": "jacquard_electronic"
+      },
+      {
+        "text": "Jacquard (Mechanical) — 130 RPM",
+        "value": "jacquard_mechanical"
+      },
+      {
+        "text": "Water Jet — 700 RPM",
+        "value": "water_jet"
+      },
+      {
+        "text": "Rapier — 450 RPM",
+        "value": "rapier"
+      },
+      {
+        "text": "Air Jet — 900 RPM",
+        "value": "air_jet"
+      },
+      {
+        "text": "Dobby — 500 RPM",
+        "value": "dobby"
+      },
+      {
+        "text": "Projectile — 280 RPM",
+        "value": "projectile"
+      },
+      {
+        "text": "Other / Manual — enter RPM manually",
+        "value": "other"
+      }
+    ],
+    "placeholder": null,
+    "tag": "select",
+    "text": "LOOM TYPE — Select loom type — Jacquard (Electronic) — 250 RPM Jacquard (Mechanical) — 130 RPM Water Jet — 700 RPM Rapie",
+    "type": null,
+    "value": "jacquard_electronic"
+  },
+  {
+    "disabled": false,
+    "idx": 22,
+    "placeholder": "—",
+    "tag": "input",
+    "text": "RPM",
+    "type": "number",
+    "value": "4.5"
+  },
+  {
+    "disabled": false,
+    "idx": 23,
+    "placeholder": "—",
+    "tag": "input",
+    "text": "kW",
+    "type": "number",
+    "value": "7"
+  },
+  {
+    "disabled": false,
+    "idx": 24,
+    "placeholder": "12",
+    "tag": "input",
+    "text": "h",
+    "type": "number",
+    "value": "2"
+  },
+  {
+    "disabled": false,
+    "idx": 25,
+    "placeholder": "0.00",
+    "tag": "input",
+    "text": "₹ /m",
+    "type": "number",
+    "value": ""
+  },
+  {
+    "disabled": false,
+    "idx": 26,
+    "placeholder": null,
+    "tag": "input",
+    "text": "paise",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "disabled": false,
+    "idx": 27,
+    "placeholder": null,
+    "tag": "input",
+    "text": "",
+    "type": "number",
+    "value": "4"
+  },
+  {
+    "disabled": false,
+    "idx": 28,
+    "placeholder": null,
+    "tag": "input",
+    "text": "In-house (already in overhead)",
+    "type": "radio",
+    "value": "in_house"
+  },
+  {
+    "disabled": false,
+    "idx": 29,
+    "placeholder": null,
+    "tag": "input",
+    "text": "Outsourced",
+    "type": "radio",
+    "value": "outsourced"
+  },
+  {
+    "disabled": false,
+    "idx": 30,
+    "placeholder": null,
+    "tag": "input",
+    "text": "looms",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "disabled": false,
+    "idx": 31,
+    "placeholder": null,
+    "tag": "input",
+    "text": "m/day",
+    "type": "number",
+    "value": "50"
+  },
+  {
+    "disabled": false,
+    "idx": 32,
+    "placeholder": null,
+    "tag": "input",
+    "text": "days",
+    "type": "number",
+    "value": "26"
+  },
+  {
+    "disabled": true,
+    "idx": 33,
+    "placeholder": null,
+    "tag": "input",
+    "text": "",
+    "type": null,
+    "value": "Rent / Lease"
+  },
+  {
+    "disabled": false,
+    "idx": 34,
+    "placeholder": null,
+    "tag": "input",
+    "text": "₹ /mo",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "disabled": true,
+    "idx": 35,
+    "placeholder": null,
+    "tag": "input",
+    "text": "per loom helper",
+    "type": null,
+    "value": "Electricity"
+  },
+  {
+    "disabled": false,
+    "idx": 36,
+    "placeholder": null,
+    "tag": "input",
+    "text": "₹ /mo",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "disabled": true,
+    "idx": 37,
+    "placeholder": null,
+    "tag": "input",
+    "text": "",
+    "type": null,
+    "value": "Water & Maintenance"
+  },
+  {
+    "disabled": false,
+    "idx": 38,
+    "placeholder": null,
+    "tag": "input",
+    "text": "₹ /mo",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "disabled": true,
+    "idx": 39,
+    "placeholder": null,
+    "tag": "input",
+    "text": "",
+    "type": null,
+    "value": "Factory Consumables"
+  },
+  {
+    "disabled": false,
+    "idx": 40,
+    "placeholder": null,
+    "tag": "input",
+    "text": "₹ /mo",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "disabled": false,
+    "idx": 41,
+    "placeholder": null,
+    "tag": "input",
+    "text": "m",
+    "type": "number",
+    "value": "10000"
+  },
+  {
+    "disabled": false,
+    "idx": 42,
+    "placeholder": "e.g. 12.50",
+    "tag": "input",
+    "text": "₹",
+    "type": "number",
+    "value": ""
+  },
+  {
+    "disabled": false,
+    "idx": 43,
+    "placeholder": "1000",
+    "tag": "input",
+    "text": "m",
+    "type": "number",
+    "value": ""
+  }
+]

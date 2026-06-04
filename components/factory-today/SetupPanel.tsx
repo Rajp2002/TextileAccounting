@@ -28,6 +28,7 @@ import {
     Truck,
     IndianRupee,
 } from 'lucide-react'
+import { useTranslation } from '@/lib/i18n/context'
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -557,6 +558,8 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
 // ─── Help Modal ────────────────────────────────────────────────────────────────
 
 function StepHelpModal({ step, onClose }: { step: SetupStep | null; onClose: () => void }) {
+    const { tx } = useTranslation()
+
     return (
         <AnimatePresence>
             {step && (
@@ -572,7 +575,7 @@ function StepHelpModal({ step, onClose }: { step: SetupStep | null; onClose: () 
                     <button
                         type="button"
                         className="absolute inset-0 cursor-default"
-                        aria-label="Close setup help"
+                        aria-label={tx("Close setup help")}
                         onClick={onClose}
                     />
                     <motion.div
@@ -580,70 +583,71 @@ function StepHelpModal({ step, onClose }: { step: SetupStep | null; onClose: () 
                         animate={{ y: 0, scale: 1 }}
                         exit={{ y: 20, scale: 0.98 }}
                         transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+                        data-i18n-skip="true"
                         className="relative z-10 max-h-[86vh] w-full max-w-lg overflow-hidden rounded-2xl border border-hairline bg-white shadow-2xl"
                     >
                         <div className="flex items-start justify-between gap-4 border-b border-hairline px-5 py-4">
                             <div className="min-w-0">
-                                <p className="text-[11px] font-bold uppercase tracking-wide text-saffron-deep">Step guide</p>
+                                <p className="text-[11px] font-bold uppercase tracking-wide text-saffron-deep">{tx("Step guide")}</p>
                                 <h3 id="setup-step-help-title" className="mt-1 text-lg font-bold leading-tight text-ink">
-                                    {step.title}
+                                    {tx(step.title)}
                                 </h3>
                             </div>
                             <button
                                 type="button"
                                 onClick={onClose}
                                 className="shrink-0 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                                aria-label="Close step guide"
+                                aria-label={tx("Close step guide")}
                             >
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
 
                         <div className="max-h-[calc(86vh-76px)] overflow-y-auto px-5 py-4">
-                            <p className="text-sm leading-relaxed text-body">{step.help.intro}</p>
+                            <p className="text-sm leading-relaxed text-body">{tx(step.help.intro)}</p>
 
                             <div className="mt-4 space-y-4">
                                 <div>
-                                    <h4 className="text-xs font-bold uppercase tracking-wide text-ink">Why it matters</h4>
+                                    <h4 className="text-xs font-bold uppercase tracking-wide text-ink">{tx("Why it matters")}</h4>
                                     <ul className="mt-2 space-y-2">
                                         {step.help.why.map((item) => (
                                             <li key={item} className="flex gap-2 text-sm leading-relaxed text-body">
                                                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" />
-                                                <span>{item}</span>
+                                                <span>{tx(item)}</span>
                                             </li>
                                         ))}
                                     </ul>
                                 </div>
 
                                 <div>
-                                    <h4 className="text-xs font-bold uppercase tracking-wide text-ink">What to do</h4>
+                                    <h4 className="text-xs font-bold uppercase tracking-wide text-ink">{tx("What to do")}</h4>
                                     <ol className="mt-2 space-y-2">
                                         {step.help.actions.map((item, index) => (
                                             <li key={item} className="flex gap-2 text-sm leading-relaxed text-body">
                                                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface-soft text-[11px] font-bold text-saffron-deep">
                                                     {index + 1}
                                                 </span>
-                                                <span>{item}</span>
+                                                <span>{tx(item)}</span>
                                             </li>
                                         ))}
                                     </ol>
                                 </div>
 
                                 <div className="rounded-xl border border-saffron/20 bg-saffron/5 px-3 py-3">
-                                    <h4 className="text-xs font-bold uppercase tracking-wide text-saffron-deep">Where to click</h4>
+                                    <h4 className="text-xs font-bold uppercase tracking-wide text-saffron-deep">{tx("Where to click")}</h4>
                                     <p className="mt-1 text-sm font-semibold leading-relaxed text-ink">
-                                        {step.help.clickPath.join(' -> ')}
+                                        {step.help.clickPath.map((item) => tx(item)).join(' -> ')}
                                     </p>
                                 </div>
 
                                 <div>
-                                    <h4 className="text-xs font-bold uppercase tracking-wide text-ink">Done when</h4>
-                                    <p className="mt-1 text-sm leading-relaxed text-body">{step.help.doneWhen}</p>
+                                    <h4 className="text-xs font-bold uppercase tracking-wide text-ink">{tx("Done when")}</h4>
+                                    <p className="mt-1 text-sm leading-relaxed text-body">{tx(step.help.doneWhen)}</p>
                                 </div>
 
                                 {step.help.note && (
                                     <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-3">
-                                        <p className="text-sm leading-relaxed text-blue-900">{step.help.note}</p>
+                                        <p className="text-sm leading-relaxed text-blue-900">{tx(step.help.note)}</p>
                                     </div>
                                 )}
                             </div>
@@ -653,7 +657,7 @@ function StepHelpModal({ step, onClose }: { step: SetupStep | null; onClose: () 
                                 onClick={onClose}
                                 className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-saffron px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-saffron-deep sm:w-auto"
                             >
-                                {step.ctaLabel}
+                                {tx(step.ctaLabel)}
                                 <ArrowRight className="h-4 w-4" />
                             </Link>
                         </div>
@@ -679,6 +683,7 @@ function SetupStepList({
     skippedFixed: boolean
     onSkipFixed: () => void
 }) {
+    const { tx } = useTranslation()
     const [helpStep, setHelpStep] = useState<SetupStep | null>(null)
     const steps = buildSetupSteps(productionMode)
 
@@ -702,15 +707,19 @@ function SetupStepList({
     const currentStepId = steps.find((step) => getStepStatus(step) === 'incomplete')?.id ?? null
 
     return (
-        <div className="flex h-full flex-col">
+        <div className="flex h-full flex-col" data-i18n-skip="true">
             {/* Header */}
             <div className="px-5 pb-4 pt-5">
                 <div className="mb-1 flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-saffron" />
-                    <h2 className="text-sm font-bold uppercase tracking-wide text-ink">Factory Setup</h2>
+                    <h2 className="text-sm font-bold uppercase tracking-wide text-ink">{tx("Factory Setup")}</h2>
                 </div>
                 <p className="mt-0.5 text-xs text-body">
-                    {completedCount} of {totalSteps} steps complete · {getModeLabel(productionMode)}
+                    {tx("{completed} of {total} steps complete · {mode}", {
+                        completed: completedCount,
+                        total: totalSteps,
+                        mode: tx(getModeLabel(productionMode)),
+                    })}
                 </p>
 
                 {/* Progress bar */}
@@ -782,20 +791,20 @@ function SetupStepList({
                                                             ? 'text-emerald-700 line-through decoration-1'
                                                             : isCurrent ? 'text-ink' : 'text-body'
                                                     )}>
-                                                        {step.title}
+                                                        {tx(step.title)}
                                                     </p>
                                                     <button
                                                         type="button"
                                                         onClick={() => setHelpStep(step)}
                                                         className="shrink-0 rounded-full p-1 text-gray-400 transition-colors hover:bg-saffron/10 hover:text-saffron focus:outline-none focus:ring-2 focus:ring-saffron/30"
-                                                        aria-label={`Learn more about ${step.title}`}
+                                                        aria-label={tx("Learn more about {title}", { title: tx(step.title) })}
                                                     >
                                                         <Info className="h-3.5 w-3.5" />
                                                     </button>
                                                 </div>
 
                                                 {status === 'completed' && (
-                                                    <p className="mt-0.5 text-[11px] font-medium text-emerald-500">Done</p>
+                                                    <p className="mt-0.5 text-[11px] font-medium text-emerald-500">{tx("Done")}</p>
                                                 )}
 
                                                 {/* Expanded content for current step */}
@@ -806,16 +815,16 @@ function SetupStepList({
                                                         className="mt-1.5"
                                                     >
                                                         <p className="text-xs leading-relaxed text-body">
-                                                            {step.description}
+                                                            {tx(step.description)}
                                                         </p>
 
                                                         {step.id === 'supervisor' && (
                                                             <div className="mt-2 rounded-lg border border-amber-200/60 bg-amber-50 px-3 py-2">
                                                                 <p className="text-[11px] leading-relaxed text-amber-800">
-                                                                    If you do not have a separate supervisor, create a second account for yourself using the join code from Settings.
+                                                                    {tx("If you do not have a separate supervisor, create a second account for yourself using the join code from Settings.")}
                                                                 </p>
                                                                 <p className="mt-1 text-[11px] italic text-amber-600">
-                                                                    Planned update: production logging from owner account.
+                                                                    {tx("Planned update: production logging from owner account.")}
                                                                 </p>
                                                             </div>
                                                         )}
@@ -827,7 +836,7 @@ function SetupStepList({
                                                                     ? 'bg-emerald-50 text-emerald-700'
                                                                     : 'bg-red-50 text-red-600'
                                                             )}>
-                                                                {checklist.hasSupervisor ? 'Supervisor joined' : 'No supervisor yet'}
+                                                                {checklist.hasSupervisor ? tx("Supervisor joined") : tx("No supervisor yet")}
                                                             </div>
                                                         )}
 
@@ -841,7 +850,7 @@ function SetupStepList({
                                                                 )}
                                                             >
                                                                 <Icon className="h-3.5 w-3.5" />
-                                                                {step.ctaLabel}
+                                                                {tx(step.ctaLabel)}
                                                                 <ArrowRight className="h-3 w-3" />
                                                             </Link>
 
@@ -851,7 +860,7 @@ function SetupStepList({
                                                                 className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-semibold text-saffron-deep transition-colors hover:bg-saffron/10"
                                                             >
                                                                 <Info className="h-3 w-3" />
-                                                                Guide
+                                                                {tx("Guide")}
                                                             </button>
                                                         </div>
 
@@ -863,7 +872,7 @@ function SetupStepList({
                                                                 className="mt-1.5 flex items-center gap-1 text-[11px] text-gray-400 transition-colors hover:text-gray-600"
                                                             >
                                                                 <SkipForward className="h-3 w-3" />
-                                                                Skip - I do not have salary staff
+                                                                {tx("Skip - I do not have salary staff")}
                                                             </button>
                                                         )}
                                                     </motion.div>
@@ -872,7 +881,7 @@ function SetupStepList({
                                                 {/* Upcoming step — show description in muted */}
                                                 {!isCurrent && status !== 'completed' && (
                                                     <p className="mt-0.5 line-clamp-1 text-[11px] text-gray-400">
-                                                        {step.description}
+                                                        {tx(step.description)}
                                                     </p>
                                                 )}
                                             </div>
@@ -888,7 +897,7 @@ function SetupStepList({
             {/* Footer */}
             <div className="border-t border-gray-100 px-5 pb-4 pt-2">
                 <p className="text-center text-[10px] text-gray-400">
-                    Complete this once to prove the factory can run end to end.
+                    {tx("Complete this once to prove the factory can run end to end.")}
                 </p>
             </div>
 

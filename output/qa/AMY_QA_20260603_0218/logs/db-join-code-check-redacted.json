@@ -1,0 +1,40 @@
+{
+  "qaOrgs": [
+    {
+      "id": "b1f6e408-ca92-4e70-a82d-4db74b2b91b4",
+      "name": "AMY_QA_20260603_0218 Factory",
+      "isQa": true,
+      "join_code": "EKVKDG7R",
+      "onboarding_complete": true,
+      "production_mode": "both",
+      "created_at": "2026-06-02T20:54:56.305334+00:00"
+    }
+  ],
+  "shownJoinCodeMapsTo": {
+    "id": "f5a28d2d-cf1c-4406-9161-90e3aa1b292f",
+    "name": "[REDACTED_NON_QA_ORG]",
+    "isQa": false,
+    "join_code": "32HYKD9A",
+    "onboarding_complete": true,
+    "production_mode": "both",
+    "created_at": "2026-05-27T04:27:40.306034+00:00"
+  },
+  "supervisorProfile": {
+    "id": "db838279-b75a-473e-80f4-391254dfa9aa",
+    "org_id": "f5a28d2d-cf1c-4406-9161-90e3aa1b292f",
+    "role": "supervisor",
+    "full_name": "AMY_QA_20260603_0218 Supervisor",
+    "email": "amy.qa.20260603.0218.supervisor@example.com",
+    "created_at": "2026-06-02T21:01:13.641918+00:00"
+  },
+  "supervisorOrg": {
+    "id": "f5a28d2d-cf1c-4406-9161-90e3aa1b292f",
+    "name": "[REDACTED_NON_QA_ORG]",
+    "isQa": false,
+    "join_code": "32HYKD9A",
+    "onboarding_complete": true,
+    "production_mode": "both",
+    "created_at": "2026-05-27T04:27:40.306034+00:00"
+  },
+  "errors": {}
+}

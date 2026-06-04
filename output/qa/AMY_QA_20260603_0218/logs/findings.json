@@ -1,0 +1,204 @@
+[
+  {
+    "id": "BUG-001",
+    "severity": "Blocker",
+    "area": "Onboarding / Machines",
+    "title": "Onboarding machine creation reports success but owner Looms page shows no looms",
+    "steps": [
+      "Create fresh owner",
+      "Complete onboarding machine step with 4 loom groups",
+      "Open /owner/machines",
+      "Refresh once"
+    ],
+    "expected": "Four created looms persist and are visible for assignment/production",
+    "actual": "Owner /owner/machines says No looms found after onboarding success",
+    "evidence": [
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/039-bug-001-reproduce-onboarding-machines-missing-after-refresh.png"
+    ],
+    "reproduced": true,
+    "businessImpact": "Fresh factory cannot proceed to loom assignment or supervisor production without recreating looms manually.",
+    "reproducible": true,
+    "status": "Open"
+  },
+  {
+    "id": "BUG-002",
+    "severity": "Blocker",
+    "area": "Machines / Production setup",
+    "title": "Manual Add Loom reports success but no loom appears after refresh",
+    "steps": [
+      "Open /owner/machines",
+      "Click Add Loom",
+      "Enter prefixed loom name and Jacquard type",
+      "Click Add Loom",
+      "Refresh"
+    ],
+    "expected": "New loom appears in Loom Assignments",
+    "actual": "Success toast appears but page still says No looms found after refresh",
+    "evidence": [
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/044-bug-002-manual-add-loom-invisible-after-refresh.png"
+    ],
+    "reproduced": true,
+    "businessImpact": "Fresh owner cannot create assignable looms, blocking order/market-run production and supervisor logging.",
+    "reproducible": true,
+    "status": "Open"
+  },
+  {
+    "id": "BUG-003",
+    "severity": "Blocker",
+    "area": "Security / Join code / Data isolation",
+    "title": "Fresh owner Settings displayed another organization's join code, causing supervisor to join non-QA factory",
+    "steps": [
+      "Fresh owner completed onboarding",
+      "Open /owner/settings",
+      "Read Factory join code displayed as 32HYKD9A",
+      "Log out and enter that code on /join",
+      "Supervisor form shows non-QA factory and created supervisor in that org"
+    ],
+    "expected": "Settings join code belongs to the current owner's QA organization and supervisor joins the same QA org",
+    "actual": "Read-only DB check shows QA org real join_code is EKVKDG7R; displayed code 32HYKD9A maps to a non-QA org. Supervisor profile was created under the non-QA org.",
+    "evidence": [
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/035-settings-01-factory-settings-after-onboarding.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/logs/db-join-code-check-redacted.json"
+    ],
+    "reproduced": true,
+    "businessImpact": "A factory owner can invite a supervisor into another factory, exposing private production/party/order data and polluting that factory with the wrong user.",
+    "reproducible": true,
+    "status": "Open"
+  },
+  {
+    "id": "BUG-004",
+    "severity": "High",
+    "area": "Supervisor / Role boundaries",
+    "title": "Supervisor dashboard shows owner-view copy",
+    "steps": [
+      "Join QA factory as supervisor",
+      "Land on /supervisor/dashboard"
+    ],
+    "expected": "Supervisor dashboard shows supervisor role/scope only, with no owner impersonation language unless intentionally authorized",
+    "actual": "Dashboard displays \"Viewing as Owner\" and \"Switch to Owner View\" for supervisor account",
+    "evidence": [
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/051-join-07-qa-supervisor-join-result.png"
+    ],
+    "reproduced": true,
+    "businessImpact": "Supervisors may believe they have owner privileges; this undermines role-boundary confidence and could mask unauthorized access.",
+    "reproducible": true,
+    "status": "Open"
+  },
+  {
+    "id": "BUG-005",
+    "severity": "Blocker",
+    "area": "Stock / Taka math",
+    "title": "Manual Add Stock stores total meters as taka count and cannot create sub-taka lot",
+    "steps": [
+      "Open /owner/stock",
+      "Add stock lot with quality AMY_QA_20260603_0218 QA Sub-Taka Quality",
+      "Enter Total Meters = 25, cost = 28, save",
+      "Check UI ledger and DB row"
+    ],
+    "expected": "A 25m lot can represent under-1 taka/0.5 taka or at minimum does not treat 25m as 25 takas; sub-taka regression lot can be created",
+    "actual": "UI exposes no taka-count control; saved row has original_taka_count=25, available_taka_count=25, meters_per_taka=1, and ledger says Stock inward +25 taka 25m",
+    "evidence": [
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/090-stock-03-manual-25m-stock-dialog-filled.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/091-stock-04-manual-25m-stock-lot-saved.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/logs/db-stock-before-sale.json"
+    ],
+    "reproduced": true,
+    "businessImpact": "Sub-taka sale regression cannot be tested through the UI and stock/taka ledger math is materially wrong for manual lots.",
+    "reproducible": true,
+    "status": "Open"
+  },
+  {
+    "id": "BUG-006",
+    "severity": "High",
+    "area": "Dates / dispatches / commercials",
+    "title": "Date inputs submitted as 2026-06-03 persist/display as 2026-06-02",
+    "reproducible": true,
+    "status": "Open",
+    "steps": [
+      "From the QA stock sale dispatch dialog, fill Dispatch Date as 2026-06-03 and submit 10m dispatch.",
+      "Verify Dispatches/Archive and DB dispatch row.",
+      "From Commercials payment dialog, fill Payment Date as 2026-06-03 and submit full ₹420 payment.",
+      "Verify DB payment receipt row."
+    ],
+    "expected": "Dates entered as 2026-06-03 should persist and display as 2026-06-03, and due-date calculations should be based on that date.",
+    "actual": "Dispatch persisted/displayed as 2026-06-02 with due date 2026-06-17; payment receipt persisted payment_date as 2026-06-02 despite 2026-06-03 input.",
+    "businessImpact": "Dispatch challans, receipt timelines, collection dates, aging buckets, and due-date calculations can be one day wrong for factories operating in Asia/Kolkata.",
+    "evidence": [
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/107-dispatch-04-confirm-dispatch-filled-before-submit.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/logs/db-stock-after-dispatch.json",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/118-commercials-03-payment-filled-before-submit.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/logs/db-commercials-after-payment.json"
+    ],
+    "nextAction": "Normalize date-only fields without UTC conversion drift; retest dispatch date, payment date, and due-date aging in Asia/Kolkata and UTC-negative timezones."
+  },
+  {
+    "id": "BUG-007",
+    "severity": "High",
+    "area": "Onboarding / workers / payroll",
+    "title": "Persisted onboarding workers are not visible in Workers, Advances, or Payroll UI",
+    "reproducible": true,
+    "status": "Open",
+    "steps": [
+      "During onboarding, add two prefixed meter-rate workers and save the worker step.",
+      "Open sidebar Workers route /owner/fixed-workers after onboarding.",
+      "Open Advances and Payroll."
+    ],
+    "expected": "Workers page should list the two persisted piece-rate workers; Advances and Payroll should use those workers for advance and wage workflows.",
+    "actual": "Read-only DB check shows two QA piece-rate worker rows, but Workers page shows Piece Rate Workers 0; Advances shows Select Worker 0 and No workers found; Payroll shows 0 piece-rate and 0 monthly/daily workers.",
+    "businessImpact": "Persisted workers cannot be operated on from the UI, blocking advances, payroll settlement, attendance-adjacent workflows, and production wage visibility.",
+    "evidence": [
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/026-onboard-04-worker-form-parsed-two-workers.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/027-onboard-05-workers-saved.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/121-advances-01-owner-advances-initial.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/123-workers-02-owner-fixed-workers-route.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/logs/db-workers-after-manual-add.json"
+    ],
+    "nextAction": "Fix worker-list queries/cache invalidation and retest Workers, Advances, Payroll, and supervisor worker visibility against persisted rows."
+  },
+  {
+    "id": "BUG-008",
+    "severity": "High",
+    "area": "Workers / attendance / payroll",
+    "title": "Manual fixed worker persists in DB but UI still shows zero fixed workers; salary also persisted as role default",
+    "reproducible": true,
+    "status": "Open",
+    "steps": [
+      "Open /owner/fixed-workers.",
+      "Open Add Worker, choose Fixed Salary, fill prefixed worker name, role Master, monthly salary ₹18,000, phone, consent, and age confirmation.",
+      "Submit Add Worker, then switch to Fixed Salary tab and open Advances/Payroll."
+    ],
+    "expected": "New fixed worker should be visible in Fixed Salary tab and selectable in Advances/Attendance/Payroll with the entered monthly salary ₹18,000.",
+    "actual": "DB contains AMY_QA_20260603_0218 Meena Fixed Salary as active, but Fixed Salary tab shows 0 active fixed workers. Entered salary ₹18,000 persisted as ₹30,000 (role default for Master).",
+    "businessImpact": "Owners cannot see or operate on newly-created salaried staff from the UI, and payroll can use an incorrect monthly salary.",
+    "evidence": [
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/129-workers-05c-fixed-worker-role-selected-before-save.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/130-workers-07-fixed-worker-save-after-role-selected.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/131-workers-08-fixed-salary-tab-after-manual-worker.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/logs/db-workers-after-manual-add.json"
+    ],
+    "nextAction": "Fix fixed-worker query/cache visibility and salary binding so submitted salary persists; retest worker listing, advances, attendance, and payroll preview."
+  },
+  {
+    "id": "BUG-009",
+    "severity": "High",
+    "area": "Public tracking / receipt confirmation",
+    "title": "Stock-sale dispatch generated no public tracking token; public receipt flow is unavailable",
+    "reproducible": true,
+    "status": "Open / feature unavailable",
+    "steps": [
+      "Create QA stock sale and confirm stock-sale dispatch.",
+      "Inspect dispatch row and DB dispatch record for public tracking token/link.",
+      "Open invalid public tracking token while logged out."
+    ],
+    "expected": "Dispatch should expose a public tracking URL/token for trader receipt confirmation, and invalid tokens should show a safe public invalid-token state.",
+    "actual": "DB dispatch row has tracking_token null; no public tracking URL was visible in dispatch UI. Invalid /track/not-a-real-token redirected to login instead of a public invalid-token page. Owner-side Record Receipt did work.",
+    "businessImpact": "Trader-facing receipt confirmation cannot be exercised, so factories must confirm receipt inside the owner app and cannot share a public receipt link.",
+    "evidence": [
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/logs/db-stock-after-dispatch.json",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/109-dispatch-06-dispatched-batch-expanded.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/015-track-01r-invalid-token-logged-out-retest.png",
+      "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/112-receipt-03-record-receipt-result-delivered.png"
+    ],
+    "nextAction": "Decide whether public tracking is in Phase 1 scope. If yes, generate tokens/links for dispatches and make invalid-token handling public-safe; if no, remove public tracking expectations from UI/docs."
+  }
+]

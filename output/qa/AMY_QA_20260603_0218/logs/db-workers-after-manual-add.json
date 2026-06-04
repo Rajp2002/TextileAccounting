@@ -1,0 +1,53 @@
+{
+  "captured_at": "2026-06-02T21:33:13.483Z",
+  "org_id": "b1f6e408-ca92-4e70-a82d-4db74b2b91b4",
+  "errors": {},
+  "meter_workers": [
+    {
+      "id": 113,
+      "org_id": "b1f6e408-ca92-4e70-a82d-4db74b2b91b4",
+      "name": "AMY_QA_20260603_0218 Ramesh Piece Rate",
+      "is_active": true,
+      "esi_number": null,
+      "pf_number": null,
+      "pf_esi_eligible": false,
+      "whatsapp_number": null,
+      "whatsapp_language": "en",
+      "start_date": "2026-06-02",
+      "pf_esi_enrolled": false
+    },
+    {
+      "id": 112,
+      "org_id": "b1f6e408-ca92-4e70-a82d-4db74b2b91b4",
+      "name": "AMY_QA_20260603_0218 Kishan Piece Rate",
+      "is_active": true,
+      "esi_number": null,
+      "pf_number": null,
+      "pf_esi_eligible": false,
+      "whatsapp_number": null,
+      "whatsapp_language": "en",
+      "start_date": "2026-06-02",
+      "pf_esi_enrolled": false
+    }
+  ],
+  "fixed_workers": [
+    {
+      "id": 64,
+      "org_id": "b1f6e408-ca92-4e70-a82d-4db74b2b91b4",
+      "name": "AMY_QA_20260603_0218 Meena Fixed Salary",
+      "role": "master",
+      "monthly_salary": 30000,
+      "is_active": true,
+      "created_at": "2026-06-02T21:25:37.877858+00:00",
+      "esi_number": null,
+      "pf_number": null,
+      "pf_esi_eligible": false,
+      "whatsapp_number": "9106020222",
+      "whatsapp_language": "en",
+      "start_date": "2026-06-02",
+      "pf_esi_enrolled": false
+    }
+  ],
+  "worker_advances": [],
+  "attendance": []
+}

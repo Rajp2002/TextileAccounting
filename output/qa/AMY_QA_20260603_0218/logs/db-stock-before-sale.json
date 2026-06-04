@@ -1,0 +1,33 @@
+{
+  "lots": [
+    {
+      "id": "5485d113-55c6-4fa9-9edc-f98eb9cd3f0b",
+      "org_id": "b1f6e408-ca92-4e70-a82d-4db74b2b91b4",
+      "quality_label": "AMY_QA_20260603_0218 QA Sub-Taka Quality",
+      "godown": "Main Godown",
+      "source_type": "manual",
+      "market_run_id": null,
+      "order_id": null,
+      "quote_id": null,
+      "original_taka_count": 25,
+      "available_taka_count": 25,
+      "meters_per_taka": 1,
+      "cost_per_meter": 28,
+      "received_date": "2026-06-02",
+      "notes": "AMY_QA_20260603_0218 sub-taka regression lot; UI hidden taka_count default observed",
+      "created_by": "1e1ffaaf-d20b-437b-b038-9cb10b868cf1",
+      "created_at": "2026-06-02T21:13:00.208988+00:00",
+      "updated_at": "2026-06-02T21:13:00.208988+00:00",
+      "unit_label": "taka",
+      "original_meters": 25,
+      "available_meters": 25,
+      "stock_purpose": "manual",
+      "source_date": null,
+      "source_shift": null
+    }
+  ],
+  "movements": null,
+  "errors": {
+    "movements": "column fabric_stock_movements.quality_label does not exist"
+  }
+}

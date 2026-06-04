@@ -1,0 +1,655 @@
+[
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 0,
+    "labels": [
+      "Log out",
+      "English Log out"
+    ],
+    "name": "$ACTION_ID_00d5def7e08869fb840fd74584166cf000acbc725e",
+    "placeholder": null,
+    "tag": "input",
+    "type": "hidden",
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 1,
+    "labels": [
+      "PARTY / CUSTOMER",
+      "PARTY / CUSTOMER FABRIC / QUALITY NAME Name this estimate, e.g. 60g Georgette or D.246."
+    ],
+    "name": null,
+    "placeholder": "e.g. Sundaram Textiles",
+    "tag": "input",
+    "type": null,
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 2,
+    "labels": [
+      "FABRIC / QUALITY NAME Name this estimate, e.g. 60g Georgette or D.246.",
+      "PARTY / CUSTOMER FABRIC / QUALITY NAME Name this estimate, e.g. 60g Georgette or D.246."
+    ],
+    "name": null,
+    "placeholder": "e.g. 60g Georgette, D.246, Japan Satin",
+    "tag": "input",
+    "type": null,
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 3,
+    "labels": [
+      "WARP CONSTRUCTION",
+      "WARP CONSTRUCTION WEFT CONSTRUCTION"
+    ],
+    "name": null,
+    "placeholder": "50/48 + Rainbow",
+    "tag": "input",
+    "type": null,
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 4,
+    "labels": [
+      "WEFT CONSTRUCTION",
+      "WARP CONSTRUCTION WEFT CONSTRUCTION"
+    ],
+    "name": null,
+    "placeholder": "50/48 - 68 Picks",
+    "tag": "input",
+    "type": null,
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 5,
+    "labels": [
+      "%",
+      "WARP CRIMP (TAKE-UP) % Beam shrink relative to tape length"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "5"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 6,
+    "labels": [
+      "%",
+      "DEFAULT YARN WASTE % Fallback waste % if row is 0%"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "10"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 7,
+    "labels": [
+      "LAYER NAME Required",
+      "LAYER NAME Required CALC DENIER D BEAM ENDS WASTE % % or 10% default RATE (₹/KG) Required GST %"
+    ],
+    "name": null,
+    "placeholder": "Warp Layer 1",
+    "tag": "input",
+    "type": null,
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 8,
+    "labels": [
+      "D",
+      "CALC DENIER D"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 9,
+    "labels": [
+      "BEAM ENDS",
+      "LAYER NAME Required CALC DENIER D BEAM ENDS WASTE % % or 10% default RATE (₹/KG) Required GST %"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 10,
+    "labels": [
+      "%",
+      "WASTE % % or 10% default"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 11,
+    "labels": [
+      "RATE (₹/KG) Required",
+      "LAYER NAME Required CALC DENIER D BEAM ENDS WASTE % % or 10% default RATE (₹/KG) Required GST %"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 12,
+    "labels": [
+      "GST %",
+      "LAYER NAME Required CALC DENIER D BEAM ENDS WASTE % % or 10% default RATE (₹/KG) Required GST %"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 13,
+    "labels": [
+      "m",
+      "TAPE LENGTH m"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 14,
+    "labels": [
+      "LAYER NAME Required",
+      "LAYER NAME Required PICKS (PPI) CLOTH WIDTH CM INCH cm Finished output width (not loom width) CALC DENIER D WASTE % % or 10% default RATE (₹/KG) Required GST %"
+    ],
+    "name": null,
+    "placeholder": "Weft Layer 1",
+    "tag": "input",
+    "type": null,
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 15,
+    "labels": [
+      "PICKS (PPI)",
+      "LAYER NAME Required PICKS (PPI) CLOTH WIDTH CM INCH cm Finished output width (not loom width) CALC DENIER D WASTE % % or 10% default RATE (₹/KG) Required GST %"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 16,
+    "labels": [
+      "cm",
+      "CLOTH WIDTH CM INCH cm Finished output width (not loom width)"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 17,
+    "labels": [
+      "D",
+      "CALC DENIER D"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 18,
+    "labels": [
+      "%",
+      "WASTE % % or 10% default"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 19,
+    "labels": [
+      "RATE (₹/KG) Required",
+      "LAYER NAME Required PICKS (PPI) CLOTH WIDTH CM INCH cm Finished output width (not loom width) CALC DENIER D WASTE % % or 10% default RATE (₹/KG) Required GST %"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 20,
+    "labels": [
+      "GST %",
+      "LAYER NAME Required PICKS (PPI) CLOTH WIDTH CM INCH cm Finished output width (not loom width) CALC DENIER D WASTE % % or 10% default RATE (₹/KG) Required GST %"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "loom-type-selector",
+    "idx": 21,
+    "labels": [
+      "LOOM TYPE — Select loom type — Jacquard (Electronic) — 250 RPM Jacquard (Mechanical) — 130 RPM Water Jet — 700 RPM Rapier — 450 RPM Air Jet — 900 RPM Dobby — 50",
+      "LOOM TYPE & OUTPUT LOOM TYPE — Select loom type — Jacquard (Electronic) — 250 RPM Jacquard (Mechanical) — 130 RPM Water Jet — 700 RPM Rapier — 450 RPM Air Jet —"
+    ],
+    "name": null,
+    "options": [
+      {
+        "text": "— Select loom type —",
+        "value": ""
+      },
+      {
+        "text": "Jacquard (Electronic) — 250 RPM",
+        "value": "jacquard_electronic"
+      },
+      {
+        "text": "Jacquard (Mechanical) — 130 RPM",
+        "value": "jacquard_mechanical"
+      },
+      {
+        "text": "Water Jet — 700 RPM",
+        "value": "water_jet"
+      },
+      {
+        "text": "Rapier — 450 RPM",
+        "value": "rapier"
+      },
+      {
+        "text": "Air Jet — 900 RPM",
+        "value": "air_jet"
+      },
+      {
+        "text": "Dobby — 500 RPM",
+        "value": "dobby"
+      },
+      {
+        "text": "Projectile — 280 RPM",
+        "value": "projectile"
+      },
+      {
+        "text": "Other / Manual — enter RPM manually",
+        "value": "other"
+      }
+    ],
+    "placeholder": null,
+    "tag": "select",
+    "type": null,
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 22,
+    "labels": [
+      "₹ /m",
+      "WAGE PER METER (₹/M) ₹ /m Required"
+    ],
+    "name": null,
+    "placeholder": "0.00",
+    "tag": "input",
+    "type": "number",
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 23,
+    "labels": [
+      "paise",
+      "PAISA PER PICK paise Required"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 24,
+    "labels": [
+      "WARPING / KG",
+      "WARPING / KG"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "2"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "sizing-mode-in-house",
+    "idx": 25,
+    "labels": [
+      "In-house (already in overhead)",
+      "In-house (already in overhead) Outsourced"
+    ],
+    "name": "sizing-mode",
+    "placeholder": null,
+    "tag": "input",
+    "type": "radio",
+    "value": "in_house"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "sizing-mode-outsourced",
+    "idx": 26,
+    "labels": [
+      "Outsourced",
+      "In-house (already in overhead) Outsourced"
+    ],
+    "name": "sizing-mode",
+    "placeholder": null,
+    "tag": "input",
+    "type": "radio",
+    "value": "outsourced"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 27,
+    "labels": [
+      "looms",
+      "LOOM COUNT looms"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 28,
+    "labels": [
+      "m/day",
+      "AVG DAILY OUTPUT m/day"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "50"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 29,
+    "labels": [
+      "days",
+      "WORKING DAYS days Standard 26-day month"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "26"
+  },
+  {
+    "aria": null,
+    "disabled": true,
+    "id": "",
+    "idx": 30,
+    "labels": [
+      "₹ /mo",
+      "₹ /mo"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": null,
+    "value": "Rent / Lease"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 31,
+    "labels": [
+      "₹ /mo",
+      "₹ /mo"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": true,
+    "id": "",
+    "idx": 32,
+    "labels": [
+      "per loom helper",
+      "per loom helper ₹ /mo"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": null,
+    "value": "Electricity"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 33,
+    "labels": [
+      "₹ /mo",
+      "per loom helper ₹ /mo"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": true,
+    "id": "",
+    "idx": 34,
+    "labels": [
+      "₹ /mo",
+      "₹ /mo"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": null,
+    "value": "Water & Maintenance"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 35,
+    "labels": [
+      "₹ /mo",
+      "₹ /mo"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": true,
+    "id": "",
+    "idx": 36,
+    "labels": [
+      "₹ /mo",
+      "₹ /mo"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": null,
+    "value": "Factory Consumables"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 37,
+    "labels": [
+      "₹ /mo",
+      "₹ /mo"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "0"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 38,
+    "labels": [
+      "m",
+      "MONTHLY OUTPUT (ACTUAL/TARGET) Suggest m"
+    ],
+    "name": null,
+    "placeholder": null,
+    "tag": "input",
+    "type": "number",
+    "value": "10000"
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 39,
+    "labels": [
+      "₹",
+      "Direct overhead override Force a specific overhead rate from historical data ₹"
+    ],
+    "name": null,
+    "placeholder": "e.g. 12.50",
+    "tag": "input",
+    "type": "number",
+    "value": ""
+  },
+  {
+    "aria": null,
+    "disabled": false,
+    "id": "",
+    "idx": 40,
+    "labels": [
+      "m",
+      "SIMULATION QUANTITY m Required"
+    ],
+    "name": null,
+    "placeholder": "1000",
+    "tag": "input",
+    "type": "number",
+    "value": ""
+  }
+]

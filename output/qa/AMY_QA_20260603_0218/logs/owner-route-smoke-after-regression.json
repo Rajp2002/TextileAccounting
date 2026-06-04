@@ -1,0 +1,44 @@
+[
+  {
+    "route": "/owner/today",
+    "label": "today-02-after-stock-commercials-regression",
+    "url": "http://localhost:3000/owner/today",
+    "text": "AMY_QA_20260603_0218 Factory\n\nOwner control\n\nCONTROL\n\nFactory Today\nEstimator\nQuotes\nDashboard\n\nFACTORY FLOW\n\nOrders\nMarket Runs\nGodown Stock\nDispatches\n\nMONEY\n\nCommercials\nBilling\n\nWORKFORCE\n\nWorkers\nPayroll\nAdvances\n\nLOOMS\n\nLooms\n\nSYSTEM\n\nArchive\nSettings\n\nAMY_QA_20260603_0218 Owner\n\nEnglish\nLog out\nFactory Today\n\nWEDNESDAY\n\n3 Jun\n\n1 critical\nYour factory is ready. Start with your first estimate.\n\nCreate your first estimate to add a fabric quality, calculate pricing, and see expected profit.\n\nCreate first estimate\n\nStart first market run\n\nHigh Priority\n\nPlan fabric that will create expected godown stock.\n\nCreate first estimate\n\nCalculate pricing and expected profit.\n\nAdd/select first quality\n\nHigh Priority\n\nThis happens inside the estimator flow.\n\nConvert quote to order\n\nMove from estimate to production.\n\nLog first production\n\nHigh Priority\n\nRecord meters produced on looms.\n\nAdd opening stock\n\nAdd existing stock to godown.\n\n1\n\nCRITICAL ACTION NEEDED\n\nYou have 1 critical item that need attention.\n\nTODAY'S PRODUCTION\n\nPending\n\nPending\n\nACTIVE LOOMS\n\n0 / 0\n\nAll assigned\n\nGODOWN STOCK\n\nLive\n\nCurrent ledger\n\nNOT DISPATCHED\n\n0\n\nAll dispatched\n\nPRODUCTION STATUS\n\nNo production logged today\n\n1\nDay Shift\nPending\nNight Shift\nPending\nView Looms\n\nLOOMS\n\nAll looms assigned\n\n0\n\nAssigned\n\n0\n\nUnassigned\n\n0\n\nMaintenance\n\nAll 0 looms are assigned and active.\n\nManage Looms\n\nWORK AT RISK\n\nAll orders and runs on track\n\nAll orders and runs are on schedule.\n\nView Orders\nView Runs\n\nSOLD, NOT DISPATCHED\n\nAll sold stock dispatched\n\nAll sold stock has been dispatched.\n\nSell & Dispatch\nView Dispatches\n\nDISPATCHES PENDING RECEIPT\n\nAll dispatches received\n\nAll dispatches have been confirmed received.\n\nView All Dispatches\n\nPAYROLL / HISAAB\n\n15 Apr – 14 May\n\nActive Workers\n\n—\n\nopens near pay date\n\nPending Advances\n\n—\n\nNo pending advances\n\nPay date 10 Jun\nView Payroll\n\nQUICK ACTIONS\n\nJump to a workflow\n\nCost New Fabric\n\nRun the estimator\n\nStart Party Order\n\nConvert a quote to order\n\nStart Market Maal\n\nNew speculative run\n\nGodown Ledger\n\nReview expected stock\n\nCreate Dispatch\n\nSend sold stock\n\nSettle Hisaab\n\nProcess payroll",
+    "logs": []
+  },
+  {
+    "route": "/owner/analytics",
+    "label": "analytics-01-after-stock-commercials-regression",
+    "url": "http://localhost:3000/owner/analytics",
+    "text": "AMY_QA_20260603_0218 Factory\n\nOwner control\n\nCONTROL\n\nFactory Today\nEstimator\nQuotes\nDashboard\n\nFACTORY FLOW\n\nOrders\nMarket Runs\nGodown Stock\nDispatches\n\nMONEY\n\nCommercials\nBilling\n\nWORKFORCE\n\nWorkers\nPayroll\nAdvances\n\nLOOMS\n\nLooms\n\nSYSTEM\n\nArchive\nSettings\n\nAMY_QA_20260603_0218 Owner\n\nEnglish\nLog out\nProduction Overview\n\nOrders, market runs, machines, and payroll signals\n\nLive\nYESTERDAY · 2 JUN\nFINALIZED\nMETERS PRODUCED\n—\nFLOOR WAGES\n—\nSALARY BURDEN\n₹1.0k\nOVERALL EFFICIENCY\n—\nTODAY · 3 JUN\nLIVE\nMETERS PRODUCED\n—\nFLOOR WAGES\n—est.\nMACHINES RUNNING\n—machines\nHealth Index(1)\nManage\n1\nACTIVE\n0\nAT RISK\n0\nOVERDUE\nAMY_QA_20260603_0218 Buyer Alpha\n0%\nMachine Utilisation\n0%\n\nNo machines configured\n\n7-Day Production Trend\nSteady\n0\n0\n0\n0\n0\n0\n0\nTHU 28\nFRI 29\nSAT 30\nSUN 31\nMON 1\nTUE 2\nWED 3\n7-day avg: 0 m\nToday's workers\n\nNo production logged today\n\nQUICK ACTIONS\nCLIENT ORDERS\n\nCheck pace and assign production\n\nMARKET RUNS\n\nTrack speculative loom output\n\nPAYROLL\n\nReview wage liability from logs",
+    "logs": []
+  },
+  {
+    "route": "/owner/market-runs",
+    "label": "market-01-market-runs-route",
+    "url": "http://localhost:3000/owner/market-runs",
+    "text": "AMY_QA_20260603_0218 Factory\n\nOwner control\n\nCONTROL\n\nFactory Today\nEstimator\nQuotes\nDashboard\n\nFACTORY FLOW\n\nOrders\nMarket Runs\nGodown Stock\nDispatches\n\nMONEY\n\nCommercials\nBilling\n\nWORKFORCE\n\nWorkers\nPayroll\nAdvances\n\nLOOMS\n\nLooms\n\nSYSTEM\n\nArchive\nSettings\n\nAMY_QA_20260603_0218 Owner\n\nEnglish\nLog out\nMarket Runs\n\nPlan speculative grey fabric production, then manage finished takas from Stock\n\nArchive\nNew Run\nNo market runs yet\n\nStart a market run to keep looms productive when client orders are light, then manage physical takas from Stock.\n\nNew Market Run",
+    "logs": []
+  },
+  {
+    "route": "/owner/billing",
+    "label": "billing-01-billing-smoke-owner",
+    "url": "http://localhost:3000/owner/billing",
+    "text": "AMY_QA_20260603_0218 Factory\n\nOwner control\n\nCONTROL\n\nFactory Today\nEstimator\nQuotes\nDashboard\n\nFACTORY FLOW\n\nOrders\nMarket Runs\nGodown Stock\nDispatches\n\nMONEY\n\nCommercials\nBilling\n\nWORKFORCE\n\nWorkers\nPayroll\nAdvances\n\nLOOMS\n\nLooms\n\nSYSTEM\n\nArchive\nSettings\n\nAMY_QA_20260603_0218 Owner\n\nEnglish\nLog out\nBilling & Subscription\n\nManage your Weavly factory operations plan\n\nActive\nFREE TRIAL ACTIVE\nExperience Weavly Premium\n\nFull access until Wednesday, 10 June 2026\n\nTIME REMAINING\n\n7\nDAYS\nTRIAL STARTED\n0% ELAPSED\n\nFull Access Unlocked\n\nYou are enjoying full Premium features. To prevent service disruption after the trial ends, you can subscribe to a plan below today. You won't be charged until your trial expires.\n\nSelect your Weavly Plan\n\nAll prices include 18% GST. Cancel anytime.\n\nBase\n₹2,360\n/month\n\n₹2,000 + ₹360 GST (18%)\n\nWeavly Estimator\nBasic order cost calculations\nSingle owner account\nSubscribe — ₹2,360/mo\nAuto-renew monthly\nRECOMMENDED\nPremium\n₹5,900\n/month\n\n₹5,000 + ₹900 GST (18%)\n\nEverything in Base\nProduction & order tracking\nPayroll & advances\nDaily WhatsApp briefs\nAnalytics & reports\nUnlimited machines & workers\nPriority support\nSubscribe — ₹5,900/mo\nAuto-renew monthly\n\nPAYMENTS SECURED BY RAZORPAY · DATA ENCRYPTED PER DPDP ACT 2023\n\nRefer & Earn\n\nGet 10% off your monthly bill per paid referral.\n\nTOTAL REFERRALS\n\n0\n0 converted\n\nCURRENT REWARD\n\n0%\nOFF\nJOURNEY TO 100% FREE\n0% / 100%\nYOUR UNIQUE CODE\nSHARE\n\nBILLING SUPPORT\n\nDownload Invoices\nUpdate Payment Method\n\n🧪 TEST MODE ACTIVE: USE CARD 4111-1111-1111-1111 FOR TRIAL AND TEST PAYMENTS.",
+    "logs": []
+  },
+  {
+    "route": "/owner/settings",
+    "label": "settings-02-settings-and-production-mode-after-regression",
+    "url": "http://localhost:3000/owner/settings",
+    "text": "AMY_QA_20260603_0218 Factory\n\nOwner control\n\nCONTROL\n\nFactory Today\nEstimator\nQuotes\nDashboard\n\nFACTORY FLOW\n\nOrders\nMarket Runs\nGodown Stock\nDispatches\n\nMONEY\n\nCommercials\nBilling\n\nWORKFORCE\n\nWorkers\nPayroll\nAdvances\n\nLOOMS\n\nLooms\n\nSYSTEM\n\nArchive\nSettings\n\nAMY_QA_20260603_0218 Owner\n\nEnglish\nLog out\nSettings\n\nFactory configuration and access codes\n\nRefresh\nFACTORY & IDENTITY\nFactory Information\n\nManage your factory details and access codes\n\nFactory Name\nFactory join code\n\nEKVKDG7R\n\nCopy\nRegenerate\n\nExpires: 3 Jul 2026\n\nPersonal Information\n\nView your registered profile details\n\nFull Name\nPhone Number\nROLE: OWNER\nPRODUCTION MODE\nProduction Mode\n\nChoose which workflows Weavly shows first for this factory.\n\nProduction workflow\nBoth\n\nWe handle both market runs and customer-specific orders.\n\nChanging this only adjusts which workflows are shown. Existing quotes, orders, market runs, stock, and dispatches will not be deleted.\nACCOUNT SECURITY & TEAM\nSensitive Actions Access Code\nGenerate a single-use code for supervisors to delete records or edit past attendance. Codes expire in 15 minutes.\nGenerate New Code\nCOMMUNICATIONS & AUTOMATION\nDaily WhatsApp Brief\nNot enrolled\nGet a factory summary — meters produced, yield efficiency, and wage totals — every evening at 8 PM.\nYour WhatsApp Number\n+91\n\n10-digit Indian mobile number, without country code.\n\nSave & Enable\n\nBy saving, you agree to receive automated WhatsApp messages from Weavly about your factory activity. Messages are sent only at scheduled times or when critical events occur. Standard WhatsApp rates may apply. You can opt out any time using the button above.\n\nMore automations coming soon\n\nRequest features like weekly email summaries or worker SMS receipts.\n\nPRODUCTION COSTING & TEMPLATES\nSAVED FABRIC QUALITIES",
+    "logs": []
+  },
+  {
+    "route": "/owner/system-health",
+    "label": "health-01-system-health-route",
+    "url": "http://localhost:3000/feature-archived",
+    "text": "Feature archived for Phase 1\n\nThis module is preserved for a future release, but it is not active in the focused Phase 1 workflow.\n\nBack to production overview",
+    "logs": []
+  }
+]

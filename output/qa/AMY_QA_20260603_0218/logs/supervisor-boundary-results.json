@@ -1,0 +1,146 @@
+[
+  {
+    "label": "SUP-01 supervisor dashboard QA",
+    "route": "/supervisor/dashboard",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/052-sup-01-supervisor-dashboard-qa.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SUP-02 supervisor production route QA",
+    "route": "/supervisor/production",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/053-sup-02-supervisor-production-route-qa.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SUP-03 supervisor workers route QA",
+    "route": "/supervisor/workers",
+    "finalUrl": "http://localhost:3000/supervisor/workers",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out Worker Directory Meter workers, Upaad, and payroll records Add Worker Meter Workers No meter workers yet. Add workers to start linking shift meters, Upaad, and payroll records.",
+      "h1": "Worker Directory",
+      "h2": "Meter Workers",
+      "href": "http://localhost:3000/supervisor/workers",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/054-sup-03-supervisor-workers-route-qa.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SUP-04 supervisor attendance route QA",
+    "route": "/supervisor/attendance",
+    "finalUrl": "http://localhost:3000/supervisor/attendance",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out Daily Attendance Fixed salary staff Today PRESENT 0/0 No day-to-day workers Add daily workers to start attendance-linked payroll. Save Attendance",
+      "h1": "Daily Attendance",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/attendance",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/055-sup-04-supervisor-attendance-route-qa.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SUP-05 supervisor machines route QA",
+    "route": "/supervisor/machines",
+    "finalUrl": "http://localhost:3000/supervisor/machines",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out Loom Board Review running, idle, and assigned looms for the factory floor. Loom Assignments Review worker and shift assignments for each loom. No looms found. Contact the owner to add looms.",
+      "h1": "Loom Board",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/machines",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/056-sup-05-supervisor-machines-route-qa.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-04 supervisor direct owner today",
+    "route": "/owner/today",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/057-sec-04-supervisor-direct-owner-today.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-05 supervisor direct owner commercials",
+    "route": "/owner/commercials",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/058-sec-05-supervisor-direct-owner-commercials.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-06 supervisor direct owner billing",
+    "route": "/owner/billing",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/059-sec-06-supervisor-direct-owner-billing.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-07 supervisor direct owner settings",
+    "route": "/owner/settings",
+    "finalUrl": "http://localhost:3000/supervisor/dashboard",
+    "navError": null,
+    "info": {
+      "body": "AMY_QA_20260603_0218 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms AMY_QA_20260603_0218 QA Supervisor English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Save shift logs",
+      "h1": "Shift Meter Log",
+      "h2": "",
+      "href": "http://localhost:3000/supervisor/dashboard",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/060-sec-07-supervisor-direct-owner-settings.png",
+    "warnErrorCount": 0,
+    "logs": []
+  }
+]

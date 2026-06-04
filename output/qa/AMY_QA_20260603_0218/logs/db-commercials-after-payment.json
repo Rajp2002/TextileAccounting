@@ -1,0 +1,52 @@
+{
+  "captured_at": "2026-06-02T21:22:43.040Z",
+  "sale_id": "d9a06b19-26d8-4157-8c52-a744688ffcff",
+  "receivable_id": "8f2a2e70-517d-474b-947d-5c15cd04385f",
+  "errors": {},
+  "receivable": {
+    "id": "8f2a2e70-517d-474b-947d-5c15cd04385f",
+    "org_id": "b1f6e408-ca92-4e70-a82d-4db74b2b91b4",
+    "source_type": "fabric_stock_sale",
+    "source_id": "d9a06b19-26d8-4157-8c52-a744688ffcff",
+    "source_date": "2026-06-03",
+    "order_id": null,
+    "dispatch_id": "e9cedcfd-31a5-4da2-a138-3a5d05df6458",
+    "party_name": "AMY_QA_20260603_0218 QA Stock Buyer",
+    "quality_label": "AMY_QA_20260603_0218 QA Sub-Taka Quality",
+    "broker_name": null,
+    "reference_label": null,
+    "total_amount": 420,
+    "received_amount": 420,
+    "balance_amount": 0,
+    "payment_status": "paid",
+    "credit_days": 15,
+    "due_date": "2026-06-17",
+    "party_risk_status": null,
+    "last_follow_up_at": null,
+    "next_follow_up_at": null,
+    "follow_up_note": null,
+    "notes": null,
+    "created_by": "1e1ffaaf-d20b-437b-b038-9cb10b868cf1",
+    "updated_by": "1e1ffaaf-d20b-437b-b038-9cb10b868cf1",
+    "created_at": "2026-06-02T21:17:30.565172+00:00",
+    "updated_at": "2026-06-02T21:22:21.581021+00:00",
+    "party_id": "af972fc7-aac6-4c25-ab9d-f4f8b1db4822"
+  },
+  "payment_receipts": [
+    {
+      "id": "2a64e304-32f6-4991-9a44-f71f9f94a8da",
+      "org_id": "b1f6e408-ca92-4e70-a82d-4db74b2b91b4",
+      "receivable_id": "8f2a2e70-517d-474b-947d-5c15cd04385f",
+      "amount": 420,
+      "payment_date": "2026-06-02",
+      "payment_mode": "bank",
+      "reference_number": "AMY_QA_20260603_0218-PAY-001",
+      "cheque_number": null,
+      "cheque_date": null,
+      "bank_name": null,
+      "notes": "AMY_QA_20260603_0218 full receivable collection smoke",
+      "created_by": "1e1ffaaf-d20b-437b-b038-9cb10b868cf1",
+      "created_at": "2026-06-02T21:22:21.581021+00:00"
+    }
+  ]
+}

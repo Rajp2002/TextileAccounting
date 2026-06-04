@@ -35,6 +35,8 @@ import {
     Zap,
     Play,
     CheckCircle2,
+    ArrowRight,
+    Minus,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
@@ -420,34 +422,162 @@ function estimateReducer(state: EstimateState, action: Action): EstimateState {
 // SUB-COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detail }: {
+type EstimatorAccent = 'warp' | 'weft' | 'weave' | 'overhead' | 'post' | 'neutral'
+
+function getAccentStyles(accent: EstimatorAccent = 'neutral') {
+    const styles: Record<EstimatorAccent, {
+        icon: string
+        marker: string
+        text: string
+        rail: string
+        panel: string
+        ring: string
+    }> = {
+        warp: {
+            icon: 'bg-[#EEF5FB] text-[var(--color-info-blue)] border-[#D7E7F1]',
+            marker: 'bg-[#EEF5FB] text-[var(--color-info-blue)] border-[#D7E7F1]',
+            text: 'text-[var(--color-info-blue)]',
+            rail: 'bg-[var(--color-info-blue)]',
+            panel: 'border-[#D7E7F1] bg-[#F7FBFD]',
+            ring: 'focus:border-[var(--color-info-blue)] focus:ring-[var(--color-info-blue)]/15',
+        },
+        weft: {
+            icon: 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)] border-[#CDE5D3]',
+            marker: 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)] border-[#CDE5D3]',
+            text: 'text-[var(--color-factory-green)]',
+            rail: 'bg-[var(--color-factory-green)]',
+            panel: 'border-[#CDE5D3] bg-[#F7FCF8]',
+            ring: 'focus:border-[var(--color-factory-green)] focus:ring-[var(--color-factory-green)]/15',
+        },
+        weave: {
+            icon: 'bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] border-[#EFD7A4]',
+            marker: 'bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] border-[#EFD7A4]',
+            text: 'text-[var(--color-warning-amber)]',
+            rail: 'bg-[var(--color-warning-amber)]',
+            panel: 'border-[#EFD7A4] bg-[#FFFBF2]',
+            ring: 'focus:border-[var(--color-warning-amber)] focus:ring-[var(--color-warning-amber)]/15',
+        },
+        overhead: {
+            icon: 'bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)] border-[#EEC6BD]',
+            marker: 'bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)] border-[#EEC6BD]',
+            text: 'text-[var(--color-risk-red)]',
+            rail: 'bg-[var(--color-risk-red)]',
+            panel: 'border-[#EEC6BD] bg-[#FFF7F5]',
+            ring: 'focus:border-[var(--color-risk-red)] focus:ring-[var(--color-risk-red)]/15',
+        },
+        post: {
+            icon: 'bg-[var(--color-surface-soft)] text-[var(--color-muted)] border-[var(--color-hairline)]',
+            marker: 'bg-[var(--color-surface-soft)] text-[var(--color-muted)] border-[var(--color-hairline)]',
+            text: 'text-[var(--color-muted)]',
+            rail: 'bg-[var(--color-hairline-strong)]',
+            panel: 'border-[var(--color-hairline)] bg-[var(--color-canvas)]',
+            ring: 'focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/15',
+        },
+        neutral: {
+            icon: 'bg-[var(--color-surface-soft)] text-[var(--color-muted)] border-[var(--color-hairline)]',
+            marker: 'bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)] border-[#EFD7A4]',
+            text: 'text-[var(--color-muted)]',
+            rail: 'bg-[var(--color-yarn-orange)]',
+            panel: 'border-[var(--color-hairline)] bg-[var(--color-canvas)]',
+            ring: 'focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/15',
+        },
+    }
+    return styles[accent]
+}
+
+function SectionHeader({ title, icon: Icon, accent = 'warp', badgeContent, detail, step }: {
     title:    string
     icon:     React.ElementType
-    accent?:  'warp' | 'weft' | 'weave' | 'overhead' | 'post' | 'neutral'
+    accent?:  EstimatorAccent
     badgeContent?: React.ReactNode
     detail?: React.ReactNode
+    step?: number
 }) {
-    const variants: Record<string, string> = {
-        warp:     'bg-[var(--color-info-blue-soft)] text-[var(--color-info-blue)]',
-        weft:     'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]',
-        weave:    'bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]',
-        overhead: 'bg-[var(--color-risk-red-soft)] text-[var(--color-risk-red)]',
-        post:     'bg-[var(--color-surface-soft)] text-[var(--color-muted)]',
-        neutral:  'bg-[var(--color-surface-soft)] text-[var(--color-muted)]',
-    }
-    const colorClass = variants[accent] ?? variants.neutral
+    const colorClass = getAccentStyles(accent)
     return (
-        <div className="flex items-center justify-between gap-3 border-b border-[var(--color-hairline)] px-5 py-3.5">
+        <div className="flex flex-col gap-3 border-b border-[var(--color-hairline)] bg-gradient-to-r from-white to-[var(--color-canvas)]/70 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="flex min-w-0 items-center gap-2.5">
-                <div className={`flex h-7 w-7 items-center justify-center rounded-[8px] ${colorClass}`}>
+                {step != null && (
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] border text-[12px] font-semibold ${colorClass.marker}`}>
+                        {step}
+                    </span>
+                )}
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] border ${colorClass.icon}`}>
                     <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                    <span className="text-sm font-medium text-[var(--color-ink)]">{title}</span>
+                    <span className="text-[15px] font-semibold text-[var(--color-ink)]">{title}</span>
                     {detail}
                 </div>
             </div>
-            {badgeContent}
+            {badgeContent && <div className="shrink-0 self-start sm:self-center">{badgeContent}</div>}
+        </div>
+    )
+}
+
+function EstimatorCard({ children, accent = 'neutral' }: { children: React.ReactNode; accent?: EstimatorAccent }) {
+    const accentClass = getAccentStyles(accent).rail
+    return (
+        <Card className="relative mb-3 overflow-hidden rounded-[14px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-[0_8px_28px_rgba(30,37,40,0.045)]">
+            <div className={`absolute left-0 top-0 h-full w-[3px] ${accentClass}`} />
+            {children}
+        </Card>
+    )
+}
+
+function StepperField({
+    label,
+    value,
+    onChange,
+    unit = '%',
+    step = 0.5,
+    hint,
+    accent = 'warp',
+}: {
+    label: string
+    value: number
+    onChange: (v: number) => void
+    unit?: string
+    step?: number
+    hint?: string
+    accent?: EstimatorAccent
+}) {
+    const accentStyles = getAccentStyles(accent)
+    const decrement = () => onChange(Math.max(0, Number((value - step).toFixed(2))))
+    const increment = () => onChange(Number((value + step).toFixed(2)))
+    return (
+        <div className="min-w-0 space-y-2">
+            <Label className={`block text-[11px] font-semibold uppercase tracking-[0.05em] ${accentStyles.text}`}>
+                {label}
+            </Label>
+            <div className="inline-flex h-10 overflow-hidden rounded-[9px] border border-[var(--color-hairline)] bg-white shadow-[0_1px_2px_rgba(30,37,40,0.04)]">
+                <button
+                    type="button"
+                    onClick={decrement}
+                    className="flex w-10 items-center justify-center border-r border-[var(--color-hairline)] text-[var(--color-muted)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
+                >
+                    <Minus className="h-3.5 w-3.5" />
+                </button>
+                <Input
+                    type="number"
+                    value={value}
+                    step={step}
+                    min={0}
+                    onChange={e => onChange(Number(e.target.value))}
+                    className="h-full w-16 rounded-none border-0 bg-white p-0 text-center font-mono text-sm font-semibold text-[var(--color-ink)] shadow-none focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                <span className="flex w-10 items-center justify-center border-l border-r border-[var(--color-hairline)] text-xs font-semibold text-[var(--color-muted)]">
+                    {unit}
+                </span>
+                <button
+                    type="button"
+                    onClick={increment}
+                    className="flex w-10 items-center justify-center text-[var(--color-muted)] transition-colors hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
+                >
+                    <Plus className="h-3.5 w-3.5" />
+                </button>
+            </div>
+            {hint && <p className="text-[11px] font-medium leading-tight text-[var(--color-muted)]">{hint}</p>}
         </div>
     )
 }
@@ -462,7 +592,7 @@ function NumField({
     const isEmpty = attentionWhenEmpty && (!value || value <= 0)
     return (
         <div className="space-y-1.5 min-w-0">
-            <Label className="block text-xs uppercase tracking-wider font-medium text-[var(--color-muted)] whitespace-nowrap overflow-visible">{label}</Label>
+            <Label className="block text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] whitespace-nowrap overflow-visible">{label}</Label>
             <div className="relative group">
                 <Input
                     type="number"
@@ -474,8 +604,8 @@ function NumField({
                         const val = e.target.value === '' ? null : Number(e.target.value)
                         onChange(val)
                     }}
-                    className={`h-11 lg:h-9 text-xs sm:text-sm font-mono font-medium text-center pr-10 sm:pr-14 border focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[10px] text-[var(--color-yarn-orange)] ${
-                        isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)]' : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)]'
+                    className={`h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-10 sm:pr-14 border focus:border-[var(--color-yarn-orange)] focus:ring-1 focus:ring-[var(--color-yarn-orange)]/15 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)] shadow-[0_1px_2px_rgba(30,37,40,0.035)] ${
+                        isEmpty ? 'bg-[var(--color-warning-amber-soft)] border-[var(--color-warning-amber)] text-[var(--color-warning-amber)] placeholder:text-[var(--color-warning-amber)]' : 'bg-[var(--color-canvas-white)] border-[var(--color-hairline)] hover:border-[var(--color-hairline-strong)]'
                     }`}
                 />
                 {unit && (
@@ -484,7 +614,7 @@ function NumField({
                     </span>
                 )}
             </div>
-            {isEmpty && <p className="text-[10px] text-[var(--color-warning-amber)]">Required</p>}
+            {isEmpty && <p className="text-[10px] font-semibold text-[var(--color-warning-amber)]">Required</p>}
             {warning ? (
                 <div className="flex flex-col gap-0.5 mt-1">
                     <div className="flex items-center gap-1">
@@ -501,7 +631,7 @@ function NumField({
                     )}
                 </div>
             ) : hint && !isEmpty ? (
-                <p className="text-xs text-[var(--color-muted)] font-medium leading-tight mt-1">{hint}</p>
+                <p className="text-[11px] text-[var(--color-muted)] font-medium leading-tight mt-1">{hint}</p>
             ) : null}
         </div>
     )
@@ -552,17 +682,17 @@ function WidthField({
     return (
         <div className="space-y-1.5 min-w-0">
             <div className="flex items-center justify-between">
-                <Label className="block text-xs uppercase tracking-wider font-semibold text-slate-500 whitespace-nowrap overflow-visible">
+                <Label className="block text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] whitespace-nowrap overflow-visible">
                     {label}
                 </Label>
-                <div className="flex items-center bg-slate-100 rounded-lg p-0.5 scale-90 origin-right border border-slate-200/50">
+                <div className="flex items-center rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5">
                     <button
                         type="button"
                         onClick={() => onUnitChange('cm')}
                         className={`px-2 py-0.5 text-[10px] font-semibold uppercase rounded-md transition-all ${
                             unit === 'cm'
-                                ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/20'
-                                : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white text-[var(--color-factory-green)] shadow-sm border border-[var(--color-hairline)]'
+                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
                         }`}
                     >
                         cm
@@ -572,8 +702,8 @@ function WidthField({
                         onClick={() => onUnitChange('inch')}
                         className={`px-2 py-0.5 text-[10px] font-semibold uppercase rounded-md transition-all ${
                             unit === 'inch'
-                                ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/20'
-                                : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white text-[var(--color-factory-green)] shadow-sm border border-[var(--color-hairline)]'
+                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
                         }`}
                     >
                         inch
@@ -595,7 +725,7 @@ function WidthField({
                             onChange(raw)
                         }
                     }}
-                    className="h-11 lg:h-9 text-xs sm:text-sm font-mono font-semibold text-center pr-12 sm:pr-16 bg-white border-slate-200 focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-sm group-hover:border-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-full text-orange-600"
+                    className="h-11 text-xs sm:text-sm font-mono font-semibold text-center pr-12 sm:pr-16 bg-white border-[var(--color-hairline)] focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/15 transition-all shadow-[0_1px_2px_rgba(30,37,40,0.035)] group-hover:border-[var(--color-hairline-strong)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none rounded-[9px] text-[var(--color-yarn-orange)]"
                 />
                 <span className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold pointer-events-none">
                     {unit}
@@ -603,41 +733,23 @@ function WidthField({
             </div>
             <div className="flex flex-col gap-0.5 mt-1">
                 {value > 0 && (
-                    <p className="text-[10px] text-emerald-600 font-bold leading-tight flex items-center gap-1 bg-emerald-50/50 py-0.5 px-2 rounded-md self-start border border-emerald-100/50">
-                        <span className="text-[9px]">✨</span> {secondaryReadout}
+                    <p className="text-[10px] text-[var(--color-factory-green)] font-semibold leading-tight flex items-center gap-1 bg-[var(--color-factory-green-soft)] py-0.5 px-2 rounded-md self-start border border-[#CDE5D3]">
+                        {secondaryReadout}
                     </p>
                 )}
-                {hint && <p className="text-[10px] text-slate-400 font-medium leading-tight pl-1">{hint}</p>}
+                {hint && <p className="text-[10px] text-[var(--color-muted)] font-medium leading-tight pl-1">{hint}</p>}
             </div>
         </div>
-    )
-}
-
-function CostPill({ label, value, type = 'default' }: { label: string; value: number; type?: 'default' | 'warp' | 'weft' | 'weave' | 'primary' }) {
-    if (value <= 0) return null
-    const dot: Record<string, string> = {
-        warp: 'bg-[var(--color-info-blue)]',
-        weft: 'bg-[var(--color-factory-green)]',
-        weave: 'bg-[var(--color-yarn-orange)]',
-        default: 'bg-[var(--color-muted)]',
-        primary: 'bg-[var(--color-yarn-orange)]',
-    }
-    const base = "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-xs font-medium text-[var(--color-hairline-strong)]"
-    return (
-        <span className={base}>
-            <span className={`h-[7px] w-[7px] rounded-full ${dot[type] ?? dot.default}`} />
-            {label} ₹{value.toFixed(2)}
-        </span>
     )
 }
 
 function SectionCostPill({ value }: { value: number }) {
     const hasCost = value > 0
     return (
-        <span className={`rounded-full px-2.5 py-[3px] text-[13px] font-medium ${
+        <span className={`rounded-full border px-3 py-1 text-[13px] font-semibold shadow-[0_1px_2px_rgba(30,37,40,0.035)] ${
             hasCost
-                ? 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]'
-                : 'bg-[var(--color-surface-soft)] text-[var(--color-muted)]'
+                ? 'border-[#CDE5D3] bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]'
+                : 'border-[var(--color-hairline)] bg-[var(--color-surface-soft)] text-[var(--color-muted)]'
         }`}>
             ₹{value.toFixed(2)}/m
         </span>
@@ -654,7 +766,7 @@ function CapacityMetricField({
     hint?: string
 }) {
     return (
-        <div className="rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2.5">
+        <div className="rounded-[10px] border border-[var(--color-hairline)] bg-gradient-to-br from-[var(--color-canvas)] to-[var(--color-surface-soft)] px-3 py-2.5">
             <Label className="text-[10px] font-medium uppercase tracking-[0.05em] text-[var(--color-muted)]">{label}</Label>
             <div className="mt-1 flex items-end gap-1">
                 <Input
@@ -688,14 +800,14 @@ function LayerNameField({
 }) {
     return (
         <div className="space-y-1.5 min-w-0">
-            <Label className="block text-xs uppercase tracking-wider font-medium text-[var(--color-muted)]">
+            <Label className="block text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)]">
                 {label}
             </Label>
             <Input
                 value={value}
                 placeholder={placeholder}
                 onChange={e => onChange(e.target.value)}
-                className={`h-10 rounded-[10px] border font-medium focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/10 ${
+                className={`h-11 rounded-[9px] border font-semibold focus:border-[var(--color-yarn-orange)] focus:ring-[var(--color-yarn-orange)]/10 ${
                     value?.trim() ? 'border-[var(--color-hairline)] bg-[var(--color-canvas-white)]' : 'border-[var(--color-warning-amber)] bg-[var(--color-warning-amber-soft)] text-[var(--color-warning-amber)]'
                 }`}
             />
@@ -725,33 +837,35 @@ function RowCard({
     kgPer100m: number; costPer100m: number; children: React.ReactNode; accent?: 'indigo' | 'emerald'
 }) {
     const colors = {
-        indigo:  { strip: 'bg-[var(--color-info-blue-soft)]', badge: 'bg-[var(--color-info-blue-soft)] text-[var(--color-info-blue)]' },
-        emerald: { strip: 'bg-[var(--color-factory-green-soft)]', badge: 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)]' },
+        indigo:  { strip: 'bg-[#F6FAFD]', badge: 'bg-[#EEF5FB] text-[var(--color-info-blue)] border-[#D7E7F1]', dot: 'bg-[var(--color-info-blue)]' },
+        emerald: { strip: 'bg-[#F7FCF8]', badge: 'bg-[var(--color-factory-green-soft)] text-[var(--color-factory-green)] border-[#CDE5D3]', dot: 'bg-[var(--color-factory-green)]' },
     }
     const c = colors[accent]
     return (
-        <div className="overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] group">
-            <div className={`flex items-center justify-between gap-2 px-3.5 py-2.5 ${c.strip}`}>
-                <div className="flex items-center gap-2">
-                    <span className={`rounded-[4px] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] ${c.badge}`}>
+        <div className="group overflow-hidden rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-[0_1px_8px_rgba(30,37,40,0.035)]">
+            <div className={`flex flex-col gap-2 border-b border-[var(--color-hairline)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${c.strip}`}>
+                <div className="flex min-w-0 items-center gap-2">
+                    <span className={`rounded-[6px] border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.06em] ${c.badge}`}>
                         {title} {index + 1}
                     </span>
-                    <Badge variant="outline" className="h-4 border-0 bg-transparent px-0 py-0 text-[11px] font-medium text-[var(--color-muted)]">
+                    <span className={`h-2 w-2 rounded-full ${c.dot}`} />
+                    <Badge variant="outline" className="h-4 border-0 bg-transparent px-0 py-0 text-[11px] font-semibold text-[var(--color-muted)]">
                         {kgPer100m.toFixed(3)} kg/100m
                     </Badge>
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-[var(--color-muted)]">
+                <div className="flex items-center justify-between gap-2 sm:justify-end">
+                    <span className="text-xs font-semibold text-[var(--color-muted)]">
                         ₹{costPer100m.toFixed(2)}/100m
                     </span>
+                    <ChevronUp className="h-4 w-4 text-[var(--color-muted)]" />
                     {canRemove && (
-                        <button onClick={onRemove} className="text-[var(--color-muted)] hover:text-[var(--color-risk-red)] transition-colors">
+                        <button onClick={onRemove} className="rounded-md p-1 text-[var(--color-muted)] transition-colors hover:bg-white hover:text-[var(--color-risk-red)]">
                             <Trash2 className="h-3.5 w-3.5" />
                         </button>
                     )}
                 </div>
             </div>
-            <div className={`grid gap-3 px-3.5 py-3 ${accent === 'indigo' ? 'lg:grid-cols-5' : 'lg:grid-cols-6'}`}>
+            <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 lg:grid-cols-3 ${accent === 'indigo' ? '2xl:grid-cols-6' : '2xl:grid-cols-7'}`}>
                 {children}
             </div>
         </div>
@@ -1279,8 +1393,21 @@ export default function EstimatorClient({
 
     // Validation: Pilot Safety Rails
     const isZeroConfig = state.overheadItems.filter(i => i.isPreset).every(i => (i.monthlyAmount || 0) === 0)
-    const pageShellClass = "mx-auto w-full max-w-6xl lg:translate-x-8 xl:translate-x-12 2xl:translate-x-16"
-    const hudShellClass = "mx-auto max-w-5xl space-y-3 rounded-[18px] border border-[var(--color-hairline)] bg-[var(--color-loom-navy)] px-5 py-3 sm:px-6 lg:translate-x-8 xl:translate-x-12 2xl:translate-x-16"
+    const pageShellClass = "w-full max-w-7xl px-4 sm:px-6 lg:ml-[280px] lg:mr-8 lg:w-[calc(100%-312px)] lg:max-w-none lg:px-0"
+    const hudShellClass = "w-full rounded-[18px] border border-[var(--color-hairline)] bg-white/95 px-4 py-4 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur sm:px-5 lg:ml-[280px] lg:mr-8 lg:w-[calc(100%-312px)]"
+    const postProcessingCostPerM = totals.windingPerM + totals.processingPerM + totals.finishingPerM
+    const displayMarginPct = Number.isFinite(orderQuote?.actualMarginPct)
+        ? orderQuote?.actualMarginPct ?? state.profitPct
+        : state.profitPct
+    const costSegments = [
+        { label: 'Warp', value: totals.warpCostPerM, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' },
+        { label: 'Weft', value: totals.weftCostPerM, color: 'bg-[#D2A149]', text: 'text-[#9B6B19]' },
+        { label: 'Weave', value: totals.weaveCostPerM, color: 'bg-[var(--color-info-blue)]', text: 'text-[var(--color-info-blue)]' },
+        { label: 'Warping', value: totals.warpingAndSizingPerM, color: 'bg-[var(--color-factory-green)]', text: 'text-[var(--color-factory-green)]' },
+        { label: 'Overhead', value: totals.overheadPerM, color: 'bg-[var(--color-risk-red)]', text: 'text-[var(--color-risk-red)]' },
+        { label: 'Post', value: postProcessingCostPerM, color: 'bg-[var(--color-warning-amber)]', text: 'text-[var(--color-warning-amber)]' },
+    ].filter(segment => segment.value > 0)
+    const costStackTotal = costSegments.reduce((sum, segment) => sum + segment.value, 0)
     return (
         <div className="space-y-5 pb-floating-button md:pb-20 relative">
             {!state.isConfigured && (
@@ -1368,40 +1495,57 @@ export default function EstimatorClient({
                 </div>
             )}
 
-            {/* ── STICKY HUD ───────────────────────────────────────── */}
-            <div className="sticky top-3 z-40 -mt-3 px-5 py-3 sm:px-8 md:px-12 lg:px-16">
+            {/* ── STICKY QUOTE COCKPIT ─────────────────────────────── */}
+            <div className="sticky top-3 z-40 -mt-3 py-3">
                 <div className={hudShellClass}>
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="min-w-[120px]">
-                            <p className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--color-muted)]">{t('estimator.hud.prod_cost')}</p>
-                            <p className="font-mono text-[22px] font-semibold leading-none text-[var(--color-ledger-cream)]">
-                                ₹{totals.totalProductionCostPerM.toFixed(2)}
-                            </p>
+                    <div className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
+                        <div className="min-w-0 space-y-3">
+                            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_minmax(0,0.7fr)] sm:items-end">
+                                <div className="min-w-0">
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.hud.prod_cost')}</p>
+                                    <p className="font-mono text-[34px] font-semibold leading-none text-[var(--color-ink)] sm:text-[40px]">
+                                        ₹{totals.totalProductionCostPerM.toFixed(2)}
+                                    </p>
+                                </div>
+                                <ArrowRight className="hidden h-7 w-7 self-center text-[var(--color-subtle)] sm:block" />
+                                <div className="min-w-0">
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">{t('estimator.hud.quote_per_m')}</p>
+                                    <p className="font-mono text-[34px] font-semibold leading-none text-[var(--color-yarn-orange)] sm:text-[40px]">
+                                        ₹{orderQuote?.isValid ? orderQuote.quotePricePerM.toFixed(2) : '0.00'}
+                                    </p>
+                                </div>
+                                <div className="min-w-0 rounded-[12px] border border-[#CDE5D3] bg-[var(--color-factory-green-soft)] px-3 py-2">
+                                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-factory-green)]">{t('estimator.hud.margin')}</p>
+                                    <p className="font-mono text-[28px] font-semibold leading-none text-[var(--color-factory-green)]">
+                                        {displayMarginPct >= 0 ? '+' : ''}{displayMarginPct.toFixed(1)}%
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex h-2.5 overflow-hidden rounded-full bg-[var(--color-surface-soft)]">
+                                    {costSegments.length > 0 ? costSegments.map(segment => (
+                                        <div
+                                            key={segment.label}
+                                            className={`${segment.color} min-w-[3px] border-r border-white last:border-r-0`}
+                                            style={{ width: `${Math.max(3, (segment.value / costStackTotal) * 100)}%` }}
+                                        />
+                                    )) : (
+                                        <div className="w-full bg-[var(--color-hairline)]" />
+                                    )}
+                                </div>
+                                <div className="flex gap-x-4 gap-y-1 overflow-x-auto pb-1 text-[11px] font-semibold no-scrollbar">
+                                    {(costSegments.length > 0 ? costSegments : [{ label: 'Warp', value: 0, color: 'bg-[var(--color-yarn-orange)]', text: 'text-[var(--color-yarn-orange)]' }]).map(segment => (
+                                        <span key={segment.label} className={`inline-flex shrink-0 items-center gap-1.5 ${segment.text}`}>
+                                            <span className={`h-2 w-2 rounded-full ${segment.color}`} />
+                                            {segment.label}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="min-w-[110px]">
-                            <p className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--color-muted)]">{t('estimator.hud.quote_per_m')}</p>
-                            <p className="font-mono text-[22px] font-semibold leading-none text-[var(--color-yarn-orange)]">
-                                ₹{orderQuote?.isValid ? orderQuote.quotePricePerM.toFixed(2) : '0.00'}
-                            </p>
-                        </div>
-
-                        <div className="min-w-[130px]">
-                            <p className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.07em] text-[var(--color-muted)]">{t('estimator.hud.total_order')}</p>
-                            <p className="font-mono text-[22px] font-semibold leading-none text-[var(--color-factory-green)]">
-                                ₹{orderQuote?.isValid ? orderQuote.totalOrderValue.toLocaleString('en-IN', { maximumFractionDigits: 0 }) : '0'}
-                            </p>
-                        </div>
-
-                        <div className="hidden h-9 w-px bg-[var(--color-primary-active)] sm:block" />
-
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                            <CostPill label="Warp" value={totals.warpCostPerM} type="warp" />
-                            <CostPill label="Weft" value={totals.weftCostPerM} type="weft" />
-                            <CostPill label="Weave" value={totals.weaveCostPerM} type="weave" />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 sm:ml-auto sm:flex sm:w-auto">
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end 2xl:w-[520px]">
 
                             {mode === 'quote' ? (
                                 <>
@@ -1409,7 +1553,7 @@ export default function EstimatorClient({
                                     <Button
                                         id="btn-save-accept"
                                         size="sm"
-                                        className="col-span-2 h-9 rounded-[8px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
+                                        className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                         onClick={() => handleSaveQuote('quote', 'accepted')}
                                         disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
@@ -1426,7 +1570,7 @@ export default function EstimatorClient({
                                         id="btn-save-quote"
                                         size="sm"
                                         variant="outline"
-                                        className="h-9 rounded-[8px] border border-white/15 bg-transparent px-4 text-[13px] font-medium text-[var(--color-hairline-strong)] hover:bg-white/10"
+                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={() => handleSaveQuote('quote', 'draft')}
                                         disabled={savingQuote || !orderQuote?.isValid}
                                     >
@@ -1439,7 +1583,7 @@ export default function EstimatorClient({
                                         id="btn-switch-market"
                                         size="sm"
                                         variant="ghost"
-                                        className="h-9 rounded-[8px] border border-white/15 bg-transparent px-4 text-[13px] font-medium text-[var(--color-hairline-strong)] hover:bg-white/10"
+                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={() => setMode('market')}
                                     >
                                         <Gauge className="h-3.5 w-3.5 shrink-0" />
@@ -1452,7 +1596,7 @@ export default function EstimatorClient({
                                     <Button
                                         id="btn-start-market-run"
                                         size="sm"
-                                        className="col-span-2 h-9 rounded-[8px] bg-[var(--color-yarn-orange)] px-4 text-[13px] font-semibold text-white hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
+                                        className="col-span-2 h-12 rounded-[10px] bg-[var(--color-yarn-orange)] px-5 text-[14px] font-semibold text-white shadow-[0_8px_20px_rgba(217,107,28,0.24)] hover:bg-[var(--color-yarn-orange-dark)] sm:col-span-1"
                                         onClick={() => handleSaveQuote('market')}
                                         disabled={savingQuote || !hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid}
                                         title={(!hasOrderQty || !partyName.trim() || !qualityLabel.trim() || totals.totalProductionCostPerM <= 0 || !orderQuote?.isValid)
@@ -1469,7 +1613,7 @@ export default function EstimatorClient({
                                         id="btn-save-quote-market"
                                         size="sm"
                                         variant="outline"
-                                        className="h-9 rounded-[8px] border border-white/15 bg-transparent px-4 text-[13px] font-medium text-[var(--color-hairline-strong)] hover:bg-white/10"
+                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={() => handleSaveQuote('quote')}
                                         disabled={savingQuote || !orderQuote?.isValid}
                                     >
@@ -1482,7 +1626,7 @@ export default function EstimatorClient({
                                         id="btn-start-party-order-market"
                                         size="sm"
                                         variant="ghost"
-                                        className="h-9 rounded-[8px] border border-white/15 bg-transparent px-4 text-[13px] font-medium text-[var(--color-hairline-strong)] hover:bg-white/10"
+                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-5 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={() => setMode('quote')}
                                         disabled={savingQuote}
                                     >
@@ -1494,11 +1638,11 @@ export default function EstimatorClient({
 
                             {/* Save / Update Quality template button */}
                             {appliedTemplate ? (
-                                <div className="flex items-center">
+                                <div className="col-span-2 flex items-center sm:col-span-1">
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        className="h-9 rounded-[8px] border border-white/15 bg-transparent px-4 text-[13px] font-medium text-[var(--color-hairline-strong)] hover:bg-white/10"
+                                        className="h-12 rounded-[10px] border border-[var(--color-hairline)] bg-white px-4 text-[14px] font-semibold text-[var(--color-body)] hover:bg-[var(--color-surface-soft)]"
                                         onClick={handleUpdateTemplate}
                                         disabled={savingTemplate}
                                     >
@@ -1509,7 +1653,7 @@ export default function EstimatorClient({
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => setAppliedTemplate(null)}
-                                        className="ml-1 h-9 px-2 text-[var(--color-muted)] hover:bg-transparent hover:text-[var(--color-muted)]"
+                                        className="ml-1 h-12 px-2 text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"
                                         title={t('estimator.quality.detachTooltip')}
                                     >
                                         <X className="h-4 w-4" />
@@ -1519,7 +1663,7 @@ export default function EstimatorClient({
                                 <Button
                                     size="sm"
                                     variant="ghost"
-                                    className="hidden h-9 flex-none rounded-[8px] px-3 text-[13px] font-medium text-[var(--color-muted)] hover:bg-transparent hover:text-[var(--color-hairline-strong)] sm:flex"
+                                    className="hidden h-12 flex-none rounded-[10px] px-4 text-[14px] font-semibold text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)] sm:flex"
                                     onClick={() => {
                                         setTemplateName(qualityLabel.trim())
                                         setShowSaveTemplate(true)
@@ -1533,9 +1677,9 @@ export default function EstimatorClient({
                     </div>
 
                     {hasOrderQty && orderQuote && (
-                        <div className="flex items-center gap-3 border-t border-[var(--color-primary-active)] pt-3">
+                        <div className="mt-4 flex items-center gap-3 border-t border-[var(--color-hairline)] pt-3">
                             <div className="shrink-0">
-                                <p className="text-[11px] text-[var(--color-muted)]">{t('estimator.hud.margin')}</p>
+                                <p className="text-[11px] font-semibold text-[var(--color-muted)]">{t('estimator.hud.margin')}</p>
                             </div>
                             <input
                                 type="range"
@@ -1544,11 +1688,11 @@ export default function EstimatorClient({
                                 onChange={e => dispatch({ type: 'SET', field: 'profitPct', value: Number(e.target.value) })}
                                 className="h-2 flex-1 cursor-pointer appearance-none rounded-full accent-[var(--color-yarn-orange)]"
                             />
-                            <p className="shrink-0 text-sm font-medium text-[var(--color-yarn-orange)]">{state.profitPct.toFixed(1)}%</p>
-                            <div className="h-6 w-px bg-[var(--color-primary-active)]" />
+                            <p className="shrink-0 text-sm font-semibold text-[var(--color-yarn-orange)]">{state.profitPct.toFixed(1)}%</p>
+                            <div className="h-6 w-px bg-[var(--color-hairline)]" />
                             <div className="shrink-0 text-right">
-                                <p className="text-[11px] text-[var(--color-muted)]">{t('estimator.hud.net_profit')}</p>
-                                <p className="text-sm font-medium leading-none text-[var(--color-factory-green)]">
+                                <p className="text-[11px] font-semibold text-[var(--color-muted)]">{t('estimator.hud.net_profit')}</p>
+                                <p className="text-sm font-semibold leading-none text-[var(--color-factory-green)]">
                                     ₹{orderQuote.grossProfitRupees.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                 </p>
                             </div>
@@ -1676,8 +1820,8 @@ export default function EstimatorClient({
                 )}
 
                 {/* 1. Order Basics */}
-                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
-                    <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" />
+                <EstimatorCard accent="neutral">
+                    <SectionHeader title={t('estimator.order_basics.title')} icon={Layers} accent="neutral" step={1} />
                     <CardContent className="p-4 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Party / Customer (only visible in quote mode) */}
@@ -1748,59 +1892,52 @@ export default function EstimatorClient({
                             </div>
                         </div>
                     </CardContent>
-                </Card>
+                </EstimatorCard>
 
                 {/* 2. Warp Yarn Rows */}
-                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
+                <EstimatorCard accent="warp">
                     <SectionHeader 
                         title={t('estimator.warp.title')} 
                         icon={Sparkles} 
                         accent="warp"
+                        step={2}
                         detail={<p className="text-[11px] text-[var(--color-muted)]">{state.warpCrimpPct || 0}% crimp · {state.yarnShortagePct || 0}% waste → <span className="font-semibold text-[var(--color-warning-amber)]">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}% total</span></p>}
                         badgeContent={<SectionCostPill value={totals.warpCostPerM} />}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         {/* Global Defaults Block */}
-                        <div className="border border-indigo-100 rounded-xl mb-6 bg-indigo-50/30 overflow-hidden">
-                            <div className="flex gap-4 p-3 border-b border-indigo-100/50">
-                                <div className="flex-1 space-y-1">
-                                    <Label className="text-[10px] uppercase font-bold text-indigo-700">Warp Crimp (Take-up)</Label>
-                                    <div className="flex gap-2 items-center">
-                                        <Input
-                                            type="number"
-                                            value={state.warpCrimpPct}
-                                            onChange={e => dispatch({ type: 'SET', field: 'warpCrimpPct', value: Number(e.target.value) })}
-                                            className="w-20 h-8 font-mono text-xs bg-white"
-                                            step={0.5}
-                                        />
-                                        <span className="text-[10px] font-bold text-slate-500">%</span>
-                                    </div>
-                                    <p className="text-[9px] text-slate-400 leading-tight">Beam shrink relative to tape length</p>
-                                </div>
-                                <div className="flex-1 space-y-1 border-l border-indigo-100 pl-4">
-                                    <Label className="text-[10px] uppercase font-bold text-indigo-700">Default Yarn Waste</Label>
-                                    <div className="flex gap-2 items-center">
-                                        <Input
-                                            type="number"
-                                            value={state.yarnShortagePct}
-                                            onChange={e => dispatch({ type: 'SET', field: 'yarnShortagePct', value: Number(e.target.value) })}
-                                            className="w-20 h-8 font-mono text-xs bg-white"
-                                            step={0.5}
-                                        />
-                                        <span className="text-[10px] font-bold text-slate-500">%</span>
-                                    </div>
-                                    <p className="text-[9px] text-slate-400 leading-tight">Fallback waste % if row is 0%</p>
-                                </div>
+                        <div className="mb-6 grid overflow-hidden rounded-[13px] border border-[#D7E7F1] bg-[#F7FBFD] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(260px,0.9fr)]">
+                            <div className="border-b border-[#D7E7F1] p-4 sm:border-b-0 sm:border-r">
+                                <StepperField
+                                    label="Warp Crimp (Take-up)"
+                                    value={state.warpCrimpPct || 0}
+                                    onChange={v => dispatch({ type: 'SET', field: 'warpCrimpPct', value: v })}
+                                    hint="Beam shrink relative to tape length"
+                                    accent="warp"
+                                />
                             </div>
-                            <div className="bg-indigo-50/80 px-4 py-2 flex items-center justify-between">
-                                <div className="flex items-center gap-1.5">
-                                    <Calculator className="h-3.5 w-3.5 text-indigo-500" />
-                                    <span className="text-[10px] font-bold text-indigo-800 uppercase tracking-wider">Effective Total Shortage</span>
+                            <div className="border-b border-[#D7E7F1] p-4 sm:border-b-0 sm:border-r">
+                                <StepperField
+                                    label="Default Yarn Waste"
+                                    value={state.yarnShortagePct || 0}
+                                    onChange={v => dispatch({ type: 'SET', field: 'yarnShortagePct', value: v })}
+                                    hint="Fallback waste % if row is 0%"
+                                    accent="warp"
+                                />
+                            </div>
+                            <div className="flex items-center justify-between gap-4 p-4">
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                        <Calculator className="h-3.5 w-3.5 text-[var(--color-info-blue)]" />
+                                        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--color-info-blue)]">Effective Total Shortage</span>
+                                    </div>
+                                    <p className="mt-2 font-mono text-sm font-semibold text-[var(--color-info-blue)]">
+                                        {state.warpCrimpPct || 0}% <span className="px-2 text-[var(--color-muted)]">+</span> {state.yarnShortagePct || 0}% <span className="px-2 text-[var(--color-muted)]">=</span>
+                                        <span className="ml-1 rounded-[7px] border border-[#C6D9EA] bg-white px-2.5 py-1 text-base">
+                                            {(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}%
+                                        </span>
+                                    </p>
                                 </div>
-                                <span className="text-[11px] font-mono font-semibold text-indigo-700 flex items-center gap-2">
-                                    <span>{state.warpCrimpPct || 0}% + {state.yarnShortagePct || 0}% =</span>
-                                    <span className="text-sm bg-white px-2 py-0.5 rounded border border-indigo-200">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}%</span>
-                                </span>
                             </div>
                         </div>
 
@@ -1834,7 +1971,7 @@ export default function EstimatorClient({
                                         const isDismissed = dismissedWarnings.includes(warningId)
                                         return (
                                             <NumField 
-                                                label={t('estimator.field_labels.rate_kg')} 
+                                                label={`${t('estimator.field_labels.rate_kg')} — REQUIRED`} 
                                                 value={row.yarnRate} 
                                                 onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })} 
                                                 step={1} 
@@ -1850,7 +1987,7 @@ export default function EstimatorClient({
                         </div>
                         <Button
                             variant="outline"
-                            className="w-full border-dashed border-slate-300 py-6 text-slate-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all gap-2"
+                            className="h-14 w-full rounded-[12px] border-dashed border-[#C6D9EA] bg-[#F7FBFD] text-[var(--color-info-blue)] hover:border-[var(--color-info-blue)] hover:bg-[#EEF5FB] transition-all gap-2"
                             onClick={() => dispatch({ type: 'ADD_WARP_ROW' })}
                         >
                             <Plus className="h-4 w-4" /> {t('estimator.warp.add_blend')}
@@ -1863,10 +2000,10 @@ export default function EstimatorClient({
                                 ? Math.ceil(orderQty / beamM)
                                 : null
                             return (
-                                <div className="pt-4 border-t border-slate-100 space-y-3">
+                                <div className="space-y-4 border-t border-[var(--color-hairline)] pt-5">
                                     {/* Row 1: Tape Length input + Cloth/Beam display */}
-                                    <div className="flex items-end justify-between gap-4">
-                                        <div className="w-40">
+                                    <div className="grid gap-4 md:grid-cols-[180px_minmax(0,1fr)] md:items-end">
+                                        <div>
                                             <NumField
                                                 label={t('estimator.warp.tape_len')}
                                                 value={state.tapeLengthM}
@@ -1874,21 +2011,21 @@ export default function EstimatorClient({
                                                 unit="m"
                                             />
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">{t('estimator.warp.beam_capacity')}</p>
-                                            <p className="text-lg font-semibold font-mono text-indigo-600 leading-none">
+                                        <div className="rounded-[12px] border border-[#D7E7F1] bg-[#F7FBFD] px-4 py-3 text-right">
+                                            <p className="text-[10px] uppercase font-semibold text-[var(--color-muted)] tracking-[0.06em]">{t('estimator.warp.beam_capacity')}</p>
+                                            <p className="mt-1 font-mono text-xl font-semibold leading-none text-[var(--color-info-blue)]">
                                                 {beamM > 0 ? `≈ ${beamM.toFixed(0)} m` : '— m'}
                                             </p>
-                                            <p className="text-[9px] text-slate-400 mt-0.5">cloth per beam</p>
+                                            <p className="mt-1 text-[10px] text-[var(--color-muted)]">cloth per beam</p>
                                         </div>
                                     </div>
                                     {/* Row 2: Beams Needed pill (only when tape length is set) */}
                                     {beamM > 0 && (
-                                        <div className="flex items-center justify-between gap-3 bg-indigo-50/60 border border-indigo-100 rounded-xl px-4 py-2.5">
+                                        <div className="flex items-center justify-between gap-3 rounded-[12px] border border-[#D7E7F1] bg-[#F7FBFD] px-4 py-3">
                                             <div className="flex items-center gap-2">
-                                                <Layers className="h-4 w-4 text-indigo-500 shrink-0" />
+                                                <Layers className="h-4 w-4 text-[var(--color-info-blue)] shrink-0" />
                                                 <div>
-                                                    <p className="text-[10px] uppercase font-semibold text-indigo-600 tracking-wider">Beams Needed</p>
+                                                    <p className="text-[10px] uppercase font-semibold text-[var(--color-info-blue)] tracking-wider">Beams Needed</p>
                                                     {beamsNeeded !== null ? (
                                                     <p className="text-[9px] text-slate-500 font-medium">
                                                             for {(orderQty!).toLocaleString('en-IN')} m order
@@ -1903,7 +2040,7 @@ export default function EstimatorClient({
                                             <div className="text-right shrink-0">
                                                 {beamsNeeded !== null ? (
                                                     <>
-                                                        <p className="text-2xl font-semibold font-mono text-indigo-700 leading-none">{beamsNeeded}</p>
+                                                        <p className="text-2xl font-semibold font-mono text-[var(--color-info-blue)] leading-none">{beamsNeeded}</p>
                                                         <p className="text-[9px] text-slate-500 font-bold mt-0.5">
                                                             beams × {beamM.toFixed(0)} m
                                                         </p>
@@ -1918,31 +2055,35 @@ export default function EstimatorClient({
                             )
                         })()}
                     </CardContent>
-                </Card>
+                </EstimatorCard>
 
                 {/* 3. Weft Yarn Rows */}
-                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
+                <EstimatorCard accent="weft">
                     <SectionHeader 
                         title={t('estimator.weft.title')} 
                         icon={Scissors} 
                         accent="weft"
+                        step={3}
                         badgeContent={<SectionCostPill value={totals.weftCostPerM} />}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         {/* Global Defaults Sync Readout */}
-                        <div className="border border-emerald-100 rounded-xl mb-6 bg-emerald-50/30 overflow-hidden">
-                            <div className="bg-emerald-50/80 px-4 py-2 flex items-center justify-between">
-                                <div className="flex items-center gap-1.5">
-                                    <Calculator className="h-3.5 w-3.5 text-emerald-500" />
-                                    <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Effective Total Shortage</span>
+                        <div className="mb-6 overflow-hidden rounded-[13px] border border-[#CDE5D3] bg-[#F7FCF8]">
+                            <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Calculator className="h-3.5 w-3.5 text-[var(--color-factory-green)]" />
+                                        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--color-factory-green)]">Effective Total Shortage</span>
+                                    </div>
+                                    <p className="mt-1 text-[11px] font-medium text-[var(--color-muted)]">Synced with warp crimp to keep loom-wide shortage parity.</p>
                                 </div>
-                                <span className="text-[11px] font-mono font-semibold text-emerald-700 flex items-center gap-2">
-                                    <span>{state.warpCrimpPct || 0}% + {state.yarnShortagePct || 0}% =</span>
-                                    <span className="text-sm bg-white px-2 py-0.5 rounded border border-emerald-200">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}%</span>
+                                <span className="flex items-center gap-2 font-mono text-sm font-semibold text-[var(--color-factory-green)]">
+                                    <span>{state.warpCrimpPct || 0}%</span>
+                                    <span className="text-[var(--color-muted)]">+</span>
+                                    <span>{state.yarnShortagePct || 0}%</span>
+                                    <span className="text-[var(--color-muted)]">=</span>
+                                    <span className="rounded-[7px] border border-[#CDE5D3] bg-white px-2.5 py-1 text-base">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}%</span>
                                 </span>
-                            </div>
-                            <div className="px-4 py-1.5 bg-white/50 border-t border-emerald-100/50">
-                                <p className="text-[9px] text-slate-400 font-medium leading-tight italic">Synced with Warp Crimp to ensure loom-wide shortage parity</p>
                             </div>
                         </div>
 
@@ -1984,7 +2125,7 @@ export default function EstimatorClient({
                                         const isDismissed = dismissedWarnings.includes(warningId)
                                         return (
                                             <NumField 
-                                                label={t('estimator.field_labels.rate_kg')} 
+                                                label={`${t('estimator.field_labels.rate_kg')} — REQUIRED`} 
                                                 value={row.yarnRate} 
                                                 onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })} 
                                                 attentionWhenEmpty
@@ -1999,17 +2140,17 @@ export default function EstimatorClient({
                         </div>
                         <Button
                             variant="outline"
-                            className="w-full border-dashed border-slate-300 py-6 text-slate-500 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all gap-2"
+                            className="h-14 w-full rounded-[12px] border-dashed border-[#CDE5D3] bg-[#F7FCF8] text-[var(--color-factory-green)] hover:border-[var(--color-factory-green)] hover:bg-[var(--color-factory-green-soft)] transition-all gap-2"
                             onClick={() => dispatch({ type: 'ADD_WEFT_ROW' })}
                         >
                             <Plus className="h-4 w-4" /> {t('estimator.weft.add_weft')}
                         </Button>
                     </CardContent>
-                </Card>
+                </EstimatorCard>
 
                 {/* 4. Weave Cost */}
-                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
-                    <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="weave" badgeContent={<SectionCostPill value={totals.weaveCostPerM} />} />
+                <EstimatorCard accent="weave">
+                    <SectionHeader title={t('estimator.weave.title')} icon={Gauge} accent="weave" step={4} badgeContent={<SectionCostPill value={totals.weaveCostPerM} />} />
                     <CardContent className="p-5 sm:p-6 space-y-6">
 
                         {/* ── Loom Type Selector ── renders above Loom Wage ── */}
@@ -2119,20 +2260,20 @@ export default function EstimatorClient({
                         })()}
 
                     </CardContent>
-                </Card>
+                </EstimatorCard>
 
                 {/* 5. Warping & Sizing */}
-                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
-                    <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} />} />
+                <EstimatorCard accent="post">
+                    <SectionHeader title={t('estimator.warping_sizing.title')} icon={TrendingUp} accent="post" step={5} badgeContent={<SectionCostPill value={totals.warpingAndSizingPerM} />} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <NumField label={t('estimator.warping_sizing.warping_per_kg')} value={state.warpingRatePerKg} onChange={v => dispatch({ type: 'SET', field: 'warpingRatePerKg', value: v ?? 0 })} step={0.1} />
                         </div>
 
                         {/* Sizing: in-house vs outsourced toggle (Gap fix: zero is now explicit) */}
-                        <div className="rounded-xl border border-violet-100 bg-violet-50/40 p-3 space-y-2">
-                            <p className="text-[10px] uppercase font-semibold text-violet-700/80 tracking-wider">Sizing</p>
-                            <div className="flex gap-4">
+                        <div className="space-y-3 rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-4">
+                            <p className="text-[11px] uppercase font-semibold text-[var(--color-warning-amber)] tracking-[0.06em]">Sizing</p>
+                            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                                 <label className="flex items-center gap-2 cursor-pointer group">
                                     <input
                                         id="sizing-mode-in-house"
@@ -2141,10 +2282,10 @@ export default function EstimatorClient({
                                         value="in_house"
                                         checked={state.sizingMode === 'in_house'}
                                         onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'in_house' })}
-                                        className="accent-violet-600 h-3.5 w-3.5"
+                                        className="accent-[var(--color-yarn-orange)] h-3.5 w-3.5"
                                     />
-                                    <span className="text-xs font-semibold text-slate-600 group-hover:text-slate-900">
-                                        In-house <span className="text-[10px] text-slate-400 font-normal">(already in overhead)</span>
+                                    <span className="text-xs font-semibold text-[var(--color-body)] group-hover:text-[var(--color-ink)]">
+                                        In-house <span className="text-[10px] text-[var(--color-muted)] font-normal">(already in overhead)</span>
                                     </span>
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer group">
@@ -2155,9 +2296,9 @@ export default function EstimatorClient({
                                         value="outsourced"
                                         checked={state.sizingMode === 'outsourced'}
                                         onChange={() => dispatch({ type: 'SET', field: 'sizingMode', value: 'outsourced' })}
-                                        className="accent-violet-600 h-3.5 w-3.5"
+                                        className="accent-[var(--color-yarn-orange)] h-3.5 w-3.5"
                                     />
-                                    <span className="text-xs font-semibold text-slate-600 group-hover:text-slate-900">Outsourced</span>
+                                    <span className="text-xs font-semibold text-[var(--color-body)] group-hover:text-[var(--color-ink)]">Outsourced</span>
                                 </label>
                             </div>
                             {state.sizingMode === 'outsourced' && (
@@ -2172,7 +2313,7 @@ export default function EstimatorClient({
                                 </div>
                             )}
                             {state.sizingMode === 'in_house' && (
-                                <p className="text-[9.5px] text-slate-400 font-medium italic">
+                                <p className="text-[11px] text-[var(--color-muted)] font-medium italic">
                                     Sizing cost is ₹0 — treated as part of factory overhead above.
                                 </p>
                             )}
@@ -2182,14 +2323,15 @@ export default function EstimatorClient({
                             {t('estimator.warping_sizing.applied_on')} {totals.totalWarpKgPer100m.toFixed(2)} {t('estimator.warping_sizing.warp_consumption')}
                         </div>
                     </CardContent>
-                </Card>
+                </EstimatorCard>
 
                 {/* 5b. Factory Overhead — Itemized Breakdown */}
-                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
+                <EstimatorCard accent="overhead">
                     <SectionHeader
                         title={t('estimator.overhead.title')}
                         icon={Calculator}
                         accent="overhead"
+                        step={6}
                         badgeContent={
                             <div className="flex items-center gap-2">
                                 <SectionCostPill value={totals.overheadPerM} />
@@ -2533,13 +2675,13 @@ export default function EstimatorClient({
                                 </div>
                             </div>
                         </CardContent>
-                    </Card>
+                    </EstimatorCard>
 
 
 
                 {/* 6. Optional Sections */}
-                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
-                    <SectionHeader title={t('estimator.post_processing.title')} icon={Palette} accent="post" />
+                <EstimatorCard accent="post">
+                    <SectionHeader title={t('estimator.post_processing.title')} icon={Palette} accent="post" step={7} />
                     <CardContent className="p-5 sm:p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {state.enabledSections.winding ? (
@@ -2559,11 +2701,11 @@ export default function EstimatorClient({
                             )}
                         </div>
                     </CardContent>
-                </Card>
+                </EstimatorCard>
 
                 {/* 7. Simulation / Order */}
-                <Card className="mb-3 overflow-hidden rounded-[10px] border border-[var(--color-hairline)] bg-[var(--color-canvas-white)] shadow-none">
-                    <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" />
+                <EstimatorCard accent="weft">
+                    <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={8} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <NumField 
@@ -2584,7 +2726,7 @@ export default function EstimatorClient({
                             )}
                         </div>
                     </CardContent>
-                </Card>
+                </EstimatorCard>
             </div>
 
             {/* ── SCENARIO ANALYSIS (STRESS TESTS) ───────────────────────── */}

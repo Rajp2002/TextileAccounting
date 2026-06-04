@@ -1,0 +1,66 @@
+[
+  {
+    "label": "TRACK-01R invalid token logged out retest",
+    "route": "/track/not-a-real-token",
+    "finalUrl": "http://localhost:3000/login",
+    "navError": null,
+    "info": {
+      "body": "English Welcome back Sign in to your Weavly account Email Password Forgot password? Sign in Don't have an account? Start as owner or join with a code Weavly © 2026• Built for India",
+      "h1": "Welcome back",
+      "h2": "",
+      "href": "http://localhost:3000/login",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/015-track-01r-invalid-token-logged-out-retest.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-01R owner protected route logged out retest",
+    "route": "/owner/today",
+    "finalUrl": "http://localhost:3000/login",
+    "navError": null,
+    "info": {
+      "body": "English Welcome back Sign in to your Weavly account Email Password Forgot password? Sign in Don't have an account? Start as owner or join with a code Weavly © 2026• Built for India",
+      "h1": "Welcome back",
+      "h2": "",
+      "href": "http://localhost:3000/login",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/016-sec-01r-owner-protected-route-logged-out-retest.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-02R supervisor protected route logged out retest",
+    "route": "/supervisor/dashboard",
+    "finalUrl": "http://localhost:3000/login",
+    "navError": null,
+    "info": {
+      "body": "English Welcome back Sign in to your Weavly account Email Password Forgot password? Sign in Don't have an account? Start as owner or join with a code Weavly © 2026• Built for India",
+      "h1": "Welcome back",
+      "h2": "",
+      "href": "http://localhost:3000/login",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/017-sec-02r-supervisor-protected-route-logged-out-retest.png",
+    "warnErrorCount": 0,
+    "logs": []
+  },
+  {
+    "label": "SEC-03R owner commercials logged out retest",
+    "route": "/owner/commercials",
+    "finalUrl": "http://localhost:3000/login",
+    "navError": null,
+    "info": {
+      "body": "English Welcome back Sign in to your Weavly account Email Password Forgot password? Sign in Don't have an account? Start as owner or join with a code Weavly © 2026• Built for India",
+      "h1": "Welcome back",
+      "h2": "",
+      "href": "http://localhost:3000/login",
+      "title": "Weavly — Factory OS for Textile Weaving Units"
+    },
+    "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/AMY_QA_20260603_0218/screenshots/018-sec-03r-owner-commercials-logged-out-retest.png",
+    "warnErrorCount": 0,
+    "logs": []
+  }
+]

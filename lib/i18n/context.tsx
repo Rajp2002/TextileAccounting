@@ -6,6 +6,7 @@ import { hi } from "./locales/hi"
 import { gu } from "./locales/gu"
 import { legacyPhraseTranslations } from "./legacy"
 import { generatedLegacyPhraseTranslations } from "./legacy-generated"
+import { applyTranslationGuards, translateFallbackUiText } from "./runtime"
 
 export type Language = "en" | "hi" | "gu"
 interface TranslationTree {
@@ -32,6 +33,7 @@ const LANGUAGE_STORAGE_KEY = "weavly_language"
 const SUPPORTED_LANGUAGES: Language[] = ["en", "hi", "gu"]
 const TRANSLATABLE_ATTRIBUTES = ["placeholder", "title", "aria-label", "aria-description", "alt"] as const
 const SKIP_TEXT_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE"])
+const SKIP_TRANSLATION_SELECTOR = '[data-i18n-skip="true"]'
 const translationCache = new WeakMap<Map<string, string>, Map<string, string | undefined>>()
 const reverseTranslationCache = new WeakMap<Map<string, string>, Map<string, string>>()
 
@@ -137,8 +139,15 @@ function translateSourceText(source: string, language: Language, phraseMap: Map<
   if (cache.has(source)) return cache.get(source)
 
   const translated = phraseMap.get(source) ?? translateKnownFragments(source, phraseMap)
-  cache.set(source, translated)
-  return translated
+  if (translated) {
+    const guarded = applyTranslationGuards(source, translated, language)
+    cache.set(source, guarded)
+    return guarded
+  }
+
+  const fallback = translateFallbackUiText(source, language)
+  cache.set(source, fallback)
+  return fallback
 }
 
 function getReversePhraseMap(phraseMap: Map<string, string>) {
@@ -163,6 +172,7 @@ function preserveOuterWhitespace(original: string, replacement: string) {
 function shouldTranslateTextNode(node: Text, originals: WeakMap<Text, LocalizedTextState>) {
   const parent = node.parentElement
   if (!parent || SKIP_TEXT_TAGS.has(parent.tagName) || parent.isContentEditable) return false
+  if (parent.closest(SKIP_TRANSLATION_SELECTOR)) return false
   return originals.has(node) || /[A-Za-z]/.test(node.nodeValue ?? "")
 }
 
@@ -201,6 +211,7 @@ function translateElementAttributes(
   originals: WeakMap<Element, ElementAttributeStates>,
 ) {
   for (const attribute of TRANSLATABLE_ATTRIBUTES) {
+    if (element.closest(SKIP_TRANSLATION_SELECTOR)) return
     const value = element.getAttribute(attribute)
     let states = originals.get(element)
     let state = states?.get(attribute)

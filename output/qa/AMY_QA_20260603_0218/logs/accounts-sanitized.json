@@ -1,0 +1,15 @@
+{
+  "ownerEmail": "amy.qa.20260603.0218.owner@example.com",
+  "ownerPasswordSet": true,
+  "ownerName": "AMY_QA_20260603_0218 Owner",
+  "factoryName": "AMY_QA_20260603_0218 Factory",
+  "ownerPhone": "9106020218",
+  "joinCode": "EKVKDG7R",
+  "supervisorEmail": "amy.qa.20260603.0218.supervisor@example.com",
+  "supervisorName": "AMY_QA_20260603_0218 Supervisor",
+  "supervisorPhone": "9106020219",
+  "joinCodeDisplayedInSettings": "32HYKD9A",
+  "qaSupervisorEmail": "amy.qa.20260603.0218.supervisor.qa@example.com",
+  "qaSupervisorName": "AMY_QA_20260603_0218 QA Supervisor",
+  "qaSupervisorPhone": "9106020220"
+}

@@ -1,0 +1,746 @@
+
+
+--- PAGE 1 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+Weavly End-to-End Intern QA Testing Guide
+Controlled pilot test plan for a fresh account, owner/supervisor workflows, stock-to-commercials regression, mobile 
+QA, security, and hidden gap discovery
+Prepared for: Raj Patel / Weavly
+Guide version: 1.0 | Date: June 1, 2026
+Primary tester: Intern QA tester using a fresh test account and screen recordings
+Main instruction to the intern: Do not only check whether pages load. Try to break realistic workflows the way a Surat grey-fabric 
+factory user would: wrong inputs, partial sales, refreshes, back buttons, duplicate clicks, mobile usage, role switching, and 
+incomplete data. Record the screen during every major workflow and speak out loud when something feels confusing.
+Item Instruction
+Goal Validate that a new factory can onboard, set up data, produce grey 
+fabric, sell stock, dispatch, confirm receipt, collect payment, and 
+track payroll without hidden gaps.
+Primary roles Owner and Supervisor. Do not rely on admin-only flows unless 
+explicitly provided.
+Main account state Create a brand-new owner account and one supervisor/joined 
+account.
+Required evidence Screen recordings, screenshots, console logs, QA log spreadsheet, 
+and bug reports.
+Pass standard No blockers in 
+quote/order/market-run/production/stock/sale/dispatch/receipt/com
+mercial/payroll flows; no confusing role leakage; no critical mobile 
+breakage.
+1. QA Mission And Pass/Fail Rules
+This QA pass is meant to simulate a new factory owner adopting Weavly from scratch while Raj is away. The intern should 
+validate every important user journey, create realistic records, intentionally test edge cases, and record enough evidence so 
+Raj can review the findings later without needing to ask what happened.
+Severity Definition Examples
+Blocker A core workflow cannot be completed or 
+data is corrupted.
+Cannot create sale, cannot dispatch, cannot 
+log production, wrong stock balance after 
+receipt, auth bypass.
+High Workflow completes but user trust or 
+business accuracy is at risk.
+Commercial balance wrong, wrong role 
+copy, duplicate logs, mobile button 
+inaccessible, public tracking misleading.
+Medium Workflow is usable but confusing, slow, or 
+missing validation.
+Unclear error copy, missing empty state, 
+awkward navigation, non-critical console 
+warnings.
+Low Polish issue. Spacing, typo, minor alignment, cosmetic 
+inconsistency.
+  ☐ A workflow is not considered passed until the tester confirms the created/changed data appears in the expected 
+downstream page.
+  ☐ For every bug, capture the exact route, role, steps, expected result, actual result, screenshot/video timestamp, and 
+whether refresh/retry changed the outcome.
+  ☐ If a workflow involves money, meters, takas, wages, or receivables, write down the before and after numbers.
+  ☐ If a workflow seems to pass but the browser console shows red errors or repeated warnings, log it as at least Medium 
+unless clearly harmless.
+
+--- PAGE 2 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+2. Setup Before Testing
+The intern should use a clean browser profile or incognito window and avoid mixing the test account with Raj’s previous QA 
+data.
+Requirement Instruction
+Browser Chrome or Edge preferred for DevTools and console capture. Also 
+run key flows in Safari/mobile if available.
+Recording Use Loom, OBS, QuickTime, or built-in screen recorder. Record the 
+whole browser window, including URL bar and visible toasts.
+Console Open DevTools Console for console-health test sections. Clear 
+console before starting a section.
+Network Use normal internet first. Later do one offline/interrupted-network 
+test.
+Test email Use a unique test email such as 
+weavly.qa+YYYYMMDDHHMM@gmail.com or the provided test 
+inbox.
+Password Use a strong test password and save it in the QA log. Do not use 
+Raj’s private password.
+Payment/WhatsApp Do not trigger real payments or real WhatsApp messages unless 
+Raj has provided a sandbox/test channel.
+Recommended recording naming format: YYYY-MM-DD_WeavlyQA_SectionNumber_Workflow_Role_Result.mp4. Example: 
+2026-06-02_WeavlyQA_06_OrderToProduction_Owner_PASS.mp4
+
+--- PAGE 3 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+3. Standard Test Data To Create
+Use this data so all workflows are realistic and easy to review later. Add the current date/time suffix to names to avoid 
+duplicates.
+Data Type Create These Records Purpose
+Factory Weavly QA Factory [date/time] Fresh onboarding and settings test.
+Owner QA Owner [date/time] Primary admin/owner user.
+Supervisor QA Supervisor [date/time] Floor production and restricted role testing.
+Godowns Main Godown, Market Godown, Dispatch 
+Holding
+Stock and dispatch location tests.
+Machines/Looms Jacquard 1, Rapier 1, Water Jet 1, Other - 
+Sample Loom
+Loom type visibility and production logging.
+Workers Kishan Piece Rate, Ramesh Piece Rate, 
+Meena Fixed Salary, QA Worker Edge Case
+Payroll, attendance, advances, worker 
+ledger.
+Buyers/Parties QA Buyer Alpha, QA Buyer Beta, QA Stock 
+Buyer, QA Market Buyer
+Quotes, orders, stock sales, receivables.
+Qualities QA Cotton Plain 60x60, QA Jacquard Butta 
+80x80, QA Georgette 60g, QA Sub-Taka 
+Quality
+Estimator, order, stock, market-run, sub-
+taka regression.
+Quality Suggested Inputs What To Validate
+QA Cotton Plain 60x60 Simple construction, normal width, normal 
+cost, 1,500m target.
+Normal quote/order production path.
+QA Jacquard Butta 80x80 Higher wage/cost assumptions. Estimator handles higher-cost fabric.
+QA Georgette 60g Use known production-cost baseline if 
+present.
+Regression against estimator math and 
+saved quality flow.
+QA Sub-Taka Quality Small production lot such as 25m with 
+approx. 0.5 taka; sell 10m / approx. 0.2 
+taka.
+Validates previous sub-taka sale blocker 
+remains fixed.
+
+--- PAGE 4 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+4. Master Workflow Coverage Map
+Workflow Area Must Test Evidence Required
+Auth/Public Landing, login, signup, join, forgot 
+password, reset password invalid state, 
+protected route guard.
+Recording + screenshots of expected 
+pages/errors.
+Onboarding New factory account, production mode, 
+profile/setup completion, default landing.
+Recording + final settings screenshot.
+Factory setup Machines, workers, godowns, saved 
+qualities, buyers/parties.
+Screenshots of created records.
+Estimator/Quotes Save quote, history, accept quote, create 
+active order.
+Before/after screenshots + quote amount.
+Order production Assign order to loom, activate loom, 
+supervisor logs meters.
+Owner and supervisor recordings.
+Market runs Create market run, handoff to production, 
+stock visibility.
+Market-run detail and stock screenshots.
+Stock/Sale/Dispatch Sale-only, dispatch-now, pending dispatch, 
+sub-taka sale, receipt.
+Record quantities before/after.
+Public tracking Valid token, invalid token, receipt 
+confirmation.
+Recording from public URL.
+Commercials Receivable appears, collect partial/full 
+payment, due date behavior.
+Before/after balance screenshot.
+Payroll/Workers Piece-rate preview, fixed attendance, 
+advances, ledger, settlement gate.
+Payroll and worker ledger screenshots.
+Analytics/Today Factory Today and Analytics reflect 
+production, stock, dispatch, payroll.
+Dashboard screenshots after each major 
+flow.
+Settings/Billing Production mode switch, access code, 
+factory profile, billing page visibility.
+Screenshots; no real payment unless 
+sandbox.
+Archive Completed/closed items appear and 
+inactive items are not lost.
+Archive screenshots.
+Mobile/Accessibility Owner and supervisor core flows on mobile 
+viewport.
+Mobile recording + console.
+Security/Permissions Role restrictions, logout guard, direct URL 
+access, public tracking auth-free only.
+Record attempts and outcomes.
+
+--- PAGE 5 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+5. Detailed Test Scripts
+5.1 Public Pages And Auth Smoke
+Goal: Confirm all public and auth pages load, show correct copy, and do not expose private factory data.
+Steps:
+1. Open landing page `/` while logged out.
+2. Open `/login`, `/signup`, `/join`, `/forgot-password`, `/reset-password`, `/terms`, `/privacy`, `/refund-policy`.
+3. Open an invalid tracking URL such as `/track/not-a-real-token`.
+4. While logged out, directly open `/owner/today` and `/supervisor/dashboard`.
+Expected result:
+  ☐ All public pages load nonblank with expected copy.
+  ☐ Invalid tracking URL shows a clear link-not-found state.
+  ☐ Protected owner/supervisor routes redirect to login or an auth guard.
+  ☐ No private factory data appears while logged out.
+Evidence to capture:
+  ☐ One recording covering all public/auth pages.
+  ☐ Screenshots of invalid tracking and protected-route redirect.
+  ☐ Console screenshot if any errors appear.
+Hidden-gap / edge-case checks:
+  ☐ Try browser back after logout.
+  ☐ Open protected route in a second incognito window.
+  ☐ Refresh each auth page once.
+5.2 Fresh Owner Signup And Onboarding
+Goal: Create a brand-new factory account and verify onboarding is understandable and complete.
+Steps:
+1. Go to `/signup` and create a new owner account using the unique test email.
+2. Complete factory onboarding using factory name `Weavly QA Factory [date/time]`.
+3. Select production mode `both` first so order-based and market-run workflows are visible.
+4. Complete any profile/setup fields required by the app.
+5. Confirm the owner lands on the expected default page, usually `/owner/today`.
+Expected result:
+  ☐ Signup completes without framework overlay or stuck loading state.
+  ☐ Onboarding clearly asks for production mode and saves the selected value.
+  ☐ Owner lands in the dashboard with empty states, not broken pages.
+  ☐ Settings later shows the factory profile and production mode correctly.
+Evidence to capture:
+  ☐ Full signup/onboarding recording.
+
+--- PAGE 6 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+  ☐ Screenshot of final owner dashboard.
+  ☐ Screenshot of settings showing production mode.
+Hidden-gap / edge-case checks:
+  ☐ Try submitting incomplete onboarding form and verify helpful validation.
+  ☐ Refresh during onboarding and confirm state does not corrupt.
+  ☐ Use long factory name and confirm layout remains readable.
+5.3 Owner Setup: Machines, Godowns, Workers, Buyers, Qualities
+Goal: Create the base operational records a new factory needs before production.
+Steps:
+1. Create or verify godowns: Main Godown, Market Godown, Dispatch Holding.
+2. Create machines/looms: Jacquard 1, Rapier 1, Water Jet 1, Other - Sample Loom.
+3. Create piece-rate workers and fixed-salary workers using the standard test data.
+4. Create buyers/parties: QA Buyer Alpha, QA Buyer Beta, QA Stock Buyer, QA Market Buyer.
+5. Create/save at least four qualities from the standard test data.
+6. Refresh each page after saving to confirm records persist.
+Expected result:
+  ☐ All records save successfully and remain after refresh.
+  ☐ Machine type `Other` requires or displays the custom label correctly.
+  ☐ Empty states disappear once records exist.
+  ☐ No duplicate records are created from one click.
+Evidence to capture:
+  ☐ Screenshots of machines, workers, buyers, godowns, saved qualities.
+  ☐ Recording of creating at least one item in each setup category.
+Hidden-gap / edge-case checks:
+  ☐ Double-click Save quickly to check duplicate protection.
+  ☐ Try invalid/blank fields and confirm validation copy.
+  ☐ Create one record with a long name to test layout.
+5.4 Estimator Quote, Save, History, Accept, Active Order
+Goal: Validate the order-based quote-to-order workflow.
+Steps:
+1. Open owner estimator.
+2. Create a quote for `QA Buyer Alpha` using `QA Cotton Plain 60x60`, target 1,500m, realistic costs, margin, and deadline.
+3. Save the quote and open Quote History.
+4. Confirm the quote appears with the expected party, quality, meters, rate, and total.
+5. Accept the quote.
+
+--- PAGE 7 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+6. Create an active order from the accepted quote.
+7. Open the active order detail page.
+Expected result:
+  ☐ Estimator calculates without NaN, negative totals, or confusing unit issues.
+  ☐ Saved quote appears in history after refresh.
+  ☐ Accepted quote changes status and exposes active-order creation.
+  ☐ Active order appears with target meters, party, quality, deadline, and production status.
+Evidence to capture:
+  ☐ Recording from quote creation through active order.
+  ☐ Screenshot of quote amount/rate.
+  ☐ Screenshot of active order detail page.
+Hidden-gap / edge-case checks:
+  ☐ Edit values after calculation and ensure totals update.
+  ☐ Try 0 meters, negative cost, blank party, and extreme width/count values.
+  ☐ Reload Quote History after acceptance.
+5.5 Order Production: Loom Assignment, Activation, Supervisor Log
+Goal: Validate that an active order can move to the shop floor and be logged by supervisor.
+Steps:
+1. As owner, open machines/loom assignment or production planning surface.
+2. Try activating Loom 1 without assignment if possible and confirm validation blocks it.
+3. Assign the active order/quality to Jacquard 1 or Loom 1.
+4. Activate the loom.
+5. Log out owner and log into supervisor account, or create supervisor through join-code flow first if needed.
+6. As supervisor, open dashboard/production page and confirm the assigned loom appears as running.
+7. Log 25m production for the loom and save shift logs.
+8. Refresh supervisor page and confirm already-logged/edit-window state appears.
+Expected result:
+  ☐ Owner cannot activate an unassigned loom without clear validation.
+  ☐ Assigned loom appears active/running for supervisor.
+  ☐ Supervisor can log production once and sees confirmation.
+  ☐ Duplicate save does not create duplicate meters.
+  ☐ Owner dashboard, analytics, stock, and payroll reflect the 25m production.
+Evidence to capture:
+  ☐ Owner loom assignment recording.
+  ☐ Supervisor production log recording.
+  ☐ Screenshots of Factory Today, Analytics, Stock, Payroll after logging.
+Hidden-gap / edge-case checks:
+
+--- PAGE 8 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+  ☐ Double-click `Save shift logs`.
+  ☐ Refresh during/after save.
+  ☐ Try invalid meters: 0, negative, very high, decimal.
+  ☐ Test mobile supervisor logging.
+5.6 Join Code And Supervisor Role Boundary
+Goal: Confirm a supervisor can join the factory and only sees supervisor-appropriate surfaces.
+Steps:
+1. As owner, open Settings and find/generate the join code or invite path.
+2. Log out or open incognito and go to `/join`.
+3. Use a second unique email to create/join as supervisor.
+4. Log in as supervisor and visit `/supervisor/dashboard`, `/supervisor/production`, `/supervisor/workers`, 
+`/supervisor/attendance`, `/supervisor/machines`.
+5. Try direct owner URLs such as `/owner/today`, `/owner/commercials`, `/owner/billing`, `/owner/settings`.
+Expected result:
+  ☐ Join flow completes or fails with clear validation if configuration is missing.
+  ☐ Supervisor pages load and show supervisor language, not owner-confusing copy.
+  ☐ Supervisor cannot access owner-only financial/settings pages unless intentionally allowed.
+  ☐ No `Viewing as Owner` or similar misleading role label appears for supervisor unless it is an intentional impersonation 
+feature.
+Evidence to capture:
+  ☐ Join-code recording.
+  ☐ Supervisor dashboard screenshot.
+  ☐ Screenshots/video of denied owner-route attempts.
+Hidden-gap / edge-case checks:
+  ☐ Try invalid join code.
+  ☐ Try expired/old join code if available.
+  ☐ Try opening owner routes in a fresh tab after supervisor login.
+5.7 Market-Run Production Workflow
+Goal: Validate market-run mode because Raj’s brother primarily runs market production rather than order-centric production.
+Steps:
+1. As owner, create a market run for `QA Market Buyer` or market stock using `QA Jacquard Butta 80x80`, target 250m.
+2. Open the market-run detail page and confirm cost stack, target meters, status, and handoff guidance.
+3. Assign the market-run quality to a loom and activate it.
+4. As supervisor, log production meters against the loom.
+5. Return as owner and confirm Factory Today, Analytics, and Stock reflect market-run production.
+Expected result:
+  ☐ Market run creates successfully and appears in market-run list/detail.
+
+--- PAGE 9 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+  ☐ Market run can be handed off to production without requiring an order buyer flow.
+  ☐ Produced meters appear as stock and remain actionable until sold/dispatched.
+  ☐ Closing/completing production does not hide stock while meters remain available.
+Evidence to capture:
+  ☐ Recording from market-run creation to stock visibility.
+  ☐ Screenshots of market-run detail and resulting stock lot.
+Hidden-gap / edge-case checks:
+  ☐ Create very small market run for sub-taka edge test.
+  ☐ Switch production mode to market_run only and verify order routes hide from nav but direct URLs behave safely.
+  ☐ Complete/close market run and confirm stock lifecycle rule.
+5.8 Stock Sale: Sale-Only, Dispatch-Now, And Sub-Taka Regression
+Goal: Stress test the previously fixed stock-sale and dispatch blockers.
+Steps:
+1. Open Stock as owner and find the 25m/sub-taka stock lot produced earlier or create a small lot through production.
+2. Record current available meters and takas before selling.
+3. Start Sell/Dispatch flow for `QA Stock Buyer`.
+4. Sell 10m from a lot under 1 taka, approximately 0.2 taka if the UI exposes taka count.
+5. Choose Save Sale Only first.
+6. Confirm the sale appears in stock/sales/pending dispatch area.
+7. Repeat another stock sale using Dispatch Now if available.
+8. Return to Stock and confirm available meters reduce correctly without going negative.
+Expected result:
+  ☐ Sub-taka sale can advance past all steps.
+  ☐ Save Sale Only persists successfully.
+  ☐ Dispatch Now creates dispatch successfully if selected.
+  ☐ Stock balances and pending meters are mathematically correct.
+  ☐ No hidden taka validation blocks fractional/under-1-taka lots.
+Evidence to capture:
+  ☐ Full recording of sub-taka sale.
+  ☐ Before/after stock screenshots with meters/takas.
+  ☐ Screenshot of pending dispatch or sale detail.
+Hidden-gap / edge-case checks:
+  ☐ Try selling exact full quantity.
+  ☐ Try selling more than available and confirm block.
+  ☐ Try decimal meters/takas.
+  ☐ Try back button inside wizard.
+  ☐ Refresh before final save and confirm no partial corrupt record.
+
+--- PAGE 10 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+5.9 Dispatch Confirmation And Public Receipt Tracking
+Goal: Validate dispatch can move from pending/in-transit to delivered and sync back to sales/commercials.
+Steps:
+1. Open owner Dispatches.
+2. Find the pending dispatch created from stock sale.
+3. Confirm/dispatch it with transport/challan/vehicle details if required.
+4. Copy/open the public tracking link in logged-out/incognito browser.
+5. Confirm the tracking page shows the correct party, meters, status, and dispatch batch.
+6. Record receipt from the public tracking page.
+7. Return to owner dispatches and stock sale records.
+Expected result:
+  ☐ Pending dispatch confirms without `order_id` or package errors.
+  ☐ Public tracking is accessible without owner login but only shows the intended tracking data.
+  ☐ Receipt changes dispatch status to delivered/received.
+  ☐ Pending dispatch meters become 0 after receipt when fully received.
+  ☐ Stock sale dispatch status syncs to received/delivered correctly.
+Evidence to capture:
+  ☐ Owner dispatch recording.
+  ☐ Public tracking receipt recording.
+  ☐ Before/after screenshots of dispatch status and pending meters.
+Hidden-gap / edge-case checks:
+  ☐ Try invalid tracking token.
+  ☐ Try public receipt twice.
+  ☐ Try partial receipt if supported.
+  ☐ Open tracking link after logout and in another browser.
+5.10 Commercials, Receivables, And Collections
+Goal: Confirm sold/received fabric creates receivables and payment collection updates balances.
+Steps:
+1. Open Commercials after receipt is recorded.
+2. Find the buyer/party from the stock sale.
+3. Record the current receivable amount and due date.
+4. Record a small partial payment, such as Rs. 10.
+5. Refresh Commercials and verify the amount owing changed correctly.
+6. Record a second payment or full settlement if safe/test-only.
+Expected result:
+
+--- PAGE 11 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+  ☐ Receivable appears for the stock sale after receipt/commercial handoff.
+  ☐ Due date and unpaid status are visible.
+  ☐ Partial payment reduces outstanding amount correctly.
+  ☐ No duplicate payment is created from double-clicking save.
+  ☐ Payment appears in party history/ledger if available.
+Evidence to capture:
+  ☐ Before/after commercials screenshots.
+  ☐ Recording of payment entry.
+  ☐ Screenshot of party balance and payment history.
+Hidden-gap / edge-case checks:
+  ☐ Try Rs. 0 payment.
+  ☐ Try payment greater than due.
+  ☐ Try decimal payment.
+  ☐ Refresh after payment.
+  ☐ Test date picker/due date edge.
+5.11 Workers, Attendance, Advances, Payroll Preview
+Goal: Validate labour cost tracking and worker financial flows.
+Steps:
+1. Open Workers and verify piece-rate and fixed-salary workers exist.
+2. Open Attendance and save daily attendance for fixed-salary worker.
+3. Open Advances and create a small advance, such as Rs. 2, for a test worker.
+4. Open Payroll and confirm production meters appear for piece-rate worker.
+5. Confirm fixed salary/attendance impact appears if implemented.
+6. Open settlement history and current-cycle gate.
+Expected result:
+  ☐ Attendance saves and locks or clearly indicates saved rows.
+  ☐ Advance appears in worker ledger/debt summary.
+  ☐ Payroll preview shows production meters, gross/net, and current-cycle status.
+  ☐ Mark Paid is disabled or gated when pay date/cycle is not eligible.
+  ☐ No worker ledger mismatch after refresh.
+Evidence to capture:
+  ☐ Screenshots of attendance, advance ledger, payroll preview, settlement history.
+  ☐ Recording of advance creation.
+Hidden-gap / edge-case checks:
+  ☐ Try duplicate attendance save.
+  ☐ Try negative advance.
+  ☐ Try worker with no WhatsApp number and confirm safe message.
+  ☐ Try mobile payroll view for touch targets.
+
+--- PAGE 12 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+5.12 Factory Today, Analytics, Archive, And Historical Views
+Goal: Verify dashboards and historical surfaces reflect the operational data created during QA.
+Steps:
+1. Open Factory Today after order production and market-run production.
+2. Confirm today’s production, active looms, stock status, and shift indicators.
+3. Open Analytics and compare produced meters/wages to logged production.
+4. Complete/close at least one eligible order or market run if safe, then open Archive.
+5. Confirm archived/completed records are visible with useful summary details.
+Expected result:
+  ☐ Factory Today reflects the latest production and stock changes.
+  ☐ Analytics totals match the production logs within expected rounding.
+  ☐ Archive does not lose completed records.
+  ☐ Active stock is not hidden merely because production was completed if meters remain.
+Evidence to capture:
+  ☐ Dashboard screenshots after major workflow completion.
+  ☐ Analytics screenshot with meter/wage totals.
+  ☐ Archive screenshot.
+Hidden-gap / edge-case checks:
+  ☐ Refresh dashboards.
+  ☐ Use date filters if available.
+  ☐ Compare order-based vs market-run data visibility.
+5.13 Settings, Production Mode, Saved Qualities, Access Codes
+Goal: Validate configuration controls and mode-based navigation.
+Steps:
+1. Open Settings as owner.
+2. Update safe factory profile fields and save.
+3. Switch production mode from `both` to `market_run`; check owner navigation and Factory Today.
+4. Switch production mode to `order_based`; check relevant navigation.
+5. Switch back to `both` for full testing.
+6. Open saved qualities/settings sections and confirm created qualities are present.
+7. Generate sensitive-action access code if this is safe in the test account.
+Expected result:
+  ☐ Settings save successfully and persist after refresh.
+  ☐ Navigation changes based on production mode without deleting data.
+  ☐ Direct URLs are handled safely even if hidden from navigation.
+  ☐ Access code generation works and does not leak sensitive info in public pages.
+
+--- PAGE 13 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+Evidence to capture:
+  ☐ Recording of production mode switches.
+  ☐ Screenshots of nav before/after mode changes.
+  ☐ Screenshot of saved qualities.
+Hidden-gap / edge-case checks:
+  ☐ Try switching modes while records exist.
+  ☐ Try supervisor login after mode switch.
+  ☐ Test mobile nav after mode switch.
+5.14 Billing, Razorpay, WhatsApp, And External Integrations
+Goal: Verify external surfaces are safe and clearly labelled without triggering real-world actions.
+Steps:
+1. Open Billing as owner.
+2. Confirm current plan, renewal date, invoices/referral/test-mode sections if present.
+3. Do not complete real payment unless Raj gave sandbox instructions.
+4. Open WhatsApp-related settings/brief if present.
+5. Trigger only safe/test WhatsApp flows if a sandbox number is provided; otherwise verify the app blocks or explains missing 
+number/channel.
+Expected result:
+  ☐ Billing page loads and labels plan/test mode clearly.
+  ☐ No real payment is charged during QA.
+  ☐ WhatsApp actions do not send to real customers/workers unless explicitly configured for testing.
+  ☐ Missing WhatsApp number/channel produces safe and clear feedback.
+Evidence to capture:
+  ☐ Billing screenshot.
+  ☐ Screenshots of disabled/test-mode external actions.
+  ☐ Bug report if any action seems dangerous or unclear.
+Hidden-gap / edge-case checks:
+  ☐ Try cancel/back from checkout if sandbox is provided.
+  ☐ Check if billing page is inaccessible to supervisor.
+  ☐ Check mobile billing layout.
+5.15 Mobile And Tablet Regression
+Goal: Make sure the app is usable on the devices factory owners/supervisors may actually use.
+Steps:
+1. Use Chrome DevTools device toolbar or a real phone.
+2. Test owner: Factory Today, Estimator, Stock sale wizard, Dispatches, Commercials, Payroll, Settings mobile nav.
+3. Test supervisor: Dashboard, Production logging, Attendance, Workers, Machines mobile nav.
+4. Rotate between portrait and landscape if using a real device.
+
+--- PAGE 14 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+5. Check that buttons are tappable and not hidden behind the browser bottom bar.
+Expected result:
+  ☐ No horizontal overflow on core pages unless a wide table intentionally scrolls.
+  ☐ Dialogs/sheets fit screen and can be closed.
+  ☐ Primary CTAs are visible and tappable.
+  ☐ Supervisor can log production from mobile without layout issues.
+  ☐ Owner can complete stock sale wizard from mobile.
+Evidence to capture:
+  ☐ Mobile recordings for owner stock sale and supervisor production log.
+  ☐ Screenshots of any overflow/clipped CTAs.
+Hidden-gap / edge-case checks:
+  ☐ Open/close mobile navigation repeatedly.
+  ☐ Test slow scrolling pages.
+  ☐ Try keyboard open state on forms.
+  ☐ Check date/time pickers on mobile.
+5.16 Console Health, Build/Lint/Test Commands
+Goal: Confirm local quality gates remain healthy after manual QA.
+Steps:
+1. Open DevTools Console and clear it.
+2. Visit owner dashboard and open mobile navigation sheet.
+3. Visit supervisor dashboard and open mobile navigation sheet.
+4. Visit public tracking page and auth pages.
+5. Record any warnings/errors after timestamp filter or after clearing console.
+6. If the intern has repo access, run `npm run build`, `npm run lint`, and `npx vitest run`.
+Expected result:
+  ☐ No hydration errors.
+  ☐ No Supabase `getSession()` warnings.
+  ☐ No Radix dialog/sheet description warnings.
+  ☐ Build exits 0.
+  ☐ Lint exits 0 errors; warnings are logged separately.
+  ☐ Vitest exits with 0 failures.
+Evidence to capture:
+  ☐ Console screenshots for owner, supervisor, public pages.
+  ☐ Terminal screenshots/logs for build/lint/tests if run.
+Hidden-gap / edge-case checks:
+  ☐ Repeat console check after mobile nav, stock sale wizard, dispatch dialog, and public receipt.
+  ☐ Flag repeated warnings even if app seems usable.
+
+--- PAGE 15 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+5.17 Security, Permissions, And Data Isolation
+Goal: Look for role leakage, unauthorized access, and unsafe public exposure.
+Steps:
+1. As logged-out user, attempt owner/supervisor direct routes.
+2. As supervisor, attempt owner financial/settings/billing routes.
+3. As owner, copy public tracking link and open logged out.
+4. Modify URL IDs/tokens manually and observe behavior.
+5. Use browser back after logout.
+6. Open the app in two tabs and log out in one tab, then try actions in the other.
+Expected result:
+  ☐ Logged-out private routes are blocked.
+  ☐ Supervisor cannot access owner-only sensitive pages.
+  ☐ Public tracking only reveals intended dispatch tracking info.
+  ☐ Invalid IDs/tokens show safe not-found/unauthorized states.
+  ☐ Logout invalidates or blocks sensitive actions in old tabs.
+Evidence to capture:
+  ☐ Record unauthorized route attempts.
+  ☐ Screenshots of safe error states.
+  ☐ Bug report for any data leakage.
+Hidden-gap / edge-case checks:
+  ☐ Try changing UUID-like IDs in URLs.
+  ☐ Try opening another factory-like URL if known.
+  ☐ Try direct API-like action only through UI, not hacking tools.
+
+--- PAGE 16 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+6. Hidden Gap Edge-Case Matrix
+Area What To Try Pass Criteria
+Input validation Blank required fields, 0, negative, decimals, 
+huge values, long text, special characters, 
+emojis.
+Clear validation; no crash; no corrupted 
+record.
+Duplicate actions Double-click Save/Submit, press Enter 
+repeatedly, browser back then submit again.
+No duplicate quote/order/log/payment/sale 
+unless intentionally allowed.
+Refresh/back behavior Refresh during wizard, use back button mid-
+flow, close dialog, reopen.
+No stuck partial state; draft handling is 
+understandable.
+Stock math Partial sale, full sale, oversell attempt, sub-
+taka sale, decimal meters, multiple sales 
+from same lot.
+Available/pending/sold meters and takas 
+reconcile.
+Dispatch lifecycle Sale-only → pending → dispatched → 
+public receipt → delivered → commercials.
+Status syncs across dispatches, stock 
+sales, public tracking, commercials.
+Payroll math Piece-rate meters, fixed attendance, 
+advances, partial cycle, pay-date gate.
+Gross/net/debt balances are correct and 
+explainable.
+Role boundaries Owner vs supervisor nav and direct URLs. No confusing copy or permission leakage.
+Mobile Forms, wizards, dialogs, nav, keyboard 
+open state.
+Core actions remain possible on phone.
+Network/session Slow internet, offline moment, expired 
+session, two tabs.
+Safe errors; no duplicate/corrupt writes.
+Timezone/date Today, due dates, deadlines, pay dates, 
+receipt dates.
+Dates are correct for India/SIA timezone 
+expectations and do not shift unexpectedly.
+
+--- PAGE 17 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+7. Suggested Execution Schedule While Raj Is Away
+Day/Session Focus Output
+Session 1 Fresh account signup, onboarding, owner 
+setup, public/auth smoke.
+Recording folder + QA log started.
+Session 2 Estimator, quotes, accepted order, order 
+production, supervisor join/logging.
+Order-to-production recording and 
+screenshots.
+Session 3 Market runs, stock visibility, stock sale, sub-
+taka regression.
+Stock math evidence with before/after 
+quantities.
+Session 4 Dispatch, public tracking receipt, 
+commercials payment.
+Full stock-to-commercials regression 
+recording.
+Session 5 Payroll, attendance, advances, analytics, 
+archive.
+Financial/labour screenshots and mismatch 
+notes.
+Session 6 Mobile/responsive, permissions, console 
+health, build/lint/tests if possible.
+Final issue list with severity and evidence 
+links.
+
+--- PAGE 18 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+8. QA Log Template
+Use this table in Google Sheets/Notion. Every workflow needs one row, even if it passes.
+Test ID Workflow Role Device Result Severity Video Link / 
+Timestamp
+Notes
+AUTH-01 Protected 
+route guard
+Logged out Desktop 
+Chrome
+Pass/Fail Blocker/
+High/
+Medium/
+Low/N/A
+link + 02:13 What 
+happened and 
+route tested.
+STOCK-03 Sub-taka sale 
+10m from 25m 
+lot
+Owner Desktop 
+Chrome
+Pass/Fail ... link + 
+timestamp
+Before/after 
+meters and 
+takas.
+MOB-02 Supervisor 
+production log 
+mobile
+Supervisor iPhone/
+Chrome 
+device toolbar
+Pass/Fail ... link + 
+timestamp
+Any 
+clipping/tap 
+issue.
+
+--- PAGE 19 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+9. Bug Report Template
+Field What To Write
+Title [Severity] Short description. Example: [Blocker] Sub-taka sale 
+cannot advance from stock wizard.
+Environment URL, branch/deployment, browser, device, account role, date/time.
+Preconditions Existing records needed before reproducing.
+Steps to reproduce Numbered steps from a clean starting point.
+Expected result What should have happened.
+Actual result What actually happened. Include exact error text.
+Business impact Why this matters to a factory owner/supervisor.
+Evidence Video link, screenshot, console log, network error, affected record 
+ID/name.
+Retest notes Leave blank until fixed and retested.
+Business-impact examples: “Factory cannot sell produced stock”, “Supervisor can accidentally duplicate production meters”, 
+“Owner sees wrong receivable balance”, “Public buyer tracking shows wrong delivery status”, or “Mobile user cannot reach the 
+Save button.”
+
+--- PAGE 20 ---
+Weavly Intern QA Guide | Controlled test account only | Do not trigger real payments or WhatsApp sends unless sandbox is provided
+10. Final Signoff Checklist
+  ☐ Fresh owner signup and onboarding completed successfully.
+  ☐ Supervisor join/login tested successfully, or documented if blocked by setup constraints.
+  ☐ Order-based quote → active order → loom assignment → supervisor production → stock/payroll visibility completed.
+  ☐ Market-run creation → production → stock visibility completed.
+  ☐ Sub-taka stock sale completed from a lot under 1 taka.
+  ☐ Sale-only and dispatch-now/pending dispatch paths tested where available.
+  ☐ Public tracking receipt completed and owner dispatch/sale status updated.
+  ☐ Commercial receivable appeared and partial payment updated balance.
+  ☐ Attendance, advances, payroll preview, and settlement gate checked.
+  ☐ Factory Today, Analytics, and Archive reflect created data.
+  ☐ Production mode switching tested without data loss.
+  ☐ Mobile owner stock sale and supervisor production logging tested.
+  ☐ Logged-out and supervisor unauthorized route tests passed.
+  ☐ Console-health checks completed for owner, supervisor, public pages.
+  ☐ Build/lint/test commands captured if intern has repo access.
+  ☐ All bugs logged with severity, evidence, and business impact.
