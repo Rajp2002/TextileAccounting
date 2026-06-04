@@ -98,13 +98,31 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
     // Setup panel visibility — check if any setup step is incomplete
     // Note: fixed_worker skip is handled client-side in SetupPanel via localStorage
     const setupChecklist = data.setupChecklist
+    const activationChecklist = data.activationChecklist
+    const hasFirstRunCosting = !!(
+        setupChecklist.hasQuality &&
+        (activationChecklist?.hasEstimate || activationChecklist?.hasOrder || activationChecklist?.hasMarketRun)
+    )
+    const hasStartedFirstRun = data.productionMode === 'market_run'
+        ? !!activationChecklist?.hasMarketRun
+        : data.productionMode === 'order_based'
+            ? !!activationChecklist?.hasOrder
+            : !!(activationChecklist?.hasOrder || activationChecklist?.hasMarketRun)
     const hasAnyIncompleteSetup = !setupChecklist.hasProductionMode ||
         !setupChecklist.hasMachine ||
+        !setupChecklist.hasLoomAssignment ||
+        !setupChecklist.hasLoomTarget ||
         !setupChecklist.hasQuality ||
         !setupChecklist.hasMeterWorker ||
         !setupChecklist.hasSupervisor ||
         !setupChecklist.hasPayrollConfig ||
-        !setupChecklist.hasPlan
+        !setupChecklist.hasPlan ||
+        !hasFirstRunCosting ||
+        !hasStartedFirstRun ||
+        (data.productionMode === 'market_run' && !activationChecklist?.hasStockEntry) ||
+        !activationChecklist?.hasProductionLog ||
+        !activationChecklist?.hasDispatch ||
+        !activationChecklist?.hasCommercial
     // hasFixedWorker is skippable so we don't include it in the server check —
     // the SetupPanel component handles it via localStorage
     const showSetupPanel = hasAnyIncompleteSetup || !setupChecklist.hasFixedWorker
@@ -191,7 +209,11 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
 
                     {/* Right Column — Setup Panel (desktop only) */}
                     {showSetupPanel && (
-                        <SetupPanel checklist={setupChecklist} />
+                        <SetupPanel
+                            checklist={setupChecklist}
+                            activationChecklist={data.activationChecklist}
+                            productionMode={data.productionMode}
+                        />
                     )}
                 </div>
             )}
@@ -200,7 +222,11 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
             {isAllClear && showSetupPanel && (
                 <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
                     <QuickActionsCard productionMode={data.productionMode} />
-                    <SetupPanel checklist={setupChecklist} />
+                    <SetupPanel
+                        checklist={setupChecklist}
+                        activationChecklist={data.activationChecklist}
+                        productionMode={data.productionMode}
+                    />
                 </div>
             )}
 
@@ -211,7 +237,11 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
 
             {/* Mobile floating setup button */}
             {showSetupPanel && (
-                <SetupFloatingButton checklist={setupChecklist} />
+                <SetupFloatingButton
+                    checklist={setupChecklist}
+                    activationChecklist={data.activationChecklist}
+                    productionMode={data.productionMode}
+                />
             )}
         </div>
     )

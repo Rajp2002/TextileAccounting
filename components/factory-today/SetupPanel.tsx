@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
+import type { LucideIcon } from 'lucide-react'
+import type { ProductionMode } from '@/lib/production-mode'
 import {
     CheckCircle2,
     Store,
@@ -18,6 +20,13 @@ import {
     SkipForward,
     X,
     Sparkles,
+    Info,
+    ClipboardList,
+    Link2,
+    Activity,
+    Warehouse,
+    Truck,
+    IndianRupee,
 } from 'lucide-react'
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -25,6 +34,8 @@ import {
 export interface SetupChecklist {
     hasProductionMode: boolean
     hasMachine: boolean
+    hasLoomAssignment: boolean
+    hasLoomTarget: boolean
     hasQuality: boolean
     hasMeterWorker: boolean
     hasFixedWorker: boolean
@@ -33,143 +44,679 @@ export interface SetupChecklist {
     hasPlan: boolean
 }
 
+export interface ActivationChecklist {
+    hasEstimate: boolean
+    hasQuality: boolean
+    hasOrder: boolean
+    hasProductionLog: boolean
+    hasStockEntry: boolean
+    hasMarketRun: boolean
+    hasDispatch: boolean
+    hasCommercial: boolean
+}
+
 interface SetupPanelProps {
     checklist: SetupChecklist
+    activationChecklist?: ActivationChecklist
+    productionMode: ProductionMode
 }
+
+type StepStatus = 'completed' | 'incomplete'
+
+interface HelpContent {
+    intro: string
+    why: string[]
+    actions: string[]
+    clickPath: string[]
+    doneWhen: string
+    note?: string
+}
+
+interface SetupStep {
+    id: string
+    icon: LucideIcon
+    title: string
+    description: string
+    href: string
+    ctaLabel: string
+    skippable?: boolean
+    isComplete: (context: StepContext) => boolean
+    help: HelpContent
+}
+
+interface StepContext {
+    checklist: SetupChecklist
+    activationChecklist: ActivationChecklist
+    productionMode: ProductionMode
+    skippedFixed: boolean
+}
+
+const EMPTY_ACTIVATION: ActivationChecklist = {
+    hasEstimate: false,
+    hasQuality: false,
+    hasOrder: false,
+    hasProductionLog: false,
+    hasStockEntry: false,
+    hasMarketRun: false,
+    hasDispatch: false,
+    hasCommercial: false,
+}
+
+const SKIP_STORAGE_KEY = 'weavly_skip_fixed_staff'
 
 // ─── Step Definitions ───────────────────────────────────────────────────────────
 
-const SETUP_STEPS = [
-    {
-        key: 'hasProductionMode' as keyof SetupChecklist,
-        icon: Store,
-        title: 'Choose production mode',
-        description: 'Tell Weavly if you produce for market stock, orders, or both.',
-        href: '/onboarding',
-        ctaLabel: 'Set up',
-        accentClass: 'text-amber-600',
-        bgClass: 'bg-amber-50',
-        skippable: false,
-    },
-    {
-        key: 'hasMachine' as keyof SetupChecklist,
-        icon: Server,
-        title: 'Add your looms',
-        description: 'Add all the machines/looms in your factory.',
-        href: '/owner/machines',
-        ctaLabel: 'Add looms',
-        accentClass: 'text-amber-600',
-        bgClass: 'bg-amber-50',
-        skippable: false,
-    },
-    {
-        key: 'hasQuality' as keyof SetupChecklist,
-        icon: Palette,
-        title: 'Add your first quality',
-        description: 'Define a fabric quality inside the estimator flow.',
-        href: '/owner/estimator',
-        ctaLabel: 'Create quality',
-        accentClass: 'text-violet-600',
-        bgClass: 'bg-violet-50',
-        skippable: false,
-    },
-    {
-        key: 'hasMeterWorker' as keyof SetupChecklist,
-        icon: Users,
-        title: 'Add piece-rate workers',
-        description: 'Workers tracked for production and payroll.',
-        href: '/owner/fixed-workers',
-        ctaLabel: 'Add workers',
-        accentClass: 'text-emerald-600',
-        bgClass: 'bg-emerald-50',
-        skippable: false,
-    },
-    {
-        key: 'hasFixedWorker' as keyof SetupChecklist,
-        icon: UserPlus,
-        title: 'Add fixed/salary staff',
-        description: 'Salaried workers with attendance-based pay.',
-        href: '/owner/fixed-workers',
-        ctaLabel: 'Add staff',
-        accentClass: 'text-blue-600',
-        bgClass: 'bg-blue-50',
-        skippable: true,
-        skipLabel: "Skip — I don't have salary staff",
-    },
-    {
-        key: 'hasSupervisor' as keyof SetupChecklist,
-        icon: ShieldCheck,
-        title: 'Invite your supervisor',
-        description: 'A supervisor account is needed to log daily production.',
-        href: '/owner/settings',
-        ctaLabel: 'Get join code',
-        accentClass: 'text-orange-600',
-        bgClass: 'bg-orange-50',
-        skippable: false,
-        extraContext: true,
-    },
-    {
-        key: 'hasPayrollConfig' as keyof SetupChecklist,
-        icon: Calendar,
-        title: 'Set your pay cycle',
-        description: 'Define the monthly payroll period and pay date.',
-        href: '/owner/payroll',
-        ctaLabel: 'Configure payroll',
-        accentClass: 'text-violet-600',
-        bgClass: 'bg-violet-50',
-        skippable: false,
-    },
-    {
-        key: 'hasPlan' as keyof SetupChecklist,
-        icon: CreditCard,
-        title: 'Choose your plan',
-        description: 'Start a free 7-day trial or subscribe. No card required for trial.',
-        href: '/owner/billing',
-        ctaLabel: 'View plans',
-        accentClass: 'text-amber-600',
-        bgClass: 'bg-amber-50',
-        skippable: false,
-    },
-] as const
+function getModeLabel(productionMode: ProductionMode) {
+    if (productionMode === 'order_based') return 'Order-run path'
+    if (productionMode === 'both') return 'Order or market-run path'
+    return 'Market-run path'
+}
 
-const SKIP_STORAGE_KEY = 'weavly_skip_fixed_staff'
-const TOTAL_STEPS = SETUP_STEPS.length
+function getRunLabels(productionMode: ProductionMode) {
+    if (productionMode === 'order_based') {
+        return {
+            qualityTitle: 'Create first quote and quality',
+            qualityDescription: 'Build a costed quote with the fabric quality and worker rate.',
+            qualityCta: 'Open estimator',
+            runTitle: 'Convert quote to order',
+            runDescription: 'Create the live party order that production will run against.',
+            runCta: 'Open quotes',
+            runHref: '/owner/quotes',
+            linkTitle: 'Link order to looms',
+            linkDescription: 'Select the order as the active cost analysis on the looms that will run it.',
+            dispatchTitle: 'Create first order dispatch',
+            dispatchDescription: 'Send finished fabric to the party and start receipt tracking.',
+            stockStep: null as SetupStep | null,
+        }
+    }
+
+    if (productionMode === 'both') {
+        return {
+            qualityTitle: 'Create first costing',
+            qualityDescription: 'Define the fabric quality, costing, and worker rate for your first run.',
+            qualityCta: 'Open estimator',
+            runTitle: 'Start first order or market run',
+            runDescription: 'Pick one path for your first run: convert a quote to an order or start market maal.',
+            runCta: 'Start run',
+            runHref: '/owner/estimator',
+            linkTitle: 'Link run to looms',
+            linkDescription: 'Assign the selected order or market run to the looms that will produce it.',
+            dispatchTitle: 'Create first dispatch',
+            dispatchDescription: 'Dispatch finished fabric and track what the party receives.',
+            stockStep: null as SetupStep | null,
+        }
+    }
+
+    return {
+        qualityTitle: 'Create first market costing',
+        qualityDescription: 'Define the fabric quality, costing, and worker rate for market production.',
+        qualityCta: 'Open estimator',
+        runTitle: 'Start market run',
+        runDescription: 'Create the market maal run that will move from production into godown stock.',
+        runCta: 'Start market run',
+        runHref: '/owner/estimator?mode=market',
+        linkTitle: 'Link market run to looms',
+        linkDescription: 'Select the market run as the active cost analysis on the looms that will run it.',
+        dispatchTitle: 'Sell and dispatch stock',
+        dispatchDescription: 'Sell stock to a party, create the dispatch, and track receipt.',
+        stockStep: null as SetupStep | null,
+    }
+}
+
+function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
+    const labels = getRunLabels(productionMode)
+
+    const steps: SetupStep[] = [
+        {
+            id: 'production-mode',
+            icon: Store,
+            title: 'Choose production mode',
+            description: 'Tell Weavly if this factory runs market stock, party orders, or both.',
+            href: '/owner/settings',
+            ctaLabel: 'Review mode',
+            isComplete: ({ checklist }) => checklist.hasProductionMode,
+            help: {
+                intro: 'Production mode controls which workflow Weavly shows first and which first-run path this checklist follows.',
+                why: [
+                    'Market run factories produce fabric first, move it to godown stock, then sell and dispatch later.',
+                    'Order-run factories produce against confirmed party requirements, deadlines, and dispatches.',
+                    'Both mode keeps both workflows visible and lets the first completed run finish this checklist.',
+                ],
+                actions: [
+                    'Choose the closest day-to-day operating style.',
+                    'Use Both only if the factory regularly does both workflows.',
+                    'Change it later from Owner Settings if your workflow changes.',
+                ],
+                clickPath: ['Owner sidebar', 'Settings', 'Factory settings', 'Production mode'],
+                doneWhen: 'A production mode is saved for the organization.',
+            },
+        },
+        {
+            id: 'looms',
+            icon: Server,
+            title: 'Add your looms',
+            description: 'Add all active looms or machines before assigning work.',
+            href: '/owner/machines',
+            ctaLabel: 'Add looms',
+            isComplete: ({ checklist }) => checklist.hasMachine,
+            help: {
+                intro: 'Looms are the production units that receive qualities, workers, and daily meter readings.',
+                why: [
+                    'Production logs need a loom so output can be traced to the right machine.',
+                    'Loom status helps the owner see idle, active, and attention-needed machines.',
+                    'Rates and assignments become clearer when every physical loom exists in the system.',
+                ],
+                actions: [
+                    'Add each active loom with a practical factory label.',
+                    'Set loom type where possible so reporting and grouping are cleaner.',
+                    'Keep unused looms inactive instead of deleting production history later.',
+                ],
+                clickPath: ['Owner sidebar', 'Looms', 'Add loom'],
+                doneWhen: 'At least one loom exists in the factory.',
+            },
+        },
+        {
+            id: 'piece-rate-workers',
+            icon: Users,
+            title: 'Add piece-rate workers',
+            description: 'Add the weavers who will be paid from production meters.',
+            href: '/owner/fixed-workers',
+            ctaLabel: 'Add workers',
+            isComplete: ({ checklist }) => checklist.hasMeterWorker,
+            help: {
+                intro: 'Piece-rate workers are the workers assigned to looms and paid from logged production.',
+                why: [
+                    'Supervisor production entry requires a worker on the loom.',
+                    'Payroll uses production logs to calculate worker hisaab.',
+                    'Worker history remains accurate when workers are created before the first shift.',
+                ],
+                actions: [
+                    'Add each production worker by name.',
+                    'Add phone numbers if WhatsApp receipts or reminders will be used.',
+                    'Keep salary-only staff for the optional fixed staff step.',
+                ],
+                clickPath: ['Owner sidebar', 'Workers', 'Piece-rate workers', 'Add worker'],
+                doneWhen: 'At least one piece-rate worker exists.',
+            },
+        },
+        {
+            id: 'loom-workers',
+            icon: Link2,
+            title: 'Assign workers to looms',
+            description: 'Select day and night workers on at least one loom before production.',
+            href: '/owner/machines',
+            ctaLabel: 'Assign workers',
+            isComplete: ({ checklist }) => checklist.hasLoomAssignment,
+            help: {
+                intro: 'This connects a worker to a loom shift so Weavly knows who produced the meters.',
+                why: [
+                    'A loom cannot be activated for production until day and night assignments exist.',
+                    'The production log needs the assigned worker to calculate wages correctly.',
+                    'Owners can review who was responsible for output, shortages, or idle shifts.',
+                ],
+                actions: [
+                    'Open the Looms page and find the loom card.',
+                    'Use the Day and Night worker selectors on the card.',
+                    'Select the normal worker for each shift. If one worker handles both shifts, select the same worker for both.',
+                ],
+                clickPath: ['Owner sidebar', 'Looms', 'Loom card', 'Day worker / Night worker selectors'],
+                doneWhen: 'At least one loom has both day and night workers assigned.',
+                note: 'This step is separate from linking the order or market run. Workers answer "who runs the loom"; the active cost analysis answers "what is being produced".',
+            },
+        },
+        {
+            id: 'quality',
+            icon: Palette,
+            title: labels.qualityTitle,
+            description: labels.qualityDescription,
+            href: '/owner/estimator',
+            ctaLabel: labels.qualityCta,
+            isComplete: ({ checklist, activationChecklist }) => (
+                checklist.hasQuality &&
+                (activationChecklist.hasEstimate || activationChecklist.hasOrder || activationChecklist.hasMarketRun)
+            ),
+            help: {
+                intro: 'A costing gives the first run its fabric quality, construction details, expected cost, and worker rate.',
+                why: [
+                    'Production needs a quality or cost analysis before a loom can be linked to work.',
+                    'Commercials uses the costing to compare revenue against expected cost.',
+                    'Worker wage rates flow from the selected quality or costing into production logs.',
+                ],
+                actions: [
+                    'Open Estimator and create the first fabric quality.',
+                    'Fill enough costing details to save the quote or market costing.',
+                    'Confirm the worker rate per meter before starting production.',
+                ],
+                clickPath: ['Owner sidebar', 'Estimator', 'Create quality or quote', 'Save costing'],
+                doneWhen: 'A quality exists and at least one estimate, order, or market run has been created.',
+            },
+        },
+        {
+            id: 'first-run',
+            icon: ClipboardList,
+            title: labels.runTitle,
+            description: labels.runDescription,
+            href: labels.runHref,
+            ctaLabel: labels.runCta,
+            isComplete: ({ activationChecklist, productionMode }) => {
+                if (productionMode === 'market_run') return activationChecklist.hasMarketRun
+                if (productionMode === 'order_based') return activationChecklist.hasOrder
+                return activationChecklist.hasOrder || activationChecklist.hasMarketRun
+            },
+            help: {
+                intro: 'This creates the live work item that the factory will actually produce.',
+                why: [
+                    'An order gives party name, target meters, and deadline for order-based production.',
+                    'A market run gives target meters and stock identity for market maal.',
+                    'Factory Today can only track pace and idle work after a run exists.',
+                ],
+                actions: productionMode === 'order_based'
+                    ? ['Open Quotes after saving a quote.', 'Convert the accepted quote to an order.', 'Check party name, target meters, and deadline before saving.']
+                    : productionMode === 'market_run'
+                        ? ['Open Estimator in market mode.', 'Create a market run from the costing.', 'Check fabric label, target meters, and planned quantity before saving.']
+                        : ['Create either a party order from Quotes or a market run from Estimator.', 'Use the workflow the factory will run first.', 'Finish one path end to end before starting the second path.'],
+                clickPath: productionMode === 'order_based'
+                    ? ['Owner sidebar', 'Quotes', 'Quote row', 'Convert to order']
+                    : ['Owner sidebar', 'Estimator', 'Market mode', 'Start market run'],
+                doneWhen: productionMode === 'order_based'
+                    ? 'At least one order exists.'
+                    : productionMode === 'market_run'
+                        ? 'At least one market run exists.'
+                        : 'At least one order or market run exists.',
+            },
+        },
+        {
+            id: 'loom-target',
+            icon: Activity,
+            title: labels.linkTitle,
+            description: labels.linkDescription,
+            href: '/owner/machines',
+            ctaLabel: 'Link to looms',
+            isComplete: ({ checklist }) => checklist.hasLoomTarget,
+            help: {
+                intro: 'This links the live order or market run to the loom that will produce it.',
+                why: [
+                    'The loom needs an active cost analysis before production can be saved.',
+                    'Factory Today uses this link to show assigned and unassigned machines.',
+                    'Production logs inherit the correct quality and rate from the linked work.',
+                ],
+                actions: [
+                    'Open the Looms page after creating the order or market run.',
+                    'On the loom card, click Cost analysis / quality.',
+                    'Select the order or market run that loom should produce.',
+                ],
+                clickPath: ['Owner sidebar', 'Looms', 'Loom card', 'Cost analysis / quality selector'],
+                doneWhen: 'At least one loom is linked to an active order or market run.',
+            },
+        },
+        {
+            id: 'supervisor',
+            icon: ShieldCheck,
+            title: 'Invite your supervisor',
+            description: 'Give the person logging production access to the supervisor app.',
+            href: '/owner/settings',
+            ctaLabel: 'Get join code',
+            isComplete: ({ checklist }) => checklist.hasSupervisor,
+            help: {
+                intro: 'The supervisor account is the daily entry point for loom status, assignments, and production logs.',
+                why: [
+                    'The supervisor flow is optimized for mobile shop-floor entry.',
+                    'Separating owner and supervisor roles keeps commercials and payroll controls protected.',
+                    'Daily logs are cleaner when the person entering them has their own account.',
+                ],
+                actions: [
+                    'Open Settings and generate the supervisor join code.',
+                    'Share the code with the supervisor and ask them to sign in.',
+                    'If you do not have a separate supervisor, create a second account for yourself with the join code.',
+                ],
+                clickPath: ['Owner sidebar', 'Settings', 'Supervisor access', 'Generate join code'],
+                doneWhen: 'At least one supervisor profile has joined this factory.',
+            },
+        },
+        {
+            id: 'production-log',
+            icon: Activity,
+            title: 'Log first production',
+            description: 'Enter the first shift meters after loom, worker, and run are linked.',
+            href: '/supervisor/production',
+            ctaLabel: 'Log production',
+            isComplete: ({ activationChecklist }) => activationChecklist.hasProductionLog,
+            help: {
+                intro: 'The first production log proves the setup can run from costing to actual output.',
+                why: [
+                    'Meters drive progress, stock movement, payroll, and daily owner alerts.',
+                    'The log captures loom, worker, shift, quality, and meter readings in one record.',
+                    'Commercial and dispatch readiness depends on production being recorded first.',
+                ],
+                actions: [
+                    'Sign in as supervisor or use the supervisor flow.',
+                    'Open Production and choose the loom/shift.',
+                    'Enter opening and closing readings or produced meters, then save.',
+                ],
+                clickPath: ['Supervisor app', 'Production', 'Select loom and shift', 'Save production'],
+                doneWhen: 'At least one production log exists.',
+                note: 'If saving is blocked, check that the loom has day/night workers and an active order or market run selected.',
+            },
+        },
+    ]
+
+    if (productionMode === 'market_run') {
+        steps.push({
+            id: 'stock',
+            icon: Warehouse,
+            title: 'Move fabric into godown',
+            description: 'Confirm produced market maal as stock so it can be sold and dispatched.',
+            href: '/owner/stock',
+            ctaLabel: 'Open godown',
+            isComplete: ({ activationChecklist }) => activationChecklist.hasStockEntry,
+            help: {
+                intro: 'Market-run production must become godown stock before it can be sold to a party.',
+                why: [
+                    'Stock lots preserve quality, meters, taka count, cost, and source run.',
+                    'Dispatches for market maal start from sold stock.',
+                    'Commercial profit depends on the stock cost captured before sale.',
+                ],
+                actions: [
+                    'Open Godown Ledger after production is logged.',
+                    'Review expected stock from the market run.',
+                    'Confirm the lot or inward entry when the fabric is physically in godown.',
+                ],
+                clickPath: ['Owner sidebar', 'Godown Ledger', 'Expected stock', 'Confirm inward'],
+                doneWhen: 'At least one stock lot exists.',
+            },
+        })
+    }
+
+    steps.push(
+        {
+            id: 'dispatch',
+            icon: Truck,
+            title: labels.dispatchTitle,
+            description: labels.dispatchDescription,
+            href: '/owner/dispatches',
+            ctaLabel: 'Open dispatches',
+            isComplete: ({ activationChecklist }) => activationChecklist.hasDispatch,
+            help: {
+                intro: 'Dispatch records what fabric left the factory and tracks what the party confirms receiving.',
+                why: [
+                    'Open dispatches show fabric in transit and receipt delays.',
+                    'Shortage and received quantity are tracked against the sent quantity.',
+                    'Commercial receivables become easier to follow when dispatches are clean.',
+                ],
+                actions: productionMode === 'market_run'
+                    ? ['Sell stock to a named party from Godown Ledger or Dispatches.', 'Create the dispatch for the sold stock.', 'Update receipt once the party confirms received meters.']
+                    : ['Open Dispatches for the order.', 'Create a dispatch batch with sent meters.', 'Update receipt once the party confirms received meters.'],
+                clickPath: productionMode === 'market_run'
+                    ? ['Owner sidebar', 'Dispatches', 'Pending dispatches', 'Sell and dispatch stock']
+                    : ['Owner sidebar', 'Dispatches', 'Create dispatch'],
+                doneWhen: 'At least one dispatch exists.',
+            },
+        },
+        {
+            id: 'commercials',
+            icon: IndianRupee,
+            title: 'Review commercials',
+            description: 'Check revenue, expected cost, profit, and receivables after the first sale or dispatch.',
+            href: '/owner/commercials',
+            ctaLabel: 'Open commercials',
+            isComplete: ({ activationChecklist }) => activationChecklist.hasCommercial,
+            help: {
+                intro: 'Commercials is where the owner reviews whether the run made money and what the party still owes.',
+                why: [
+                    'Expected and realized profit help catch pricing or costing mistakes early.',
+                    'Receivables show unpaid, partial, and collected amounts by party.',
+                    'The first review confirms that costing, stock, dispatch, and payment data are connected.',
+                ],
+                actions: [
+                    'Open Commercials after the first sale, dispatch, or invoice-linked event.',
+                    'Review the profit snapshot and receivables list.',
+                    'Record payment when the party pays so outstanding balance stays current.',
+                ],
+                clickPath: ['Owner sidebar', 'Commercials', 'Profit snapshot / Receivables', 'Record payment'],
+                doneWhen: 'At least one commercial profit entry exists.',
+            },
+        },
+        {
+            id: 'fixed-staff',
+            icon: UserPlus,
+            title: 'Add fixed/salary staff',
+            description: 'Add salaried staff only if you track attendance-based pay.',
+            href: '/owner/fixed-workers',
+            ctaLabel: 'Add staff',
+            skippable: true,
+            isComplete: ({ checklist, skippedFixed }) => skippedFixed || checklist.hasFixedWorker,
+            help: {
+                intro: 'Fixed staff are salaried or attendance-paid people, separate from piece-rate loom workers.',
+                why: [
+                    'Payroll can handle both production wages and fixed staff salary.',
+                    'Attendance-based pay needs staff records before the payroll period closes.',
+                    'Factories without fixed staff can skip this step.',
+                ],
+                actions: [
+                    'Add salary staff if you pay supervisors, helpers, or office staff monthly.',
+                    'Enter salary and optional PF/ESI details when relevant.',
+                    'Skip the step if your factory only pays piece-rate workers.',
+                ],
+                clickPath: ['Owner sidebar', 'Workers', 'Fixed/salary staff', 'Add staff'],
+                doneWhen: 'At least one fixed worker exists, or the owner has skipped this optional step on this device.',
+            },
+        },
+        {
+            id: 'pay-cycle',
+            icon: Calendar,
+            title: 'Set your pay cycle',
+            description: 'Define monthly payroll period, pay date, and reminders.',
+            href: '/owner/payroll',
+            ctaLabel: 'Configure payroll',
+            isComplete: ({ checklist }) => checklist.hasPayrollConfig,
+            help: {
+                intro: 'The pay cycle tells Weavly which production logs belong in each monthly hisaab.',
+                why: [
+                    'Payroll needs clear cycle boundaries before settlement.',
+                    'The pay date drives due, upcoming, and overdue payroll alerts.',
+                    'Consistent periods prevent mixing two months of worker wages.',
+                ],
+                actions: [
+                    'Choose the cycle start day used by your factory.',
+                    'Choose the pay date day.',
+                    'Pick a reminder window so Factory Today warns before payroll is due.',
+                ],
+                clickPath: ['Owner sidebar', 'Payroll', 'Payroll settings', 'Save payroll config'],
+                doneWhen: 'A payroll configuration exists.',
+            },
+        },
+        {
+            id: 'plan',
+            icon: CreditCard,
+            title: 'Choose your plan',
+            description: 'Start trial or subscribe so the factory can keep using the workflow.',
+            href: '/owner/billing',
+            ctaLabel: 'View plans',
+            isComplete: ({ checklist }) => checklist.hasPlan,
+            help: {
+                intro: 'The plan step activates the account for continued use after setup.',
+                why: [
+                    'A trial lets the factory complete the first run without entering card details.',
+                    'Billing status gates long-term access to premium workflows.',
+                    'Owners can change plan details later from Billing.',
+                ],
+                actions: [
+                    'Open Billing.',
+                    'Start the free trial or select a paid plan.',
+                    'Return to Factory Today to continue the first-run checklist.',
+                ],
+                clickPath: ['Owner sidebar', 'Billing', 'Choose trial or plan'],
+                doneWhen: 'An active trial or subscription exists.',
+            },
+        },
+    )
+
+    return steps
+}
+
+// ─── Help Modal ────────────────────────────────────────────────────────────────
+
+function StepHelpModal({ step, onClose }: { step: SetupStep | null; onClose: () => void }) {
+    return (
+        <AnimatePresence>
+            {step && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[90] flex items-end justify-center bg-black/45 px-3 py-4 backdrop-blur-sm sm:items-center"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="setup-step-help-title"
+                >
+                    <button
+                        type="button"
+                        className="absolute inset-0 cursor-default"
+                        aria-label="Close setup help"
+                        onClick={onClose}
+                    />
+                    <motion.div
+                        initial={{ y: 20, scale: 0.98 }}
+                        animate={{ y: 0, scale: 1 }}
+                        exit={{ y: 20, scale: 0.98 }}
+                        transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+                        className="relative z-10 max-h-[86vh] w-full max-w-lg overflow-hidden rounded-2xl border border-hairline bg-white shadow-2xl"
+                    >
+                        <div className="flex items-start justify-between gap-4 border-b border-hairline px-5 py-4">
+                            <div className="min-w-0">
+                                <p className="text-[11px] font-bold uppercase tracking-wide text-saffron-deep">Step guide</p>
+                                <h3 id="setup-step-help-title" className="mt-1 text-lg font-bold leading-tight text-ink">
+                                    {step.title}
+                                </h3>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="shrink-0 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                                aria-label="Close step guide"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <div className="max-h-[calc(86vh-76px)] overflow-y-auto px-5 py-4">
+                            <p className="text-sm leading-relaxed text-body">{step.help.intro}</p>
+
+                            <div className="mt-4 space-y-4">
+                                <div>
+                                    <h4 className="text-xs font-bold uppercase tracking-wide text-ink">Why it matters</h4>
+                                    <ul className="mt-2 space-y-2">
+                                        {step.help.why.map((item) => (
+                                            <li key={item} className="flex gap-2 text-sm leading-relaxed text-body">
+                                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-saffron" />
+                                                <span>{item}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-xs font-bold uppercase tracking-wide text-ink">What to do</h4>
+                                    <ol className="mt-2 space-y-2">
+                                        {step.help.actions.map((item, index) => (
+                                            <li key={item} className="flex gap-2 text-sm leading-relaxed text-body">
+                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface-soft text-[11px] font-bold text-saffron-deep">
+                                                    {index + 1}
+                                                </span>
+                                                <span>{item}</span>
+                                            </li>
+                                        ))}
+                                    </ol>
+                                </div>
+
+                                <div className="rounded-xl border border-saffron/20 bg-saffron/5 px-3 py-3">
+                                    <h4 className="text-xs font-bold uppercase tracking-wide text-saffron-deep">Where to click</h4>
+                                    <p className="mt-1 text-sm font-semibold leading-relaxed text-ink">
+                                        {step.help.clickPath.join(' -> ')}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h4 className="text-xs font-bold uppercase tracking-wide text-ink">Done when</h4>
+                                    <p className="mt-1 text-sm leading-relaxed text-body">{step.help.doneWhen}</p>
+                                </div>
+
+                                {step.help.note && (
+                                    <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-3">
+                                        <p className="text-sm leading-relaxed text-blue-900">{step.help.note}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <Link
+                                href={step.href}
+                                onClick={onClose}
+                                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-saffron px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-saffron-deep sm:w-auto"
+                            >
+                                {step.ctaLabel}
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    )
+}
 
 // ─── Step List (shared between desktop and mobile) ──────────────────────────────
 
-function SetupStepList({ checklist, skippedFixed, onSkipFixed }: {
+function SetupStepList({
+    checklist,
+    activationChecklist,
+    productionMode,
+    skippedFixed,
+    onSkipFixed,
+}: {
     checklist: SetupChecklist
+    activationChecklist: ActivationChecklist
+    productionMode: ProductionMode
     skippedFixed: boolean
     onSkipFixed: () => void
 }) {
-    const getStepStatus = useCallback((step: typeof SETUP_STEPS[number]) => {
-        if (step.key === 'hasFixedWorker' && skippedFixed) return 'completed'
-        return checklist[step.key] ? 'completed' : 'incomplete'
-    }, [checklist, skippedFixed])
+    const [helpStep, setHelpStep] = useState<SetupStep | null>(null)
+    const steps = buildSetupSteps(productionMode)
 
-    const completedCount = SETUP_STEPS.reduce((count, step) => {
+    const context: StepContext = {
+        checklist,
+        activationChecklist,
+        productionMode,
+        skippedFixed,
+    }
+
+    const getStepStatus = (step: SetupStep): StepStatus => {
+        return step.isComplete(context) ? 'completed' : 'incomplete'
+    }
+
+    const completedCount = steps.reduce((count, step) => {
         return count + (getStepStatus(step) === 'completed' ? 1 : 0)
     }, 0)
 
-    const progressPct = (completedCount / TOTAL_STEPS) * 100
-
-    // Find the first incomplete step (the "current" step)
-    const currentStepKey = SETUP_STEPS.find(s => getStepStatus(s) === 'incomplete')?.key ?? null
+    const totalSteps = steps.length
+    const progressPct = (completedCount / totalSteps) * 100
+    const currentStepId = steps.find((step) => getStepStatus(step) === 'incomplete')?.id ?? null
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex h-full flex-col">
             {/* Header */}
-            <div className="px-5 pt-5 pb-4">
-                <div className="flex items-center gap-2 mb-1">
+            <div className="px-5 pb-4 pt-5">
+                <div className="mb-1 flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-saffron" />
-                    <h2 className="text-sm font-bold text-ink uppercase tracking-wide">Factory Setup</h2>
+                    <h2 className="text-sm font-bold uppercase tracking-wide text-ink">Factory Setup</h2>
                 </div>
-                <p className="text-xs text-body mt-0.5">{completedCount} of {TOTAL_STEPS} steps complete</p>
+                <p className="mt-0.5 text-xs text-body">
+                    {completedCount} of {totalSteps} steps complete · {getModeLabel(productionMode)}
+                </p>
 
                 {/* Progress bar */}
-                <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-gray-100">
                     <motion.div
-                        className="h-full bg-gradient-to-r from-saffron to-amber-400 rounded-full"
+                        className="h-full rounded-full bg-gradient-to-r from-saffron to-amber-400"
                         initial={{ width: 0 }}
                         animate={{ width: `${progressPct}%` }}
                         transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -181,33 +728,33 @@ function SetupStepList({ checklist, skippedFixed, onSkipFixed }: {
             <div className="flex-1 overflow-y-auto px-5 pb-5">
                 <div className="relative">
                     {/* Vertical connector line */}
-                    <div className="absolute left-[15px] top-4 bottom-4 w-px bg-gray-200" />
+                    <div className="absolute bottom-4 left-[15px] top-4 w-px bg-gray-200" />
 
                     <div className="space-y-1">
-                        {SETUP_STEPS.map((step, i) => {
+                        {steps.map((step, i) => {
                             const status = getStepStatus(step)
-                            const isCurrent = step.key === currentStepKey
+                            const isCurrent = step.id === currentStepId
                             const Icon = step.icon
 
                             return (
                                 <motion.div
-                                    key={step.key}
+                                    key={step.id}
                                     initial={{ opacity: 0, x: 10 }}
                                     animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: i * 0.04 }}
+                                    transition={{ delay: i * 0.025 }}
                                 >
                                     <div
                                         className={cn(
                                             'relative rounded-xl transition-all duration-200',
                                             isCurrent
-                                                ? 'bg-white border border-saffron/30 shadow-sm p-3'
+                                                ? 'border border-saffron/30 bg-white p-3 shadow-sm'
                                                 : 'p-3',
                                         )}
                                     >
                                         <div className="flex items-start gap-3">
                                             {/* Step circle */}
                                             <div className={cn(
-                                                'relative z-10 flex items-center justify-center w-[30px] h-[30px] rounded-full shrink-0 transition-all duration-200',
+                                                'relative z-10 flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full transition-all duration-200',
                                                 status === 'completed'
                                                     ? 'bg-emerald-100'
                                                     : isCurrent
@@ -227,18 +774,28 @@ function SetupStepList({ checklist, skippedFixed, onSkipFixed }: {
                                             </div>
 
                                             {/* Step content */}
-                                            <div className="flex-1 min-w-0">
-                                                <p className={cn(
-                                                    'text-sm font-semibold leading-tight',
-                                                    status === 'completed'
-                                                        ? 'text-emerald-700 line-through decoration-1'
-                                                        : isCurrent ? 'text-ink' : 'text-body'
-                                                )}>
-                                                    {step.title}
-                                                </p>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-start gap-2">
+                                                    <p className={cn(
+                                                        'min-w-0 flex-1 text-sm font-semibold leading-tight',
+                                                        status === 'completed'
+                                                            ? 'text-emerald-700 line-through decoration-1'
+                                                            : isCurrent ? 'text-ink' : 'text-body'
+                                                    )}>
+                                                        {step.title}
+                                                    </p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setHelpStep(step)}
+                                                        className="shrink-0 rounded-full p-1 text-gray-400 transition-colors hover:bg-saffron/10 hover:text-saffron focus:outline-none focus:ring-2 focus:ring-saffron/30"
+                                                        aria-label={`Learn more about ${step.title}`}
+                                                    >
+                                                        <Info className="h-3.5 w-3.5" />
+                                                    </button>
+                                                </div>
 
                                                 {status === 'completed' && (
-                                                    <p className="text-[11px] text-emerald-500 font-medium mt-0.5">Done ✓</p>
+                                                    <p className="mt-0.5 text-[11px] font-medium text-emerald-500">Done</p>
                                                 )}
 
                                                 {/* Expanded content for current step */}
@@ -248,56 +805,65 @@ function SetupStepList({ checklist, skippedFixed, onSkipFixed }: {
                                                         animate={{ opacity: 1, height: 'auto' }}
                                                         className="mt-1.5"
                                                     >
-                                                        <p className="text-xs text-body leading-relaxed">
+                                                        <p className="text-xs leading-relaxed text-body">
                                                             {step.description}
                                                         </p>
 
-                                                        {/* Supervisor extra context */}
-                                                        {step.key === 'hasSupervisor' && (
-                                                            <div className="mt-2 rounded-lg bg-amber-50 border border-amber-200/60 px-3 py-2">
-                                                                <p className="text-[11px] text-amber-800 leading-relaxed">
-                                                                    If you don&apos;t have a separate supervisor, create a second account for yourself using the join code from Settings.
+                                                        {step.id === 'supervisor' && (
+                                                            <div className="mt-2 rounded-lg border border-amber-200/60 bg-amber-50 px-3 py-2">
+                                                                <p className="text-[11px] leading-relaxed text-amber-800">
+                                                                    If you do not have a separate supervisor, create a second account for yourself using the join code from Settings.
                                                                 </p>
-                                                                <p className="text-[11px] text-amber-600 mt-1 italic">
-                                                                    🔜 Future update: production logging from owner account.
+                                                                <p className="mt-1 text-[11px] italic text-amber-600">
+                                                                    Planned update: production logging from owner account.
                                                                 </p>
                                                             </div>
                                                         )}
 
-                                                        {/* Supervisor status indicator */}
-                                                        {step.key === 'hasSupervisor' && (
+                                                        {step.id === 'supervisor' && (
                                                             <div className={cn(
-                                                                'mt-2 flex items-center gap-1.5 text-[11px] font-medium rounded-md px-2 py-1 w-fit',
+                                                                'mt-2 flex w-fit items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium',
                                                                 checklist.hasSupervisor
                                                                     ? 'bg-emerald-50 text-emerald-700'
                                                                     : 'bg-red-50 text-red-600'
                                                             )}>
-                                                                {checklist.hasSupervisor ? '✅ Supervisor joined' : '⚠️ No supervisor yet'}
+                                                                {checklist.hasSupervisor ? 'Supervisor joined' : 'No supervisor yet'}
                                                             </div>
                                                         )}
 
-                                                        <Link
-                                                            href={step.href}
-                                                            className={cn(
-                                                                'mt-2.5 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5',
-                                                                'text-xs font-semibold text-white transition-colors',
-                                                                'bg-saffron hover:bg-saffron-deep'
-                                                            )}
-                                                        >
-                                                            <Icon className="h-3.5 w-3.5" />
-                                                            {step.ctaLabel}
-                                                            <ArrowRight className="h-3 w-3" />
-                                                        </Link>
+                                                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                                                            <Link
+                                                                href={step.href}
+                                                                className={cn(
+                                                                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5',
+                                                                    'bg-saffron text-xs font-semibold text-white transition-colors',
+                                                                    'hover:bg-saffron-deep'
+                                                                )}
+                                                            >
+                                                                <Icon className="h-3.5 w-3.5" />
+                                                                {step.ctaLabel}
+                                                                <ArrowRight className="h-3 w-3" />
+                                                            </Link>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setHelpStep(step)}
+                                                                className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-semibold text-saffron-deep transition-colors hover:bg-saffron/10"
+                                                            >
+                                                                <Info className="h-3 w-3" />
+                                                                Guide
+                                                            </button>
+                                                        </div>
 
                                                         {/* Skip button for fixed staff step */}
-                                                        {step.key === 'hasFixedWorker' && (
+                                                        {step.id === 'fixed-staff' && (
                                                             <button
                                                                 type="button"
                                                                 onClick={onSkipFixed}
-                                                                className="mt-1.5 flex items-center gap-1 text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
+                                                                className="mt-1.5 flex items-center gap-1 text-[11px] text-gray-400 transition-colors hover:text-gray-600"
                                                             >
                                                                 <SkipForward className="h-3 w-3" />
-                                                                Skip — I don&apos;t have salary staff
+                                                                Skip - I do not have salary staff
                                                             </button>
                                                         )}
                                                     </motion.div>
@@ -305,7 +871,7 @@ function SetupStepList({ checklist, skippedFixed, onSkipFixed }: {
 
                                                 {/* Upcoming step — show description in muted */}
                                                 {!isCurrent && status !== 'completed' && (
-                                                    <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">
+                                                    <p className="mt-0.5 line-clamp-1 text-[11px] text-gray-400">
                                                         {step.description}
                                                     </p>
                                                 )}
@@ -320,37 +886,40 @@ function SetupStepList({ checklist, skippedFixed, onSkipFixed }: {
             </div>
 
             {/* Footer */}
-            <div className="px-5 pb-4 pt-2 border-t border-gray-100">
-                <p className="text-[10px] text-gray-400 text-center">
-                    All settings can be changed later.
+            <div className="border-t border-gray-100 px-5 pb-4 pt-2">
+                <p className="text-center text-[10px] text-gray-400">
+                    Complete this once to prove the factory can run end to end.
                 </p>
             </div>
+
+            <StepHelpModal step={helpStep} onClose={() => setHelpStep(null)} />
         </div>
     )
 }
 
 // ─── Desktop Panel ──────────────────────────────────────────────────────────────
 
-export function SetupPanel({ checklist }: SetupPanelProps) {
-    const [skippedFixed, setSkippedFixed] = useState(false)
-    const [dismissed, setDismissed] = useState(false)
-
-    useEffect(() => {
-        setSkippedFixed(localStorage.getItem(SKIP_STORAGE_KEY) === 'true')
-    }, [])
+export function SetupPanel({ checklist, activationChecklist = EMPTY_ACTIVATION, productionMode }: SetupPanelProps) {
+    const [skippedFixed, setSkippedFixed] = useState(() => {
+        return typeof window !== 'undefined' && localStorage.getItem(SKIP_STORAGE_KEY) === 'true'
+    })
 
     const handleSkipFixed = () => {
         localStorage.setItem(SKIP_STORAGE_KEY, 'true')
         setSkippedFixed(true)
     }
 
-    // Check if all steps are complete
-    const isAllComplete = SETUP_STEPS.every(step => {
-        if (step.key === 'hasFixedWorker' && skippedFixed) return true
-        return checklist[step.key]
-    })
+    const steps = buildSetupSteps(productionMode)
+    const context: StepContext = {
+        checklist,
+        activationChecklist,
+        productionMode,
+        skippedFixed,
+    }
 
-    if (isAllComplete || dismissed) return null
+    const isAllComplete = steps.every((step) => step.isComplete(context))
+
+    if (isAllComplete) return null
 
     return (
         <motion.div
@@ -358,10 +927,12 @@ export function SetupPanel({ checklist }: SetupPanelProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40 }}
             transition={{ duration: 0.3 }}
-            className="hidden md:flex flex-col sticky top-6 h-fit max-h-[calc(100vh-3rem)] rounded-2xl border border-saffron/15 bg-white/80 backdrop-blur-sm shadow-[0_4px_24px_-4px_rgba(226,112,37,0.08)] overflow-hidden"
+            className="hidden max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl border border-saffron/15 bg-white/80 shadow-[0_4px_24px_-4px_rgba(226,112,37,0.08)] backdrop-blur-sm md:flex lg:sticky lg:top-6"
         >
             <SetupStepList
                 checklist={checklist}
+                activationChecklist={activationChecklist}
+                productionMode={productionMode}
                 skippedFixed={skippedFixed}
                 onSkipFixed={handleSkipFixed}
             />
@@ -371,29 +942,35 @@ export function SetupPanel({ checklist }: SetupPanelProps) {
 
 // ─── Mobile Floating Button + Modal ─────────────────────────────────────────────
 
-export function SetupFloatingButton({ checklist }: SetupPanelProps) {
+export function SetupFloatingButton({ checklist, activationChecklist = EMPTY_ACTIVATION, productionMode }: SetupPanelProps) {
     const [isOpen, setIsOpen] = useState(false)
-    const [skippedFixed, setSkippedFixed] = useState(false)
-
-    useEffect(() => {
-        setSkippedFixed(localStorage.getItem(SKIP_STORAGE_KEY) === 'true')
-    }, [])
+    const [skippedFixed, setSkippedFixed] = useState(() => {
+        return typeof window !== 'undefined' && localStorage.getItem(SKIP_STORAGE_KEY) === 'true'
+    })
 
     const handleSkipFixed = () => {
         localStorage.setItem(SKIP_STORAGE_KEY, 'true')
         setSkippedFixed(true)
     }
 
-    const completedCount = SETUP_STEPS.reduce((count, step) => {
-        if (step.key === 'hasFixedWorker' && skippedFixed) return count + 1
-        return count + (checklist[step.key] ? 1 : 0)
+    const steps = buildSetupSteps(productionMode)
+    const context: StepContext = {
+        checklist,
+        activationChecklist,
+        productionMode,
+        skippedFixed,
+    }
+
+    const completedCount = steps.reduce((count, step) => {
+        return count + (step.isComplete(context) ? 1 : 0)
     }, 0)
 
-    const isAllComplete = completedCount === TOTAL_STEPS
+    const totalSteps = steps.length
+    const isAllComplete = completedCount === totalSteps
 
     if (isAllComplete) return null
 
-    const progressPct = (completedCount / TOTAL_STEPS) * 100
+    const progressPct = (completedCount / totalSteps) * 100
     // SVG circle math
     const radius = 22
     const circumference = 2 * Math.PI * radius
@@ -412,15 +989,14 @@ export function SetupFloatingButton({ checklist }: SetupPanelProps) {
                         type="button"
                         onClick={() => setIsOpen(true)}
                         className={cn(
-                            'md:hidden fixed z-50 flex items-center justify-center',
-                            'w-14 h-14 rounded-full',
+                            'fixed z-50 flex h-14 w-14 items-center justify-center rounded-full md:hidden',
                             'bg-[#111111] shadow-xl shadow-black/20',
                             'bottom-[calc(80px+env(safe-area-inset-bottom,0px))] right-4',
                         )}
-                        aria-label={`Factory setup: ${completedCount} of ${TOTAL_STEPS} complete`}
+                        aria-label={`Factory setup: ${completedCount} of ${totalSteps} complete`}
                     >
                         {/* Progress ring */}
-                        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
+                        <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 56 56">
                             <circle
                                 cx="28" cy="28" r={radius}
                                 fill="none"
@@ -441,7 +1017,7 @@ export function SetupFloatingButton({ checklist }: SetupPanelProps) {
                         </svg>
                         {/* Center text */}
                         <span className="relative text-[11px] font-bold text-white">
-                            {completedCount}/{TOTAL_STEPS}
+                            {completedCount}/{totalSteps}
                         </span>
                     </motion.button>
                 )}
@@ -455,7 +1031,7 @@ export function SetupFloatingButton({ checklist }: SetupPanelProps) {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="md:hidden fixed inset-0 z-[60] flex items-end justify-center"
+                        className="fixed inset-0 z-[60] flex items-end justify-center md:hidden"
                     >
                         {/* Backdrop */}
                         <motion.div
@@ -470,19 +1046,18 @@ export function SetupFloatingButton({ checklist }: SetupPanelProps) {
                             exit={{ y: '100%', opacity: 0 }}
                             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                             className={cn(
-                                'relative z-10 w-full max-h-[85vh] rounded-t-2xl',
-                                'bg-white overflow-hidden flex flex-col',
-                                'shadow-[0_-8px_30px_-4px_rgba(0,0,0,0.2)]',
+                                'relative z-10 flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl',
+                                'bg-white shadow-[0_-8px_30px_-4px_rgba(0,0,0,0.2)]',
                                 'pb-safe',
                             )}
                         >
                             {/* Modal drag handle + close */}
-                            <div className="flex items-center justify-between px-4 pt-3 pb-1">
-                                <div className="w-10 h-1 rounded-full bg-gray-300 mx-auto" />
+                            <div className="flex items-center justify-between px-4 pb-1 pt-3">
+                                <div className="mx-auto h-1 w-10 rounded-full bg-gray-300" />
                                 <button
                                     type="button"
                                     onClick={() => setIsOpen(false)}
-                                    className="absolute right-3 top-3 p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                                    className="absolute right-3 top-3 rounded-full p-1.5 transition-colors hover:bg-gray-100"
                                     aria-label="Close setup panel"
                                 >
                                     <X className="h-4 w-4 text-gray-400" />
@@ -491,6 +1066,8 @@ export function SetupFloatingButton({ checklist }: SetupPanelProps) {
 
                             <SetupStepList
                                 checklist={checklist}
+                                activationChecklist={activationChecklist}
+                                productionMode={productionMode}
                                 skippedFixed={skippedFixed}
                                 onSkipFixed={handleSkipFixed}
                             />

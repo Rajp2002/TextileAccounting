@@ -99,11 +99,15 @@ export type FactoryTodayData = {
         hasProductionLog: boolean
         hasStockEntry: boolean
         hasMarketRun: boolean
+        hasDispatch: boolean
+        hasCommercial: boolean
     }
 
     setupChecklist: {
         hasProductionMode: boolean
         hasMachine: boolean
+        hasLoomAssignment: boolean
+        hasLoomTarget: boolean
         hasQuality: boolean
         hasMeterWorker: boolean
         hasFixedWorker: boolean
@@ -162,6 +166,9 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         hasSupervisorRes,
         subscriptionRes,
         hasMeterWorkerRes,
+        machineAssignmentsRes,
+        hasDispatchRes,
+        hasCommercialRes,
     ] = await Promise.all([
         // 1. Production logs today
         supabase
@@ -336,6 +343,37 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
                 return { count: 0 }
             }
         })(),
+
+        (async () => {
+            try {
+                const { data } = await supabase
+                    .from('machine_assignments')
+                    .select('machine_id, shift')
+                    .eq('org_id', orgId)
+                    .in('shift', ['day', 'night'])
+                return { data: data ?? [] }
+            } catch {
+                return { data: [] }
+            }
+        })(),
+
+        (async () => {
+            try {
+                const { count } = await supabase.from('dispatches').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                return { count }
+            } catch {
+                return { count: 0 }
+            }
+        })(),
+
+        (async () => {
+            try {
+                const { count } = await supabase.from('commercial_profit_entries').select('source_id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                return { count }
+            } catch {
+                return { count: 0 }
+            }
+        })(),
     ])
 
     const hasEstimate = hasAnyCount(hasEstimateRes)
@@ -347,6 +385,8 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
     const hasFixedWorker = hasAnyCount(hasFixedWorkerRes)
     const hasSupervisor = hasAnyCount(hasSupervisorRes)
     const hasMeterWorker = hasAnyCount(hasMeterWorkerRes)
+    const hasDispatch = hasAnyCount(hasDispatchRes)
+    const hasCommercial = hasAnyCount(hasCommercialRes)
     const productionMode = normalizeProductionMode(orgSettingsRes.data?.production_mode)
 
     // Setup checklist: production mode check mirrors onboarding logic
@@ -354,6 +394,18 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         ? true
         : hasExplicitProductionMode(orgSettingsRes.data?.production_mode)
     const setupHasMachine = (machinesRes.data ?? []).length > 0
+    const setupHasLoomTarget = (machinesRes.data ?? []).some((machine) => !!machine.current_order_id)
+    const assignmentsByMachine = new Map<string, Set<string>>()
+    for (const assignment of machineAssignmentsRes.data ?? []) {
+        const machineId = String((assignment as Record<string, unknown>).machine_id ?? '')
+        const shift = String((assignment as Record<string, unknown>).shift ?? '')
+        if (!machineId) continue
+        const shifts = assignmentsByMachine.get(machineId) ?? new Set<string>()
+        shifts.add(shift)
+        assignmentsByMachine.set(machineId, shifts)
+    }
+    const setupHasLoomAssignment = Array.from(assignmentsByMachine.values())
+        .some((shifts) => shifts.has('day') && shifts.has('night'))
     const setupHasPayrollConfig = !!payrollConfigRes.data
 
     // Check subscription validity
@@ -613,10 +665,14 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             hasProductionLog,
             hasStockEntry,
             hasMarketRun,
+            hasDispatch,
+            hasCommercial,
         },
         setupChecklist: {
             hasProductionMode: setupHasProductionMode,
             hasMachine: setupHasMachine,
+            hasLoomAssignment: setupHasLoomAssignment,
+            hasLoomTarget: setupHasLoomTarget,
             hasQuality,
             hasMeterWorker,
             hasFixedWorker,
