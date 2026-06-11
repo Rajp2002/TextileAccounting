@@ -511,18 +511,20 @@ function MachineUnifiedRow({
                             ) : (
                                 <>
                                     <div className={cn(
-                                        "group/input flex items-center overflow-hidden rounded-lg border bg-surface transition-all duration-200 w-full lg:w-auto h-11 lg:h-9",
+                                        "group/input flex h-11 w-full items-center overflow-hidden rounded-lg border bg-surface transition-all duration-200 lg:h-9 lg:w-auto",
                                         producedMeters > 0 ? "border-saffron ring-4 ring-saffron/10" : "border-hairline shadow-sm"
                                     )}>
                                         <Input
+                                            aria-label={`${formatLoomName(machine.name)} shift production metres`}
                                             type="number"
                                             inputMode="decimal"
                                             pattern="[0-9]*"
                                             placeholder="0"
                                             value={producedMeters || ''}
                                             onChange={(e) => onProducedMetersChange(Number(e.target.value))}
-                                            className="h-full flex-1 border-none bg-transparent p-0 text-center font-mono text-lg font-semibold focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                            className="h-full min-w-0 flex-1 border-none bg-transparent py-0 pl-6 pr-1 text-center font-mono text-lg font-semibold focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                         />
+                                        <span className="pr-3 text-xs font-bold text-muted-foreground">m</span>
                                     </div>
                                     <div className="flex w-full flex-col items-center gap-2 lg:gap-1">
                                         <div className="flex max-w-full items-center gap-1 rounded-full border border-hairline bg-surface px-2.5 py-1 lg:py-0.5 shadow-sm">
@@ -1120,6 +1122,15 @@ export default function UnifiedDashboard() {
     const correctionBannerText = remainingCorrectionMinutes > 0
         ? t('floor.correction.windowOpen').replace('{minutes}', remainingCorrectionMinutes.toString())
         : t('floor.correction.windowClosed')
+    const hasShiftSetup = assignments.length > 0
+    const pendingEntryCount = Math.max(machines.length - validEntryCount, 0)
+    const saveHelperText = loading
+        ? 'Loading shift data...'
+        : validEntryCount === 0
+            ? 'Add meter readings or downtime reasons to save.'
+            : pendingEntryCount > 0
+                ? `${validEntryCount} ready, ${pendingEntryCount} pending`
+                : 'All loom entries ready'
 
     return (
         <div
@@ -1160,7 +1171,7 @@ export default function UnifiedDashboard() {
 
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold tracking-normal text-ink">Shift Meter Log</h1>
+                            <h1 className="text-xl font-bold leading-tight tracking-normal text-ink">Shift Meter Log</h1>
                             <div className="flex items-center gap-2 mt-1">
                                 <Badge variant="secondary">
                                     {assignedCount}/{machines.length} assigned
@@ -1172,19 +1183,26 @@ export default function UnifiedDashboard() {
                                 )}
                             </div>
                         </div>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-10 gap-2 px-4 text-xs"
-                            onClick={handleCopyPrevious}
-                            disabled={copying || assignments.length > 0}
-                        >
-                            {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
-                            Copy previous
-                        </Button>
+                        {hasShiftSetup ? (
+                            <Badge variant="success" className="h-10 gap-1.5 px-3 text-xs">
+                                <Check className="h-3.5 w-3.5" />
+                                Setup ready
+                            </Badge>
+                        ) : (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-10 gap-2 px-4 text-xs"
+                                onClick={handleCopyPrevious}
+                                disabled={copying}
+                            >
+                                {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
+                                Copy previous
+                            </Button>
+                        )}
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="grid gap-2 xs:grid-cols-[minmax(0,1fr)_auto]">
                         <Input
                             type="date"
                             value={date}
@@ -1270,7 +1288,13 @@ export default function UnifiedDashboard() {
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center border-t border-border bg-canvas/76 p-4 backdrop-blur-xl pb-floating-button md:left-[248px] md:p-6">
-                <div className="flex w-full max-w-xl gap-3">
+                <div className="flex w-full max-w-xl flex-col gap-2">
+                    <div className="flex items-center justify-between px-1 text-xs font-semibold text-body">
+                        <span>{saveHelperText}</span>
+                        {!loading && machines.length > 0 && (
+                            <span className="text-muted-foreground">{validEntryCount}/{machines.length}</span>
+                        )}
+                    </div>
                     <Button
                         className="h-14 flex-1 gap-3 rounded-xl text-base font-semibold"
                         onClick={() => handleBulkSubmit()}
@@ -1281,7 +1305,7 @@ export default function UnifiedDashboard() {
                         ) : (
                             <ClipboardList className="h-6 w-6" />
                         )}
-                        Save shift logs {validEntryCount > 0 && `(${validEntryCount})`}
+                        {validEntryCount > 0 ? `Save shift logs (${validEntryCount})` : 'Save shift logs'}
                     </Button>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Calculator, Package, Truck, DollarSign, Store, Zap } from 'lucide-react'
+import { ArrowRight, Calculator, Package, Truck, DollarSign, Store, Zap } from 'lucide-react'
 import { getWorkflowVisibility, type ProductionMode, type WorkflowKey } from '@/lib/production-mode'
 import { useTranslation } from '@/lib/i18n/context'
 
@@ -82,16 +82,19 @@ export function QuickActionsCard({ productionMode }: { productionMode?: Producti
                             key={action.id}
                             href={action.href}
                             id={`quick-action-${action.id}`}
-                            className="group flex flex-col items-start gap-2 rounded-xl border border-hairline bg-surface p-3 transition-all hover:border-saffron/30 hover:bg-surface-soft"
+                            className="group flex min-h-[96px] flex-col justify-between gap-3 rounded-xl border border-hairline bg-surface p-3 transition-all hover:border-saffron/30 hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/25"
                         >
-                            <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${action.color}`}>
-                                <Icon className="h-3.5 w-3.5" />
+                            <div className="flex items-start justify-between gap-2">
+                                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${action.color}`}>
+                                    <Icon className="h-3.5 w-3.5" />
+                                </div>
+                                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-saffron-deep" />
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <p className="text-xs font-bold text-ink group-hover:text-saffron transition-colors">
                                     {tx(action.label)}
                                 </p>
-                                <p className="text-[11px] text-body">{tx(action.description)}</p>
+                                <p className="mt-0.5 text-[11px] leading-snug text-body">{tx(action.description)}</p>
                             </div>
                         </Link>
                     )

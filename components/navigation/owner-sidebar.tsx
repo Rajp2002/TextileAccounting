@@ -92,6 +92,13 @@ function getNavLabel(item: { name: string; translationKey: string }, productionM
     return t(`nav.${item.translationKey}`) || item.name
 }
 
+function getMobileNavLabel(item: { name: string; translationKey: string }, productionMode: ProductionMode, t: (key: string) => string) {
+    if (item.name === 'Factory Today') return 'Today'
+    if (item.name === 'Market Runs') return 'Market'
+    if (item.name === 'Stock' && productionMode === 'market_run') return 'Godown'
+    return getNavLabel(item, productionMode, t)
+}
+
 interface OwnerSidebarProps {
     factoryName?: string
     userName?: string
@@ -223,6 +230,8 @@ export function OwnerSidebar({ factoryName, userName, productionMode }: OwnerSid
                 {visibleBottomNavItems.map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+                    const navLabel = getNavLabel(item, normalizedProductionMode, t)
+                    const mobileNavLabel = getMobileNavLabel(item, normalizedProductionMode, t)
 
                     return (
                         <Link
@@ -233,7 +242,8 @@ export function OwnerSidebar({ factoryName, userName, productionMode }: OwnerSid
                                 "py-1 px-0.5 transition-all duration-300",
                                 isActive ? "text-saffron-deep" : "text-body"
                             )}
-                            aria-label={getNavLabel(item, normalizedProductionMode, t)}
+                            aria-label={navLabel}
+                            title={navLabel}
                         >
                             <div className={cn(
                                 "mobile-nav-icon-pill py-1 px-2 xs:px-3 rounded-xl mb-0.5 transition-all duration-300",
@@ -246,7 +256,7 @@ export function OwnerSidebar({ factoryName, userName, productionMode }: OwnerSid
                                 "mobile-nav-label text-[10px] landscape:text-[9px] font-semibold leading-none truncate max-w-full px-0.5",
                                 isActive ? "opacity-100" : "opacity-80"
                             )}>
-                                {getNavLabel(item, normalizedProductionMode, t)}
+                                {mobileNavLabel}
                             </span>
                             {isActive && (
                                 <span className="absolute -top-px left-1/2 h-[2px] w-6 -translate-x-1/2 rounded-full bg-saffron" />

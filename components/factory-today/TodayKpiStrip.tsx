@@ -36,9 +36,9 @@ function KpiCard({
                 <Icon className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-                <p className="text-xs font-medium uppercase tracking-wide text-ink">{label}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-body">{label}</p>
                 <p className="text-lg font-bold leading-tight text-ink">{value}</p>
-                {sub && <p className="text-xs text-body">{sub}</p>}
+                {sub && <p className="truncate text-xs text-body">{sub}</p>}
             </div>
         </div>
     )
@@ -60,32 +60,38 @@ export function TodayKpiStrip({ productionMode, production, machines, dispatch, 
     const prodValue = production.hasLogsToday
         ? `${production.totalMetersToday.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m`
         : 'Pending'
+    const productionSub = production.hasLogsToday
+        ? production.dayShiftLogged && production.nightShiftLogged
+            ? 'Day + night logged'
+            : production.dayShiftLogged
+                ? 'Day shift logged'
+                : production.nightShiftLogged
+                    ? 'Night shift logged'
+                    : 'Partial shift logged'
+        : 'Log shift meters'
 
     return (
         <div className="space-y-3">
             {/* Critical Action Card */}
             {actionCounts.critical > 0 && (
-                <div className="flex items-center gap-3 rounded-xl border border-risk/30 bg-risk-soft px-4 py-3">
+                <div className="flex items-center gap-3 rounded-xl border border-risk/30 bg-risk-soft px-4 py-3" role="alert">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-risk/30 bg-risk/20">
                         <span className="text-lg font-bold text-risk">{actionCounts.critical}</span>
                     </div>
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-risk">Critical Action Needed</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-risk">Critical action needed</p>
                         <p className="text-sm text-risk">You have {actionCounts.critical} critical item{actionCounts.critical !== 1 ? 's' : ''} that need attention.</p>
                     </div>
                 </div>
             )}
 
             {/* KPI Grid */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
                 <KpiCard
                     icon={Activity}
                     label="Today's Production"
                     value={prodValue}
-                    sub={production.hasLogsToday
-                        ? `${production.totalMetersToday.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m`
-                        : 'Pending'
-                    }
+                    sub={productionSub}
                     color={prodColor}
                 />
                 <KpiCard
