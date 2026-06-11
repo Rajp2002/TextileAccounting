@@ -10,6 +10,7 @@ import {
     CheckCircle2, ArrowRight, Loader2,
     Cpu, Layers, Users, Plus, Trash2, Upload,
     ChevronDown, ChevronUp, CreditCard, Sparkles, Star, Zap, Calendar, Store,
+    Calculator, ClipboardList, Link2, Activity, IndianRupee,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -22,6 +23,7 @@ import { getOnboardingStatus, markOnboardingComplete } from '@/app/(auth)/action
 import { TrialButton } from '@/components/billing/TrialButton'
 import { SubscribeButton } from '@/components/billing/SubscribeButton'
 import { BrandBackground } from '@/components/brand-background'
+import { LoomiAvatar } from '@/components/onboarding/loomi-avatar'
 import { PRODUCTION_MODE_OPTIONS, type ProductionMode } from '@/lib/production-mode'
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -726,6 +728,149 @@ const STEPS = [
     },
 ]
 
+const TOUR_STEPS = [
+    {
+        icon: Store,
+        label: 'Factory path',
+        title: 'Choose how this factory usually runs.',
+        body: 'Market stock, party orders, or both decides which workflows Weavly keeps closest.',
+    },
+    {
+        icon: Calculator,
+        label: 'Costing',
+        title: 'Create the first fabric costing after setup.',
+        body: 'The estimator turns quality, yarn, wage rate, and overhead into a run the factory can follow.',
+    },
+    {
+        icon: ClipboardList,
+        label: 'First run',
+        title: 'Start an order or market run.',
+        body: 'This becomes the live work item that gets linked to looms, workers, and daily meters.',
+    },
+    {
+        icon: Link2,
+        label: 'Loom link',
+        title: 'Connect the run to the loom floor.',
+        body: 'Assignments answer who is running the loom and what fabric the loom is producing.',
+    },
+    {
+        icon: Activity,
+        label: 'Meters',
+        title: 'Log the first shift production.',
+        body: 'Meters update pace, stock movement, payroll hisaab, and Factory Today alerts.',
+    },
+    {
+        icon: IndianRupee,
+        label: 'Dispatch',
+        title: 'Finish with dispatch and commercials.',
+        body: 'Once fabric leaves the factory, Weavly helps track receipt, receivables, and profit.',
+    },
+]
+
+function OnboardingGuideCard() {
+    const [tourIndex, setTourIndex] = useState(0)
+    const tourStep = TOUR_STEPS[tourIndex]
+    const TourIcon = tourStep.icon
+    const isLastStep = tourIndex === TOUR_STEPS.length - 1
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="mb-5 overflow-hidden rounded-2xl border border-saffron/20 bg-white/90 shadow-sm backdrop-blur-sm"
+        >
+            <div className="flex gap-3 p-4">
+                <LoomiAvatar size="lg" />
+                <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-saffron/10 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-saffron-deep">
+                            <Sparkles className="h-3 w-3" />
+                            Loomi guide
+                        </span>
+                        <span className="text-[11px] font-semibold text-subtle">60-second tour</span>
+                    </div>
+                    <h2 className="text-base font-bold leading-snug text-ink">
+                        Set up only the basics. Factory Today will guide the real production loop.
+                    </h2>
+                    <p className="mt-1 text-sm leading-relaxed text-body">
+                        Loomi will keep this first pass short, then continue one next action at a time after you enter the dashboard.
+                    </p>
+                </div>
+            </div>
+
+            <div className="border-t border-saffron/10 bg-saffron/5 px-4 py-3">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={tourStep.label}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.22, ease: 'easeOut' }}
+                        className="flex items-start gap-3"
+                        aria-live="polite"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.92, rotate: -3 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ duration: 0.25, ease: 'easeOut' }}
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-saffron-deep shadow-sm"
+                        >
+                            <TourIcon className="h-4 w-4" />
+                        </motion.div>
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[11px] font-bold uppercase tracking-wide text-saffron-deep">
+                                {tourIndex + 1}/{TOUR_STEPS.length} · {tourStep.label}
+                            </p>
+                            <p className="mt-0.5 text-sm font-bold leading-tight text-ink">{tourStep.title}</p>
+                            <p className="mt-1 text-xs leading-relaxed text-body">{tourStep.body}</p>
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-1.5">
+                        {TOUR_STEPS.map((step, index) => (
+                            <motion.button
+                                key={step.label}
+                                type="button"
+                                onClick={() => setTourIndex(index)}
+                                whileTap={{ scale: 0.9 }}
+                                className={cn(
+                                    'h-2 rounded-full transition-all',
+                                    index === tourIndex ? 'w-6 bg-saffron' : 'w-2 bg-saffron/25 hover:bg-saffron/45'
+                                )}
+                                aria-label={`Show tour step ${index + 1}`}
+                            />
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="xs"
+                            disabled={tourIndex === 0}
+                            onClick={() => setTourIndex((current) => Math.max(0, current - 1))}
+                            className="text-saffron-deep disabled:opacity-30"
+                        >
+                            Back
+                        </Button>
+                        <Button
+                            type="button"
+                            size="xs"
+                            onClick={() => setTourIndex((current) => isLastStep ? 0 : current + 1)}
+                            className="bg-saffron text-white hover:bg-saffron-deep"
+                        >
+                            {isLastStep ? 'Replay' : 'Next'}
+                            <ArrowRight className="h-3 w-3" />
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────────
 
 export default function OnboardingChecklist({ initialStatus }: Props) {
@@ -855,6 +1000,8 @@ export default function OnboardingChecklist({ initialStatus }: Props) {
                         </span>
                     </div>
                 </div>
+
+                <OnboardingGuideCard />
 
                 {/* Steps */}
                 <div className="space-y-3 mb-6">

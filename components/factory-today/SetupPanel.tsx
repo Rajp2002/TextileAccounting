@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
+import { LoomiAvatar } from '@/components/onboarding/loomi-avatar'
 import type { LucideIcon } from 'lucide-react'
 import type { ProductionMode } from '@/lib/production-mode'
 import {
@@ -704,7 +705,9 @@ function SetupStepList({
 
     const totalSteps = steps.length
     const progressPct = (completedCount / totalSteps) * 100
-    const currentStepId = steps.find((step) => getStepStatus(step) === 'incomplete')?.id ?? null
+    const currentStep = steps.find((step) => getStepStatus(step) === 'incomplete') ?? null
+    const currentStepId = currentStep?.id ?? null
+    const currentStepNumber = currentStep ? steps.findIndex((step) => step.id === currentStep.id) + 1 : totalSteps
 
     return (
         <div className="flex h-full flex-col" data-i18n-skip="true">
@@ -732,6 +735,57 @@ function SetupStepList({
                     />
                 </div>
             </div>
+
+            <AnimatePresence mode="wait">
+                {currentStep && (
+                    <motion.div
+                        key={currentStep.id}
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.24, ease: 'easeOut' }}
+                        className="px-5 pb-4"
+                    >
+                        <div
+                            data-setup-next-guide="true"
+                            className="rounded-2xl border border-saffron/20 bg-saffron/5 p-3 shadow-sm"
+                        >
+                            <div className="flex items-start gap-3">
+                                <LoomiAvatar size="sm" className="rounded-xl" />
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-[11px] font-bold uppercase tracking-wide text-saffron-deep">
+                                        <span>Loomi</span> · {tx("Next step")} · {tx("Step {step} of {total}", {
+                                            step: currentStepNumber,
+                                            total: totalSteps,
+                                        })}
+                                    </p>
+                                    <h3 className="mt-1 text-sm font-bold leading-tight text-ink">{tx(currentStep.title)}</h3>
+                                    <p className="mt-1 text-xs leading-relaxed text-body">{tx(currentStep.description)}</p>
+
+                                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        <Link
+                                            href={currentStep.href}
+                                            className="inline-flex items-center gap-1.5 rounded-lg bg-saffron px-3 py-1.5 text-xs font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-saffron-deep"
+                                        >
+                                            {tx(currentStep.ctaLabel)}
+                                            <ArrowRight className="h-3 w-3" />
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            data-setup-guide-action="true"
+                                            onClick={() => setHelpStep(currentStep)}
+                                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-semibold text-saffron-deep transition-all hover:-translate-y-0.5 hover:bg-saffron/10"
+                                        >
+                                            <Info className="h-3 w-3" />
+                                            {tx("Guide")}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Step list */}
             <div className="flex-1 overflow-y-auto px-5 pb-5">
