@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LoomiAvatar } from '@/components/onboarding/loomi-avatar'
@@ -561,14 +562,16 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
 function StepHelpModal({ step, onClose }: { step: SetupStep | null; onClose: () => void }) {
     const { tx } = useTranslation()
 
-    return (
+    if (typeof document === 'undefined') return null
+
+    return createPortal(
         <AnimatePresence>
             {step && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[90] flex items-end justify-center bg-black/45 px-3 py-4 backdrop-blur-sm sm:items-center"
+                    className="fixed inset-0 z-[90] flex h-[100dvh] items-center justify-center overflow-hidden bg-black/45 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] pt-[calc(0.75rem+env(safe-area-inset-top,0px))] backdrop-blur-sm sm:px-4 sm:py-4"
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="setup-step-help-title"
@@ -585,9 +588,9 @@ function StepHelpModal({ step, onClose }: { step: SetupStep | null; onClose: () 
                         exit={{ y: 20, scale: 0.98 }}
                         transition={{ type: 'spring', damping: 26, stiffness: 320 }}
                         data-i18n-skip="true"
-                        className="relative z-10 max-h-[86vh] w-full max-w-lg overflow-hidden rounded-2xl border border-hairline bg-white shadow-2xl"
+                        className="relative z-10 flex max-h-full w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-2xl"
                     >
-                        <div className="flex items-start justify-between gap-4 border-b border-hairline px-5 py-4">
+                        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-hairline px-5 py-4">
                             <div className="min-w-0">
                                 <p className="text-[11px] font-bold uppercase tracking-wide text-saffron-deep">{tx("Step guide")}</p>
                                 <h3 id="setup-step-help-title" className="mt-1 text-lg font-bold leading-tight text-ink">
@@ -604,7 +607,7 @@ function StepHelpModal({ step, onClose }: { step: SetupStep | null; onClose: () 
                             </button>
                         </div>
 
-                        <div className="max-h-[calc(86vh-76px)] overflow-y-auto px-5 py-4">
+                        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 [-webkit-overflow-scrolling:touch]">
                             <p className="text-sm leading-relaxed text-body">{tx(step.help.intro)}</p>
 
                             <div className="mt-4 space-y-4">
@@ -665,7 +668,8 @@ function StepHelpModal({ step, onClose }: { step: SetupStep | null; onClose: () 
                     </motion.div>
                 </motion.div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body,
     )
 }
 
