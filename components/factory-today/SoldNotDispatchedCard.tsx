@@ -16,7 +16,7 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
     const totalValue = sales.reduce((s, sale) => s + sale.saleValue, 0)
 
     return (
-        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-hairline bg-surface">
             {/* Header */}
             <div className={cn(
                 'flex items-center gap-3 border-b px-4 py-3',
@@ -24,7 +24,7 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
             )}>
                 <Truck className={cn('h-4 w-4 shrink-0', hasSales ? 'text-risk' : 'text-success')} />
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
                         <p className="text-xs font-semibold uppercase tracking-wide text-ink">Sold, Not Dispatched</p>
                         {hasSales && (
                             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF3B30] text-[10px] font-bold text-white">
@@ -40,7 +40,7 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
                     </p>
                 </div>
                 {hasSales && (
-                    <div className="text-right">
+                    <div className="shrink-0 text-right">
                         <p className="text-[11px] font-bold text-risk">
                             ₹{(totalValue / 1000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}k
                         </p>
@@ -61,7 +61,7 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
                                     {formatToSurat(sale.saleDate, 'd MMM')}
                                 </p>
                             </div>
-                            <div className="text-right">
+                            <div className="shrink-0 text-right">
                                 <p className="text-xs font-semibold text-body">
                                     {sale.meters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m
                                 </p>
@@ -83,17 +83,17 @@ export function SoldNotDispatchedCard({ sales }: SoldNotDispatchedCardProps) {
             )}
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 border-t border-hairline px-4 py-3">
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-hairline px-4 py-3">
                 <Link
                     href="/owner/stock"
-                    className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface text-ink px-3 py-1.5 text-xs font-semibold transition hover:bg-surface-soft"
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
                 >
                     Sell & Dispatch
                 </Link>
                 <Link
                     href="/owner/dispatches"
                     className={cn(
-                        'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition',
+                        'flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition',
                         hasSales
                             ? 'border-risk/30 bg-risk-soft text-risk hover:bg-risk/20'
                             : 'border-hairline bg-surface text-ink hover:bg-surface-soft'

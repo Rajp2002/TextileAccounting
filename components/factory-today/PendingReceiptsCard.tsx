@@ -14,7 +14,7 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
     const longPending = receipts.filter((r) => r.daysPending > 5)
 
     return (
-        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-hairline bg-surface">
             {/* Header */}
             <div className={cn(
                 'flex items-center gap-3 border-b px-4 py-3',
@@ -57,17 +57,17 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
                                 r.daysPending > 5 ? 'text-risk' : 'text-warning'
                             )} />
                             <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
+                                <div className="flex min-w-0 items-center gap-2">
                                     <p className="truncate text-sm font-semibold text-ink">{r.partyName}</p>
                                     {r.daysPending > 5 && (
-                                        <span className="rounded bg-risk-soft px-1.5 py-0.5 text-[10px] font-bold text-risk uppercase">Critical</span>
+                                        <span className="shrink-0 rounded bg-risk-soft px-1.5 py-0.5 text-[10px] font-bold uppercase text-risk">Critical</span>
                                     )}
                                 </div>
                                 <p className="text-[11px] text-body">
                                     Dispatch #{r.dispatchNumber} · {r.sentMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m sent
                                 </p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex shrink-0 items-center gap-2">
                                 <span className={cn(
                                     'text-[11px] font-semibold',
                                     r.daysPending > 5 ? 'text-risk' : 'text-warning'
@@ -89,10 +89,10 @@ export function PendingReceiptsCard({ receipts }: PendingReceiptsCardProps) {
             )}
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 border-t border-hairline px-4 py-3">
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-hairline px-4 py-3">
                 <Link
                     href="/owner/dispatches"
-                    className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
                 >
                     View All Dispatches
                 </Link>

@@ -994,7 +994,7 @@ export function SetupPanel({ checklist, activationChecklist = EMPTY_ACTIVATION, 
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40 }}
             transition={{ duration: 0.3 }}
-            className="hidden max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-2xl border border-saffron/15 bg-white/80 shadow-[0_4px_24px_-4px_rgba(226,112,37,0.08)] backdrop-blur-sm md:flex lg:sticky lg:top-6"
+            className="hidden min-w-0 flex-col overflow-hidden rounded-2xl border border-saffron/15 bg-white/80 shadow-[0_4px_24px_-4px_rgba(226,112,37,0.08)] backdrop-blur-sm md:flex md:max-h-[calc(100vh-3rem)] min-[1440px]:sticky min-[1440px]:top-6"
         >
             <SetupStepList
                 checklist={checklist}

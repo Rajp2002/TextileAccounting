@@ -20,7 +20,7 @@ export function WorkAtRiskCard({ workAtRisk, productionMode }: WorkAtRiskCardPro
     const criticalOrders = ordersBehindPace.filter((o) => o.riskLevel === 'red')
 
     return (
-        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-hairline bg-surface">
             {/* Header */}
             <div className={cn(
                 'flex items-center gap-3 border-b px-4 py-3',
@@ -71,17 +71,17 @@ export function WorkAtRiskCard({ workAtRisk, productionMode }: WorkAtRiskCardPro
                                     order.riskLevel === 'red' ? 'bg-risk' : 'bg-warning'
                                 )} />
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex min-w-0 items-center gap-2">
                                         <p className="truncate text-sm font-semibold text-ink">{order.partyName}</p>
                                         {order.riskLevel === 'red' && (
-                                            <span className="rounded bg-risk-soft px-1.5 py-0.5 text-[10px] font-bold text-risk uppercase">Critical</span>
+                                            <span className="shrink-0 rounded bg-risk-soft px-1.5 py-0.5 text-[10px] font-bold uppercase text-risk">Critical</span>
                                         )}
                                     </div>
                                     {order.qualityLabel && (
-                                        <p className="text-xs text-body">{order.qualityLabel}</p>
+                                        <p className="truncate text-xs text-body">{order.qualityLabel}</p>
                                     )}
                                 </div>
-                                <div className="text-right">
+                                <div className="shrink-0 text-right">
                                     <p className="text-xs font-semibold text-body">
                                         {order.remainingMeters.toLocaleString('en-IN', { maximumFractionDigits: 0 })}m left
                                     </p>
@@ -123,11 +123,11 @@ export function WorkAtRiskCard({ workAtRisk, productionMode }: WorkAtRiskCardPro
             )}
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 border-t border-hairline px-4 py-3">
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-hairline px-4 py-3">
                 {visibility.orders && (
                     <Link
                         href="/owner/orders"
-                        className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
+                        className="flex shrink-0 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
                     >
                         View Orders
                     </Link>
@@ -135,7 +135,7 @@ export function WorkAtRiskCard({ workAtRisk, productionMode }: WorkAtRiskCardPro
                 {visibility.marketRuns && (
                     <Link
                         href="/owner/market-runs"
-                        className="flex items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
+                        className="flex shrink-0 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-surface-soft"
                     >
                         View Runs
                     </Link>

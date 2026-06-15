@@ -68,13 +68,13 @@ export function QuickActionsCard({ productionMode }: { productionMode?: Producti
     const visibleActions = actions.filter((action) => visibility[action.workflow as WorkflowKey])
 
     return (
-        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden" data-i18n-skip="true">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-hairline bg-surface" data-i18n-skip="true">
             <div className="border-b border-hairline px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink">{tx("Quick Actions")}</p>
                 <p className="text-sm font-bold text-ink">{tx("Jump to a workflow")}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2 p-4 xs:grid-cols-2 sm:grid-cols-3">
                 {visibleActions.map((action) => {
                     const Icon = action.icon
                     return (
@@ -91,7 +91,7 @@ export function QuickActionsCard({ productionMode }: { productionMode?: Producti
                                 <ArrowRight className="h-3.5 w-3.5 shrink-0 text-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-saffron-deep" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-xs font-bold text-ink group-hover:text-saffron transition-colors">
+                                <p className="text-xs font-bold leading-tight text-ink transition-colors group-hover:text-saffron">
                                     {tx(action.label)}
                                 </p>
                                 <p className="mt-0.5 text-[11px] leading-snug text-body">{tx(action.description)}</p>

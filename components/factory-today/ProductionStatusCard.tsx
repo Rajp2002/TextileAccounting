@@ -14,15 +14,15 @@ function ShiftBadge({ shift, logged }: { shift: 'Day' | 'Night'; logged: boolean
     const Icon = shift === 'Day' ? Sun : Moon
     return (
         <div className={cn(
-            'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium',
+            'flex min-w-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium',
             logged
                 ? 'border-success/30 bg-success-soft text-success'
                 : 'border-warning/30 bg-warning-soft text-warning'
         )}>
             <Icon className="h-3.5 w-3.5" />
-            <span>{shift} Shift</span>
+            <span className="min-w-0 truncate">{shift} Shift</span>
             <span className={cn(
-                'ml-auto text-xs font-semibold',
+                'ml-auto shrink-0 text-xs font-semibold',
                 logged ? 'text-success' : 'text-warning'
             )}>
                 {logged ? 'Logged' : 'Pending'}
@@ -50,7 +50,7 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
             : 'Shifts partially logged'
 
     return (
-        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-hairline bg-surface">
             {/* Header */}
             <div className={cn('flex items-center gap-3 border-b px-4 py-3', headerColor)}>
                 <StatusIcon className={cn('h-4 w-4 shrink-0', statusColor)} />
@@ -73,21 +73,21 @@ export function ProductionStatusCard({ production }: ProductionStatusCardProps) 
             </div>
 
             {/* Shift Status */}
-            <div className="grid grid-cols-2 gap-2 p-4">
+            <div className="grid grid-cols-1 gap-2 p-4 xs:grid-cols-2">
                 <ShiftBadge shift="Day" logged={production.dayShiftLogged} />
                 <ShiftBadge shift="Night" logged={production.nightShiftLogged} />
             </div>
 
             {/* Footer Actions */}
-            <div className="flex items-center gap-2 border-t border-white/[0.06] px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2 border-t border-white/[0.06] px-4 py-3">
                 {production.lastLogAt && (
-                    <p className="flex-1 text-xs text-muted">
+                    <p className="min-w-[12rem] flex-1 text-xs text-muted">
                         Last log: {formatToSurat(production.lastLogAt, 'hh:mm a')}
                     </p>
                 )}
                 <Link
                     href="/owner/machines"
-                    className="flex h-11 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink transition hover:bg-surface-soft lg:h-9 lg:text-xs"
+                    className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink transition hover:bg-surface-soft lg:h-9 lg:text-xs"
                 >
                     <ExternalLink className="h-4 w-4 lg:h-3 lg:w-3" />
                     View Looms

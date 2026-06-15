@@ -128,7 +128,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
     const showSetupPanel = hasAnyIncompleteSetup || !setupChecklist.hasFixedWorker
 
     return (
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
             {/* Page Header */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-start justify-between gap-3">
@@ -187,20 +187,20 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
             {/* Main Grid — 3 columns when setup panel is active, 2 columns otherwise */}
             {!isAllClear && (
                 <div className={cn(
-                    'grid gap-4',
+                    'grid min-w-0 gap-4',
                     showSetupPanel
-                        ? 'lg:grid-cols-[1fr_1fr_340px]'
-                        : 'lg:grid-cols-2'
+                        ? 'xl:grid-cols-2 min-[1440px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(320px,340px)]'
+                        : 'xl:grid-cols-2'
                 )}>
                     {/* Left Column */}
-                    <div className="space-y-4">
+                    <div className="min-w-0 space-y-4">
                         <ProductionStatusCard production={data.production} />
                         <MachineAttentionCard machines={data.machines} />
                         <WorkAtRiskCard workAtRisk={data.workAtRisk} productionMode={data.productionMode} />
                     </div>
 
                     {/* Middle Column */}
-                    <div className="space-y-4">
+                    <div className="min-w-0 space-y-4">
                         <SoldNotDispatchedCard sales={data.dispatch.soldNotDispatched} />
                         <PendingReceiptsCard receipts={data.dispatch.pendingReceipts} />
                         <PayrollHisaabCard payroll={data.payroll} />
@@ -209,18 +209,20 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
 
                     {/* Right Column — Setup Panel (desktop only) */}
                     {showSetupPanel && (
-                        <SetupPanel
-                            checklist={setupChecklist}
-                            activationChecklist={data.activationChecklist}
-                            productionMode={data.productionMode}
-                        />
+                        <div className="min-w-0 xl:col-span-2 min-[1440px]:col-span-1">
+                            <SetupPanel
+                                checklist={setupChecklist}
+                                activationChecklist={data.activationChecklist}
+                                productionMode={data.productionMode}
+                            />
+                        </div>
                     )}
                 </div>
             )}
 
             {/* Setup panel for all-clear state — still show setup if incomplete */}
             {isAllClear && showSetupPanel && (
-                <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
+                <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,340px)]">
                     <QuickActionsCard productionMode={data.productionMode} />
                     <SetupPanel
                         checklist={setupChecklist}

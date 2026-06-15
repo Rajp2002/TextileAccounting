@@ -13,7 +13,7 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
     const allAssigned = machines.unassigned === 0
 
     return (
-        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-hairline bg-surface">
             {/* Header */}
             <div className={cn(
                 'flex items-center gap-3 border-b px-4 py-3',
@@ -34,19 +34,19 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
             <div className="grid grid-cols-3 divide-x divide-hairline border-b border-hairline">
                 <div className="px-4 py-3 text-center">
                     <p className="text-lg font-bold text-success">{machines.assigned}</p>
-                    <p className="text-xs font-medium text-body">Assigned</p>
+                    <p className="text-[11px] font-medium text-body sm:text-xs">Assigned</p>
                 </div>
                 <div className="px-4 py-3 text-center">
                     <p className={cn('text-lg font-bold', machines.unassigned > 0 ? 'text-warning' : 'text-muted-foreground')}>
                         {machines.unassigned}
                     </p>
-                    <p className="text-xs font-medium text-body">Unassigned</p>
+                    <p className="text-[11px] font-medium text-body sm:text-xs">Unassigned</p>
                 </div>
                 <div className="px-4 py-3 text-center">
                     <p className={cn('text-lg font-bold', machines.maintenance > 0 ? 'text-risk' : 'text-muted-foreground')}>
                         {machines.maintenance}
                     </p>
-                    <p className="text-xs font-medium text-body">Maintenance</p>
+                    <p className="text-[11px] font-medium text-body sm:text-xs">Maintenance</p>
                 </div>
             </div>
 
@@ -56,7 +56,7 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
                     {machines.unassignedMachines.slice(0, 4).map((m) => (
                         <div key={m.id} className="flex items-center gap-3 py-2.5">
                             <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
-                            <span className="flex-1 text-sm font-medium text-body">{m.name}</span>
+                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-body">{m.name}</span>
                             {m.loomType && (
                                 <span className="text-xs text-muted">{m.loomType}</span>
                             )}
@@ -78,10 +78,10 @@ export function MachineAttentionCard({ machines }: MachineAttentionCardProps) {
             )}
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 border-t border-hairline px-4 py-3">
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-hairline px-4 py-3">
                 <Link
                     href="/owner/machines"
-                    className="flex h-11 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink transition hover:bg-surface-soft lg:h-9 lg:text-xs"
+                    className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-hairline bg-surface px-3 text-sm font-semibold text-ink transition hover:bg-surface-soft lg:h-9 lg:text-xs"
                 >
                     <Wrench className="h-4 w-4 lg:h-3 lg:w-3" />
                     Manage Looms

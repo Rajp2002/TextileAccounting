@@ -48,7 +48,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
     }[color]
 
     return (
-        <div className="rounded-2xl border border-hairline bg-surface overflow-hidden">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-hairline bg-surface">
             {/* Header */}
             <div className={cn(
                 'flex items-center gap-3 border-b px-4 py-3',
@@ -64,11 +64,11 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
             </div>
 
             {/* Metrics */}
-            <div className="grid grid-cols-2 divide-x divide-hairline border-b border-hairline">
+            <div className="grid grid-cols-1 divide-y divide-hairline border-b border-hairline xs:grid-cols-2 xs:divide-x xs:divide-y-0">
                 <div className="px-4 py-4">
                     <div className="mb-2 flex items-center gap-2">
                         <Users className="h-3.5 w-3.5 text-body" />
-                        <p className="text-xs text-body">Active Workers</p>
+                        <p className="min-w-0 truncate text-xs text-body">Active Workers</p>
                     </div>
                     <p className={cn(
                         'text-2xl font-bold',
@@ -83,7 +83,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                 <div className="px-4 py-4">
                     <div className="mb-2 flex items-center gap-2">
                         <HandCoins className="h-3.5 w-3.5 text-body" />
-                        <p className="text-xs text-body">Pending Advances</p>
+                        <p className="min-w-0 truncate text-xs text-body">Pending Advances</p>
                     </div>
                     <p className={cn(
                         'text-2xl font-bold',
@@ -102,7 +102,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
 
             {/* Cycle info */}
             <div className="px-4 py-3">
-                <div className="flex items-center gap-2 text-xs text-body">
+                <div className="flex min-w-0 items-start gap-2 text-xs text-body">
                     <CalendarClock className="h-3.5 w-3.5 shrink-0" />
                     <span>
                         {statusLabel}
@@ -119,11 +119,11 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 border-t border-hairline px-4 py-3">
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-hairline px-4 py-3">
                 {hasAdvances && (
                     <Link
                         href="/owner/advances"
-                        className="flex items-center gap-1.5 rounded-lg border border-risk/30 bg-risk-soft px-3 py-1.5 text-xs font-semibold text-risk transition hover:bg-risk/20"
+                        className="flex shrink-0 items-center gap-1.5 rounded-lg border border-risk/30 bg-risk-soft px-3 py-1.5 text-xs font-semibold text-risk transition hover:bg-risk/20"
                     >
                         Review Advances
                     </Link>
@@ -131,7 +131,7 @@ export function PayrollHisaabCard({ payroll }: PayrollHisaabCardProps) {
                 <Link
                     href={`/owner/payroll?cycle=${payroll.currentCycleMonth}`}
                     className={cn(
-                        'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition',
+                        'flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition',
                         hasUnsettled ? tone.link : 'border-hairline bg-surface text-ink hover:bg-surface-soft'
                     )}
                 >

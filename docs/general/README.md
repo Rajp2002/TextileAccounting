@@ -1,6 +1,6 @@
 # Weavly Documentation Index
 
-Last analyzed from the active codebase on June 1, 2026.
+Last updated June 15, 2026.
 
 Weavly is a multi-tenant operating system for Indian weaving factories. The current Phase 1 source of truth is the factory loop from production-mode setup to estimating, orders or market runs, supervisor shift logging, expected godown stock, party-first stock sale with saved customer identity, dispatch/receipt tracking, Commercials receivables/payments/party insights, and payroll/advances.
 
@@ -9,6 +9,7 @@ Weavly is a multi-tenant operating system for Indian weaving factories. The curr
 1. [CURRENT_PRODUCT_IMPLEMENTATION_ANALYSIS.md](./CURRENT_PRODUCT_IMPLEMENTATION_ANALYSIS.md) - **Read this first** for current implementation details.
 2. [PHASE_1_SCOPE.md](./PHASE_1_SCOPE.md) - Authoritative scope boundary for active/deferred features.
 3. [MASTER_PRODUCT_DOCUMENT.md](./MASTER_PRODUCT_DOCUMENT.md) - Product narrative and positioning.
+4. [INDIA_SAAS_BUSINESS_LAUNCH_MASTER_GUIDE.md](./INDIA_SAAS_BUSINESS_LAUNCH_MASTER_GUIDE.md) - Founder business setup, India compliance, payment setup, pilot readiness, security gates, and go-to-market plan.
 
 > [!WARNING]
 > Do not rely on archived or deprecated documents unless explicitly instructed.
