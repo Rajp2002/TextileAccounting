@@ -1686,7 +1686,7 @@ export default function EstimatorClient({
                                 min={0} max={100} step={0.5}
                                 value={state.profitPct}
                                 onChange={e => dispatch({ type: 'SET', field: 'profitPct', value: Number(e.target.value) })}
-                                className="h-2 flex-1 cursor-pointer appearance-none rounded-full accent-[var(--color-yarn-orange)]"
+                                className="h-5 flex-1 modern-slider"
                             />
                             <p className="shrink-0 text-sm font-semibold text-[var(--color-yarn-orange)]">{state.profitPct.toFixed(1)}%</p>
                             <div className="h-6 w-px bg-[var(--color-hairline)]" />
