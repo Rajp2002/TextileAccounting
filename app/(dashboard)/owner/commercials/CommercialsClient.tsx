@@ -1081,7 +1081,7 @@ function CollectionFocusPanel({
     const visibleReceivables = openReceivables.slice(0, 6)
 
     return (
-        <Card className="border-border/60 bg-white/95 shadow-sm">
+        <Card className="@container border-border/60 bg-white/95 shadow-sm">
             <CardContent className="p-0">
                 <div className="border-b border-border/60 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1129,7 +1129,7 @@ function CollectionFocusPanel({
 
                             return (
                                 <div key={rec.id} className="p-4">
-                                    <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-start">
+                                    <div className="grid gap-3 @lg:grid-cols-[minmax(0,1fr)_auto] @lg:items-start">
                                         <div className="min-w-0">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <p className="truncate text-sm font-black text-foreground">{rec.party_name}</p>
@@ -1145,7 +1145,7 @@ function CollectionFocusPanel({
                                             </p>
                                         </div>
 
-                                        <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                                        <div className="flex flex-wrap items-center gap-2 @lg:justify-end">
                                             <p className="mr-1 text-lg font-black text-rose-700">{money(rec.balance_amount)}</p>
                                             {rec.received_amount > 0 && (
                                                 <Button variant="outline" size="sm" className="h-8 min-h-8 gap-1 text-xs font-bold" onClick={() => onToggleHistory(rec.id)}>

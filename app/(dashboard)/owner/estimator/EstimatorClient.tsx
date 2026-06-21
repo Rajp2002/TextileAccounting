@@ -1393,8 +1393,8 @@ export default function EstimatorClient({
 
     // Validation: Pilot Safety Rails
     const isZeroConfig = state.overheadItems.filter(i => i.isPreset).every(i => (i.monthlyAmount || 0) === 0)
-    const pageShellClass = "w-full max-w-7xl px-4 sm:px-6 lg:ml-[280px] lg:mr-8 lg:w-[calc(100%-312px)] lg:max-w-none lg:px-0"
-    const hudShellClass = "w-full rounded-[18px] border border-[var(--color-hairline)] bg-white/95 px-4 py-4 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur sm:px-5 lg:ml-[280px] lg:mr-8 lg:w-[calc(100%-312px)]"
+    const pageShellClass = "w-full px-4 sm:px-6 lg:px-0"
+    const hudShellClass = "w-full rounded-[18px] border border-[var(--color-hairline)] bg-white/95 px-4 py-4 shadow-[0_14px_40px_rgba(30,37,40,0.10)] backdrop-blur sm:px-5"
     const postProcessingCostPerM = totals.windingPerM + totals.processingPerM + totals.finishingPerM
     const displayMarginPct = Number.isFinite(orderQuote?.actualMarginPct)
         ? orderQuote?.actualMarginPct ?? state.profitPct
