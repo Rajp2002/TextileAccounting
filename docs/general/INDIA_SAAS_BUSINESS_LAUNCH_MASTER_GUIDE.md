@@ -2,6 +2,8 @@
 
 Last updated: June 15, 2026
 
+> Status: supporting background guide. The authoritative launch-control checklist is now `docs/general/MASTER_BUSINESS_LEGAL_DOCUMENT.md`, source-checked on June 16, 2026. Use that master document for go/no-go decisions, open checklist status, advisor questions, legal-page gaps, incorporation/PAN/GST/Razorpay readiness, grants, cofounder vesting, and profit-extraction planning.
+
 This guide is for turning Weavly from a near-production product into a real Indian software business, with the current founder context in mind:
 
 - Canadian founder currently in India on an e-Business visa.

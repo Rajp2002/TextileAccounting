@@ -2,6 +2,8 @@
 
 Last updated June 1, 2026.
 
+> The current full pre-pilot manual is [`docs/PRE_PILOT_COMPREHENSIVE_TESTING_GUIDE.md`](docs/PRE_PILOT_COMPREHENSIVE_TESTING_GUIDE.md). This file remains the shorter Phase 1 testing summary.
+
 ## Current Automated Coverage
 
 The repo has Vitest-style coverage across finance and several Phase 1 regressions:

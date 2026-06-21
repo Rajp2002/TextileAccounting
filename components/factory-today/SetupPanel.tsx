@@ -128,7 +128,7 @@ function getRunLabels(productionMode: ProductionMode) {
             linkTitle: 'Link order to looms',
             linkDescription: 'Select the order as the active cost analysis on the looms that will run it.',
             dispatchTitle: 'Create first order dispatch',
-            dispatchDescription: 'Send finished fabric to the party and start receipt tracking.',
+            dispatchDescription: 'Owner records dispatch sent. Owner records received quantity after confirmation.',
             stockStep: null as SetupStep | null,
         }
     }
@@ -145,7 +145,7 @@ function getRunLabels(productionMode: ProductionMode) {
             linkTitle: 'Link run to looms',
             linkDescription: 'Assign the selected order or market run to the looms that will produce it.',
             dispatchTitle: 'Create first dispatch',
-            dispatchDescription: 'Dispatch finished fabric and track what the party receives.',
+            dispatchDescription: 'Owner records dispatch sent. Owner records received quantity after confirmation.',
             stockStep: null as SetupStep | null,
         }
     }
@@ -161,7 +161,7 @@ function getRunLabels(productionMode: ProductionMode) {
         linkTitle: 'Link market run to looms',
         linkDescription: 'Select the market run as the active cost analysis on the looms that will run it.',
         dispatchTitle: 'Sell and dispatch stock',
-        dispatchDescription: 'Sell stock to a party, create the dispatch, and track receipt.',
+        dispatchDescription: 'Owner records dispatch sent. Owner records received quantity after confirmation.',
         stockStep: null as SetupStep | null,
     }
 }
@@ -440,15 +440,15 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
             ctaLabel: 'Open dispatches',
             isComplete: ({ activationChecklist }) => activationChecklist.hasDispatch,
             help: {
-                intro: 'Dispatch records what fabric left the factory and tracks what the party confirms receiving.',
+                intro: 'Dispatch records what fabric left the factory. Owner records received quantity after confirmation.',
                 why: [
                     'Open dispatches show fabric in transit and receipt delays.',
                     'Shortage and received quantity are tracked against the sent quantity.',
                     'Commercial receivables become easier to follow when dispatches are clean.',
                 ],
                 actions: productionMode === 'market_run'
-                    ? ['Sell stock to a named party from Godown Ledger or Dispatches.', 'Create the dispatch for the sold stock.', 'Update receipt once the party confirms received meters.']
-                    : ['Open Dispatches for the order.', 'Create a dispatch batch with sent meters.', 'Update receipt once the party confirms received meters.'],
+                    ? ['Sell stock to a named party from Godown Ledger or Dispatches.', 'Create the dispatch for the sold stock.', 'Owner records received quantity after confirmation.']
+                    : ['Open Dispatches for the order.', 'Create a dispatch batch with sent meters.', 'Owner records received quantity after confirmation.'],
                 clickPath: productionMode === 'market_run'
                     ? ['Owner sidebar', 'Dispatches', 'Pending dispatches', 'Sell and dispatch stock']
                     : ['Owner sidebar', 'Dispatches', 'Create dispatch'],
