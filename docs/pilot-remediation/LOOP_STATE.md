@@ -110,3 +110,46 @@ Resolution status:
 - `code_verified` is still not treated as pass.
 - `SEC-006` and `AUTH-016` remain open for Batch 1B.
 - No production/stock, dispatch, payroll, estimator, offline, npm audit, Sentry, release-gate, or migration-drift work was included in Batch 1A.
+
+## Batch 1B-A State
+
+Batch 1B-A targets `SEC-006` only. `AUTH-016` remains open and unmodified.
+
+Invariant:
+
+Access-code protected actions must fail closed. Every protected action must use the same server-side validation path, count failed attempts, enforce a real 5 attempts per 10 minutes limit, reject expired or malformed codes, consume a valid code exactly once, and avoid recoverable plaintext access-code storage after the generation response.
+
+Implemented locally:
+
+- Centralized generation/validation/consume in `lib/access-codes.ts`.
+- Changed access-code limiter to 5 attempts per 10 minutes.
+- Made access-code limiter/lockout/failure recording fail closed when Redis is missing or errors.
+- Routed owner order updates, owner worker delete-with-code, owner validate/rotate, owner generation, and supervisor request flows through central helpers.
+- Removed owner layout recovery/display of `organizations.last_code_plain`.
+- Added non-destructive migration `20260625215612_harden_access_code_fail_closed.sql` to prevent future non-null plaintext writes.
+- Added `__tests__/p0-access-code-boundary.test.ts` and `scripts/qa/batch1b-access-code-probe.mjs`.
+
+Evidence captured:
+
+- Focused test: `npx vitest run __tests__/p0-access-code-boundary.test.ts` -> passed, 8 tests.
+- Broader relevant auth/security test: `npx vitest run __tests__/p0-authz-boundary.test.ts __tests__/p0-access-code-boundary.test.ts` -> passed, 13 tests.
+- Lint for touched Batch 1B-A proof files -> passed.
+- `npx tsc --noEmit` -> passed.
+- `git diff --check` -> passed.
+- Migration safety check classified `20260625215612_harden_access_code_fail_closed.sql` as safe forward-looking hardening: trigger/function/grants/comment only, with no delete, truncate, mass update, plaintext cleanup, table/column drop, or existing production data mutation.
+- `npx supabase db push --dry-run` showed only `20260625215612_harden_access_code_fail_closed.sql` pending.
+- `npx supabase db push` applied only `20260625215612_harden_access_code_fail_closed.sql` to project `vzhwahudircrpgtitwzd`.
+- `npx supabase migration list` now shows local and remote aligned for Batch 1A `20260625195248` and Batch 1B-A `20260625215612`.
+- Runtime probe passed owner/supervisor login, missing Redis fail-closed, 5/10 limiter block, invalid-attempt lockout, valid one-time consume, reuse failure, expired failure, wrong-code failure, and plaintext storage trigger rejection using a disposable org.
+
+Data safety:
+
+- No production data cleanup was performed.
+- Existing `organizations.last_code_plain` values were not cleared or backfilled.
+- Runtime mutation checks used a disposable organization.
+
+Resolution status:
+
+- `SEC-006` is pass-ready after human review and matrix promotion.
+- `AUTH-016` remains open and unmodified.
+- Production/stock, dispatch, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.

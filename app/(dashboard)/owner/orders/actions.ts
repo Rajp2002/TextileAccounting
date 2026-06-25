@@ -3,8 +3,7 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import crypto from 'crypto'
-import { checkAccessCodeRateLimit, checkAccessCodeLockout, recordAccessCodeFailure, resetAccessCodeFailures } from '@/lib/rate-limit'
+import { generateAndStoreAccessCode, validateAndConsumeAccessCode } from '@/lib/access-codes'
 import { assignMachinesToOrderForOrg, type AssignmentResult } from '@/lib/actions/order-assignment'
 import { CreateFabricDispatchSchema, safeParse } from '@/lib/schemas'
 import { shouldArchiveDispatchGroup } from '@/lib/dispatch/archive'
@@ -119,73 +118,20 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
     return { success: true }
 }
 
-// ─── Access Code Validation (owner-side) ─────────────────────────────────────
-
-async function validateOwnerAccessCode(userId: string, orgId: string, inputCode: string): Promise<boolean> {
-    const isLockedOut = await checkAccessCodeLockout(userId)
-    if (isLockedOut) throw new Error('Account temporarily locked due to too many failed attempts. Try again in 1 hour.')
-
-    const rl = await checkAccessCodeRateLimit(userId)
-    if (rl) throw new Error(`Too many attempts. Try again in ${Math.ceil(rl / 1000)} seconds.`)
-
-    if (!inputCode || inputCode.length !== 6) {
-        await recordAccessCodeFailure(userId)
-        return false
-    }
-
-    const supabase = await createServerClient()
-    const { data: org, error } = await supabase
-        .from('organizations')
-        .select('access_code_hash, access_code_expires_at')
-        .eq('id', orgId)
-        .single()
-
-    if (error || !org || !org.access_code_hash) {
-        await recordAccessCodeFailure(userId)
-        return false
-    }
-
-    if (new Date(org.access_code_expires_at) < new Date()) {
-        await recordAccessCodeFailure(userId)
-        return false
-    }
-
-    const inputHash = crypto.createHash('sha256').update(inputCode.toUpperCase()).digest('hex')
-    const isValid = crypto.timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(org.access_code_hash, 'hex'))
-    if (!isValid) {
-        await recordAccessCodeFailure(userId)
-        return false
-    }
-
-    // Consume the code
-    await supabase
-        .from('organizations')
-        .update({ access_code_hash: null, access_code_expires_at: null })
-        .eq('id', orgId)
-
-    await resetAccessCodeFailures(userId)
-    return true
-}
-
 // ─── Request a new access code (owner can call this too) ──────────────────────
 
 export async function requestAccessCodeAsOwner() {
     const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
 
-    const code = crypto.randomBytes(3).toString('hex').toUpperCase()
-    const hash = crypto.createHash('sha256').update(code).digest('hex')
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString()
-
-    const { error } = await supabase
-        .from('organizations')
-        .update({ access_code_hash: hash, access_code_expires_at: expiresAt })
-        .eq('id', profile.org_id)
-
-    if (error) return { error: 'Failed to generate code. Please try again.' }
+    let generated: Awaited<ReturnType<typeof generateAndStoreAccessCode>>
+    try {
+        generated = await generateAndStoreAccessCode(profile.org_id)
+    } catch (error) {
+        return { error: error instanceof Error ? error.message : 'Failed to generate code. Please try again.' }
+    }
 
     // Return the code directly to the owner (they are the owner viewing the dashboard)
-    return { success: true, code }
+    return { success: true, code: generated.code }
 }
 
 export async function updateOrderDetails(orderId: string, data: {
@@ -203,7 +149,7 @@ export async function updateOrderDetails(orderId: string, data: {
     // Validate access code
     let isCodeValid = false
     try {
-        isCodeValid = await validateOwnerAccessCode(user.id, profile.org_id, accessCode)
+        isCodeValid = await validateAndConsumeAccessCode(user.id, profile.org_id, accessCode)
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unable to validate access code'
         return { error: message }

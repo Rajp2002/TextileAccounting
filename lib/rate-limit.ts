@@ -2,8 +2,8 @@
  * lib/rate-limit.ts — Rate Limiter Factory
  *
  * Uses @upstash/ratelimit (Redis-backed sliding window) when UPSTASH_REDIS_REST_URL
- * is set. Falls back gracefully with a console warning when Redis is not configured,
- * so the app remains functional in environments without Redis (e.g. local dev).
+ * is set. Generic public/auth routes fall back gracefully in environments without
+ * Redis. Access-code checks are stricter and fail closed when Redis is unavailable.
  *
  * Two usage patterns:
  *   1. Middleware tier: IP-based, for auth routes (/login, /signup)
@@ -34,6 +34,10 @@ export interface RateLimitResult {
 
 let redis: Redis | null = null
 let redisWarned = false
+const ACCESS_CODE_LIMIT = 5
+const ACCESS_CODE_WINDOW_SECONDS = 10 * 60
+const ACCESS_CODE_LOCKOUT_SECONDS = 10 * 60
+const ACCESS_CODE_UNAVAILABLE_MESSAGE = 'Access-code protection is temporarily unavailable. Try again later.'
 
 function getRedis(): Redis | null {
     if (redis) return redis
@@ -95,7 +99,7 @@ export function getSignupLimiter() {
  */
 let _accessCodeLimiter: Ratelimit | null | undefined = undefined
 export function getAccessCodeLimiter() {
-    if (_accessCodeLimiter === undefined) _accessCodeLimiter = createLimiter(100, 10 * 60)
+    if (_accessCodeLimiter === undefined) _accessCodeLimiter = createLimiter(ACCESS_CODE_LIMIT, ACCESS_CODE_WINDOW_SECONDS)
     return _accessCodeLimiter
 }
 
@@ -178,8 +182,16 @@ export async function checkAuthRateLimit(ip: string, isSignup: boolean = false):
  * Returns null if allowed, or the reset timestamp (ms) if rate-limited.
  */
 export async function checkAccessCodeRateLimit(userId: string): Promise<number | null> {
-    const result = await checkRateLimit(getAccessCodeLimiter, `code:${userId}`)
-    return result.success ? null : result.reset
+    const limiter = getAccessCodeLimiter()
+    if (!limiter) throw new Error(ACCESS_CODE_UNAVAILABLE_MESSAGE)
+
+    try {
+        const result = await limiter.limit(`code:${userId}`)
+        return result.success ? null : result.reset
+    } catch (err) {
+        console.error('[RateLimit] Redis error — access-code validation blocked:', err)
+        throw new Error(ACCESS_CODE_UNAVAILABLE_MESSAGE)
+    }
 }
 
 /**
@@ -211,11 +223,12 @@ export function getClientIpFromHeaders(headerList: { get(name: string): string |
  */
 export async function checkAccessCodeLockout(userId: string): Promise<boolean> {
     const r = getRedis()
-    if (!r) return false
+    if (!r) throw new Error(ACCESS_CODE_UNAVAILABLE_MESSAGE)
     try {
         return !!(await r.get(`lockout:${userId}`))
-    } catch {
-        return false // fail open
+    } catch (err) {
+        console.error('[RateLimit] Redis error — access-code lockout check blocked:', err)
+        throw new Error(ACCESS_CODE_UNAVAILABLE_MESSAGE)
     }
 }
 
@@ -225,18 +238,19 @@ export async function checkAccessCodeLockout(userId: string): Promise<boolean> {
  */
 export async function recordAccessCodeFailure(userId: string): Promise<void> {
     const r = getRedis()
-    if (!r) return
+    if (!r) throw new Error(ACCESS_CODE_UNAVAILABLE_MESSAGE)
     try {
         const key = `code_fails:${userId}`
         const fails = await r.incr(key)
         if (fails === 1) {
-            await r.expire(key, 1800) // 30 minutes window
+            await r.expire(key, ACCESS_CODE_WINDOW_SECONDS)
         }
         if (fails >= 5) {
-            await r.setex(`lockout:${userId}`, 3600, '1') // 1 hour lockout
+            await r.setex(`lockout:${userId}`, ACCESS_CODE_LOCKOUT_SECONDS, '1')
         }
     } catch (err) {
         console.error('[RateLimit] Redis error on failure record:', err)
+        throw new Error(ACCESS_CODE_UNAVAILABLE_MESSAGE)
     }
 }
 
@@ -248,6 +262,7 @@ export async function resetAccessCodeFailures(userId: string): Promise<void> {
     if (!r) return
     try {
         await r.del(`code_fails:${userId}`)
+        await r.del(`lockout:${userId}`)
     } catch {}
 }
 

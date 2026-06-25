@@ -5,7 +5,6 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
-import crypto from 'crypto'
 import {
     SavePastAttendanceSchema,
     AccessCodeSchema,
@@ -19,6 +18,7 @@ import {
 } from '@/lib/schemas'
 import { getCycleBoundsForDate } from '@/lib/payroll-cycle'
 import { validateEntry, VALIDATION_MESSAGES } from '@/lib/production-log-validation'
+import { generateAndStoreAccessCode, validateAndConsumeAccessCode } from '@/lib/access-codes'
 
 type ShiftType = 'day' | 'night'
 
@@ -86,8 +86,6 @@ async function supervisorWorkerHasHistory(
 
     return (settlementsRes.data?.length ?? 0) > 0 || (advancesRes.data?.length ?? 0) > 0
 }
-
-import { validateAndConsumeAccessCode } from '@/lib/access-codes'
 
 // ─── Attendance ───────────────────────────────────────────────────────────────
 
@@ -719,27 +717,15 @@ export async function requestAccessCode() {
     const { user, profile } = await requireRole(['supervisor', 'owner'])
     const supabase = await createServerClient()
 
-    // 1. Generate random 6-character code
-    const code = crypto.randomBytes(3).toString('hex').toUpperCase()
-    const hash = crypto.createHash('sha256').update(code).digest('hex')
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes
-
-    // 2. Save hash and plain code to organizations table
-    const { error } = await supabase
-        .from('organizations')
-        .update({ 
-            access_code_hash: hash, 
-            access_code_expires_at: expiresAt,
-            last_code_plain: code
-        })
-        .eq('id', profile.org_id)
-
-    if (error) {
+    let generated: Awaited<ReturnType<typeof generateAndStoreAccessCode>>
+    try {
+        generated = await generateAndStoreAccessCode(profile.org_id)
+    } catch (error) {
         console.error('[requestAccessCode] DB Update failed:', error)
-        return { error: 'Failed to generate request. Please try again.' }
+        return { error: error instanceof Error ? error.message : 'Failed to generate request. Please try again.' }
     }
 
-    // 3. Fire-and-forget: send notification to owner via Edge Function
+    // Fire-and-forget: send notification to owner via Edge Function.
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -759,8 +745,8 @@ export async function requestAccessCode() {
             },
             body: JSON.stringify({
                 org_id: profile.org_id,
-                code,
-                expires_at: expiresAt,
+                code: generated.code,
+                expires_at: generated.expiresAt,
                 requested_by: requester?.name || 'Supervisor'
             }),
         }).catch((err) => console.error('[request-access-code] Notification failed:', err))

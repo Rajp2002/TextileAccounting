@@ -14,13 +14,13 @@ import {
     AssignOrderSchema,
     UuidSchema,
     PositiveIntSchema,
-    AccessCodeSchema,
     UpdateOrgNameSchema,
     ProductionModeSchema,
     safeParse,
 } from '@/lib/schemas'
 import { eraseWorkerPII } from './actions/compliance'
 import { formatToSurat } from '@/lib/time'
+import { generateAndStoreAccessCode, validateAndConsumeAccessCode } from '@/lib/access-codes'
 
 export type ProductionTargetOption = {
     source_type: 'order' | 'market_run'
@@ -552,25 +552,13 @@ export async function updateMeterWorker(data: {
 
 export async function generateAccessCode() {
     const { profile } = await requireRole(['owner'])
-    const supabase = await createServerClient()
 
-    // Generate a cryptographically random 6-character code
-    const code = crypto.randomBytes(3).toString('hex').toUpperCase()
-    const hash = crypto.createHash('sha256').update(code).digest('hex')
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes
-
-    const { error } = await supabase
-        .from('organizations')
-        .update({ 
-            access_code_hash: hash, 
-            access_code_expires_at: expiresAt,
-            last_code_plain: code
-        })
-        .eq('id', profile.org_id)
-
-    if (error) {
+    let generated: Awaited<ReturnType<typeof generateAndStoreAccessCode>>
+    try {
+        generated = await generateAndStoreAccessCode(profile.org_id)
+    } catch (error) {
         console.error('Failed to generate access code:', error)
-        return { error: 'Failed to generate access code. Please try again.' }
+        return { error: error instanceof Error ? error.message : 'Failed to generate access code. Please try again.' }
     }
 
     // ── Fire-and-forget: send code to owner's WhatsApp ───────────────────────
@@ -586,13 +574,13 @@ export async function generateAccessCode() {
             },
             body: JSON.stringify({
                 org_id: profile.org_id,
-                code,
-                expires_at: expiresAt,
+                code: generated.code,
+                expires_at: generated.expiresAt,
             }),
         }).catch((err) => console.error('[send-access-code] Notification failed:', err))
     }
 
-    return { success: true, code }
+    return { success: true, code: generated.code }
 }
 
 export async function updateOrganizationName(newName: string) {
@@ -660,7 +648,7 @@ export async function setBeamTrackingEnabled(enabled: boolean) {
 }
 
 export async function validateAndRotateAccessCode(orgId: string, inputCode: string): Promise<boolean> {
-    const { profile } = await requireRole(['owner', 'supervisor'])
+    const { user, profile } = await requireRole(['owner', 'supervisor'])
 
     // Security: Ensure the orgId the client passed matches the server-derived org.
     // This prevents IDOR — a user cannot check codes for another org by passing a different ID.
@@ -668,36 +656,7 @@ export async function validateAndRotateAccessCode(orgId: string, inputCode: stri
         return false
     }
 
-    // Validate access code format before any DB hit
-    const codeParsed = safeParse(AccessCodeSchema, inputCode)
-    if ('error' in codeParsed) return false
-
-    const supabase = await createServerClient()
-
-    const { data: org, error } = await supabase
-        .from('organizations')
-        .select('access_code_hash, access_code_expires_at')
-        .eq('id', profile.org_id)
-        .single()
-
-    if (error || !org || !org.access_code_hash) return false
-    if (new Date(org.access_code_expires_at) < new Date()) return false
-
-    const inputHash = crypto.createHash('sha256').update(codeParsed.data).digest('hex')
-    const isValid = crypto.timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(org.access_code_hash, 'hex'))
-    if (!isValid) return false
-
-    // Valid! Consume the code
-    await supabase
-        .from('organizations')
-        .update({ 
-            access_code_hash: null, 
-            access_code_expires_at: null,
-            last_code_plain: null
-        })
-        .eq('id', profile.org_id)
-
-    return true
+    return validateAndConsumeAccessCode(user.id, profile.org_id, inputCode)
 }
 
 /**
@@ -763,40 +722,21 @@ export async function deleteMeterWorker(workerId: number) {
  * Requires a one-time access code. orgId is derived server-side.
  */
 export async function deleteFixedWorkerWithCode(workerId: number, accessCode: string, erasePII: boolean = false) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const orgId = profile.org_id
 
     // Validate inputs
     const workerParsed = safeParse(PositiveIntSchema, workerId)
     if ('error' in workerParsed) return { error: workerParsed.error }
 
-    const codeParsed = safeParse(AccessCodeSchema, accessCode)
-    if ('error' in codeParsed) return { error: 'Invalid access code format' }
+    try {
+        const isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
+        if (!isCodeValid) return { error: 'Invalid or expired access code' }
+    } catch (error: unknown) {
+        return { error: error instanceof Error ? error.message : 'Unable to validate access code' }
+    }
 
     const supabase = await createServerClient()
-
-    // ... (access code validation) ...
-    const { data: org, error: orgError } = await supabase
-        .from('organizations')
-        .select('access_code_hash, access_code_expires_at')
-        .eq('id', orgId)
-        .single()
-
-    if (orgError || !org || !org.access_code_hash) return { error: 'Invalid or expired access code' }
-    if (new Date(org.access_code_expires_at) < new Date()) return { error: 'Invalid or expired access code' }
-
-    const inputHash = crypto.createHash('sha256').update(codeParsed.data).digest('hex')
-    const isValid = crypto.timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(org.access_code_hash, 'hex'))
-    if (!isValid) return { error: 'Invalid or expired access code' }
-
-    await supabase
-        .from('organizations')
-        .update({ 
-            access_code_hash: null, 
-            access_code_expires_at: null,
-            last_code_plain: null
-        })
-        .eq('id', orgId)
 
     if (erasePII) {
         // DPDP 2026: Anonymize instead of delete
@@ -823,38 +763,20 @@ export async function deleteFixedWorkerWithCode(workerId: number, accessCode: st
  * Requires a one-time access code. orgId is derived server-side.
  */
 export async function deleteMeterWorkerWithCode(workerId: number, accessCode: string, erasePII: boolean = false) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const orgId = profile.org_id
 
     const workerParsed = safeParse(PositiveIntSchema, workerId)
     if ('error' in workerParsed) return { error: workerParsed.error }
 
-    const codeParsed = safeParse(AccessCodeSchema, accessCode)
-    if ('error' in codeParsed) return { error: 'Invalid access code format' }
+    try {
+        const isCodeValid = await validateAndConsumeAccessCode(user.id, orgId, accessCode)
+        if (!isCodeValid) return { error: 'Invalid or expired access code' }
+    } catch (error: unknown) {
+        return { error: error instanceof Error ? error.message : 'Unable to validate access code' }
+    }
 
     const supabase = await createServerClient()
-
-    const { data: org, error: orgError } = await supabase
-        .from('organizations')
-        .select('access_code_hash, access_code_expires_at')
-        .eq('id', orgId)
-        .single()
-
-    if (orgError || !org || !org.access_code_hash) return { error: 'Invalid or expired access code' }
-    if (new Date(org.access_code_expires_at) < new Date()) return { error: 'Invalid or expired access code' }
-
-    const inputHash = crypto.createHash('sha256').update(codeParsed.data).digest('hex')
-    const isValid = crypto.timingSafeEqual(Buffer.from(inputHash, 'hex'), Buffer.from(org.access_code_hash, 'hex'))
-    if (!isValid) return { error: 'Invalid or expired access code' }
-
-    await supabase
-        .from('organizations')
-        .update({ 
-            access_code_hash: null, 
-            access_code_expires_at: null,
-            last_code_plain: null
-        })
-        .eq('id', orgId)
 
     if (erasePII) {
         // DPDP 2026: Anonymize instead of delete

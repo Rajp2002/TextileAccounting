@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { OwnerSidebar } from '@/components/navigation/owner-sidebar'
 import { requireRole } from '@/lib/auth'
-import { AccessCodeBanner } from '@/components/AccessCodeBanner'
 import { BrandBackground } from '@/components/brand-background'
 import { normalizeProductionMode } from '@/lib/production-mode'
 
@@ -14,23 +13,17 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
     // Fetch factory name for the sidebar
     let factoryName = 'Weavly'
     let productionMode = normalizeProductionMode(null)
-    let activeCode: string | null = null
-    let codeExpiresAt: string | null = null
 
     if (userOrgId) {
         const supabase = await createClient()
         const { data: org } = await supabase
             .from('organizations')
-            .select('name, production_mode, last_code_plain, access_code_expires_at')
+            .select('name, production_mode')
             .eq('id', userOrgId)
             .single()
         
         if (org?.name) factoryName = org.name
         productionMode = normalizeProductionMode(org?.production_mode)
-        if (org?.last_code_plain) {
-            activeCode = org.last_code_plain
-            codeExpiresAt = org.access_code_expires_at
-        }
     }
 
     return (
@@ -50,9 +43,6 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
                 </main>
             </div>
 
-            {activeCode && codeExpiresAt && (
-                <AccessCodeBanner code={activeCode} expiresAt={codeExpiresAt} />
-            )}
         </div>
     )
 }
