@@ -1,0 +1,273 @@
+# Retest Plan
+
+This plan defines the proof needed for remediation batches. Commands are run from the repository root: `/Users/rajpatel/Projects/textile Saas`.
+
+## Global Local Gates
+
+Run these before promoting any batch:
+
+```bash
+npm ci
+npm run lint
+npx vitest run
+npm run build
+npm audit --omit=dev --audit-level=high
+npm audit --audit-level=high
+```
+
+Current known state from `logs/technical-gates.md`:
+
+- `npm ci` fails until the lockfile is repaired.
+- `npm run lint` passed in the final QA run.
+- `npx vitest run` passed in the final QA run.
+- `npm run build` passed in the final QA run.
+- Both audit commands fail until advisories are fixed or formally accepted.
+
+Do not use passing lint/build/source checks to resolve runtime failures.
+
+## BATCH-01-AUTHZ-BOUNDARY
+
+Failures targeted: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
+
+Follow-on checks: `AUTH-016`, `AUTH-012`, `AUTH-013`, `SEC-013`
+
+### Acceptance Criteria
+
+1. No authenticated user can update `public.profiles.role`, `public.profiles.org_id`, or equivalent authorization fields.
+2. Profile RLS permits only intended self-service profile updates and blocks authorization-field mutation.
+3. A supervisor self-mutation attempt fails and leaves the profile unchanged.
+4. After token refresh, the supervisor still has supervisor claims and owner-only actions remain denied.
+5. Owner login, supervisor login, onboarding redirects, and protected route guards still work.
+6. SQL metadata, tests, and runtime browser/API evidence are all saved.
+
+### Required Regression Tests
+
+Add or update tests for the authorization boundary, then run:
+
+```bash
+npx vitest run __tests__/p1-auth-login-route.test.ts __tests__/p1-auth-authorization-boundary.test.ts
+npx vitest run __tests__/p1-payroll-guard.test.ts
+npx vitest run
+```
+
+If `__tests__/p1-auth-authorization-boundary.test.ts` does not exist yet, create it as part of the fix. It must cover the policy/grant expectation and server-side role/org derivation at the highest practical level available in the local test harness.
+
+### Required SQL Metadata Checks
+
+Run against the QA/disposable database after migrations are applied. Save sanitized output.
+
+```sql
+select grantee, table_schema, table_name, column_name, privilege_type
+from information_schema.column_privileges
+where table_schema = 'public'
+  and table_name = 'profiles'
+  and column_name in ('role', 'org_id')
+  and grantee in ('anon', 'authenticated')
+order by grantee, column_name, privilege_type;
+```
+
+Expected: no `UPDATE` privilege for `anon` or `authenticated` on `role` or `org_id`.
+
+```sql
+select policyname, cmd, qual, with_check
+from pg_policies
+where schemaname = 'public'
+  and tablename = 'profiles'
+order by policyname;
+```
+
+Expected: update policy cannot be satisfied by a user attempting to change authorization fields. If field-level enforcement is implemented through triggers or functions instead of RLS alone, include the trigger/function metadata and a failing mutation probe.
+
+### Required Runtime QA Checks
+
+Use an isolated QA tenant or rollback-only transaction. Do not mutate production data outside the QA tenant.
+
+1. Log in as QA supervisor.
+2. Attempt a direct Supabase/PostgREST update of the supervisor's own profile role to `owner`.
+3. Attempt a direct update of the supervisor's own `org_id` to another known org ID or a generated invalid UUID.
+4. Refresh the session/token.
+5. Open an owner-only route and invoke one owner-only server action that was previously protected.
+6. Confirm the route/action is denied and no owner data is visible.
+7. Log in as QA owner and confirm owner routes/actions still work.
+8. Re-query the supervisor profile and confirm role/org never changed.
+
+Evidence to save:
+
+- SQL metadata output.
+- Mutation attempt request/response summary with sanitized user/org IDs.
+- Browser route/action observations.
+- Post-probe profile row summary.
+- Test command output.
+
+### Batch 01 Closure Rule
+
+Close `SEC-002`, `SEC-003`, `SEC-004`, and `SEC-005` only when all acceptance criteria pass. If `AUTH-016` is not fixed in the same implementation, keep it open and create the next security batch for lockdown policy coverage.
+
+## P1 Production and Stock Retest
+
+Use after `PROD-A` and `PROD-B` fixes.
+
+Commands:
+
+```bash
+npx vitest run __tests__/p0-atomicity.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-dispatch-regressions.test.ts
+npx vitest run __tests__/p1-stock-lifecycle.test.ts __tests__/p1-stock-source-validation.test.ts
+npx vitest run
+```
+
+Runtime checks:
+
+- Create order-backed production for two looms.
+- Edit one positive shift to downtime inside the allowed correction window.
+- Verify current positive `production_logs` sum equals generated order stock exactly.
+- Re-submit the same shift and verify stock changes exactly once.
+- Probe negative meters, cancelled order, over-target production, and assignment mismatch through rollback-only RPC/API checks.
+- Refresh and open a second session to confirm stock/dashboard values remain reconciled.
+
+Acceptance:
+
+- `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have runtime evidence.
+- Golden A follow-ons can be re-run from a clean QA order.
+
+## P1 Estimator, Quote, Order, and Date Snapshot Retest
+
+Use after `ECON-A` fixes.
+
+Commands:
+
+```bash
+npx vitest run __tests__/estimator.test.ts __tests__/market-runs.test.ts __tests__/production-mode.test.ts
+npx vitest run __tests__/p1-stock-source-validation.test.ts __tests__/p1-commercial-payments.test.ts
+npx vitest run
+```
+
+Add targeted tests for quote transition rules, target/deadline edit guards, below-target completion confirmation, and date-only formatting before closing this cluster.
+
+Runtime checks:
+
+- Build a quote/order from a business truth sheet and verify rate, margin, worker-rate, order, and commercial snapshots remain exact.
+- Restore a quote into the estimator while a local draft exists and verify the user must choose whether to overwrite.
+- Edit target/deadline after production and verify audit plus target >= produced guard.
+- Attempt below-target completion and verify explicit warning/confirmation.
+- Render representative order, dispatch, payslip, and commercial date-only fields under UTC, US Pacific, and Asia/Kolkata.
+
+Acceptance:
+
+- `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, and `TIME-002` have test or runtime evidence.
+- `GOLDEN-A-03` has a supplied truth sheet/business reference or remains blocked and de-scoped from pilot sign-off.
+
+## P2 Dispatch and Receipt Retest
+
+Commands:
+
+```bash
+npx vitest run __tests__/p1-party-first-stock-sale-dispatch.test.ts __tests__/dispatch-archive.test.ts __tests__/p1-production-dispatch-regressions.test.ts
+npx vitest run
+```
+
+Runtime checks:
+
+- Sell 80m from a QA stock lot.
+- Dispatch 50m first, then 30m second.
+- Confirm package numbers are unique and both batches are visible.
+- Record exact receipt, shortage receipt, excess receipt, duplicate receipt attempt, negative receipt attempt, and zero receipt according to chosen policy.
+- Confirm Factory Today pending dispatch and Dispatches page match DB values.
+
+Acceptance:
+
+- `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `SIGNOFF-07`, and `SIGNOFF-08` have evidence.
+
+## P2 Dashboard and Sign-Off Read Model Retest
+
+Use after source-domain fixes for production, stock, dispatch, commercials, and payroll are merged.
+
+Commands:
+
+```bash
+npx vitest run __tests__/commercials-read-model.test.ts __tests__/p1-production-dispatch-regressions.test.ts
+npx vitest run
+```
+
+Add dashboard read-model tests for Factory Today production, gross wages, pending dispatch, pending receipt, historical analytics, and sign-off blocking before closing this cluster.
+
+Runtime checks:
+
+- After production, verify Today meters, active looms, downtime, and gross wages against source rows.
+- After sale and partial dispatch, verify Factory Today pending dispatch matches `fabric_stock_sales.pending_dispatch_meters`.
+- After receipt discrepancy, verify sign-off shows the unresolved difference and owner/next-action state.
+- Open a historical date and verify analytics use that date's production/orders/machines, not current state.
+- Confirm sign-off remains blocked when external supervisor-register truth is missing.
+
+Acceptance:
+
+- `DASH-003`, `DASH-004`, `DASH-007`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `SIGNOFF-05`, `SIGNOFF-06`, `SIGNOFF-07`, `SIGNOFF-08`, `SIGNOFF-09`, and `SIGNOFF-10` have runtime evidence or documented pilot de-scope.
+
+## P3 Payroll and Kharchi Retest
+
+Commands:
+
+```bash
+npx vitest run __tests__/p1-payroll-guard.test.ts __tests__/p1-payroll-revert.test.ts __tests__/payroll-manual-adjustments.test.ts __tests__/payroll-settlement-history.test.ts
+npx vitest run __tests__/payroll-cycle.test.ts __tests__/payroll-pay-date-config.test.ts
+npx vitest run
+```
+
+Runtime checks:
+
+- Preview and settle payroll in a valid final/pay window.
+- Verify gross, inam, kapaat, advance recovery, PF, ESI, and net against source rows.
+- Attempt legacy settlement/reversal RPCs and confirm they are revoked or hardened.
+- Record online kharchi and verify worker advance plus supervisor float transaction are atomic.
+- Verify offline kharchi is disabled or queues to a real reconciled path.
+
+Acceptance:
+
+- `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-027`, `PAY-028`, `OFF-008`, and payroll-related sign-off rows have evidence.
+
+## P4 Idempotency, Offline, and Cache Retest
+
+Commands:
+
+```bash
+npx vitest run __tests__/p1-razorpay-idempotency.test.ts
+npx vitest run
+```
+
+Add targeted tests for estimator, market-run, sale, dispatch, payment, payroll idempotency, and logout cache clearing before closing this cluster.
+
+Runtime checks:
+
+- Rapid double-submit estimator save and market-run creation.
+- Rapid double-submit sale and dispatch.
+- Simulated timeout for sale/payment/payroll mutation with status reconciliation.
+- Logout and login as another QA account on same browser profile; inspect localStorage, React Query persister, and IndexedDB mutation queue.
+- Offline route renders the offline page if offline support remains in pilot.
+
+Acceptance:
+
+- `EST-017`, `SALE-015`, `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-009`, `OFF-010`, and `SEC-016` are fixed or de-scoped.
+
+## P5 Release Gate Retest
+
+Commands:
+
+```bash
+npm ci
+npm run lint
+npx vitest run
+npm run build
+npm audit --omit=dev --audit-level=high
+npm audit --audit-level=high
+```
+
+Release checks:
+
+- Confirm production migration head equals approved repository migration head.
+- Confirm CI runs install, lint, tests, build, and audit gate.
+- Confirm Sentry release and source maps for the deployed commit.
+- Restore backup into a disposable project and reconcile one org, users, production, stock, receivables, and payroll.
+- Exercise application rollback and database forward-fix runbook in disposable infrastructure.
+
+Acceptance:
+
+- `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `TECH-011`, `TECH-012`, `TECH-013`, and `SIGNOFF-10` have evidence or signed release-risk acceptance where allowed.
