@@ -1,0 +1,177 @@
+# Fix Log
+
+This log starts from the completed pre-pilot QA artifacts. No application fix has been made or verified by this remediation operating-system step.
+
+Rules for entries:
+
+- Do not mark a failure resolved from source review alone.
+- `code_verified` is not resolved.
+- Runtime probes must use an isolated QA tenant, rollback-only transaction, or disposable environment.
+- Each entry must link the invariant, tests, runtime evidence, and matrix rows changed.
+
+## Current Resolution State
+
+| Cluster | Status | Notes |
+| --- | --- | --- |
+| `SEC-A` mutable profile authorization | Review ready for Batch 1A | `SEC-002` through `SEC-005` have post-fix test/runtime evidence below. Matrix rows are not edited here. |
+| `SEC-B` privileged action/lockdown enforcement | Open | Security follow-up after `SEC-A`, unless implementation safely includes it. |
+| `SEC-C` webhook/export/compliance fail-closed | Open | Some items may require de-scope or counsel review. |
+| `PROD-A` production correction/stock atomicity | Open | Critical business-data cluster after security. |
+| `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
+| `ECON-A` estimator/quote/order/date snapshot correctness | Open | Medium failures, but must close before Golden A can be trusted. |
+| `DISP-A` multi-batch dispatch identity | Open | Blocks Golden B. |
+| `DISP-B` receipt-state coherence | Open | Blocks difference sign-off. |
+| `COMM-A` sales/receivables/profit boundary | Open | Includes sale idempotency and direct market-run sale bypass. |
+| `DASH-A` dashboard/sign-off read-model truth | Open | Depends on source-domain repairs and independent dashboard retest. |
+| `PAY-A` payroll/kharchi ledger integrity | Open | Includes legacy RPCs and offline kharchi. |
+| `IDEMP-A` mutation idempotency/unknown outcome | Open | Cross-cutting after core data invariants. |
+| `OFF-A` offline/cache/PWA claims | Open | Some features likely de-scoped for pilot. |
+| `REL-A` release gates | Open | Must be closed before pilot. |
+
+## Entry Template
+
+| Field | Required content |
+| --- | --- |
+| Date/time | IST timestamp. |
+| Batch | Example: `BATCH-01-AUTHZ-BOUNDARY`. |
+| Cluster | Backlog cluster ID. |
+| Invariant | Exact invariant from `DOMAIN_INVARIANTS.md`. |
+| Failures addressed | Matrix IDs. |
+| Change summary | Code/migration/config files changed. |
+| Regression tests | Command output and test file names. |
+| Runtime QA | Browser/SQL/API evidence path. |
+| Data safety | QA tenant/disposable/rollback-only proof. |
+| Result | `open`, `blocked`, `retest_needed`, or `resolved_with_evidence`. |
+| Matrix update | Rows promoted and evidence references. |
+
+## Active Entry: BATCH-01A-MUTABLE-PROFILE-AUTHZ
+
+Status: review ready.
+
+Failures targeted: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`.
+
+Scope note: this is Batch 1A only. `SEC-006` and `AUTH-016` remain open for Batch 1B unless directly affected by this authorization-boundary fix.
+
+Invariant: role, tenant, and custom authorization claims are server-owned authority. A tenant user must not be able to change the fields used to authorize owner/supervisor/admin behavior.
+
+### Pre-Fix Reproduction Evidence
+
+Date/time: 2026-06-26 01:19 IST.
+
+Environment: local Next dev server at `http://localhost:3000` using Supabase project `vzhwahudircrpgtitwzd`; reusable QA supervisor account only. Passwords, tokens, cookies, and service-role keys were not printed or stored.
+
+Data safety: the probe used the QA supervisor profile and a second QA/disposable organization id. The script restored the supervisor profile in a `finally` block and verified the final profile was restored to `role=supervisor` and the original `org_id`.
+
+Pre-fix results:
+
+- Direct authenticated update of own `profiles.role` to `owner`: succeeded. Stored row became `owner`; token refresh minted root JWT claim `user_role=owner`.
+- Direct authenticated update of own `profiles.org_id` to another QA org: succeeded. Stored row moved to the target org; token refresh minted root JWT `org_id` for the target org.
+- Owner route and owner-only server loader after role mutation: `/owner/today` loaded in the browser using the refreshed supervisor session. This route invokes the owner-only Factory Today server loader guarded by `requireRole(['owner'])`.
+- Final restoration check: restored profile remained `role=supervisor` on the original QA org.
+
+Current result: reproduced before patch. `SEC-002`, `SEC-003`, `SEC-004`, and `SEC-005` remained open until the post-fix evidence below.
+
+### Root Cause
+
+- Grants: `authenticated` had table-level `INSERT` and `UPDATE` on `public.profiles`, which granted write access to every profile column, including `id`, `role`, and `org_id`.
+- RLS: the old `"Users can update their own profile"` policy was `FOR UPDATE USING (auth.uid() = id)` with no explicit `TO authenticated` and no `WITH CHECK`.
+- Triggers/functions: `profiles` only had the audit trigger. There was no guard comparing `OLD` versus `NEW` authorization fields.
+- Claim refresh: `public.custom_access_token_hook(event jsonb)` derives `org_id` and `user_role` from `public.profiles`, so a mutated profile row minted escalated or cross-org claims after refresh.
+- Server authorization: `requireRole()` correctly re-reads the server profile row, but the row was user-mutable, so owner routes/server loaders accepted the mutated role.
+- RPCs/server actions: owner-only RPCs and owner routes depend on `auth.jwt()->>'user_role'` or `requireRole(['owner'])`; those checks were bypassable only because profile mutation could mint owner claims.
+
+### Change Summary
+
+Files changed:
+
+- `supabase/migrations/20260626012000_harden_profile_authorization_boundary.sql`
+- `__tests__/p0-authz-boundary.test.ts`
+- `scripts/qa/batch1a-authz-boundary-probe.mjs`
+- `docs/pilot-remediation/FIX_LOG.md`
+- `docs/pilot-remediation/LOOP_STATE.md`
+
+Migration/policy changes applied to Supabase project `vzhwahudircrpgtitwzd`:
+
+- Revoked `INSERT` and table-level `UPDATE` on `public.profiles` from `anon` and `authenticated`.
+- Re-granted `authenticated` update only on `full_name`, `phone`, `whatsapp_number`, `whatsapp_opted_in`, and `whatsapp_opted_in_at`.
+- Dropped the old own-profile update policy.
+- Added `"Users can update own non-authorization profile fields"` `FOR UPDATE TO authenticated USING ((select auth.uid()) = id) WITH CHECK ((select auth.uid()) = id)`.
+- Added `public.prevent_profile_authorization_field_update()` plus `protect_profile_authorization_fields` trigger for `id`, `role`, and `org_id`.
+- Revoked public/authenticated execute on the guard function; `service_role` retains execute.
+
+### Post-Fix Evidence
+
+Date/time: 2026-06-26 01:26 IST.
+
+Targeted tests:
+
+- `npx vitest run __tests__/p0-authz-boundary.test.ts` -> 1 file passed, 5 tests passed.
+- `node scripts/qa/batch1a-authz-boundary-probe.mjs` -> passed. Direct role mutation denied with `42501`; direct org mutation denied with `42501`; stored profile stayed supervisor/original org; token refresh stayed supervisor/original org; owner-only RPC was denied for supervisor; owner login and owner token refresh stayed owner.
+
+Broader auth/security-adjacent tests:
+
+- `npx vitest run __tests__/p0-authz-boundary.test.ts __tests__/p1-auth-login-route.test.ts __tests__/p1-billing-gates.test.ts` -> 3 files passed, 12 tests passed.
+- `npx eslint __tests__/p0-authz-boundary.test.ts scripts/qa/batch1a-authz-boundary-probe.mjs` -> passed.
+- `npx eslint scripts/qa/batch1a-authz-boundary-probe.mjs` -> passed after adding the RPC assertion.
+
+SQL metadata evidence:
+
+- `authenticated` no longer has `UPDATE` on `profiles.id`, `profiles.role`, or `profiles.org_id`.
+- `authenticated` has `UPDATE` only on non-authorization profile preference columns listed above.
+- The new update policy has `roles={authenticated}`, `USING ((select auth.uid()) = id)`, and matching `WITH CHECK`.
+- `protect_profile_authorization_fields` trigger is installed before update of `id`, `role`, or `org_id`.
+- Guard function ACL is `{postgres=X/postgres,service_role=X/postgres}`.
+
+Browser/runtime evidence:
+
+- Post-fix browser QA with QA supervisor after denied mutation and token refresh: `/owner/today` redirected to `/supervisor/dashboard`.
+- Supervisor owner-only API check: `POST /api/subscriptions/trial` returned `403 {"error":"Owner access required"}`.
+- Real owner browser check: `/owner/today` loaded successfully.
+
+### Final Compatibility Smoke Before Commit
+
+Date/time: 2026-06-26 02:21 IST.
+
+Scope: profile authorization boundary compatibility only.
+
+Commands/checks run:
+
+- `node --input-type=module <<'NODE' ... NODE` inline Supabase smoke, using local env plus private QA credential loader -> passed, 28 sanitized assertions.
+- `npm run dev` -> Next dev server ready on `http://localhost:3000`; stopped after browser QA.
+- In-app Browser runtime against `http://localhost:3000` using the real login form and QA owner/supervisor accounts -> passed.
+
+Database compatibility evidence:
+
+- Owner and supervisor authenticated clients can still update allowed profile preference fields: `full_name`, `phone`, `whatsapp_number`, `whatsapp_opted_in`, and `whatsapp_opted_in_at`.
+- Owner and supervisor authenticated clients cannot update `profiles.id`, `profiles.role`, `profiles.org_id`, `profiles.email`, or `profiles.created_at`; each denied attempt returned `42501 permission denied for table profiles`.
+- After denied updates, owner remained `role=owner` on the original org and supervisor remained `role=supervisor` on the original org.
+- Owner and supervisor token refreshes kept the expected `user_role` and original `org_id` claims.
+- Disposable service-role owner signup profile creation succeeded.
+- Disposable service-role supervisor join profile creation succeeded.
+- Disposable profiles, disposable organization, and disposable auth users were cleaned up successfully.
+
+Browser/runtime compatibility evidence:
+
+- Existing owner UI login succeeded through the real login form and reached `/owner/today`.
+- Owner `/owner/settings` loaded successfully with registered profile details, two read-only profile inputs, and role display; no `permission denied`, profile-load, authorization, or profile-save failure text appeared.
+- Owner logout succeeded through the localized logout control.
+- Existing supervisor UI login succeeded through the real login form and reached `/supervisor/dashboard`.
+- Supervisor `/supervisor/dashboard` loaded successfully; no `permission denied`, profile-load, authorization, or profile-save failure text appeared.
+- Browser console check found zero relevant profile/permission/authorization/RLS errors.
+
+Compatibility risk note:
+
+- Revoking table-level `UPDATE` from `authenticated` is compatible with the current profile preference surface because direct authenticated profile updates are limited to the five granted preference columns. Service-role signup/join and owner-only WhatsApp preference actions still work because they use admin/server paths after authorization. Any future direct client profile edit must either use only those granted columns or move through an authorized server action.
+- Dev server logs still showed an out-of-scope Sentry proxy `ECONNRESET`; no Batch 1A profile authorization failure was indicated.
+
+Supabase advisor note:
+
+- Security advisor still reports existing out-of-scope findings such as security-definer views, mutable search paths, executable security-definer RPCs, and tables with RLS but no policies. The new Batch 1A guard function is not executable by `authenticated`. Existing advisor findings remain for later security/release batches.
+
+Data safety:
+
+- Runtime mutation attempts used reusable QA accounts and QA/disposable org ids only.
+- The probe scripts restore the QA supervisor profile in `finally`.
+- No destructive production data changes were made. The applied DDL changes grants, policies, and a trigger only.
+
+Result: `resolved_with_evidence` for Batch 1A scope (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`), pending human review and matrix promotion. `SEC-006`, `AUTH-016`, release gates, npm audit, Sentry, migration drift, production/stock, dispatch, payroll, estimator, and offline remain open/out of scope.
