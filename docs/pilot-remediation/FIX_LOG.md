@@ -84,7 +84,7 @@ Current result: reproduced before patch. `SEC-002`, `SEC-003`, `SEC-004`, and `S
 
 Files changed:
 
-- `supabase/migrations/20260626012000_harden_profile_authorization_boundary.sql`
+- `supabase/migrations/20260625195248_harden_profile_authorization_boundary.sql`
 - `__tests__/p0-authz-boundary.test.ts`
 - `scripts/qa/batch1a-authz-boundary-probe.mjs`
 - `docs/pilot-remediation/FIX_LOG.md`

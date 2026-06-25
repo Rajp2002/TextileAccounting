@@ -99,7 +99,7 @@ Batch 1A (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`) is implemented and review-
 Evidence captured:
 
 - Pre-fix QA reproduction proved supervisor self-mutation of `profiles.role` and `profiles.org_id`, token refresh claim escalation, and owner route/server-loader access.
-- Supabase migration `20260626012000_harden_profile_authorization_boundary.sql` was applied to project `vzhwahudircrpgtitwzd`.
+- Supabase migration `20260625195248_harden_profile_authorization_boundary.sql` was applied to project `vzhwahudircrpgtitwzd`.
 - Post-fix SQL metadata shows `authenticated` cannot update `profiles.id`, `profiles.role`, or `profiles.org_id`.
 - Post-fix QA probe shows direct role/org mutations denied, role/org unchanged, token refresh remains supervisor, owner-only RPC denied, and owner login/claims still work.
 - Post-fix browser QA shows supervisor is redirected from `/owner/today` to `/supervisor/dashboard`, owner-only API returns 403 for supervisor, and real owner can load `/owner/today`.

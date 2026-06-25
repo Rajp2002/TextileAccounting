@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 
 const migration = fs.readFileSync(
-    path.join(process.cwd(), 'supabase/migrations/20260626012000_harden_profile_authorization_boundary.sql'),
+    path.join(process.cwd(), 'supabase/migrations/20260625195248_harden_profile_authorization_boundary.sql'),
     'utf8'
 )
 
