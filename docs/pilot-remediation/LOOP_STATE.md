@@ -193,3 +193,45 @@ Resolution status:
 
 - `AUTH-016` is pass-ready after human review and matrix promotion.
 - Production/stock, dispatch, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.
+
+## Security Foundation Closed
+
+Date/time: 2026-06-26 11:27 IST.
+
+Human decision: security foundation approved. Pass-ready failures:
+
+- `SEC-002`
+- `SEC-003`
+- `SEC-004`
+- `SEC-005`
+- `SEC-006`
+- `AUTH-016`
+
+Committed and pushed security batches:
+
+- Batch 1A authorization boundary: `76a25a3` plus evidence/migration-history closure commits `ff1ddb0` and `704cb54`.
+- Batch 1B-A access-code boundary: `77a0382`.
+- Batch 1B-B locked-tenant boundary: `e2e0cf1`.
+
+Supabase migration history:
+
+- `20260625195248_harden_profile_authorization_boundary.sql` aligned locally and remotely.
+- `20260625215612_harden_access_code_fail_closed.sql` aligned locally and remotely.
+- `20260626051352_harden_locked_tenant_writes.sql` aligned locally and remotely.
+
+Next batch prepared, not implemented:
+
+- Batch 2: production correction plus generated stock atomicity.
+- Target failures: `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`.
+- Invariant: production corrections must be transactionally safe; production logs and generated stock must reconcile exactly once; correcting production to downtime must not leave stale saleable stock; if stock has already been sold or dispatched, the correction must be blocked or routed through an explicit owner-authorized adjustment flow.
+
+Still out of scope until explicitly started:
+
+- Dispatch correctness.
+- Payroll business correctness.
+- Estimator.
+- Offline behavior.
+- Release gates.
+- Sentry.
+- npm audit.
+- Lockfile work.

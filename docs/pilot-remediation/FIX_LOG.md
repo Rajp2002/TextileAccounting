@@ -339,3 +339,38 @@ Data safety:
 - The runtime probe used disposable QA organizations and did not run broad production writes.
 
 Result: `AUTH-016` is pass-ready with migration-history, runtime, test, typecheck, lint, and diff-check evidence, pending human review and matrix promotion. Production/stock atomicity, dispatch correctness, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.
+
+## Security Foundation Closure
+
+Date/time: 2026-06-26 11:27 IST.
+
+Human decision: security foundation approved. The following failures are treated as pass-ready based on runtime/test evidence:
+
+- `SEC-002`
+- `SEC-003`
+- `SEC-004`
+- `SEC-005`
+- `SEC-006`
+- `AUTH-016`
+
+Closure evidence:
+
+- Batch 1A authorization boundary is covered by the profile authorization migration, SQL metadata proof, browser/runtime QA, and `__tests__/p0-authz-boundary.test.ts`.
+- Batch 1B-A access-code boundary is covered by the access-code migration, runtime disposable-org probe, and `__tests__/p0-access-code-boundary.test.ts`.
+- Batch 1B-B locked-tenant boundary is covered by the locked-tenant migration, runtime disposable locked/unlocked organization probe, and `__tests__/p0-locked-tenant-boundary.test.ts`.
+- Supabase migration history is aligned locally and remotely for `20260625195248`, `20260625215612`, and `20260626051352`.
+- `code_verified` was not treated as pass without runtime/test proof.
+
+Out of scope and still open for later batches:
+
+- Production correction and generated stock atomicity.
+- Dispatch correctness.
+- Payroll business correctness.
+- Estimator.
+- Offline behavior.
+- Release gates.
+- Sentry.
+- npm audit.
+- Lockfile work.
+
+Next prepared remediation batch: Batch 2, production correction plus generated stock atomicity, covering `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05`.
