@@ -10,18 +10,21 @@ import AuthLayout from '@/components/auth/auth-layout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PasswordSchema } from '@/lib/schemas'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
 const INVALID_LINK_MESSAGE = 'This reset link is invalid or expired. Please request a new password reset link.'
+const SESSION_CHECK_TIMEOUT_MS = 2500
 
 type RecoveryStatus = 'checking' | 'ready' | 'invalid'
 
 function validatePasswordForm(password: string, confirmPassword: string): Record<string, string> {
     const errors: Record<string, string> = {}
+    const passwordResult = PasswordSchema.safeParse(password)
 
-    if (password.length < 8) {
-        errors.password = 'Password must be at least 8 characters'
+    if (!passwordResult.success) {
+        errors.password = passwordResult.error.issues[0]?.message ?? 'Password does not meet requirements'
     }
 
     if (!confirmPassword) {
@@ -58,98 +61,56 @@ export default function ResetPasswordForm() {
 
     useEffect(() => {
         let cancelled = false
+        let invalidTimer: ReturnType<typeof setTimeout> | null = null
 
         const cleanResetUrl = () => {
             window.history.replaceState(null, '', window.location.pathname)
         }
 
-        const markReady = () => {
-            if (cancelled) return
+        const clearInvalidTimer = () => {
+            if (invalidTimer) {
+                clearTimeout(invalidTimer)
+                invalidTimer = null
+            }
+        }
+
+        const markReady = (session: Session | null) => {
+            if (cancelled || !session) return
+            clearInvalidTimer()
             cleanResetUrl()
             setStatus('ready')
         }
 
         const markInvalid = () => {
             if (cancelled) return
-            setStatus('invalid')
+            setStatus((current) => current === 'ready' ? current : 'invalid')
         }
 
-        const getCurrentUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            return user
-        }
-
-        const establishRecoverySession = async () => {
-            const url = new URL(window.location.href)
-            const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
-            const accessToken = hashParams.get('access_token')
-            const refreshToken = hashParams.get('refresh_token')
-            const linkType = hashParams.get('type') ?? url.searchParams.get('type')
-            const code = url.searchParams.get('code')
-            const hasRecoveryHint =
-                linkType === 'recovery' ||
-                url.searchParams.get('recovery') === '1' ||
-                !!code ||
-                (!!accessToken && !!refreshToken)
-
+        const checkCurrentSession = async () => {
             try {
-                if (accessToken && refreshToken) {
-                    const { data, error } = await supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: refreshToken,
-                    })
-
-                    if (error || !data.session) {
-                        markInvalid()
-                        return
-                    }
-
-                    markReady()
+                const { data: { session } } = await supabase.auth.getSession()
+                if (session) {
+                    markReady(session)
                     return
                 }
-
-                if (code) {
-                    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-
-                    if (!error && data.session) {
-                        markReady()
-                        return
-                    }
-
-                    const user = await getCurrentUser()
-                    if (user && hasRecoveryHint) {
-                        markReady()
-                        return
-                    }
-
-                    markInvalid()
-                    return
-                }
-
-                if (hasRecoveryHint) {
-                    const user = await getCurrentUser()
-                    if (user) {
-                        markReady()
-                        return
-                    }
-                }
-
-                markInvalid()
             } catch {
-                markInvalid()
+                // Fall through to the timeout below so the user still gets a stable loading state first.
+            }
+
+            if (!cancelled) {
+                invalidTimer = setTimeout(markInvalid, SESSION_CHECK_TIMEOUT_MS)
             }
         }
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
-            if (event === 'PASSWORD_RECOVERY' && session) {
-                markReady()
-            }
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+            markReady(session)
         })
 
-        void establishRecoverySession()
+        void checkCurrentSession()
 
         return () => {
             cancelled = true
+            clearInvalidTimer()
             subscription.unsubscribe()
         }
     }, [supabase])
@@ -226,7 +187,7 @@ export default function ResetPasswordForm() {
     return (
         <AuthLayout
             title="Choose a new password"
-            subtitle="Use at least 8 characters"
+            subtitle="Use 8+ characters with an uppercase letter and number"
         >
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 <div className="space-y-1.5">
@@ -237,7 +198,7 @@ export default function ResetPasswordForm() {
                         <Input
                             id="password"
                             type={showPassword ? 'text' : 'password'}
-                            placeholder="Min. 8 characters"
+                            placeholder="8+ chars, uppercase, number"
                             value={password}
                             onChange={(event) => {
                                 setPassword(event.target.value)
