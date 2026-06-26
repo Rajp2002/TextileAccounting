@@ -153,3 +153,43 @@ Resolution status:
 - `SEC-006` is pass-ready after human review and matrix promotion.
 - `AUTH-016` remains open and unmodified.
 - Production/stock, dispatch, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.
+
+## Batch 1B-B State
+
+Batch 1B-B targets `AUTH-016` only. `SEC-006` is not modified further and remains pass-ready from Batch 1B-A.
+
+Invariant:
+
+Locked organizations must fail closed for protected pilot business writes across UI/server actions, direct Supabase table access, RLS, and SECURITY DEFINER RPCs. Enforcement should be layered through centralized server-action guards, RLS predicates, and explicit RPC guards. Trigger enforcement is not the primary mechanism and was not added.
+
+Implemented locally:
+
+- Added centralized locked-organization write guard helpers in `lib/auth.ts`.
+- Added server-action lockdown guard coverage for service-role write paths in `app/(dashboard)/supervisor/actions.ts`.
+- Added a targeted owner service-role write guard in `app/(dashboard)/owner/actions.ts`.
+- Added migration `20260626051352_harden_locked_tenant_writes.sql` for RLS write predicates and explicit RPC lockdown guards on protected business write functions.
+- Added static regression tests in `__tests__/p0-locked-tenant-boundary.test.ts`.
+- Added runtime probe scaffold `scripts/qa/batch1b-locked-tenant-probe.mjs` for disposable locked/unlocked organization proof after the migration can be applied with approval.
+
+Evidence captured:
+
+- Human operator manually applied `20260626051352_harden_locked_tenant_writes.sql` with `npx supabase db push`. This proof pass did not rerun `npx supabase db push`, migration repair, `db pull`, direct SQL, or `--include-all`.
+- `npx supabase migration list` -> local and remote both include `20260626051352`.
+- Runtime probe: `node scripts/qa/batch1b-locked-tenant-probe.mjs` -> passed.
+- Runtime probe assertions passed: locked owner and supervisor login still work; unlocked owner and supervisor login still work; locked direct writes to `workers`, `fabric_stock_lots`, and `worker_advances` are denied; locked mutating `replace_shift_production_logs` RPC is denied; unlocked representative writes and the unlocked empty-batch RPC still work.
+- Focused test: `npx vitest run __tests__/p0-locked-tenant-boundary.test.ts` -> passed, 5 tests.
+- Broader relevant security test: `npx vitest run __tests__/p0-authz-boundary.test.ts __tests__/p0-access-code-boundary.test.ts __tests__/p0-locked-tenant-boundary.test.ts` -> passed, 18 tests.
+- `npx tsc --noEmit` -> passed.
+- Lint for touched Batch 1B-B files -> passed.
+- `git diff --check` -> passed.
+
+Data safety:
+
+- No production data cleanup was performed.
+- The runtime probe used disposable locked and unlocked organizations and cleaned them up.
+- No production/stock, dispatch, payroll business-correctness, estimator, offline, release-gate, Sentry, npm audit, or lockfile work was included.
+
+Resolution status:
+
+- `AUTH-016` is pass-ready after human review and matrix promotion.
+- Production/stock, dispatch, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.

@@ -279,3 +279,63 @@ Data safety:
 - Runtime consume/expiry/reuse checks used a disposable organization and cleaned up after the probe.
 
 Result: `SEC-006` is pass-ready with runtime/test/migration evidence, pending human review and matrix promotion. `AUTH-016`, production/stock, dispatch, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.
+
+## Batch 1B-B - AUTH-016 Locked-Tenant Write Boundary
+
+Date/time: 2026-06-26 10:58 IST.
+
+Scope: `AUTH-016` only. No production/stock atomicity, dispatch correctness, payroll business-correctness, estimator, offline, release-gate, Sentry, npm audit, lockfile, `SEC-006`, or other security work was included.
+
+Invariant:
+
+Locked organizations must not mutate protected pilot business data through UI, server actions, API routes, direct Supabase table access, RLS gaps, or SECURITY DEFINER RPCs. Unlocked organizations must continue normal writes. Lockdown is enforced primarily through centralized server-action guards, RLS predicates, and explicit RPC guards; no trigger was added as the primary enforcement mechanism.
+
+Pre-fix evidence:
+
+- QA finding `AUTH-016` remains open from the pre-pilot security batch: locked tenants were redirected at the UI layer but backend write surfaces still existed through direct table writes, service-role server actions, and privileged RPCs.
+- Existing policies included protected pilot tables without a consistent `NOT public.check_org_lockdown(org_id)` write predicate.
+- Existing service-role write paths in `app/(dashboard)/supervisor/actions.ts` obtained `getServiceClient()` directly after role checks, allowing locked organizations to reach admin writes if the UI redirect was bypassed.
+- Existing privileged RPCs mutated protected business data without an explicit internal `public.assert_org_not_locked(...)` guard.
+
+Implementation status:
+
+- Added central server guard helpers in `lib/auth.ts`:
+  - `assertOrgWritable(orgId)`
+  - `requireWritableOrg(allowedRoles)`
+  - `ORG_LOCKED_WRITE_MESSAGE`
+- Routed supervisor service-role write helpers through `assertOrgWritable(orgId)` before creating the admin client.
+- Added an owner service-role write guard for owner market-run/order helper writes.
+- Added migration `20260626051352_harden_locked_tenant_writes.sql` to harden locked-tenant writes with RLS predicates and explicit SECURITY DEFINER RPC guards.
+- Added static regression coverage in `__tests__/p0-locked-tenant-boundary.test.ts`.
+- Added runtime probe scaffold `scripts/qa/batch1b-locked-tenant-probe.mjs` for disposable locked/unlocked organization proof after the migration can be safely dry-run and applied.
+
+Migration safety summary:
+
+- The migration is intended as forward-looking schema/security hardening: function definitions, grants, RLS enablement, policy replacement, and explicit RPC guard injection.
+- It does not contain `DELETE FROM`, `TRUNCATE`, table/column drops, mass production data updates, or cleanup of existing production rows.
+- It does not add trigger-based primary enforcement.
+- The migration was manually applied by the human operator with `npx supabase db push`; this pass did not rerun `npx supabase db push`, migration repair, `db pull`, direct SQL, or `--include-all`.
+- `npx supabase migration list` now shows `20260626051352` aligned locally and remotely.
+
+Runtime proof:
+
+- Initial probe run exposed probe-only schema drift in the disposable seed payload (`workers.rate_per_meter`, then missing `fabric_stock_lots.original_meters`). The probe was corrected to match the current live schema without changing product logic or migration SQL.
+- `node scripts/qa/batch1b-locked-tenant-probe.mjs` -> passed.
+- Runtime assertions passed: locked owner login still works; locked supervisor login still works; unlocked owner login still works; unlocked supervisor login still works; locked org direct `workers` insert denied with RLS `42501`; locked org direct `fabric_stock_lots` insert denied with RLS `42501`; locked org direct `worker_advances` insert denied with RLS `42501`; locked org mutating `replace_shift_production_logs` RPC denied with `42501`; unlocked org representative `workers`, `fabric_stock_lots`, and `worker_advances` inserts still work; unlocked org empty-batch mutating RPC still works.
+- Runtime proof used disposable locked and unlocked organizations and cleaned them up after the probe.
+
+Final tests and checks:
+
+- `npx vitest run __tests__/p0-locked-tenant-boundary.test.ts` -> 1 file passed, 5 tests passed.
+- `npx vitest run __tests__/p0-authz-boundary.test.ts __tests__/p0-access-code-boundary.test.ts __tests__/p0-locked-tenant-boundary.test.ts` -> 3 files passed, 18 tests passed.
+- `npx tsc --noEmit` -> passed.
+- `npx eslint lib/auth.ts app/'(dashboard)'/owner/actions.ts app/'(dashboard)'/supervisor/actions.ts __tests__/p0-locked-tenant-boundary.test.ts scripts/qa/batch1b-locked-tenant-probe.mjs` -> passed.
+- `git diff --check` -> passed.
+
+Data safety:
+
+- No production data was mutated.
+- No production data cleanup was performed.
+- The runtime probe used disposable QA organizations and did not run broad production writes.
+
+Result: `AUTH-016` is pass-ready with migration-history, runtime, test, typecheck, lint, and diff-check evidence, pending human review and matrix promotion. Production/stock atomicity, dispatch correctness, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.

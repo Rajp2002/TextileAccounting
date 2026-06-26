@@ -2,7 +2,7 @@
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireRole } from '@/lib/auth'
+import { assertOrgWritable, requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import crypto from 'crypto'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
@@ -1561,6 +1561,8 @@ async function ensureActiveOrderForMarketRun(
     if (displayStatus !== 'production') {
         return { error: 'Only market runs still in production can be assigned to a loom.' }
     }
+
+    await assertOrgWritable(orgId)
 
     const admin = createAdminClient()
     const existingOrderId = run.order_id ? String(run.order_id) : null

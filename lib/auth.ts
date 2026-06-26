@@ -124,6 +124,31 @@ export async function requireRole(allowedRoles: string[]) {
     }
 }
 
+export const ORG_LOCKED_WRITE_MESSAGE = 'Organization is locked. Business writes are disabled until compliance unlock.'
+
+export async function assertOrgWritable(orgId: string) {
+    const admin = createAdminClient()
+    const { data, error } = await admin
+        .from('organizations')
+        .select('is_locked_down')
+        .eq('id', orgId)
+        .maybeSingle()
+
+    if (error) {
+        throw new Error('Unable to verify organization lock state.')
+    }
+
+    if (data?.is_locked_down) {
+        throw new Error(ORG_LOCKED_WRITE_MESSAGE)
+    }
+}
+
+export async function requireWritableOrg(allowedRoles: string[]) {
+    const result = await requireRole(allowedRoles)
+    await assertOrgWritable(result.profile.org_id)
+    return result
+}
+
 /**
  * getAuthenticatedUser — lightweight check for any authenticated user.
  * Use when you need org_id + user.id without a role restriction.

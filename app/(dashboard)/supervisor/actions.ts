@@ -2,7 +2,7 @@
 
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
-import { requireRole } from '@/lib/auth'
+import { assertOrgWritable, requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import {
@@ -54,6 +54,11 @@ function getServiceClient() {
     return createServiceClient(url, key, {
         auth: { autoRefreshToken: false, persistSession: false }
     })
+}
+
+async function getWritableServiceClient(orgId: string) {
+    await assertOrgWritable(orgId)
+    return getServiceClient()
 }
 
 function getLatestSubmittedAt(logs: Array<{ submitted_at: string | null }>) {
@@ -122,7 +127,7 @@ export async function savePastAttendance(
     // 2. Bypass RLS for past-date insert
     let serviceClient
     try {
-        serviceClient = getServiceClient()
+        serviceClient = await getWritableServiceClient(orgId)
     } catch {
         return { error: 'A server error occurred. Please try again later.' }
     }
@@ -178,7 +183,7 @@ export async function deleteMachineWithCode(machineId: string, accessCode: strin
 
     let serviceClient
     try {
-        serviceClient = getServiceClient()
+        serviceClient = await getWritableServiceClient(orgId)
     } catch {
         return { error: 'A server error occurred. Please try again later.' }
     }
@@ -217,7 +222,7 @@ export async function deleteWorker(workerId: number) {
 
     let serviceClient
     try {
-        serviceClient = getServiceClient()
+        serviceClient = await getWritableServiceClient(orgId)
     } catch {
         return { error: 'A server error occurred. Please try again later.' }
     }
@@ -257,7 +262,7 @@ export async function deleteWorkerWithCode(workerId: number, accessCode: string)
 
     let serviceClient
     try {
-        serviceClient = getServiceClient()
+        serviceClient = await getWritableServiceClient(orgId)
     } catch {
         return { error: 'A server error occurred. Please try again later.' }
     }
@@ -320,7 +325,7 @@ export async function startBeam(batchId: string, machineId: string) {
 
     let serviceClient
     try {
-        serviceClient = getServiceClient()
+        serviceClient = await getWritableServiceClient(orgId)
     } catch {
         return { error: 'A server error occurred. Please try again later.' }
     }
@@ -376,7 +381,7 @@ export async function linkOrderToMachine(orderId: string, machineId: string) {
 
     let serviceClient
     try {
-        serviceClient = getServiceClient()
+        serviceClient = await getWritableServiceClient(orgId)
     } catch {
         return { error: 'A server error occurred. Please try again later.' }
     }
@@ -428,7 +433,7 @@ export async function shiftHandover(machineId: string, shift: 'day' | 'night') {
 
     let serviceClient
     try {
-        serviceClient = getServiceClient()
+        serviceClient = await getWritableServiceClient(orgId)
     } catch {
         return { error: 'A server error occurred. Please try again later.' }
     }
@@ -505,7 +510,7 @@ export async function unconsumeBatchWithCode(batchId: string, accessCode: string
 
     let serviceClient
     try {
-        serviceClient = getServiceClient()
+        serviceClient = await getWritableServiceClient(orgId)
     } catch {
         return { error: 'A server error occurred. Please try again later.' }
     }
