@@ -121,6 +121,31 @@ Required proof:
 - Due date starts from the first dispatch under the active product rule.
 - Profit filters classify manual, market-run, and order stock by authoritative source fields.
 
+## Estimator Costing
+
+Estimator costing must be deterministic, explainable, and honest. The engine must not silently tune formula-derived weights to match practical factory weights.
+
+Core equations:
+
+```text
+warp formula base kg/100m = denier x beam ends / 90000
+weft formula base kg/100m = denier x PPI x effective costing width inches / 90000
+warp final kg/100m = base kg/100m x (1 + warp crimp % + waste %)
+weft final kg/100m = base kg/100m x (1 + waste %)
+cost per meter = final kg/100m x rate per kg / 100
+```
+
+Required proof:
+
+- Manual kg/100m mode and formula mode use the same cost engine once base kg/100m is chosen.
+- Formula-equivalent manual inputs match formula mode within the business tolerance.
+- Formula mode exposes formula-derived kg/100m when it differs from practical/manual consumption.
+- Warp crimp applies only to warp; weft receives waste only.
+- Blank row waste uses the default, explicit `0` overrides the default to zero, and row waste does not stack with default waste.
+- Effective costing width, not finished/market pano, drives weft formula costing.
+- Suspicious cm inputs such as `62 cm` surface a width warning before they silently under-cost weft.
+- Cost Breakdown and restored quote details show mode, formula/manual base kg, adjustments, final kg, rate, and cost.
+
 ## Payroll and Kharchi
 
 Payroll is derived from production logs, stored rate snapshots, attendance, statutory settings, advances, and manual adjustments. Kharchi must affect worker advance and supervisor float ledgers atomically.
@@ -175,4 +200,3 @@ Required proof:
 - Production migration head equals approved repository migration head.
 - Sentry release/source maps exist for the deployed commit.
 - Backup restore and rollback/forward-fix are exercised in disposable infrastructure.
-

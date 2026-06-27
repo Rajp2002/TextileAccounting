@@ -18,7 +18,7 @@ Rules for entries:
 | `SEC-C` webhook/export/compliance fail-closed | Open | Some items may require de-scope or counsel review. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
-| `ECON-A` estimator/quote/order/date snapshot correctness | Open | Medium failures, but must close before Golden A can be trusted. |
+| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Server-boundary validation, idempotency, quote/order lifecycle, and date snapshot rows remain open. |
 | `DISP-A` multi-batch dispatch identity | Open | Blocks Golden B. |
 | `DISP-B` receipt-state coherence | Open | Blocks difference sign-off. |
 | `COMM-A` sales/receivables/profit boundary | Open | Includes sale idempotency and direct market-run sale bypass. |
@@ -471,3 +471,103 @@ Resolution status:
 - Code, migration, regression tests, runtime proof, and active matrix closeout are complete for this Batch 2 scope.
 - `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
 - Remaining dashboard/signoff rows outside `SIGNOFF-05` stay open in `DASH-A`.
+
+## Estimator Reconciliation Sprint - Costing Formula/Manual Audit
+
+Date/time: 2026-06-28 00:54 IST.
+
+Scope:
+
+- Estimator costing engine only.
+- Manual kg/100m override mode.
+- Formula mode and formula-equivalent manual parity.
+- Finished/market pano versus effective costing width handling.
+- Waste/crimp semantics.
+- Cost Breakdown audit UI.
+- Quote save/reopen cost-audit preservation.
+
+Out of scope:
+
+- `ECON-A` server-boundary validation for impossible estimates.
+- Estimator save/market-run idempotency.
+- Quote/order lifecycle transition model.
+- Order target/deadline audit and produced-meter guards.
+- Date-only rendering under multiple timezones.
+- Production deployment verification.
+
+Invariant:
+
+Estimator costing must be deterministic, explainable, and honest. Formula rows must use the formula-derived kg/100m unless the user explicitly switches the row to manual kg/100m. Manual rows must use the entered base kg/100m. Warp crimp applies only to warp. Waste applies to warp and weft. Blank row waste uses the default, explicit row waste `0` overrides the default to zero, and row waste does not stack with default waste. The audit UI must show exactly the values used by the engine.
+
+Implementation status:
+
+- Added manual kg/100m calculation mode for warp and weft layers.
+- Added formula/manual audit fields to `calcFullTotals(...)`, including formula kg, base kg used, crimp %, waste %, total adjustment %, final kg/100m, rate, and cost/m.
+- Fixed weft costing so warp crimp no longer applies to weft.
+- Split finished/market width from effective costing width and defaulted fresh estimator sessions to inches.
+- Added width warnings for suspicious cm inputs such as `62 cm`, which costs as only `24.4 inches`.
+- Fixed row-waste semantics: blank uses default, explicit `0` overrides to zero, and row waste does not stack with default waste.
+- Added a visible Cost Breakdown audit panel that explains formula/manual mode and every cost line.
+- Added quote detail/restore audit rendering for saved estimator quotes.
+- Fixed a hydration mismatch by rendering a deterministic initial width unit and loading persisted width unit after mount.
+- Updated template legacy `reed_space` snapshots to use effective costing width.
+
+Files changed:
+
+- `lib/estimator.ts`
+- `app/(dashboard)/owner/estimator/EstimatorClient.tsx`
+- `components/cost-analysis-details.tsx`
+- `app/(dashboard)/owner/estimator/actions.ts`
+- `__tests__/estimator.test.ts`
+- `__tests__/width-field.test.ts`
+
+Calculation QA evidence:
+
+- Practical manual regression:
+  - `50/600`: `3.800 -> 4.180 kg/100m`, `₹7.98/m`
+  - `Jari`: `3.300 -> 3.630 kg/100m`, `₹12.34/m`
+  - `40 spun`: `6.500 -> 7.150 kg/100m`, `₹14.09/m`
+  - Yarn total: `₹34.41/m`
+  - With `₹21.50/m` other cost: `₹55.91/m`
+  - With `₹21.75/m` other cost: `₹56.16/m`
+- Formula real factory specs:
+  - `50/600`: base `3.789`, final `4.547`, `20.0%` adjustment, `₹8.68/m`
+  - `Jari`: base `3.307`, final `3.968`, `20.0%` adjustment, `₹13.49/m`
+  - `50 span/spun`: base `5.456`, final `6.002`, `10.0%` adjustment, `₹11.82/m`
+  - Production cost: `₹55.75/m`
+- Formula-equivalent manual mode:
+  - Production cost: `₹55.75/m`
+  - Difference from formula mode: `₹0.00/m`
+
+Browser/runtime QA evidence:
+
+- Estimator UI loaded in a QA owner session on local dev.
+- Fresh estimator sessions render width unit as inches.
+- Entering effective width `62 cm` produced the low formula result `₹48.58/m` and displayed the warning that `62 cm` is only `24.4 inches` and asks whether the user meant `62 inches`.
+- Switching the same width to `62 inch` produced `₹55.75/m`.
+- Warp rows showed `10.0% crimp + 10.0% waste = 20.0%`.
+- Weft row showed `0.0% crimp + 10.0% waste = 10.0%`.
+- Explicit row waste `0` overrode default waste and dropped the first practical warp row to `₹7.26/m`.
+- Explicit row waste `10` did not stack with default waste and restored `₹7.98/m`.
+- Saving quote `QA Formula Factory / DNO Practical Manual` created a quote at `₹56.16/m`; Quotes -> Restore reopened the estimator with the same rows and `₹56.16/m` audit.
+
+Verification commands:
+
+- `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` -> passed, 2 files, 31 tests.
+- `npx vitest run` -> passed, 33 files, 298 passed, 1 skipped.
+- `npx tsc --noEmit` -> passed.
+- `npm run build` -> passed.
+- `npm run lint -- __tests__/estimator.test.ts __tests__/width-field.test.ts lib/estimator.ts app/(dashboard)/owner/estimator/EstimatorClient.tsx app/(dashboard)/owner/estimator/actions.ts components/cost-analysis-details.tsx` -> passed.
+- `npm run lint` -> failed only on existing unrelated `scratch/*.js` CommonJS `require()` lint errors.
+
+Data safety:
+
+- Browser QA used a QA owner session.
+- A draft estimator quote was created for QA evidence.
+- No production data mutation or database migration was performed.
+
+Resolution status:
+
+- Estimator costing reconciliation is complete for the scoped formula/manual/manual-practical costing sprint.
+- Active QA matrix rows are not promoted by this closeout because existing `ECON-A` rows also cover server-boundary validation, idempotency, quote/order lifecycle, and date rendering that remain outside this sprint.
+- `ECON-A` remains open for those remaining rows.
