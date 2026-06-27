@@ -29,7 +29,9 @@ Do not use passing lint/build/source checks to resolve runtime failures.
 
 Failures targeted: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
 
-Follow-on checks: `AUTH-016`, `AUTH-012`, `AUTH-013`, `SEC-013`
+Security foundation follow-on rows closed in Batch 1B: `SEC-006`, `AUTH-016`
+
+Other follow-on checks that remain open unless separately proven: `AUTH-008`, `AUTH-012`, `AUTH-013`, `SEC-013`, `PAY-018`, `PAY-020`
 
 ### Acceptance Criteria
 
@@ -101,7 +103,37 @@ Evidence to save:
 
 ### Batch 01 Closure Rule
 
-Close `SEC-002`, `SEC-003`, `SEC-004`, and `SEC-005` only when all acceptance criteria pass. If `AUTH-016` is not fixed in the same implementation, keep it open and create the next security batch for lockdown policy coverage.
+Historical closure rule: close `SEC-002`, `SEC-003`, `SEC-004`, and `SEC-005` only when all acceptance criteria pass. If `AUTH-016` is not fixed in the same implementation, keep it open and create the next security batch for lockdown policy coverage.
+
+Retrospective closeout status: satisfied. `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` are documented as pass/pass-ready and promoted to pass in the active QA matrix.
+
+Security migrations applied/aligned:
+
+- `20260625195248_harden_profile_authorization_boundary.sql`
+- `20260625215612_harden_access_code_fail_closed.sql`
+- `20260626051352_harden_locked_tenant_writes.sql`
+
+Security proof commands recorded:
+
+```bash
+node scripts/qa/batch1a-authz-boundary-probe.mjs
+npx vitest run __tests__/p0-authz-boundary.test.ts
+node scripts/qa/batch1b-access-code-probe.mjs
+npx vitest run __tests__/p0-access-code-boundary.test.ts
+node scripts/qa/batch1b-locked-tenant-probe.mjs
+npx vitest run __tests__/p0-locked-tenant-boundary.test.ts
+npx vitest run __tests__/p0-authz-boundary.test.ts __tests__/p0-access-code-boundary.test.ts __tests__/p0-locked-tenant-boundary.test.ts
+npx tsc --noEmit
+git diff --check
+```
+
+Targeted ESLint commands were also run for the Batch 1A, Batch 1B-A, and Batch 1B-B proof files as recorded in `FIX_LOG.md`.
+
+Batch 1 proof summary:
+
+- `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`: profile authorization fields are hardened; supervisor role/org mutation and token-refresh escalation are denied; owner/supervisor normal paths are preserved.
+- `SEC-006`: access-code validation is centralized, fail-closed, attempt-limited, expiry-bound, single-use, and no longer relies on recoverable plaintext storage.
+- `AUTH-016`: locked-organization writes are denied through RLS/RPC/server guard coverage; unlocked writes and owner/supervisor login still work.
 
 ## P1 Production and Stock Retest
 

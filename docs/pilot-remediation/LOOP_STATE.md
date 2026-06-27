@@ -14,18 +14,20 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 2 documentation closeout:
+Current classification after Batch 1 security foundation closeout and Batch 2 documentation closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 131 | Runtime/test evidence exists. |
-| `fail` | 84 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 137 | Runtime/test evidence exists. |
+| `fail` | 78 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 30 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
-Critical failures: 4. High failures: 30. Critical blocked golden-journey follow-ons: 14.
+Critical failures: 0. High failures: 28. Critical blocked golden-journey follow-ons: 14.
+
+Batch 1 security foundation moved `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` from fail to pass with runtime/test/migration evidence. `AUTH-008`, `PAY-018`, `PAY-020`, external webhook/export/compliance security rows, release gates, and unrelated unresolved failures remain open.
 
 Batch 2 moved `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` from fail to pass with runtime/test evidence. Downstream Golden A rows that were not rerun end-to-end remain blocked until a clean order chain is retested or explicitly de-scoped.
 
@@ -68,7 +70,7 @@ Priority source:
 Failure IDs in batch:
 
 - Critical: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
-- Kept open for Batch 1B or later security batches: `SEC-006`, `AUTH-016`, `AUTH-012`, `AUTH-013`, `SEC-013`
+- Deferred from Batch 1A: `SEC-006` and `AUTH-016` were closed later in Batch 1B; `AUTH-012`, `AUTH-013`, and `SEC-013` remain outside Batch 1 security foundation closeout.
 
 Batch 1A objective:
 
@@ -76,7 +78,7 @@ Authenticated users must not be able to mutate role, organization, or any other 
 
 Out of scope for Batch 1A:
 
-- `SEC-006` and `AUTH-016`, unless directly affected by the profile authorization-boundary fix.
+- `SEC-006` and `AUTH-016`, which were deferred from Batch 1A and closed later in Batch 1B.
 - Production correction/stock atomicity.
 - Dispatch package numbering and receipt-state repair.
 - Payroll legacy RPC removal.
@@ -96,7 +98,7 @@ Batch 1A is accepted only when all of the following are true:
 
 ## Current Batch State
 
-Batch 1A (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`) is implemented and review-ready with evidence in `FIX_LOG.md`.
+Batch 1A (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`) is closed with evidence in `FIX_LOG.md` and active matrix rows promoted to pass.
 
 Evidence captured:
 
@@ -108,14 +110,14 @@ Evidence captured:
 
 Resolution status:
 
-- `SEC-002`, `SEC-003`, `SEC-004`, and `SEC-005` are candidates for matrix promotion to pass after human review.
+- `SEC-002`, `SEC-003`, `SEC-004`, and `SEC-005` are documented as pass in the active matrix.
 - `code_verified` is still not treated as pass.
-- `SEC-006` and `AUTH-016` remain open for Batch 1B.
+- `SEC-006` and `AUTH-016` are closed separately by Batch 1B.
 - No production/stock, dispatch, payroll, estimator, offline, npm audit, Sentry, release-gate, or migration-drift work was included in Batch 1A.
 
 ## Batch 1B-A State
 
-Batch 1B-A targets `SEC-006` only. `AUTH-016` remains open and unmodified.
+Batch 1B-A targets `SEC-006` only. `AUTH-016` was out of scope for this sub-batch and closed later in Batch 1B-B.
 
 Invariant:
 
@@ -152,8 +154,8 @@ Data safety:
 
 Resolution status:
 
-- `SEC-006` is pass-ready after human review and matrix promotion.
-- `AUTH-016` remains open and unmodified.
+- `SEC-006` is documented as pass in the active matrix.
+- `AUTH-016` is closed separately by Batch 1B-B.
 - Production/stock, dispatch, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.
 
 ## Batch 1B-B State
@@ -193,14 +195,14 @@ Data safety:
 
 Resolution status:
 
-- `AUTH-016` is pass-ready after human review and matrix promotion.
+- `AUTH-016` is documented as pass in the active matrix.
 - Production/stock, dispatch, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.
 
 ## Security Foundation Closed
 
 Date/time: 2026-06-26 11:27 IST.
 
-Human decision: security foundation approved. Pass-ready failures:
+Human decision: security foundation approved. Pass/pass-ready failures documented as pass in the active matrix:
 
 - `SEC-002`
 - `SEC-003`
@@ -214,6 +216,7 @@ Committed and pushed security batches:
 - Batch 1A authorization boundary: `76a25a3` plus evidence/migration-history closure commits `ff1ddb0` and `704cb54`.
 - Batch 1B-A access-code boundary: `77a0382`.
 - Batch 1B-B locked-tenant boundary: `e2e0cf1`.
+- Security foundation documentation closure: `d98f2f2`.
 
 Supabase migration history:
 

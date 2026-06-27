@@ -8,8 +8,7 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 
 | Priority band | Root-cause cluster | Failed matrix IDs |
 | --- | --- | --- |
-| P0 | `SEC-A` mutable profile authorization | `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005` |
-| P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008`, `AUTH-016`, `SEC-006`, `PAY-018`, `PAY-020` |
+| P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008`, `PAY-018`, `PAY-020` |
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-016`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, `TIME-002` |
@@ -26,45 +25,49 @@ Blocked rows also remain unresolved evidence debt. Critical or high blocked rows
 
 Medium blocked rows still need evidence or explicit pilot de-scope, but they do not outrank critical/high business-data and security repair: `AUTH-014`, `AUTH-015`, `AUTH-018`, `BILL-006`, `BILL-007`, `BILL-009`, `BILL-010`, `GOLDEN-A-03`, `SIGNOFF-04`, `UX-012`, `WA-010`. `SEC-011` is blocked for Sentry event inspection and stays tied to release/security evidence.
 
+Closed in Batch 1 and removed from the open failure coverage rows: security foundation (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, `AUTH-016`). `SEC-A` is closed; `SEC-B` remains open only for `AUTH-008`, `PAY-018`, and `PAY-020`.
+
 Closed in Batch 2 and removed from the open failure coverage rows: `PROD-A` production correction and generated stock atomicity (`PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`). `SIGNOFF-05` is also removed from open `DASH-A`; remaining dashboard/signoff rows stay open.
 
-## P0 SEC-A - Mutable Profile Authorization Boundary
+## Closed SEC-A - Mutable Profile Authorization Boundary
 
-Failures: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
+Closed rows: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
 
-Evidence: `logs/security-review.json`, `FINAL_REPORT.md`, `FAILURE_DATA_IMPACT_REPORT.md`
+Evidence: `logs/security-review.json`, `FINAL_REPORT.md`, `FAILURE_DATA_IMPACT_REPORT.md`, `docs/pilot-remediation/FIX_LOG.md`, active QA matrix closeout.
 
 Invariant: role, tenant, and custom authorization claims are server-owned authority. A tenant user must not be able to change the fields used to authorize owner/supervisor/admin behavior.
 
-Impact: all domains are corruptible. A supervisor can self-update to owner in a rolled-back production probe and then receive owner claims after token refresh.
+Original impact: all domains were corruptible. A supervisor could self-update to owner in a rolled-back production probe and then receive owner claims after token refresh.
 
-Remediation direction:
+Resolution:
 
-- Revoke direct update privileges on authorization columns.
-- Replace permissive profile update policy with field-safe policy or owner/service controlled mutation path.
-- Ensure custom access-token hook derives only from protected data.
-- Add runtime regression probes for supervisor self-escalation and owner route/action denial.
+- Migration `20260625195248_harden_profile_authorization_boundary.sql` was applied and aligned locally/remotely.
+- Direct authenticated updates to `profiles.id`, `profiles.role`, and `profiles.org_id` are denied; allowed direct profile updates are limited to non-authorization preference fields.
+- Runtime probe `node scripts/qa/batch1a-authz-boundary-probe.mjs` passed with role/org mutation denied, token refresh preserving supervisor/original-org claims, owner-only RPC denied for supervisor, and owner login preserved.
+- `npx vitest run __tests__/p0-authz-boundary.test.ts` passed 5 tests.
+- Browser QA confirmed supervisor `/owner/today` access redirected to `/supervisor/dashboard`, supervisor owner-only API returned 403, and owner `/owner/today` loaded.
 
-Required proof: Batch 01 acceptance in `LOOP_STATE.md` and `RETEST_PLAN.md`.
+Required proof: satisfied by Batch 1A runtime/test/browser evidence, migration alignment, and active matrix promotion to pass.
 
 ## P0 SEC-B - Privileged Action and Lockdown Enforcement Is Inconsistent
 
-Failures: `AUTH-016`, `SEC-006`, `AUTH-008`, `PAY-018`, `PAY-020`
+Failures: `AUTH-008`, `PAY-018`, `PAY-020`
+
+Closed in Batch 1: `SEC-006`, `AUTH-016`
 
 Evidence: `logs/auth-security-time-code-evidence-20260624.json`, `logs/security-access-code-evidence.json`, `logs/payroll-kharchi-source-evidence-20260624.json`
 
 Invariant: protected owner actions, access-code actions, locked-tenant writes, and join-code validation fail closed and are consistently rate-limited. Legacy privileged RPCs cannot bypass the app-level authorization trail.
 
-Impact: locked tenants can still mutate some core tables; access-code brute-force and legacy payroll settlement/reversal paths can bypass intended controls.
+Impact: join-code brute-force/rate-limit coverage and legacy payroll settlement/reversal paths can still bypass intended controls. Batch 1 closed access-code validation (`SEC-006`) and locked-tenant write enforcement (`AUTH-016`).
 
 Remediation direction:
 
-- Centralize access-code validation and failure recording.
-- Remove plaintext access-code exposure from active runtime paths.
+- Add join-code attempt tracking/rate limiting without noisy production lockout.
 - Revoke or replace legacy payroll settlement/reversal RPC execute grants.
-- Add lockdown-aware policies/checks to all pilot write tables or explicitly de-scope locked-tenant write testing from pilot.
+- Keep Batch 1 access-code and locked-tenant boundaries under regression while closing the remaining SEC-B rows.
 
-Required proof: SQL policy/grant metadata, rollback-only QA probes, and browser checks for locked tenants and access-code failure paths.
+Required proof: SQL policy/grant metadata, rollback-only QA probes, and browser checks for remaining join-code and payroll privileged-action paths. `SEC-006` proof is satisfied by `node scripts/qa/batch1b-access-code-probe.mjs`, `npx vitest run __tests__/p0-access-code-boundary.test.ts`, and migration `20260625215612_harden_access_code_fail_closed.sql`; `AUTH-016` proof is satisfied by `node scripts/qa/batch1b-locked-tenant-probe.mjs`, `npx vitest run __tests__/p0-locked-tenant-boundary.test.ts`, and migration `20260626051352_harden_locked_tenant_writes.sql`.
 
 ## P0 SEC-C - External Webhooks and Compliance Surfaces Do Not Fail Closed
 

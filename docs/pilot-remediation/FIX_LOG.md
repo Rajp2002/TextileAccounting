@@ -13,8 +13,8 @@ Rules for entries:
 
 | Cluster | Status | Notes |
 | --- | --- | --- |
-| `SEC-A` mutable profile authorization | Review ready for Batch 1A | `SEC-002` through `SEC-005` have post-fix test/runtime evidence below. Matrix rows are not edited here. |
-| `SEC-B` privileged action/lockdown enforcement | Open | Security follow-up after `SEC-A`, unless implementation safely includes it. |
+| `SEC-A` mutable profile authorization | Closed in Batch 1 / pass | `SEC-002` through `SEC-005` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
+| `SEC-B` privileged action/lockdown enforcement | Partially closed in Batch 1 / open remainder | Batch 1 closed `SEC-006` and `AUTH-016` with runtime/test evidence and active matrix rows promoted to pass. `AUTH-008`, `PAY-018`, and `PAY-020` remain open. |
 | `SEC-C` webhook/export/compliance fail-closed | Open | Some items may require de-scope or counsel review. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
@@ -50,7 +50,7 @@ Status: review ready.
 
 Failures targeted: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`.
 
-Scope note: this is Batch 1A only. `SEC-006` and `AUTH-016` remain open for Batch 1B unless directly affected by this authorization-boundary fix.
+Scope note: this is Batch 1A only. `SEC-006` and `AUTH-016` were deferred from Batch 1A and closed later in Batch 1B.
 
 Invariant: role, tenant, and custom authorization claims are server-owned authority. A tenant user must not be able to change the fields used to authorize owner/supervisor/admin behavior.
 
@@ -174,7 +174,7 @@ Data safety:
 - The probe scripts restore the QA supervisor profile in `finally`.
 - No destructive production data changes were made. The applied DDL changes grants, policies, and a trigger only.
 
-Result: `resolved_with_evidence` for Batch 1A scope (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`), pending human review and matrix promotion. `SEC-006`, `AUTH-016`, release gates, npm audit, Sentry, migration drift, production/stock, dispatch, payroll, estimator, and offline remain open/out of scope.
+Result: `resolved_with_evidence` for Batch 1A scope (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`). These rows are promoted to pass in the active matrix by the retrospective Batch 1 security foundation closeout. `SEC-006` and `AUTH-016` are closed separately by Batch 1B. Release gates, npm audit, Sentry, production/stock outside later Batch 2 closure, dispatch, payroll, estimator, and offline remain open/out of scope.
 
 ## Batch 1B-A - SEC-006 Access-Code Fail-Closed Boundary
 
@@ -182,7 +182,7 @@ Result: `resolved_with_evidence` for Batch 1A scope (`SEC-002`, `SEC-003`, `SEC-
 
 Date/time started: 2026-06-26 03:24 IST.
 
-Scope is `SEC-006` only. `AUTH-016`, production/stock, dispatch, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, lockfile, and unrelated security findings remain out of scope unless directly required to prove `SEC-006`.
+Scope is `SEC-006` only. `AUTH-016` was out of scope for this sub-batch and closed later in Batch 1B-B. Production/stock, dispatch, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, lockfile, and unrelated security findings remained out of scope unless directly required to prove `SEC-006`.
 
 ### Invariant
 
@@ -278,7 +278,7 @@ Data safety:
 - Existing non-null `organizations.last_code_plain` values were not cleared, updated, or backfilled.
 - Runtime consume/expiry/reuse checks used a disposable organization and cleaned up after the probe.
 
-Result: `SEC-006` is pass-ready with runtime/test/migration evidence, pending human review and matrix promotion. `AUTH-016`, production/stock, dispatch, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.
+Result: `SEC-006` is pass-ready with runtime/test/migration evidence and is promoted to pass in the active matrix by the retrospective Batch 1 security foundation closeout. `AUTH-016` is closed separately by Batch 1B-B. Production/stock outside later Batch 2 closure, dispatch, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.
 
 ## Batch 1B-B - AUTH-016 Locked-Tenant Write Boundary
 
@@ -338,13 +338,13 @@ Data safety:
 - No production data cleanup was performed.
 - The runtime probe used disposable QA organizations and did not run broad production writes.
 
-Result: `AUTH-016` is pass-ready with migration-history, runtime, test, typecheck, lint, and diff-check evidence, pending human review and matrix promotion. Production/stock atomicity, dispatch correctness, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.
+Result: `AUTH-016` is pass-ready with migration-history, runtime, test, typecheck, lint, and diff-check evidence and is promoted to pass in the active matrix by the retrospective Batch 1 security foundation closeout. Production/stock atomicity is closed later by Batch 2; dispatch correctness, payroll business correctness, estimator, offline, release gates, Sentry, npm audit, and lockfile work remain open/out of scope.
 
 ## Security Foundation Closure
 
 Date/time: 2026-06-26 11:27 IST.
 
-Human decision: security foundation approved. The following failures are treated as pass-ready based on runtime/test evidence:
+Human decision: security foundation approved. The following failures are treated as pass/pass-ready based on runtime/test evidence and are documented as pass in the active QA matrix:
 
 - `SEC-002`
 - `SEC-003`
@@ -360,6 +360,37 @@ Closure evidence:
 - Batch 1B-B locked-tenant boundary is covered by the locked-tenant migration, runtime disposable locked/unlocked organization probe, and `__tests__/p0-locked-tenant-boundary.test.ts`.
 - Supabase migration history is aligned locally and remotely for `20260625195248`, `20260625215612`, and `20260626051352`.
 - `code_verified` was not treated as pass without runtime/test proof.
+
+Security commits/evidence:
+
+- Batch 1A authorization boundary: `76a25a3` (`fix(authz): harden profile authorization boundary`), `ff1ddb0` (`docs(qa): close Batch 1A authorization evidence`), and `704cb54` (`chore(db): reconcile Batch 1A migration history`).
+- Batch 1B-A access-code boundary: `77a0382` (`fix(security): harden access-code validation`).
+- Batch 1B-B locked-tenant boundary: `e2e0cf1` (`fix(security): enforce locked-tenant write boundary`).
+- Security foundation closure: `d98f2f2` (`docs(qa): close security foundation`).
+
+Security migrations applied/aligned:
+
+- `20260625195248_harden_profile_authorization_boundary.sql`.
+- `20260625215612_harden_access_code_fail_closed.sql`.
+- `20260626051352_harden_locked_tenant_writes.sql`.
+
+Proof commands recorded:
+
+- `node scripts/qa/batch1a-authz-boundary-probe.mjs`.
+- `npx vitest run __tests__/p0-authz-boundary.test.ts`.
+- `node scripts/qa/batch1b-access-code-probe.mjs`.
+- `npx vitest run __tests__/p0-access-code-boundary.test.ts`.
+- `node scripts/qa/batch1b-locked-tenant-probe.mjs`.
+- `npx vitest run __tests__/p0-locked-tenant-boundary.test.ts`.
+- `npx vitest run __tests__/p0-authz-boundary.test.ts __tests__/p0-access-code-boundary.test.ts __tests__/p0-locked-tenant-boundary.test.ts`.
+- `npx tsc --noEmit`.
+- Targeted `npx eslint ...` commands listed in the Batch 1A, Batch 1B-A, and Batch 1B-B entries above.
+- `git diff --check`.
+
+Active matrix result:
+
+- `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` are promoted to pass.
+- `AUTH-008`, `PAY-018`, `PAY-020`, `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-016`, `SEC-017`, and other unrelated unresolved failures remain open.
 
 Out of scope and still open for later batches:
 
