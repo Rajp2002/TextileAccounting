@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session Docs Closeout"
+  short_description: "Close remediation docs with evidence discipline"
+  default_prompt: "Use $session-docs-closeout to propose evidence-backed Weavly remediation documentation updates."
