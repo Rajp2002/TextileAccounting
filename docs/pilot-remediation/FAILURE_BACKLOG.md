@@ -11,13 +11,12 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P0 | `SEC-A` mutable profile authorization | `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005` |
 | P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008`, `AUTH-016`, `SEC-006`, `PAY-018`, `PAY-020` |
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-016`, `SEC-017` |
-| P1 | `PROD-A` production correction and generated stock atomicity | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, `TIME-002` |
 | P2 | `DISP-A` multi-batch dispatch identity | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, `SIGNOFF-10` |
 | P2 | `DISP-B` receipt state and difference queue coherence | `DISP-007`, `DISP-010`, `DISP-019`, `SIGNOFF-08` |
 | P2 | `COMM-A` sales, receivables, stock audit, and profit boundaries | `SALE-015`, `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `STOCK-016`, `STOCK-017`, `SIGNOFF-06`, `SIGNOFF-09` |
-| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `DASH-007`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-05`, `SIGNOFF-06`, `SIGNOFF-07`, `SIGNOFF-08`, `SIGNOFF-09`, `SIGNOFF-10` |
+| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `DASH-007`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-06`, `SIGNOFF-07`, `SIGNOFF-08`, `SIGNOFF-09`, `SIGNOFF-10` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `PAY-028`, `OFF-008`, `DASH-003` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `SALE-015`, `OFF-009` |
 | P4 | `OFF-A` offline, cache, and public claims | `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-008`, `OFF-010`, `SEC-016` |
@@ -26,6 +25,8 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 Blocked rows also remain unresolved evidence debt. Critical or high blocked rows must be re-run or de-scoped before pilot: `TECH-011`, `TECH-012`, `BILL-003`, `SEC-018`, `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `GOLDEN-A-24`, `GOLDEN-B-12`, `GOLDEN-B-17`, `GOLDEN-B-18`.
 
 Medium blocked rows still need evidence or explicit pilot de-scope, but they do not outrank critical/high business-data and security repair: `AUTH-014`, `AUTH-015`, `AUTH-018`, `BILL-006`, `BILL-007`, `BILL-009`, `BILL-010`, `GOLDEN-A-03`, `SIGNOFF-04`, `UX-012`, `WA-010`. `SEC-011` is blocked for Sentry event inspection and stays tied to release/security evidence.
+
+Closed in Batch 2 and removed from the open failure coverage rows: `PROD-A` production correction and generated stock atomicity (`PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`). `SIGNOFF-05` is also removed from open `DASH-A`; remaining dashboard/signoff rows stay open.
 
 ## P0 SEC-A - Mutable Profile Authorization Boundary
 
@@ -85,26 +86,27 @@ Remediation direction:
 
 Required proof: webhook negative probes, export audit evidence, filename tests, and documented counsel sign-off or explicit de-scope.
 
-## P1 PROD-A - Production Correction Is Not Atomic With Generated Stock
+## Closed PROD-A - Production Correction Is Not Atomic With Generated Stock
 
-Failures: `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`
+Closed rows: `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`
 
 Blocked follow-ons: `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `GOLDEN-A-24`
 
-Evidence: `logs/business-reconciliation.json`
+Evidence: `docs/pilot-remediation/FIX_LOG.md`, `docs/pilot-remediation/LOOP_STATE.md`, active QA matrix closeout.
 
 Invariant: generated order stock equals current valid positive production logs exactly once. Correcting a production row to downtime must update or reverse generated stock in the same transaction.
 
-Impact: current customer-order production reconciled to 230.75m, but order stock showed 256.00m because a stale 25.25m lot remained. Operators could sell, dispatch, value, or sign off stock that should not exist.
+Original impact: current customer-order production reconciled to 230.75m, but order stock showed 256.00m because a stale 25.25m lot remained. Operators could sell, dispatch, value, or sign off stock that should not exist.
 
-Remediation direction:
+Resolution:
 
-- Move production replacement and generated stock reconciliation into one transaction/RPC.
-- Store a stable production-log/source reference for generated lots or movements.
-- Recompute or delta-apply stock when a production log is edited to zero/downtime.
-- Block correction after settlement where required.
+- Batch 2 migration `20260626064830_production_stock_atomicity.sql` was human-approved, applied, and aligned locally/remotely.
+- Production replacement and generated stock reconciliation now run in one RPC transaction and reconcile old and new affected grains.
+- Runtime proof created 256.00m production, corrected stale 25.25m Night production to downtime, and proved `production_logs`, generated stock, Factory Today, stock summary, and signoff expected stock read 230.75m.
+- No stale 25.25m saleable lot remained; reversal movement was recorded exactly once; retry did not duplicate stock or movements; sale over corrected-away stock, reduction below sold quantity, and dispatch/receipt-history correction paths were blocked.
+- Factory Today/signoff read-model mismatch was fixed by using `order_progress_summary.total_meters_produced`.
 
-Required proof: regression tests for correction-to-downtime, edit delta, duplicate submit, and runtime QA showing logs, stock lots, stock movements, and dashboard agree.
+Required proof: satisfied by Batch 2 targeted Vitest (8 tests), broader production/stock pack (92 tests), full Vitest (287 passed, 1 skipped), TypeScript, targeted ESLint, `git diff --check`, and disposable QA runtime proof.
 
 ## P1 PROD-B - Production Boundary Allows Invalid Attribution or Quantities
 
@@ -204,7 +206,7 @@ Required proof: duplicate sale probe, direct-path receivable check, profit-ledge
 
 ## P2 DASH-A - Dashboard and Daily Sign-Off Read Models Are Not Authoritative
 
-Failures: `DASH-003`, `DASH-004`, `DASH-007`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-05`, `SIGNOFF-06`, `SIGNOFF-07`, `SIGNOFF-08`, `SIGNOFF-09`, `SIGNOFF-10`
+Failures: `DASH-003`, `DASH-004`, `DASH-007`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-06`, `SIGNOFF-07`, `SIGNOFF-08`, `SIGNOFF-09`, `SIGNOFF-10`
 
 Blocked evidence debt: `SIGNOFF-04`
 
@@ -212,7 +214,7 @@ Evidence: `logs/dashboard-evidence.json`, `logs/prod-dashboard-ux-signoff-source
 
 Invariant: Factory Today and sign-off views are read models over authoritative production, stock, dispatch, commercial, payroll, and observability state. A sign-off card cannot clear when its source rows remain unresolved.
 
-Impact: Factory Today reported all sold stock dispatched while the database still had 30.00m pending dispatch, gross wages were hard-coded to zero, historical analytics mixed historical and current data, and final sign-off rows could not be trusted.
+Impact: Factory Today reported all sold stock dispatched while the database still had 30.00m pending dispatch, gross wages were hard-coded to zero, historical analytics mixed historical and current data, and final sign-off rows could not be trusted. `SIGNOFF-05` expected-stock truth is closed by Batch 2; the remaining dashboard/signoff rows stay open.
 
 Remediation direction:
 

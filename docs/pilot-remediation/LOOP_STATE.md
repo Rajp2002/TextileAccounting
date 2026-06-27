@@ -14,18 +14,20 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Final classification from the completed matrix:
+Current classification after Batch 2 documentation closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 124 | Runtime/test evidence exists. |
-| `fail` | 91 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 131 | Runtime/test evidence exists. |
+| `fail` | 84 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 30 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
-Critical blockers: 10. High failures: 31. Critical blocked golden-journey follow-ons: 14.
+Critical failures: 4. High failures: 30. Critical blocked golden-journey follow-ons: 14.
+
+Batch 2 moved `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` from fail to pass with runtime/test evidence. Downstream Golden A rows that were not rerun end-to-end remain blocked until a clean order chain is retested or explicitly de-scoped.
 
 ## Operating Rules
 
@@ -218,18 +220,20 @@ Supabase migration history:
 - `20260625195248_harden_profile_authorization_boundary.sql` aligned locally and remotely.
 - `20260625215612_harden_access_code_fail_closed.sql` aligned locally and remotely.
 - `20260626051352_harden_locked_tenant_writes.sql` aligned locally and remotely.
+- `20260626064830_production_stock_atomicity.sql` aligned locally and remotely after human-approved manual application.
 
-Batch 2 review ready:
+Batch 2 closed on main:
 
 - Batch 2: production correction plus generated stock atomicity.
 - Target failures: `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`.
+- Repository state: implementation commit `f34b89c8f1f16bd87474737c69941565665f17d0` was fast-forwarded into `main`, and `origin/main` pointed to that commit before this documentation closeout.
 - Invariant: production corrections must be transactionally safe; production logs and generated stock must reconcile exactly once; correcting production to downtime must not leave stale saleable stock; if stock has already been sold or dispatched, the correction must be blocked or routed through an explicit owner-authorized adjustment flow.
 - Local implementation: migration `20260626064830_production_stock_atomicity.sql`, new internal generated-stock reconciler, updated `replace_shift_production_logs(...)`, safe wrapper for `create_or_refresh_stock_inward_draft(...)`, and removal of app-level post-replacement stock refresh.
 - Read-model repair: `getFactoryToday()` now reads `order_progress_summary.total_meters_produced`, matching the deployed view contract. No new migration was needed.
 - Migration status: `20260626064830` is aligned locally and remotely after human-approved manual application.
 - Runtime QA status: fresh disposable QA tenant proof passed on 2026-06-27. Evidence: 256.00m initial production; correction of stale 25.25m night production to downtime left 230.75m production logs and 230.75m generated stock; no stale 25.25m saleable lot remained; reversal movement was recorded exactly once; retry did not duplicate stock or movements; sale over corrected-away stock was blocked; reduction below sold quantity was blocked and rolled back; dispatch/receipt history blocked automatic correction; Factory Today, stock summary, and signoff expected stock read 230.75m after refresh/second session.
-- Local verification passed: targeted Batch 2 test, production/stock regression pack, full Vitest, TypeScript, targeted ESLint, and `git diff --check`.
-- Resolution status: `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` are pass-ready for review with runtime/test evidence.
+- Local verification passed: targeted Batch 2 Vitest passed 8 tests; broader production/stock pack passed 92 tests; full Vitest passed 287 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
+- Resolution status: `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` are pass-ready with runtime/test evidence and are documented as pass in the active QA matrix.
 
 Still out of scope until explicitly started:
 

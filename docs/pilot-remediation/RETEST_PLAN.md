@@ -105,7 +105,7 @@ Close `SEC-002`, `SEC-003`, `SEC-004`, and `SEC-005` only when all acceptance cr
 
 ## P1 Production and Stock Retest
 
-Use after `PROD-A` and `PROD-B` fixes.
+Use after `PROD-B` fixes or when checking for regressions in the closed `PROD-A` Batch 2 production/stock atomicity scope.
 
 Commands:
 
@@ -126,7 +126,9 @@ Runtime checks:
 
 Acceptance:
 
-- `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have runtime evidence.
+- Batch 2 already closed `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` with runtime evidence: 256.00m production created; stale 25.25m Night production corrected to downtime; `production_logs`, generated stock, Factory Today, stock summary, and signoff expected stock read 230.75m; no stale 25.25m saleable lot remained; reversal movement was recorded exactly once; retry did not duplicate stock or movements; unsafe sale/reduction/dispatch correction paths were blocked.
+- Migration `20260626064830_production_stock_atomicity.sql` is applied and aligned.
+- Factory Today/signoff expected stock uses `order_progress_summary.total_meters_produced`.
 - Golden A follow-ons can be re-run from a clean QA order.
 
 ## P1 Estimator, Quote, Order, and Date Snapshot Retest
@@ -200,7 +202,8 @@ Runtime checks:
 
 Acceptance:
 
-- `DASH-003`, `DASH-004`, `DASH-007`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `SIGNOFF-05`, `SIGNOFF-06`, `SIGNOFF-07`, `SIGNOFF-08`, `SIGNOFF-09`, and `SIGNOFF-10` have runtime evidence or documented pilot de-scope.
+- `DASH-003`, `DASH-004`, `DASH-007`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `SIGNOFF-06`, `SIGNOFF-07`, `SIGNOFF-08`, `SIGNOFF-09`, and `SIGNOFF-10` have runtime evidence or documented pilot de-scope.
+- `SIGNOFF-05` expected-stock reasonableness is already closed by Batch 2 production/stock atomicity proof and should be rerun here only if the dashboard read model changes again.
 
 ## P3 Payroll and Kharchi Retest
 

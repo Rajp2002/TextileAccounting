@@ -16,13 +16,13 @@ Rules for entries:
 | `SEC-A` mutable profile authorization | Review ready for Batch 1A | `SEC-002` through `SEC-005` have post-fix test/runtime evidence below. Matrix rows are not edited here. |
 | `SEC-B` privileged action/lockdown enforcement | Open | Security follow-up after `SEC-A`, unless implementation safely includes it. |
 | `SEC-C` webhook/export/compliance fail-closed | Open | Some items may require de-scope or counsel review. |
-| `PROD-A` production correction/stock atomicity | Review ready for Batch 2 | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below. |
+| `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
 | `ECON-A` estimator/quote/order/date snapshot correctness | Open | Medium failures, but must close before Golden A can be trusted. |
 | `DISP-A` multi-batch dispatch identity | Open | Blocks Golden B. |
 | `DISP-B` receipt-state coherence | Open | Blocks difference sign-off. |
 | `COMM-A` sales/receivables/profit boundary | Open | Includes sale idempotency and direct market-run sale bypass. |
-| `DASH-A` dashboard/sign-off read-model truth | Open | Broad cluster remains open; Batch 2 covers `SIGNOFF-05` expected-stock read-model truth with runtime evidence below. |
+| `DASH-A` dashboard/sign-off read-model truth | Open | Broad cluster remains open; Batch 2 closes `SIGNOFF-05` expected-stock read-model truth with runtime evidence below. |
 | `PAY-A` payroll/kharchi ledger integrity | Open | Includes legacy RPCs and offline kharchi. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Open | Cross-cutting after core data invariants. |
 | `OFF-A` offline/cache/PWA claims | Open | Some features likely de-scoped for pilot. |
@@ -363,7 +363,6 @@ Closure evidence:
 
 Out of scope and still open for later batches:
 
-- Production correction and generated stock atomicity.
 - Dispatch correctness.
 - Payroll business correctness.
 - Estimator.
@@ -373,11 +372,11 @@ Out of scope and still open for later batches:
 - npm audit.
 - Lockfile work.
 
-Next prepared remediation batch: Batch 2, production correction plus generated stock atomicity, covering `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05`.
+Most recent completed remediation batch: Batch 2, production correction plus generated stock atomicity, covering `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05`. Implementation commit `f34b89c8f1f16bd87474737c69941565665f17d0` was reconciled into `main` by fast-forward; `origin/main` points to that commit before this documentation closeout.
 
 ## Batch 2 - Production Correction and Generated Stock Atomicity
 
-Date/time: 2026-06-27 15:41 IST.
+Date/time: 2026-06-27 15:41 IST. Documentation closeout: 2026-06-27 after `main` was fast-forwarded to `f34b89c8f1f16bd87474737c69941565665f17d0`.
 
 Scope:
 
@@ -406,8 +405,8 @@ Implementation status:
 Regression tests and checks run:
 
 - `npx vitest run __tests__/p1-production-stock-atomicity.test.ts` -> passed, 8 tests.
-- `npx vitest run __tests__/p1-production-stock-atomicity.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-stock-lifecycle.test.ts __tests__/p1-stock-source-validation.test.ts __tests__/p1-party-first-stock-sale-dispatch.test.ts __tests__/market-runs.test.ts __tests__/production-mode.test.ts __tests__/p0-atomicity.test.ts` -> passed, 9 files, 91 tests.
-- `npx vitest run` -> passed, 33 files, 286 passed, 1 skipped.
+- `npx vitest run __tests__/p1-production-stock-atomicity.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-stock-lifecycle.test.ts __tests__/p1-stock-source-validation.test.ts __tests__/p1-party-first-stock-sale-dispatch.test.ts __tests__/market-runs.test.ts __tests__/production-mode.test.ts __tests__/p0-atomicity.test.ts` -> passed, 9 files, 92 tests.
+- `npx vitest run` -> passed, 33 files, 287 passed, 1 skipped.
 - `npx tsc --noEmit` -> passed.
 - `npx eslint app/'(dashboard)'/supervisor/actions.ts __tests__/p1-production-stock-atomicity.test.ts` -> passed.
 - `git diff --check` -> passed.
@@ -438,6 +437,6 @@ Runtime QA status:
 
 Resolution status:
 
-- Code, migration, regression tests, and runtime proof are complete for this Batch 2 scope.
-- `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` are pass-ready for review with the evidence above.
+- Code, migration, regression tests, runtime proof, and active matrix closeout are complete for this Batch 2 scope.
+- `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
 - Remaining dashboard/signoff rows outside `SIGNOFF-05` stay open in `DASH-A`.
