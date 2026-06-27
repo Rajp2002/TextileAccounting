@@ -186,7 +186,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         // 3. Active orders with progress summary for pace calculation
         supabase
             .from('order_progress_summary')
-            .select('order_id, party_name, quality_label, total_target_meters, produced_meters, deadline, status')
+            .select('order_id, party_name, quality_label, total_target_meters, total_meters_produced, deadline, status')
             .eq('org_id', orgId)
             .eq('status', 'active')
             .not('deadline', 'is', null),
@@ -460,7 +460,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
     const ordersBehindPace = (ordersRes.data ?? [])
         .map((order) => {
             const targetMeters = toNum(order.total_target_meters)
-            const producedMeters = toNum(order.produced_meters)
+            const producedMeters = toNum(order.total_meters_produced)
             const remainingMeters = Math.max(0, targetMeters - producedMeters)
             const deadline = order.deadline as string
             const daysUntilDeadline = daysBetween(today, deadline)

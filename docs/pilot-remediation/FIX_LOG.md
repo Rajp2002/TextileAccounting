@@ -16,13 +16,13 @@ Rules for entries:
 | `SEC-A` mutable profile authorization | Review ready for Batch 1A | `SEC-002` through `SEC-005` have post-fix test/runtime evidence below. Matrix rows are not edited here. |
 | `SEC-B` privileged action/lockdown enforcement | Open | Security follow-up after `SEC-A`, unless implementation safely includes it. |
 | `SEC-C` webhook/export/compliance fail-closed | Open | Some items may require de-scope or counsel review. |
-| `PROD-A` production correction/stock atomicity | Open | Critical business-data cluster after security. |
+| `PROD-A` production correction/stock atomicity | Review ready for Batch 2 | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
 | `ECON-A` estimator/quote/order/date snapshot correctness | Open | Medium failures, but must close before Golden A can be trusted. |
 | `DISP-A` multi-batch dispatch identity | Open | Blocks Golden B. |
 | `DISP-B` receipt-state coherence | Open | Blocks difference sign-off. |
 | `COMM-A` sales/receivables/profit boundary | Open | Includes sale idempotency and direct market-run sale bypass. |
-| `DASH-A` dashboard/sign-off read-model truth | Open | Depends on source-domain repairs and independent dashboard retest. |
+| `DASH-A` dashboard/sign-off read-model truth | Open | Broad cluster remains open; Batch 2 covers `SIGNOFF-05` expected-stock read-model truth with runtime evidence below. |
 | `PAY-A` payroll/kharchi ledger integrity | Open | Includes legacy RPCs and offline kharchi. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Open | Cross-cutting after core data invariants. |
 | `OFF-A` offline/cache/PWA claims | Open | Some features likely de-scoped for pilot. |
@@ -374,3 +374,70 @@ Out of scope and still open for later batches:
 - Lockfile work.
 
 Next prepared remediation batch: Batch 2, production correction plus generated stock atomicity, covering `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05`.
+
+## Batch 2 - Production Correction and Generated Stock Atomicity
+
+Date/time: 2026-06-27 15:41 IST.
+
+Scope:
+
+- `PROD-016`
+- `PROD-028`
+- `STOCK-015`
+- `GOLDEN-A-11`
+- `GOLDEN-A-12`
+- `GOLDEN-A-14`
+- `SIGNOFF-05`
+
+Implementation status:
+
+- Added migration `20260626064830_production_stock_atomicity.sql`.
+- Added internal RPC `reconcile_generated_stock_for_production_grain(...)`.
+- Updated `replace_shift_production_logs(...)` so production replacement and generated stock reconciliation run in the same database transaction.
+- The replacement RPC captures affected `(org_id, order_id, date, shift)` grains from both old rows and new rows, so an old order/date/shift that loses all production is still reconciled to zero.
+- `create_or_refresh_stock_inward_draft(...)` is now a wrapper over the same reconciler instead of retaining a separate implementation.
+- Removed the app-level post-replacement stock refresh from `bulkLogProduction`; the server action now delegates production/stock atomicity to the RPC.
+- Generated stock remains keyed by the existing deterministic grain: `fabric_stock_inward_drafts(org_id, order_id, source_date, source_shift)`.
+- Stock deltas insert `fabric_stock_movements` rows. Negative production corrections use `adjustment_subtract` with a production-correction note.
+- Unsafe reductions are blocked instead of clamped. The migration does not use `GREATEST(0, available_meters + delta)` or equivalent clamping to hide over-consumption.
+- Automatic production correction is blocked if the generated stock has already been dispatched/received, or if corrected production would fall below already sold meters.
+- Fixed the Factory Today/signoff read-model contract mismatch by updating `getFactoryToday()` to read `order_progress_summary.total_meters_produced`, matching the deployed view and existing owner order surfaces. No new migration was needed.
+
+Regression tests and checks run:
+
+- `npx vitest run __tests__/p1-production-stock-atomicity.test.ts` -> passed, 8 tests.
+- `npx vitest run __tests__/p1-production-stock-atomicity.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-stock-lifecycle.test.ts __tests__/p1-stock-source-validation.test.ts __tests__/p1-party-first-stock-sale-dispatch.test.ts __tests__/market-runs.test.ts __tests__/production-mode.test.ts __tests__/p0-atomicity.test.ts` -> passed, 9 files, 91 tests.
+- `npx vitest run` -> passed, 33 files, 286 passed, 1 skipped.
+- `npx tsc --noEmit` -> passed.
+- `npx eslint app/'(dashboard)'/supervisor/actions.ts __tests__/p1-production-stock-atomicity.test.ts` -> passed.
+- `git diff --check` -> passed.
+
+Migration safety status:
+
+- `20260626064830_production_stock_atomicity.sql` was manually applied after human approval before runtime proof.
+- `npx supabase migration list` showed `20260626064830 | 20260626064830` before runtime proof.
+- No new migration was needed for the Factory Today read-model fix because the deployed `order_progress_summary` canonical column is `total_meters_produced`.
+- No additional migration was applied to the production-linked Supabase project.
+- No migration repair, `db pull`, direct SQL, or `--include-all` was used.
+
+Runtime QA status:
+
+- Executed with a disposable QA tenant and disposable owner/supervisor users, then cleaned up in `finally`.
+- Sanitized QA evidence: project `vzhwahudircrpgtitwzd`, org `a7deb148...d5c7`, order `2b6755b2...462b`, target date `2026-06-27`, control day-shift date `2026-06-26`.
+- Production totaling 256.00m was created.
+- Correcting stale 25.25m night production to downtime left valid production at 230.75m.
+- `production_logs` total was 230.75m.
+- Generated order stock original total was 230.75m after correction; final generated stock original total remained 230.75m after sale/dispatch guard probes.
+- No stale 25.25m lot remained.
+- Reversal movement count was exactly 1 after correction; retry/double-submit kept movement count at 2 and did not duplicate the reversal.
+- Sale over corrected-away stock was blocked with "Cannot sell more than available stock".
+- Reduction below sold quantity was blocked and rolled back with the generated-stock sold/dispatched error.
+- Dispatch and delivered/receipt-history rows blocked automatic production correction and rolled back to 230.75m.
+- Multiple looms same order/date/night shift aggregated correctly; day control production stayed independent at 17.50m on the control date.
+- Second-session stock summary read 230.75m, Factory Today production source read 230.75m, and `order_progress_summary.total_meters_produced` read 230.75m for signoff expected-stock proof.
+
+Resolution status:
+
+- Code, migration, regression tests, and runtime proof are complete for this Batch 2 scope.
+- `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` are pass-ready for review with the evidence above.
+- Remaining dashboard/signoff rows outside `SIGNOFF-05` stay open in `DASH-A`.

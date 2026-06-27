@@ -219,11 +219,17 @@ Supabase migration history:
 - `20260625215612_harden_access_code_fail_closed.sql` aligned locally and remotely.
 - `20260626051352_harden_locked_tenant_writes.sql` aligned locally and remotely.
 
-Next batch prepared, not implemented:
+Batch 2 review ready:
 
 - Batch 2: production correction plus generated stock atomicity.
 - Target failures: `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`.
 - Invariant: production corrections must be transactionally safe; production logs and generated stock must reconcile exactly once; correcting production to downtime must not leave stale saleable stock; if stock has already been sold or dispatched, the correction must be blocked or routed through an explicit owner-authorized adjustment flow.
+- Local implementation: migration `20260626064830_production_stock_atomicity.sql`, new internal generated-stock reconciler, updated `replace_shift_production_logs(...)`, safe wrapper for `create_or_refresh_stock_inward_draft(...)`, and removal of app-level post-replacement stock refresh.
+- Read-model repair: `getFactoryToday()` now reads `order_progress_summary.total_meters_produced`, matching the deployed view contract. No new migration was needed.
+- Migration status: `20260626064830` is aligned locally and remotely after human-approved manual application.
+- Runtime QA status: fresh disposable QA tenant proof passed on 2026-06-27. Evidence: 256.00m initial production; correction of stale 25.25m night production to downtime left 230.75m production logs and 230.75m generated stock; no stale 25.25m saleable lot remained; reversal movement was recorded exactly once; retry did not duplicate stock or movements; sale over corrected-away stock was blocked; reduction below sold quantity was blocked and rolled back; dispatch/receipt history blocked automatic correction; Factory Today, stock summary, and signoff expected stock read 230.75m after refresh/second session.
+- Local verification passed: targeted Batch 2 test, production/stock regression pack, full Vitest, TypeScript, targeted ESLint, and `git diff --check`.
+- Resolution status: `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` are pass-ready for review with runtime/test evidence.
 
 Still out of scope until explicitly started:
 

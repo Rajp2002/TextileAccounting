@@ -1327,13 +1327,6 @@ export async function bulkLogProduction(entries: {
     const replaceResult = Array.isArray(replaceRows) ? replaceRows[0] : replaceRows
     const loggedCount = Number(replaceResult?.inserted_count ?? logs.length)
 
-    const producedOrderIds = [...new Set(logs.map((log) => log.order_id).filter((id): id is string => Boolean(id)))]
-    await Promise.all(producedOrderIds.map((orderId) => supabase.rpc('create_or_refresh_stock_inward_draft', {
-        p_order_id: orderId,
-        p_source_date: logDate,
-        p_source_shift: logShift,
-    })))
-
     revalidatePath('/supervisor/production')
     revalidatePath('/owner/today')
     revalidatePath('/owner/analytics')
