@@ -14,7 +14,7 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout and Batch 2 documentation closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, and the estimator costing reconciliation closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
@@ -30,6 +30,8 @@ Critical failures: 0. High failures: 28. Critical blocked golden-journey follow-
 Batch 1 security foundation moved `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` from fail to pass with runtime/test/migration evidence. `AUTH-008`, `PAY-018`, `PAY-020`, external webhook/export/compliance security rows, release gates, and unrelated unresolved failures remain open.
 
 Batch 2 moved `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` from fail to pass with runtime/test evidence. Downstream Golden A rows that were not rerun end-to-end remain blocked until a clean order chain is retested or explicitly de-scoped.
+
+Estimator costing reconciliation is complete for the scoped formula/manual/manual-practical sprint with test and browser evidence. The active matrix counts above are unchanged because the broader `ECON-A` rows still include server-boundary validation, idempotency, quote/order lifecycle, and date snapshot work outside this sprint.
 
 ## Operating Rules
 
@@ -238,11 +240,24 @@ Batch 2 closed on main:
 - Local verification passed: targeted Batch 2 Vitest passed 8 tests; broader production/stock pack passed 92 tests; full Vitest passed 287 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
 - Resolution status: `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` are pass-ready with runtime/test evidence and are documented as pass in the active QA matrix.
 
+Estimator costing closeout:
+
+- Date/time: 2026-06-28 00:54 IST.
+- Scope closed: manual kg/100m override, formula mode, formula-equivalent manual parity, mixed formula/manual semantics, width unit hardening, waste/crimp semantics, Cost Breakdown audit, and quote save/reopen audit preservation.
+- Practical manual regression passed at `₹55.91/m` with `₹21.50/m` other cost and `₹56.16/m` with `₹21.75/m` other cost.
+- Formula real factory specs passed at `₹55.75/m`.
+- Formula-equivalent manual mode matched formula mode with `₹0.00/m` difference.
+- Width warning for `62 cm` was observed in the UI; switching to `62 inch` restored expected costing.
+- Saved quote restore preserved rows, costing, and audit at `₹56.16/m`.
+- Local verification passed: targeted estimator/width Vitest passed 31 tests; full Vitest passed 298 tests with 1 skipped; `npx tsc --noEmit`, `npm run build`, and scoped estimator ESLint passed.
+- Repo-wide `npm run lint` remains blocked only by existing unrelated `scratch/*.js` CommonJS `require()` lint errors.
+- Active QA matrix rows are not promoted by this closeout because the relevant `ECON-A` rows are broader than estimator costing and still require separate proof.
+
 Still out of scope until explicitly started:
 
 - Dispatch correctness.
 - Payroll business correctness.
-- Estimator.
+- Remaining `ECON-A` work outside estimator costing: server-boundary estimate validation, estimator save/market-run idempotency, quote/order lifecycle, target/deadline guards, below-target completion, and date-only rendering.
 - Offline behavior.
 - Release gates.
 - Sentry.

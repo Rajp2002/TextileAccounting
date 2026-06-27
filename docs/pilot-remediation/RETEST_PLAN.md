@@ -167,6 +167,43 @@ Acceptance:
 
 Use after `ECON-A` fixes.
 
+### Estimator Costing Reconciliation Sub-Scope
+
+Use after estimator costing changes or when checking for regressions in the completed formula/manual/manual-practical costing scope.
+
+Commands:
+
+```bash
+npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts
+npx vitest run
+npx tsc --noEmit
+npm run build
+npm run lint -- __tests__/estimator.test.ts __tests__/width-field.test.ts lib/estimator.ts 'app/(dashboard)/owner/estimator/EstimatorClient.tsx' 'app/(dashboard)/owner/estimator/actions.ts' components/cost-analysis-details.tsx
+```
+
+Runtime checks:
+
+- Enter real formula specs for `50/600`, `Jari`, and `50 span/spun`; verify production cost is approximately `₹55.75/m`.
+- Switch to formula-equivalent manual kg/100m inputs and verify the formula/manual difference is no more than `₹0.10/m`.
+- Enter practical manual kg/100m inputs and verify `₹55.91/m` with `₹21.50/m` other cost or `₹56.16/m` with `₹21.75/m` other cost.
+- Confirm warp audit rows show crimp plus waste and weft audit rows show waste only.
+- Confirm blank row waste uses the default, explicit row waste `0` overrides the default, and row waste does not stack with default waste.
+- Enter effective costing width `62 cm` and verify the warning that it is only `24.4 inches`; switch to `62 inch` and verify expected costing is restored.
+- Save a quote, reopen it through Quotes -> Restore, and verify the same cost audit is displayed.
+
+Known lint caveat:
+
+- Repo-wide `npm run lint` may fail on existing unrelated `scratch/*.js` CommonJS `require()` lint errors. Scoped estimator ESLint must pass before promotion.
+
+Completed evidence as of 2026-06-28:
+
+- Targeted estimator/width Vitest passed 31 tests.
+- Full Vitest passed 298 tests with 1 skipped.
+- `npx tsc --noEmit`, `npm run build`, and scoped estimator ESLint passed.
+- Browser QA validated formula mode at `₹55.75/m`, formula-equivalent manual at `₹55.75/m`, practical manual at `₹55.91/m` or `₹56.16/m` depending on overhead, width warning behavior, and saved quote restore audit preservation.
+
+### Broader ECON-A Retest
+
 Commands:
 
 ```bash

@@ -152,6 +152,13 @@ Remediation direction:
 
 Required proof: estimator calculation tests, quote/order lifecycle tests, timezone rendering tests under UTC/US Pacific/Asia Kolkata, and runtime quote-to-order checks against a business truth sheet.
 
+Scoped estimator costing reconciliation closeout:
+
+- Date/time: 2026-06-28 00:54 IST.
+- Closed sub-scope: formula/manual/manual-practical costing, mixed formula/manual semantics, width unit handling, waste/crimp semantics, Cost Breakdown audit, and saved quote restore audit preservation.
+- Evidence: `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` passed 31 tests; full `npx vitest run` passed 298 tests with 1 skipped; `npx tsc --noEmit`, `npm run build`, and scoped estimator ESLint passed; browser QA validated formula mode at `₹55.75/m`, formula-equivalent manual at `₹55.75/m`, practical manual at `₹55.91/m` or `₹56.16/m` depending on overhead, width warning for `62 cm`, and quote restore preserving `₹56.16/m`.
+- Matrix status: unchanged. `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, and `TIME-002` remain open until the original row-level proof is captured.
+
 ## P2 DISP-A - Multi-Batch Dispatch Package Identity Is Unsafe
 
 Failures: `DISP-003`, `GOLDEN-B-09`, `SIGNOFF-07`, `SIGNOFF-10`

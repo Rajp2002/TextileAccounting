@@ -37,6 +37,7 @@ import {
     CheckCircle2,
     ArrowRight,
     Minus,
+    ReceiptText,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useTranslation } from '@/lib/i18n/context'
@@ -49,8 +50,11 @@ import {
     DEFAULT_OVERHEAD_ITEMS,
     DEFAULT_FACTORY_SECTIONS,
     ensureOverheadIntegrity,
+    getEffectiveCostingWidthCm,
+    getWidthWarnings,
     LOOM_TYPE_DEFAULTS,
     type LoomType,
+    type YarnCalculationMode,
     type EstimateState,
     type WarpRow,
     type WeftRow,
@@ -644,6 +648,7 @@ function WidthField({
     unit,
     onUnitChange,
     hint,
+    warning,
 }: {
     label: string
     value: number
@@ -651,6 +656,7 @@ function WidthField({
     unit: 'cm' | 'inch'
     onUnitChange: (u: 'cm' | 'inch') => void
     hint?: string
+    warning?: string
 }) {
     const displayValue = useMemo(() => {
         if (!value) return ''
@@ -737,6 +743,12 @@ function WidthField({
                         {secondaryReadout}
                     </p>
                 )}
+                {warning && (
+                    <p className="flex items-start gap-1 rounded-md border border-[var(--color-warning-amber-soft)] bg-[var(--color-warning-amber-soft)] px-2 py-1 text-[10px] font-semibold leading-tight text-[var(--color-warning-amber)]">
+                        <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                        <span>{warning}</span>
+                    </p>
+                )}
                 {hint && <p className="text-[10px] text-[var(--color-muted)] font-medium leading-tight pl-1">{hint}</p>}
             </div>
         </div>
@@ -816,6 +828,38 @@ function LayerNameField({
     )
 }
 
+function CalculationModeField({
+    value,
+    onChange,
+}: {
+    value: YarnCalculationMode
+    onChange: (value: YarnCalculationMode) => void
+}) {
+    return (
+        <div className="space-y-1.5 min-w-0">
+            <Label className="block text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)]">
+                Mode
+            </Label>
+            <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
+                {(['formula', 'manual'] as YarnCalculationMode[]).map(mode => (
+                    <button
+                        key={mode}
+                        type="button"
+                        onClick={() => onChange(mode)}
+                        className={`rounded-[7px] px-2 text-[11px] font-semibold transition-all ${
+                            value === mode
+                                ? 'border border-[var(--color-hairline)] bg-white text-[var(--color-ink)] shadow-sm'
+                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                        }`}
+                    >
+                        {mode === 'formula' ? 'Formula' : 'Manual kg'}
+                    </button>
+                ))}
+            </div>
+        </div>
+    )
+}
+
 function findMissingLayerLabel(warpRows: WarpRow[], weftRows: WeftRow[]) {
     const missingWarpIndex = warpRows.findIndex(row => !row.label?.trim())
     if (missingWarpIndex >= 0) return `Warp ${missingWarpIndex + 1}`
@@ -831,10 +875,10 @@ function trimLayerLabels<T extends WarpRow | WeftRow>(rows: T[]) {
 }
 
 function RowCard({
-    title, index, onRemove, canRemove, kgPer100m, costPer100m, children, accent = 'indigo'
+    title, index, onRemove, canRemove, kgPer100m, costPer100m, adjustmentPct, children, accent = 'indigo'
 }: {
     title: string; index: number; onRemove: () => void; canRemove: boolean
-    kgPer100m: number; costPer100m: number; children: React.ReactNode; accent?: 'indigo' | 'emerald'
+    kgPer100m: number; costPer100m: number; adjustmentPct?: number; children: React.ReactNode; accent?: 'indigo' | 'emerald'
 }) {
     const colors = {
         indigo:  { strip: 'bg-[#F6FAFD]', badge: 'bg-[#EEF5FB] text-[var(--color-info-blue)] border-[#D7E7F1]', dot: 'bg-[var(--color-info-blue)]' },
@@ -852,6 +896,11 @@ function RowCard({
                     <Badge variant="outline" className="h-4 border-0 bg-transparent px-0 py-0 text-[11px] font-semibold text-[var(--color-muted)]">
                         {kgPer100m.toFixed(3)} kg/100m
                     </Badge>
+                    {adjustmentPct != null && (
+                        <Badge variant="outline" className={`h-5 rounded-[6px] px-1.5 py-0 text-[10px] font-semibold ${c.badge}`}>
+                            Adj {adjustmentPct.toFixed(1)}%
+                        </Badge>
+                    )}
                 </div>
                 <div className="flex items-center justify-between gap-2 sm:justify-end">
                     <span className="text-xs font-semibold text-[var(--color-muted)]">
@@ -865,7 +914,7 @@ function RowCard({
                     )}
                 </div>
             </div>
-            <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 lg:grid-cols-3 ${accent === 'indigo' ? '2xl:grid-cols-6' : '2xl:grid-cols-7'}`}>
+            <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 lg:grid-cols-3 ${accent === 'indigo' ? '2xl:grid-cols-7' : '2xl:grid-cols-8'}`}>
                 {children}
             </div>
         </div>
@@ -892,19 +941,21 @@ export default function EstimatorClient({
     
     const [mode, setMode] = useState<'quote' | 'market'>(searchParams.get('mode') === 'market' ? 'market' : 'quote')
 
-    const [widthUnit, setWidthUnit] = useState<'cm' | 'inch'>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('weavly-estimator-width-unit')
-            if (saved === 'cm' || saved === 'inch') return saved
-        }
-        return 'cm'
-    })
+    const [widthUnit, setWidthUnit] = useState<'cm' | 'inch'>('inch')
+    const [hasLoadedWidthUnit, setHasLoadedWidthUnit] = useState(false)
 
     useEffect(() => {
+        const saved = localStorage.getItem('weavly-estimator-width-unit')
+        if (saved === 'cm' || saved === 'inch') setWidthUnit(saved)
+        setHasLoadedWidthUnit(true)
+    }, [])
+
+    useEffect(() => {
+        if (!hasLoadedWidthUnit) return
         if (typeof window !== 'undefined') {
             localStorage.setItem('weavly-estimator-width-unit', widthUnit)
         }
-    }, [widthUnit])
+    }, [hasLoadedWidthUnit, widthUnit])
 
     // Build the initial state synchronously from server-provided data (no loading flash)
     const initialState = useMemo(() => {
@@ -1408,6 +1459,18 @@ export default function EstimatorClient({
         { label: 'Post', value: postProcessingCostPerM, color: 'bg-[var(--color-warning-amber)]', text: 'text-[var(--color-warning-amber)]' },
     ].filter(segment => segment.value > 0)
     const costStackTotal = costSegments.reduce((sum, segment) => sum + segment.value, 0)
+    const auditLayerRows = [
+        ...totals.audit.warp.layers.map(layer => ({ ...layer, section: 'Warp' })),
+        ...totals.audit.weft.layers.map(layer => ({ ...layer, section: 'Weft' })),
+    ]
+    const auditCostLines = [
+        { label: 'Warp yarn', value: totals.audit.warp.totalCostPerMeter },
+        { label: 'Weft yarn', value: totals.audit.weft.totalCostPerMeter },
+        { label: 'Weave / loom', value: totals.audit.weaveCostPerMeter },
+        { label: 'Warping + sizing', value: totals.audit.warpingAndSizingCostPerMeter },
+        { label: 'Post-processing', value: totals.audit.postProcessingCostPerMeter },
+        { label: 'Factory overhead / other', value: totals.audit.overheadCostPerMeter },
+    ].filter(line => line.value > 0)
     return (
         <div className="space-y-5 pb-floating-button md:pb-20 relative">
             {!state.isConfigured && (
@@ -1901,7 +1964,7 @@ export default function EstimatorClient({
                         icon={Sparkles} 
                         accent="warp"
                         step={2}
-                        detail={<p className="text-[11px] text-[var(--color-muted)]">{state.warpCrimpPct || 0}% crimp · {state.yarnShortagePct || 0}% waste → <span className="font-semibold text-[var(--color-warning-amber)]">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}% total</span></p>}
+                        detail={<p className="text-[11px] text-[var(--color-muted)]">Default rows: {state.warpCrimpPct || 0}% crimp + {state.yarnShortagePct || 0}% waste → <span className="font-semibold text-[var(--color-warning-amber)]">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}% total</span></p>}
                         badgeContent={<SectionCostPill value={totals.warpCostPerM} />}
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
@@ -1921,7 +1984,7 @@ export default function EstimatorClient({
                                     label="Default Yarn Waste"
                                     value={state.yarnShortagePct || 0}
                                     onChange={v => dispatch({ type: 'SET', field: 'yarnShortagePct', value: v })}
-                                    hint="Fallback waste % if row is 0%"
+                                    hint="Blank row waste uses this default. Row value 0 means no waste."
                                     accent="warp"
                                 />
                             </div>
@@ -1952,16 +2015,27 @@ export default function EstimatorClient({
                                     onRemove={() => dispatch({ type: 'REMOVE_WARP_ROW', id: row.id })}
                                     kgPer100m={totals.warpRows[i]?.kgPer100m ?? 0}
                                     costPer100m={totals.warpRows[i]?.costPer100m ?? 0}
+                                    adjustmentPct={totals.warpRows[i]?.totalAdjustmentPct ?? 0}
                                 >
+                                    <CalculationModeField
+                                        value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
+                                        onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calculationMode', value })}
+                                    />
                                     <LayerNameField
                                         label={t('estimator.field_labels.layer_name')}
                                         value={row.label ?? ''}
                                         placeholder={`${t('estimator.warp.layer')} ${i + 1}`}
                                         onChange={value => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'label', value })}
                                     />
-                                    <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.1} />
-                                    <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} />
-                                    <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`or ${state.yarnShortagePct}% default`} warning={row.shortagePct !== null && (row.shortagePct > 15 || (row.shortagePct === 0 && state.yarnShortagePct > 15)) ? 'High waste %' : undefined} />
+                                    {row.calculationMode === 'manual' ? (
+                                        <NumField label="Manual kg/100m" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Base before waste/crimp" attentionWhenEmpty />
+                                    ) : (
+                                        <>
+                                            <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.1} />
+                                            <NumField label={t('estimator.field_labels.beam_ends')} value={row.beamEnds} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'beamEnds', value: v ?? 0 })} />
+                                        </>
+                                    )}
+                                    <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WARP_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
                                     {(() => {
                                         const templateRate = appliedTemplate?.warp_rows?.[i]?.yarnRate ?? null
                                         const isUnusuallyLow = templateRate !== null
@@ -2073,70 +2147,106 @@ export default function EstimatorClient({
                                 <div>
                                     <div className="flex items-center gap-1.5">
                                         <Calculator className="h-3.5 w-3.5 text-[var(--color-factory-green)]" />
-                                        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--color-factory-green)]">Effective Total Shortage</span>
+                                        <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--color-factory-green)]">Effective Weft Waste</span>
                                     </div>
-                                    <p className="mt-1 text-[11px] font-medium text-[var(--color-muted)]">Synced with warp crimp to keep loom-wide shortage parity.</p>
+                                    <p className="mt-1 text-[11px] font-medium text-[var(--color-muted)]">Weft uses waste only. Warp crimp does not apply to weft yarn.</p>
                                 </div>
                                 <span className="flex items-center gap-2 font-mono text-sm font-semibold text-[var(--color-factory-green)]">
-                                    <span>{state.warpCrimpPct || 0}%</span>
-                                    <span className="text-[var(--color-muted)]">+</span>
                                     <span>{state.yarnShortagePct || 0}%</span>
-                                    <span className="text-[var(--color-muted)]">=</span>
-                                    <span className="rounded-[7px] border border-[#CDE5D3] bg-white px-2.5 py-1 text-base">{(state.warpCrimpPct || 0) + (state.yarnShortagePct || 0)}%</span>
+                                    <span className="rounded-[7px] border border-[#CDE5D3] bg-white px-2.5 py-1 text-base">waste</span>
                                 </span>
                             </div>
                         </div>
 
                         <div className="space-y-4">
-                            {state.weftRows.map((row, i) => (
-                                <RowCard
-                                    key={row.id}
-                                    title={t('estimator.weft.layer')}
-                                    index={i}
-                                    accent="emerald"
-                                    canRemove={state.weftRows.length > 1}
-                                    onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })}
-                                    kgPer100m={totals.weftRows[i]?.kgPer100m ?? 0}
-                                    costPer100m={totals.weftRows[i]?.costPer100m ?? 0}
-                                >
-                                    <LayerNameField
-                                        label={t('estimator.field_labels.layer_name')}
-                                        value={row.label ?? ''}
-                                        placeholder={`${t('estimator.weft.layer')} ${i + 1}`}
-                                        onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
-                                    />
-                                    <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} />
-                                    <WidthField
-                                        label={t('estimator.field_labels.cloth_width')}
-                                        value={row.reedSpace}
-                                        onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })}
-                                        unit={widthUnit}
-                                        onUnitChange={setWidthUnit}
-                                        hint={t('estimator.weft.cloth_width_hint')}
-                                    />
-                                    <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.1} />
-                                    <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`or ${state.yarnShortagePct}% default`} warning={row.shortagePct !== null && (row.shortagePct > 15 || (row.shortagePct === 0 && state.yarnShortagePct > 15)) ? 'High waste %' : undefined} />
-                                    {(() => {
-                                        const templateRate = appliedTemplate?.weft_rows?.[i]?.yarnRate ?? null
-                                        const isUnusuallyLow = templateRate !== null
-                                            ? row.yarnRate < templateRate * 0.6
-                                            : row.yarnRate > 0 && row.yarnRate < 50
-                                        const warningId = `weft-${row.id}-rate`
-                                        const isDismissed = dismissedWarnings.includes(warningId)
-                                        return (
-                                            <NumField 
-                                                label={`${t('estimator.field_labels.rate_kg')} — REQUIRED`} 
-                                                value={row.yarnRate} 
-                                                onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })} 
-                                                attentionWhenEmpty
-                                                warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
-                                                onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
-                                            />
-                                        )
-                                    })()}
-                                    <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} />
-                                </RowCard>
-                            ))}
+                            {state.weftRows.map((row, i) => {
+                                const finishedWidthCm = row.finishedWidthCm ?? row.reedSpace
+                                const effectiveCostingWidthCm = getEffectiveCostingWidthCm(row)
+                                const rawEffectiveWidth = widthUnit === 'inch' ? effectiveCostingWidthCm / 2.54 : effectiveCostingWidthCm
+                                const effectiveWidthWarning = getWidthWarnings({
+                                    finishedWidthCm,
+                                    effectiveCostingWidthCm,
+                                    inputUnit: widthUnit,
+                                    rawInputValue: rawEffectiveWidth,
+                                })[0]?.message
+
+                                return (
+                                    <RowCard
+                                        key={row.id}
+                                        title={t('estimator.weft.layer')}
+                                        index={i}
+                                        accent="emerald"
+                                        canRemove={state.weftRows.length > 1}
+                                        onRemove={() => dispatch({ type: 'REMOVE_WEFT_ROW', id: row.id })}
+                                        kgPer100m={totals.weftRows[i]?.kgPer100m ?? 0}
+                                        costPer100m={totals.weftRows[i]?.costPer100m ?? 0}
+                                        adjustmentPct={totals.weftRows[i]?.totalAdjustmentPct ?? 0}
+                                    >
+                                        <CalculationModeField
+                                            value={row.calculationMode === 'manual' ? 'manual' : 'formula'}
+                                            onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calculationMode', value })}
+                                        />
+                                        <LayerNameField
+                                            label={t('estimator.field_labels.layer_name')}
+                                            value={row.label ?? ''}
+                                            placeholder={`${t('estimator.weft.layer')} ${i + 1}`}
+                                            onChange={value => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'label', value })}
+                                        />
+                                        <NumField label={t('estimator.field_labels.picks_ppi')} value={row.picks} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'picks', value: v ?? 0 })} />
+                                        <WidthField
+                                            label="Finished / market pano"
+                                            value={finishedWidthCm}
+                                            onChange={v => {
+                                                dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'finishedWidthCm', value: v })
+                                                if (effectiveCostingWidthCm <= 0) {
+                                                    dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value: v })
+                                                    dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })
+                                                }
+                                            }}
+                                            unit={widthUnit}
+                                            onUnitChange={setWidthUnit}
+                                            hint="Market/finished pano"
+                                        />
+                                        <WidthField
+                                            label="Effective costing width"
+                                            value={effectiveCostingWidthCm}
+                                            onChange={v => {
+                                                dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'effectiveCostingWidthCm', value: v })
+                                                dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })
+                                            }}
+                                            unit={widthUnit}
+                                            onUnitChange={setWidthUnit}
+                                            hint={row.calculationMode === 'manual' ? 'Saved for audit; manual kg bypasses formula' : 'Used for weft yarn formula'}
+                                            warning={effectiveWidthWarning}
+                                        />
+                                        {row.calculationMode === 'manual' ? (
+                                            <NumField label="Manual kg/100m" value={row.manualKgPer100m ?? null} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'manualKgPer100m', value: v })} unit="kg" step={0.001} hint="Base before waste/crimp" attentionWhenEmpty />
+                                        ) : (
+                                            <NumField label={t('estimator.field_labels.calc_denier')} value={row.calcDenier} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'calcDenier', value: v ?? 0 })} unit="D" step={0.1} />
+                                        )}
+                                        <NumField label="Waste %" value={row.shortagePct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'shortagePct', value: v })} unit="%" step={0.5} hint={`Blank uses ${state.yarnShortagePct}% default; 0 overrides`} warning={row.shortagePct !== null && row.shortagePct > 15 ? 'High waste %' : undefined} />
+                                        {(() => {
+                                            const templateRate = appliedTemplate?.weft_rows?.[i]?.yarnRate ?? null
+                                            const isUnusuallyLow = templateRate !== null
+                                                ? row.yarnRate < templateRate * 0.6
+                                                : row.yarnRate > 0 && row.yarnRate < 50
+                                            const warningId = `weft-${row.id}-rate`
+                                            const isDismissed = dismissedWarnings.includes(warningId)
+                                            return (
+                                                <NumField
+                                                    label={`${t('estimator.field_labels.rate_kg')} — REQUIRED`}
+                                                    value={row.yarnRate}
+                                                    onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'yarnRate', value: v ?? 0 })}
+                                                    attentionWhenEmpty
+                                                    warning={isUnusuallyLow && !isDismissed ? 'Unusually low' : undefined}
+                                                    onDismissWarning={() => setDismissedWarnings(prev => [...prev, warningId])}
+                                                />
+                                            )
+                                        })()}
+                                        <NumField label={t('estimator.field_labels.gst_pct')} value={row.gstPct} onChange={v => dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'gstPct', value: v ?? 0 })} step={0.5} />
+                                    </RowCard>
+                                )
+                            })}
                         </div>
                         <Button
                             variant="outline"
@@ -2703,9 +2813,102 @@ export default function EstimatorClient({
                     </CardContent>
                 </EstimatorCard>
 
-                {/* 7. Simulation / Order */}
+                {/* 8. Cost Audit */}
+                <EstimatorCard accent="neutral">
+                    <SectionHeader
+                        title="Cost Breakdown"
+                        icon={ReceiptText}
+                        accent="neutral"
+                        step={8}
+                        detail={<p className="text-[11px] text-[var(--color-muted)]">Engine audit used for the final production cost.</p>}
+                        badgeContent={<SectionCostPill value={totals.audit.productionCostPerMeter} />}
+                    />
+                    <CardContent className="p-5 sm:p-6 space-y-5">
+                        <div className="overflow-hidden rounded-[12px] border border-[var(--color-hairline)]">
+                            <div className="hidden grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.8fr_0.8fr] gap-3 border-b border-[var(--color-hairline)] bg-[var(--color-surface-soft)] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.05em] text-[var(--color-muted)] md:grid">
+                                <span>Yarn</span>
+                                <span>Mode</span>
+                                <span>Base kg/100m</span>
+                                <span>Adjust</span>
+                                <span>Final kg/100m</span>
+                                <span>Rate</span>
+                                <span className="text-right">Cost</span>
+                            </div>
+                            <div className="divide-y divide-[var(--color-hairline)] bg-white">
+                                {auditLayerRows.map(layer => (
+                                    <div key={`${layer.section}-${layer.id}`} className="grid gap-2 px-3 py-3 text-xs md:grid-cols-[1fr_0.8fr_0.9fr_0.8fr_0.9fr_0.8fr_0.8fr] md:gap-3 md:items-center">
+                                        <div>
+                                            <p className="font-semibold text-[var(--color-ink)]">{layer.name}</p>
+                                            <p className="text-[10px] font-medium text-[var(--color-muted)]">{layer.section}</p>
+                                            {layer.mode === 'formula' ? (
+                                                <p className="mt-1 text-[10px] font-medium leading-tight text-[var(--color-muted)]">
+                                                    {layer.section === 'Warp'
+                                                        ? `${layer.calcDenier.toFixed(2)}D × ${layer.beamEnds ?? 0} ends / 90000 = ${layer.formulaKgPer100m.toFixed(3)} kg/100m`
+                                                        : `${layer.calcDenier.toFixed(2)}D × ${layer.picks ?? 0} PPI × ${(layer.effectiveCostingWidthInches ?? 0).toFixed(1)} in / 90000 = ${layer.formulaKgPer100m.toFixed(3)} kg/100m`}
+                                                </p>
+                                            ) : (
+                                                <p className="mt-1 text-[10px] font-medium leading-tight text-[var(--color-muted)]">
+                                                    Manual base: {(layer.manualKgPer100m ?? layer.baseKgPer100mUsed).toFixed(3)} kg/100m
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="font-mono font-semibold text-[var(--color-muted)]">{layer.mode === 'manual' ? 'Manual' : 'Formula'}</p>
+                                            <p className="text-[10px] font-medium leading-tight text-[var(--color-muted)]">{layer.formulaDescription}</p>
+                                        </div>
+                                        <p className="font-mono text-[var(--color-ink)]">{layer.baseKgPer100mUsed.toFixed(3)}</p>
+                                        <div>
+                                            <p className="font-mono text-[var(--color-warning-amber)]">{layer.totalAdjustmentPct.toFixed(1)}%</p>
+                                            <p className="text-[10px] font-medium leading-tight text-[var(--color-muted)]">{layer.crimpPct.toFixed(1)}% crimp + {layer.wastePct.toFixed(1)}% waste</p>
+                                        </div>
+                                        <p className="font-mono text-[var(--color-ink)]">{layer.finalKgPer100m.toFixed(3)}</p>
+                                        <p className="font-mono text-[var(--color-ink)]">₹{layer.ratePerKg.toFixed(0)}/kg</p>
+                                        <p className="text-right font-mono font-semibold text-[var(--color-factory-green)]">₹{layer.costPerMeter.toFixed(2)}/m</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
+                            <div className="rounded-[12px] border border-[var(--color-hairline)] bg-[var(--color-canvas)] p-4">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Yarn subtotal</p>
+                                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                                    <div>
+                                        <p className="text-[10px] text-[var(--color-muted)]">Base before adjustment</p>
+                                        <p className="font-mono text-base font-semibold text-[var(--color-ink)]">₹{totals.audit.yarnBaseCostPerMeter.toFixed(2)}/m</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-[var(--color-muted)]">Waste/crimp add-on</p>
+                                        <p className="font-mono text-base font-semibold text-[var(--color-warning-amber)]">₹{totals.audit.yarnAdjustmentCostPerMeter.toFixed(2)}/m</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-[var(--color-muted)]">Yarn after adjustment</p>
+                                        <p className="font-mono text-base font-semibold text-[var(--color-factory-green)]">₹{totals.audit.yarnTotalCostPerMeter.toFixed(2)}/m</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="rounded-[12px] border border-[var(--color-hairline)] bg-white p-4">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--color-muted)]">Production stack</p>
+                                <div className="mt-2 divide-y divide-[var(--color-hairline)]">
+                                    {auditCostLines.map(line => (
+                                        <div key={line.label} className="flex items-center justify-between gap-3 py-1.5 text-xs">
+                                            <span className="font-medium text-[var(--color-muted)]">{line.label}</span>
+                                            <span className="font-mono font-semibold text-[var(--color-ink)]">₹{line.value.toFixed(2)}/m</span>
+                                        </div>
+                                    ))}
+                                    <div className="flex items-center justify-between gap-3 pt-2 text-sm">
+                                        <span className="font-semibold text-[var(--color-ink)]">Production cost</span>
+                                        <span className="font-mono font-semibold text-[var(--color-factory-green)]">₹{totals.audit.productionCostPerMeter.toFixed(2)}/m</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </EstimatorCard>
+
+                {/* 9. Simulation / Order */}
                 <EstimatorCard accent="weft">
-                    <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={8} />
+                    <SectionHeader title={mode === 'market' ? t('estimator.simulation.market_title') : t('estimator.simulation.title')} icon={Coins} accent="weft" step={9} />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <NumField 

@@ -5,12 +5,317 @@ import {
     calcWarpYarnKg,
     calcWeaveCostPerMeter,
     calcWeftYarnKg,
+    getWidthWarnings,
+    inchesToCm,
     makeDefaultEstimateState,
     type EstimateState,
 } from '../lib/estimator'
 
 function round2(value: number) {
     return Math.round(value * 100) / 100
+}
+
+function makeDno252BaseEstimate(partial: Partial<EstimateState>): EstimateState {
+    return {
+        ...makeDefaultEstimateState(),
+        perPickCostPaisa: 0,
+        warpingRatePerKg: 0,
+        sizingRatePerKg: 0,
+        sizingMode: 'in_house',
+        yarnShortagePct: 10,
+        warpCrimpPct: 0,
+        overheadItems: [],
+        overheadOverridePerM: 21.5,
+        monthlyOutputM: 10000,
+        enabledSections: {
+            winding: false,
+            processing: false,
+            finishing: false,
+            commission: false,
+            transport: false,
+        },
+        ...partial,
+    }
+}
+
+function makeDno252ManualEstimate(): EstimateState {
+    return makeDno252BaseEstimate({
+        warpRows: [
+            {
+                id: 'warp-50-600',
+                label: '50/600',
+                calculationMode: 'manual',
+                manualKgPer100m: 3.8,
+                calcDenier: 50.6,
+                beamEnds: 6200,
+                yarnRate: 191,
+                gstPct: 0,
+                shortagePct: null,
+            },
+            {
+                id: 'warp-jari',
+                label: 'Jari',
+                calculationMode: 'manual',
+                manualKgPer100m: 3.3,
+                calcDenier: 0,
+                beamEnds: 0,
+                yarnRate: 340,
+                gstPct: 0,
+                shortagePct: null,
+            },
+        ],
+        weftRows: [{
+            id: 'weft-40-spun',
+            label: '40 spun',
+            calculationMode: 'manual',
+            manualKgPer100m: 6.5,
+            picks: 0,
+            reedSpace: 0,
+            calcDenier: 0,
+            yarnRate: 197,
+            gstPct: 0,
+            shortagePct: null,
+        }],
+    })
+}
+
+function makeDno252FormulaEquivalentEstimate(): EstimateState {
+    const effectiveWidthCm = inchesToCm(62)
+    return makeDno252BaseEstimate({
+        warpRows: [
+            {
+                id: 'warp-50-600',
+                label: '50/600',
+                calculationMode: 'formula',
+                manualKgPer100m: null,
+                calcDenier: 55.1612903226,
+                beamEnds: 6200,
+                yarnRate: 191,
+                gstPct: 0,
+                shortagePct: null,
+            },
+            {
+                id: 'warp-jari',
+                label: 'Jari',
+                calculationMode: 'formula',
+                manualKgPer100m: null,
+                calcDenier: 150,
+                beamEnds: 1980,
+                yarnRate: 340,
+                gstPct: 0,
+                shortagePct: null,
+            },
+        ],
+        weftRows: [{
+            id: 'weft-40-spun',
+            label: '40 spun',
+            calculationMode: 'formula',
+            manualKgPer100m: null,
+            picks: 60,
+            finishedWidthCm: inchesToCm(60),
+            effectiveCostingWidthCm: effectiveWidthCm,
+            reedSpace: effectiveWidthCm,
+            calcDenier: 157.2580645161,
+            yarnRate: 197,
+            gstPct: 0,
+            shortagePct: null,
+        }],
+    })
+}
+
+function makeFactoryFormulaQaEstimate(): EstimateState {
+    const effectiveWidthCm = inchesToCm(62)
+    return {
+        ...makeDefaultEstimateState(),
+        warpRows: [
+            {
+                id: 'qa-warp-50-600',
+                label: '50/600',
+                calculationMode: 'formula',
+                calcDenier: 55,
+                beamEnds: 6200,
+                yarnRate: 191,
+                gstPct: 0,
+                shortagePct: null,
+            },
+            {
+                id: 'qa-warp-jari',
+                label: 'Jari',
+                calculationMode: 'formula',
+                calcDenier: 155,
+                beamEnds: 1920,
+                yarnRate: 340,
+                gstPct: 0,
+                shortagePct: null,
+            },
+        ],
+        weftRows: [{
+            id: 'qa-weft-spun',
+            label: '50 span/spun',
+            calculationMode: 'formula',
+            picks: 60,
+            finishedWidthCm: inchesToCm(60),
+            effectiveCostingWidthCm: effectiveWidthCm,
+            reedSpace: effectiveWidthCm,
+            calcDenier: 132,
+            yarnRate: 197,
+            gstPct: 0,
+            shortagePct: null,
+        }],
+        perPickCostPaisa: 8.25 / 60,
+        warpingRatePerKg: 0,
+        sizingRatePerKg: 0,
+        sizingMode: 'in_house',
+        yarnShortagePct: 10,
+        warpCrimpPct: 10,
+        overheadItems: [],
+        overheadOverridePerM: 13.5,
+        monthlyOutputM: 10000,
+        enabledSections: {
+            winding: false,
+            processing: false,
+            finishing: false,
+            commission: false,
+            transport: false,
+        },
+    }
+}
+
+function makeFactoryFormulaEquivalentManualQaEstimate(): EstimateState {
+    return {
+        ...makeFactoryFormulaQaEstimate(),
+        warpRows: [
+            {
+                id: 'qa-manual-warp-50-600',
+                label: '50/600',
+                calculationMode: 'manual',
+                manualKgPer100m: 3.7888889,
+                calcDenier: 55,
+                beamEnds: 6200,
+                yarnRate: 191,
+                gstPct: 0,
+                shortagePct: null,
+            },
+            {
+                id: 'qa-manual-warp-jari',
+                label: 'Jari',
+                calculationMode: 'manual',
+                manualKgPer100m: 3.3066667,
+                calcDenier: 155,
+                beamEnds: 1920,
+                yarnRate: 340,
+                gstPct: 0,
+                shortagePct: null,
+            },
+        ],
+        weftRows: [{
+            id: 'qa-manual-weft-spun',
+            label: '50 span/spun',
+            calculationMode: 'manual',
+            manualKgPer100m: 5.456,
+            picks: 60,
+            finishedWidthCm: inchesToCm(60),
+            effectiveCostingWidthCm: inchesToCm(62),
+            reedSpace: inchesToCm(62),
+            calcDenier: 132,
+            yarnRate: 197,
+            gstPct: 0,
+            shortagePct: null,
+        }],
+    }
+}
+
+function makePracticalManualQaEstimate(overheadPerM: number): EstimateState {
+    return {
+        ...makeDefaultEstimateState(),
+        warpRows: [
+            {
+                id: 'practical-warp-50-600',
+                label: '50/600',
+                calculationMode: 'manual',
+                manualKgPer100m: 3.8,
+                calcDenier: 50.6,
+                beamEnds: 6200,
+                yarnRate: 191,
+                gstPct: 0,
+                shortagePct: null,
+            },
+            {
+                id: 'practical-warp-jari',
+                label: 'Jari',
+                calculationMode: 'manual',
+                manualKgPer100m: 3.3,
+                calcDenier: 150,
+                beamEnds: 1980,
+                yarnRate: 340,
+                gstPct: 0,
+                shortagePct: null,
+            },
+        ],
+        weftRows: [{
+            id: 'practical-weft-40-spun',
+            label: '40 spun',
+            calculationMode: 'manual',
+            manualKgPer100m: 6.5,
+            picks: 60,
+            finishedWidthCm: inchesToCm(60),
+            effectiveCostingWidthCm: inchesToCm(62),
+            reedSpace: inchesToCm(62),
+            calcDenier: 132,
+            yarnRate: 197,
+            gstPct: 0,
+            shortagePct: null,
+        }],
+        perPickCostPaisa: 8.25 / 60,
+        warpingRatePerKg: 0,
+        sizingRatePerKg: 0,
+        sizingMode: 'in_house',
+        yarnShortagePct: 10,
+        warpCrimpPct: 0,
+        overheadItems: [],
+        overheadOverridePerM: overheadPerM,
+        monthlyOutputM: 10000,
+        enabledSections: {
+            winding: false,
+            processing: false,
+            finishing: false,
+            commission: false,
+            transport: false,
+        },
+    }
+}
+
+function expectDno252Reconciled(totals: ReturnType<typeof calcFullTotals>) {
+    expect(round2(totals.warpRows[0].costPerMeter)).toBe(7.98)
+    expect(round2(totals.warpRows[1].costPerMeter)).toBe(12.34)
+    expect(round2(totals.weftRows[0].costPerMeter)).toBe(14.09)
+    expect(totals.audit.yarnBaseCostPerMeter).toBeCloseTo(31.28, 2)
+    expect(round2(totals.audit.yarnTotalCostPerMeter)).toBe(34.41)
+    expect(round2(totals.overheadPerM)).toBe(21.5)
+    expect(totals.totalProductionCostPerM).toBeGreaterThanOrEqual(55.78)
+    expect(totals.totalProductionCostPerM).toBeLessThanOrEqual(55.98)
+    expect(round2(totals.totalProductionCostPerM)).toBe(55.91)
+}
+
+function expectFactoryFormulaQaReconciled(totals: ReturnType<typeof calcFullTotals>) {
+    expect(totals.warpRows[0].formulaKgPer100m).toBeCloseTo(3.7888889, 6)
+    expect(totals.warpRows[0].finalKgPer100m).toBeCloseTo(4.5466667, 6)
+    expect(round2(totals.warpRows[0].costPerMeter)).toBe(8.68)
+
+    expect(totals.warpRows[1].formulaKgPer100m).toBeCloseTo(3.3066667, 6)
+    expect(totals.warpRows[1].finalKgPer100m).toBeCloseTo(3.968, 6)
+    expect(round2(totals.warpRows[1].costPerMeter)).toBe(13.49)
+
+    expect(totals.weftRows[0].formulaKgPer100m).toBeCloseTo(5.456, 6)
+    expect(totals.weftRows[0].finalKgPer100m).toBeCloseTo(6.0016, 6)
+    expect(round2(totals.weftRows[0].costPerMeter)).toBe(11.82)
+
+    expect(round2(totals.audit.yarnTotalCostPerMeter)).toBe(34)
+    expect(round2(totals.weaveCostPerM)).toBe(8.25)
+    expect(round2(totals.overheadPerM)).toBe(13.5)
+    expect(totals.totalProductionCostPerM).toBeGreaterThanOrEqual(55.65)
+    expect(totals.totalProductionCostPerM).toBeLessThanOrEqual(55.85)
+    expect(round2(totals.totalProductionCostPerM)).toBe(55.75)
 }
 
 describe('Estimator formula primitives', () => {
@@ -61,6 +366,235 @@ describe('Estimator formula primitives', () => {
 })
 
 describe('Estimator full totals', () => {
+    it('calculates the real factory formula QA case honestly with warp crimp only on warp', () => {
+        const totals = calcFullTotals(makeFactoryFormulaQaEstimate())
+
+        expectFactoryFormulaQaReconciled(totals)
+        expect(totals.audit.warp.layers[0]).toMatchObject({
+            name: '50/600',
+            mode: 'formula',
+            crimpPct: 10,
+            wastePct: 10,
+            totalAdjustmentPct: 20,
+        })
+        expect(totals.audit.warp.layers[1]).toMatchObject({
+            name: 'Jari',
+            mode: 'formula',
+            crimpPct: 10,
+            wastePct: 10,
+            totalAdjustmentPct: 20,
+        })
+        expect(totals.audit.weft.layers[0]).toMatchObject({
+            name: '50 span/spun',
+            mode: 'formula',
+            crimpPct: 0,
+            wastePct: 10,
+            totalAdjustmentPct: 10,
+            effectiveCostingWidthInches: expect.closeTo(62, 6),
+        })
+    })
+
+    it('matches real formula QA totals in formula-equivalent manual kg/100m mode', () => {
+        const formulaTotals = calcFullTotals(makeFactoryFormulaQaEstimate())
+        const manualTotals = calcFullTotals(makeFactoryFormulaEquivalentManualQaEstimate())
+
+        expectFactoryFormulaQaReconciled(manualTotals)
+        expect(Math.abs(formulaTotals.totalProductionCostPerM - manualTotals.totalProductionCostPerM)).toBeLessThanOrEqual(0.10)
+        expect(manualTotals.audit.warp.layers[0]).toMatchObject({
+            mode: 'manual',
+            baseKgPer100mUsed: expect.closeTo(3.7888889, 6),
+            totalAdjustmentPct: 20,
+        })
+        expect(manualTotals.audit.weft.layers[0]).toMatchObject({
+            mode: 'manual',
+            baseKgPer100mUsed: expect.closeTo(5.456, 6),
+            crimpPct: 0,
+            totalAdjustmentPct: 10,
+        })
+    })
+
+    it('keeps practical manual regression aligned with explicit weave and overhead inputs', () => {
+        const oldOtherCostTotals = calcFullTotals(makePracticalManualQaEstimate(13.25))
+        const newOtherCostTotals = calcFullTotals(makePracticalManualQaEstimate(13.5))
+
+        expect(round2(oldOtherCostTotals.audit.yarnTotalCostPerMeter)).toBe(34.41)
+        expect(round2(oldOtherCostTotals.weaveCostPerM)).toBe(8.25)
+        expect(round2(oldOtherCostTotals.overheadPerM)).toBe(13.25)
+        expect(round2(oldOtherCostTotals.totalProductionCostPerM)).toBe(55.91)
+
+        expect(round2(newOtherCostTotals.audit.yarnTotalCostPerMeter)).toBe(34.41)
+        expect(round2(newOtherCostTotals.weaveCostPerM)).toBe(8.25)
+        expect(round2(newOtherCostTotals.overheadPerM)).toBe(13.5)
+        expect(round2(newOtherCostTotals.totalProductionCostPerM)).toBe(56.16)
+    })
+
+    it('reconciles D.NO 252/254 manual kg/100m factory costing within pilot tolerance', () => {
+        const totals = calcFullTotals(makeDno252ManualEstimate())
+
+        expectDno252Reconciled(totals)
+        expect(totals.audit.warp.layers[0]).toMatchObject({
+            name: '50/600',
+            mode: 'manual',
+            manualKgPer100m: 3.8,
+            baseKgPer100mUsed: 3.8,
+            wastePct: 10,
+            totalAdjustmentPct: 10,
+        })
+        expect(totals.audit.productionCostPerMeter).toBe(totals.totalProductionCostPerM)
+    })
+
+    it('reconciles D.NO 252/254 formula inputs when they mathematically imply the manual kg fixture', () => {
+        const manualTotals = calcFullTotals(makeDno252ManualEstimate())
+        const formulaTotals = calcFullTotals(makeDno252FormulaEquivalentEstimate())
+
+        expectDno252Reconciled(formulaTotals)
+        expect(Math.abs(formulaTotals.totalProductionCostPerM - manualTotals.totalProductionCostPerM)).toBeLessThanOrEqual(0.10)
+        expect(formulaTotals.audit.warp.layers[0]).toMatchObject({
+            mode: 'formula',
+            formulaDescription: 'denier × beam ends / 90000',
+            calcDenier: 55.1612903226,
+            beamEnds: 6200,
+            formulaKgPer100m: expect.closeTo(3.8, 6),
+            baseKgPer100mUsed: expect.closeTo(3.8, 6),
+            totalAdjustmentPct: 10,
+        })
+        expect(formulaTotals.audit.weft.layers[0]).toMatchObject({
+            mode: 'formula',
+            formulaDescription: 'denier × PPI × effective width inches / 90000',
+            calcDenier: 157.2580645161,
+            picks: 60,
+            effectiveCostingWidthInches: expect.closeTo(62, 6),
+            formulaKgPer100m: expect.closeTo(6.5, 6),
+            baseKgPer100mUsed: expect.closeTo(6.5, 6),
+            totalAdjustmentPct: 10,
+        })
+    })
+
+    it('matches manual layer costs when formula inputs imply the same base kg/100m', () => {
+        const manualTotals = calcFullTotals(makeDno252ManualEstimate())
+        const formulaTotals = calcFullTotals(makeDno252FormulaEquivalentEstimate())
+
+        expect(Math.abs(formulaTotals.warpRows[0].costPerMeter - manualTotals.warpRows[0].costPerMeter)).toBeLessThanOrEqual(0.05)
+        expect(Math.abs(formulaTotals.warpRows[1].costPerMeter - manualTotals.warpRows[1].costPerMeter)).toBeLessThanOrEqual(0.05)
+        expect(Math.abs(formulaTotals.weftRows[0].costPerMeter - manualTotals.weftRows[0].costPerMeter)).toBeLessThanOrEqual(0.05)
+        expect(Math.abs(formulaTotals.totalProductionCostPerM - manualTotals.totalProductionCostPerM)).toBeLessThanOrEqual(0.10)
+    })
+
+    it('reconciles mixed formula/manual D.NO 252/254 layers when each layer implies the same base kg', () => {
+        const formula = makeDno252FormulaEquivalentEstimate()
+        const manual = makeDno252ManualEstimate()
+        const mixed = makeDno252BaseEstimate({
+            warpRows: [
+                formula.warpRows[0],
+                manual.warpRows[1],
+            ],
+            weftRows: [formula.weftRows[0]],
+        })
+
+        const totals = calcFullTotals(mixed)
+
+        expectDno252Reconciled(totals)
+        expect(totals.audit.warp.layers[0].mode).toBe('formula')
+        expect(totals.audit.warp.layers[1].mode).toBe('manual')
+        expect(totals.audit.weft.layers[0].mode).toBe('formula')
+    })
+
+    it('does not silently adjust formula-derived kg to practical/manual fixture weights', () => {
+        const estimate = makeDno252BaseEstimate({
+            warpRows: [{
+                id: 'warp-50-600',
+                label: '50/600 practical mismatch',
+                calculationMode: 'formula',
+                calcDenier: 50.6,
+                beamEnds: 6200,
+                yarnRate: 191,
+                gstPct: 0,
+                shortagePct: null,
+            }],
+            weftRows: [],
+        })
+
+        const totals = calcFullTotals(estimate)
+        const layer = totals.audit.warp.layers[0]
+
+        expect(layer.mode).toBe('formula')
+        expect(layer.formulaKgPer100m).toBeCloseTo(3.4857778, 6)
+        expect(layer.baseKgPer100mUsed).toBeCloseTo(3.4857778, 6)
+        expect(layer.baseKgPer100mUsed).not.toBeCloseTo(3.8, 3)
+        expect(layer.finalKgPer100m).toBeCloseTo(3.8343556, 6)
+        expect(round2(layer.costPerMeter)).toBe(7.32)
+        expect(round2(totals.totalProductionCostPerM)).toBe(28.82)
+    })
+
+    it('applies row waste override and crimp semantics without hidden double-counting', () => {
+        const base = makeDefaultEstimateState()
+        const makeEstimate = (defaultWaste: number, rowWaste: number | null, crimp: number): EstimateState => ({
+            ...base,
+            warpRows: [{
+                id: 'warp-main',
+                calcDenier: 75,
+                beamEnds: 3200,
+                yarnRate: 100,
+                gstPct: 0,
+                shortagePct: rowWaste,
+            }],
+            weftRows: [{
+                id: 'weft-main',
+                picks: 60,
+                reedSpace: inchesToCm(62),
+                effectiveCostingWidthCm: inchesToCm(62),
+                calcDenier: 132,
+                yarnRate: 197,
+                gstPct: 0,
+                shortagePct: rowWaste,
+            }],
+            yarnShortagePct: defaultWaste,
+            warpCrimpPct: crimp,
+        })
+
+        expect(calcFullTotals(makeEstimate(10, null, 0)).warpRows[0].totalAdjustmentPct).toBe(10)
+        expect(calcFullTotals(makeEstimate(10, 0, 0)).warpRows[0].totalAdjustmentPct).toBe(0)
+        expect(calcFullTotals(makeEstimate(0, 10, 10)).warpRows[0].totalAdjustmentPct).toBe(20)
+        expect(calcFullTotals(makeEstimate(10, 10, 0)).warpRows[0].totalAdjustmentPct).toBe(10)
+        expect(calcFullTotals(makeEstimate(10, null, 10)).weftRows[0].totalAdjustmentPct).toBe(10)
+        expect(calcFullTotals(makeEstimate(10, 0, 10)).weftRows[0].totalAdjustmentPct).toBe(0)
+        expect(calcFullTotals(makeEstimate(10, 10, 10)).weftRows[0].totalAdjustmentPct).toBe(10)
+        expect(calcFullTotals(makeEstimate(10, 10, 10)).weftRows[0].crimpPct).toBe(0)
+    })
+
+    it('uses effective costing width for weft formula and warns on dangerous cm widths', () => {
+        const effectiveWidthCm = inchesToCm(62)
+        const estimate: EstimateState = {
+            ...makeDefaultEstimateState(),
+            warpRows: [],
+            weftRows: [{
+                id: 'weft-main',
+                picks: 68,
+                finishedWidthCm: inchesToCm(60),
+                effectiveCostingWidthCm: effectiveWidthCm,
+                reedSpace: effectiveWidthCm,
+                calcDenier: 40,
+                yarnRate: 197,
+                gstPct: 0,
+                shortagePct: 0,
+            }],
+            yarnShortagePct: 10,
+            warpCrimpPct: 0,
+        }
+
+        const totals = calcFullTotals(estimate)
+        expect(totals.weftRows[0].formulaKgPer100m).toBeCloseTo(calcWeftYarnKg(68, effectiveWidthCm, 40), 8)
+        expect(totals.weftRows[0].effectiveCostingWidthInches).toBeCloseTo(62, 6)
+        expect(totals.weftRows[0].totalAdjustmentPct).toBe(0)
+
+        const warnings = getWidthWarnings({
+            effectiveCostingWidthCm: 62,
+            inputUnit: 'cm',
+            rawInputValue: 62,
+        })
+        expect(warnings.map(warning => warning.message)).toContain('62 cm is only 24.4 inches. Did you mean 62 inches?')
+    })
+
     it('keeps a representative Phase 1 costing stack stable', () => {
         const estimate: EstimateState = {
             ...makeDefaultEstimateState(),
@@ -117,13 +651,13 @@ describe('Estimator full totals', () => {
         const totals = calcFullTotals(estimate)
 
         expect(round2(totals.warpCostPerM)).toBe(3.08)
-        expect(round2(totals.weftCostPerM)).toBe(1.60)
+        expect(round2(totals.weftCostPerM)).toBe(1.52)
         expect(round2(totals.weaveCostPerM)).toBe(10.88)
         expect(round2(totals.warpingAndSizingPerM)).toBe(0.1)
         expect(round2(totals.overheadPerM)).toBe(10)
-        expect(round2(totals.totalProductionCostPerM)).toBe(25.66)
-        expect(round2(totals.orderQuote?.quotePricePerM ?? 0)).toBe(31.00)
-        expect(round2(totals.orderQuote?.grossProfitRupees ?? 0)).toBe(3720.04)
+        expect(round2(totals.totalProductionCostPerM)).toBe(25.59)
+        expect(round2(totals.orderQuote?.quotePricePerM ?? 0)).toBe(30.92)
+        expect(round2(totals.orderQuote?.grossProfitRupees ?? 0)).toBe(3709.90)
     })
 
     it('calculates V3 totals for a mixed warp/weft composition', () => {
@@ -236,14 +770,14 @@ describe('Estimator full totals', () => {
 
         expect(round2(totals.warpRows[0].kgPer100m)).toBe(3.32)
         expect(round2(totals.warpCostPerM)).toBe(11.63)
-        expect(round2(totals.weftRows[0].kgPer100m)).toBe(1.92)
-        expect(round2(totals.weftCostPerM)).toBe(6.70)
+        expect(round2(totals.weftRows[0].kgPer100m)).toBe(1.83)
+        expect(round2(totals.weftCostPerM)).toBe(6.41)
         expect(round2(totals.weaveCostPerM)).toBe(8.00)
         expect(round2(totals.warpingAndSizingPerM)).toBe(0.40)
         expect(round2(totals.overheadPerM)).toBe(5.75)
         
-        expect(round2(totals.totalProductionCostPerM)).toBe(32.48)
-        expect(round2(totals.orderQuote?.landedCostPerM ?? totals.totalProductionCostPerM)).toBe(32.48)
+        expect(round2(totals.totalProductionCostPerM)).toBe(32.19)
+        expect(round2(totals.orderQuote?.landedCostPerM ?? totals.totalProductionCostPerM)).toBe(32.19)
     })
 
     it('calculates landed cost separately with commission and transport additions', () => {
@@ -294,9 +828,9 @@ describe('Estimator full totals', () => {
 
         const totals = calcFullTotals(estimate)
 
-        expect(round2(totals.totalProductionCostPerM)).toBe(32.48)
-        expect(round2(totals.orderQuote?.landedCostPerM ?? 0)).toBe(34.77)
-        expect(round2(totals.orderQuote?.quotePricePerM ?? 0)).toBe(39.51)
+        expect(round2(totals.totalProductionCostPerM)).toBe(32.19)
+        expect(round2(totals.orderQuote?.landedCostPerM ?? 0)).toBe(34.47)
+        expect(round2(totals.orderQuote?.quotePricePerM ?? 0)).toBe(39.17)
     })
 })
 
@@ -403,4 +937,3 @@ describe('Estimator Market-Mode Race Condition Safety', () => {
         expect(resolved).toBe('Sundaram Textiles')
     })
 })
-

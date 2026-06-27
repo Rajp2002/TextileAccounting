@@ -6,8 +6,8 @@
  * only math engine in this file.
  *
  * COST STACK (per metre of finished fabric):
- *   Layer 1: Warp yarn     = Σ (beamEnds × calcDenier × (1 + warpCrimpPct/100) × rate × GST × shortage)
- *             ↑ warpCrimpPct accounts for yarn take-up: 6% crimp → 1.06m yarn per 1m cloth
+ *   Layer 1: Warp yarn     = Σ (beamEnds × calcDenier × (1 + warpCrimpPct/100 + waste%) × rate × GST)
+ *             ↑ warpCrimpPct accounts for warp take-up only: 6% crimp → 1.06m warp yarn per 1m cloth
  *   Layer 2: Weft yarn     = Σ (picks × reedSpace × calcDenier × rate × GST × shortage)
  *   Layer 3: Weave cost    = picks(PPI) × perPickCostPaisa
  *   Layer 4: Warping+Sizing= totalWarpKg × (warpingRate + sizingRate) / 100
@@ -59,6 +59,8 @@ export const LOOM_TYPE_DEFAULTS = {
 } as const
 
 export type LoomType = keyof typeof LOOM_TYPE_DEFAULTS
+export type YarnCalculationMode = 'formula' | 'manual'
+export type WidthUnit = 'cm' | 'inch'
 
 // Configure Decimal for financial calculations — matches lib/finance.ts
 // 20-digit precision is hardened for textile manufacturing land-cost analysis
@@ -72,6 +74,8 @@ Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP })
 export interface WarpRow {
   id: string
   label?: string        // optional display label e.g. "Main", "Selvedge"
+  calculationMode?: YarnCalculationMode // formula by default; manual bypasses formula kg
+  manualKgPer100m?: number | null // base kg/100m before waste/crimp when mode is manual
   calcDenier: number    // effective denier after doubling (e.g. 75/2 → 37.5)
   beamEnds: number      // ends for THIS row only — discrete per component
   yarnRate: number      // ₹/kg market rate for this yarn
@@ -83,9 +87,12 @@ export interface WarpRow {
 export interface WeftRow {
   id: string
   label?: string
+  calculationMode?: YarnCalculationMode
+  manualKgPer100m?: number | null
   picks: number         // picks per inch (PPI) — industry standard in Surat
-  reedSpace: number     // finished CLOTH width in cm (not loom/reed width)
-                        // Use the actual output cloth width — narrower than loom due to crimp
+  reedSpace: number     // legacy effective costing width in cm; use effectiveCostingWidthCm when present
+  finishedWidthCm?: number | null // market pano / finished width in cm
+  effectiveCostingWidthCm?: number | null // loom/costing width in cm; used for weft formula
   calcDenier: number    // effective weft yarn denier
   yarnRate: number      // ₹/kg
   gstPct: number
@@ -202,18 +209,79 @@ export interface EstimateState {
 
 /** Warp row after formula has been applied */
 export interface WarpRowResult extends WarpRow {
-  kgPer100m:        number   // raw yarn kg per 100m of fabric
-  costPer100m:      number   // ₹ per 100m (GST + shortage inclusive)
-  shortagePctUsed:  number   // effective shortage % applied (row-level or global fallback)
-  shortageCostPer100m: number // rupee contribution of shortage for this row
+  mode: YarnCalculationMode
+  formulaKgPer100m: number
+  baseKgPer100mUsed: number
+  crimpPct: number
+  wastePct: number
+  totalAdjustmentPct: number
+  finalKgPer100m: number
+  ratePerKg: number
+  costPerMeter: number
+  kgPer100m:        number   // final yarn kg per 100m of fabric after adjustment
+  costPer100m:      number   // ₹ per 100m (GST + adjustment inclusive)
+  shortagePctUsed:  number   // effective waste % applied (row-level or global fallback)
+  shortageCostPer100m: number // rupee contribution of waste/crimp adjustment for this row
 }
 
 /** Weft row after formula has been applied */
 export interface WeftRowResult extends WeftRow {
+  mode: YarnCalculationMode
+  formulaKgPer100m: number
+  baseKgPer100mUsed: number
+  crimpPct: number
+  wastePct: number
+  totalAdjustmentPct: number
+  finalKgPer100m: number
+  ratePerKg: number
+  costPerMeter: number
+  effectiveCostingWidthInches: number
   kgPer100m:        number
   costPer100m:      number
   shortagePctUsed:  number
   shortageCostPer100m: number
+}
+
+export interface EstimatorYarnLayerAudit {
+  id: string
+  name: string
+  mode: YarnCalculationMode
+  formulaDescription: string
+  calcDenier: number
+  beamEnds: number | null
+  picks: number | null
+  effectiveCostingWidthInches: number | null
+  formulaKgPer100m: number
+  manualKgPer100m: number | null
+  baseKgPer100mUsed: number
+  crimpPct: number
+  wastePct: number
+  totalAdjustmentPct: number
+  finalKgPer100m: number
+  ratePerKg: number
+  gstPct: number
+  costPerMeter: number
+}
+
+export interface EstimatorCostAudit {
+  warp: {
+    layers: EstimatorYarnLayerAudit[]
+    totalCostPerMeter: number
+  }
+  weft: {
+    layers: EstimatorYarnLayerAudit[]
+    totalCostPerMeter: number
+  }
+  yarnBaseCostPerMeter: number
+  yarnAdjustmentCostPerMeter: number
+  yarnTotalCostPerMeter: number
+  weaveCostPerMeter: number
+  warpingAndSizingCostPerMeter: number
+  overheadCostPerMeter: number
+  postProcessingCostPerMeter: number
+  logisticsCostPerMeter: number
+  directCostPerMeter: number
+  productionCostPerMeter: number
 }
 
 /** Output of calcOrderQuote when order quantity is known */
@@ -257,6 +325,7 @@ export interface EstimatorV3Totals {
   totalAllYarnKgPer100m:   number   // used for winding formula + quality weight display
   estimatedBeamCapacityM:  number   // how many metres one full beam produces
   orderQuote:              OrderQuote | null
+  audit:                   EstimatorCostAudit
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -312,6 +381,72 @@ export function calcWeftYarnKg(picks: number, clothWidth: number, calcDenier: nu
     .times(100)
     .div(9_000_000)
     .toNumber()
+}
+
+export function cmToInches(cm: number): number {
+  return new Decimal(cm || 0).div(2.54).toNumber()
+}
+
+export function inchesToCm(inches: number): number {
+  return new Decimal(inches || 0).times(2.54).toNumber()
+}
+
+export function getEffectiveCostingWidthCm(row: Pick<WeftRow, 'reedSpace' | 'effectiveCostingWidthCm'>): number {
+  const explicit = Number(row.effectiveCostingWidthCm)
+  if (Number.isFinite(explicit) && explicit > 0) return explicit
+  const legacy = Number(row.reedSpace)
+  return Number.isFinite(legacy) ? legacy : 0
+}
+
+export type WidthWarningCode =
+  | 'suspicious_narrow_width'
+  | 'cm_value_looks_like_inches'
+  | 'effective_width_below_finished_width'
+
+export interface WidthWarning {
+  code: WidthWarningCode
+  message: string
+}
+
+export function getWidthWarnings(params: {
+  finishedWidthCm?: number | null
+  effectiveCostingWidthCm?: number | null
+  inputUnit?: WidthUnit
+  rawInputValue?: number
+}): WidthWarning[] {
+  const warnings: WidthWarning[] = []
+  const effectiveCm = Number(params.effectiveCostingWidthCm ?? 0)
+  const finishedCm = Number(params.finishedWidthCm ?? 0)
+  const effectiveInches = cmToInches(effectiveCm)
+  const rawInput = Number(params.rawInputValue ?? 0)
+
+  if (effectiveCm > 0 && effectiveInches < 30) {
+    warnings.push({
+      code: 'suspicious_narrow_width',
+      message: `${effectiveCm.toFixed(effectiveCm % 1 === 0 ? 0 : 1)} cm is only ${effectiveInches.toFixed(1)} inches. Did you mean ${effectiveCm.toFixed(effectiveCm % 1 === 0 ? 0 : 1)} inches?`,
+    })
+  }
+
+  if (
+    params.inputUnit === 'cm' &&
+    rawInput >= 45 &&
+    rawInput <= 90 &&
+    !warnings.some(warning => warning.code === 'suspicious_narrow_width')
+  ) {
+    warnings.push({
+      code: 'cm_value_looks_like_inches',
+      message: `${rawInput.toFixed(rawInput % 1 === 0 ? 0 : 1)} cm looks like an inch/pano width. Confirm the unit before costing.`,
+    })
+  }
+
+  if (finishedCm > 0 && effectiveCm > 0 && effectiveCm < finishedCm) {
+    warnings.push({
+      code: 'effective_width_below_finished_width',
+      message: `Effective costing width is below finished width. Add loom allowance or confirm this fabric narrows after finishing.`,
+    })
+  }
+
+  return warnings
 }
 
 /**
@@ -548,41 +683,88 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const warpCrimpPct = estimate.warpCrimpPct || 0;
 
   // ── Layer 1: Warp Yarn (Additive shortage applied) ──────────────
-  // Each row uses its own shortagePct; falls back to the global yarnShortagePct.
-  // We use additive logic: Total Shortage = Crimp % + Waste %.
-  // The cost directly multiples base kg * total shortage.
+  // Contract: row shortage/waste overrides the default. Null means use default,
+  // explicit 0 means no waste. Total adjustment is crimp + effective waste.
   const warpRows: WarpRowResult[] = estimate.warpRows.map(r => {
-    const baseKg          = calcWarpYarnKg(r.beamEnds, r.calcDenier);
-    const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage;
-    const totalShortagePct = new Decimal(warpCrimpPct).plus(shortagePctUsed);
-    
-    // To match Surat manual paper calculations exactly (where a '1.1 multiplier' applies equally to sizing cost)
-    // Both crimp and waste contribute to the gross weight sent to Sizing and Warping.
-    const kgPer100m       = new Decimal(baseKg).times(new Decimal(1).plus(totalShortagePct.div(100))).toNumber();
+    const mode: YarnCalculationMode = r.calculationMode === 'manual' ? 'manual' : 'formula'
+    const formulaKgPer100m = calcWarpYarnKg(r.beamEnds, r.calcDenier)
+    const manualKgPer100m = r.manualKgPer100m != null && Number.isFinite(Number(r.manualKgPer100m))
+      ? Number(r.manualKgPer100m)
+      : null
+    const baseKgPer100mUsed = mode === 'manual'
+      ? Math.max(0, manualKgPer100m ?? 0)
+      : formulaKgPer100m
+    const wastePct = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage
+    const totalAdjustmentPct = new Decimal(warpCrimpPct).plus(wastePct)
+    const finalKgPer100m = new Decimal(baseKgPer100mUsed)
+      .times(new Decimal(1).plus(totalAdjustmentPct.div(100)))
+      .toNumber()
 
-    const costPer100m     = calcYarnCost(baseKg, r.yarnRate, r.gstPct, totalShortagePct.toNumber());
-    const baseCostPer100m = calcYarnCost(baseKg, r.yarnRate, r.gstPct, 0);
+    const costPer100m = calcYarnCost(baseKgPer100mUsed, r.yarnRate, r.gstPct, totalAdjustmentPct.toNumber())
+    const baseCostPer100m = calcYarnCost(baseKgPer100mUsed, r.yarnRate, r.gstPct, 0)
     const shortageCostPer100m = new Decimal(costPer100m).minus(baseCostPer100m).toNumber();
     
-    return { ...r, kgPer100m, costPer100m, shortagePctUsed, shortageCostPer100m }
+    return {
+      ...r,
+      mode,
+      calculationMode: mode,
+      manualKgPer100m,
+      formulaKgPer100m,
+      baseKgPer100mUsed,
+      crimpPct: warpCrimpPct,
+      wastePct,
+      totalAdjustmentPct: totalAdjustmentPct.toNumber(),
+      finalKgPer100m,
+      ratePerKg: r.yarnRate,
+      costPerMeter: new Decimal(costPer100m).div(100).toNumber(),
+      kgPer100m: finalKgPer100m,
+      costPer100m,
+      shortagePctUsed: wastePct,
+      shortageCostPer100m,
+    }
   })
 
-  // ── Layer 2: Weft Yarn (Additive shortage applied) ───────────────────────
+  // ── Layer 2: Weft Yarn (waste only; warp crimp does not apply) ───────────
   const weftRows: WeftRowResult[] = estimate.weftRows.map(r => {
-    const baseKg          = calcWeftYarnKg(r.picks, r.reedSpace, r.calcDenier)
-    const shortagePctUsed = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage;
-    // NOTE: Using `warpCrimpPct` for weft is correct for Surat practice, where weft shortage/crimp is
-    // estimated using the warp crimp percentage, despite the misleading "warp" name.
-    const totalShortagePct = new Decimal(warpCrimpPct).plus(shortagePctUsed); // Weft now carries the full loom-wide shortage burden
+    const mode: YarnCalculationMode = r.calculationMode === 'manual' ? 'manual' : 'formula'
+    const effectiveCostingWidthCm = getEffectiveCostingWidthCm(r)
+    const formulaKgPer100m = calcWeftYarnKg(r.picks, effectiveCostingWidthCm, r.calcDenier)
+    const manualKgPer100m = r.manualKgPer100m != null && Number.isFinite(Number(r.manualKgPer100m))
+      ? Number(r.manualKgPer100m)
+      : null
+    const baseKgPer100mUsed = mode === 'manual'
+      ? Math.max(0, manualKgPer100m ?? 0)
+      : formulaKgPer100m
+    const wastePct = (r.shortagePct !== null && r.shortagePct !== undefined) ? r.shortagePct : globalShortage
+    const totalAdjustmentPct = new Decimal(wastePct)
+    const finalKgPer100m = new Decimal(baseKgPer100mUsed)
+      .times(new Decimal(1).plus(totalAdjustmentPct.div(100)))
+      .toNumber()
 
-    // Ensure weft contributes to total winding weight with the same '1.1 multiplier' safety net
-    const kgPer100m       = new Decimal(baseKg).times(new Decimal(1).plus(totalShortagePct.div(100))).toNumber();
-
-    const costPer100m     = calcYarnCost(baseKg, r.yarnRate, r.gstPct, totalShortagePct.toNumber());
-    const baseCostPer100m = calcYarnCost(baseKg, r.yarnRate, r.gstPct, 0);
+    const costPer100m = calcYarnCost(baseKgPer100mUsed, r.yarnRate, r.gstPct, totalAdjustmentPct.toNumber())
+    const baseCostPer100m = calcYarnCost(baseKgPer100mUsed, r.yarnRate, r.gstPct, 0)
     const shortageCostPer100m = new Decimal(costPer100m).minus(baseCostPer100m).toNumber();
     
-    return { ...r, kgPer100m, costPer100m, shortagePctUsed, shortageCostPer100m }
+    return {
+      ...r,
+      mode,
+      calculationMode: mode,
+      manualKgPer100m,
+      effectiveCostingWidthCm,
+      formulaKgPer100m,
+      baseKgPer100mUsed,
+      crimpPct: 0,
+      wastePct,
+      totalAdjustmentPct: totalAdjustmentPct.toNumber(),
+      finalKgPer100m,
+      ratePerKg: r.yarnRate,
+      costPerMeter: new Decimal(costPer100m).div(100).toNumber(),
+      effectiveCostingWidthInches: cmToInches(effectiveCostingWidthCm),
+      kgPer100m: finalKgPer100m,
+      costPer100m,
+      shortagePctUsed: wastePct,
+      shortageCostPer100m,
+    }
   })
 
   const totalWarpKgPer100m    = warpRows.reduce((s, r) => s.plus(r.kgPer100m), new Decimal(0))
@@ -594,8 +776,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
   const weftCostPerM = weftRows.reduce((s, r) => s.plus(r.costPer100m), new Decimal(0)).div(100)
 
   // Base costs (pre-shortage) for display
-  const yarnBaseWarpPerM = warpRows.reduce((s, r) => s.plus(calcYarnCost(r.kgPer100m, r.yarnRate, r.gstPct, 0)), new Decimal(0)).div(100)
-  const yarnBaseWeftPerM = weftRows.reduce((s, r) => s.plus(calcYarnCost(r.kgPer100m, r.yarnRate, r.gstPct, 0)), new Decimal(0)).div(100)
+  const yarnBaseWarpPerM = warpRows.reduce((s, r) => s.plus(calcYarnCost(r.baseKgPer100mUsed, r.yarnRate, r.gstPct, 0)), new Decimal(0)).div(100)
+  const yarnBaseWeftPerM = weftRows.reduce((s, r) => s.plus(calcYarnCost(r.baseKgPer100mUsed, r.yarnRate, r.gstPct, 0)), new Decimal(0)).div(100)
 
   // Total shortage cost across all rows: Σ(per-row shortage contributions)
   const yarnShortageCostPerM =
@@ -673,6 +855,54 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     profitMarginPct: estimate.profitPct,
   })
 
+  const toYarnLayerAudit = (row: WarpRowResult | WeftRowResult, fallbackName: string): EstimatorYarnLayerAudit => {
+    const isWarp = 'beamEnds' in row
+    return {
+      id: row.id,
+      name: row.label?.trim() || fallbackName,
+      mode: row.mode,
+      formulaDescription: isWarp
+        ? 'denier × beam ends / 90000'
+        : 'denier × PPI × effective width inches / 90000',
+      calcDenier: row.calcDenier,
+      beamEnds: isWarp ? row.beamEnds : null,
+      picks: 'picks' in row ? row.picks : null,
+      effectiveCostingWidthInches: 'effectiveCostingWidthInches' in row ? row.effectiveCostingWidthInches : null,
+      formulaKgPer100m: row.formulaKgPer100m,
+      manualKgPer100m: row.manualKgPer100m ?? null,
+      baseKgPer100mUsed: row.baseKgPer100mUsed,
+      crimpPct: row.crimpPct,
+      wastePct: row.wastePct,
+      totalAdjustmentPct: row.totalAdjustmentPct,
+      finalKgPer100m: row.finalKgPer100m,
+      ratePerKg: row.ratePerKg,
+      gstPct: row.gstPct,
+      costPerMeter: row.costPerMeter,
+    }
+  }
+
+  const postProcessingCostPerMeter = windingPerM.plus(processingPerM).plus(finishingPerM)
+  const audit: EstimatorCostAudit = {
+    warp: {
+      layers: warpRows.map((row, index) => toYarnLayerAudit(row, `Warp layer ${index + 1}`)),
+      totalCostPerMeter: warpCostPerM.toNumber(),
+    },
+    weft: {
+      layers: weftRows.map((row, index) => toYarnLayerAudit(row, `Weft layer ${index + 1}`)),
+      totalCostPerMeter: weftCostPerM.toNumber(),
+    },
+    yarnBaseCostPerMeter: yarnBaseWarpPerM.plus(yarnBaseWeftPerM).toNumber(),
+    yarnAdjustmentCostPerMeter: yarnShortageCostPerM.toNumber(),
+    yarnTotalCostPerMeter: warpCostPerM.plus(weftCostPerM).toNumber(),
+    weaveCostPerMeter: weaveCostPerM.toNumber(),
+    warpingAndSizingCostPerMeter: warpingAndSizingPerM.toNumber(),
+    overheadCostPerMeter: overheadPerM.toNumber(),
+    postProcessingCostPerMeter: postProcessingCostPerMeter.toNumber(),
+    logisticsCostPerMeter: estimate.enabledSections.transport ? Number(estimate.transportPerM || 0) : 0,
+    directCostPerMeter: directCostPerM.toNumber(),
+    productionCostPerMeter: totalProductionCostPerM.toNumber(),
+  }
+
   return {
     warpRows,
     weftRows,
@@ -700,6 +930,7 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
     estimatedBeamCapacityM,
     orderQuote,
     resolvedItems,
+    audit,
   }
 }
 
@@ -708,6 +939,8 @@ export function calcFullTotals(estimate: EstimateState): EstimatorV3Totals {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const DEFAULT_WARP_ROW: Omit<WarpRow, 'id'> = {
+  calculationMode: 'formula',
+  manualKgPer100m: null,
   calcDenier:  0,
   beamEnds:    0,
   yarnRate:    0,
@@ -716,8 +949,12 @@ export const DEFAULT_WARP_ROW: Omit<WarpRow, 'id'> = {
 }
 
 export const DEFAULT_WEFT_ROW: Omit<WeftRow, 'id'> = {
+  calculationMode: 'formula',
+  manualKgPer100m: null,
   picks:       0,
-  reedSpace:   0,   // finished cloth width in cm (not loom reed width, not folded width)
+  reedSpace:   0,   // legacy effective costing width in cm
+  finishedWidthCm: null,
+  effectiveCostingWidthCm: null,
   calcDenier:  0,
   yarnRate:    0,
   gstPct:      0,
@@ -751,7 +988,7 @@ export function makeDefaultEstimateState(): EstimateState {
     windingRatePerKg:   0,
     processingRatePerM: 0,
     finishingRatePerM:  0,
-    yarnShortagePct:    0,  // default shortage — applied per-row when row's shortagePct is 0
+    yarnShortagePct:    0,  // default waste — applied per-row when row's shortagePct is null
     warpCrimpPct:       5.0, // default 5% take-up
     overheadItems:      DEFAULT_OVERHEAD_ITEMS.map(item => ({ ...item, id: nanoid() })),
     monthlyOutputM:     0,

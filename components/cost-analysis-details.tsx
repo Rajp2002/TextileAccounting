@@ -201,7 +201,9 @@ export function CostAnalysisDetails({
                                             {row.label || `Warp layer ${index + 1}`}
                                         </p>
                                         <p className="text-[11px] font-semibold text-slate-500">
-                                            {row.beamEnds} ends · {row.calcDenier}D · {row.kgPer100m.toFixed(3)} kg/100m
+                                            {row.mode === 'manual'
+                                                ? `Manual · base ${row.baseKgPer100mUsed.toFixed(3)} kg/100m · final ${row.finalKgPer100m.toFixed(3)} kg/100m`
+                                                : `Formula · ${row.calcDenier}D × ${row.beamEnds} ends / 90000 = ${row.formulaKgPer100m.toFixed(3)} kg/100m · final ${row.finalKgPer100m.toFixed(3)} kg/100m`}
                                         </p>
                                     </div>
                                     <div className="text-right font-mono">
@@ -209,19 +211,75 @@ export function CostAnalysisDetails({
                                         {meters > 0 && <p className="text-[11px] text-slate-400">{totalMoney((row.costPer100m / 100) * meters)}</p>}
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-3 gap-2 text-[11px]">
+                                <div className="grid grid-cols-4 gap-2 text-[11px]">
                                     <div>
                                         <p className="font-bold uppercase tracking-wider text-slate-400">Yarn</p>
                                         <p className="font-mono font-semibold text-slate-700">{money(row.yarnRate, 0)}/kg</p>
                                     </div>
                                     <div>
-                                        <p className="font-bold uppercase tracking-wider text-slate-400">GST</p>
-                                        <p className="font-mono font-semibold text-slate-700">{num(row.gstPct).toFixed(1)}%</p>
+                                        <p className="font-bold uppercase tracking-wider text-slate-400">Crimp</p>
+                                        <p className="font-mono font-semibold text-slate-700">{row.crimpPct.toFixed(1)}%</p>
                                     </div>
                                     <div>
-                                        <p className="font-bold uppercase tracking-wider text-slate-400">Crimp + waste</p>
+                                        <p className="font-bold uppercase tracking-wider text-slate-400">Waste</p>
+                                        <p className="font-mono font-semibold text-slate-700">{row.wastePct.toFixed(1)}%</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-bold uppercase tracking-wider text-slate-400">Total adj.</p>
                                         <p className="font-mono font-semibold text-slate-700">
-                                            {(num(row.shortagePctUsed) + estimate.warpCrimpPct).toFixed(1)}%
+                                            {row.totalAdjustmentPct.toFixed(1)}%
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </details>
+            )}
+            {totals.weftRows.length > 0 && (
+                <details className="group rounded-xl border border-slate-200 bg-slate-50">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5">
+                        <span className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-600">
+                            <Layers className="h-3.5 w-3.5" /> Weft Layer Cost
+                        </span>
+                        <ChevronDown className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-180" />
+                    </summary>
+                    <div className="space-y-2 border-t border-slate-200 p-3">
+                        {totals.weftRows.map((row, index) => (
+                            <div key={row.id ?? index} className="rounded-lg border border-slate-200 bg-white p-3">
+                                <div className="mb-2 flex items-start justify-between gap-3">
+                                    <div>
+                                        <p className="text-sm font-black text-slate-900">
+                                            {row.label || `Weft layer ${index + 1}`}
+                                        </p>
+                                        <p className="text-[11px] font-semibold text-slate-500">
+                                            {row.mode === 'manual'
+                                                ? `Manual · base ${row.baseKgPer100mUsed.toFixed(3)} kg/100m · final ${row.finalKgPer100m.toFixed(3)} kg/100m`
+                                                : `Formula · ${row.calcDenier}D × ${row.picks} PPI × ${row.effectiveCostingWidthInches.toFixed(1)} in / 90000 = ${row.formulaKgPer100m.toFixed(3)} kg/100m · final ${row.finalKgPer100m.toFixed(3)} kg/100m`}
+                                        </p>
+                                    </div>
+                                    <div className="text-right font-mono">
+                                        <p className="text-sm font-black text-primary">{money(row.costPer100m / 100)}</p>
+                                        {meters > 0 && <p className="text-[11px] text-slate-400">{totalMoney((row.costPer100m / 100) * meters)}</p>}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-4 gap-2 text-[11px]">
+                                    <div>
+                                        <p className="font-bold uppercase tracking-wider text-slate-400">Yarn</p>
+                                        <p className="font-mono font-semibold text-slate-700">{money(row.yarnRate, 0)}/kg</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-bold uppercase tracking-wider text-slate-400">Crimp</p>
+                                        <p className="font-mono font-semibold text-slate-700">{row.crimpPct.toFixed(1)}%</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-bold uppercase tracking-wider text-slate-400">Waste</p>
+                                        <p className="font-mono font-semibold text-slate-700">{row.wastePct.toFixed(1)}%</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-bold uppercase tracking-wider text-slate-400">Total adj.</p>
+                                        <p className="font-mono font-semibold text-slate-700">
+                                            {row.totalAdjustmentPct.toFixed(1)}%
                                         </p>
                                     </div>
                                 </div>

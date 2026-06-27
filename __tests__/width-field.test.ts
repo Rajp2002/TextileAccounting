@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { calcFullTotals, makeDefaultEstimateState } from '../lib/estimator'
+import { calcFullTotals, getWidthWarnings, makeDefaultEstimateState } from '../lib/estimator'
 
 // Helper function that mirrors the UI's secondaryReadout logic
 function getSecondaryReadout(value: number, unit: 'cm' | 'inch'): string {
@@ -173,5 +173,21 @@ describe('4. WidthField state persistence', () => {
         // Clean up globals
         Reflect.deleteProperty(globalThis, 'window')
         Reflect.deleteProperty(globalThis, 'localStorage')
+    })
+})
+
+describe('5. Width warnings', () => {
+    it('warns when 62 cm would silently cost as only 24.4 inches', () => {
+        const warnings = getWidthWarnings({
+            finishedWidthCm: 60,
+            effectiveCostingWidthCm: 62,
+            inputUnit: 'cm',
+            rawInputValue: 62,
+        })
+
+        expect(warnings[0]).toEqual({
+            code: 'suspicious_narrow_width',
+            message: '62 cm is only 24.4 inches. Did you mean 62 inches?',
+        })
     })
 })

@@ -3,7 +3,7 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
+import { getEffectiveCostingWidthCm, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
@@ -191,7 +191,7 @@ export async function saveAsFabricTemplate(data: {
             calculated_yarn_denier: firstWarp?.calcDenier ?? 75,
             beam_ends:           firstWarp?.beamEnds ?? 3200,
             ppi:                 Math.round(firstWeft?.picks ?? 68),
-            reed_space:          firstWeft?.reedSpace ?? 62,
+            reed_space:          firstWeft ? getEffectiveCostingWidthCm(firstWeft) : 62,
             weft_denier:         firstWeft?.calcDenier ?? 75,
             default_yarn_rate:   firstWarp?.yarnRate ?? 107,
             gsm:                 80,   // legacy placeholder — not used in V3
@@ -286,7 +286,7 @@ export async function updateFabricTemplate(data: {
             calculated_yarn_denier: firstWarp?.calcDenier ?? 75,
             beam_ends:           firstWarp?.beamEnds ?? 3200,
             ppi:                 Math.round(firstWeft?.picks ?? 68),
-            reed_space:          firstWeft?.reedSpace ?? 62,
+            reed_space:          firstWeft ? getEffectiveCostingWidthCm(firstWeft) : 62,
             weft_denier:         firstWeft?.calcDenier ?? 75,
             default_yarn_rate:   firstWarp?.yarnRate ?? 107,
         })
