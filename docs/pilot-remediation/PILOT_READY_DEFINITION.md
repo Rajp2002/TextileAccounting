@@ -64,7 +64,7 @@ The following must be hidden, disabled, or documented as unsupported before pilo
 | --- | --- | --- |
 | Offline production logging | Not queued; public copy implies planned/available behavior. | Mark online-only; remove auto-sync claims. |
 | Offline kharchi | Queues to missing `kharchi_offline` table. | Disable offline kharchi submit/sync; mark online-only. |
-| Direct market-run sale path | Can bypass commercial receivable. | Disable direct path or route through normal receivable-creating sale. |
+| Direct market-run sale path | Batch 4 disables the direct path so it cannot bypass commercial receivables. | Keep disabled for pilot unless it is routed through the normal receivable-creating sale path and retested. |
 | Day-only factories | Production logging requires both day/night assignments. | Limit pilot to factories with both shifts configured or fix support. |
 | Substitute worker logging | Actual substitute cannot be logged without remapping assignment. | Document unsupported or add intentional substitute flow. |
 | Owner data export | Not wired/audited/redaction-reviewed. | Keep hidden until audited and runtime-tested. |
@@ -82,4 +82,3 @@ Final sign-off must include:
 - Evidence logs for each closed cluster.
 - Release metadata: deployed URL, commit, migration head, Sentry release, CI run, backup restore, rollback/forward-fix exercise.
 - A list of de-scoped features shown to the pilot customer.
-

@@ -250,6 +250,34 @@ Acceptance:
 - Evidence: disposable QA runtime proof `BATCH3-fc791041`; migrations `20260627195152`, `20260628071340`, and `20260628073917` applied/aligned; focused Batch 3 Vitest passed 7 tests; targeted regression Vitest passed 27 tests; full Vitest passed 306 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
 - `SIGNOFF-10` has partial dispatch/package/receipt runtime evidence only and remains open for release/Sentry/source-map proof.
 
+## P2 Commercials Receivables Payments Retest
+
+Commands:
+
+```bash
+npx vitest run __tests__/p1-commercial-payments.test.ts __tests__/commercials-read-model.test.ts __tests__/p2-commercials-receivables-payments.test.ts
+npx vitest run __tests__/p1-party-first-stock-sale-dispatch.test.ts __tests__/p2-dispatch-sale-receipt.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/p1-stock-source-validation.test.ts __tests__/p0-atomicity.test.ts
+npx vitest run
+```
+
+Runtime checks:
+
+- Create a stock-sale/dispatch and verify exactly one receivable.
+- Repeat the same sale submit and verify the same sale/receivable returns without duplicate rows.
+- Attempt direct market-run sale and verify the disabled-path message.
+- Record partial cheque payment, duplicate partial submit, full bank payment, duplicate full submit, and overpayment attempt.
+- Verify cheque metadata, references, payment history, balance, and status.
+- Verify due today, overdue, future, and paid buckets against Asia/Kolkata date.
+- Verify Top Parties last-sale/overdue and 30d versus all-time period filtering.
+- Verify Profit Ledger source filters use authoritative stock source fields.
+- Verify Factory Today commercial blockers and Commercials refresh/second-session totals.
+
+Acceptance:
+
+- Batch 4 satisfied this Commercials retest for `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09`.
+- Evidence: disposable QA runtime proof `BATCH4QA-20260628125203`; migration `20260628121903` applied/aligned; focused Batch 4 Vitest passed 32 tests; Batch 2/3 guard Vitest passed 37 tests; full Vitest passed 313 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
+- `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+
 ## P2 Dashboard and Sign-Off Read Model Retest
 
 Use after source-domain fixes for production, stock, dispatch, commercials, and payroll are merged.
@@ -276,6 +304,7 @@ Acceptance:
 - `DASH-003`, `DASH-004`, `DASH-007`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `SIGNOFF-06`, `SIGNOFF-07`, `SIGNOFF-08`, `SIGNOFF-09`, and `SIGNOFF-10` have runtime evidence or documented pilot de-scope.
 - `SIGNOFF-05` expected-stock reasonableness is already closed by Batch 2 production/stock atomicity proof and should be rerun here only if the dashboard read model changes again.
 - Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` with runtime proof. `SIGNOFF-10` remains open because Batch 3 does not prove the release/Sentry/source-map portion.
+- Batch 4 closes commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09` with runtime/browser proof. `SIGNOFF-10` remains open because Batch 4 does not prove the release/Sentry/source-map portion.
 
 ## P3 Payroll and Kharchi Retest
 
@@ -322,6 +351,7 @@ Acceptance:
 
 - `EST-017`, `SALE-015`, `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-009`, `OFF-010`, and `SEC-016` are fixed or de-scoped.
 - Batch 3 closes `SALE-015` for rapid duplicate stock-sale submit. Other idempotency/offline/cache rows remain open.
+- Batch 4 closes commercial receivable payment duplicate-submit idempotency as part of `COMM-010` and `SIGNOFF-09`. `OFF-009` remains open for unknown-timeout UX and status reconciliation across high-value mutations.
 
 ## P5 Release Gate Retest
 

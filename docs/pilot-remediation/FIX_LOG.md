@@ -21,10 +21,10 @@ Rules for entries:
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Server-boundary validation, idempotency, quote/order lifecycle, and date snapshot rows remain open. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` receives partial dispatch/package evidence only and remains open for release/Sentry proof. |
 | `DISP-B` receipt-state coherence | Closed in Batch 3 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. |
-| `COMM-A` sales/receivables/profit boundary | Partially closed in Batch 3 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency with runtime/test evidence. Direct market-run sale, profit, payment metadata, stock classification, and remaining commercials/signoff rows remain open. |
-| `DASH-A` dashboard/sign-off read-model truth | Partially closed in Batch 3 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`. Production, payroll, historical analytics, commercials, and release/Sentry portions remain open. |
+| `COMM-A` sales/receivables/profit boundary | Partially closed in Batch 4 / open stock remainder | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. `STOCK-016`, `STOCK-017`, Golden A order-linked receivable rows, and broad timezone/offline rows remain open or partial evidence only. |
+| `DASH-A` dashboard/sign-off read-model truth | Partially closed in Batch 4 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`. Production, payroll, historical analytics, and release/Sentry portions remain open. |
 | `PAY-A` payroll/kharchi ledger integrity | Open | Includes legacy RPCs and offline kharchi. |
-| `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 3 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Estimator, market-run, payment, payroll, subscription, trial, timeout, and offline idempotency remain open. |
+| `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Open | Some features likely de-scoped for pilot. |
 | `REL-A` release gates | Open | Must be closed before pilot. |
 
@@ -646,3 +646,86 @@ Resolution status:
 - Code, migrations, regression tests, runtime proof, and active matrix closeout are complete for the Batch 3 target scope.
 - `SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
 - `SIGNOFF-10` remains open. Batch 3 only supplies partial dispatch/package/receipt runtime evidence; missing release/Sentry/source-map proof still blocks full closure.
+
+## Batch 4 - Commercials Receivables Payments Correctness
+
+Date/time: 2026-06-28 18:39 IST. Documentation closeout after `main` was fast-forwarded to implementation commit `d2a464c6f9c3caa470d1fa3bf530333faa2e0d4c`.
+
+Scope:
+
+- `COMM-002`
+- `COMM-010`
+- `COMM-012`
+- `COMM-014`
+- `COMM-016`
+- `SIGNOFF-06`
+- `SIGNOFF-09`
+
+Partial evidence only, not promoted by Batch 4:
+
+- `SIGNOFF-10` remains open for release/Sentry/source-map proof.
+- `STOCK-017` received Commercials refresh/second-session evidence only; stock-board stale refresh remains open.
+- `STOCK-016` remains open for movement history pagination beyond 500 rows.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remain blocked because the order-linked Golden A payment/receivable chain was not rerun.
+- `TIME-002` remains open for non-Commercials date-only surfaces.
+- `OFF-009` remains open for unknown-timeout UX beyond the commercial payment idempotency proof.
+
+Invariant:
+
+Sales, receivables, payments, and profit are derived from stored sale snapshots. Each sale creates exactly one receivable when required, payment collection reduces outstanding exactly once, duplicate submits do not duplicate sale or payment rows, overpayment is blocked, due buckets are Asia/Kolkata date-only, and Factory Today/signoff cannot falsely clear while commercial receivables remain unresolved.
+
+Implementation status:
+
+- Added migration `20260628121903_batch_4_commercials_receivables_payments.sql`.
+- Disabled the direct `create_market_run_sale` RPC path so it cannot bypass receivable creation.
+- Added commercial payment idempotency with `commercial_payment_receipts.idempotency_key` and a unique org/key index.
+- Replaced `record_commercial_payment_v1` with a row-locking, overpayment-blocking, cheque-metadata-validating, idempotent RPC.
+- Recreated `commercial_profit_entries` with authoritative `stock_source_type`, `stock_market_run_id`, and `stock_order_id` fields.
+- Added Asia/Kolkata due-bucket helpers for Commercials.
+- Updated owner Commercials UI/actions for cheque metadata, payment history detail, source filters, Top Parties last-sale/overdue, and refresh-stable totals.
+- Added Factory Today commercial blockers for due/overdue receivables and payment mismatches.
+- Blocked the estimator direct market-run sale action with the same unsupported-path message.
+
+Migrations applied/aligned:
+
+- `20260628121903 | 20260628121903`
+
+Runtime QA status:
+
+- Fresh disposable QA runtime proof passed on run `BATCH4QA-20260628125203` using factory `BATCH4QA-20260628125203 Factory`.
+- Duplicate stock-sale submit returned the same sale and receivable and left exactly one sale row for the idempotency key.
+- Sale path created exactly one `commercial_receivable` and preserved the Batch 3 dispatch-created receivable link.
+- Direct market-run sale RPC returned the disabled-path message and did not create sale/invoice/receivable state.
+- Partial cheque payment of Rs. 1,200 left received Rs. 1,200 and balance Rs. 3,800.
+- Duplicate partial payment submit left exactly one receipt row.
+- Full bank payment of Rs. 3,800 closed the receivable with received Rs. 5,000 and balance Rs. 0.
+- Duplicate full payment submit did not duplicate payment rows.
+- Overpayment returned `Payment amount exceeds remaining balance`.
+- Payment history contained two receipts with `REF-FULL`, `REF-PARTIAL`, `Cheque CHQ125203`, cheque date `28 Jun 2026`, and `Batch 4 QA Bank`.
+- Due-bucket proof on 2026-06-28 Asia/Kolkata produced one due-today receivable, one overdue receivable, two future receivables, and one paid receivable.
+- Profit read model returned five realized stock-sale rows with authoritative manual stock source fields.
+- Top Parties source facts showed Party Mills last sale `28 Jun 2026`, outstanding Rs. 5,020, overdue Rs. 1,600, and four recent rows versus five all-time rows.
+- Factory Today rendered the Commercials blocker with two receivables needing review: Rs. 1,600 overdue and Rs. 1,320 due today.
+- Commercials reload and second-tab session reconciled totals: outstanding Rs. 7,020, collected Rs. 5,000, overdue Rs. 1,600, Sales (5), Parties (2), Profit Ledger (5).
+- Browser proof for Commercials, payment history, Profit Ledger, refresh, second tab, and Factory Today had no console errors.
+
+Verification commands:
+
+- `npx vitest run __tests__/p1-commercial-payments.test.ts __tests__/commercials-read-model.test.ts __tests__/p2-commercials-receivables-payments.test.ts` -> passed, 3 files, 32 tests.
+- `npx vitest run __tests__/p1-party-first-stock-sale-dispatch.test.ts __tests__/p2-dispatch-sale-receipt.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/p1-stock-source-validation.test.ts __tests__/p0-atomicity.test.ts` -> passed, 5 files, 37 tests.
+- `npx tsc --noEmit` -> passed.
+- Targeted ESLint for Batch 4 touched files -> passed.
+- `git diff --check` -> passed.
+- `npx vitest run` -> passed, 35 files, 313 passed, 1 skipped.
+
+Data safety:
+
+- Runtime proof used a fresh disposable QA tenant/run.
+- Disposable setup mutations were scoped to the `BATCH4QA-20260628125203` org only.
+- No direct SQL, migration repair, `db pull`, `--include-all`, npm audit, payroll/kharchi work, lockfile work, Sentry work, or release-gate work was used for Batch 4.
+
+Resolution status:
+
+- Code, migration, regression tests, runtime proof, browser proof, and active matrix closeout are complete for the Batch 4 target scope.
+- `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
+- `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only as listed above.

@@ -12,8 +12,8 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-016`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, `TIME-002` |
-| P2 | `COMM-A` sales, receivables, stock audit, and profit boundaries | `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `STOCK-016`, `STOCK-017`, `SIGNOFF-06`, `SIGNOFF-09` |
-| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-06`, `SIGNOFF-09`, `SIGNOFF-10` |
+| P2 | `COMM-A` sales, receivables, stock audit, and profit boundaries | `STOCK-016`, `STOCK-017` |
+| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-10` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `PAY-028`, `OFF-008`, `DASH-003` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
 | P4 | `OFF-A` offline, cache, and public claims | `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-008`, `OFF-010`, `SEC-016` |
@@ -28,6 +28,8 @@ Closed in Batch 1 and removed from the open failure coverage rows: security foun
 Closed in Batch 2 and removed from the open failure coverage rows: `PROD-A` production correction and generated stock atomicity (`PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`). `SIGNOFF-05` is also removed from open `DASH-A`; remaining dashboard/signoff rows stay open.
 
 Closed in Batch 3 and removed from the open failure coverage rows: dispatch sale receipt correctness (`SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, `SIGNOFF-08`). `SIGNOFF-10` remains open under dashboard/release readiness; Batch 3 supplies partial dispatch/package/receipt runtime evidence only.
+
+Closed in Batch 4 and removed from the open failure coverage rows: commercials receivables payments correctness (`COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, `SIGNOFF-09`). `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -200,31 +202,35 @@ Resolution:
 
 Required proof: satisfied by Batch 3 runtime proof, targeted Vitest, full Vitest, TypeScript, targeted ESLint, migration alignment, and active matrix promotion to pass.
 
-## P2 COMM-A - Sales, Receivables, and Profit Boundaries Are Inconsistent
+## P2 COMM-A - Stock Audit Refresh And History Remainder
 
-Failures: `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `STOCK-016`, `STOCK-017`, `SIGNOFF-06`, `SIGNOFF-09`
+Failures: `STOCK-016`, `STOCK-017`
 
 Closed in Batch 3: `SALE-015`
+
+Closed in Batch 4: `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, `SIGNOFF-09`
 
 Evidence: `logs/order-stock-sale-source-evidence-20260624.json`, `logs/business-reconciliation.json`, `logs/commercials-payment-mode-evidence.json`, `logs/commercials-filter-evidence.json`
 
 Invariant: each sale creates one stock decrement, one receivable when credit applies, one party identity, and one profit basis. Direct and normal paths must produce the same accounting result.
 
-Impact: direct market-run sale can bypass receivables; profit filters misclassify origins; cheque metadata and date buckets are incomplete or timezone-sensitive. Batch 3 closed duplicate sale idempotency for the stock sale/dispatch path.
+Impact: Batch 4 closes the direct market-run receivable bypass, cheque metadata/history, Asia/Kolkata due buckets, Top Parties last-sale/overdue, source filters, commercial signoff, and commercial payment idempotency. The remaining COMM-A-adjacent open items are stock-board movement history pagination and stale stock refresh/second-user behavior.
 
 Remediation direction:
 
-- Remove or harden direct market-run sale paths that bypass receivables.
-- Fix profit origin classification and payment metadata capture.
-- Add IST-stable due-date rendering.
+- Add retrievable pagination or explicit history limits for stock movement history beyond 500 rows.
+- Fix stock-board refresh/second-user state after stock mutations.
+- Keep Batch 4 commercial receivable/payment behavior covered as regression guardrails when stock refresh/history is fixed.
 
-Required proof: `SALE-015` duplicate sale proof is satisfied by Batch 3 runtime proof and tests. Remaining rows still require direct-path receivable checks, profit-ledger filter tests, payment metadata browser checks, and due-date timezone tests.
+Required proof: `SALE-015` duplicate sale proof is satisfied by Batch 3 runtime proof and tests. Batch 4 satisfies `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09`. `STOCK-016` and `STOCK-017` still require stock-specific runtime/source proof; Batch 4 Commercials refresh evidence is partial only for `STOCK-017`.
 
 ## P2 DASH-A - Dashboard and Daily Sign-Off Read Models Are Not Authoritative
 
-Failures: `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-06`, `SIGNOFF-09`, `SIGNOFF-10`
+Failures: `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-10`
 
 Closed in Batch 3: `DASH-007`, `SIGNOFF-07`, `SIGNOFF-08`
+
+Closed in Batch 4: `SIGNOFF-06`, `SIGNOFF-09`
 
 Blocked evidence debt: `SIGNOFF-04`
 
@@ -232,7 +238,7 @@ Evidence: `logs/dashboard-evidence.json`, `logs/prod-dashboard-ux-signoff-source
 
 Invariant: Factory Today and sign-off views are read models over authoritative production, stock, dispatch, commercial, payroll, and observability state. A sign-off card cannot clear when its source rows remain unresolved.
 
-Impact: gross wages were hard-coded to zero, historical analytics mixed historical and current data, and final sign-off rows still depend on unresolved production/payroll/commercial/release evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; `SIGNOFF-10` remains open for release/Sentry/source-map evidence.
+Impact: gross wages were hard-coded to zero, historical analytics mixed historical and current data, and final sign-off rows still depend on unresolved production/payroll/release evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 4 closed commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; `SIGNOFF-10` remains open for release/Sentry/source-map evidence.
 
 Remediation direction:
 
@@ -267,11 +273,13 @@ Failures: `EST-017`, `OFF-009`, plus duplicate-risk paths in estimator, market-r
 
 Closed in Batch 3: `SALE-015` for the stock sale/dispatch path.
 
+Closed in Batch 4: commercial receivable payment duplicate-submit idempotency for `COMM-010`/`SIGNOFF-09` evidence.
+
 Evidence: `logs/estimator-quotes-source-evidence-20260624.json`, `logs/order-stock-sale-source-evidence-20260624.json`, `logs/source-audit-time-ux-evidence-20260624.json`
 
 Invariant: a user retry or timeout must not create duplicate business records. Every high-value mutation must have an idempotency key or a post-timeout reconciliation path.
 
-Impact: duplicate quotes, market runs, backing orders, sales, receivables, or settlements can be created when network state is ambiguous.
+Impact: duplicate quotes, market runs, backing orders, sales, receivables, or settlements can be created when network state is ambiguous. Batch 4 removes the duplicate-payment risk for commercial receivable payments, but the broader unknown-timeout UX remains unresolved.
 
 Remediation direction:
 
@@ -279,7 +287,7 @@ Remediation direction:
 - Surface "unknown outcome, checking status" instead of generic failure after timeouts.
 - Add server-side uniqueness for user-intended operation keys.
 
-Required proof: rapid double-submit tests, timeout simulation, and runtime reconciliation evidence.
+Required proof: rapid double-submit tests, timeout simulation, and runtime reconciliation evidence. Batch 4 supplies payment duplicate-submit proof only; `OFF-009` remains open for unknown-outcome timeout messaging and reconciliation across high-value mutations.
 
 ## P4 OFF-A - Offline, Cache, and Public Claims Are Not Pilot-Safe
 

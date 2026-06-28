@@ -14,18 +14,18 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, and Batch 3 dispatch sale receipt closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, and Batch 4 commercials receivables closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 146 | Runtime/test evidence exists. |
-| `fail` | 69 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 153 | Runtime/test evidence exists. |
+| `fail` | 62 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 30 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
-Critical failures: 0. High failures: 21. Critical blocked golden-journey follow-ons: 14.
+Critical failures: 0. High failures: 20. Critical blocked golden-journey follow-ons: 14.
 
 Batch 1 security foundation moved `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` from fail to pass with runtime/test/migration evidence. `AUTH-008`, `PAY-018`, `PAY-020`, external webhook/export/compliance security rows, release gates, and unrelated unresolved failures remain open.
 
@@ -34,6 +34,8 @@ Batch 2 moved `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`,
 Estimator costing reconciliation is complete for the scoped formula/manual/manual-practical sprint with test and browser evidence. The active matrix counts above were unchanged by that sprint because the broader `ECON-A` rows still include server-boundary validation, idempotency, quote/order lifecycle, and date snapshot work outside that scope.
 
 Batch 3 moved `SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` from fail to pass with runtime/test/migration evidence. `SIGNOFF-10` remains open; Batch 3 supplies partial dispatch/package/receipt runtime evidence only, not release/Sentry/source-map proof.
+
+Batch 4 moved `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` from fail to pass with runtime/test/migration/browser evidence. `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
 
 ## Operating Rules
 
@@ -322,3 +324,55 @@ Resolution status:
 
 - `SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` are documented as pass in the active matrix.
 - `SIGNOFF-10` remains partial evidence only and is not closed.
+
+## Batch 4 Closed on Main
+
+Date/time: 2026-06-28 18:39 IST.
+
+Batch 4: commercials receivables payments correctness.
+
+Target failures:
+
+- `COMM-002`
+- `COMM-010`
+- `COMM-012`
+- `COMM-014`
+- `COMM-016`
+- `SIGNOFF-06`
+- `SIGNOFF-09`
+
+Repository state:
+
+- Implementation commit `d2a464c6f9c3caa470d1fa3bf530333faa2e0d4c` was fast-forwarded into `main` and pushed to `origin/main`.
+- `origin/main` pointed to `d2a464c6f9c3caa470d1fa3bf530333faa2e0d4c` before this documentation closeout.
+
+Migration applied and aligned before docs closeout:
+
+- `20260628121903_batch_4_commercials_receivables_payments.sql`
+
+Runtime proof:
+
+- Disposable QA run `BATCH4QA-20260628125203` passed.
+- Duplicate stock-sale submit produced one sale and one receivable for the sale idempotency key.
+- Payment partial/full/duplicate/overpayment probes reconciled exactly: Rs. 1,200 partial cheque, Rs. 3,800 full bank, two receipts total, paid balance Rs. 0, overpayment blocked.
+- Cheque metadata and reference history rendered in Commercials payment history.
+- Direct market-run sale RPC was disabled.
+- Due today, overdue, future, and paid buckets reconciled to Asia/Kolkata date `2026-06-28`.
+- Profit ledger rows used authoritative stock source fields and Manual Stock filter totals reconciled.
+- Top Parties showed last sale and overdue values; period source proof distinguished 30d from all-time.
+- Factory Today showed unresolved commercial receivables as blockers.
+- Commercials reload and second-tab session preserved totals and had no console errors.
+
+Verification:
+
+- Focused Batch 4 Vitest: 32 passed.
+- Batch 2/3 guard Vitest: 37 passed.
+- Full Vitest: 35 files, 313 passed, 1 skipped.
+- `npx tsc --noEmit` -> passed.
+- Targeted ESLint for touched Batch 4 files -> passed.
+- `git diff --check` -> passed.
+
+Resolution status:
+
+- `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` are documented as pass in the active matrix.
+- `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain partial evidence only or open and are not closed by Batch 4.
