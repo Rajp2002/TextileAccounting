@@ -84,6 +84,8 @@ Required proof:
 - Duplicate sale submissions do not create duplicate receivables or stock decrements.
 - Direct sale paths cannot bypass receivable creation when receivable creation is required.
 
+Batch 3 proof note: `SALE-015` is satisfied for the stock sale/dispatch path by disposable runtime proof that rapid duplicate 80m sale submit created exactly one sale, one receivable where applicable, and one stock movement.
+
 ## Dispatch and Receipt
 
 Dispatch is a batch-level obligation against sold meters. Receipt is a batch-level confirmation. A partial dispatch is not a shortage.
@@ -101,6 +103,8 @@ Required proof:
 - Delivered status, receipt columns, package lines, and sale summary agree.
 - One shortage/excess receipt creates one actionable discrepancy.
 - Zero received meters is either blocked or explicitly treated as full shortage by policy and UI.
+
+Batch 3 proof note: the current pilot policy blocks zero and negative received meters. Runtime proof `BATCH3-fc791041` confirms 50m plus 30m dispatch batches for one 80m sale, exact receipt closure, shortage/excess discrepancy creation, duplicate receipt idempotency, archive protection, and dashboard/signoff/second-session reconciliation.
 
 ## Commercials
 

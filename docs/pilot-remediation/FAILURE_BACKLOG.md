@@ -12,12 +12,10 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-016`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, `TIME-002` |
-| P2 | `DISP-A` multi-batch dispatch identity | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, `SIGNOFF-10` |
-| P2 | `DISP-B` receipt state and difference queue coherence | `DISP-007`, `DISP-010`, `DISP-019`, `SIGNOFF-08` |
-| P2 | `COMM-A` sales, receivables, stock audit, and profit boundaries | `SALE-015`, `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `STOCK-016`, `STOCK-017`, `SIGNOFF-06`, `SIGNOFF-09` |
-| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `DASH-007`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-06`, `SIGNOFF-07`, `SIGNOFF-08`, `SIGNOFF-09`, `SIGNOFF-10` |
+| P2 | `COMM-A` sales, receivables, stock audit, and profit boundaries | `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `STOCK-016`, `STOCK-017`, `SIGNOFF-06`, `SIGNOFF-09` |
+| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-06`, `SIGNOFF-09`, `SIGNOFF-10` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `PAY-028`, `OFF-008`, `DASH-003` |
-| P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `SALE-015`, `OFF-009` |
+| P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
 | P4 | `OFF-A` offline, cache, and public claims | `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-008`, `OFF-010`, `SEC-016` |
 | P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `TECH-013`, `SIGNOFF-10` |
 
@@ -28,6 +26,8 @@ Medium blocked rows still need evidence or explicit pilot de-scope, but they do 
 Closed in Batch 1 and removed from the open failure coverage rows: security foundation (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, `AUTH-016`). `SEC-A` is closed; `SEC-B` remains open only for `AUTH-008`, `PAY-018`, and `PAY-020`.
 
 Closed in Batch 2 and removed from the open failure coverage rows: `PROD-A` production correction and generated stock atomicity (`PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`). `SIGNOFF-05` is also removed from open `DASH-A`; remaining dashboard/signoff rows stay open.
+
+Closed in Batch 3 and removed from the open failure coverage rows: dispatch sale receipt correctness (`SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, `SIGNOFF-08`). `SIGNOFF-10` remains open under dashboard/release readiness; Batch 3 supplies partial dispatch/package/receipt runtime evidence only.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -159,64 +159,72 @@ Scoped estimator costing reconciliation closeout:
 - Evidence: `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` passed 31 tests; full `npx vitest run` passed 298 tests with 1 skipped; `npx tsc --noEmit`, `npm run build`, and scoped estimator ESLint passed; browser QA validated formula mode at `₹55.75/m`, formula-equivalent manual at `₹55.75/m`, practical manual at `₹55.91/m` or `₹56.16/m` depending on overhead, width warning for `62 cm`, and quote restore preserving `₹56.16/m`.
 - Matrix status: unchanged. `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, and `TIME-002` remain open until the original row-level proof is captured.
 
-## P2 DISP-A - Multi-Batch Dispatch Package Identity Is Unsafe
+## Closed DISP-A - Multi-Batch Dispatch Package Identity
 
-Failures: `DISP-003`, `GOLDEN-B-09`, `SIGNOFF-07`, `SIGNOFF-10`
+Closed rows: `DISP-003`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`
 
-Evidence: `logs/business-reconciliation.json`, `logs/dashboard-evidence.json`
+Partial evidence only: `SIGNOFF-10`
+
+Evidence: `docs/pilot-remediation/FIX_LOG.md`, `docs/pilot-remediation/LOOP_STATE.md`, active QA matrix closeout.
 
 Invariant: pending dispatch equals sold meters minus dispatched meters. A second valid dispatch batch for remaining sold meters must create a new unique package/batch identity without corrupting the first batch.
 
-Impact: the first 50m dispatch succeeded, but the second 30m dispatch failed with `idx_fabric_packages_org_package_no`, leaving 30m pending and blocking Golden Journey B.
+Original impact: the first 50m dispatch succeeded, but the second 30m dispatch failed with `idx_fabric_packages_org_package_no`, leaving 30m pending and blocking Golden Journey B.
 
-Remediation direction:
+Resolution:
 
-- Fix package-number generation/idempotency for multiple batches on one sale.
-- Add a deterministic per-sale/per-batch sequence or server-generated identity.
-- Ensure dashboard pending-dispatch cards read the authoritative pending quantity.
+- Batch 3 migration `20260627195152_batch_3_dispatch_sale_receipt_correctness.sql` was applied and aligned, followed by forward-only RPC contract fixes `20260628071340_batch_3_dispatch_tracking_token_contract_fix.sql` and `20260628073917_batch_3_dispatch_number_returning_contract_fix.sql`.
+- Runtime proof `BATCH3-fc791041` sold 80m, dispatched 50m, confirmed 30m pending, dispatched the remaining 30m with a distinct deterministic package identity, and confirmed pending dispatch became 0.
+- Factory Today, Dispatches, stock, Commercials, signoff, and second-session refresh reconciled for the Batch 3 dispatch path.
+- No runtime path tried to use stale `dispatches.tracking_token`, and no ambiguous `dispatch_number` runtime error remained.
 
-Required proof: two-batch dispatch runtime QA, DB row reconciliation, dashboard check, and duplicate-submit tests.
+Required proof: satisfied for `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` by Batch 3 runtime proof, targeted Vitest, full Vitest, TypeScript, targeted ESLint, migration alignment, and active matrix promotion to pass. `SIGNOFF-10` remains open for release/Sentry/source-map evidence outside Batch 3.
 
-## P2 DISP-B - Receipt State and Difference Queue Are Incoherent
+## Closed DISP-B - Receipt State and Difference Queue Coherence
 
-Failures: `DISP-007`, `DISP-010`, `DISP-019`, `SIGNOFF-08`
+Closed rows: `DISP-007`, `DISP-010`, `DISP-019`, `SIGNOFF-08`
 
-Evidence: `logs/business-reconciliation.json`
+Evidence: `docs/pilot-remediation/FIX_LOG.md`, `docs/pilot-remediation/LOOP_STATE.md`, active QA matrix closeout.
 
 Invariant: receipt variance equals received meters minus sent meters. Delivered status, receipt fields, package lines, sale summary, and stock discrepancy rows must agree. A receipt mismatch creates exactly one actionable discrepancy.
 
-Impact: exact receipt and shortage paths left legacy receipt fields contradictory/null or hidden from views. Zero received meters can be accepted without an explicit pilot policy.
+Original impact: exact receipt and shortage paths left legacy receipt fields contradictory/null or hidden from views. Zero received meters could be accepted without an explicit pilot policy.
 
-Remediation direction:
+Resolution:
 
-- Choose one authoritative receipt schema and backfill/remove legacy display ambiguity.
-- Enforce intentional zero-receipt behavior.
-- Keep completed dispatches discoverable in audit/history.
+- Batch 3 exact receipt closed with delivered/received state and synchronized receipt fields, with no discrepancy.
+- Shortage and excess receipts each created exactly one actionable discrepancy.
+- Duplicate receipt submit did not duplicate discrepancy or receipt state.
+- Negative and zero receipts were blocked consistently.
+- Archive helper did not archive unresolved dispatch/receipt obligations.
 
-Required proof: exact, shortage, excess, duplicate, negative, and zero receipt checks against the same QA sale.
+Required proof: satisfied by Batch 3 runtime proof, targeted Vitest, full Vitest, TypeScript, targeted ESLint, migration alignment, and active matrix promotion to pass.
 
 ## P2 COMM-A - Sales, Receivables, and Profit Boundaries Are Inconsistent
 
-Failures: `SALE-015`, `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `STOCK-016`, `STOCK-017`, `SIGNOFF-06`, `SIGNOFF-09`
+Failures: `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `STOCK-016`, `STOCK-017`, `SIGNOFF-06`, `SIGNOFF-09`
+
+Closed in Batch 3: `SALE-015`
 
 Evidence: `logs/order-stock-sale-source-evidence-20260624.json`, `logs/business-reconciliation.json`, `logs/commercials-payment-mode-evidence.json`, `logs/commercials-filter-evidence.json`
 
 Invariant: each sale creates one stock decrement, one receivable when credit applies, one party identity, and one profit basis. Direct and normal paths must produce the same accounting result.
 
-Impact: sale RPC lacks idempotency; direct market-run sale can bypass receivables; profit filters misclassify origins; cheque metadata and date buckets are incomplete or timezone-sensitive.
+Impact: direct market-run sale can bypass receivables; profit filters misclassify origins; cheque metadata and date buckets are incomplete or timezone-sensitive. Batch 3 closed duplicate sale idempotency for the stock sale/dispatch path.
 
 Remediation direction:
 
-- Add sale idempotency keys.
 - Remove or harden direct market-run sale paths that bypass receivables.
 - Fix profit origin classification and payment metadata capture.
 - Add IST-stable due-date rendering.
 
-Required proof: duplicate sale probe, direct-path receivable check, profit-ledger filter test, payment metadata browser check, and due-date timezone test.
+Required proof: `SALE-015` duplicate sale proof is satisfied by Batch 3 runtime proof and tests. Remaining rows still require direct-path receivable checks, profit-ledger filter tests, payment metadata browser checks, and due-date timezone tests.
 
 ## P2 DASH-A - Dashboard and Daily Sign-Off Read Models Are Not Authoritative
 
-Failures: `DASH-003`, `DASH-004`, `DASH-007`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-06`, `SIGNOFF-07`, `SIGNOFF-08`, `SIGNOFF-09`, `SIGNOFF-10`
+Failures: `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-06`, `SIGNOFF-09`, `SIGNOFF-10`
+
+Closed in Batch 3: `DASH-007`, `SIGNOFF-07`, `SIGNOFF-08`
 
 Blocked evidence debt: `SIGNOFF-04`
 
@@ -224,7 +232,7 @@ Evidence: `logs/dashboard-evidence.json`, `logs/prod-dashboard-ux-signoff-source
 
 Invariant: Factory Today and sign-off views are read models over authoritative production, stock, dispatch, commercial, payroll, and observability state. A sign-off card cannot clear when its source rows remain unresolved.
 
-Impact: Factory Today reported all sold stock dispatched while the database still had 30.00m pending dispatch, gross wages were hard-coded to zero, historical analytics mixed historical and current data, and final sign-off rows could not be trusted. `SIGNOFF-05` expected-stock truth is closed by Batch 2; the remaining dashboard/signoff rows stay open.
+Impact: gross wages were hard-coded to zero, historical analytics mixed historical and current data, and final sign-off rows still depend on unresolved production/payroll/commercial/release evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; `SIGNOFF-10` remains open for release/Sentry/source-map evidence.
 
 Remediation direction:
 
@@ -255,7 +263,9 @@ Required proof: payroll unit tests, rollback-only RPC probes, online kharchi par
 
 ## P4 IDEMP-A - Mutations Lack Idempotency and Unknown-Outcome Recovery
 
-Failures: `EST-017`, `SALE-015`, `OFF-009`, plus duplicate-risk paths in estimator, market-run creation, sale, dispatch, payment, payroll, subscription, and trial actions.
+Failures: `EST-017`, `OFF-009`, plus duplicate-risk paths in estimator, market-run creation, payment, payroll, subscription, and trial actions.
+
+Closed in Batch 3: `SALE-015` for the stock sale/dispatch path.
 
 Evidence: `logs/estimator-quotes-source-evidence-20260624.json`, `logs/order-stock-sale-source-evidence-20260624.json`, `logs/source-audit-time-ux-evidence-20260624.json`
 

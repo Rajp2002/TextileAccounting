@@ -14,24 +14,26 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, and the estimator costing reconciliation closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, and Batch 3 dispatch sale receipt closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 137 | Runtime/test evidence exists. |
-| `fail` | 78 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 146 | Runtime/test evidence exists. |
+| `fail` | 69 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 30 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
-Critical failures: 0. High failures: 28. Critical blocked golden-journey follow-ons: 14.
+Critical failures: 0. High failures: 21. Critical blocked golden-journey follow-ons: 14.
 
 Batch 1 security foundation moved `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` from fail to pass with runtime/test/migration evidence. `AUTH-008`, `PAY-018`, `PAY-020`, external webhook/export/compliance security rows, release gates, and unrelated unresolved failures remain open.
 
 Batch 2 moved `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` from fail to pass with runtime/test evidence. Downstream Golden A rows that were not rerun end-to-end remain blocked until a clean order chain is retested or explicitly de-scoped.
 
-Estimator costing reconciliation is complete for the scoped formula/manual/manual-practical sprint with test and browser evidence. The active matrix counts above are unchanged because the broader `ECON-A` rows still include server-boundary validation, idempotency, quote/order lifecycle, and date snapshot work outside this sprint.
+Estimator costing reconciliation is complete for the scoped formula/manual/manual-practical sprint with test and browser evidence. The active matrix counts above were unchanged by that sprint because the broader `ECON-A` rows still include server-boundary validation, idempotency, quote/order lifecycle, and date snapshot work outside that scope.
+
+Batch 3 moved `SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` from fail to pass with runtime/test/migration evidence. `SIGNOFF-10` remains open; Batch 3 supplies partial dispatch/package/receipt runtime evidence only, not release/Sentry/source-map proof.
 
 ## Operating Rules
 
@@ -255,7 +257,7 @@ Estimator costing closeout:
 
 Still out of scope until explicitly started:
 
-- Dispatch correctness.
+- Golden A order-linked dispatch/receipt follow-ons not rerun by Batch 3.
 - Payroll business correctness.
 - Remaining `ECON-A` work outside estimator costing: server-boundary estimate validation, estimator save/market-run idempotency, quote/order lifecycle, target/deadline guards, below-target completion, and date-only rendering.
 - Offline behavior.
@@ -263,3 +265,60 @@ Still out of scope until explicitly started:
 - Sentry.
 - npm audit.
 - Lockfile work.
+
+## Batch 3 Closed on Main
+
+Date/time: 2026-06-28 13:34 IST.
+
+Batch 3: dispatch sale receipt correctness.
+
+Target failures:
+
+- `SALE-015`
+- `DISP-003`
+- `DISP-007`
+- `DISP-010`
+- `DISP-019`
+- `GOLDEN-B-09`
+- `DASH-007`
+- `SIGNOFF-07`
+- `SIGNOFF-08`
+
+Repository state:
+
+- Implementation commit `9661f3fcace44b1b44c71002e6d0554a58de8ab6` was fast-forwarded into `main`.
+- `origin/main` pointed to `9661f3fcace44b1b44c71002e6d0554a58de8ab6` before this documentation closeout.
+
+Migrations applied and aligned before docs closeout:
+
+- `20260627195152_batch_3_dispatch_sale_receipt_correctness.sql`
+- `20260628071340_batch_3_dispatch_tracking_token_contract_fix.sql`
+- `20260628073917_batch_3_dispatch_number_returning_contract_fix.sql`
+
+Runtime proof:
+
+- Disposable QA run `BATCH3-fc791041` passed with `production_mode=both`.
+- Duplicate 80m sale submit produced exactly one sale, one receivable where applicable, and one stock movement.
+- 50m dispatch left 30m pending; second 30m dispatch used a distinct deterministic package identity and left 0m pending.
+- Exact receipt closed with synchronized receipt fields and no discrepancy.
+- Shortage and excess receipts each created exactly one actionable discrepancy.
+- Duplicate receipt submit did not duplicate discrepancy or receipt state.
+- Negative and zero receipts were blocked consistently.
+- Archive helper protected unresolved obligations and allowed clean reconciled groups.
+- Dispatches, Factory Today, stock, Commercials, signoff, and second-session refresh reconciled.
+- No runtime path read or wrote `dispatches.tracking_token`.
+- No ambiguous `dispatch_number` runtime error remained.
+
+Verification:
+
+- `npx vitest run __tests__/p2-dispatch-sale-receipt.test.ts` -> 7 passed.
+- `npx vitest run __tests__/p1-party-first-stock-sale-dispatch.test.ts __tests__/dispatch-archive.test.ts __tests__/p1-production-dispatch-regressions.test.ts` -> 27 passed.
+- `npx tsc --noEmit` -> passed.
+- Targeted ESLint -> passed.
+- `git diff --check` -> passed.
+- `npx vitest run` -> 34 files, 306 passed, 1 skipped.
+
+Resolution status:
+
+- `SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` are documented as pass in the active matrix.
+- `SIGNOFF-10` remains partial evidence only and is not closed.

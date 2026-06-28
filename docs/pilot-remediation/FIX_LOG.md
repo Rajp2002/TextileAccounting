@@ -19,12 +19,12 @@ Rules for entries:
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Server-boundary validation, idempotency, quote/order lifecycle, and date snapshot rows remain open. |
-| `DISP-A` multi-batch dispatch identity | Open | Blocks Golden B. |
-| `DISP-B` receipt-state coherence | Open | Blocks difference sign-off. |
-| `COMM-A` sales/receivables/profit boundary | Open | Includes sale idempotency and direct market-run sale bypass. |
-| `DASH-A` dashboard/sign-off read-model truth | Open | Broad cluster remains open; Batch 2 closes `SIGNOFF-05` expected-stock read-model truth with runtime evidence below. |
+| `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` receives partial dispatch/package evidence only and remains open for release/Sentry proof. |
+| `DISP-B` receipt-state coherence | Closed in Batch 3 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. |
+| `COMM-A` sales/receivables/profit boundary | Partially closed in Batch 3 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency with runtime/test evidence. Direct market-run sale, profit, payment metadata, stock classification, and remaining commercials/signoff rows remain open. |
+| `DASH-A` dashboard/sign-off read-model truth | Partially closed in Batch 3 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`. Production, payroll, historical analytics, commercials, and release/Sentry portions remain open. |
 | `PAY-A` payroll/kharchi ledger integrity | Open | Includes legacy RPCs and offline kharchi. |
-| `IDEMP-A` mutation idempotency/unknown outcome | Open | Cross-cutting after core data invariants. |
+| `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 3 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Estimator, market-run, payment, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Open | Some features likely de-scoped for pilot. |
 | `REL-A` release gates | Open | Must be closed before pilot. |
 
@@ -394,7 +394,7 @@ Active matrix result:
 
 Out of scope and still open for later batches:
 
-- Dispatch correctness.
+- Batch 3 dispatch/receipt correctness for the approved target rows is closed; Golden A order-linked receipt follow-ons and unrelated dispatch-adjacent proof remain out of scope.
 - Payroll business correctness.
 - Estimator.
 - Offline behavior.
@@ -571,3 +571,78 @@ Resolution status:
 - Estimator costing reconciliation is complete for the scoped formula/manual/manual-practical costing sprint.
 - Active QA matrix rows are not promoted by this closeout because existing `ECON-A` rows also cover server-boundary validation, idempotency, quote/order lifecycle, and date rendering that remain outside this sprint.
 - `ECON-A` remains open for those remaining rows.
+
+## Batch 3 - Dispatch Sale Receipt Correctness
+
+Date/time: 2026-06-28 13:34 IST. Documentation closeout after `main` was fast-forwarded to implementation commit `9661f3fcace44b1b44c71002e6d0554a58de8ab6`.
+
+Scope:
+
+- `SALE-015`
+- `DISP-003`
+- `DISP-007`
+- `DISP-010`
+- `DISP-019`
+- `GOLDEN-B-09`
+- `DASH-007`
+- `SIGNOFF-07`
+- `SIGNOFF-08`
+
+Partial evidence only:
+
+- `SIGNOFF-10` received dispatch/package/receipt runtime evidence that no Batch 3 runtime path produced `tracking_token` or ambiguous `dispatch_number` errors. Full `SIGNOFF-10` remains open for non-dispatch release/Sentry/source-map evidence and is not promoted.
+
+Invariant:
+
+Dispatch is a batch-level obligation against sold meters. Pending dispatch equals sold meters minus dispatched meters. Receipt variance equals received meters minus sent meters. A partial dispatch is not a shortage. Duplicate sale/dispatch/receipt submissions must not duplicate stock, receivable, dispatch, package, receipt, or discrepancy state.
+
+Implementation status:
+
+- Added migration `20260627195152_batch_3_dispatch_sale_receipt_correctness.sql` to make stock-sale dispatch and receipt paths idempotent and coherent.
+- Added migration `20260628071340_batch_3_dispatch_tracking_token_contract_fix.sql` to remove stale `dispatches.tracking_token` writes from Batch 3 RPC definitions because public tracking is deferred and active stock-sale dispatch actions return `trackingUrl: null`.
+- Added migration `20260628073917_batch_3_dispatch_number_returning_contract_fix.sql` to qualify `dispatch_number` `RETURNING` references and remove the ambiguous runtime error.
+- Added focused regression coverage in `__tests__/p2-dispatch-sale-receipt.test.ts` and archive regression coverage in `__tests__/dispatch-archive.test.ts`.
+- Updated dispatch/sale/receipt server actions, shared types, dispatch archive helper, and dispatch UI components so pending dispatch, package identity, receipt fields, discrepancy creation, archive eligibility, and refresh behavior use the same Batch 3 contract.
+
+Migrations applied/aligned:
+
+- `20260627195152 | 20260627195152`
+- `20260628071340 | 20260628071340`
+- `20260628073917 | 20260628073917`
+
+Runtime QA status:
+
+- Fresh disposable QA runtime proof passed on run `BATCH3-fc791041` with valid `production_mode=both`.
+- Rapid duplicate 80m sale submit produced exactly one sale, one receivable where applicable, and one stock movement.
+- Dispatching 50m left 30m pending; dispatching the remaining 30m with a distinct deterministic package identity reduced pending dispatch to 0.
+- Exact receipt closed with no discrepancy and synchronized receipt fields.
+- Shortage receipt created exactly one actionable shortage discrepancy.
+- Excess receipt created exactly one actionable excess discrepancy.
+- Duplicate receipt submit did not duplicate discrepancy or receipt state.
+- Negative and zero receipts were blocked consistently.
+- Archive helper did not archive unresolved dispatch/receipt obligations and allowed clean reconciled groups.
+- Dispatches, Factory Today, stock, Commercials, signoff, and second-session refresh reconciled.
+- No runtime path tried to read or write `dispatches.tracking_token`.
+- No ambiguous `dispatch_number` runtime error remained.
+
+Verification commands:
+
+- `npx vitest run __tests__/p2-dispatch-sale-receipt.test.ts` -> passed, 1 file, 7 tests.
+- `npx vitest run __tests__/p1-party-first-stock-sale-dispatch.test.ts __tests__/dispatch-archive.test.ts __tests__/p1-production-dispatch-regressions.test.ts` -> passed, 3 files, 27 tests.
+- `npx tsc --noEmit` -> passed.
+- Targeted ESLint for changed app/components/lib files -> passed.
+- `git diff --check` -> passed.
+- `npx vitest run` -> passed, 34 files, 306 passed, 1 skipped.
+
+Data safety:
+
+- Runtime proof used a fresh disposable QA tenant/run.
+- Earlier failed disposable proof attempts were cleaned up when they had no durable dispatch rows.
+- One orphan disposable QA auth user from the failed setup attempt was deleted only after verifying no org/profile/workflow rows existed.
+- No direct SQL, migration repair, `db pull`, `--include-all`, or npm audit was used during Batch 3 closeout.
+
+Resolution status:
+
+- Code, migrations, regression tests, runtime proof, and active matrix closeout are complete for the Batch 3 target scope.
+- `SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
+- `SIGNOFF-10` remains open. Batch 3 only supplies partial dispatch/package/receipt runtime evidence; missing release/Sentry/source-map proof still blocks full closure.
