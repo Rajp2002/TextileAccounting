@@ -12,7 +12,6 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-016`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, `TIME-002` |
-| P2 | `COMM-A` sales, receivables, stock audit, and profit boundaries | `STOCK-016`, `STOCK-017` |
 | P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-10` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `PAY-028`, `OFF-008`, `DASH-003` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
@@ -29,7 +28,9 @@ Closed in Batch 2 and removed from the open failure coverage rows: `PROD-A` prod
 
 Closed in Batch 3 and removed from the open failure coverage rows: dispatch sale receipt correctness (`SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, `SIGNOFF-08`). `SIGNOFF-10` remains open under dashboard/release readiness; Batch 3 supplies partial dispatch/package/receipt runtime evidence only.
 
-Closed in Batch 4 and removed from the open failure coverage rows: commercials receivables payments correctness (`COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, `SIGNOFF-09`). `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+Closed in Batch 4 and removed from the open failure coverage rows: commercials receivables payments correctness (`COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, `SIGNOFF-09`). `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 4 closeout.
+
+Closed in Batch 5 and removed from the open failure coverage rows: stock audit pagination and sale-only stock refresh (`STOCK-016`, `STOCK-017`). `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -202,27 +203,31 @@ Resolution:
 
 Required proof: satisfied by Batch 3 runtime proof, targeted Vitest, full Vitest, TypeScript, targeted ESLint, migration alignment, and active matrix promotion to pass.
 
-## P2 COMM-A - Stock Audit Refresh And History Remainder
+## Closed P2 COMM-A - Stock Audit Refresh And History Remainder
 
-Failures: `STOCK-016`, `STOCK-017`
+Failures: none remaining in this cluster.
 
 Closed in Batch 3: `SALE-015`
 
 Closed in Batch 4: `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, `SIGNOFF-09`
 
-Evidence: `logs/order-stock-sale-source-evidence-20260624.json`, `logs/business-reconciliation.json`, `logs/commercials-payment-mode-evidence.json`, `logs/commercials-filter-evidence.json`
+Closed in Batch 5: `STOCK-016`, `STOCK-017`
+
+Evidence: `logs/order-stock-sale-source-evidence-20260624.json`, `logs/business-reconciliation.json`, `logs/commercials-payment-mode-evidence.json`, `logs/commercials-filter-evidence.json`, `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json`, `docs/pilot-remediation/FIX_LOG.md`, active QA matrix closeout.
 
 Invariant: each sale creates one stock decrement, one receivable when credit applies, one party identity, and one profit basis. Direct and normal paths must produce the same accounting result.
 
-Impact: Batch 4 closes the direct market-run receivable bypass, cheque metadata/history, Asia/Kolkata due buckets, Top Parties last-sale/overdue, source filters, commercial signoff, and commercial payment idempotency. The remaining COMM-A-adjacent open items are stock-board movement history pagination and stale stock refresh/second-user behavior.
+Impact: Batch 4 closes the direct market-run receivable bypass, cheque metadata/history, Asia/Kolkata due buckets, Top Parties last-sale/overdue, source filters, commercial signoff, and commercial payment idempotency. Batch 5 closes the remaining stock-board movement history pagination and stale stock refresh/second-user behavior.
 
-Remediation direction:
+Resolution:
 
-- Add retrievable pagination or explicit history limits for stock movement history beyond 500 rows.
-- Fix stock-board refresh/second-user state after stock mutations.
-- Keep Batch 4 commercial receivable/payment behavior covered as regression guardrails when stock refresh/history is fixed.
+- Cursor-based stock movement pagination retrieves older audit entries beyond the old 500-row cap with deterministic `created_at desc, id desc` ordering.
+- Godown Stock lot entries lazy-load older movement pages and append unique movement rows.
+- Sale-only stock sale success without a dispatch id refreshes the stock page and reconciles available/pending quantities.
+- Disposable runtime proof retrieved 506 movement rows as 100, 100, 100, 100, 100, and 6 with no duplicates/missing rows, then verified 75m available, 25m pending, one sale movement, one receivable, and a matching second owner session.
+- Batch 4 commercial receivable/payment behavior remains covered by regression guardrails.
 
-Required proof: `SALE-015` duplicate sale proof is satisfied by Batch 3 runtime proof and tests. Batch 4 satisfies `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09`. `STOCK-016` and `STOCK-017` still require stock-specific runtime/source proof; Batch 4 Commercials refresh evidence is partial only for `STOCK-017`.
+Required proof: satisfied by Batch 3 runtime/tests for `SALE-015`, Batch 4 runtime/tests/browser proof for `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09`, and Batch 5 runtime/tests for `STOCK-016` and `STOCK-017`.
 
 ## P2 DASH-A - Dashboard and Daily Sign-Off Read Models Are Not Authoritative
 

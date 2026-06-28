@@ -21,7 +21,7 @@ Rules for entries:
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Server-boundary validation, idempotency, quote/order lifecycle, and date snapshot rows remain open. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` receives partial dispatch/package evidence only and remains open for release/Sentry proof. |
 | `DISP-B` receipt-state coherence | Closed in Batch 3 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. |
-| `COMM-A` sales/receivables/profit boundary | Partially closed in Batch 4 / open stock remainder | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. `STOCK-016`, `STOCK-017`, Golden A order-linked receivable rows, and broad timezone/offline rows remain open or partial evidence only. |
+| `COMM-A` sales/receivables/profit boundary | Closed in Batch 5 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017` with stock audit pagination and sale-only refresh runtime proof. Golden A order-linked receivable rows, broad timezone/offline rows, and release/Sentry proof remain open separately and are not promoted by Batch 5. |
 | `DASH-A` dashboard/sign-off read-model truth | Partially closed in Batch 4 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`. Production, payroll, historical analytics, and release/Sentry portions remain open. |
 | `PAY-A` payroll/kharchi ledger integrity | Open | Includes legacy RPCs and offline kharchi. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
@@ -664,8 +664,8 @@ Scope:
 Partial evidence only, not promoted by Batch 4:
 
 - `SIGNOFF-10` remains open for release/Sentry/source-map proof.
-- `STOCK-017` received Commercials refresh/second-session evidence only; stock-board stale refresh remains open.
-- `STOCK-016` remains open for movement history pagination beyond 500 rows.
+- `STOCK-017` received Commercials refresh/second-session evidence only during Batch 4; stock-board stale refresh remained open until Batch 5.
+- `STOCK-016` remained open for movement history pagination beyond 500 rows until Batch 5.
 - `GOLDEN-A-19` and `GOLDEN-A-20` remain blocked because the order-linked Golden A payment/receivable chain was not rerun.
 - `TIME-002` remains open for non-Commercials date-only surfaces.
 - `OFF-009` remains open for unknown-timeout UX beyond the commercial payment idempotency proof.
@@ -728,4 +728,70 @@ Resolution status:
 
 - Code, migration, regression tests, runtime proof, browser proof, and active matrix closeout are complete for the Batch 4 target scope.
 - `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
-- `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only as listed above.
+- `SIGNOFF-10`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only as listed above.
+
+## Batch 5 - Stock Audit Pagination And Sale-Only Refresh
+
+Date/time: 2026-06-28 23:07 IST. Documentation closeout after `main` was fast-forwarded to implementation commit `46ad361fa03d3fb9d561c639e5e3ed6424cb8e03`.
+
+Scope:
+
+- `STOCK-016`
+- `STOCK-017`
+
+Explicitly not promoted by Batch 5:
+
+- `GOLDEN-A-19` and `GOLDEN-A-20` remain blocked because the order-linked Golden A payment/receivable chain was not rerun.
+- `SIGNOFF-10` remains open for release/Sentry/source-map proof.
+- `TIME-002` remains open for non-Commercials date-only surfaces.
+- `OFF-009` remains open for unknown-timeout UX and status reconciliation across high-value mutations.
+
+Invariant:
+
+Stock movement history must be complete, paginated, deterministic, and auditable. Stock after sale-only, dispatch, payment, and refresh paths must reconcile to committed server state, and a second session must not show stale stock values.
+
+Implementation status:
+
+- Added cursor-based stock movement pagination with deterministic `created_at desc, id desc` ordering and page size guardrails.
+- Reduced the stock board's initial recent movement load to an explicit recent-history summary while adding a dedicated `getTakaStockMovements` server action for older pages.
+- Updated Godown Stock lot entries to lazy-load movement pages, append unique movement rows, show loading/error states, and expose an explicit "Load older entries" action.
+- Changed stock sale callback handling so sale-only success with no `dispatchId` closes the dialog and refreshes the stock page instead of skipping the success callback.
+- Added focused Batch 5 regression tests and a disposable QA proof script.
+
+Migrations:
+
+- No migration was required.
+- No Supabase db push, repair, db pull, direct SQL, or `--include-all` command was run for Batch 5.
+
+Runtime QA status:
+
+- Disposable QA proof passed with artifact `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json`.
+- 506 stock movements were retrieved as pages of 100, 100, 100, 100, 100, and 6 rows.
+- Movement pagination had no duplicate rows and preserved deterministic newest-to-oldest ordering.
+- Sale-only stock sale returned no dispatch id, returned 25m pending dispatch, and refreshed committed stock to 75m available / 25m pending.
+- The sale created exactly one stock sale movement and one receivable.
+- A second owner session matched the committed stock state: 75m available, 25m pending, and one receivable.
+- Disposable cleanup completed with no cleanup errors.
+
+Verification commands:
+
+- `npm run lint -- app/(dashboard)/owner/stock/actions.ts app/(dashboard)/owner/stock/TakaStockClient.tsx components/dispatches/SellAndDispatchDialog.tsx lib/stock-movement-pagination.ts __tests__/p2-stock-audit-refresh.test.ts scripts/qa/batch5-stock-audit-refresh-probe.mjs` -> passed.
+- `npx tsc --noEmit` -> passed.
+- `npx vitest run __tests__/p2-stock-audit-refresh.test.ts` -> passed, 1 file, 4 tests.
+- Batch 2/3/4 stock, dispatch, and commercials regression pack -> passed, 10 files, 85 tests.
+- `npx vitest run` -> passed, 36 files, 317 passed, 1 skipped.
+- `git diff --check` -> passed.
+- After fast-forwarding `main`, `npx vitest run __tests__/p2-stock-audit-refresh.test.ts`, `npx tsc --noEmit`, and `npx vitest run` passed again.
+
+Data safety:
+
+- Runtime proof used a fresh disposable QA tenant/run.
+- Disposable setup mutations were scoped to the Batch 5 QA organization only.
+- The proof artifact stores redacted ids only and records cleanup completion.
+- No migration, direct SQL, migration repair, `db pull`, `--include-all`, npm audit, payroll/kharchi work, Sentry work, release-gate work, or lockfile work was used for Batch 5.
+
+Resolution status:
+
+- Code, regression tests, runtime proof, and active matrix closeout are complete for the Batch 5 target scope.
+- `STOCK-016` and `STOCK-017` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
+- `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only and are not closed by Batch 5.

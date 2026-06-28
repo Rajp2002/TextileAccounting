@@ -86,6 +86,8 @@ Required proof:
 
 Batch 3 proof note: `SALE-015` is satisfied for the stock sale/dispatch path by disposable runtime proof that rapid duplicate 80m sale submit created exactly one sale, one receivable where applicable, and one stock movement.
 
+Batch 5 proof note: `STOCK-016` and `STOCK-017` are satisfied by disposable runtime proof `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json`, focused Batch 5 tests, regression tests, and full Vitest. The proof retrieved 506 stock movement rows through cursor pagination as 100, 100, 100, 100, 100, and 6 with no duplicates/missing rows and deterministic newest-to-oldest ordering. It also verified sale-only no-dispatch refresh to 75m available / 25m pending, one stock sale movement, one receivable, and a matching second owner session. No migration was required.
+
 ## Dispatch and Receipt
 
 Dispatch is a batch-level obligation against sold meters. Receipt is a batch-level confirmation. A partial dispatch is not a shortage.
@@ -125,7 +127,7 @@ Required proof:
 - Due date starts from the first dispatch under the active product rule.
 - Profit filters classify manual, market-run, and order stock by authoritative source fields.
 
-Batch 4 proof note: `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` are satisfied by disposable runtime proof `BATCH4QA-20260628125203`, migration `20260628121903`, focused Batch 4 tests, and browser evidence. The proof covers exact-once sale receivable creation, duplicate sale submit idempotency, disabled direct market-run sale, partial/full/duplicate payment handling, overpayment blocking, cheque metadata/history, Asia/Kolkata due buckets, Top Parties last-sale/overdue, authoritative profit source fields, Factory Today blockers, and Commercials refresh/second-session reconciliation. Stock movement history pagination, stock-board stale refresh, Golden A order-linked payments, broad date-only rendering, timeout UX, and release/Sentry proof remain outside Batch 4.
+Batch 4 proof note: `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` are satisfied by disposable runtime proof `BATCH4QA-20260628125203`, migration `20260628121903`, focused Batch 4 tests, and browser evidence. The proof covers exact-once sale receivable creation, duplicate sale submit idempotency, disabled direct market-run sale, partial/full/duplicate payment handling, overpayment blocking, cheque metadata/history, Asia/Kolkata due buckets, Top Parties last-sale/overdue, authoritative profit source fields, Factory Today blockers, and Commercials refresh/second-session reconciliation. Golden A order-linked payments, broad date-only rendering, timeout UX, and release/Sentry proof remain outside Batch 4.
 
 ## Estimator Costing
 

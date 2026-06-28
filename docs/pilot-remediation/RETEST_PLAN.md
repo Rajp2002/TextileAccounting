@@ -276,7 +276,33 @@ Acceptance:
 
 - Batch 4 satisfied this Commercials retest for `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09`.
 - Evidence: disposable QA runtime proof `BATCH4QA-20260628125203`; migration `20260628121903` applied/aligned; focused Batch 4 Vitest passed 32 tests; Batch 2/3 guard Vitest passed 37 tests; full Vitest passed 313 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
-- `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+- `SIGNOFF-10`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+
+## P2 Stock Audit Refresh Retest
+
+Commands:
+
+```bash
+npx vitest run __tests__/p2-stock-audit-refresh.test.ts
+npx vitest run __tests__/p2-stock-audit-refresh.test.ts __tests__/p1-stock-lifecycle.test.ts __tests__/p1-stock-source-validation.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/p0-atomicity.test.ts __tests__/p1-party-first-stock-sale-dispatch.test.ts __tests__/p2-dispatch-sale-receipt.test.ts __tests__/commercials-read-model.test.ts __tests__/p1-commercial-payments.test.ts __tests__/p2-commercials-receivables-payments.test.ts
+npx vitest run
+```
+
+Runtime checks:
+
+- Seed a disposable stock lot with more than 500 movement rows.
+- Retrieve all movement history through the product-equivalent cursor path and verify older rows are reachable.
+- Confirm no duplicate or missing movement rows and deterministic newest-to-oldest ordering.
+- Save a sale-only stock sale with no dispatch id.
+- Confirm Godown Stock refreshes to committed available and pending-dispatch state without a manual full reload requirement.
+- Confirm a second owner session matches committed server state.
+
+Acceptance:
+
+- Batch 5 satisfied this stock audit refresh retest for `STOCK-016` and `STOCK-017`.
+- Evidence: disposable QA proof `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json`; implementation commit `46ad361fa03d3fb9d561c639e5e3ed6424cb8e03`; focused Batch 5 Vitest passed 4 tests; Batch 2/3/4 stock, dispatch, and commercials regression pack passed 85 tests; full Vitest passed 317 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
+- No migration was required.
+- `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
 
 ## P2 Dashboard and Sign-Off Read Model Retest
 

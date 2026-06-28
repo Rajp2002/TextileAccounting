@@ -14,12 +14,12 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, and Batch 4 commercials receivables closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, and Batch 5 stock audit refresh closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 153 | Runtime/test evidence exists. |
-| `fail` | 62 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 155 | Runtime/test evidence exists. |
+| `fail` | 60 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 30 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
@@ -35,7 +35,9 @@ Estimator costing reconciliation is complete for the scoped formula/manual/manua
 
 Batch 3 moved `SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` from fail to pass with runtime/test/migration evidence. `SIGNOFF-10` remains open; Batch 3 supplies partial dispatch/package/receipt runtime evidence only, not release/Sentry/source-map proof.
 
-Batch 4 moved `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` from fail to pass with runtime/test/migration/browser evidence. `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+Batch 4 moved `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` from fail to pass with runtime/test/migration/browser evidence. `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 4 closeout.
+
+Batch 5 moved `STOCK-016` and `STOCK-017` from fail to pass with runtime/test evidence for stock movement audit pagination beyond 500 rows and sale-only stock refresh/second-session reconciliation. `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
 
 ## Operating Rules
 
@@ -375,4 +377,50 @@ Verification:
 Resolution status:
 
 - `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` are documented as pass in the active matrix.
-- `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain partial evidence only or open and are not closed by Batch 4.
+- `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remained partial evidence only or open and were not closed by Batch 4.
+
+## Batch 5 Closed on Main
+
+Date/time: 2026-06-28 23:07 IST.
+
+Batch 5: stock audit pagination and sale-only stock refresh.
+
+Target failures:
+
+- `STOCK-016`
+- `STOCK-017`
+
+Repository state:
+
+- Implementation commit `46ad361fa03d3fb9d561c639e5e3ed6424cb8e03` was fast-forwarded into `main` and pushed to `origin/main`.
+- `origin/main` pointed to `46ad361fa03d3fb9d561c639e5e3ed6424cb8e03` before this documentation closeout.
+
+Migration status:
+
+- No migration was required.
+- No Supabase db push, repair, db pull, direct SQL, or `--include-all` command was run.
+
+Runtime proof:
+
+- Disposable QA proof `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json` passed.
+- 506 stock movement rows were retrieved through cursor pagination as pages of 100, 100, 100, 100, 100, and 6.
+- Pagination had no duplicate/missing rows and preserved deterministic newest-to-oldest order.
+- Sale-only no-dispatch stock sale refreshed committed state to 75m available and 25m pending dispatch.
+- The sale created one stock sale movement and one receivable.
+- A second owner session matched the committed stock state.
+- Cleanup completed with no cleanup errors.
+
+Verification:
+
+- Focused Batch 5 Vitest: 4 passed.
+- Batch 2/3/4 guard regression pack: 85 passed.
+- Full Vitest: 36 files, 317 passed, 1 skipped.
+- `npx tsc --noEmit` -> passed.
+- Targeted ESLint for touched Batch 5 files -> passed.
+- `git diff --check` -> passed.
+- After fast-forwarding `main`, focused Batch 5 Vitest, `npx tsc --noEmit`, and full Vitest passed again.
+
+Resolution status:
+
+- `STOCK-016` and `STOCK-017` are documented as pass in the active matrix.
+- `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain partial evidence only or open and are not closed by Batch 5.
