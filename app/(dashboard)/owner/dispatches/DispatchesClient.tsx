@@ -207,6 +207,13 @@ function getClientDispatchGroupId(dispatch: Dispatch) {
     return dispatch.stock_sale?.id ?? dispatch.stock_sale_id ?? dispatch.orders.id
 }
 
+function createClientIdempotencyKey(prefix: string) {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return `${prefix}:${crypto.randomUUID()}`
+    }
+    return `${prefix}:${Date.now().toString(36)}:${Math.random().toString(36).slice(2)}`
+}
+
 function filterArchivedDispatchRows(dispatches: Dispatch[]) {
     const groups = new Map<string, {
         dispatches: Dispatch[]
@@ -281,7 +288,7 @@ function DispatchBatchRow({
 
     const submitOwnerReceiptConfirm = () => {
         const qty = Number.parseFloat(metersReceived)
-        if (!Number.isFinite(qty) || qty < 0) {
+        if (!Number.isFinite(qty) || qty <= 0) {
             toast.error(t('dispatch.receipt.metersReceived'))
             return
         }
@@ -302,7 +309,7 @@ function DispatchBatchRow({
 
     const handleOwnerReceiptConfirm = () => {
         const qty = Number.parseFloat(metersReceived)
-        if (!Number.isFinite(qty) || qty < 0) {
+        if (!Number.isFinite(qty) || qty <= 0) {
             toast.error(t('dispatch.receipt.metersReceived'))
             return
         }
@@ -419,7 +426,7 @@ function DispatchBatchRow({
                         <Input
                             type="number"
                             step="0.01"
-                            min="0"
+                            min="0.01"
                             value={metersReceived}
                             onChange={(event) => setMetersReceived(event.target.value)}
                         />
@@ -695,6 +702,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
     const [dispatchMeters, setDispatchMeters] = useState('')
     const [dispatchTakas, setDispatchTakas] = useState('')
     const [dispatchNotes, setDispatchNotes] = useState('')
+    const [dispatchIdempotencyKey, setDispatchIdempotencyKey] = useState(() => createClientIdempotencyKey('stock-dispatch'))
     const [confirmPending, startConfirmTransition] = useTransition()
 
     const handleConfirmDispatch = () => {
@@ -719,7 +727,8 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                 challanNumber,
                 meters,
                 takas,
-                dispatchNotes
+                dispatchNotes,
+                dispatchIdempotencyKey
             )
 
             if (!res.success) {
@@ -1070,6 +1079,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                                     const estimatedPendingTakas = Math.max(1, Math.round(pendingMeters / (avgMetersPerTaka || 1)))
                                                     setDispatchTakas(String(estimatedPendingTakas))
                                                     setDispatchNotes('')
+                                                    setDispatchIdempotencyKey(createClientIdempotencyKey('stock-dispatch'))
                                                 }}
                                                 className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold gap-2 shrink-0 h-10 px-4 rounded-xl shadow-md transition-all active:scale-95 text-xs"
                                             >

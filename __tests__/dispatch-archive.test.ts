@@ -33,6 +33,13 @@ describe('dispatch archive eligibility', () => {
         })).toBe(false)
     })
 
+    it('keeps over-dispatched groups active for reconciliation instead of hiding the mismatch', () => {
+        expect(shouldArchiveDispatchGroup({
+            ...completedGroup,
+            totalDispatchedMeters: 420,
+        })).toBe(false)
+    })
+
     it('keeps unconfirmed receipts active', () => {
         expect(shouldArchiveDispatchGroup({
             ...completedGroup,

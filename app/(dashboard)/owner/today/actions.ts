@@ -209,18 +209,18 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         // 6. Sold stock not yet dispatched
         supabase
             .from('fabric_stock_sales')
-            .select('id, taka_sold, meters_sold, revenue_amount, sale_date, fabric_stock_lots!inner(quality_label)')
+            .select('id, taka_sold, meters_sold, pending_dispatch_meters, revenue_amount, sale_date, fabric_stock_lots!inner(quality_label)')
             .eq('org_id', orgId)
-            .is('dispatch_id', null)
+            .gt('pending_dispatch_meters', 0)
             .order('sale_date', { ascending: false })
             .limit(20),
 
-        // 7. In-transit dispatches (pending receipt)
+        // 7. In-transit dispatches and unresolved receipt differences
         supabase
             .from('dispatches')
-            .select('id, dispatch_number, qty_meters_sent, dispatched_at, orders!inner(party_name)')
+            .select('id, dispatch_number, qty_meters_sent, dispatched_at, party_name, receipt_status, orders(party_name)')
             .eq('org_id', orgId)
-            .eq('status', 'in_transit')
+            .or('status.eq.in_transit,receipt_status.eq.difference_reported')
             .order('dispatched_at', { ascending: true })
             .limit(15),
 
@@ -560,7 +560,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         return {
             saleId: String(raw.id),
             qualityLabel: String(lotTyped?.quality_label || 'Stock'),
-            meters: toNum(raw.meters_sold),
+            meters: toNum(raw.pending_dispatch_meters),
             units: toNum(raw.taka_sold),
             saleValue: toNum(raw.revenue_amount),
             saleDate: String(raw.sale_date || today),
@@ -575,7 +575,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         return {
             dispatchId: String(raw.id),
             dispatchNumber: toNum(raw.dispatch_number),
-            partyName: String(orderTyped?.party_name || 'Party'),
+            partyName: String(raw.party_name || orderTyped?.party_name || 'Party'),
             sentMeters: toNum(raw.qty_meters_sent),
             sentDate,
             daysPending: daysBetween(sentDate, today),

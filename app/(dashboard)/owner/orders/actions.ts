@@ -798,7 +798,8 @@ export async function createDispatch(
     dispatchMeters?: Record<string, number>,
     dispatchTakas?: Record<string, number>,
     dispatchDate?: string,
-    challanNumber?: string
+    challanNumber?: string,
+    idempotencyKey?: string
 ): Promise<{ dispatch: DispatchRow; dispatch_number: number } | { error: string }> {
     const { user, profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
@@ -855,6 +856,7 @@ export async function createDispatch(
         p_approximate_distance_km: parsed.data.approximate_distance_km ?? null,
         p_eway_bill_generated_at: parsed.data.eway_bill_generated_at || null,
         p_created_by: user.id,
+        p_idempotency_key: idempotencyKey?.trim() || null,
     })
 
     if (rpcError) return { error: rpcError.message }
@@ -1248,8 +1250,8 @@ export async function confirmDispatchReceiptByOwner(
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
-    if (!Number.isFinite(qtyReceived) || qtyReceived < 0) {
-        return { error: 'Enter a valid received quantity' }
+    if (!Number.isFinite(qtyReceived) || qtyReceived <= 0) {
+        return { error: 'Enter a valid received quantity greater than 0' }
     }
 
     const { data: dispatch, error: dispatchError } = await supabase
@@ -1302,6 +1304,7 @@ export async function confirmDispatchReceiptByOwner(
         const { data, error } = await supabase.rpc('confirm_stock_sale_dispatch_receipt_v1', {
             p_dispatch_id: dispatchId,
             p_qty_received: qtyReceived,
+            p_receipt_note: note?.trim() || null,
         })
         if (error) {
             const message = error.message || 'Could not confirm receipt. Please try again.'
@@ -1323,6 +1326,9 @@ export async function confirmDispatchReceiptByOwner(
             receipt_confirmed_by_owner: true,
             receipt_confirmation_note: note?.trim() || null,
             receipt_confirmed_by: user.id,
+            received_meters: resultQty,
+            received_note: note?.trim() || null,
+            receipt_status: Math.abs(resultQty - Number(dispatch.qty_meters_sent ?? 0)) <= 0.01 ? 'matched' : 'difference_reported',
         })
         .eq('id', dispatchId)
         .eq('org_id', profile.org_id)
@@ -1434,7 +1440,8 @@ export async function confirmPendingSaleDispatch(
     challanNumber: string,
     dispatchMeters: number,
     dispatchTakas: number,
-    notes: string
+    notes: string,
+    idempotencyKey?: string
 ): Promise<{ success: boolean; dispatchId?: string; dispatchNumber?: number; message?: string }> {
     await requireRole(['owner'])
     const supabase = await createServerClient()
@@ -1458,6 +1465,7 @@ export async function confirmPendingSaleDispatch(
         p_dispatch_meters: dispatchMeters,
         p_dispatch_takas: dispatchTakas || null,
         p_notes: notes?.trim() || null,
+        p_idempotency_key: idempotencyKey?.trim() || null,
     })
 
     if (error) {

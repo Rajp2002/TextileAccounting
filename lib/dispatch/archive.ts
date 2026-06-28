@@ -12,7 +12,7 @@ export type DispatchArchiveEligibilityInput = {
 
 export function isDispatchGroupActionable(group: DispatchArchiveEligibilityInput): boolean {
     if (group.pendingDispatchMeters > METER_EPSILON) return true
-    if (Math.max(group.totalSaleMeters - group.totalDispatchedMeters, 0) > METER_EPSILON) return true
+    if (Math.abs(group.totalSaleMeters - group.totalDispatchedMeters) > METER_EPSILON) return true
     if (group.hasUnconfirmedReceipt) return true
     if (group.hasDisputedDispatch) return true
     if (group.hasOpenDiscrepancy) return true

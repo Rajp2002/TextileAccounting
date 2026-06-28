@@ -29,6 +29,7 @@ export type SellAndDispatchInput = {
   vehicleNumber?: string | null
   challanNumber?: string | null
   notes?: string | null
+  idempotencyKey?: string | null
 }
 
 export type LegacyOrderSellAndDispatchInput = {

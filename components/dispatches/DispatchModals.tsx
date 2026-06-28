@@ -23,6 +23,13 @@ import { getCurrentIsoString, getSuratTodayString } from '@/lib/time'
 import { cn } from '@/lib/utils'
 import { createDispatch, type DispatchRow, type AvailableFabricPackage } from '@/app/(dashboard)/owner/orders/actions'
 
+function createClientIdempotencyKey(prefix: string) {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return `${prefix}:${crypto.randomUUID()}`
+    }
+    return `${prefix}:${Date.now().toString(36)}:${Math.random().toString(36).slice(2)}`
+}
+
 /**
  * Modal for creating a new dispatch batch.
  */
@@ -46,6 +53,7 @@ export function CreateDispatchModal({
     const [distanceKm, setDistanceKm] = useState('')
     const [selected, setSelected] = useState<string[]>(availablePackages.map((pkg) => pkg.id))
     const [pending, startTransition] = useTransition()
+    const [idempotencyKey] = useState(() => createClientIdempotencyKey('order-dispatch'))
 
     // ── Configurable Batch Dispatch Date, Meters & Takas State ──
     const [dispatchDate, setDispatchDate] = useState(() => getSuratTodayString())
@@ -136,7 +144,7 @@ export function CreateDispatchModal({
                 transporter_id: transporterId,
                 approximate_distance_km: parsedDistance,
                 eway_bill_generated_at: ewayNumber.trim() ? getCurrentIsoString() : '',
-            }, dispatchMetersObj, dispatchTakasObj, dispatchDate, challanNumber)
+            }, dispatchMetersObj, dispatchTakasObj, dispatchDate, challanNumber, idempotencyKey)
             
             if ('error' in res) {
                 toast.error(res.error)

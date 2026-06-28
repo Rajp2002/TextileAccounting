@@ -108,6 +108,7 @@ export async function createPartyStockSaleAndOptionalDispatch(input: SellAndDisp
         p_challan_number: cleanText(input.challanNumber),
         p_notes: cleanText(input.notes),
         p_party_id: partyId,
+        p_idempotency_key: cleanText(input.idempotencyKey),
     })
 
     if (error) {

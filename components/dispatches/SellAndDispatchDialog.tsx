@@ -93,6 +93,13 @@ function partyDetailLabel(party: PartyOption) {
     return parts.join(' · ')
 }
 
+function createClientIdempotencyKey(prefix: string) {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return `${prefix}:${crypto.randomUUID()}`
+    }
+    return `${prefix}:${Date.now().toString(36)}:${Math.random().toString(36).slice(2)}`
+}
+
 export function SellAndDispatchDialog({
     open,
     onOpenChange,
@@ -126,6 +133,7 @@ export function SellAndDispatchDialog({
     const [vehicleNumber, setVehicleNumber] = useState('')
     const [challanNumber, setChallanNumber] = useState('')
     const [notes, setNotes] = useState('')
+    const [idempotencyKey, setIdempotencyKey] = useState(() => createClientIdempotencyKey('stock-sale'))
 
     const findUniquePartyByName = useCallback((name: string) => findUniquePartyByNameIn(name, parties), [parties])
 
@@ -161,6 +169,7 @@ export function SellAndDispatchDialog({
         setVehicleNumber('')
         setChallanNumber('')
         setNotes('')
+        setIdempotencyKey(createClientIdempotencyKey('stock-sale'))
 
         getSellAndDispatchOptions().then((data) => {
             const loadedOrders = data.orders as OrderOption[]
@@ -261,6 +270,7 @@ export function SellAndDispatchDialog({
                 vehicleNumber,
                 challanNumber,
                 notes,
+                idempotencyKey,
             })
 
             if (result.success) {
