@@ -1,0 +1,86 @@
+{
+  "run_id": "BATCH5-20260628173243",
+  "org_id": "3e552191...0ee0",
+  "stock_lot_id": "5f5e2d96...4b78",
+  "movement_count": 506,
+  "page_size": 100,
+  "page_lengths": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    6
+  ],
+  "sale_id": "04c38ec2...1186",
+  "first_session_snapshot": {
+    "available_meters": 75,
+    "pending_dispatch_meters": 25,
+    "sale_movement_count": 1,
+    "receivable_count": 1
+  },
+  "second_session_snapshot": {
+    "available_meters": 75,
+    "pending_dispatch_meters": 25,
+    "receivable_count": 1
+  },
+  "assertions": [
+    {
+      "name": "older-than-500 movements are reachable",
+      "passed": true,
+      "collected": 506,
+      "expected": 506,
+      "pageLengths": [
+        100,
+        100,
+        100,
+        100,
+        100,
+        6
+      ]
+    },
+    {
+      "name": "movement pagination has no duplicate rows",
+      "passed": true
+    },
+    {
+      "name": "movement pagination is newest-to-oldest deterministic",
+      "passed": true
+    },
+    {
+      "name": "sale-only mutation returned no dispatch id",
+      "passed": true,
+      "saleId": "04c38ec2...1186",
+      "dispatchId": null
+    },
+    {
+      "name": "sale-only mutation returned pending dispatch meters",
+      "passed": true
+    },
+    {
+      "name": "available meters update after sale-only mutation",
+      "passed": true,
+      "availableMeters": 75
+    },
+    {
+      "name": "pending dispatch reconciles after sale-only mutation",
+      "passed": true
+    },
+    {
+      "name": "stock sale movement is recorded exactly once",
+      "passed": true
+    },
+    {
+      "name": "sale-only creates one receivable",
+      "passed": true
+    },
+    {
+      "name": "second session matches committed stock state",
+      "passed": true,
+      "firstAvailableMeters": 75,
+      "secondAvailableMeters": 75
+    }
+  ],
+  "cleanup": "complete",
+  "cleanup_errors": []
+}

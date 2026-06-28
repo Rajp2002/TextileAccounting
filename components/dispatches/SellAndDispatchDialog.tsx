@@ -24,7 +24,7 @@ export type SellAndDispatchDialogProps = {
     onOpenChange: (open: boolean) => void
     defaultOrderId?: string
     defaultStockLotId?: string
-    onSuccess?: (dispatchId: string, trackingUrl: string | null) => void
+    onSuccess?: (dispatchId: string | null, trackingUrl: string | null) => void
 }
 
 type OrderOption = { id: string; party_name: string; quality_label: string | null; status: string; total_target_meters: number }
@@ -276,7 +276,7 @@ export function SellAndDispatchDialog({
             if (result.success) {
                 toast.success(dispatchNow ? 'Stock sale and dispatch saved' : 'Stock sale saved')
                 onOpenChange(false)
-                if (result.dispatchId) onSuccess?.(result.dispatchId, result.trackingUrl)
+                onSuccess?.(result.dispatchId ?? null, result.trackingUrl ?? null)
             } else {
                 const notify = result.recoverable ? toast.warning : toast.error
                 notify(result.message, { duration: 7000 })

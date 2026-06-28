@@ -7,6 +7,13 @@ import { ensureReceivableForCommercialEntry } from '@/lib/commercials/receivable
 import { getOrganizationProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { isStockLotActionable } from '@/lib/stock-lifecycle'
 import {
+    buildStockMovementCursorFilter,
+    getNextStockMovementCursor,
+    RECENT_STOCK_MOVEMENT_LIMIT,
+    STOCK_MOVEMENT_PAGE_SIZE,
+    type StockMovementCursor,
+} from '@/lib/stock-movement-pagination'
+import {
     AdjustTakaStockLotSchema,
     CreateFabricPackageSchema,
     CreateTakaStockLotSchema,
@@ -129,6 +136,19 @@ export interface TakaStockMovementRow {
         godown: string
         unit_label: string
     }
+}
+
+export interface TakaStockMovementPage {
+    movements: TakaStockMovementRow[]
+    nextCursor: StockMovementCursor | null
+    hasMore: boolean
+    pageSize: number
+}
+
+export interface GetTakaStockMovementsInput {
+    stockLotId?: string | null
+    cursor?: StockMovementCursor | null
+    limit?: number | null
 }
 
 export interface StockSourceOption {
@@ -321,7 +341,8 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
             `)
             .eq('org_id', profile.org_id)
             .order('created_at', { ascending: false })
-            .limit(500),
+            .order('id', { ascending: false })
+            .limit(RECENT_STOCK_MOVEMENT_LIMIT),
         supabase
             .from('market_run_summary')
             .select('market_run_id, fabric_label, quality_label, cost_per_meter, target_meters, meters_in_godown, status')
@@ -538,6 +559,65 @@ export async function getTakaStockBoard(): Promise<TakaStockBoardData | { error:
         movements,
         sourceOptions: [...marketRunOptions, ...orderOptions],
         summary,
+    }
+}
+
+export async function getTakaStockMovements(
+    input: GetTakaStockMovementsInput = {}
+): Promise<TakaStockMovementPage | { error: string }> {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+    const requestedLimit = Number(input.limit ?? STOCK_MOVEMENT_PAGE_SIZE)
+    const pageSize = Number.isFinite(requestedLimit)
+        ? Math.max(1, Math.min(requestedLimit, STOCK_MOVEMENT_PAGE_SIZE))
+        : STOCK_MOVEMENT_PAGE_SIZE
+
+    let query = supabase
+        .from('fabric_stock_movements')
+        .select(`
+            id,
+            stock_lot_id,
+            movement_type,
+            movement_date,
+            taka_delta,
+            meters_delta,
+            reference,
+            notes,
+            created_at,
+            fabric_stock_lots!inner (
+                quality_label,
+                godown,
+                unit_label
+            )
+        `)
+        .eq('org_id', profile.org_id)
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(pageSize + 1)
+
+    if (input.stockLotId) {
+        query = query.eq('stock_lot_id', input.stockLotId)
+    }
+
+    if (input.cursor?.created_at && input.cursor.id) {
+        query = query.or(buildStockMovementCursorFilter(input.cursor))
+    }
+
+    const { data, error } = await query
+    if (error) return { error: error.message }
+
+    const rawRows = ((data ?? []) as unknown[]).map((row) => (
+        normalizeRelation(row as Record<string, unknown>, 'fabric_stock_lots')
+    )) as unknown as TakaStockMovementRow[]
+
+    const movements = rawRows.slice(0, pageSize)
+    const hasMore = rawRows.length > pageSize
+
+    return {
+        movements,
+        hasMore,
+        nextCursor: getNextStockMovementCursor(movements, hasMore),
+        pageSize,
     }
 }
 

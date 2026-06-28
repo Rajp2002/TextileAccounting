@@ -46,17 +46,29 @@ import { cn } from '@/lib/utils'
 import {
     adjustTakaStockLot,
     createTakaStockLot,
+    getTakaStockMovements,
     type StockSourceOption,
     type TakaStockBoardData,
     type TakaStockLotSummary,
+    type TakaStockMovementPage,
     type TakaStockMovementRow,
 } from './actions'
 import { SellAndDispatchDialog } from '@/components/dispatches/SellAndDispatchDialog'
 import { isMarketRunOnlyMode } from '@/lib/production-mode'
 import { getSuratTodayString } from '@/lib/time'
+import {
+    appendUniqueStockMovements,
+    type StockMovementCursor,
+} from '@/lib/stock-movement-pagination'
 
 type SourceType = 'opening' | 'market_run' | 'order' | 'manual' | 'adjustment'
 type AdjustmentMode = 'add' | 'subtract'
+
+type MovementPageState = TakaStockMovementPage & {
+    loading: boolean
+    loaded: boolean
+    error: string | null
+}
 
 const today = () => getSuratTodayString()
 
@@ -487,6 +499,7 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
     const [addOpen, setAddOpen] = useState(false)
     const [adjustLot, setAdjustLot] = useState<TakaStockLotSummary | null>(null)
     const [expandedLots, setExpandedLots] = useState<Record<string, boolean>>({})
+    const [movementPages, setMovementPages] = useState<Record<string, MovementPageState>>({})
     const [sellAndDispatchOpen, setSellAndDispatchOpen] = useState(false)
     const [sellAndDispatchLotId, setSellAndDispatchLotId] = useState<string | undefined>()
     const marketRunOnly = isMarketRunOnlyMode(initialData.productionMode)
@@ -507,17 +520,75 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
         })
     }, [initialData.lots, godown, query, activeTab])
 
-    const movementsByLot = useMemo(() => {
-        const grouped = new Map<string, TakaStockMovementRow[]>()
-        for (const movement of initialData.movements) {
-            const entries = grouped.get(movement.stock_lot_id) ?? []
-            entries.push(movement)
-            grouped.set(movement.stock_lot_id, entries)
-        }
-        return grouped
-    }, [initialData.movements])
-
     const refresh = () => router.refresh()
+
+    const loadLotMovements = async (
+        stockLotId: string,
+        cursor: StockMovementCursor | null = null,
+        replace = false
+    ) => {
+        setMovementPages((prev) => {
+            const current = prev[stockLotId]
+            return {
+                ...prev,
+                [stockLotId]: {
+                    movements: replace ? [] : current?.movements ?? [],
+                    nextCursor: current?.nextCursor ?? null,
+                    hasMore: current?.hasMore ?? true,
+                    pageSize: current?.pageSize ?? 0,
+                    loading: true,
+                    loaded: current?.loaded ?? false,
+                    error: null,
+                },
+            }
+        })
+
+        const result = await getTakaStockMovements({ stockLotId, cursor })
+
+        setMovementPages((prev) => {
+            const current = prev[stockLotId]
+            if ('error' in result) {
+                return {
+                    ...prev,
+                    [stockLotId]: {
+                        movements: current?.movements ?? [],
+                        nextCursor: current?.nextCursor ?? null,
+                        hasMore: current?.hasMore ?? false,
+                        pageSize: current?.pageSize ?? 0,
+                        loading: false,
+                        loaded: current?.loaded ?? false,
+                        error: result.error,
+                    },
+                }
+            }
+
+            return {
+                ...prev,
+                [stockLotId]: {
+                    ...result,
+                    movements: replace
+                        ? result.movements
+                        : appendUniqueStockMovements(current?.movements ?? [], result.movements),
+                    loading: false,
+                    loaded: true,
+                    error: null,
+                },
+            }
+        })
+    }
+
+    const toggleLotEntries = (stockLotId: string) => {
+        const expanding = !expandedLots[stockLotId]
+        setExpandedLots((prev) => ({
+            ...prev,
+            [stockLotId]: expanding,
+        }))
+
+        const currentPage = movementPages[stockLotId]
+        if (expanding && !currentPage?.loaded && !currentPage?.loading) {
+            void loadLotMovements(stockLotId, null, true)
+        }
+    }
 
     return (
         <div className="space-y-6">
@@ -617,7 +688,8 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
             ) : (
                 <div className="grid gap-4">
                     {filteredLots.map((lot) => {
-                        const lotMovements = movementsByLot.get(lot.stock_lot_id) ?? []
+                        const movementPage = movementPages[lot.stock_lot_id]
+                        const lotMovements = movementPage?.movements ?? []
                         const expanded = Boolean(expandedLots[lot.stock_lot_id])
                         return (
                             <Card key={lot.stock_lot_id} className="border-border/60 shadow-sm rounded-2xl bg-stone-50/50">
@@ -681,16 +753,13 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                         </Button>
                                         <Button
                                             variant="outline"
-                                            onClick={() => setExpandedLots((prev) => ({
-                                                ...prev,
-                                                [lot.stock_lot_id]: !prev[lot.stock_lot_id],
-                                            }))}
+                                            onClick={() => toggleLotEntries(lot.stock_lot_id)}
                                             className="gap-2 h-11 lg:h-9"
                                         >
                                             {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                                             Entries
                                             <Badge variant="secondary" className="ml-1">
-                                                {lotMovements.length}
+                                                {movementPage?.loaded ? lotMovements.length : 'Audit'}
                                             </Badge>
                                         </Button>
                                         <div className="ml-auto flex items-center gap-1 text-xs font-semibold text-muted-foreground">
@@ -701,7 +770,23 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
 
                                     {expanded && (
                                         <div className="mt-4 overflow-hidden rounded-lg border border-border/60">
-                                            {lotMovements.length === 0 ? (
+                                            {movementPage?.loading && !movementPage.loaded ? (
+                                                <div className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-muted-foreground">
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    Loading movement entries...
+                                                </div>
+                                            ) : movementPage?.error ? (
+                                                <div className="flex flex-col gap-3 px-4 py-3 text-sm font-semibold text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                                                    <span>{movementPage.error}</span>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => void loadLotMovements(lot.stock_lot_id, null, true)}
+                                                    >
+                                                        Retry
+                                                    </Button>
+                                                </div>
+                                            ) : lotMovements.length === 0 ? (
                                                 <div className="px-4 py-3 text-sm font-semibold text-muted-foreground">
                                                     No movement entries found for this lot yet.
                                                 </div>
@@ -773,6 +858,24 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                                                                 </div>
                                                             )
                                                         })}
+                                                    </div>
+                                                    <div className="flex flex-col gap-2 border-t border-border/60 bg-background px-4 py-3 text-xs font-semibold text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                                                        <span>
+                                                            Showing {lotMovements.length.toLocaleString('en-IN')} movement entries for this lot.
+                                                        </span>
+                                                        {movementPage?.hasMore ? (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                disabled={movementPage.loading}
+                                                                onClick={() => void loadLotMovements(lot.stock_lot_id, movementPage.nextCursor)}
+                                                            >
+                                                                {movementPage.loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                                                Load older entries
+                                                            </Button>
+                                                        ) : (
+                                                            <span>Full movement history loaded.</span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}
@@ -914,7 +1017,11 @@ export default function TakaStockClient({ initialData }: { initialData: TakaStoc
                     defaultStockLotId={sellAndDispatchLotId}
                     onSuccess={(dispatchId) => {
                         setSellAndDispatchOpen(false)
-                        router.push(`/owner/dispatches?dispatchId=${dispatchId}&created=1`)
+                        if (dispatchId) {
+                            router.push(`/owner/dispatches?dispatchId=${dispatchId}&created=1`)
+                            return
+                        }
+                        router.refresh()
                     }}
                 />
             )}
