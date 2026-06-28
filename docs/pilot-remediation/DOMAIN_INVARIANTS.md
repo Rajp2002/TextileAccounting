@@ -64,6 +64,8 @@ Required proof:
 - Re-submit/edit changes downstream stock exactly once.
 - Order stock and production logs reconcile after refresh and in a second session.
 
+Batch 6 proof note: `GOLDEN-A-13` is satisfied by disposable runtime proof `output/qa/batch6/BATCH6-20260628185811-golden-a-runtime-proof.json`. The proof corrected Golden A production from 230.75m to 235.75m, verified the exact +5m change, auto-completed the customer order at target, and reconciled generated order-linked stock.
+
 ## Stock and Sale
 
 Available stock is computed from opening/produced meters, adjustments, and sales. Manual, market-run, and order-reserved stock must remain distinguishable.
@@ -88,6 +90,8 @@ Batch 3 proof note: `SALE-015` is satisfied for the stock sale/dispatch path by 
 
 Batch 5 proof note: `STOCK-016` and `STOCK-017` are satisfied by disposable runtime proof `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json`, focused Batch 5 tests, regression tests, and full Vitest. The proof retrieved 506 stock movement rows through cursor pagination as 100, 100, 100, 100, 100, and 6 with no duplicates/missing rows and deterministic newest-to-oldest ordering. It also verified sale-only no-dispatch refresh to 75m available / 25m pending, one stock sale movement, one receivable, and a matching second owner session. No migration was required.
 
+Batch 6 proof note: `GOLDEN-A-15` is satisfied by disposable runtime proof that sold 120m of valid order-linked completed-order stock on credit, created the expected sale/stock/receivable state, and preserved committed refresh/second-session reconciliation.
+
 ## Dispatch and Receipt
 
 Dispatch is a batch-level obligation against sold meters. Receipt is a batch-level confirmation. A partial dispatch is not a shortage.
@@ -107,6 +111,8 @@ Required proof:
 - Zero received meters is either blocked or explicitly treated as full shortage by policy and UI.
 
 Batch 3 proof note: the current pilot policy blocks zero and negative received meters. Runtime proof `BATCH3-fc791041` confirms 50m plus 30m dispatch batches for one 80m sale, exact receipt closure, shortage/excess discrepancy creation, duplicate receipt idempotency, archive protection, and dashboard/signoff/second-session reconciliation.
+
+Batch 6 proof note: `GOLDEN-A-16`, `GOLDEN-A-17`, and `GOLDEN-A-18` are satisfied by disposable runtime proof that allowed valid completed-order dispatch, rejected invalid completed-order dispatch state through the RPC gate, recorded a 70m exact receipt with no discrepancy, recorded a 50m dispatch with 45m received, and created exactly one actionable 5m shortage discrepancy plus one open party claim.
 
 ## Commercials
 
@@ -128,6 +134,8 @@ Required proof:
 - Profit filters classify manual, market-run, and order stock by authoritative source fields.
 
 Batch 4 proof note: `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` are satisfied by disposable runtime proof `BATCH4QA-20260628125203`, migration `20260628121903`, focused Batch 4 tests, and browser evidence. The proof covers exact-once sale receivable creation, duplicate sale submit idempotency, disabled direct market-run sale, partial/full/duplicate payment handling, overpayment blocking, cheque metadata/history, Asia/Kolkata due buckets, Top Parties last-sale/overdue, authoritative profit source fields, Factory Today blockers, and Commercials refresh/second-session reconciliation. Golden A order-linked payments, broad date-only rendering, timeout UX, and release/Sentry proof remain outside Batch 4.
+
+Batch 6 proof note: `GOLDEN-A-19` and `GOLDEN-A-20` are satisfied by disposable runtime proof that closed the Golden A Rs. 7,200 order-linked receivable with Rs. 2,200 partial and Rs. 5,000 final payments, retained two payment receipt records, reached zero balance, and matched first and second owner-session state. Broad date-only rendering, timeout UX, and release/Sentry proof remain outside Batch 6.
 
 ## Estimator Costing
 

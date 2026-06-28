@@ -18,7 +18,7 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P4 | `OFF-A` offline, cache, and public claims | `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-008`, `OFF-010`, `SEC-016` |
 | P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `TECH-013`, `SIGNOFF-10` |
 
-Blocked rows also remain unresolved evidence debt. Critical or high blocked rows must be re-run or de-scoped before pilot: `TECH-011`, `TECH-012`, `BILL-003`, `SEC-018`, `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `GOLDEN-A-24`, `GOLDEN-B-12`, `GOLDEN-B-17`, `GOLDEN-B-18`.
+Blocked rows also remain unresolved evidence debt. Critical or high blocked rows must be re-run or de-scoped before pilot: `TECH-011`, `TECH-012`, `BILL-003`, `SEC-018`, `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `GOLDEN-B-12`, `GOLDEN-B-17`, `GOLDEN-B-18`.
 
 Medium blocked rows still need evidence or explicit pilot de-scope, but they do not outrank critical/high business-data and security repair: `AUTH-014`, `AUTH-015`, `AUTH-018`, `BILL-006`, `BILL-007`, `BILL-009`, `BILL-010`, `GOLDEN-A-03`, `SIGNOFF-04`, `UX-012`, `WA-010`. `SEC-011` is blocked for Sentry event inspection and stays tied to release/security evidence.
 
@@ -30,7 +30,9 @@ Closed in Batch 3 and removed from the open failure coverage rows: dispatch sale
 
 Closed in Batch 4 and removed from the open failure coverage rows: commercials receivables payments correctness (`COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, `SIGNOFF-09`). `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 4 closeout.
 
-Closed in Batch 5 and removed from the open failure coverage rows: stock audit pagination and sale-only stock refresh (`STOCK-016`, `STOCK-017`). `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+Closed in Batch 5 and removed from the open failure coverage rows: stock audit pagination and sale-only stock refresh (`STOCK-016`, `STOCK-017`). `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 5 closeout.
+
+Closed in Batch 6 and removed from the blocked evidence rows: Golden A runtime customer-order chain (`GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, `GOLDEN-A-24`). `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -96,7 +98,9 @@ Required proof: webhook negative probes, export audit evidence, filename tests, 
 
 Closed rows: `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`
 
-Blocked follow-ons: `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `GOLDEN-A-24`
+Closed in Batch 6 follow-ons: `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, `GOLDEN-A-24`
+
+Still blocked follow-ons: `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`
 
 Evidence: `docs/pilot-remediation/FIX_LOG.md`, `docs/pilot-remediation/LOOP_STATE.md`, active QA matrix closeout.
 
@@ -113,6 +117,27 @@ Resolution:
 - Factory Today/signoff read-model mismatch was fixed by using `order_progress_summary.total_meters_produced`.
 
 Required proof: satisfied by Batch 2 targeted Vitest (8 tests), broader production/stock pack (92 tests), full Vitest (287 passed, 1 skipped), TypeScript, targeted ESLint, `git diff --check`, and disposable QA runtime proof.
+
+## Closed GOLDEN-A Runtime Customer Order Chain
+
+Closed rows: `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, `GOLDEN-A-24`
+
+Still blocked Golden A rows: `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`
+
+Evidence: `output/qa/batch6/BATCH6-20260628185811-golden-a-runtime-proof.json`, `docs/pilot-remediation/FIX_LOG.md`, `docs/pilot-remediation/LOOP_STATE.md`, active QA matrix closeout.
+
+Invariant: Golden A customer-order runtime proof must reconcile production correction, generated order stock, completed-order sale/dispatch, exact and shortage receipts, discrepancy/claim actionability, receivable/payment closeout, Factory Today source blockers, second-session refresh, and order archive/unlink behavior from authoritative source rows.
+
+Original impact: Batch 2 fixed production/stock atomicity, but the downstream customer-order sale, dispatch, receipt, commercial, and archive steps remained blocked until the full Golden A runtime chain was rerun. Completed customer orders could also be incorrectly rejected by the stock dispatch RPC even when their order-linked sold stock was valid.
+
+Resolution:
+
+- Batch 6 migrations `20260628183500_batch_6_allow_completed_order_stock_dispatch.sql` and `20260628185344_batch_6_qualify_completed_order_dispatch_returning.sql` were applied and aligned before docs closeout.
+- Valid order-linked sold stock can dispatch for active or completed customer orders; cancelled or invalid order state remains blocked.
+- Ambiguous `dispatch_number` runtime errors were removed by qualifying the dispatch insert `RETURNING` fields.
+- Runtime proof corrected production from 230.75m to 235.75m, auto-completed the order, reconciled generated stock, sold 120m on credit, completed a 70m exact receipt, recorded a 50m/45m shortage with one discrepancy and one claim, closed the Rs. 7,200 receivable with two payments, reconciled second-session state, and archived/unlinked the completed order.
+
+Required proof: satisfied by disposable Batch 6 runtime proof with 26 assertions, focused Batch 6 Vitest, Batch 2/3/4/5 guard regression pack, full Vitest, TypeScript, targeted ESLint, migration alignment evidence, and active matrix promotion to pass.
 
 ## P1 PROD-B - Production Boundary Allows Invalid Attribution or Quantities
 
@@ -213,11 +238,13 @@ Closed in Batch 4: `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `
 
 Closed in Batch 5: `STOCK-016`, `STOCK-017`
 
-Evidence: `logs/order-stock-sale-source-evidence-20260624.json`, `logs/business-reconciliation.json`, `logs/commercials-payment-mode-evidence.json`, `logs/commercials-filter-evidence.json`, `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json`, `docs/pilot-remediation/FIX_LOG.md`, active QA matrix closeout.
+Closed in Batch 6: Golden A order-linked commercial follow-ons `GOLDEN-A-19`, `GOLDEN-A-20`
+
+Evidence: `logs/order-stock-sale-source-evidence-20260624.json`, `logs/business-reconciliation.json`, `logs/commercials-payment-mode-evidence.json`, `logs/commercials-filter-evidence.json`, `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json`, `output/qa/batch6/BATCH6-20260628185811-golden-a-runtime-proof.json`, `docs/pilot-remediation/FIX_LOG.md`, active QA matrix closeout.
 
 Invariant: each sale creates one stock decrement, one receivable when credit applies, one party identity, and one profit basis. Direct and normal paths must produce the same accounting result.
 
-Impact: Batch 4 closes the direct market-run receivable bypass, cheque metadata/history, Asia/Kolkata due buckets, Top Parties last-sale/overdue, source filters, commercial signoff, and commercial payment idempotency. Batch 5 closes the remaining stock-board movement history pagination and stale stock refresh/second-user behavior.
+Impact: Batch 4 closes the direct market-run receivable bypass, cheque metadata/history, Asia/Kolkata due buckets, Top Parties last-sale/overdue, source filters, commercial signoff, and commercial payment idempotency. Batch 5 closes the remaining stock-board movement history pagination and stale stock refresh/second-user behavior. Batch 6 closes the order-linked Golden A receivable/payment closeout.
 
 Resolution:
 
@@ -226,8 +253,9 @@ Resolution:
 - Sale-only stock sale success without a dispatch id refreshes the stock page and reconciles available/pending quantities.
 - Disposable runtime proof retrieved 506 movement rows as 100, 100, 100, 100, 100, and 6 with no duplicates/missing rows, then verified 75m available, 25m pending, one sale movement, one receivable, and a matching second owner session.
 - Batch 4 commercial receivable/payment behavior remains covered by regression guardrails.
+- Golden A order-linked receivable/payment behavior is proven by the Batch 6 runtime artifact: partial Rs. 2,200 payment plus final Rs. 5,000 payment closed the Rs. 7,200 receivable to zero with two receipt rows and matching second-session state.
 
-Required proof: satisfied by Batch 3 runtime/tests for `SALE-015`, Batch 4 runtime/tests/browser proof for `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09`, and Batch 5 runtime/tests for `STOCK-016` and `STOCK-017`.
+Required proof: satisfied by Batch 3 runtime/tests for `SALE-015`, Batch 4 runtime/tests/browser proof for `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09`, Batch 5 runtime/tests for `STOCK-016` and `STOCK-017`, and Batch 6 runtime/tests for `GOLDEN-A-19` and `GOLDEN-A-20`.
 
 ## P2 DASH-A - Dashboard and Daily Sign-Off Read Models Are Not Authoritative
 
@@ -243,7 +271,7 @@ Evidence: `logs/dashboard-evidence.json`, `logs/prod-dashboard-ux-signoff-source
 
 Invariant: Factory Today and sign-off views are read models over authoritative production, stock, dispatch, commercial, payroll, and observability state. A sign-off card cannot clear when its source rows remain unresolved.
 
-Impact: gross wages were hard-coded to zero, historical analytics mixed historical and current data, and final sign-off rows still depend on unresolved production/payroll/release evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 4 closed commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; `SIGNOFF-10` remains open for release/Sentry/source-map evidence.
+Impact: gross wages were hard-coded to zero, historical analytics mixed historical and current data, and final sign-off rows still depend on unresolved production/payroll/release evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 4 closed commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 6 supplies Golden A Factory Today source reconciliation for production, dispatch, receipt, receivable, and deliberate discrepancy state. `SIGNOFF-10` remains open for release/Sentry/source-map evidence.
 
 Remediation direction:
 

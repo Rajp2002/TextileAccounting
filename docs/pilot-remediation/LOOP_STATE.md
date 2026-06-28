@@ -14,18 +14,18 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, and Batch 5 stock audit refresh closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, and Batch 6 Golden A runtime closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 155 | Runtime/test evidence exists. |
+| `pass` | 163 | Runtime/test evidence exists. |
 | `fail` | 60 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
-| `blocked` | 30 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
+| `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
-Critical failures: 0. High failures: 20. Critical blocked golden-journey follow-ons: 14.
+Critical failures: 0. High failures: 20. Critical blocked golden-journey follow-ons: 6.
 
 Batch 1 security foundation moved `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` from fail to pass with runtime/test/migration evidence. `AUTH-008`, `PAY-018`, `PAY-020`, external webhook/export/compliance security rows, release gates, and unrelated unresolved failures remain open.
 
@@ -37,7 +37,9 @@ Batch 3 moved `SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDE
 
 Batch 4 moved `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` from fail to pass with runtime/test/migration/browser evidence. `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 4 closeout.
 
-Batch 5 moved `STOCK-016` and `STOCK-017` from fail to pass with runtime/test evidence for stock movement audit pagination beyond 500 rows and sale-only stock refresh/second-session reconciliation. `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+Batch 5 moved `STOCK-016` and `STOCK-017` from fail to pass with runtime/test evidence for stock movement audit pagination beyond 500 rows and sale-only stock refresh/second-session reconciliation. `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 5 closeout.
+
+Batch 6 moved `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24` from blocked to pass with runtime/test/migration evidence for the Golden A customer-order chain. `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only.
 
 ## Operating Rules
 
@@ -261,7 +263,7 @@ Estimator costing closeout:
 
 Still out of scope until explicitly started:
 
-- Golden A order-linked dispatch/receipt follow-ons not rerun by Batch 3.
+- Remaining Golden A payroll follow-ons `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-A-23`.
 - Payroll business correctness.
 - Remaining `ECON-A` work outside estimator costing: server-boundary estimate validation, estimator save/market-run idempotency, quote/order lifecycle, target/deadline guards, below-target completion, and date-only rendering.
 - Offline behavior.
@@ -377,7 +379,7 @@ Verification:
 Resolution status:
 
 - `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` are documented as pass in the active matrix.
-- `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remained partial evidence only or open and were not closed by Batch 4.
+- `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, and `GOLDEN-A-20` remained partial evidence only or open at Batch 4 closeout and were closed by later batches. `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open and were not closed by Batch 4.
 
 ## Batch 5 Closed on Main
 
@@ -423,4 +425,58 @@ Verification:
 Resolution status:
 
 - `STOCK-016` and `STOCK-017` are documented as pass in the active matrix.
-- `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain partial evidence only or open and are not closed by Batch 5.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remained partial evidence only or open at Batch 5 closeout and were closed later by Batch 6. `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open and are not closed by Batch 5.
+
+## Batch 6 Closed on Main
+
+Date/time: 2026-06-29 00:36 IST.
+
+Batch 6: Golden A runtime closure.
+
+Target failures:
+
+- `GOLDEN-A-13`
+- `GOLDEN-A-15`
+- `GOLDEN-A-16`
+- `GOLDEN-A-17`
+- `GOLDEN-A-18`
+- `GOLDEN-A-19`
+- `GOLDEN-A-20`
+- `GOLDEN-A-24`
+
+Repository state:
+
+- Implementation commit `80e8f8c6ae1318207b0c5b1f45e98c3cfe524f67` was fast-forwarded into `main` and pushed to `origin/main`.
+- `origin/main` pointed to `80e8f8c6ae1318207b0c5b1f45e98c3cfe524f67` before this documentation closeout.
+
+Migrations applied and aligned before docs closeout:
+
+- `20260628183500_batch_6_allow_completed_order_stock_dispatch.sql`
+- `20260628185344_batch_6_qualify_completed_order_dispatch_returning.sql`
+
+Runtime proof:
+
+- Disposable QA proof `output/qa/batch6/BATCH6-20260628185811-golden-a-runtime-proof.json` passed with 26 assertions and cleanup completed.
+- Production was corrected from 230.75m to 235.75m and generated order-linked stock reconciled exactly.
+- The customer order auto-completed at target and valid completed-order dispatch was allowed for order-linked sold stock.
+- 120m was sold on credit for Rs. 7,200.
+- 70m dispatch exact receipt closed with no discrepancy.
+- 50m dispatch received as 45m created one 5m shortage discrepancy and one open party claim.
+- Rs. 2,200 partial payment plus Rs. 5,000 final payment closed the receivable to zero with two receipt records.
+- Second-session state matched committed receivable/payment state.
+- Factory Today source reconciliation showed no pending dispatch, no in-transit receipt, no receivable balance, and one deliberate unresolved shortage discrepancy.
+- Completed order archive/unlink behavior succeeded.
+
+Verification:
+
+- Focused Batch 6 Vitest: 1 passed.
+- Batch 2/3/4/5 guard regression pack: 86 passed.
+- Full Vitest: 37 files, 318 passed, 1 skipped.
+- `npx tsc --noEmit` -> passed.
+- Targeted ESLint for Batch 6 touched files -> passed before implementation commit.
+- `git diff --check` and `git diff --cached --check` -> passed.
+
+Resolution status:
+
+- `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24` are documented as pass in the active matrix.
+- `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain partial evidence only or open and are not closed by Batch 6.

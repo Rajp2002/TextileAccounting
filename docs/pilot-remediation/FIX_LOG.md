@@ -21,8 +21,8 @@ Rules for entries:
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Server-boundary validation, idempotency, quote/order lifecycle, and date snapshot rows remain open. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` receives partial dispatch/package evidence only and remains open for release/Sentry proof. |
 | `DISP-B` receipt-state coherence | Closed in Batch 3 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. |
-| `COMM-A` sales/receivables/profit boundary | Closed in Batch 5 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017` with stock audit pagination and sale-only refresh runtime proof. Golden A order-linked receivable rows, broad timezone/offline rows, and release/Sentry proof remain open separately and are not promoted by Batch 5. |
-| `DASH-A` dashboard/sign-off read-model truth | Partially closed in Batch 4 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`. Production, payroll, historical analytics, and release/Sentry portions remain open. |
+| `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
+| `DASH-A` dashboard/sign-off read-model truth | Partially closed in Batch 6 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`. Batch 6 supplies Golden A Factory Today/source reconciliation evidence, but payroll, historical analytics, and release/Sentry portions remain open. |
 | `PAY-A` payroll/kharchi ledger integrity | Open | Includes legacy RPCs and offline kharchi. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Open | Some features likely de-scoped for pilot. |
@@ -666,7 +666,7 @@ Partial evidence only, not promoted by Batch 4:
 - `SIGNOFF-10` remains open for release/Sentry/source-map proof.
 - `STOCK-017` received Commercials refresh/second-session evidence only during Batch 4; stock-board stale refresh remained open until Batch 5.
 - `STOCK-016` remained open for movement history pagination beyond 500 rows until Batch 5.
-- `GOLDEN-A-19` and `GOLDEN-A-20` remain blocked because the order-linked Golden A payment/receivable chain was not rerun.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remained blocked at Batch 4 closeout because the order-linked Golden A payment/receivable chain had not been rerun. They were closed later by Batch 6.
 - `TIME-002` remains open for non-Commercials date-only surfaces.
 - `OFF-009` remains open for unknown-timeout UX beyond the commercial payment idempotency proof.
 
@@ -728,7 +728,7 @@ Resolution status:
 
 - Code, migration, regression tests, runtime proof, browser proof, and active matrix closeout are complete for the Batch 4 target scope.
 - `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
-- `SIGNOFF-10`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only as listed above.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 4 closeout and were closed later by Batch 6. `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only as listed above.
 
 ## Batch 5 - Stock Audit Pagination And Sale-Only Refresh
 
@@ -741,7 +741,7 @@ Scope:
 
 Explicitly not promoted by Batch 5:
 
-- `GOLDEN-A-19` and `GOLDEN-A-20` remain blocked because the order-linked Golden A payment/receivable chain was not rerun.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remained blocked at Batch 5 closeout because the order-linked Golden A payment/receivable chain had not been rerun. They were closed later by Batch 6.
 - `SIGNOFF-10` remains open for release/Sentry/source-map proof.
 - `TIME-002` remains open for non-Commercials date-only surfaces.
 - `OFF-009` remains open for unknown-timeout UX and status reconciliation across high-value mutations.
@@ -794,4 +794,81 @@ Resolution status:
 
 - Code, regression tests, runtime proof, and active matrix closeout are complete for the Batch 5 target scope.
 - `STOCK-016` and `STOCK-017` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
-- `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only and are not closed by Batch 5.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 5 closeout and were closed later by Batch 6. `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only and are not closed by Batch 5.
+
+## Batch 6 - Golden A Runtime Closure
+
+Date/time: 2026-06-29 00:36 IST. Documentation closeout after `main` was fast-forwarded to implementation commit `80e8f8c6ae1318207b0c5b1f45e98c3cfe524f67`.
+
+Scope:
+
+- `GOLDEN-A-13`
+- `GOLDEN-A-15`
+- `GOLDEN-A-16`
+- `GOLDEN-A-17`
+- `GOLDEN-A-18`
+- `GOLDEN-A-19`
+- `GOLDEN-A-20`
+- `GOLDEN-A-24`
+
+Explicitly not promoted by Batch 6:
+
+- `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-A-23` remain open for worker advance, payroll settlement, payslip, and settled-production correction proof.
+- `SIGNOFF-10` remains open for release/Sentry/source-map proof.
+- `TIME-002` remains open for broader date-only rendering surfaces.
+- `OFF-009` remains open for unknown-timeout UX and status reconciliation across high-value mutations.
+- `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open/out of scope.
+
+Invariant:
+
+Golden A customer-order runtime proof must reconcile production correction, generated order stock, completed-order sale/dispatch, exact and shortage receipts, actionable discrepancy/claim state, receivable/payment closeout, second-session refresh, Factory Today source blockers, and final order archive/unlink behavior from the same authoritative rows.
+
+Implementation status:
+
+- Added migration `20260628183500_batch_6_allow_completed_order_stock_dispatch.sql`.
+- Added migration `20260628185344_batch_6_qualify_completed_order_dispatch_returning.sql`.
+- Updated the stock dispatch RPC contract so valid active or completed customer orders can dispatch order-linked sold stock while cancelled or invalid orders remain blocked.
+- Qualified the dispatch insert `RETURNING` fields to avoid ambiguous `dispatch_number` runtime errors.
+- Added focused regression coverage in `__tests__/p2-golden-a-completed-order-dispatch.test.ts`.
+- Added disposable Golden A runtime proof script `scripts/qa/batch6-golden-a-runtime-proof.mjs`.
+
+Migrations applied/aligned before docs closeout:
+
+- `20260628183500_batch_6_allow_completed_order_stock_dispatch.sql`
+- `20260628185344_batch_6_qualify_completed_order_dispatch_returning.sql`
+
+Runtime QA status:
+
+- Disposable QA proof passed with artifact `output/qa/batch6/BATCH6-20260628185811-golden-a-runtime-proof.json`.
+- The proof completed 26 assertions and cleanup completed.
+- Production correction moved the Golden A order from 230.75m to 235.75m, proving the exact +5m delta and generated order-linked stock reconciliation.
+- The order auto-completed at the target and still allowed valid order-linked stock sale/dispatch.
+- The proof sold 120m of order-linked stock on credit for Rs. 7,200.
+- The first 70m dispatch was received exactly and closed with no discrepancy.
+- The second 50m dispatch was received as 45m, leaving one 5m shortage discrepancy and one open party claim.
+- Partial payment Rs. 2,200 and final payment Rs. 5,000 closed the receivable to zero with two receipt records.
+- First and second owner sessions matched committed receivable/payment state.
+- Factory Today source reconciliation showed no pending dispatch, no in-transit receipt, no receivable balance, and one unresolved deliberate shortage discrepancy.
+- The completed order archived cleanly and associated machines were unlinked/inactive.
+
+Verification commands:
+
+- `npx vitest run __tests__/p2-golden-a-completed-order-dispatch.test.ts` -> passed, 1 file, 1 test.
+- Batch 2/3/4/5 guard regression pack -> passed, 11 files, 86 tests.
+- `npx vitest run` -> passed, 37 files, 318 passed, 1 skipped.
+- `npx tsc --noEmit` -> passed.
+- Targeted ESLint for Batch 6 touched files -> passed before implementation commit.
+- `git diff --check` and `git diff --cached --check` -> passed.
+
+Data safety:
+
+- Runtime proof used a fresh disposable QA tenant/run.
+- Disposable setup mutations were scoped to the Batch 6 QA organization only.
+- Proof artifacts store redacted ids and record cleanup completion.
+- No Supabase command, migration push/repair/pull, direct SQL, `--include-all`, npm audit, payroll/kharchi work, Sentry work, release-gate work, or lockfile work was used during documentation closeout.
+
+Resolution status:
+
+- Code, migrations, regression tests, runtime proof, and active matrix closeout are complete for the Batch 6 target scope.
+- `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
+- `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only and are not closed by Batch 6.

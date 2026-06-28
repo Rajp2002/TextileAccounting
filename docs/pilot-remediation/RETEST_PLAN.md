@@ -276,7 +276,7 @@ Acceptance:
 
 - Batch 4 satisfied this Commercials retest for `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09`.
 - Evidence: disposable QA runtime proof `BATCH4QA-20260628125203`; migration `20260628121903` applied/aligned; focused Batch 4 Vitest passed 32 tests; Batch 2/3 guard Vitest passed 37 tests; full Vitest passed 313 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
-- `SIGNOFF-10`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 4 closeout and were closed later by Batch 6 Golden A runtime proof. `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
 
 ## P2 Stock Audit Refresh Retest
 
@@ -302,7 +302,36 @@ Acceptance:
 - Batch 5 satisfied this stock audit refresh retest for `STOCK-016` and `STOCK-017`.
 - Evidence: disposable QA proof `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json`; implementation commit `46ad361fa03d3fb9d561c639e5e3ed6424cb8e03`; focused Batch 5 Vitest passed 4 tests; Batch 2/3/4 stock, dispatch, and commercials regression pack passed 85 tests; full Vitest passed 317 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
 - No migration was required.
-- `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 5 closeout and were closed later by Batch 6 Golden A runtime proof. `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+
+## P2 Golden A Runtime Closure Retest
+
+Commands:
+
+```bash
+node scripts/qa/batch6-golden-a-runtime-proof.mjs
+npx vitest run __tests__/p2-golden-a-completed-order-dispatch.test.ts
+npx vitest run __tests__/p2-golden-a-completed-order-dispatch.test.ts __tests__/p2-stock-audit-refresh.test.ts __tests__/p1-stock-lifecycle.test.ts __tests__/p1-stock-source-validation.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/p0-atomicity.test.ts __tests__/p1-party-first-stock-sale-dispatch.test.ts __tests__/p2-dispatch-sale-receipt.test.ts __tests__/commercials-read-model.test.ts __tests__/p1-commercial-payments.test.ts __tests__/p2-commercials-receivables-payments.test.ts
+npx vitest run
+```
+
+Runtime checks:
+
+- Correct customer-order production from 230.75m to 235.75m and verify generated order-linked stock changes by exactly 5m.
+- Confirm the order auto-completes at target and completed-order dispatch remains allowed only for valid order-linked sold stock.
+- Sell 120m on credit and verify sale, stock decrement, receivable, source fields, and committed refresh state.
+- Dispatch 70m and record exact receipt with no discrepancy.
+- Dispatch 50m and record 45m received, creating exactly one 5m shortage discrepancy and one open party claim.
+- Record partial and final receivable payments and verify balance reaches zero with complete receipt history.
+- Verify second owner session state matches committed sale, receivable, payment, dispatch, and discrepancy state.
+- Verify Factory Today source reconciliation shows no pending dispatch, no in-transit receipt, no receivable balance, and one deliberate unresolved discrepancy.
+- Complete/archive the order and verify assigned machines are unlinked or inactive.
+
+Acceptance:
+
+- Batch 6 satisfied this Golden A runtime retest for `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`.
+- Evidence: disposable QA proof `output/qa/batch6/BATCH6-20260628185811-golden-a-runtime-proof.json`; implementation commit `80e8f8c6ae1318207b0c5b1f45e98c3cfe524f67`; migrations `20260628183500` and `20260628185344` applied/aligned; focused Batch 6 Vitest passed 1 test; Batch 2/3/4/5 guard regression pack passed 86 tests; full Vitest passed 318 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, `git diff --check`, and `git diff --cached --check` passed.
+- `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only.
 
 ## P2 Dashboard and Sign-Off Read Model Retest
 
