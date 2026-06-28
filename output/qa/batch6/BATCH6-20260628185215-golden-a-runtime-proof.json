@@ -1,0 +1,252 @@
+{
+  "passed": false,
+  "run_id": "BATCH6-20260628185215",
+  "scope": "Batch 6 Golden A runtime closure proof only",
+  "closure_targets": [
+    "GOLDEN-A-13",
+    "GOLDEN-A-15",
+    "GOLDEN-A-16",
+    "GOLDEN-A-17",
+    "GOLDEN-A-18",
+    "GOLDEN-A-19",
+    "GOLDEN-A-20",
+    "GOLDEN-A-24"
+  ],
+  "out_of_scope_not_closed": [
+    "GOLDEN-A-21",
+    "GOLDEN-A-22",
+    "GOLDEN-A-23",
+    "SIGNOFF-10",
+    "TIME-002",
+    "OFF-009",
+    "SIGNOFF-01",
+    "SIGNOFF-02",
+    "SIGNOFF-04",
+    "TECH-011",
+    "TECH-012"
+  ],
+  "disposable_qa_tenant": true,
+  "org_id": "4c8050ce...f133",
+  "users": {
+    "owner_id": "b0342f65...6b78",
+    "supervisor_id": "7ce13858...9642"
+  },
+  "ids": {
+    "quality_id": "ce9cd56b...4278",
+    "order_id": "4186310f...a0e8",
+    "worker_ids": [
+      null,
+      null
+    ],
+    "machine_ids": [
+      "e0044c31...28d4",
+      "a050034b...2330"
+    ],
+    "stock_lot_id": "c5c9d0a3...2d29",
+    "sale_id": "ce9a02ed...bd38",
+    "receivable_id": "e12e51ba...5c0e",
+    "party_id": "b7bc7d0b...5f07"
+  },
+  "production": {
+    "initial": {
+      "log_count": 2,
+      "production_meters": 230.75,
+      "order_progress": {
+        "order_id": "4186310f-3ffb-422e-8a4e-b3244dcda0e8",
+        "status": "active",
+        "total_meters_produced": 230.75,
+        "progress_percent": 97.87910922587487,
+        "assigned_machines_count": 2
+      },
+      "lots": [
+        {
+          "stock_lot_id": "c5c9d0a3-f5a1-4bdf-8175-922377ec2d29",
+          "order_id": "4186310f-3ffb-422e-8a4e-b3244dcda0e8",
+          "source_type": "order",
+          "stock_purpose": "order_reserved",
+          "original_meters": 230.75,
+          "available_meters": 230.75,
+          "original_taka_count": 4.62,
+          "available_taka_count": 4.62,
+          "sold_meters": 0,
+          "quality_label": "Batch 6 Golden Fabric",
+          "source_date": "2026-06-29",
+          "source_shift": "day"
+        }
+      ],
+      "drafts": [
+        {
+          "id": "f5d59ba0-5ff1-477e-a0b8-c6159433ca03",
+          "suggested_meters": 230.75,
+          "status": "confirmed",
+          "confirmed_stock_lot_id": "c5c9d0a3-f5a1-4bdf-8175-922377ec2d29"
+        }
+      ],
+      "movements": [
+        {
+          "id": "1c461c26-adfa-428f-bad0-c1c45f54cd8e",
+          "movement_type": "inward",
+          "meters_delta": 230.75,
+          "reference": "Expected production ledger",
+          "notes": "Production created expected stock in the same transaction as production logs."
+        }
+      ]
+    },
+    "corrected": {
+      "log_count": 2,
+      "production_meters": 235.75,
+      "order_progress": {
+        "order_id": "4186310f-3ffb-422e-8a4e-b3244dcda0e8",
+        "status": "completed",
+        "total_meters_produced": 235.75,
+        "progress_percent": 100,
+        "assigned_machines_count": 0
+      },
+      "lots": [
+        {
+          "stock_lot_id": "c5c9d0a3-f5a1-4bdf-8175-922377ec2d29",
+          "order_id": "4186310f-3ffb-422e-8a4e-b3244dcda0e8",
+          "source_type": "order",
+          "stock_purpose": "order_reserved",
+          "original_meters": 235.75,
+          "available_meters": 235.75,
+          "original_taka_count": 4.72,
+          "available_taka_count": 4.72,
+          "sold_meters": 0,
+          "quality_label": "Batch 6 Golden Fabric",
+          "source_date": "2026-06-29",
+          "source_shift": "day"
+        }
+      ],
+      "drafts": [
+        {
+          "id": "f5d59ba0-5ff1-477e-a0b8-c6159433ca03",
+          "suggested_meters": 235.75,
+          "status": "confirmed",
+          "confirmed_stock_lot_id": "c5c9d0a3-f5a1-4bdf-8175-922377ec2d29"
+        }
+      ],
+      "movements": [
+        {
+          "id": "1c461c26-adfa-428f-bad0-c1c45f54cd8e",
+          "movement_type": "inward",
+          "meters_delta": 230.75,
+          "reference": "Expected production ledger",
+          "notes": "Production created expected stock in the same transaction as production logs."
+        },
+        {
+          "id": "a590fdfd-89e7-45e7-8d53-1d1012b392b9",
+          "movement_type": "inward",
+          "meters_delta": 5,
+          "reference": "Expected production ledger",
+          "notes": "Production created expected stock in the same transaction as production logs."
+        }
+      ]
+    }
+  },
+  "failure_classification": "golden_a_product_or_runtime_failure",
+  "error": "create_stock_sale_dispatch 1 failed: column reference \"dispatch_number\" is ambiguous",
+  "assertions": [
+    {
+      "name": "initial production inserts two logs",
+      "passed": true,
+      "inserted_count": 2,
+      "replaced_count": 0
+    },
+    {
+      "name": "initial order progress reflects produced meters",
+      "passed": true,
+      "order_id": "4186310f-3ffb-422e-8a4e-b3244dcda0e8",
+      "status": "active",
+      "total_meters_produced": 230.75,
+      "progress_percent": 97.87910922587487,
+      "assigned_machines_count": 2
+    },
+    {
+      "name": "initial generated stock lot is order-linked",
+      "passed": true,
+      "lot_count": 1,
+      "source_type": "order",
+      "order_id": "4186310f...a0e8"
+    },
+    {
+      "name": "initial generated stock meters match production",
+      "passed": true,
+      "original_meters": 230.75,
+      "available_meters": 230.75
+    },
+    {
+      "name": "production correction replaces prior logs atomically",
+      "passed": true,
+      "inserted_count": 2,
+      "replaced_count": 2
+    },
+    {
+      "name": "corrected order progress reaches target meters",
+      "passed": true,
+      "order_id": "4186310f-3ffb-422e-8a4e-b3244dcda0e8",
+      "status": "completed",
+      "total_meters_produced": 235.75,
+      "progress_percent": 100,
+      "assigned_machines_count": 0
+    },
+    {
+      "name": "corrected generated stock lot updates in place",
+      "passed": true,
+      "lot_count": 1,
+      "original_meters": 235.75,
+      "available_meters": 235.75
+    },
+    {
+      "name": "production stock movement history includes initial and correction deltas",
+      "passed": true,
+      "movement_count": 2,
+      "deltas": [
+        230.75,
+        5
+      ]
+    },
+    {
+      "name": "sale-only stock sale returns no dispatch id",
+      "passed": true,
+      "sale_id": "ce9a02ed...bd38",
+      "dispatch_id": null
+    },
+    {
+      "name": "sale-only stock sale keeps all sold meters pending dispatch",
+      "passed": true,
+      "pending_dispatch_meters": 120
+    },
+    {
+      "name": "sale-only creates exactly one receivable",
+      "passed": true,
+      "receivable_count": 1
+    },
+    {
+      "name": "sale-only receivable amount and balance are exact",
+      "passed": true,
+      "id": "e12e51ba-eb45-4a98-b33f-fab826ba5c0e",
+      "source_type": "fabric_stock_sale",
+      "source_id": "ce9a02ed-c0a2-420f-96f0-2c676fb7bd38",
+      "order_id": "4186310f-3ffb-422e-8a4e-b3244dcda0e8",
+      "dispatch_id": null,
+      "party_id": "b7bc7d0b-1990-4c36-8925-490b67855f07",
+      "party_name": "Batch 6 Golden Buyer",
+      "quality_label": "Batch 6 Golden Fabric",
+      "total_amount": 7200,
+      "received_amount": 0,
+      "balance_amount": 7200,
+      "payment_status": "unpaid",
+      "credit_days": 7,
+      "due_date": null
+    },
+    {
+      "name": "sale-only stock movement is recorded once",
+      "passed": true,
+      "sale_movement_count": 1,
+      "meters_delta": -120
+    }
+  ],
+  "cleanup": "attempted",
+  "cleanup_errors": []
+}
