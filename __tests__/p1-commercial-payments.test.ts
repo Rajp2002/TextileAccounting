@@ -35,6 +35,29 @@ describe('P1 commercial payment recording — completion patch', () => {
         expect(migration).toContain("ELSE 'partial'")
     })
 
+    it('Batch 4 payment RPC requires idempotency and preserves cheque metadata', () => {
+        const migration = readProjectFile('supabase/migrations/20260628121903_batch_4_commercials_receivables_payments.sql')
+        const receivablesLib = readProjectFile('lib/commercials/receivables.ts')
+        const clientFile = readProjectFile('app/(dashboard)/owner/commercials/CommercialsClient.tsx')
+
+        expect(migration).toContain('ADD COLUMN IF NOT EXISTS idempotency_key TEXT')
+        expect(migration).toContain('idx_commercial_payment_receipts_org_idempotency_key')
+        expect(migration).toContain('p_idempotency_key TEXT')
+        expect(migration).toContain('Payment idempotency key is required')
+        expect(migration).toContain('Cheque number, cheque date, and bank name are required')
+        expect(migration).toContain('ON CONFLICT (org_id, idempotency_key) WHERE idempotency_key IS NOT NULL')
+        expect(migration).toContain('Payment idempotency key was already used for a different payment')
+
+        expect(receivablesLib).toContain('idempotencyKey?: string')
+        expect(receivablesLib).toContain('p_idempotency_key: idempotencyKey')
+        expect(receivablesLib).toContain('Cheque number, cheque date, and bank name are required for cheque payments.')
+
+        expect(clientFile).toContain("createClientIdempotencyKey('commercial-payment')")
+        expect(clientFile).toContain('paymentIdempotencyKey')
+        expect(clientFile).toContain('chequeNumber')
+        expect(clientFile).toContain('bankName')
+    })
+
     // ──────────────── PAYMENT MODE NORMALIZATION ────────────────
 
     it('processCommercialPayment normalizes payment modes via PAYMENT_MODE_MAP', () => {
@@ -102,7 +125,10 @@ describe('P1 commercial payment recording — completion patch', () => {
         expect(clientFile).toContain('payment_mode')
         expect(clientFile).toContain('getPaymentModeLabel')
         expect(clientFile).toContain('reference_number')
-        expect(clientFile).toContain('p.notes')
+        expect(clientFile).toContain('cheque_number')
+        expect(clientFile).toContain('cheque_date')
+        expect(clientFile).toContain('bank_name')
+        expect(clientFile).toContain('paymentDetailLine')
     })
 
     it('payment history toggle with History button and ChevronDown icon', () => {

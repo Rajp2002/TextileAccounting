@@ -95,6 +95,7 @@ export interface RecordPaymentInput {
     chequeDate?: string
     bankName?: string
     notes?: string
+    idempotencyKey?: string
 }
 
 // Defensive map: accepts both human-readable UI labels and already-normalized DB enum values
@@ -121,6 +122,17 @@ export async function processCommercialPayment(input: RecordPaymentInput) {
     const supabase = await createServerClient()
 
     const normalizedMode = normalizePaymentMode(input.paymentMode)
+    const idempotencyKey = input.idempotencyKey?.trim()
+
+    if (!idempotencyKey) {
+        return { error: 'Payment idempotency key is required. Please reopen the payment dialog and try again.' }
+    }
+
+    if (normalizedMode === 'cheque') {
+        if (!input.chequeNumber?.trim() || !input.chequeDate || !input.bankName?.trim()) {
+            return { error: 'Cheque number, cheque date, and bank name are required for cheque payments.' }
+        }
+    }
 
     const { error } = await supabase.rpc('record_commercial_payment_v1', {
         p_receivable_id: input.receivableId,
@@ -132,6 +144,7 @@ export async function processCommercialPayment(input: RecordPaymentInput) {
         p_cheque_date: input.chequeDate || null,
         p_bank_name: input.bankName || null,
         p_notes: input.notes || null,
+        p_idempotency_key: idempotencyKey,
     })
 
     if (error) {

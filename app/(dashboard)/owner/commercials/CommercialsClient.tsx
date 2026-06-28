@@ -55,6 +55,12 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { getSuratTodayString } from '@/lib/time'
+import {
+    getCommercialDaysLate,
+    getCommercialDueBucket,
+    normalizeCommercialDateOnly,
+    type CommercialDueBucket,
+} from '@/lib/commercials/date-buckets'
 
 const PAYMENT_MODE_LABELS: Record<string, string> = {
     bank: 'Bank Transfer',
@@ -68,8 +74,20 @@ function getPaymentModeLabel(mode: string): string {
     return PAYMENT_MODE_LABELS[mode] ?? mode
 }
 
+function paymentDetailLine(payment: CommercialPayment): string {
+    const details = [
+        payment.reference_number ? `Ref ${payment.reference_number}` : null,
+        payment.payment_mode === 'cheque' && payment.cheque_number ? `Cheque ${payment.cheque_number}` : null,
+        payment.payment_mode === 'cheque' && payment.cheque_date ? `Cheque date ${formatDate(payment.cheque_date)}` : null,
+        payment.payment_mode === 'cheque' && payment.bank_name ? payment.bank_name : null,
+        payment.notes || null,
+    ].filter(Boolean)
+
+    return details.join(' · ')
+}
+
 type StageFilter = 'all' | CommercialStage
-type DueBucket = 'overdue' | 'due_today' | 'due_this_week' | 'upcoming' | 'paid'
+type DueBucket = CommercialDueBucket
 type SourceFilter =
     | 'all'
     | CommercialSourceKind
@@ -86,6 +104,13 @@ function money(value: number, digits = 0) {
 
 function meters(value: number) {
     return `${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}m`
+}
+
+function createClientIdempotencyKey(prefix: string) {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return `${prefix}:${crypto.randomUUID()}`
+    }
+    return `${prefix}:${Date.now().toString(36)}:${Math.random().toString(36).slice(2)}`
 }
 
 function normalizePartyName(value: string | null | undefined) {
@@ -130,9 +155,8 @@ function stageBadge(stage: CommercialStage) {
 function stockSaleOrigin(entry: CommercialProfitEntry) {
     if (entry.source_kind !== 'stock_sale') return null
 
-    const label = entry.source_label.toLowerCase()
-    if (label.includes('market run')) return 'market_run'
-    if (label.includes('order')) return 'order'
+    if (entry.stock_source_type === 'market_run') return 'market_run'
+    if (entry.stock_source_type === 'order') return 'order'
     return 'manual'
 }
 
@@ -193,7 +217,7 @@ function EntryRow({ entry }: { entry: CommercialProfitEntry }) {
         <tr className="hover:bg-muted/30">
             <td className="px-4 py-3 align-top">
                 <p className="font-semibold text-foreground">
-                    {new Date(entry.event_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    {formatDate(entry.event_date)}
                 </p>
                 <p className="mt-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">{entry.reference || entry.source_label}</p>
             </td>
@@ -300,58 +324,17 @@ interface PartyReceivableSummary {
     openSalesCount: number
 }
 
-// Helper to compare dates as local YYYY-MM-DD strings to avoid timezone drift issues
+// Helper to compare date-only values as YYYY-MM-DD strings to avoid timezone drift.
 function getLocalDateString(dateInput?: Date | string | null): string {
-    if (!dateInput) return ''
-    if (dateInput instanceof Date) {
-        const y = dateInput.getFullYear()
-        const m = String(dateInput.getMonth() + 1).padStart(2, '0')
-        const d = String(dateInput.getDate()).padStart(2, '0')
-        return `${y}-${m}-${d}`
-    }
-    return dateInput.split('T')[0].split(' ')[0]
+    return normalizeCommercialDateOnly(dateInput)
 }
 
-function getDueBucket(rec: Receivable): DueBucket {
-    if (rec.payment_status === 'paid' || rec.balance_amount <= 0) {
-        return 'paid'
-    }
-    if (!rec.due_date) {
-        return 'upcoming'
-    }
-
-    const todayStr = getLocalDateString(new Date())
-    const dueStr = getLocalDateString(rec.due_date)
-
-    if (dueStr < todayStr) {
-        return 'overdue'
-    }
-    if (dueStr === todayStr) {
-        return 'due_today'
-    }
-
-    const todayParts = todayStr.split('-').map(Number)
-    const dueParts = dueStr.split('-').map(Number)
-
-    const todayLocal = new Date(todayParts[0], todayParts[1] - 1, todayParts[2])
-    const dueLocal = new Date(dueParts[0], dueParts[1] - 1, dueParts[2])
-
-    const diffTime = dueLocal.getTime() - todayLocal.getTime()
-    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24))
-
-    if (diffDays > 0 && diffDays <= 7) {
-        return 'due_this_week'
-    }
-    return 'upcoming'
+function getDueBucket(rec: Receivable, today = getSuratTodayString()): DueBucket {
+    return getCommercialDueBucket(rec, today)
 }
 
-function getDaysLate(rec: Receivable): number {
-    if (!rec.due_date || rec.balance_amount <= 0) return 0
-    const todayParts = getLocalDateString(new Date()).split('-').map(Number)
-    const dueParts = getLocalDateString(rec.due_date).split('-').map(Number)
-    const todayLocal = new Date(todayParts[0], todayParts[1] - 1, todayParts[2])
-    const dueLocal = new Date(dueParts[0], dueParts[1] - 1, dueParts[2])
-    return Math.max(0, Math.floor((todayLocal.getTime() - dueLocal.getTime()) / (1000 * 60 * 60 * 24)))
+function getDaysLate(rec: Receivable, today = getSuratTodayString()): number {
+    return getCommercialDaysLate(rec, today)
 }
 
 function estimateLateInterest(rec: Receivable, annualRatePct = 18): number {
@@ -419,7 +402,9 @@ function compareCollectionPriority(a: Receivable, b: Receivable): number {
 
 function formatDate(value?: string | null) {
     if (!value) return 'No date'
-    return new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    const [year, month, day] = normalizeCommercialDateOnly(value).split('-').map(Number)
+    if (![year, month, day].every(Number.isFinite)) return 'No date'
+    return new Date(year, month - 1, day).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function getReceivableGroupMeta(rec: Receivable) {
@@ -833,11 +818,17 @@ function CommercialGroupCard({
                                             ) : (
                                                 <div className="grid gap-1.5">
                                                     {paymentHistory.map((payment) => (
-                                                        <div key={payment.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs">
-                                                            <span className="font-semibold text-foreground">{formatDate(payment.payment_date)}</span>
-                                                            <span className="text-muted-foreground">{getPaymentModeLabel(payment.payment_mode)}</span>
-                                                            {payment.reference_number && <span className="text-muted-foreground">Ref: {payment.reference_number}</span>}
-                                                            <span className="ml-auto font-black text-emerald-700">{money(payment.amount)}</span>
+                                                        <div key={payment.id} className="flex items-start justify-between gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs">
+                                                            <div className="min-w-0">
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <span className="font-semibold text-foreground">{formatDate(payment.payment_date)}</span>
+                                                                    <span className="text-muted-foreground">{getPaymentModeLabel(payment.payment_mode)}</span>
+                                                                </div>
+                                                                {paymentDetailLine(payment) && (
+                                                                    <p className="mt-0.5 break-words text-[11px] text-muted-foreground">{paymentDetailLine(payment)}</p>
+                                                                )}
+                                                            </div>
+                                                            <span className="shrink-0 font-black text-emerald-700">{money(payment.amount)}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -1029,10 +1020,17 @@ function PartiesOwingPanel({
                                                                 ) : (
                                                                     <div className="space-y-1.5">
                                                                         {paymentHistory.map((payment) => (
-                                                                            <div key={payment.id} className="flex items-center justify-between gap-2 rounded-lg bg-muted/30 px-2 py-1.5 text-[11px]">
-                                                                                <span className="font-semibold text-foreground">{formatDate(payment.payment_date)}</span>
-                                                                                <span className="text-muted-foreground">{getPaymentModeLabel(payment.payment_mode)}</span>
-                                                                                <span className="font-black text-emerald-700">{money(payment.amount)}</span>
+                                                                            <div key={payment.id} className="flex items-start justify-between gap-2 rounded-lg bg-muted/30 px-2 py-1.5 text-[11px]">
+                                                                                <div className="min-w-0">
+                                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                                        <span className="font-semibold text-foreground">{formatDate(payment.payment_date)}</span>
+                                                                                        <span className="text-muted-foreground">{getPaymentModeLabel(payment.payment_mode)}</span>
+                                                                                    </div>
+                                                                                    {paymentDetailLine(payment) && (
+                                                                                        <p className="mt-0.5 break-words text-muted-foreground">{paymentDetailLine(payment)}</p>
+                                                                                    )}
+                                                                                </div>
+                                                                                <span className="shrink-0 font-black text-emerald-700">{money(payment.amount)}</span>
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -1169,10 +1167,17 @@ function CollectionFocusPanel({
                                             ) : (
                                                 <div className="grid gap-1.5">
                                                     {paymentHistory.map((payment) => (
-                                                        <div key={payment.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs">
-                                                            <span className="font-semibold text-foreground">{formatDate(payment.payment_date)}</span>
-                                                            <span className="text-muted-foreground">{getPaymentModeLabel(payment.payment_mode)}</span>
-                                                            <span className="ml-auto font-black text-emerald-700">{money(payment.amount)}</span>
+                                                        <div key={payment.id} className="flex items-start justify-between gap-2 rounded-lg bg-muted/30 px-3 py-2 text-xs">
+                                                            <div className="min-w-0">
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <span className="font-semibold text-foreground">{formatDate(payment.payment_date)}</span>
+                                                                    <span className="text-muted-foreground">{getPaymentModeLabel(payment.payment_mode)}</span>
+                                                                </div>
+                                                                {paymentDetailLine(payment) && (
+                                                                    <p className="mt-0.5 break-words text-[11px] text-muted-foreground">{paymentDetailLine(payment)}</p>
+                                                                )}
+                                                            </div>
+                                                            <span className="shrink-0 font-black text-emerald-700">{money(payment.amount)}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -1259,7 +1264,7 @@ function PartyStatLine({ row, rank }: { row: CommercialPartyInsightRow; rank: nu
                         <p className="truncate text-sm font-black text-foreground">{row.partyName}</p>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
-                        {meters(row.metersSold)} · {row.salesCount} sale{row.salesCount === 1 ? '' : 's'}
+                        {meters(row.metersSold)} · {row.salesCount} sale{row.salesCount === 1 ? '' : 's'} · Last sale {formatDate(row.lastSaleDate)}
                     </p>
                     {identityLine && (
                         <p className="mt-1 truncate text-[11px] font-semibold text-muted-foreground">{identityLine}</p>
@@ -1269,7 +1274,7 @@ function PartyStatLine({ row, rank }: { row: CommercialPartyInsightRow; rank: nu
                     {row.bookedGrossProfit >= 0 ? '+' : ''}{money(row.bookedGrossProfit)}
                 </p>
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
                 <div>
                     <p className="font-bold uppercase tracking-wider text-muted-foreground">Revenue</p>
                     <p className="mt-0.5 font-black text-foreground">{money(row.revenue)}</p>
@@ -1284,6 +1289,12 @@ function PartyStatLine({ row, rank }: { row: CommercialPartyInsightRow; rank: nu
                     <p className="font-bold uppercase tracking-wider text-muted-foreground">Open</p>
                     <p className={cn('mt-0.5 font-black', row.outstanding > 0 ? 'text-rose-700' : 'text-foreground')}>
                         {money(row.outstanding)}
+                    </p>
+                </div>
+                <div>
+                    <p className="font-bold uppercase tracking-wider text-muted-foreground">Overdue</p>
+                    <p className={cn('mt-0.5 font-black', row.overdue > 0 ? 'text-rose-700' : 'text-foreground')}>
+                        {money(row.overdue)}
                     </p>
                 </div>
             </div>
@@ -1452,7 +1463,11 @@ export default function CommercialsClient({ initialData, initialReceivables, col
     const [paymentMode, setPaymentMode] = useState('bank')
     const [paymentDate, setPaymentDate] = useState(getSuratTodayString())
     const [reference, setReference] = useState('')
+    const [chequeNumber, setChequeNumber] = useState('')
+    const [chequeDate, setChequeDate] = useState(getSuratTodayString())
+    const [bankName, setBankName] = useState('')
     const [notes, setNotes] = useState('')
+    const [paymentIdempotencyKey, setPaymentIdempotencyKey] = useState(() => createClientIdempotencyKey('commercial-payment'))
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Payment History State
@@ -1465,7 +1480,11 @@ export default function CommercialsClient({ initialData, initialReceivables, col
         setPaymentMode('bank')
         setPaymentDate(getSuratTodayString())
         setReference('')
+        setChequeNumber('')
+        setChequeDate(getSuratTodayString())
+        setBankName('')
         setNotes('')
+        setPaymentIdempotencyKey(createClientIdempotencyKey('commercial-payment'))
         setSelectedReceivable(null)
     }
 
@@ -1503,6 +1522,11 @@ export default function CommercialsClient({ initialData, initialReceivables, col
             return
         }
 
+        if (paymentMode === 'cheque' && (!chequeNumber.trim() || !chequeDate || !bankName.trim())) {
+            toast.error('Cheque number, cheque date, and bank name are required')
+            return
+        }
+
         setIsSubmitting(true)
         try {
             const result = await recordCommercialPaymentAction({
@@ -1511,7 +1535,11 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                 paymentDate,
                 paymentMode,
                 referenceNumber: reference || undefined,
+                chequeNumber: paymentMode === 'cheque' ? chequeNumber.trim() : undefined,
+                chequeDate: paymentMode === 'cheque' ? chequeDate : undefined,
+                bankName: paymentMode === 'cheque' ? bankName.trim() : undefined,
                 notes: notes || undefined,
+                idempotencyKey: paymentIdempotencyKey,
             })
 
             if ('error' in result) {
@@ -1532,6 +1560,14 @@ export default function CommercialsClient({ initialData, initialReceivables, col
     const openPaymentDialog = (rec: Receivable) => {
         setSelectedReceivable(rec)
         setPaymentAmount(rec.balance_amount.toString())
+        setPaymentMode('bank')
+        setPaymentDate(getSuratTodayString())
+        setReference('')
+        setChequeNumber('')
+        setChequeDate(getSuratTodayString())
+        setBankName('')
+        setNotes('')
+        setPaymentIdempotencyKey(createClientIdempotencyKey('commercial-payment'))
         setIsPaymentDialogOpen(true)
     }
 
@@ -1867,7 +1903,7 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                                                             <div className="flex items-center gap-1">
                                                                 <CalendarDays className="h-3.5 w-3.5" />
                                                                 {rec.due_date ? (
-                                                                    <span>Due: {new Date(rec.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                                                    <span>Due: {formatDate(rec.due_date)}</span>
                                                                 ) : (
                                                                     <span>No due date</span>
                                                                 )}
@@ -1923,11 +1959,12 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                                                                         <div key={p.id} className="flex items-start justify-between gap-2 text-xs bg-muted/30 rounded-lg px-3 py-2">
                                                                             <div className="space-y-0.5">
                                                                                 <p className="font-semibold text-foreground">
-                                                                                    {new Date(p.payment_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                                    {formatDate(p.payment_date)}
                                                                                 </p>
                                                                                 <p className="text-[10px] text-muted-foreground">{getPaymentModeLabel(p.payment_mode)}</p>
-                                                                                {p.reference_number && <p className="text-[10px] text-muted-foreground">Ref: {p.reference_number}</p>}
-                                                                                {p.notes && <p className="text-[10px] text-muted-foreground italic">{p.notes}</p>}
+                                                                                {paymentDetailLine(p) && (
+                                                                                    <p className="text-[10px] text-muted-foreground">{paymentDetailLine(p)}</p>
+                                                                                )}
                                                                             </div>
                                                                             <p className="font-bold text-emerald-600 whitespace-nowrap">{money(p.amount)}</p>
                                                                         </div>
@@ -2020,7 +2057,7 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                                                                     {rec.due_date ? (
                                                                         <div className="flex items-center gap-1 text-xs font-semibold text-foreground">
                                                                             <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-                                                                            {new Date(rec.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                            {formatDate(rec.due_date)}
                                                                         </div>
                                                                     ) : <span className="text-muted-foreground">—</span>}
                                                                 </div>
@@ -2068,11 +2105,12 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                                                                                 <div key={p.id} className="flex items-center justify-between gap-4 text-xs bg-muted/30 rounded-lg px-4 py-2">
                                                                                     <div className="flex items-center gap-4">
                                                                                         <span className="font-semibold text-foreground">
-                                                                                            {new Date(p.payment_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                                            {formatDate(p.payment_date)}
                                                                                         </span>
                                                                                         <span className="text-muted-foreground">{getPaymentModeLabel(p.payment_mode)}</span>
-                                                                                        {p.reference_number && <span className="text-muted-foreground">Ref: {p.reference_number}</span>}
-                                                                                        {p.notes && <span className="text-muted-foreground italic">{p.notes}</span>}
+                                                                                        {paymentDetailLine(p) && (
+                                                                                            <span className="text-muted-foreground">{paymentDetailLine(p)}</span>
+                                                                                        )}
                                                                                     </div>
                                                                                     <span className="font-bold text-emerald-600 whitespace-nowrap">{money(p.amount)}</span>
                                                                                 </div>
@@ -2151,7 +2189,7 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                                                         <div className="flex justify-between items-start">
                                                             <div>
                                                                 <p className="font-bold text-foreground text-sm">
-                                                                    {new Date(entry.event_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                                    {formatDate(entry.event_date)}
                                                                 </p>
                                                                 <p className="text-xs text-muted-foreground mt-0.5">{entry.reference || entry.source_label}</p>
                                                             </div>
@@ -2326,6 +2364,41 @@ export default function CommercialsClient({ initialData, initialReceivables, col
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                {paymentMode === 'cheque' && (
+                                    <div className="grid gap-3 rounded-xl border border-stone-200 bg-stone-50 p-3 sm:grid-cols-2">
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="chequeNumber" className="text-sm font-semibold">Cheque Number</Label>
+                                            <Input
+                                                id="chequeNumber"
+                                                value={chequeNumber}
+                                                onChange={(e) => setChequeNumber(e.target.value)}
+                                                placeholder="Enter cheque no."
+                                                className="h-11 min-h-11 lg:h-9 lg:min-h-9"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label htmlFor="chequeDate" className="text-sm font-semibold">Cheque Date</Label>
+                                            <Input
+                                                id="chequeDate"
+                                                type="date"
+                                                value={chequeDate}
+                                                onChange={(e) => setChequeDate(e.target.value)}
+                                                className="h-11 min-h-11 lg:h-9 lg:min-h-9"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5 sm:col-span-2">
+                                            <Label htmlFor="bankName" className="text-sm font-semibold">Bank Name</Label>
+                                            <Input
+                                                id="bankName"
+                                                value={bankName}
+                                                onChange={(e) => setBankName(e.target.value)}
+                                                placeholder="Enter bank name"
+                                                className="h-11 min-h-11 lg:h-9 lg:min-h-9"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="space-y-1.5">
                                     <Label htmlFor="paymentDate" className="text-sm font-semibold">Payment Date</Label>

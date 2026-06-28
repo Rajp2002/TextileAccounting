@@ -73,6 +73,20 @@ export type FactoryTodayData = {
         }>
     }
 
+    commercial: {
+        blockingIssues: Array<{
+            id: string
+            partyName: string
+            qualityLabel: string
+            balanceAmount: number
+            dueDate: string | null
+            reason: 'due_or_overdue' | 'payment_mismatch'
+        }>
+        dueOrOverdueCount: number
+        paymentMismatchCount: number
+        totalDueOrOverdue: number
+    }
+
     payroll: {
         currentCycleMonth: string
         currentCycleLabel: string
@@ -169,6 +183,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         machineAssignmentsRes,
         hasDispatchRes,
         hasCommercialRes,
+        commercialReceivablesRes,
     ] = await Promise.all([
         // 1. Production logs today
         supabase
@@ -372,6 +387,20 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
                 return { count }
             } catch {
                 return { count: 0 }
+            }
+        })(),
+
+        (async () => {
+            try {
+                const { data } = await supabase
+                    .from('commercial_receivables')
+                    .select('id, party_name, quality_label, total_amount, received_amount, balance_amount, payment_status, due_date')
+                    .eq('org_id', orgId)
+                    .order('due_date', { ascending: true })
+                    .limit(500)
+                return { data: data ?? [] }
+            } catch {
+                return { data: [] }
             }
         })(),
     ])
@@ -584,7 +613,42 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
 
     const dispatch: FactoryTodayData['dispatch'] = { soldNotDispatched, pendingReceipts }
 
-    // ── 5. Payroll ─────────────────────────────────────────────────────────────
+    // ── 5. Commercials ─────────────────────────────────────────────────────────
+    const commercialBlockingIssues = (commercialReceivablesRes.data ?? []).flatMap((raw) => {
+        const rec = raw as Record<string, unknown>
+        const totalAmount = toNum(rec.total_amount)
+        const receivedAmount = toNum(rec.received_amount)
+        const balanceAmount = toNum(rec.balance_amount)
+        const paymentStatus = String(rec.payment_status || '')
+        const dueDate = rec.due_date ? String(rec.due_date) : null
+        const isDueOrOverdue = balanceAmount > 0.01 && Boolean(dueDate) && String(dueDate) <= today
+        const isPaymentMismatch =
+            receivedAmount > totalAmount + 0.01 ||
+            (paymentStatus === 'paid' && balanceAmount > 0.01) ||
+            (paymentStatus !== 'paid' && balanceAmount <= 0.01 && totalAmount > 0)
+
+        if (!isDueOrOverdue && !isPaymentMismatch) return []
+
+        return [{
+            id: String(rec.id),
+            partyName: String(rec.party_name || 'Unknown Party'),
+            qualityLabel: String(rec.quality_label || 'Commercial receivable'),
+            balanceAmount,
+            dueDate,
+            reason: isPaymentMismatch ? 'payment_mismatch' as const : 'due_or_overdue' as const,
+        }]
+    })
+
+    const commercial: FactoryTodayData['commercial'] = {
+        blockingIssues: commercialBlockingIssues.slice(0, 10),
+        dueOrOverdueCount: commercialBlockingIssues.filter((issue) => issue.reason === 'due_or_overdue').length,
+        paymentMismatchCount: commercialBlockingIssues.filter((issue) => issue.reason === 'payment_mismatch').length,
+        totalDueOrOverdue: commercialBlockingIssues
+            .filter((issue) => issue.reason === 'due_or_overdue')
+            .reduce((sum, issue) => sum + issue.balanceAmount, 0),
+    }
+
+    // ── 6. Payroll ─────────────────────────────────────────────────────────────
     const cycleStartDay = payrollConfigRes.data?.cycle_start_day ?? 1
     const payDateDay = payrollConfigRes.data?.pay_date_day ?? 10
     const payReminderDays = payrollConfigRes.data?.pay_reminder_days ?? 3
@@ -634,6 +698,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         ordersBehindPace.filter((o) => o.riskLevel === 'red').length,
         soldNotDispatched.length > 0 ? 1 : 0,
         pendingReceipts.filter((r) => r.daysPending > 5).length,
+        commercial.blockingIssues.length > 0 ? 1 : 0,
     ].reduce((a, b) => a + b, 0)
 
     const warning = [
@@ -656,6 +721,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         machines: machinesData,
         workAtRisk,
         dispatch,
+        commercial,
         payroll,
         actionCounts: { critical, warning, info },
         activationChecklist: {

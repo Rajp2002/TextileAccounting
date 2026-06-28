@@ -7,6 +7,7 @@ import { MachineAttentionCard } from '@/components/factory-today/MachineAttentio
 import { WorkAtRiskCard } from '@/components/factory-today/WorkAtRiskCard'
 import { SoldNotDispatchedCard } from '@/components/factory-today/SoldNotDispatchedCard'
 import { PendingReceiptsCard } from '@/components/factory-today/PendingReceiptsCard'
+import { CommercialsAttentionCard } from '@/components/factory-today/CommercialsAttentionCard'
 import { PayrollHisaabCard } from '@/components/factory-today/PayrollHisaabCard'
 import { QuickActionsCard } from '@/components/factory-today/QuickActionsCard'
 import { SetupPanel, SetupFloatingButton } from '@/components/factory-today/SetupPanel'
@@ -60,7 +61,7 @@ function AllClearState() {
             </div>
             <h2 className="mb-2 text-xl font-bold text-success">Factory is clear today.</h2>
             <p className="max-w-sm text-sm text-body">
-                Production has been logged, the ledger is current, no dispatches pending, and payroll is up to date.
+                Production has been logged, receivables are current, no dispatches are pending, and payroll is up to date.
             </p>
         </div>
     )
@@ -92,6 +93,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
         data.workAtRisk.inactiveMarketRuns.length === 0 &&
         data.dispatch.soldNotDispatched.length === 0 &&
         data.dispatch.pendingReceipts.length === 0 &&
+        data.commercial.blockingIssues.length === 0 &&
         (!data.payroll.isPayWindowOpen || data.payroll.unsettledWorkerCount === 0) &&
         data.payroll.pendingAdvanceTotal === 0
 
@@ -203,6 +205,7 @@ export function FactoryTodayClient({ initialData }: FactoryTodayClientProps) {
                     <div className="min-w-0 space-y-4">
                         <SoldNotDispatchedCard sales={data.dispatch.soldNotDispatched} />
                         <PendingReceiptsCard receipts={data.dispatch.pendingReceipts} />
+                        <CommercialsAttentionCard commercial={data.commercial} />
                         <PayrollHisaabCard payroll={data.payroll} />
                         <QuickActionsCard productionMode={data.productionMode} />
                     </div>

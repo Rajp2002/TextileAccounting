@@ -1109,35 +1109,10 @@ export async function createMarketRunSaleAction(params: {
     notes?:        string
 }) {
     await requireRole(['owner'])
-    const supabase = await createServerClient()
-
-    const metersSold = Number(params.metersSold)
-    const price = Number(params.pricePerMeter)
-
-    if (!Number.isFinite(metersSold) || metersSold <= 0) return { error: 'Meters sold must be greater than 0.' }
-    if (!Number.isFinite(price) || price < 0) return { error: 'Price per meter must be 0 or greater.' }
-    if (!params.invoiceNumber.trim()) return { error: 'Invoice number is required.' }
-
-    const saleDate = params.saleDate || new Date().toISOString().split('T')[0]
-    const dueDays  = params.dueDays ?? 30
-    const dueDate  = new Date(new Date(saleDate).getTime() + dueDays * 86400000).toISOString().split('T')[0]
-
-    const { data, error } = await supabase.rpc('create_market_run_sale', {
-        p_market_run_id:   params.marketRunId,
-        p_party_id:        params.partyId,
-        p_meters_sold:     metersSold,
-        p_price_per_meter: price,
-        p_sale_date:       saleDate,
-        p_notes:           params.notes?.trim() ?? null,
-        p_invoice_number:  params.invoiceNumber.trim(),
-        p_due_date:        dueDate,
-    })
-
-    if (error) return { error: error.message }
-
-    revalidatePath(`/owner/market-runs/${params.marketRunId}`)
-    revalidatePath('/owner/market-runs')
-    return { success: true, result: data?.[0] ?? null }
+    void params
+    return {
+        error: 'Direct market-run sale is disabled. Sell from Godown Stock so the sale creates exactly one commercial receivable.',
+    }
 }
 
 // ─── Market Run — Update Status ───────────────────────────────────────────────

@@ -29,6 +29,9 @@ export interface CommercialProfitEntry {
     gross_profit_amount: number
     reference: string | null
     created_at: string
+    stock_source_type: string | null
+    stock_market_run_id: string | null
+    stock_order_id: string | null
 }
 
 export interface CommercialsData {
@@ -120,6 +123,9 @@ export async function getCommercialsData(): Promise<{ data: CommercialsData } | 
             gross_profit_amount: toNumber(item.gross_profit_amount),
             reference: item.reference == null ? null : String(item.reference),
             created_at: String(item.created_at),
+            stock_source_type: item.stock_source_type == null ? null : String(item.stock_source_type),
+            stock_market_run_id: item.stock_market_run_id == null ? null : String(item.stock_market_run_id),
+            stock_order_id: item.stock_order_id == null ? null : String(item.stock_order_id),
         }
     })
 
@@ -541,6 +547,9 @@ export interface CommercialPayment {
     payment_date: string
     payment_mode: string
     reference_number: string | null
+    cheque_number: string | null
+    cheque_date: string | null
+    bank_name: string | null
     notes: string | null
     created_at: string
 }
@@ -551,7 +560,7 @@ export async function getCommercialPayments(receivableId: string): Promise<{ dat
 
     const { data, error } = await supabase
         .from('commercial_payment_receipts')
-        .select('id, amount, payment_date, payment_mode, reference_number, notes, created_at')
+        .select('id, amount, payment_date, payment_mode, reference_number, cheque_number, cheque_date, bank_name, notes, created_at')
         .eq('receivable_id', receivableId)
         .eq('org_id', profile.org_id)
         .order('payment_date', { ascending: false })
@@ -565,6 +574,9 @@ export async function getCommercialPayments(receivableId: string): Promise<{ dat
         payment_date: String(row.payment_date),
         payment_mode: String(row.payment_mode ?? 'other'),
         reference_number: row.reference_number == null ? null : String(row.reference_number),
+        cheque_number: row.cheque_number == null ? null : String(row.cheque_number),
+        cheque_date: row.cheque_date == null ? null : String(row.cheque_date),
+        bank_name: row.bank_name == null ? null : String(row.bank_name),
         notes: row.notes == null ? null : String(row.notes),
         created_at: String(row.created_at),
     }))

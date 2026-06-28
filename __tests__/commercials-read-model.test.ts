@@ -36,10 +36,15 @@ describe('Commercials read-model and UI attributes', () => {
 
     it('contains local timezone drift-safe date comparison and bucket categorization helpers', () => {
         const clientFile = readProjectFile('app/(dashboard)/owner/commercials/CommercialsClient.tsx')
+        const helperFile = readProjectFile('lib/commercials/date-buckets.ts')
         
         // Verify local date comparison and bucketing logic
         expect(clientFile).toContain('getLocalDateString')
         expect(clientFile).toContain('getDueBucket')
+        expect(clientFile).toContain('getCommercialDueBucket')
+        expect(clientFile).toContain('normalizeCommercialDateOnly')
+        expect(helperFile).toContain('Date.UTC')
+        expect(helperFile).toContain('daysBetweenCommercialDates')
         expect(clientFile).toContain("'overdue'")
         expect(clientFile).toContain("'due_today'")
         expect(clientFile).toContain("'due_this_week'")
@@ -103,11 +108,29 @@ describe('Commercials read-model and UI attributes', () => {
 
         expect(clientFile).toContain('Top Parties')
         expect(clientFile).toContain('Ranked by booked gross profit')
+        expect(clientFile).toContain('Last sale')
+        expect(clientFile).toContain('row.overdue')
         expect(clientFile).toContain('expandedPartyKey')
         expect(clientFile).toContain('partyKey: string')
         expect(clientFile).toContain('identityLine')
         expect(clientFile).toContain('PartiesDirectory')
         expect(clientFile).toContain('Parties ({partyInsights.parties.length})')
         expect(phaseScope).toContain("'/owner/ledger'")
+    })
+
+    it('classifies stock-sale origin from source fields instead of display labels', () => {
+        const migration = readProjectFile('supabase/migrations/20260628121903_batch_4_commercials_receivables_payments.sql')
+        const actions = readProjectFile('app/(dashboard)/owner/commercials/actions.ts')
+        const clientFile = readProjectFile('app/(dashboard)/owner/commercials/CommercialsClient.tsx')
+
+        expect(migration).toContain('l.source_type AS stock_source_type')
+        expect(migration).toContain('l.market_run_id AS stock_market_run_id')
+        expect(migration).toContain('l.order_id AS stock_order_id')
+        expect(actions).toContain('stock_source_type: string | null')
+        expect(actions).toContain('stock_market_run_id: string | null')
+        expect(actions).toContain('stock_order_id: string | null')
+        expect(clientFile).toContain("entry.stock_source_type === 'market_run'")
+        expect(clientFile).toContain("entry.stock_source_type === 'order'")
+        expect(clientFile).not.toContain('source_label.toLowerCase')
     })
 })
