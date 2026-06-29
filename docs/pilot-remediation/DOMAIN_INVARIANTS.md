@@ -137,6 +137,8 @@ Batch 4 proof note: `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, 
 
 Batch 6 proof note: `GOLDEN-A-19` and `GOLDEN-A-20` are satisfied by disposable runtime proof that closed the Golden A Rs. 7,200 order-linked receivable with Rs. 2,200 partial and Rs. 5,000 final payments, retained two payment receipt records, reached zero balance, and matched first and second owner-session state. Broad date-only rendering, timeout UX, and release/Sentry proof remain outside Batch 6.
 
+Batch 8C proof note: `SIGNOFF-10` is satisfied by clean deployed browser/server/Sentry evidence after the Sentry DSN fix: `/login` and `/privacy` loaded without `/monitoring?...` 403s or CSP `worker-src blob:` errors, Vercel production runtime/server logs showed Warning 0, Error 0, Fatal 0 with no 5xx/server exceptions, and Sentry production release `7c6449a59061` showed 100% crash-free sessions with 0 crashes, 0 new issues, 0 handled issues, and 0 unhandled issues. Live Sentry event payload redaction inspection remains separate `SEC-011` evidence debt.
+
 ## Estimator Costing
 
 Estimator costing must be deterministic, explainable, and honest. The engine must not silently tune formula-derived weights to match practical factory weights.

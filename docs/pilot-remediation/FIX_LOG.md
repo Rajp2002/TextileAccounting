@@ -19,14 +19,14 @@ Rules for entries:
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Server-boundary validation, idempotency, and quote/order lifecycle rows remain open. |
-| `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` receives partial dispatch/package evidence only and remains open for release/Sentry proof. |
+| `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
 | `DISP-B` receipt-state coherence | Closed in Batch 3 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
-| `DASH-A` dashboard/sign-off read-model truth | Partially closed in Batch 6 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`. Batch 6 supplies Golden A Factory Today/source reconciliation evidence, but payroll, historical analytics, and release/Sentry portions remain open. |
+| `DASH-A` dashboard/sign-off read-model truth | Partially closed through Batch 8C / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10` with clean deployed browser/server/Sentry evidence. Payroll and historical analytics remain open. |
 | `PAY-A` payroll/kharchi ledger integrity | Open | Includes legacy RPCs and offline kharchi. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Open | Some features likely de-scoped for pilot. |
-| `REL-A` release gates | Partially remediated / open remainder | Batch 7 closes `TECH-013` source-level release test gate. Batch 8 closes `TECH-007` migration-head alignment evidence. Batch 8B closes `TECH-010` Sentry release/source-map proof. Clean install, audit, live Sentry payload inspection, restore, rollback, and final clean signoff evidence remain open or blocked. |
+| `REL-A` release gates | Partially remediated through Batch 8C / open remainder | Batch 7 closes `TECH-013` source-level release test gate. Batch 8 closes `TECH-007` migration-head alignment evidence. Batch 8B closes `TECH-010` Sentry release/source-map proof. Batch 8C closes final clean deployed signoff evidence for `SIGNOFF-10`. Clean install, audit, live Sentry payload inspection, restore, and rollback remain open or blocked. |
 
 ## Entry Template
 
@@ -590,7 +590,7 @@ Scope:
 
 Partial evidence only:
 
-- `SIGNOFF-10` received dispatch/package/receipt runtime evidence that no Batch 3 runtime path produced `tracking_token` or ambiguous `dispatch_number` errors. Full `SIGNOFF-10` remains open for non-dispatch release/Sentry/source-map evidence and is not promoted.
+- `SIGNOFF-10` received dispatch/package/receipt runtime evidence that no Batch 3 runtime path produced `tracking_token` or ambiguous `dispatch_number` errors. Full `SIGNOFF-10` remained open at Batch 3 closeout for non-dispatch release/Sentry/source-map evidence and is closed later by Batch 8C.
 
 Invariant:
 
@@ -645,7 +645,7 @@ Resolution status:
 
 - Code, migrations, regression tests, runtime proof, and active matrix closeout are complete for the Batch 3 target scope.
 - `SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
-- `SIGNOFF-10` remains open. Batch 3 only supplies partial dispatch/package/receipt runtime evidence; missing release/Sentry/source-map proof still blocks full closure.
+- `SIGNOFF-10` remained open at Batch 3 closeout because Batch 3 only supplied partial dispatch/package/receipt runtime evidence. The missing release/Sentry proof is closed later by Batch 8C.
 
 ## Batch 4 - Commercials Receivables Payments Correctness
 
@@ -663,7 +663,7 @@ Scope:
 
 Partial evidence only, not promoted by Batch 4:
 
-- `SIGNOFF-10` remains open for release/Sentry/source-map proof.
+- `SIGNOFF-10` remained open for release/Sentry/source-map proof at this closeout and is closed later by Batch 8C.
 - `STOCK-017` received Commercials refresh/second-session evidence only during Batch 4; stock-board stale refresh remained open until Batch 5.
 - `STOCK-016` remained open for movement history pagination beyond 500 rows until Batch 5.
 - `GOLDEN-A-19` and `GOLDEN-A-20` remained blocked at Batch 4 closeout because the order-linked Golden A payment/receivable chain had not been rerun. They were closed later by Batch 6.
@@ -728,7 +728,7 @@ Resolution status:
 
 - Code, migration, regression tests, runtime proof, browser proof, and active matrix closeout are complete for the Batch 4 target scope.
 - `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
-- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 4 closeout and were closed later by Batch 6. `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only as listed above.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 4 closeout and were closed later by Batch 6. `SIGNOFF-10` remained open at Batch 4 closeout and is closed later by Batch 8C. `TIME-002` and `OFF-009` remain open or partial evidence only as listed above.
 
 ## Batch 5 - Stock Audit Pagination And Sale-Only Refresh
 
@@ -742,7 +742,7 @@ Scope:
 Explicitly not promoted by Batch 5:
 
 - `GOLDEN-A-19` and `GOLDEN-A-20` remained blocked at Batch 5 closeout because the order-linked Golden A payment/receivable chain had not been rerun. They were closed later by Batch 6.
-- `SIGNOFF-10` remains open for release/Sentry/source-map proof.
+- `SIGNOFF-10` remained open for release/Sentry/source-map proof at this closeout and is closed later by Batch 8C.
 - `TIME-002` remains open for non-Commercials date-only surfaces.
 - `OFF-009` remains open for unknown-timeout UX and status reconciliation across high-value mutations.
 
@@ -794,7 +794,7 @@ Resolution status:
 
 - Code, regression tests, runtime proof, and active matrix closeout are complete for the Batch 5 target scope.
 - `STOCK-016` and `STOCK-017` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
-- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 5 closeout and were closed later by Batch 6. `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only and are not closed by Batch 5.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 5 closeout and were closed later by Batch 6. `SIGNOFF-10` remained open at Batch 5 closeout and is closed later by Batch 8C. `TIME-002` and `OFF-009` remain open or partial evidence only and are not closed by Batch 5.
 
 ## Batch 6 - Golden A Runtime Closure
 
@@ -814,7 +814,7 @@ Scope:
 Explicitly not promoted by Batch 6:
 
 - `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-A-23` remain open for worker advance, payroll settlement, payslip, and settled-production correction proof.
-- `SIGNOFF-10` remains open for release/Sentry/source-map proof.
+- `SIGNOFF-10` remained open for release/Sentry/source-map proof at this closeout and is closed later by Batch 8C.
 - `TIME-002` remains open for broader date-only rendering surfaces.
 - `OFF-009` remains open for unknown-timeout UX and status reconciliation across high-value mutations.
 - `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open/out of scope.
@@ -871,7 +871,7 @@ Resolution status:
 
 - Code, migrations, regression tests, runtime proof, and active matrix closeout are complete for the Batch 6 target scope.
 - `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
-- `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only and are not closed by Batch 6.
+- `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only and are not closed by Batch 6. `SIGNOFF-10` remained partial at Batch 6 closeout and is closed later by Batch 8C.
 
 ## Batch 7 - Release Runtime Date Hardening Partial Closeout
 
@@ -948,7 +948,7 @@ Partial source hardening not promoted by Batch 8:
 - `TECH-009` has source and test evidence for WhatsApp webhook fail-closed behavior, but deployed valid-signature and invalid-signature webhook proof remains unavailable.
 - `TECH-010` had Sentry tunnel, auth-token, release, and source-map configuration wiring, but Batch 8 Vercel build logs showed no `SENTRY_AUTH_TOKEN`; no current Sentry release, artifacts, mapped event, or live payload proof existed at Batch 8 closeout.
 - `SEC-011` has local Sentry redaction test coverage, but no live Sentry event payload inspection exists.
-- `SIGNOFF-10` has local fixes for the pre-patch `/monitoring?...` 403 and CSP `worker-src blob:` deployed smoke failures, but no clean post-patch deployed browser/server/Sentry proof exists.
+- `SIGNOFF-10` had local fixes for the pre-patch `/monitoring?...` 403 and CSP `worker-src blob:` deployed smoke failures at Batch 8 closeout, but no clean post-patch deployed browser/server/Sentry proof existed yet. It is closed later by Batch 8C.
 - `TECH-011` and `TECH-012` remain blocked because no disposable restore, application rollback, or database forward-fix exercise exists.
 - `WA-008` remains open because no deployed valid/invalid WhatsApp callback proof exists.
 
@@ -996,7 +996,7 @@ Data safety:
 Resolution status:
 
 - `TECH-007` is pass-ready and documented as pass in the active QA matrix.
-- At Batch 8 closeout, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, `SEC-011`, and `SIGNOFF-10` were blocked or partial evidence only. `TECH-010` is superseded by Batch 8B evidence below.
+- At Batch 8 closeout, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, `SEC-011`, and `SIGNOFF-10` were blocked or partial evidence only. `TECH-010` is superseded by Batch 8B evidence below, and `SIGNOFF-10` is superseded by Batch 8C evidence below.
 - `WA-008` remains open.
 - Batch 8B requires a fresh deployment and external provider proof for Sentry release/source maps, clean deployed browser/server smoke, live Sentry payload redaction, restore, rollback/forward-fix, and deployed WhatsApp valid/invalid callback behavior.
 
@@ -1010,7 +1010,7 @@ Scope:
 
 Rows explicitly not closed by Batch 8B:
 
-- `SIGNOFF-10` remains blocked/partial because fresh deployed `/login` and `/privacy` smoke still showed repeated `/monitoring?...` HTTP 403 console/network errors.
+- `SIGNOFF-10` remained blocked/partial at Batch 8B closeout because fresh deployed `/login` and `/privacy` smoke still showed repeated `/monitoring?...` HTTP 403 console/network errors. It is superseded by Batch 8C evidence below.
 - `SEC-011` remains blocked because no live Sentry event payload exists for redaction inspection.
 - `TECH-009` remains partial and `WA-008` remains open because no deployed WhatsApp valid-signature and invalid-signature callback proof exists.
 - `TECH-011` remains blocked because no disposable restore exercise exists.
@@ -1062,6 +1062,49 @@ Data safety:
 Resolution status:
 
 - `TECH-010` is pass-ready and documented as pass in the active QA matrix.
-- `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, and `SIGNOFF-10` remain blocked or partial evidence only.
+- At Batch 8B closeout, `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, and `SIGNOFF-10` remained blocked or partial evidence only. `SIGNOFF-10` is superseded by Batch 8C evidence below.
 - `WA-008` remains open.
 - Next follow-up requires external Sentry client key, allowed domains, DSN, and project checks for the `/monitoring` 403, followed by fresh deployed smoke after any provider/config fix.
+
+## Batch 8C - Clean Deployed Signoff Evidence Closeout
+
+Date/time: 2026-06-30 00:16 IST. Source commit `7c6449a590617bf0b84811bc71462843a559e34e`.
+
+Scope:
+
+- `SIGNOFF-10`
+
+Rows explicitly not closed by Batch 8C:
+
+- `SEC-011` remains blocked because no live Sentry event payload exists for redaction inspection.
+- `TECH-009` remains partial and `WA-008` remains open because no deployed WhatsApp valid-signature and invalid-signature callback proof exists.
+- `TECH-011` remains blocked because no disposable restore exercise exists.
+- `TECH-012` remains blocked because no rollback/forward-fix exercise exists.
+
+Evidence:
+
+- Evidence artifact committed at `output/qa/batch8c/BATCH8C-20260629184639-clean-deployed-smoke-after-dsn.json`.
+- Vercel `NEXT_PUBLIC_SENTRY_DSN` was updated to the current `javascript-nextjs` Sentry project DSN and redeployed; the raw DSN value was not copied into repo or Codex.
+- Fresh deployed `/login` and `/privacy` browser smoke loaded visually.
+- `/monitoring?...` 403 browser errors were gone.
+- The CSP `worker-src blob:` browser error was gone.
+- No blocking browser console errors were visible; only non-blocking `.woff2` preload warnings remained.
+- Vercel production runtime/server logs for deployment `dpl_54VCavyUikrAETiiuZzt7MAW8Kpg` showed Warning 0, Error 0, and Fatal 0 during the smoke window.
+- Relevant route requests returned 200 or cache 304 responses; `_offline` returned redirect 307; no 5xx responses or server exceptions were observed.
+- Sentry project `vastra/javascript-nextjs` production release `7c6449a59061` showed 100% crash-free sessions, 0 crashes, 0 new issues, 0 handled issues, 0 unhandled issues, 1K source-map artifacts, and "No new issues in this release."
+- No Sentry event payload, cookies, auth headers, request bodies, tokens, service keys, or secrets were copied.
+
+Verification commands:
+
+- `jq empty output/qa/batch8c/BATCH8C-20260629184639-clean-deployed-smoke-after-dsn.json` -> passed.
+- `git diff --check` -> passed.
+- `git diff --cached --check` -> passed.
+
+Data safety:
+
+- No Supabase command, db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, product code change, restore exercise, rollback exercise, or WhatsApp webhook proof was used.
+
+Resolution status:
+
+- `SIGNOFF-10` is pass-ready and documented as pass in the active QA matrix.
+- `SEC-011`, `TECH-009`, `TECH-011`, `TECH-012`, and `WA-008` remain open, blocked, or partial as listed above.

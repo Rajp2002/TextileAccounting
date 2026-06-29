@@ -1,0 +1,221 @@
+{
+  "runId": "BATCH8C-20260629184639",
+  "capturedAt": "2026-06-29T18:46:39Z",
+  "capturedAtLocal": "2026-06-30 00:16:39 IST",
+  "git": {
+    "branch": "codex/batch-8c-clean-deployed-smoke",
+    "sourceCommit": "7c6449a590617bf0b84811bc71462843a559e34e",
+    "originMain": "7c6449a590617bf0b84811bc71462843a559e34e",
+    "initialStatusShort": []
+  },
+  "scope": {
+    "rowEvaluated": "SIGNOFF-10",
+    "rowsNotClosed": [
+      "SEC-011",
+      "TECH-009",
+      "TECH-011",
+      "TECH-012",
+      "WA-008"
+    ],
+    "changeType": "evidence-and-docs-closeout"
+  },
+  "rowDefinitionInspected": {
+    "source": "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+    "section": "Daily owner sign-off",
+    "test": "No unexplained console/server/Sentry error.",
+    "expected": "Satisfied with current-run evidence.",
+    "existingStatusBeforeBatch8C": "fail",
+    "existingNotesBeforeBatch8C": "Batch 8 fixed local Sentry tunnel ownership and CSP worker policy after pre-patch deployed smoke showed /monitoring?... 403s and worker-src blob: CSP errors. Batch 8B fresh smoke shows the CSP worker error is gone and Sentry release/source-map proof exists, but repeated /monitoring?... HTTP 403 errors remain on /login and /privacy. Full SIGNOFF-10 remains open until a fresh deployment has clean browser/server/Sentry evidence and no unexplained monitoring errors."
+  },
+  "providedHumanEvidence": {
+    "deployedUrl": "https://textile-accounting.vercel.app",
+    "redeployAfterDsnUpdate": true,
+    "externalConfigAction": {
+      "provider": "Vercel",
+      "environmentVariable": "NEXT_PUBLIC_SENTRY_DSN",
+      "action": "updated from stale Sentry project ID to the current javascript-nextjs project DSN",
+      "currentDsnProjectIdSuffixProvided": "4511107149266944",
+      "rawDsnCopiedOrShared": false
+    },
+    "loginSmoke": {
+      "route": "/login",
+      "pageLoadedVisually": true,
+      "monitoring403Visible": false,
+      "cspBlobWorkerErrorVisible": false,
+      "blockingConsoleErrorsVisible": false,
+      "remainingConsoleMessages": [
+        ".woff2 resource was preloaded but not used within a few seconds"
+      ]
+    },
+    "privacySmoke": {
+      "route": "/privacy",
+      "pageLoadedVisually": true,
+      "monitoring403Visible": false,
+      "cspBlobWorkerErrorVisible": false,
+      "blockingConsoleErrorsVisible": false,
+      "remainingConsoleMessages": [
+        ".woff2 resource was preloaded but not used within a few seconds"
+      ]
+    },
+    "resolvedOldBrowserErrors": [
+      "No repeated /monitoring 403 errors visible after the DSN update and redeploy.",
+      "No CSP worker-src blob: error visible after the DSN update and redeploy."
+    ],
+    "safeDataCopied": {
+      "cookies": false,
+      "authHeaders": false,
+      "requestBodies": false,
+      "tokens": false,
+      "serviceKeys": false,
+      "secrets": false
+    }
+  },
+  "vercelRuntimeServerLogsAfterDsnFix": {
+    "environment": "production",
+    "deploymentId": "dpl_54VCavyUikrAETiiuZzt7MAW8Kpg",
+    "timeWindow": "around the fresh deployed smoke test",
+    "sidebarCounts": {
+      "warning": 0,
+      "error": 0,
+      "fatal": 0
+    },
+    "successfulRouteRequests": [
+      {
+        "route": "/login",
+        "status": 200
+      },
+      {
+        "route": "/privacy",
+        "status": 200
+      },
+      {
+        "route": "/terms",
+        "status": 200
+      },
+      {
+        "route": "/refund-policy",
+        "status": 200
+      },
+      {
+        "route": "/forgot-password",
+        "status": 200
+      },
+      {
+        "route": "/signup",
+        "status": "200/304"
+      },
+      {
+        "route": "/join",
+        "status": "200/304"
+      },
+      {
+        "route": "/",
+        "status": 200
+      }
+    ],
+    "cacheResponses": {
+      "status304": "cache/not-modified responses, not server errors"
+    },
+    "redirectResponses": {
+      "_offline": "307 redirect behavior, not a server error"
+    },
+    "no5xxResponsesObserved": true,
+    "noServerExceptionsObserved": true,
+    "safeDataCopied": {
+      "cookies": false,
+      "authHeaders": false,
+      "requestBodies": false,
+      "tokens": false,
+      "serviceKeys": false,
+      "secrets": false
+    }
+  },
+  "sentryNoErrorInspectionAfterDsnFix": {
+    "org": "vastra",
+    "project": "javascript-nextjs",
+    "latestRelevantProductionRelease": "7c6449a59061",
+    "releaseDeployedToProduction": true,
+    "createdAtDescription": "Jun 29, 4:02 PM",
+    "finalizedAtDescription": "Jun 29, 6:37 PM",
+    "crashFreeSessionRate": "100%",
+    "crashes": 0,
+    "newIssues": 0,
+    "handledIssues": 0,
+    "unhandledIssues": 0,
+    "sourceMapArtifacts": "1K artifacts",
+    "releasePageMessage": "No new issues in this release.",
+    "eventPayloadCopied": false
+  },
+  "batch8bSentryReleaseSourceMapState": {
+    "releaseExists": true,
+    "releaseName": "2538da25b2fa",
+    "deployEnvironment": "production",
+    "sourceMapsOrArtifactsVisible": true,
+    "sourceMapArtifactCount": 529,
+    "mappedEventExists": false,
+    "liveSentryEventPayloadExists": false,
+    "sourceArtifact": "output/qa/batch8b/BATCH8B-20260629153402-release-evidence-monitoring.json"
+  },
+  "evidenceSufficiencyAssessment": {
+    "browserSmokeCleanForKnownBlockers": true,
+    "monitoring403Resolved": true,
+    "cspBlobWorkerErrorResolved": true,
+    "fontPreloadWarningsBlocking": false,
+    "serverRuntimeLogsProvidedAfterDsnRedeploy": true,
+    "vercelRuntimeLogsProvidedAfterDsnRedeploy": true,
+    "sentryNoErrorInspectionProvidedAfterDsnRedeploy": true,
+    "liveSentryPayloadProvided": false
+  },
+  "rowClassification": {
+    "SIGNOFF-10": {
+      "classification": "pass-ready",
+      "passReady": true,
+      "reason": "The active row definition requires no unexplained console/server/Sentry error. Batch 8C now has clean deployed browser smoke after the Sentry DSN fix, Vercel production runtime/server logs with Warning 0, Error 0, Fatal 0 and no 5xx/server exceptions, and Sentry production release evidence showing 100% crash-free sessions, 0 crashes, 0 new issues, 0 handled issues, and 0 unhandled issues. The only visible browser messages were non-blocking .woff2 preload warnings.",
+      "evidenceAcceptedForClosure": [
+        "Fresh /login browser smoke loaded visually.",
+        "Fresh /privacy browser smoke loaded visually.",
+        "The previous /monitoring 403 browser error is gone.",
+        "The previous CSP worker-src blob: browser error is gone.",
+        "No blocking browser console errors were visible.",
+        "Only non-blocking .woff2 preload warnings remained.",
+        "Vercel production logs for deployment dpl_54VCavyUikrAETiiuZzt7MAW8Kpg showed Warning 0, Error 0, Fatal 0.",
+        "Relevant deployed routes returned 200 or cache 304 responses; _offline returned a redirect 307; no 5xx responses or server exceptions were observed.",
+        "Sentry production release 7c6449a59061 showed 100% crash-free sessions, 0 crashes, 0 new issues, 0 handled issues, 0 unhandled issues, and no new issues in the release."
+      ],
+      "notCoveredByThisClosure": [
+        "SEC-011 live Sentry event payload redaction inspection remains blocked because no event payload exists or was copied.",
+        "TECH-009 and WA-008 deployed WhatsApp valid/invalid callback proof remains unavailable.",
+        "TECH-011 disposable restore proof remains unavailable.",
+        "TECH-012 rollback/forward-fix exercise proof remains unavailable."
+      ]
+    }
+  },
+  "explicitNonClosures": {
+    "SEC-011": {
+      "status": "remains blocked/open",
+      "reason": "No live Sentry event payload exists for redaction inspection."
+    },
+    "TECH-009": {
+      "status": "remains partial/open",
+      "reason": "No deployed WhatsApp valid-signature and invalid-signature callback proof was provided."
+    },
+    "TECH-011": {
+      "status": "remains blocked/open",
+      "reason": "No disposable restore exercise was provided."
+    },
+    "TECH-012": {
+      "status": "remains blocked/open",
+      "reason": "No rollback or forward-fix exercise was provided."
+    },
+    "WA-008": {
+      "status": "remains open",
+      "reason": "No deployed WhatsApp status callback proof was provided."
+    }
+  },
+  "safetyNotes": [
+    "No Supabase command, db push, migration repair, db pull, direct SQL, or --include-all command was run.",
+    "No npm audit, package install, lockfile change, or product change was made.",
+    "No raw API keys, service-role keys, auth tokens, database passwords, connection strings, Meta app secrets, cookies, auth headers, request bodies, full .env contents, raw DSN values, or secrets were copied into this artifact.",
+    "Batch 1-8B closed statuses were not disturbed."
+  ]
+}

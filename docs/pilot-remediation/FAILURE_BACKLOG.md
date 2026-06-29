@@ -12,11 +12,11 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-016`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008` |
-| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-10` |
+| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `PAY-028`, `OFF-008`, `DASH-003` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
 | P4 | `OFF-A` offline, cache, and public claims | `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-008`, `OFF-010`, `SEC-016` |
-| P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006`, `SIGNOFF-10` |
+| P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006` |
 
 Blocked rows also remain unresolved evidence debt. Critical or high blocked rows must be re-run or de-scoped before pilot: `TECH-011`, `TECH-012`, `BILL-003`, `SEC-018`, `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `GOLDEN-B-12`, `GOLDEN-B-17`, `GOLDEN-B-18`.
 
@@ -26,17 +26,17 @@ Closed in Batch 1 and removed from the open failure coverage rows: security foun
 
 Closed in Batch 2 and removed from the open failure coverage rows: `PROD-A` production correction and generated stock atomicity (`PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`). `SIGNOFF-05` is also removed from open `DASH-A`; remaining dashboard/signoff rows stay open.
 
-Closed in Batch 3 and removed from the open failure coverage rows: dispatch sale receipt correctness (`SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, `SIGNOFF-08`). `SIGNOFF-10` remains open under dashboard/release readiness; Batch 3 supplies partial dispatch/package/receipt runtime evidence only.
+Closed in Batch 3 and removed from the open failure coverage rows: dispatch sale receipt correctness (`SALE-015`, `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, `SIGNOFF-08`). `SIGNOFF-10` remained open under dashboard/release readiness because Batch 3 supplied partial dispatch/package/receipt runtime evidence only; it is closed later by Batch 8C.
 
-Closed in Batch 4 and removed from the open failure coverage rows: commercials receivables payments correctness (`COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, `SIGNOFF-09`). `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 4 closeout.
+Closed in Batch 4 and removed from the open failure coverage rows: commercials receivables payments correctness (`COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, `SIGNOFF-09`). `SIGNOFF-10`, `STOCK-017`, `STOCK-016`, `GOLDEN-A-19`, `GOLDEN-A-20`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 4 closeout; `SIGNOFF-10` is closed later by Batch 8C.
 
-Closed in Batch 5 and removed from the open failure coverage rows: stock audit pagination and sale-only stock refresh (`STOCK-016`, `STOCK-017`). `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 5 closeout.
+Closed in Batch 5 and removed from the open failure coverage rows: stock audit pagination and sale-only stock refresh (`STOCK-016`, `STOCK-017`). `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 5 closeout; `SIGNOFF-10` is closed later by Batch 8C.
 
-Closed in Batch 6 and removed from the blocked evidence rows: Golden A runtime customer-order chain (`GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, `GOLDEN-A-24`). `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only.
+Closed in Batch 6 and removed from the blocked evidence rows: Golden A runtime customer-order chain (`GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, `GOLDEN-A-24`). `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only; `SIGNOFF-10` remained partial at Batch 6 closeout and is closed later by Batch 8C.
 
 Closed in Batch 7 and removed from the open failure coverage rows: date-only timezone stability and source-controlled release test gate (`TIME-002`, `TECH-013`). `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remained blocked or partial evidence only at Batch 7 closeout because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
 
-Closed in Batch 8 and removed from the open failure coverage rows: migration-head alignment evidence (`TECH-007`). Closed in Batch 8B and removed from the open failure coverage rows: Sentry release/source-map evidence (`TECH-010`). `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, `SIGNOFF-10`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, live Sentry payload inspection, restore, rollback/forward-fix, and clean deployed signoff evidence are still unavailable.
+Closed in Batch 8 and removed from the open failure coverage rows: migration-head alignment evidence (`TECH-007`). Closed in Batch 8B and removed from the open failure coverage rows: Sentry release/source-map evidence (`TECH-010`). Closed in Batch 8C and removed from the open failure coverage rows: clean deployed browser/server/Sentry signoff (`SIGNOFF-10`). `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, live Sentry payload inspection, restore, and rollback/forward-fix evidence are still unavailable.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -194,7 +194,7 @@ Scoped estimator costing reconciliation closeout:
 
 Closed rows: `DISP-003`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`
 
-Partial evidence only: `SIGNOFF-10`
+Closed later: `SIGNOFF-10` received partial evidence in Batch 3 and is closed by Batch 8C clean deployed browser/server/Sentry evidence.
 
 Evidence: `docs/pilot-remediation/FIX_LOG.md`, `docs/pilot-remediation/LOOP_STATE.md`, active QA matrix closeout.
 
@@ -209,7 +209,7 @@ Resolution:
 - Factory Today, Dispatches, stock, Commercials, signoff, and second-session refresh reconciled for the Batch 3 dispatch path.
 - No runtime path tried to use stale `dispatches.tracking_token`, and no ambiguous `dispatch_number` runtime error remained.
 
-Required proof: satisfied for `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` by Batch 3 runtime proof, targeted Vitest, full Vitest, TypeScript, targeted ESLint, migration alignment, and active matrix promotion to pass. `SIGNOFF-10` remains open for release/Sentry/source-map evidence outside Batch 3.
+Required proof: satisfied for `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` by Batch 3 runtime proof, targeted Vitest, full Vitest, TypeScript, targeted ESLint, migration alignment, and active matrix promotion to pass. `SIGNOFF-10` was outside Batch 3 release/Sentry scope and is closed later by Batch 8C.
 
 ## Closed DISP-B - Receipt State and Difference Queue Coherence
 
@@ -262,7 +262,7 @@ Required proof: satisfied by Batch 3 runtime/tests for `SALE-015`, Batch 4 runti
 
 ## P2 DASH-A - Dashboard and Daily Sign-Off Read Models Are Not Authoritative
 
-Failures: `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-10`
+Failures: `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`
 
 Closed in Batch 3: `DASH-007`, `SIGNOFF-07`, `SIGNOFF-08`
 
@@ -274,7 +274,7 @@ Evidence: `logs/dashboard-evidence.json`, `logs/prod-dashboard-ux-signoff-source
 
 Invariant: Factory Today and sign-off views are read models over authoritative production, stock, dispatch, commercial, payroll, and observability state. A sign-off card cannot clear when its source rows remain unresolved.
 
-Impact: gross wages were hard-coded to zero, historical analytics mixed historical and current data, and final sign-off rows still depend on unresolved production/payroll/release evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 4 closed commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 6 supplies Golden A Factory Today source reconciliation for production, dispatch, receipt, receivable, and deliberate discrepancy state. `SIGNOFF-10` remains open for release/Sentry/source-map evidence.
+Impact: gross wages were hard-coded to zero, historical analytics mixed historical and current data, and final sign-off rows still depend on unresolved production/payroll evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 4 closed commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 6 supplies Golden A Factory Today source reconciliation for production, dispatch, receipt, receivable, and deliberate discrepancy state. Batch 8C closes `SIGNOFF-10` with clean deployed browser/server/Sentry evidence.
 
 Remediation direction:
 
@@ -346,20 +346,19 @@ Required proof: browser offline route, logout/account switch cache inspection, I
 
 ## P5 REL-A - Release Gates Are Not Repeatable
 
-Failures: `TECH-001`, `TECH-005`, `TECH-006`, `TECH-011`, `TECH-012`, `SIGNOFF-10`
+Failures: `TECH-001`, `TECH-005`, `TECH-006`, `TECH-011`, `TECH-012`
 
 Evidence: `logs/technical-gates.md`, `logs/clock-and-deployment-evidence.json`
 
 Invariant: a pilot build is reproducible, uniquely identified, migrated, tested, observable, backed up, and rollback-ready.
 
-Impact: `npm ci` fails, high-severity audit advisories remain, clean deployed signoff is still blocked by `/monitoring?...` 403, and restore/rollback were not exercised. Batch 7 closes the source-controlled test script/prebuild gate. Batch 8 closes migration-head alignment evidence for `TECH-007` with local/remote Supabase migration alignment through `20260628185344`. Batch 8B closes `TECH-010` with fresh production Sentry release `2538da25b2fa` and 529 source-map artifacts.
+Impact: `npm ci` fails, high-severity audit advisories remain, and restore/rollback were not exercised. Batch 7 closes the source-controlled test script/prebuild gate. Batch 8 closes migration-head alignment evidence for `TECH-007` with local/remote Supabase migration alignment through `20260628185344`. Batch 8B closes `TECH-010` with fresh production Sentry release `2538da25b2fa` and 529 source-map artifacts. Batch 8C closes clean deployed signoff after the Sentry DSN fix, Vercel runtime log review, and Sentry no-error release inspection.
 
 Remediation direction:
 
 - Repair lockfile and audit advisories.
 - Add CI workflow or deployment-provider proof if required beyond the Batch 7 source-level test/prebuild gate.
 - Keep production migration-head alignment under release re-check; Batch 8 satisfies `TECH-007` for the current repository head `20260628185344`.
-- Resolve the remaining `/monitoring?...` 403 through Sentry client key, allowed domains, DSN, and project configuration checks, then capture fresh clean deployed smoke.
 - Exercise backup restore into disposable project and document rollback/forward-fix.
 
 Required proof: command output, CI/deployment-provider run where required, migration metadata, clean deployed browser/server/Sentry smoke, restore evidence, and rollback runbook exercise.

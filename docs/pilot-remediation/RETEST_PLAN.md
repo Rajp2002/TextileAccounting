@@ -248,7 +248,7 @@ Acceptance:
 
 - Batch 3 satisfied this dispatch/receipt retest for `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`.
 - Evidence: disposable QA runtime proof `BATCH3-fc791041`; migrations `20260627195152`, `20260628071340`, and `20260628073917` applied/aligned; focused Batch 3 Vitest passed 7 tests; targeted regression Vitest passed 27 tests; full Vitest passed 306 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
-- `SIGNOFF-10` has partial dispatch/package/receipt runtime evidence only and remains open for release/Sentry/source-map proof.
+- `SIGNOFF-10` received partial dispatch/package/receipt runtime evidence here and is closed later by Batch 8C clean deployed browser/server/Sentry evidence.
 
 ## P2 Commercials Receivables Payments Retest
 
@@ -276,7 +276,7 @@ Acceptance:
 
 - Batch 4 satisfied this Commercials retest for `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09`.
 - Evidence: disposable QA runtime proof `BATCH4QA-20260628125203`; migration `20260628121903` applied/aligned; focused Batch 4 Vitest passed 32 tests; Batch 2/3 guard Vitest passed 37 tests; full Vitest passed 313 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
-- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 4 closeout and were closed later by Batch 6 Golden A runtime proof. `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 4 closeout and were closed later by Batch 6 Golden A runtime proof. `SIGNOFF-10` remained partial at Batch 4 closeout and is closed later by Batch 8C. `TIME-002` and `OFF-009` remain open or partial evidence only.
 
 ## P2 Stock Audit Refresh Retest
 
@@ -302,7 +302,7 @@ Acceptance:
 - Batch 5 satisfied this stock audit refresh retest for `STOCK-016` and `STOCK-017`.
 - Evidence: disposable QA proof `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json`; implementation commit `46ad361fa03d3fb9d561c639e5e3ed6424cb8e03`; focused Batch 5 Vitest passed 4 tests; Batch 2/3/4 stock, dispatch, and commercials regression pack passed 85 tests; full Vitest passed 317 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
 - No migration was required.
-- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 5 closeout and were closed later by Batch 6 Golden A runtime proof. `SIGNOFF-10`, `TIME-002`, and `OFF-009` remain open or partial evidence only.
+- `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 5 closeout and were closed later by Batch 6 Golden A runtime proof. `SIGNOFF-10` remained partial at Batch 5 closeout and is closed later by Batch 8C. `TIME-002` and `OFF-009` remain open or partial evidence only.
 
 ## P2 Golden A Runtime Closure Retest
 
@@ -331,7 +331,7 @@ Acceptance:
 
 - Batch 6 satisfied this Golden A runtime retest for `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`.
 - Evidence: disposable QA proof `output/qa/batch6/BATCH6-20260628185811-golden-a-runtime-proof.json`; implementation commit `80e8f8c6ae1318207b0c5b1f45e98c3cfe524f67`; migrations `20260628183500` and `20260628185344` applied/aligned; focused Batch 6 Vitest passed 1 test; Batch 2/3/4/5 guard regression pack passed 86 tests; full Vitest passed 318 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, `git diff --check`, and `git diff --cached --check` passed.
-- `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only.
+- `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only. `SIGNOFF-10` remained partial at Batch 6 closeout and is closed later by Batch 8C.
 
 ## P2 Dashboard and Sign-Off Read Model Retest
 
@@ -358,8 +358,8 @@ Acceptance:
 
 - `DASH-003`, `DASH-004`, `DASH-007`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `SIGNOFF-06`, `SIGNOFF-07`, `SIGNOFF-08`, `SIGNOFF-09`, and `SIGNOFF-10` have runtime evidence or documented pilot de-scope.
 - `SIGNOFF-05` expected-stock reasonableness is already closed by Batch 2 production/stock atomicity proof and should be rerun here only if the dashboard read model changes again.
-- Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` with runtime proof. `SIGNOFF-10` remains open because Batch 3 does not prove the release/Sentry/source-map portion.
-- Batch 4 closes commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09` with runtime/browser proof. `SIGNOFF-10` remains open because Batch 4 does not prove the release/Sentry/source-map portion.
+- Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` with runtime proof. `SIGNOFF-10` was outside Batch 3 release/Sentry/source-map scope.
+- Batch 4 closes commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09` with runtime/browser proof. `SIGNOFF-10` was outside Batch 4 release/Sentry/source-map scope and is closed later by Batch 8C.
 
 ## P3 Payroll and Kharchi Retest
 
@@ -429,10 +429,10 @@ Release checks:
 - Confirm the source-controlled build path still runs Vitest before build; Batch 7 satisfies this for `TECH-013` with `test: vitest run`, `prebuild: npm run test`, and a passing `npm run build`.
 - Confirm Batch 8 Sentry tunnel/CSP/auth-release config remains in place: `withSentryConfig` owns `/monitoring`, `worker-src 'self' blob:` is present, and Sentry auth-token/release config is sourced from environment.
 - Batch 8B satisfies `TECH-010`: fresh production deployment after adding `SENTRY_AUTH_TOKEN` produced Sentry release `2538da25b2fa` in `production` with 529 source-map artifacts and no old skipped auth/release/source-map warnings.
-- Confirm a fresh deployment after any Sentry provider/config fix has no `/monitoring?...` 403s or CSP worker errors in browser/server smoke.
+- Batch 8C satisfies `SIGNOFF-10`: after the Sentry DSN fix and redeploy, fresh `/login` and `/privacy` browser smoke had no `/monitoring?...` 403s, no CSP `worker-src blob:` error, and only non-blocking `.woff2` preload warnings; Vercel runtime/server logs showed Warning 0, Error 0, Fatal 0 with no 5xx/server exceptions; Sentry production release `7c6449a59061` showed 100% crash-free sessions, 0 crashes, 0 new issues, 0 handled issues, and 0 unhandled issues.
 - Restore backup into a disposable project and reconcile one org, users, production, stock, receivables, and payroll.
 - Exercise application rollback and database forward-fix runbook in disposable infrastructure.
 
 Acceptance:
 
-- `TECH-001`, `TECH-005`, `TECH-006`, `TECH-011`, `TECH-012`, and `SIGNOFF-10` have evidence or signed release-risk acceptance where allowed. `TECH-013` is closed by Batch 7 source-level test/build gate evidence. `TECH-007` is closed by Batch 8 migration-head alignment evidence for repository head `20260628185344`. `TECH-010` is closed by Batch 8B Sentry release/source-map evidence for deployed release `2538da25b2fa`.
+- `TECH-001`, `TECH-005`, `TECH-006`, `TECH-011`, and `TECH-012` have evidence or signed release-risk acceptance where allowed. `TECH-013` is closed by Batch 7 source-level test/build gate evidence. `TECH-007` is closed by Batch 8 migration-head alignment evidence for repository head `20260628185344`. `TECH-010` is closed by Batch 8B Sentry release/source-map evidence for deployed release `2538da25b2fa`. `SIGNOFF-10` is closed by Batch 8C clean deployed browser/server/Sentry evidence.
