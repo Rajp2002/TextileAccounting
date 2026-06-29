@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { redactSensitiveText, redactSentryEvent } from '../lib/sentry-redaction'
 
@@ -34,6 +34,8 @@ describe('release/runtime configuration', () => {
     expect(nextConfig).toContain("tunnelRoute: '/monitoring'")
     expect(clientInstrumentation).not.toContain('tunnel:')
     expect(clientInstrumentation).not.toContain('/api/sentry-tunnel')
+    expect(existsSync('app/api/sentry-tunnel/route.ts')).toBe(false)
+    expect(proxy).not.toContain("pathname === '/api/sentry-tunnel'")
     expect(proxy).toContain('?!monitoring|_next/static')
   })
 
