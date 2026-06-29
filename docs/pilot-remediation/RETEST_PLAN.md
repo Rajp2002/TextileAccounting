@@ -424,12 +424,15 @@ npm audit --audit-level=high
 Release checks:
 
 - Confirm production migration head equals approved repository migration head.
+- Batch 8 satisfies `TECH-007` for the current repository head: Supabase local and remote migrations were aligned through `20260628185344` with no pending, failed, or out-of-order migrations reported.
 - Confirm CI runs install, lint, tests, build, and audit gate.
 - Confirm the source-controlled build path still runs Vitest before build; Batch 7 satisfies this for `TECH-013` with `test: vitest run`, `prebuild: npm run test`, and a passing `npm run build`.
+- Confirm Batch 8 Sentry tunnel/CSP/auth-release config remains in place: `withSentryConfig` owns `/monitoring`, `worker-src 'self' blob:` is present, and Sentry auth-token/release config is sourced from environment.
 - Confirm Sentry release and source maps for the deployed commit.
+- Confirm a fresh post-Batch-8 deployment has no `/monitoring?...` 403s or CSP worker errors in browser/server smoke.
 - Restore backup into a disposable project and reconcile one org, users, production, stock, receivables, and payroll.
 - Exercise application rollback and database forward-fix runbook in disposable infrastructure.
 
 Acceptance:
 
-- `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `TECH-011`, `TECH-012`, and `SIGNOFF-10` have evidence or signed release-risk acceptance where allowed. `TECH-013` is closed by Batch 7 source-level test/build gate evidence.
+- `TECH-001`, `TECH-005`, `TECH-006`, `TECH-010`, `TECH-011`, `TECH-012`, and `SIGNOFF-10` have evidence or signed release-risk acceptance where allowed. `TECH-013` is closed by Batch 7 source-level test/build gate evidence. `TECH-007` is closed by Batch 8 migration-head alignment evidence for repository head `20260628185344`.

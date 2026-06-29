@@ -26,7 +26,7 @@ Rules for entries:
 | `PAY-A` payroll/kharchi ledger integrity | Open | Includes legacy RPCs and offline kharchi. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Open | Some features likely de-scoped for pilot. |
-| `REL-A` release gates | Partially remediated / open remainder | Batch 7 closes `TECH-013` source-level release test gate. Clean install, audit, production migration/deployment evidence, Sentry/source-map proof, restore, rollback, and final signoff evidence remain open or blocked. |
+| `REL-A` release gates | Partially remediated / open remainder | Batch 7 closes `TECH-013` source-level release test gate. Batch 8 closes `TECH-007` migration-head alignment evidence. Clean install, audit, deployed Sentry/source-map proof, restore, rollback, and final signoff evidence remain open or blocked. |
 
 ## Entry Template
 
@@ -934,3 +934,68 @@ Resolution status:
 - `TIME-002` and `TECH-013` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
 - `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remain blocked or partial evidence only.
 - `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-A-23` remain open and out of scope for Batch 7.
+
+## Batch 8 - Release Observability Migration-Head Partial Closeout
+
+Date/time: 2026-06-29 20:12 IST. Documentation closeout after `main` advanced to `fb3d4dd98db398aa8aa33f5b6196fa29e536e5b1`, Batch 8 was reconciled without force-push, and `main` was fast-forwarded to implementation commit `c169a8ccbb3b544d04aa576e0b03877282d49f35`.
+
+Scope:
+
+- `TECH-007`
+
+Partial source hardening not promoted by Batch 8:
+
+- `TECH-009` has source and test evidence for WhatsApp webhook fail-closed behavior, but deployed valid-signature and invalid-signature webhook proof remains unavailable.
+- `TECH-010` has Sentry tunnel, auth-token, release, and source-map configuration wiring, but Vercel build logs showed no `SENTRY_AUTH_TOKEN`; no current Sentry release, artifacts, mapped event, or live payload proof exists.
+- `SEC-011` has local Sentry redaction test coverage, but no live Sentry event payload inspection exists.
+- `SIGNOFF-10` has local fixes for the pre-patch `/monitoring?...` 403 and CSP `worker-src blob:` deployed smoke failures, but no clean post-patch deployed browser/server/Sentry proof exists.
+- `TECH-011` and `TECH-012` remain blocked because no disposable restore, application rollback, or database forward-fix exercise exists.
+- `WA-008` remains open because no deployed valid/invalid WhatsApp callback proof exists.
+
+Invariant:
+
+A pilot build is reproducible, uniquely identified, migrated, tested, observable, backed up, and rollback-ready. The migration-head portion is pass-ready only when local and remote Supabase migration heads are aligned with no pending, failed, or out-of-order migrations.
+
+Implementation status:
+
+- Reconciled Batch 8 on top of `fb3d4dd98db398aa8aa33f5b6196fa29e536e5b1` and preserved the estimator spacing/layout commit.
+- `withSentryConfig` now owns the `/monitoring` tunnel route, and the conflicting manual client tunnel `/api/sentry-tunnel` was removed.
+- Added narrow CSP `worker-src 'self' blob:;` to address the deployed browser smoke CSP worker failure.
+- Added explicit Sentry `authToken`, release name, deploy environment, and widened client file upload configuration from environment.
+- Added release/runtime config tests covering Sentry tunnel ownership, CSP worker policy, auth/release config, Sentry redaction, and WhatsApp webhook fail-closed source checks.
+- Added Batch 8 evidence collector `scripts/qa/batch8-release-observability-evidence.mjs`.
+
+Migration status:
+
+- No migration was needed.
+- Supabase migration list evidence showed local and remote aligned through latest repository migration `20260628185344`, with no pending, failed, or out-of-order migrations.
+- No Supabase command, db push, migration repair, db pull, direct SQL, or `--include-all` command was run during reconciliation or docs closeout.
+
+Evidence:
+
+- Evidence artifact committed at `output/qa/batch8/BATCH8-20260629103146-release-observability-evidence.json`.
+- Deployed pre-patch smoke showed `/monitoring?...` 403 responses and CSP worker errors because `worker-src` did not allow `blob:`.
+- Vercel build logs showed missing `SENTRY_AUTH_TOKEN`; Sentry release creation and source-map upload did not run.
+- The Sentry project remained stale/unverified with no current release, source-map artifact, mapped event, or live payload inspection.
+- No restore, rollback/forward-fix, or deployed WhatsApp valid/invalid callback proof was available.
+
+Verification commands:
+
+- `npx vitest run __tests__/release-runtime-config.test.ts` -> passed, 1 file, 7 tests.
+- `npx tsc --noEmit` -> passed.
+- `npm run lint -- __tests__/release-runtime-config.test.ts instrumentation-client.ts next.config.ts scripts/qa/batch8-release-observability-evidence.mjs` -> passed.
+- `npx vitest run` -> passed, 39 files, 331 passed, 1 skipped.
+- `npm run build` -> passed with the prebuild Vitest gate, 39 files, 331 passed, 1 skipped during prebuild.
+- `git diff --check`, `git diff --cached --check`, and post-fast-forward `git diff --check` passed.
+
+Data safety:
+
+- No migration, Supabase mutation, db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production/customer data mutation, restore exercise, rollback exercise, or external provider mutation was used.
+- Sentry auth-token availability is recorded only as a boolean in the evidence artifact; no secret values are printed.
+
+Resolution status:
+
+- `TECH-007` is pass-ready and documented as pass in the active QA matrix.
+- `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, `SEC-011`, and `SIGNOFF-10` remain blocked or partial evidence only.
+- `WA-008` remains open.
+- Batch 8B requires a fresh deployment and external provider proof for Sentry release/source maps, clean deployed browser/server smoke, live Sentry payload redaction, restore, rollback/forward-fix, and deployed WhatsApp valid/invalid callback behavior.

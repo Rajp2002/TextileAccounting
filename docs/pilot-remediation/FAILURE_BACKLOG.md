@@ -16,7 +16,7 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `PAY-028`, `OFF-008`, `DASH-003` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
 | P4 | `OFF-A` offline, cache, and public claims | `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-008`, `OFF-010`, `SEC-016` |
-| P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `SIGNOFF-10` |
+| P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006`, `TECH-010`, `SIGNOFF-10` |
 
 Blocked rows also remain unresolved evidence debt. Critical or high blocked rows must be re-run or de-scoped before pilot: `TECH-011`, `TECH-012`, `BILL-003`, `SEC-018`, `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `GOLDEN-B-12`, `GOLDEN-B-17`, `GOLDEN-B-18`.
 
@@ -34,7 +34,9 @@ Closed in Batch 5 and removed from the open failure coverage rows: stock audit p
 
 Closed in Batch 6 and removed from the blocked evidence rows: Golden A runtime customer-order chain (`GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, `GOLDEN-A-24`). `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only.
 
-Closed in Batch 7 and removed from the open failure coverage rows: date-only timezone stability and source-controlled release test gate (`TIME-002`, `TECH-013`). `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remain blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
+Closed in Batch 7 and removed from the open failure coverage rows: date-only timezone stability and source-controlled release test gate (`TIME-002`, `TECH-013`). `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remained blocked or partial evidence only at Batch 7 closeout because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
+
+Closed in Batch 8 and removed from the open failure coverage rows: migration-head alignment evidence (`TECH-007`). `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, `SEC-011`, `SIGNOFF-10`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, Sentry release/source-map/live event proof, restore, rollback/forward-fix, and clean post-patch deployed signoff evidence are still unavailable.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -344,19 +346,19 @@ Required proof: browser offline route, logout/account switch cache inspection, I
 
 ## P5 REL-A - Release Gates Are Not Repeatable
 
-Failures: `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `TECH-011`, `TECH-012`, `SIGNOFF-10`
+Failures: `TECH-001`, `TECH-005`, `TECH-006`, `TECH-010`, `TECH-011`, `TECH-012`, `SIGNOFF-10`
 
 Evidence: `logs/technical-gates.md`, `logs/clock-and-deployment-evidence.json`
 
 Invariant: a pilot build is reproducible, uniquely identified, migrated, tested, observable, backed up, and rollback-ready.
 
-Impact: `npm ci` fails, high-severity audit advisories remain, production migrations require fresh evidence, Sentry release/source maps are missing, and restore/rollback were not exercised. Batch 7 closes the source-controlled test script/prebuild gate.
+Impact: `npm ci` fails, high-severity audit advisories remain, Sentry release/source maps are missing, and restore/rollback were not exercised. Batch 7 closes the source-controlled test script/prebuild gate. Batch 8 closes migration-head alignment evidence for `TECH-007` with local/remote Supabase migration alignment through `20260628185344`.
 
 Remediation direction:
 
 - Repair lockfile and audit advisories.
 - Add CI workflow or deployment-provider proof if required beyond the Batch 7 source-level test/prebuild gate.
-- Align production migrations with repository migration head.
+- Keep production migration-head alignment under release re-check; Batch 8 satisfies `TECH-007` for the current repository head `20260628185344`.
 - Upload Sentry release/source maps.
 - Exercise backup restore into disposable project and document rollback/forward-fix.
 

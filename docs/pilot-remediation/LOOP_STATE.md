@@ -14,12 +14,12 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, and Batch 7 partial release/date closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, and Batch 8 migration-head evidence closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 165 | Runtime/test evidence exists. |
-| `fail` | 58 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 166 | Runtime/test evidence exists. |
+| `fail` | 57 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
@@ -42,6 +42,8 @@ Batch 5 moved `STOCK-016` and `STOCK-017` from fail to pass with runtime/test ev
 Batch 6 moved `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24` from blocked to pass with runtime/test/migration evidence for the Golden A customer-order chain. `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only.
 
 Batch 7 moved `TIME-002` and `TECH-013` from fail to pass with focused timezone-stability tests, source-controlled release gate evidence, a successful prebuild Vitest/build run, full Vitest evidence, and local production smoke. `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remain blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
+
+Batch 8 moved `TECH-007` from fail to pass with supplied Supabase migration-list evidence showing local/remote alignment through repository migration head `20260628185344` and no pending, failed, or out-of-order migrations. `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, `SEC-011`, `SIGNOFF-10`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, Sentry release/source-map/live event proof, restore, rollback/forward-fix, and clean post-patch deployed signoff evidence are still unavailable.
 
 ## Operating Rules
 
@@ -526,3 +528,55 @@ Resolution status:
 - `TIME-002` and `TECH-013` are documented as pass in the active matrix.
 - `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remain blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
 - `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-A-23` remain open and out of scope for Batch 7.
+
+## Batch 8 Closed on Main
+
+Date/time: 2026-06-29 20:12 IST.
+
+Batch 8: partial release observability and migration-head closeout.
+
+Target failure:
+
+- `TECH-007`
+
+Repository state:
+
+- `origin/main` had advanced to `fb3d4dd98db398aa8aa33f5b6196fa29e536e5b1` for estimator spacing/layout before reconciliation.
+- Batch 8 was reconciled on top of latest `origin/main` without force-push.
+- Reconciled implementation commit `c169a8ccbb3b544d04aa576e0b03877282d49f35` was fast-forwarded into `main` and pushed to `origin/main`.
+
+Migrations:
+
+- No migration was needed.
+- Supabase migration-list evidence showed local and remote aligned through latest repository migration `20260628185344`, with no pending, failed, or out-of-order migrations.
+- No Supabase command, db push, migration repair, db pull, direct SQL, or `--include-all` command was run.
+
+Evidence:
+
+- Batch 8 fixed local Sentry tunnel ownership/config consistency: `withSentryConfig` owns `/monitoring`; conflicting manual `/api/sentry-tunnel` was removed.
+- Batch 8 added narrow CSP `worker-src 'self' blob:;` for the deployed browser smoke CSP worker failure.
+- Batch 8 added explicit Sentry auth-token, release, deploy environment, and source-map upload configuration from environment.
+- Batch 8 added release/runtime config tests covering Sentry tunnel ownership, CSP, auth/release config, redaction, and webhook fail-closed checks.
+- Evidence artifact was committed at `output/qa/batch8/BATCH8-20260629103146-release-observability-evidence.json`.
+- Deployed pre-patch smoke showed `/monitoring?...` 403 and CSP `worker-src blob:` errors, so `SIGNOFF-10` remains blocked/partial until post-patch deploy proof is clean.
+- Vercel build logs showed no `SENTRY_AUTH_TOKEN`; Sentry release/source maps were not created/uploaded, so `TECH-010` remains blocked.
+- Sentry was stale/unverified with no current release/source-map/event payload, so `SEC-011` remains blocked.
+- No restore exercise exists for `TECH-011`.
+- No rollback/forward-fix exercise exists for `TECH-012`.
+- No deployed WhatsApp valid/invalid proof exists, so `TECH-009` remains partial and `WA-008` remains open.
+
+Verification:
+
+- Focused Batch 8 Vitest: 7 passed.
+- Full Vitest: 39 files, 331 passed, 1 skipped.
+- `npx tsc --noEmit` -> passed.
+- Targeted ESLint for Batch 8 touched files -> passed.
+- `npm run build` -> passed with the prebuild Vitest gate.
+- `git diff --check` and `git diff --cached --check` -> passed.
+
+Resolution status:
+
+- `TECH-007` is documented as pass in the active matrix.
+- `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, `SEC-011`, and `SIGNOFF-10` remain blocked or partial evidence only.
+- `WA-008` remains open.
+- Batch 8B must start from latest `origin/main` and capture fresh deployment plus external provider proof.

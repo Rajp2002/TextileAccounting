@@ -219,4 +219,4 @@ Required proof:
 - Sentry release/source maps exist for the deployed commit.
 - Backup restore and rollback/forward-fix are exercised in disposable infrastructure.
 
-Batch 7 proof note: `TECH-013` is satisfied at source level by `test: vitest run`, `prebuild: npm run test`, release-runtime config tests, and a passing `npm run build` that executed the prebuild Vitest gate. This does not close clean install, audit, deployed migration, Sentry/source-map, restore, rollback, or final signoff evidence rows.
+Batch 7 proof note: `TECH-013` is satisfied at source level by `test: vitest run`, `prebuild: npm run test`, release-runtime config tests, and a passing `npm run build` that executed the prebuild Vitest gate. Batch 8 proof note: `TECH-007` is satisfied for repository migration head `20260628185344` by supplied Supabase migration-list evidence showing local/remote alignment with no pending, failed, or out-of-order migrations. These do not close clean install, audit, Sentry/source-map, restore, rollback, deployed WhatsApp, or final signoff evidence rows.
