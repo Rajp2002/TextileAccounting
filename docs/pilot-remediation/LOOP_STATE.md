@@ -14,12 +14,12 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, and Batch 6 Golden A runtime closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, and Batch 7 partial release/date closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 163 | Runtime/test evidence exists. |
-| `fail` | 60 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 165 | Runtime/test evidence exists. |
+| `fail` | 58 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
@@ -40,6 +40,8 @@ Batch 4 moved `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNO
 Batch 5 moved `STOCK-016` and `STOCK-017` from fail to pass with runtime/test evidence for stock movement audit pagination beyond 500 rows and sale-only stock refresh/second-session reconciliation. `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 5 closeout.
 
 Batch 6 moved `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24` from blocked to pass with runtime/test/migration evidence for the Golden A customer-order chain. `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only.
+
+Batch 7 moved `TIME-002` and `TECH-013` from fail to pass with focused timezone-stability tests, source-controlled release gate evidence, a successful prebuild Vitest/build run, full Vitest evidence, and local production smoke. `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remain blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
 
 ## Operating Rules
 
@@ -265,7 +267,7 @@ Still out of scope until explicitly started:
 
 - Remaining Golden A payroll follow-ons `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-A-23`.
 - Payroll business correctness.
-- Remaining `ECON-A` work outside estimator costing: server-boundary estimate validation, estimator save/market-run idempotency, quote/order lifecycle, target/deadline guards, below-target completion, and date-only rendering.
+- Remaining `ECON-A` work outside estimator costing: server-boundary estimate validation, estimator save/market-run idempotency, quote/order lifecycle, target/deadline guards, and below-target completion. Batch 7 closes the broader date-only rendering row separately.
 - Offline behavior.
 - Release gates.
 - Sentry.
@@ -480,3 +482,47 @@ Resolution status:
 
 - `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24` are documented as pass in the active matrix.
 - `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain partial evidence only or open and are not closed by Batch 6.
+
+## Batch 7 Closed on Main
+
+Date/time: 2026-06-29 14:42 IST.
+
+Batch 7: partial release/runtime/date hardening.
+
+Target failures:
+
+- `TIME-002`
+- `TECH-013`
+
+Repository state:
+
+- Implementation commit `ff44f46643400c93fea79f361b1911f992be3d5c` was fast-forwarded into `main` and pushed to `origin/main`.
+- `origin/main` pointed to `ff44f46643400c93fea79f361b1911f992be3d5c` before this documentation closeout.
+
+Migrations:
+
+- No migration was needed.
+
+Evidence:
+
+- Date-only rendering now uses date-only helpers instead of timezone-shifting `new Date(dateOnly)` parsing across the affected inventory, order, dispatch, archive, market-run, Factory Today, analytics, and payslip display paths.
+- Focused date-only tests prove the same date-only value renders unchanged under UTC, Asia/Kolkata, and America/Los_Angeles.
+- `package.json` defines `test: vitest run` and `prebuild: npm run test`, so the source-controlled build path cannot accidentally omit Vitest.
+- `npm run build` passed and proved the prebuild test gate runs before build.
+- Local production smoke on port 3107 returned 200 for `/login`, `/privacy`, and `/manifest.webmanifest`, with no server errors observed.
+- Evidence artifacts were committed under `output/qa/batch7/`.
+
+Verification:
+
+- Focused Batch 7 Vitest: 9 passed.
+- Full Vitest: 327 passed, 1 skipped.
+- `npx tsc --noEmit` -> passed.
+- Targeted ESLint for Batch 7 touched files -> passed.
+- `git diff --check` and `git diff --cached --check` -> passed.
+- `npm run build` -> passed with the prebuild Vitest gate.
+
+Resolution status:
+
+- `TIME-002` and `TECH-013` are documented as pass in the active matrix.
+- `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remain blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
+- `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-A-23` remain open and out of scope for Batch 7.

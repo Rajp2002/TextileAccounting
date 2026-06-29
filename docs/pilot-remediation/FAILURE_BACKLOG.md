@@ -11,12 +11,12 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008`, `PAY-018`, `PAY-020` |
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-016`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
-| P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, `TIME-002` |
+| P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008` |
 | P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-10` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `PAY-028`, `OFF-008`, `DASH-003` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
 | P4 | `OFF-A` offline, cache, and public claims | `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-008`, `OFF-010`, `SEC-016` |
-| P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `TECH-013`, `SIGNOFF-10` |
+| P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `SIGNOFF-10` |
 
 Blocked rows also remain unresolved evidence debt. Critical or high blocked rows must be re-run or de-scoped before pilot: `TECH-011`, `TECH-012`, `BILL-003`, `SEC-018`, `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `GOLDEN-B-12`, `GOLDEN-B-17`, `GOLDEN-B-18`.
 
@@ -33,6 +33,8 @@ Closed in Batch 4 and removed from the open failure coverage rows: commercials r
 Closed in Batch 5 and removed from the open failure coverage rows: stock audit pagination and sale-only stock refresh (`STOCK-016`, `STOCK-017`). `GOLDEN-A-19`, `GOLDEN-A-20`, `SIGNOFF-10`, `TIME-002`, and `OFF-009` remained open or partial evidence only at Batch 5 closeout.
 
 Closed in Batch 6 and removed from the blocked evidence rows: Golden A runtime customer-order chain (`GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, `GOLDEN-A-24`). `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only.
+
+Closed in Batch 7 and removed from the open failure coverage rows: date-only timezone stability and source-controlled release test gate (`TIME-002`, `TECH-013`). `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remain blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -159,7 +161,7 @@ Required proof: source tests plus rollback-only SQL/RPC probes for negative mete
 
 ## P1 ECON-A - Estimator, Quote, Order, and Date Snapshots Are Not Exact Enough
 
-Failures: `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, `TIME-002`
+Failures: `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`
 
 Blocked evidence debt: `GOLDEN-A-03`
 
@@ -167,7 +169,7 @@ Evidence: `logs/business-reconciliation.json`, `logs/estimator-quotes-source-evi
 
 Invariant: business snapshots used for quotes, orders, wage rates, due dates, and lifecycle state must be exact, server-validated, and stable across timezones. A restored draft or lifecycle shortcut must not silently overwrite or create inconsistent accepted-order state.
 
-Impact: worker rate entered as 2.50 persisted/displayed with floating drift, estimator save lacks server-boundary validation, accepted quote/order economics can drift, order target/deadline edits lack audit and produced-meter guards, below-target completion lacks explicit confirmation, and date-only rendering can shift outside IST.
+Impact: worker rate entered as 2.50 persisted/displayed with floating drift, estimator save lacks server-boundary validation, accepted quote/order economics can drift, order target/deadline edits lack audit and produced-meter guards, and below-target completion lacks explicit confirmation. Batch 7 closes the separate date-only rendering shift row.
 
 Remediation direction:
 
@@ -175,17 +177,16 @@ Remediation direction:
 - Validate estimator inputs at the server boundary.
 - Make quote/order lifecycle transitions explicit and auditable.
 - Add guards and audit for target/deadline edits and below-target completion.
-- Replace timezone-unstable `new Date(dateStr)` rendering for date-only business fields.
 - Require the external truth sheet or business-accepted reference estimate before closing `GOLDEN-A-03`.
 
-Required proof: estimator calculation tests, quote/order lifecycle tests, timezone rendering tests under UTC/US Pacific/Asia Kolkata, and runtime quote-to-order checks against a business truth sheet.
+Required proof: estimator calculation tests, quote/order lifecycle tests, and runtime quote-to-order checks against a business truth sheet.
 
 Scoped estimator costing reconciliation closeout:
 
 - Date/time: 2026-06-28 00:54 IST.
 - Closed sub-scope: formula/manual/manual-practical costing, mixed formula/manual semantics, width unit handling, waste/crimp semantics, Cost Breakdown audit, and saved quote restore audit preservation.
 - Evidence: `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` passed 31 tests; full `npx vitest run` passed 298 tests with 1 skipped; `npx tsc --noEmit`, `npm run build`, and scoped estimator ESLint passed; browser QA validated formula mode at `₹55.75/m`, formula-equivalent manual at `₹55.75/m`, practical manual at `₹55.91/m` or `₹56.16/m` depending on overhead, width warning for `62 cm`, and quote restore preserving `₹56.16/m`.
-- Matrix status: unchanged. `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, and `TIME-002` remain open until the original row-level proof is captured.
+- Matrix status: unchanged for estimator costing rows. `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, and `ORDER-008` remain open until the original row-level proof is captured. Batch 7 closes `TIME-002` with focused timezone-stability tests and display-path hardening.
 
 ## Closed DISP-A - Multi-Batch Dispatch Package Identity
 
@@ -343,20 +344,20 @@ Required proof: browser offline route, logout/account switch cache inspection, I
 
 ## P5 REL-A - Release Gates Are Not Repeatable
 
-Failures: `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `TECH-011`, `TECH-012`, `TECH-013`, `SIGNOFF-10`
+Failures: `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `TECH-011`, `TECH-012`, `SIGNOFF-10`
 
 Evidence: `logs/technical-gates.md`, `logs/clock-and-deployment-evidence.json`
 
 Invariant: a pilot build is reproducible, uniquely identified, migrated, tested, observable, backed up, and rollback-ready.
 
-Impact: `npm ci` fails, high-severity audit advisories remain, production migrations lag repository migrations, no CI/test script gate exists, Sentry release/source maps are missing, and restore/rollback were not exercised.
+Impact: `npm ci` fails, high-severity audit advisories remain, production migrations require fresh evidence, Sentry release/source maps are missing, and restore/rollback were not exercised. Batch 7 closes the source-controlled test script/prebuild gate.
 
 Remediation direction:
 
 - Repair lockfile and audit advisories.
-- Add `test` script and CI workflow.
+- Add CI workflow or deployment-provider proof if required beyond the Batch 7 source-level test/prebuild gate.
 - Align production migrations with repository migration head.
 - Upload Sentry release/source maps.
 - Exercise backup restore into disposable project and document rollback/forward-fix.
 
-Required proof: command output, CI run, migration metadata, Sentry release evidence, restore evidence, and rollback runbook exercise.
+Required proof: command output, CI/deployment-provider run where required, migration metadata, Sentry release evidence, restore evidence, and rollback runbook exercise.

@@ -19,8 +19,8 @@ Current known state from `logs/technical-gates.md`:
 
 - `npm ci` fails until the lockfile is repaired.
 - `npm run lint` passed in the final QA run.
-- `npx vitest run` passed in the final QA run.
-- `npm run build` passed in the final QA run.
+- `npx vitest run` passed in the final QA run; Batch 7 full Vitest also passed with 327 passed and 1 skipped.
+- `npm run build` passed in the final QA run; Batch 7 also passed `npm run build` with the source-controlled `prebuild` Vitest gate.
 - Both audit commands fail until advisories are fixed or formally accepted.
 
 Do not use passing lint/build/source checks to resolve runtime failures.
@@ -212,7 +212,7 @@ npx vitest run __tests__/p1-stock-source-validation.test.ts __tests__/p1-commerc
 npx vitest run
 ```
 
-Add targeted tests for quote transition rules, target/deadline edit guards, below-target completion confirmation, and date-only formatting before closing this cluster.
+Add targeted tests for quote transition rules, target/deadline edit guards, and below-target completion confirmation before closing this cluster. Batch 7 closes `TIME-002` date-only formatting with focused timezone tests.
 
 Runtime checks:
 
@@ -220,11 +220,11 @@ Runtime checks:
 - Restore a quote into the estimator while a local draft exists and verify the user must choose whether to overwrite.
 - Edit target/deadline after production and verify audit plus target >= produced guard.
 - Attempt below-target completion and verify explicit warning/confirmation.
-- Render representative order, dispatch, payslip, and commercial date-only fields under UTC, US Pacific, and Asia/Kolkata.
+- Batch 7 date-only proof covers representative date-only display paths under UTC, US Pacific, and Asia/Kolkata; rerun only if those display paths change.
 
 Acceptance:
 
-- `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`, and `TIME-002` have test or runtime evidence.
+- `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, and `ORDER-008` have test or runtime evidence.
 - `GOLDEN-A-03` has a supplied truth sheet/business reference or remains blocked and de-scoped from pilot sign-off.
 
 ## P2 Dispatch and Receipt Retest
@@ -425,10 +425,11 @@ Release checks:
 
 - Confirm production migration head equals approved repository migration head.
 - Confirm CI runs install, lint, tests, build, and audit gate.
+- Confirm the source-controlled build path still runs Vitest before build; Batch 7 satisfies this for `TECH-013` with `test: vitest run`, `prebuild: npm run test`, and a passing `npm run build`.
 - Confirm Sentry release and source maps for the deployed commit.
 - Restore backup into a disposable project and reconcile one org, users, production, stock, receivables, and payroll.
 - Exercise application rollback and database forward-fix runbook in disposable infrastructure.
 
 Acceptance:
 
-- `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `TECH-011`, `TECH-012`, `TECH-013`, and `SIGNOFF-10` have evidence or signed release-risk acceptance where allowed.
+- `TECH-001`, `TECH-005`, `TECH-006`, `TECH-007`, `TECH-010`, `TECH-011`, `TECH-012`, and `SIGNOFF-10` have evidence or signed release-risk acceptance where allowed. `TECH-013` is closed by Batch 7 source-level test/build gate evidence.

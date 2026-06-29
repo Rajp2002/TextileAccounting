@@ -162,6 +162,8 @@ Required proof:
 - Suspicious cm inputs such as `62 cm` surface a width warning before they silently under-cost weft.
 - Cost Breakdown and restored quote details show mode, formula/manual base kg, adjustments, final kg, rate, and cost.
 
+Batch 7 proof note: `TIME-002` is satisfied by reusable date-only rendering helpers, affected display-path hardening, and focused tests proving the same date-only value renders unchanged under UTC, Asia/Kolkata, and America/Los_Angeles. Timestamp/datetime fields are intentionally outside that date-only invariant.
+
 ## Payroll and Kharchi
 
 Payroll is derived from production logs, stored rate snapshots, attendance, statutory settings, advances, and manual adjustments. Kharchi must affect worker advance and supervisor float ledgers atomically.
@@ -216,3 +218,5 @@ Required proof:
 - Production migration head equals approved repository migration head.
 - Sentry release/source maps exist for the deployed commit.
 - Backup restore and rollback/forward-fix are exercised in disposable infrastructure.
+
+Batch 7 proof note: `TECH-013` is satisfied at source level by `test: vitest run`, `prebuild: npm run test`, release-runtime config tests, and a passing `npm run build` that executed the prebuild Vitest gate. This does not close clean install, audit, deployed migration, Sentry/source-map, restore, rollback, or final signoff evidence rows.

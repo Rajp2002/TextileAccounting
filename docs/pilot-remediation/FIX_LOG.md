@@ -18,7 +18,7 @@ Rules for entries:
 | `SEC-C` webhook/export/compliance fail-closed | Open | Some items may require de-scope or counsel review. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
-| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Server-boundary validation, idempotency, quote/order lifecycle, and date snapshot rows remain open. |
+| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Server-boundary validation, idempotency, and quote/order lifecycle rows remain open. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` receives partial dispatch/package evidence only and remains open for release/Sentry proof. |
 | `DISP-B` receipt-state coherence | Closed in Batch 3 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
@@ -26,7 +26,7 @@ Rules for entries:
 | `PAY-A` payroll/kharchi ledger integrity | Open | Includes legacy RPCs and offline kharchi. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Open | Some features likely de-scoped for pilot. |
-| `REL-A` release gates | Open | Must be closed before pilot. |
+| `REL-A` release gates | Partially remediated / open remainder | Batch 7 closes `TECH-013` source-level release test gate. Clean install, audit, production migration/deployment evidence, Sentry/source-map proof, restore, rollback, and final signoff evidence remain open or blocked. |
 
 ## Entry Template
 
@@ -872,3 +872,65 @@ Resolution status:
 - Code, migrations, regression tests, runtime proof, and active matrix closeout are complete for the Batch 6 target scope.
 - `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
 - `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only and are not closed by Batch 6.
+
+## Batch 7 - Release Runtime Date Hardening Partial Closeout
+
+Date/time: 2026-06-29 14:42 IST. Documentation closeout after `main` was fast-forwarded to implementation commit `ff44f46643400c93fea79f361b1911f992be3d5c`.
+
+Scope:
+
+- `TIME-002`
+- `TECH-013`
+
+Partial source hardening not promoted by Batch 7:
+
+- `TECH-009` has WhatsApp webhook fail-closed source hardening, but deployed/runtime webhook proof remains unavailable.
+- `SEC-011` has Sentry redaction/source hardening, but live Sentry payload inspection remains unavailable.
+
+Explicitly not promoted by Batch 7:
+
+- `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remain blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration evidence was unavailable.
+- `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-A-23` remain out of scope.
+
+Invariant:
+
+Date-only business values must remain date-only and render to the same calendar day across UTC, Asia/Kolkata, and America/Los_Angeles. The source-controlled release command must be repeatable and must not let a production build accidentally omit Vitest.
+
+Implementation status:
+
+- Added reusable date-only rendering helpers in `lib/format.ts` and used them across the affected owner inventory, orders, dispatch, archive, market-run, Factory Today, analytics, and payslip display paths.
+- Preserved timestamp/datetime formatting outside the date-only surfaces.
+- Added `__tests__/date-only-format.test.ts` to prove the same date-only value renders consistently under UTC, Asia/Kolkata, and America/Los_Angeles.
+- Added a source-level release gate by defining `test: vitest run` and `prebuild: npm run test` in `package.json`.
+- Added `__tests__/release-runtime-config.test.ts` and `scripts/qa/batch7-release-runtime-evidence.mjs`.
+- Added Sentry redaction/source hardening and WhatsApp webhook source hardening, but those rows are not promoted without live deployed evidence.
+
+Migration status:
+
+- No migration was needed.
+
+Runtime and release evidence:
+
+- Evidence artifacts were committed at `output/qa/batch7/BATCH7-20260628194456-release-runtime-evidence.json` and `output/qa/batch7/BATCH7-20260628194456-local-verification-summary.json`.
+- `npm run build` passed and proved the `prebuild` Vitest gate runs before build.
+- Local production smoke on port 3107 returned 200 for `/login`, `/privacy`, and `/manifest.webmanifest`, with no server errors observed.
+- No deployed Sentry/source-map event, live Sentry payload inspection, restore exercise, rollback exercise, or production deployment-provider proof was available.
+
+Verification commands:
+
+- Focused Batch 7 Vitest: 9 passed.
+- `npx tsc --noEmit` -> passed.
+- Targeted ESLint for touched files -> passed.
+- `git diff --check` and `git diff --cached --check` -> passed.
+- Full `npx vitest run` -> passed, 327 passed and 1 skipped.
+- `npm run build` -> passed with the prebuild Vitest gate.
+
+Data safety:
+
+- No Supabase command, migration push/repair/pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production/customer data mutation, Sentry deployment, restore/rollback exercise, OFF-009 work, payroll/kharchi work, or broad Golden A work was used.
+
+Resolution status:
+
+- `TIME-002` and `TECH-013` are pass-ready with the evidence above and are documented as pass in the active QA matrix.
+- `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remain blocked or partial evidence only.
+- `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-A-23` remain open and out of scope for Batch 7.
