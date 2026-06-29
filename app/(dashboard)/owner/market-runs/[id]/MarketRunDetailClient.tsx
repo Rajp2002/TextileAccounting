@@ -25,6 +25,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { updateMarketRunStatus } from '../../estimator/actions'
+import { formatDateOnly } from '@/lib/format'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 import { useTranslation } from '@/lib/i18n/context'
 import { CostAnalysisDetails } from '@/components/cost-analysis-details'
@@ -347,7 +348,7 @@ export default function MarketRunDetailClient({
                                             <div>
                                                 <p className="text-sm font-bold text-foreground">{sale.parties.name}</p>
                                                 <p className="text-xs text-muted-foreground">
-                                                    {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                    {formatDateOnly(sale.sale_date, { day: '2-digit', month: 'short' })}
                                                     {sale.invoice_id && ' · Ledger Linked'}
                                                 </p>
                                             </div>
@@ -405,7 +406,7 @@ export default function MarketRunDetailClient({
                                         return (
                                             <tr key={sale.id} className="hover:bg-muted/30 transition-colors">
                                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                                                    {new Date(sale.sale_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                    {formatDateOnly(sale.sale_date, { day: '2-digit', month: 'short' })}
                                                 </td>
                                                 <td className="px-4 py-3 whitespace-nowrap font-bold text-foreground">
                                                     {sale.parties.name}

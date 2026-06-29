@@ -1,0 +1,67 @@
+{
+  "runId": "BATCH7-20260628194456",
+  "capturedAt": "2026-06-28T19:44:56.799Z",
+  "git": {
+    "branch": "codex/batch-7-release-runtime-date-hardening",
+    "head": "edae1028c6d768590c86ddf6defdd57a2a8f07bc",
+    "originMain": "edae1028c6d768590c86ddf6defdd57a2a8f07bc",
+    "statusShort": [
+      " M app/(dashboard)/owner/analytics/_components/ProductionTrend.tsx",
+      " M app/(dashboard)/owner/archive/page.tsx",
+      " M app/(dashboard)/owner/dispatches/DispatchesClient.tsx",
+      " M app/(dashboard)/owner/inventory/InventoryClient.tsx",
+      " M app/(dashboard)/owner/market-runs/[id]/MarketRunDetailClient.tsx",
+      " M app/(dashboard)/owner/orders/OrdersClient.tsx",
+      " M app/(dashboard)/owner/today/actions.ts",
+      " M instrumentation-client.ts",
+      " M instrumentation.edge.ts",
+      " M instrumentation.ts",
+      " M lib/format.ts",
+      " M lib/generate-payslip.ts",
+      " M package.json",
+      " M supabase/functions/whatsapp-webhook/index.ts",
+      "?? __tests__/date-only-format.test.ts",
+      "?? __tests__/release-runtime-config.test.ts",
+      "?? lib/sentry-redaction.ts",
+      "?? scripts/qa/batch7-release-runtime-evidence.mjs"
+    ]
+  },
+  "releaseGateSource": {
+    "testScript": "vitest run",
+    "prebuildScript": "npm run test",
+    "batch7EvidenceScript": "node scripts/qa/batch7-release-runtime-evidence.mjs",
+    "testGatePresent": true
+  },
+  "sentrySourceConfig": {
+    "withSentryConfigPresent": true,
+    "uploadConfigPresent": true,
+    "sharedRedactionHelperPresent": true,
+    "instrumentationUsesSharedRedaction": {
+      "instrumentation.ts": true,
+      "instrumentation-client.ts": true,
+      "instrumentation.edge.ts": true
+    }
+  },
+  "whatsappWebhookFailClosedSource": {
+    "metaAppSecretRequired": true,
+    "missingSecretRejectionPresent": true,
+    "oldFailOpenWarningAbsent": true
+  },
+  "migrations": {
+    "repositoryMigrationHead": "20260628185344",
+    "repositoryMigrationCount": 182,
+    "productionMigrationHead": null,
+    "productionMigrationEvidence": "not collected: direct SQL, db pull, db push, and migration repair are forbidden for this Batch 7 run"
+  },
+  "externalEvidence": {
+    "deployedUrl": null,
+    "deployedCommit": null,
+    "ciRun": null,
+    "sentryRelease": null,
+    "sentryMappedEvent": null,
+    "sentryPayloadReview": null,
+    "backupRestore": null,
+    "rollbackForwardFix": null,
+    "blocker": "external deployment, Sentry, backup, and rollback provider evidence was not available to this local source-only collector"
+  }
+}

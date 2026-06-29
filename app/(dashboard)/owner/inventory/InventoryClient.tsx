@@ -3,7 +3,6 @@
 import type { ComponentType } from 'react'
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { format } from 'date-fns'
 import {
     CircleDollarSign,
     Factory,
@@ -33,6 +32,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { formatDateOnly } from '@/lib/format'
 import {
     Table,
     TableBody,
@@ -444,7 +444,7 @@ export default function InventoryClient({
                                         <TableCell className="whitespace-normal">
                                             <div className="space-y-1">
                                                 <p className="font-medium text-slate-900">{lot.supplier}</p>
-                                                <p className="text-xs text-slate-500">Bill {lot.bill_no} · {format(new Date(lot.bill_date), 'dd MMM yyyy')}</p>
+                                                <p className="text-xs text-slate-500">Bill {lot.bill_no} · {formatDateOnly(lot.bill_date, { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                                             </div>
                                         </TableCell>
                                         <TableCell className="whitespace-normal text-sm text-slate-600">
@@ -559,7 +559,7 @@ export default function InventoryClient({
                             <TableBody>
                                 {initialData.recentMovements.map((movement) => (
                                     <TableRow key={movement.id}>
-                                        <TableCell>{format(new Date(movement.movement_date), 'dd MMM yyyy')}</TableCell>
+                                        <TableCell>{formatDateOnly(movement.movement_date, { day: '2-digit', month: 'short', year: 'numeric' })}</TableCell>
                                         <TableCell className="capitalize text-sm text-slate-600">
                                             {movement.movement_type.replaceAll('_', ' ')}
                                             {movement.adjustment_mode ? ` (${movement.adjustment_mode})` : ''}

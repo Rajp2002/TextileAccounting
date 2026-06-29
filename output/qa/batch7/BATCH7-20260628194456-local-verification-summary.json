@@ -1,0 +1,53 @@
+{
+  "runId": "BATCH7-20260628194456",
+  "scope": "release/runtime evidence plus narrow date-only hardening",
+  "localChecks": [
+    {
+      "command": "npx vitest run __tests__/date-only-format.test.ts __tests__/release-runtime-config.test.ts",
+      "status": "passed",
+      "result": "2 files passed; 9 tests passed"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "status": "passed"
+    },
+    {
+      "command": "npm run lint -- <Batch 7 touched files>",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    },
+    {
+      "command": "npx vitest run",
+      "status": "passed",
+      "result": "39 files passed; 327 tests passed; 1 skipped"
+    },
+    {
+      "command": "npm run build",
+      "status": "passed",
+      "result": "prebuild ran npm run test first, then Next production build completed"
+    }
+  ],
+  "localRuntimeSmoke": {
+    "server": "PORT=3107 npm start",
+    "routes": [
+      { "path": "/login", "httpStatus": 200 },
+      { "path": "/privacy", "httpStatus": 200 },
+      { "path": "/manifest.webmanifest", "httpStatus": 200 }
+    ],
+    "serverErrorsObserved": false,
+    "productionDataMutated": false
+  },
+  "externalEvidenceBlockers": {
+    "deployedUrl": "not available",
+    "deployedCommit": "not available",
+    "ciRun": "not available",
+    "productionMigrationHead": "not collected because direct SQL, db pull, db push, and migration repair are forbidden",
+    "sentryReleaseAndMappedEvent": "not available without Sentry/deployment secrets or provider access",
+    "sentryPayloadReview": "not available without Sentry event access",
+    "backupRestore": "not available without disposable restore infrastructure",
+    "rollbackForwardFix": "not available without provider/disposable database exercise"
+  }
+}

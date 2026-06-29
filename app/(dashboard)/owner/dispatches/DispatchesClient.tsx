@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useMemo, useTransition } from 'react'
-import { format } from 'date-fns'
 import {
     Truck,
     CheckCircle2,
@@ -33,6 +32,7 @@ import {
     confirmPendingSaleDispatch,
     type PendingStockSale,
 } from '@/app/(dashboard)/owner/orders/actions'
+import { formatDateOnly } from '@/lib/format'
 import { confirmDispatchReceiptByOwner } from '@/app/(dashboard)/owner/orders/actions'
 import { CreateDispatchModal } from '@/components/dispatches/DispatchModals'
 import { SellAndDispatchDialog } from '@/components/dispatches/SellAndDispatchDialog'
@@ -384,12 +384,12 @@ function DispatchBatchRow({
             <div className="flex flex-col items-end gap-1 text-right">
                 <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
                     <Calendar className="h-3 w-3 text-primary/40" />
-                    {format(new Date(dispatch.dispatched_at), 'dd MMM yyyy')}
+                    {formatDateOnly(dispatch.dispatched_at, { day: '2-digit', month: 'short', year: 'numeric' })}
                 </div>
                 {dispatch.received_at && (
                     <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-600/70">
                         <CheckCircle2 className="h-3 w-3" />
-                        {format(new Date(dispatch.received_at), 'dd MMM yyyy')}
+                        {formatDateOnly(dispatch.received_at, { day: '2-digit', month: 'short', year: 'numeric' })}
                     </div>
                 )}
                 {showRecordReceipt && (
@@ -1026,7 +1026,7 @@ export default function DispatchesClient({ initialDispatches, initialOverview, i
                                                     Pending Dispatch
                                                 </Badge>
                                                 <span className="text-[11px] font-bold text-muted-foreground/50">·</span>
-                                                <span className="text-[11px] font-bold text-muted-foreground/60">Sold on {format(new Date(sale.sale_date), 'dd MMM yyyy')}</span>
+                                                <span className="text-[11px] font-bold text-muted-foreground/60">Sold on {formatDateOnly(sale.sale_date, { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                             </div>
                                             <h3 className="text-lg font-black text-foreground flex items-center gap-2 mt-1">
                                                 <User className="h-4 w-4 text-primary/50 flex-shrink-0" />

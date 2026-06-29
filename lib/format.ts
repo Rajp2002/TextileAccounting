@@ -14,8 +14,36 @@ export function formatPct(n: number): string {
   return `${n.toFixed(1)}%`
 }
 
+export function dateOnlyToLocalDate(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
+  if (!match) return null
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  if (![year, month, day].every(Number.isInteger)) return null
+
+  const date = new Date(year, month - 1, day)
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null
+  }
+
+  return date
+}
+
+export function formatDateOnly(
+  value: string,
+  options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
+): string {
+  const localDate = dateOnlyToLocalDate(value)
+  const date = localDate ?? new Date(value)
+  return date.toLocaleDateString('en-IN', options)
+}
+
 export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-IN', {
-    day: 'numeric', month: 'short'
-  })
+  return formatDateOnly(dateStr)
 }

@@ -6,6 +6,7 @@ import { requireRole } from '@/lib/auth'
 import { getPayrollCycleDetails, getPayrollCycleStatus, getPayrollMonthForDate, getPreviousPayrollMonth } from '@/lib/payroll-cycle'
 import { normalizeProductionMode, hasExplicitProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { formatToSurat, getSuratTodayString } from '@/lib/time'
+import { formatDateOnly } from '@/lib/format'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -677,7 +678,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             .filter(Boolean)
     )
 
-    const cycleLabel = `${new Date(bounds.cycle_start).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – ${new Date(bounds.cycle_end).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`
+    const cycleLabel = `${formatDateOnly(bounds.cycle_start)} – ${formatDateOnly(bounds.cycle_end)}`
 
     const payroll: FactoryTodayData['payroll'] = {
         currentCycleMonth: payrollCycleMonth,

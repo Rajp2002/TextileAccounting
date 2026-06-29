@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Minus, BarChart2 } from 'lucide-react'
-import { formatMeters } from '@/lib/format'
+import { formatDateOnly, formatMeters } from '@/lib/format'
 import { useTranslation } from '@/lib/i18n/context'
 
 export type DailyMeterPoint = {
@@ -11,8 +11,7 @@ export type DailyMeterPoint = {
 }
 
 function shortDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00')
-  return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' })
+  return formatDateOnly(dateStr, { weekday: 'short', day: 'numeric' })
 }
 
 export function ProductionTrend({ data }: { data: DailyMeterPoint[] | null }) {

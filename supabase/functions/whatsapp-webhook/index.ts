@@ -52,41 +52,42 @@ Deno.serve(async (req) => {
 
   // Signature verification
   const appSecret = Deno.env.get("META_APP_SECRET");
-  if (appSecret) {
-    const signature = req.headers.get("x-hub-signature-256");
-    if (!signature) {
-      console.warn("[whatsapp-webhook] Missing signature header");
-      return new Response("Missing signature", { status: 401 });
-    }
-    const parts = signature.split("=");
-    if (parts.length !== 2 || parts[0] !== "sha256") {
-      console.warn("[whatsapp-webhook] Invalid signature format");
-      return new Response("Invalid signature format", { status: 401 });
-    }
-    const expectedSignature = parts[1];
-    
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(appSecret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
-    const signatureBuffer = await crypto.subtle.sign(
-      "HMAC",
-      key,
-      encoder.encode(rawBody)
-    );
-    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
-    const actualSignature = signatureArray.map(b => b.toString(16).padStart(2, "0")).join("");
-    
-    if (actualSignature !== expectedSignature) {
-      console.warn("[whatsapp-webhook] Invalid signature");
-      return new Response("Invalid signature", { status: 401 });
-    }
-  } else {
-    console.warn("[whatsapp-webhook] META_APP_SECRET not set, signature verification disabled");
+  if (!appSecret) {
+    console.error("[whatsapp-webhook] META_APP_SECRET not configured; rejecting unsigned webhook");
+    return new Response("Webhook signing secret not configured", { status: 500 });
+  }
+
+  const signature = req.headers.get("x-hub-signature-256");
+  if (!signature) {
+    console.warn("[whatsapp-webhook] Missing signature header");
+    return new Response("Missing signature", { status: 401 });
+  }
+  const parts = signature.split("=");
+  if (parts.length !== 2 || parts[0] !== "sha256") {
+    console.warn("[whatsapp-webhook] Invalid signature format");
+    return new Response("Invalid signature format", { status: 401 });
+  }
+  const expectedSignature = parts[1];
+
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(appSecret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signatureBuffer = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(rawBody)
+  );
+  const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+  const actualSignature = signatureArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+  if (actualSignature !== expectedSignature) {
+    console.warn("[whatsapp-webhook] Invalid signature");
+    return new Response("Invalid signature", { status: 401 });
   }
 
   try {

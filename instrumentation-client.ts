@@ -1,11 +1,5 @@
 import * as Sentry from "@sentry/nextjs"
-
-function redactSensitiveText(value: string) {
-    return value
-        .replace(/\b\d{4}\s\d{4}\s\d{4}\b|\b\d{12}\b/g, "[AADHAAR_REDACTED]")
-        .replace(/\b[0-9]{9,18}\b/g, "[BANK_AC_REDACTED]")
-        .replace(/\b(?:\+91|91|0)?[6-9]\d{9}\b/g, "[PHONE_REDACTED]")
-}
+import { redactSentryEvent } from "@/lib/sentry-redaction"
 
 Sentry.init({
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -23,22 +17,7 @@ Sentry.init({
         }),
     ],
     beforeSend(event) {
-        if (event.user?.email) {
-            event.user = { ...event.user, email: "[redacted]" }
-        }
-
-        event.breadcrumbs?.forEach((breadcrumb) => {
-            if (breadcrumb.message) breadcrumb.message = redactSensitiveText(breadcrumb.message)
-            if (typeof breadcrumb.data?.url === "string") {
-                breadcrumb.data.url = redactSensitiveText(breadcrumb.data.url)
-            }
-        })
-
-        event.exception?.values?.forEach((value) => {
-            if (value.value) value.value = redactSensitiveText(value.value)
-        })
-
-        return event
+        return redactSentryEvent(event)
     },
 })
 

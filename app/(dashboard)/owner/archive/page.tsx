@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { Archive, ArrowUpRight, CheckCircle2, Package, Store, Truck } from 'lucide-react'
-import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { getArchivedDispatchGroups, getArchivedOrders, type ArchivedDispatchGroup } from '../orders/actions'
 import { getMarketRuns } from '../estimator/actions'
+import { formatDateOnly } from '@/lib/format'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
 
 export const dynamic = 'force-dynamic'
@@ -44,7 +44,7 @@ function fmtMoney(value: number) {
 }
 
 function formatDate(value: string) {
-    return format(new Date(value), 'dd MMM yyyy')
+    return formatDateOnly(value, { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function EmptyArchive() {

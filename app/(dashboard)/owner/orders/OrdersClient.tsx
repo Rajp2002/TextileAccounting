@@ -55,7 +55,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
-import { format, differenceInDays } from 'date-fns'
+import { differenceInDays } from 'date-fns'
+import { dateOnlyToLocalDate, formatDateOnly } from '@/lib/format'
 import {
     getOrdersWithProgress,
     updateOrderStatus,
@@ -265,7 +266,7 @@ function DispatchItemRow({
                             Batch #{dispatch.dispatch_number}
                         </p>
                         <p className="text-xs text-slate-500 font-mono">
-                            {format(new Date(dispatch.dispatched_at), 'dd MMM yyyy')}
+                            {formatDateOnly(dispatch.dispatched_at, { day: '2-digit', month: 'short', year: 'numeric' })}
                         </p>
                         {dispatch.challan_number && (
                             <p className="text-xs text-slate-500 font-mono">
@@ -674,7 +675,7 @@ function OrderDetailDrawer({
     const isCompleted = order?.status === 'completed'
 
     const progress = Number(order?.progress_percent ?? 0)
-    const daysRemaining = order ? differenceInDays(new Date(order.deadline), new Date()) : 0
+    const daysRemaining = order ? differenceInDays(dateOnlyToLocalDate(order.deadline) ?? new Date(order.deadline), new Date()) : 0
     const { text: daysText, cls: daysCls } = daysLabel(daysRemaining)
     const metersProduced = Number(order?.total_meters_produced ?? 0)
     const target = Number(order?.total_target_meters ?? 0)
@@ -835,7 +836,7 @@ function OrderDetailDrawer({
                                             </div>
                                         ) : (
                                             <p className="text-base font-black font-mono text-slate-900">
-                                                {format(new Date(order.deadline), 'dd MMM yyyy')}
+                                                {formatDateOnly(order.deadline, { day: '2-digit', month: 'short', year: 'numeric' })}
                                             </p>
                                         )}
                                     </div>
@@ -983,7 +984,7 @@ interface OrderCardProps {
 
 function OrderCard({ order, onSelect, onComplete, onCancel }: OrderCardProps) {
     const { t } = useTranslation()
-    const daysRemaining = differenceInDays(new Date(order.deadline), new Date())
+    const daysRemaining = differenceInDays(dateOnlyToLocalDate(order.deadline) ?? new Date(order.deadline), new Date())
     const { text: daysText, cls: daysCls } = daysLabel(daysRemaining)
     const progress = Number(order.progress_percent ?? 0)
     const paceIndex = order.pace_index ? Number(order.pace_index) : null

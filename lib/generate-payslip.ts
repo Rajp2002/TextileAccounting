@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf'
 import { formatINR } from './finance'
+import { formatDateOnly } from './format'
 import { formatToSurat } from './time'
 
 export type PayslipAdvanceRecovery = {
@@ -119,7 +120,7 @@ export function generateMeterPayslip(data: {
             doc.setFontSize(8)
             doc.setFont('helvetica', 'normal')
             advances.forEach((a) => {
-                const date = a.date ? new Date(a.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''
+                const date = a.date ? formatDateOnly(a.date, { day: '2-digit', month: 'short' }) : ''
                 doc.text(`• ${date ? date + ': ' : ''}${a.label || 'Upaad'}`, 25, y)
                 doc.text(`- ${formatINR(a.recovered)}`, pageWidth - 25, y, { align: 'right' })
                 y += 4
@@ -254,7 +255,7 @@ export function generateFixedPayslip(data: {
             doc.setFontSize(8)
             doc.setFont('helvetica', 'normal')
             advances.forEach((a) => {
-                const date = a.date ? new Date(a.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''
+                const date = a.date ? formatDateOnly(a.date, { day: '2-digit', month: 'short' }) : ''
                 doc.text(`• ${date ? date + ': ' : ''}${a.label || 'Upaad'}`, 25, y)
                 doc.text(`- ${formatINR(a.recovered)}`, pageWidth - 25, y, { align: 'right' })
                 y += 4
