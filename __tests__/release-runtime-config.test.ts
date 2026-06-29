@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { redactSensitiveText } from '../lib/sentry-redaction'
+import { redactSensitiveText, redactSentryEvent } from '../lib/sentry-redaction'
 
 function read(path: string) {
   return readFileSync(path, 'utf8')
@@ -24,6 +24,80 @@ describe('release/runtime configuration', () => {
     expect(redactSensitiveText('Call 9876543210 about account 123456789012')).toBe(
       'Call [PHONE_REDACTED] about account [AADHAAR_REDACTED]'
     )
+  })
+
+  it('uses one Sentry tunnel route controlled by withSentryConfig', () => {
+    const nextConfig = read('next.config.ts')
+    const clientInstrumentation = read('instrumentation-client.ts')
+    const proxy = read('proxy.ts')
+
+    expect(nextConfig).toContain("tunnelRoute: '/monitoring'")
+    expect(clientInstrumentation).not.toContain('tunnel:')
+    expect(clientInstrumentation).not.toContain('/api/sentry-tunnel')
+    expect(proxy).toContain('?!monitoring|_next/static')
+  })
+
+  it('requires build-time Sentry auth token configuration for releases and source maps', () => {
+    const nextConfig = read('next.config.ts')
+
+    expect(nextConfig).toContain('authToken: process.env.SENTRY_AUTH_TOKEN')
+    expect(nextConfig).toContain('release:')
+    expect(nextConfig).toContain('process.env.SENTRY_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA')
+    expect(nextConfig).toContain('widenClientFileUpload: true')
+  })
+
+  it('allows only self and blob workers in the production CSP', () => {
+    const nextConfig = read('next.config.ts')
+
+    expect(nextConfig).toContain("worker-src 'self' blob:;")
+    expect(nextConfig).not.toContain('worker-src *')
+    expect(nextConfig).not.toContain("worker-src 'unsafe-inline'")
+  })
+
+  it('redacts sensitive Sentry event fields before reporting', () => {
+    const event = redactSentryEvent({
+      message: 'Call 9876543210; bank account 123456789012345',
+      user: {
+        email: 'owner@example.com',
+        ip_address: '203.0.113.1',
+        username: 'owner@example.com',
+        id: 'user-123',
+      },
+      request: {
+        url: 'https://textile-accounting.vercel.app/login?phone=9876543210',
+        query_string: 'token=secret',
+        cookies: 'sb-auth-token=secret',
+        headers: {
+          authorization: 'Bearer secret',
+          Cookie: 'session=secret',
+          'x-request-id': 'safe-request-id',
+        },
+      },
+      breadcrumbs: [
+        {
+          message: 'Saved phone 9876543210',
+          data: { url: 'https://example.com/path?account=123456789012345' },
+        },
+      ],
+      exception: {
+        values: [{ value: 'Failed for Aadhaar 1234 5678 9012' }],
+      },
+    })
+
+    expect(event.message).toBe('Call [PHONE_REDACTED]; bank account [BANK_AC_REDACTED]')
+    expect(event.user.email).toBe('[redacted]')
+    expect(event.user.ip_address).toBe('[redacted]')
+    expect(event.user.username).toBe('[redacted]')
+    expect(event.user.id).toBe('user-123')
+    expect(event.request.url).toContain('[PHONE_REDACTED]')
+    expect(event.request.query_string).toBe('[redacted]')
+    expect(event.request.cookies).toBe('[redacted]')
+    expect(event.request.headers.authorization).toBe('[redacted]')
+    expect(event.request.headers.Cookie).toBe('[redacted]')
+    expect(event.request.headers['x-request-id']).toBe('safe-request-id')
+    expect(event.breadcrumbs[0].message).toBe('Saved phone [PHONE_REDACTED]')
+    expect(event.breadcrumbs[0].data.url).toContain('[BANK_AC_REDACTED]')
+    expect(event.exception.values[0].value).toBe('Failed for Aadhaar [AADHAAR_REDACTED]')
   })
 
   it('fails WhatsApp status webhooks closed when the Meta signing secret is unavailable', () => {

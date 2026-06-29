@@ -11,6 +11,7 @@ const cspHeader = `
   font-src 'self' data: https://checkout.razorpay.com;
   connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.ingest.sentry.io https://api.razorpay.com https://lumberjack.razorpay.com https://lumberjack-dx.razorpay.com;
   media-src 'self';
+  worker-src 'self' blob:;
   frame-src https://api.razorpay.com https://checkout.razorpay.com;
   frame-ancestors 'none';
   base-uri 'self';
@@ -75,6 +76,11 @@ const nextConfig: NextConfig = {
 export default withSentryConfig(withPWA(nextConfig), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  release: {
+    name: process.env.SENTRY_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA,
+    deploy: process.env.VERCEL_ENV ? { env: process.env.VERCEL_ENV } : undefined,
+  },
   // Upload source maps silently (they're hidden from the browser, only for readable stack traces)
   silent: !process.env.CI,
   widenClientFileUpload: true,
