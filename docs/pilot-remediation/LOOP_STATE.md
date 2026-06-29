@@ -14,18 +14,18 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, and Batch 8 migration-head evidence closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, and Batch 8B Sentry release/source-map evidence closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 166 | Runtime/test evidence exists. |
-| `fail` | 57 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 167 | Runtime/test evidence exists. |
+| `fail` | 56 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
-Critical failures: 0. High failures: 20. Critical blocked golden-journey follow-ons: 6.
+Critical failures: 0. High failures: 19. Critical blocked golden-journey follow-ons: 6.
 
 Batch 1 security foundation moved `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` from fail to pass with runtime/test/migration evidence. `AUTH-008`, `PAY-018`, `PAY-020`, external webhook/export/compliance security rows, release gates, and unrelated unresolved failures remain open.
 
@@ -41,9 +41,9 @@ Batch 5 moved `STOCK-016` and `STOCK-017` from fail to pass with runtime/test ev
 
 Batch 6 moved `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24` from blocked to pass with runtime/test/migration evidence for the Golden A customer-order chain. `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `SIGNOFF-10`, `TIME-002`, `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `TECH-011`, and `TECH-012` remain open or partial evidence only.
 
-Batch 7 moved `TIME-002` and `TECH-013` from fail to pass with focused timezone-stability tests, source-controlled release gate evidence, a successful prebuild Vitest/build run, full Vitest evidence, and local production smoke. `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remain blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
+Batch 7 moved `TIME-002` and `TECH-013` from fail to pass with focused timezone-stability tests, source-controlled release gate evidence, a successful prebuild Vitest/build run, full Vitest evidence, and local production smoke. At Batch 7 closeout, `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` were blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
 
-Batch 8 moved `TECH-007` from fail to pass with supplied Supabase migration-list evidence showing local/remote alignment through repository migration head `20260628185344` and no pending, failed, or out-of-order migrations. `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, `SEC-011`, `SIGNOFF-10`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, Sentry release/source-map/live event proof, restore, rollback/forward-fix, and clean post-patch deployed signoff evidence are still unavailable.
+Batch 8 moved `TECH-007` from fail to pass with supplied Supabase migration-list evidence showing local/remote alignment through repository migration head `20260628185344` and no pending, failed, or out-of-order migrations. Batch 8B moved `TECH-010` from fail to pass with fresh production Sentry release/source-map proof for deployed release `2538da25b2fa` and 529 artifacts. `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, `SIGNOFF-10`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, live Sentry payload inspection, restore, rollback/forward-fix, and clean deployed signoff evidence are still unavailable.
 
 ## Operating Rules
 
@@ -526,7 +526,7 @@ Verification:
 Resolution status:
 
 - `TIME-002` and `TECH-013` are documented as pass in the active matrix.
-- `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remain blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
+- At Batch 7 closeout, `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` were blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
 - `OFF-009`, `SIGNOFF-01`, `SIGNOFF-02`, `SIGNOFF-04`, `GOLDEN-A-21`, `GOLDEN-A-22`, and `GOLDEN-A-23` remain open and out of scope for Batch 7.
 
 ## Batch 8 Closed on Main
@@ -559,7 +559,7 @@ Evidence:
 - Batch 8 added release/runtime config tests covering Sentry tunnel ownership, CSP, auth/release config, redaction, and webhook fail-closed checks.
 - Evidence artifact was committed at `output/qa/batch8/BATCH8-20260629103146-release-observability-evidence.json`.
 - Deployed pre-patch smoke showed `/monitoring?...` 403 and CSP `worker-src blob:` errors, so `SIGNOFF-10` remains blocked/partial until post-patch deploy proof is clean.
-- Vercel build logs showed no `SENTRY_AUTH_TOKEN`; Sentry release/source maps were not created/uploaded, so `TECH-010` remains blocked.
+- Vercel build logs showed no `SENTRY_AUTH_TOKEN`; at Batch 8 closeout, Sentry release/source maps were not created/uploaded and `TECH-010` was still blocked pending fresh deployment evidence.
 - Sentry was stale/unverified with no current release/source-map/event payload, so `SEC-011` remains blocked.
 - No restore exercise exists for `TECH-011`.
 - No rollback/forward-fix exercise exists for `TECH-012`.
@@ -577,6 +577,53 @@ Verification:
 Resolution status:
 
 - `TECH-007` is documented as pass in the active matrix.
-- `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, `SEC-011`, and `SIGNOFF-10` remain blocked or partial evidence only.
+- At Batch 8 closeout, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, `SEC-011`, and `SIGNOFF-10` were blocked or partial evidence only. `TECH-010` is superseded by Batch 8B evidence below.
 - `WA-008` remains open.
 - Batch 8B must start from latest `origin/main` and capture fresh deployment plus external provider proof.
+
+## Batch 8B Closed on Main
+
+Date/time: 2026-06-29 21:32 IST.
+
+Batch 8B: partial release observability closeout for Sentry release/source-map evidence.
+
+Target failure:
+
+- `TECH-010`
+
+Repository state:
+
+- Batch 8B implementation commit `d4392808690ca47f7f10f9950c82d02d94621e30` was fast-forwarded into `main` and pushed to `origin/main`.
+
+Migrations:
+
+- No migration was needed.
+- No Supabase command, db push, migration repair, db pull, direct SQL, or `--include-all` command was run.
+
+Evidence:
+
+- Evidence artifact was committed at `output/qa/batch8b/BATCH8B-20260629153402-release-evidence-monitoring.json`.
+- Fresh production deployment after adding `SENTRY_AUTH_TOKEN` completed successfully; Vercel build completed in 3m 38s with no observed build errors.
+- Old Sentry missing-auth-token / skipped-release / skipped-source-map warnings were gone from build-log searches.
+- Sentry release `2538da25b2fa` exists for project `vastra/javascript-nextjs`, deploy environment `production`, and matches the deployed commit prefix.
+- Sentry source maps/artifacts are visible with 529 artifacts.
+- No mapped event exists and no live Sentry event payload exists.
+- Fresh deployed `/login` and `/privacy` smoke loaded visually and no longer showed the CSP `worker-src blob:` error.
+- Fresh deployed `/login` and `/privacy` smoke still showed repeated `/monitoring?...` HTTP 403 console/network errors, so `SIGNOFF-10` remains blocked/partial.
+- Batch 8B removed stale manual `/api/sentry-tunnel` route/proxy remnants and updated release-runtime tests to keep them absent.
+
+Verification:
+
+- Focused Batch 8B Vitest: 7 passed.
+- Full Vitest: 39 files, 331 passed, 1 skipped.
+- `npx tsc --noEmit` -> passed.
+- Targeted ESLint for Batch 8B touched files -> passed.
+- `npm run build` -> passed with the prebuild Vitest gate.
+- `git diff --check` and `git diff --cached --check` passed.
+
+Resolution status:
+
+- `TECH-010` is documented as pass in the active matrix.
+- `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, and `SIGNOFF-10` remain blocked or partial evidence only.
+- `WA-008` remains open.
+- Next follow-up must verify external Sentry client key, allowed domains, DSN, and project settings for `/monitoring` 403, then capture fresh clean deployed smoke after any provider/config fix.

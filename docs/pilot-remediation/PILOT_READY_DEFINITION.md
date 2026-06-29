@@ -72,7 +72,7 @@ The following must be hidden, disabled, or documented as unsupported before pilo
 | Backup restore/rollback | Not exercised. | No pilot until exercise is completed. |
 | Archived modules | Historical archived routes exist. | Keep hidden/archived and do not market as pilot features. |
 
-Batch 8 note: `TECH-007` migration-head alignment is closed for repository head `20260628185344` by supplied Supabase migration-list evidence. This does not satisfy Sentry release/source-map proof, live Sentry payload inspection, backup restore, rollback/forward-fix, clean post-patch deployed signoff, audit, clean install, or deployed WhatsApp webhook proof.
+Batch 8 note: `TECH-007` migration-head alignment is closed for repository head `20260628185344` by supplied Supabase migration-list evidence. Batch 8B note: `TECH-010` Sentry release/source-map proof is closed by fresh production release `2538da25b2fa` with 529 source-map artifacts. These do not satisfy live Sentry payload inspection, backup restore, rollback/forward-fix, clean deployed signoff, audit, clean install, or deployed WhatsApp webhook proof.
 
 ## Pilot Sign-Off Evidence Package
 

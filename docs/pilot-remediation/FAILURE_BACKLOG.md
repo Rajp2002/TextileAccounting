@@ -16,7 +16,7 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `PAY-028`, `OFF-008`, `DASH-003` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
 | P4 | `OFF-A` offline, cache, and public claims | `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-008`, `OFF-010`, `SEC-016` |
-| P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006`, `TECH-010`, `SIGNOFF-10` |
+| P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006`, `SIGNOFF-10` |
 
 Blocked rows also remain unresolved evidence debt. Critical or high blocked rows must be re-run or de-scoped before pilot: `TECH-011`, `TECH-012`, `BILL-003`, `SEC-018`, `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `GOLDEN-B-12`, `GOLDEN-B-17`, `GOLDEN-B-18`.
 
@@ -36,7 +36,7 @@ Closed in Batch 6 and removed from the blocked evidence rows: Golden A runtime c
 
 Closed in Batch 7 and removed from the open failure coverage rows: date-only timezone stability and source-controlled release test gate (`TIME-002`, `TECH-013`). `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remained blocked or partial evidence only at Batch 7 closeout because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
 
-Closed in Batch 8 and removed from the open failure coverage rows: migration-head alignment evidence (`TECH-007`). `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, `SEC-011`, `SIGNOFF-10`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, Sentry release/source-map/live event proof, restore, rollback/forward-fix, and clean post-patch deployed signoff evidence are still unavailable.
+Closed in Batch 8 and removed from the open failure coverage rows: migration-head alignment evidence (`TECH-007`). Closed in Batch 8B and removed from the open failure coverage rows: Sentry release/source-map evidence (`TECH-010`). `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, `SIGNOFF-10`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, live Sentry payload inspection, restore, rollback/forward-fix, and clean deployed signoff evidence are still unavailable.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -346,20 +346,20 @@ Required proof: browser offline route, logout/account switch cache inspection, I
 
 ## P5 REL-A - Release Gates Are Not Repeatable
 
-Failures: `TECH-001`, `TECH-005`, `TECH-006`, `TECH-010`, `TECH-011`, `TECH-012`, `SIGNOFF-10`
+Failures: `TECH-001`, `TECH-005`, `TECH-006`, `TECH-011`, `TECH-012`, `SIGNOFF-10`
 
 Evidence: `logs/technical-gates.md`, `logs/clock-and-deployment-evidence.json`
 
 Invariant: a pilot build is reproducible, uniquely identified, migrated, tested, observable, backed up, and rollback-ready.
 
-Impact: `npm ci` fails, high-severity audit advisories remain, Sentry release/source maps are missing, and restore/rollback were not exercised. Batch 7 closes the source-controlled test script/prebuild gate. Batch 8 closes migration-head alignment evidence for `TECH-007` with local/remote Supabase migration alignment through `20260628185344`.
+Impact: `npm ci` fails, high-severity audit advisories remain, clean deployed signoff is still blocked by `/monitoring?...` 403, and restore/rollback were not exercised. Batch 7 closes the source-controlled test script/prebuild gate. Batch 8 closes migration-head alignment evidence for `TECH-007` with local/remote Supabase migration alignment through `20260628185344`. Batch 8B closes `TECH-010` with fresh production Sentry release `2538da25b2fa` and 529 source-map artifacts.
 
 Remediation direction:
 
 - Repair lockfile and audit advisories.
 - Add CI workflow or deployment-provider proof if required beyond the Batch 7 source-level test/prebuild gate.
 - Keep production migration-head alignment under release re-check; Batch 8 satisfies `TECH-007` for the current repository head `20260628185344`.
-- Upload Sentry release/source maps.
+- Resolve the remaining `/monitoring?...` 403 through Sentry client key, allowed domains, DSN, and project configuration checks, then capture fresh clean deployed smoke.
 - Exercise backup restore into disposable project and document rollback/forward-fix.
 
-Required proof: command output, CI/deployment-provider run where required, migration metadata, Sentry release evidence, restore evidence, and rollback runbook exercise.
+Required proof: command output, CI/deployment-provider run where required, migration metadata, clean deployed browser/server/Sentry smoke, restore evidence, and rollback runbook exercise.

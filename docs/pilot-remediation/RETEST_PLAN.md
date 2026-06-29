@@ -428,11 +428,11 @@ Release checks:
 - Confirm CI runs install, lint, tests, build, and audit gate.
 - Confirm the source-controlled build path still runs Vitest before build; Batch 7 satisfies this for `TECH-013` with `test: vitest run`, `prebuild: npm run test`, and a passing `npm run build`.
 - Confirm Batch 8 Sentry tunnel/CSP/auth-release config remains in place: `withSentryConfig` owns `/monitoring`, `worker-src 'self' blob:` is present, and Sentry auth-token/release config is sourced from environment.
-- Confirm Sentry release and source maps for the deployed commit.
-- Confirm a fresh post-Batch-8 deployment has no `/monitoring?...` 403s or CSP worker errors in browser/server smoke.
+- Batch 8B satisfies `TECH-010`: fresh production deployment after adding `SENTRY_AUTH_TOKEN` produced Sentry release `2538da25b2fa` in `production` with 529 source-map artifacts and no old skipped auth/release/source-map warnings.
+- Confirm a fresh deployment after any Sentry provider/config fix has no `/monitoring?...` 403s or CSP worker errors in browser/server smoke.
 - Restore backup into a disposable project and reconcile one org, users, production, stock, receivables, and payroll.
 - Exercise application rollback and database forward-fix runbook in disposable infrastructure.
 
 Acceptance:
 
-- `TECH-001`, `TECH-005`, `TECH-006`, `TECH-010`, `TECH-011`, `TECH-012`, and `SIGNOFF-10` have evidence or signed release-risk acceptance where allowed. `TECH-013` is closed by Batch 7 source-level test/build gate evidence. `TECH-007` is closed by Batch 8 migration-head alignment evidence for repository head `20260628185344`.
+- `TECH-001`, `TECH-005`, `TECH-006`, `TECH-011`, `TECH-012`, and `SIGNOFF-10` have evidence or signed release-risk acceptance where allowed. `TECH-013` is closed by Batch 7 source-level test/build gate evidence. `TECH-007` is closed by Batch 8 migration-head alignment evidence for repository head `20260628185344`. `TECH-010` is closed by Batch 8B Sentry release/source-map evidence for deployed release `2538da25b2fa`.
