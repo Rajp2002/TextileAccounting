@@ -596,7 +596,7 @@ function NumField({
     const isEmpty = attentionWhenEmpty && (!value || value <= 0)
     return (
         <div className="space-y-1.5 min-w-0">
-            <Label className="block text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] whitespace-nowrap overflow-visible">{label}</Label>
+            <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">{label}</Label>
             <div className="relative group">
                 <Input
                     type="number"
@@ -646,7 +646,6 @@ function WidthField({
     value,
     onChange,
     unit,
-    onUnitChange,
     hint,
     warning,
 }: {
@@ -654,7 +653,6 @@ function WidthField({
     value: number
     onChange: (v: number) => void
     unit: 'cm' | 'inch'
-    onUnitChange: (u: 'cm' | 'inch') => void
     hint?: string
     warning?: string
 }) {
@@ -687,35 +685,9 @@ function WidthField({
 
     return (
         <div className="space-y-1.5 min-w-0">
-            <div className="flex items-center justify-between">
-                <Label className="block text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] whitespace-nowrap overflow-visible">
-                    {label}
-                </Label>
-                <div className="flex items-center rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5">
-                    <button
-                        type="button"
-                        onClick={() => onUnitChange('cm')}
-                        className={`px-2 py-0.5 text-[10px] font-semibold uppercase rounded-md transition-all ${
-                            unit === 'cm'
-                                ? 'bg-white text-[var(--color-factory-green)] shadow-sm border border-[var(--color-hairline)]'
-                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-                        }`}
-                    >
-                        cm
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => onUnitChange('inch')}
-                        className={`px-2 py-0.5 text-[10px] font-semibold uppercase rounded-md transition-all ${
-                            unit === 'inch'
-                                ? 'bg-white text-[var(--color-factory-green)] shadow-sm border border-[var(--color-hairline)]'
-                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-                        }`}
-                    >
-                        inch
-                    </button>
-                </div>
-            </div>
+            <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
+                {label}
+            </Label>
             <div className="relative group">
                 <Input
                     type="number"
@@ -812,7 +784,7 @@ function LayerNameField({
 }) {
     return (
         <div className="space-y-1.5 min-w-0">
-            <Label className="block text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)]">
+            <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                 {label}
             </Label>
             <Input
@@ -837,7 +809,7 @@ function CalculationModeField({
 }) {
     return (
         <div className="space-y-1.5 min-w-0">
-            <Label className="block text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)]">
+            <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                 Mode
             </Label>
             <div className="grid h-11 grid-cols-2 rounded-[9px] border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-1">
@@ -914,7 +886,7 @@ function RowCard({
                     )}
                 </div>
             </div>
-            <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 lg:grid-cols-3 ${accent === 'indigo' ? '2xl:grid-cols-7' : '2xl:grid-cols-8'}`}>
+            <div className={`grid gap-4 px-4 py-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 ${accent === 'indigo' ? '2xl:grid-cols-7' : '2xl:grid-cols-9'}`}>
                 {children}
             </div>
         </div>
@@ -2138,7 +2110,35 @@ export default function EstimatorClient({
                         icon={Scissors} 
                         accent="weft"
                         step={3}
-                        badgeContent={<SectionCostPill value={totals.weftCostPerM} />}
+                        badgeContent={
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center rounded-lg border border-[var(--color-hairline)] bg-[var(--color-surface-soft)] p-0.5 shadow-[0_1px_2px_rgba(30,37,40,0.03)]">
+                                    <button
+                                        type="button"
+                                        onClick={() => setWidthUnit('cm')}
+                                        className={`px-2.5 py-1 text-[11px] font-semibold uppercase rounded-md transition-all ${
+                                            widthUnit === 'cm'
+                                                ? 'bg-white text-[var(--color-factory-green)] shadow-sm border border-[var(--color-hairline)]'
+                                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                        }`}
+                                    >
+                                        cm
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setWidthUnit('inch')}
+                                        className={`px-2.5 py-1 text-[11px] font-semibold uppercase rounded-md transition-all ${
+                                            widthUnit === 'inch'
+                                                ? 'bg-white text-[var(--color-factory-green)] shadow-sm border border-[var(--color-hairline)]'
+                                                : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                                        }`}
+                                    >
+                                        inch
+                                    </button>
+                                </div>
+                                <SectionCostPill value={totals.weftCostPerM} />
+                            </div>
+                        }
                     />
                     <CardContent className="p-5 sm:p-6 space-y-5">
                         {/* Global Defaults Sync Readout */}
@@ -2204,7 +2204,6 @@ export default function EstimatorClient({
                                                 }
                                             }}
                                             unit={widthUnit}
-                                            onUnitChange={setWidthUnit}
                                             hint="Market/finished pano"
                                         />
                                         <WidthField
@@ -2215,7 +2214,6 @@ export default function EstimatorClient({
                                                 dispatch({ type: 'UPDATE_WEFT_ROW', id: row.id, field: 'reedSpace', value: v })
                                             }}
                                             unit={widthUnit}
-                                            onUnitChange={setWidthUnit}
                                             hint={row.calculationMode === 'manual' ? 'Saved for audit; manual kg bypasses formula' : 'Used for weft yarn formula'}
                                             warning={effectiveWidthWarning}
                                         />
