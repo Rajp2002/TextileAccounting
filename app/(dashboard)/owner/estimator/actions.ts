@@ -4,6 +4,7 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
+import { getFirstEstimatorValidationMessage, validateEstimatorQuoteBoundary } from '@/lib/estimator-validation'
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
@@ -352,6 +353,13 @@ export async function saveEstimatorQuoteV3(params: {
     const supabase = await createServerClient()
 
     const { estimate } = params
+    const validationError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
+        estimate,
+        totalProductionCostPerM: params.totalProductionCostPerM,
+        quotePricePerM: params.quotePricePerM,
+        targetMeters: estimate.orderQuantityM,
+    }))
+    if (validationError) return { error: validationError }
 
     // Compute loom-worker wage rate: Σ(picks across all weft rows) × perPickCostPaisa
     // e.g. 58 picks × 0.16 = ₹9.28/m — this is what the weaver earns per metre
@@ -518,8 +526,16 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
     // Deadline is optional — accept null/empty
     const deadline = input.deadline?.trim() || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
 
-    // ── Compute worker rate from estimator state if not explicitly provided ──
     const { estimatorState } = input
+    const validationError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
+        estimate: estimatorState,
+        totalProductionCostPerM: costPerM,
+        quotePricePerM,
+        targetMeters,
+    }))
+    if (validationError) return { error: validationError }
+
+    // ── Compute worker rate from estimator state if not explicitly provided ──
     const workerRatePerM = normalizeCurrencySnapshot(
         input.workerRatePerM ??
         calcWorkerRateSnapshot(estimatorState.weftRows, estimatorState.perPickCostPaisa ?? 0)
@@ -798,6 +814,14 @@ export async function createMarketRunFromEstimator(params: {
     }
 
     const { estimate } = params
+    const validationError = getFirstEstimatorValidationMessage(validateEstimatorQuoteBoundary({
+        estimate,
+        totalProductionCostPerM: params.totalProductionCostPerM,
+        quotePricePerM: params.totalProductionCostPerM,
+        targetMeters,
+    }))
+    if (validationError) return { error: validationError }
+
     const workerRatePerM = normalizeCurrencySnapshot(params.workerRatePerM)
 
     // 1. Save estimator snapshot as a quote (party_name = fabric label for display)

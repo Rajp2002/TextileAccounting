@@ -14,14 +14,14 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, and Batch 10 estimator/quote/order snapshot closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, and Batch 11 estimator/order lifecycle closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 180 | Runtime/test evidence exists. |
-| `fail` | 43 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 182 | Runtime/test evidence exists. |
+| `fail` | 40 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
-| `code_verified` | 131 | Source evidence only. This is not a pass. |
+| `code_verified` | 132 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
@@ -47,7 +47,9 @@ Batch 8 moved `TECH-007` from fail to pass with supplied Supabase migration-list
 
 Batch 9 moved `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` from fail to pass with focused source/test/build proof, local HTTP/browser evidence for `/offline`, `/_offline`, `/privacy`, and public copy, and truthful de-scope of unsupported offline kharchi. `OFF-007` remains partial because a production service-worker update with an active draft was not exercised. `OFF-010` remains partial because throttled slow/intermittent-network runtime proof across core mobile screens was not executed. `OFF-009` remains open and out of scope for unknown-timeout UX and status reconciliation.
 
-Batch 10 moved `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and `QUOTE-003` from fail to pass with Decimal-backed worker-rate snapshot normalization, quote restore draft-collision handling, explicit quote lifecycle transitions, focused regression tests, TypeScript, targeted ESLint, and a successful production build. `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remain open under distinct server-boundary validation, fast-path atomicity/idempotency, order edit audit/produced-meter guard, and below-target completion confirmation roots.
+Batch 10 moved `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and `QUOTE-003` from fail to pass with Decimal-backed worker-rate snapshot normalization, quote restore draft-collision handling, explicit quote lifecycle transitions, focused regression tests, TypeScript, targeted ESLint, and a successful production build. At Batch 10 closeout, `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remained open under distinct server-boundary validation, fast-path atomicity/idempotency, order edit audit/produced-meter guard, and below-target completion confirmation roots.
+
+Batch 11 moved `EST-011` and `ORDER-006` from fail to pass with server-boundary estimator validation, produced-meter target edit guards, existing audit-trigger evidence, focused regression tests, TypeScript, targeted ESLint, and a successful production build. `ORDER-008` moved from fail to `code_verified`/source-fixed but remains open pending disposable runtime/browser proof of the below-target completion confirmation. `QUOTE-007` remains fail/open because strict Start Party Order accepted-quote plus active-order atomicity requires combined database/RPC transaction work.
 
 ## Operating Rules
 
@@ -777,3 +779,55 @@ Resolution status:
 - `QUOTE-007` remains open because Start Party Order accepted-quote/order atomicity is a distinct transaction/idempotency root.
 - `ORDER-006` remains open because target/deadline audit and produced-meter guards are a distinct order edit/audit root.
 - `ORDER-008` remains open because below-target completion confirmation and runtime proof are a distinct order completion root.
+
+## Batch 11 Estimator Order Lifecycle Closeout
+
+Date/time: 2026-06-30 20:05 IST.
+
+Batch 11: remaining estimator / quote / order lifecycle cleanup.
+
+Target failures closed:
+
+- `EST-011`
+- `ORDER-006`
+
+Rows kept open or partial:
+
+- `QUOTE-007` remains fail/open because Start Party Order still creates the accepted quote before order conversion; strict atomicity needs a combined database/RPC transaction.
+- `ORDER-008` is source-fixed and documented as `code_verified`, but not pass, because runtime/browser proof with disposable below-target order data was not collected.
+
+Repository state:
+
+- Branch: `codex/batch-11-estimator-order-lifecycle-cleanup`.
+- Source base: `2ecf27c6b0619dec201395c4cc0c52ca9c11ff8c`.
+
+Migrations:
+
+- No migration or RPC change was made.
+- No Supabase command, db push, migration repair, db pull, direct SQL, or `--include-all` command was run.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch11/BATCH11-estimator-order-lifecycle-proof.json`.
+- `EST-011`: `validateEstimatorQuoteBoundary` rejects empty warp/weft rows, zero/negative required inputs, non-finite numbers, and extreme yarn/width/rate values at the server boundary.
+- `EST-011`: validation is wired before estimator quote persistence in Save Quote, Start Party Order, and market-run creation paths.
+- `ORDER-006`: `updateOrderDetails` validates deadlines and rejects a target below already-produced meters using `order_progress_summary` before updating the order.
+- `ORDER-006`: existing `audit_orders` trigger and `log_audit_event` old/new data capture target/deadline history without schema work.
+- `ORDER-008`: `updateOrderStatus` returns `confirmationRequired` for below-target or pending-dispatch completion, and Orders UI uses a shared confirmation dialog from both card and drawer completion paths.
+- Production, stock, dispatch, commercial, payroll, Supabase, migration, RPC, and unrelated order boundary paths were not intentionally changed.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch11/BATCH11-estimator-order-lifecycle-proof.json` -> passed.
+- Targeted `npx eslint` for touched Batch 11 files -> passed.
+- `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` -> passed, 2 test files, 33 tests.
+- `npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts` -> passed, 1 test file, 6 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npm run build` -> passed. Prebuild Vitest passed with 42 test files, 351 tests passed, and 1 skipped; Next compiled successfully, TypeScript completed, static page generation completed for 40 pages, and the command exited 0.
+
+Resolution status:
+
+- `EST-011` and `ORDER-006` are documented as pass in the active matrix.
+- `ORDER-008` remains open/partial as `code_verified` pending runtime/browser proof.
+- `QUOTE-007` remains open as fail pending database/RPC transaction work.

@@ -1,0 +1,151 @@
+{
+  "batch": "Batch 11 - estimator / quote / order lifecycle cleanup",
+  "source_commit": "2ecf27c6b0619dec201395c4cc0c52ca9c11ff8c",
+  "branch": "codex/batch-11-estimator-order-lifecycle-cleanup",
+  "target_ids_evaluated": [
+    "EST-011",
+    "QUOTE-007",
+    "ORDER-006",
+    "ORDER-008"
+  ],
+  "row_definitions_inspected": {
+    "EST-011": {
+      "workflow": "12. Estimator and Costing",
+      "scenario": "Zero/negative/extreme inputs and no warp/weft rows.",
+      "expected": "Save blocked with field-specific validation.",
+      "starting_status": "fail",
+      "severity": "Medium",
+      "failure_description": "The guide's field-specific save validation is not enforced at the server boundary. The client disables/toasts for some missing values and impossible last-row removal, but saveEstimatorQuoteV3 inserts the passed estimate without schema validation of negative/extreme row values, empty row arrays, or field-specific constraints. A direct server-action/RPC caller can bypass the UI checks."
+    },
+    "QUOTE-007": {
+      "workflow": "13. Quote Lifecycle",
+      "scenario": "Start Party Order fast path.",
+      "expected": "Accepted quote and order form one consistent transaction.",
+      "starting_status": "fail",
+      "severity": "Medium",
+      "failure_description": "The Start Party Order fast path is recoverable but not one consistent transaction. startPartyOrderFromEstimator inserts an accepted estimator_quote and then calls executeQuoteConversion. If conversion fails, the accepted quote is intentionally left behind for recovery from Quote History, so the accepted quote and active order are not guaranteed to be created atomically together."
+    },
+    "ORDER-006": {
+      "workflow": "14. Order-Centric End-to-End Tests",
+      "scenario": "Change target/deadline after production.",
+      "expected": "Protected edit; pace updates; history/audit retained.",
+      "starting_status": "fail",
+      "severity": "Medium",
+      "failure_description": "Target/deadline edits are protected by a one-time owner access code, but the server action does not write an audit row for the old/new target or deadline and does not enforce target >= already-produced meters at the server boundary. The UI input has a min value, but updateOrderDetails accepts any positive target sent with a valid access code."
+    },
+    "ORDER-008": {
+      "workflow": "14. Order-Centric End-to-End Tests",
+      "scenario": "Complete below target.",
+      "expected": "Confirmation warns about remaining quantity and pending dispatch.",
+      "starting_status": "fail",
+      "severity": "Medium",
+      "failure_description": "The current Orders UI exposes Mark Complete and Cancel Order actions directly from the drawer and card menu. I found no confirmation modal or warning that the order is below target or still has pending dispatch before updateOrderStatus marks it completed."
+    }
+  },
+  "implementation_summary": {
+    "EST-011": [
+      "Added lib/estimator-validation.ts with server-boundary validation for empty warp/weft arrays, impossible zero/negative required fields, non-finite numbers, and extreme values.",
+      "Wired validateEstimatorQuoteBoundary into saveEstimatorQuoteV3, startPartyOrderFromEstimator, and createMarketRunFromEstimator before estimator_quotes persistence."
+    ],
+    "QUOTE-007": [
+      "Inspected startPartyOrderFromEstimator and executeQuoteConversion.",
+      "No existing combined quote insert plus order conversion RPC was found. Strict atomicity still requires database/RPC transaction work, which is out of Batch 11 scope without explicit migration approval."
+    ],
+    "ORDER-006": [
+      "updateOrderDetails now validates date and target inputs before consuming an access code.",
+      "updateOrderDetails now reads order_progress_summary and rejects total_target_meters below already-produced meters at the server boundary.",
+      "Existing audit_orders trigger and log_audit_event old_data/new_data behavior provide durable old/new audit evidence without a new schema."
+    ],
+    "ORDER-008": [
+      "updateOrderStatus now computes below-target and pending-dispatch completion warnings server-side and returns confirmationRequired until explicit confirmation options are supplied.",
+      "OrdersClient now shows a shared completion confirmation dialog from both order card and detail drawer Mark Complete paths, warning on remaining quantity and pending dispatch."
+    ]
+  },
+  "files_changed": [
+    "lib/estimator-validation.ts",
+    "app/(dashboard)/owner/estimator/actions.ts",
+    "app/(dashboard)/owner/orders/actions.ts",
+    "app/(dashboard)/owner/orders/OrdersClient.tsx",
+    "__tests__/batch11-estimator-order-lifecycle.test.ts",
+    "output/qa/batch11/BATCH11-estimator-order-lifecycle-proof.json"
+  ],
+  "evidence": {
+    "EST-011": [
+      "validateEstimatorQuoteBoundary executable test accepts a complete estimator payload.",
+      "validateEstimatorQuoteBoundary executable test rejects empty warp rows, zero picks, extreme effective width, negative per-pick rate, and zero production cost with field-specific messages.",
+      "Source test verifies saveEstimatorQuoteV3, startPartyOrderFromEstimator, and createMarketRunFromEstimator call validateEstimatorQuoteBoundary before .from('estimator_quotes')."
+    ],
+    "QUOTE-007": [
+      "Source inspection found only convert_accepted_quote_to_order, which is atomic after an accepted quote row already exists.",
+      "startPartyOrderFromEstimator still inserts estimator_quotes before executeQuoteConversion; strict combined atomicity needs a database/RPC transaction and remains open."
+    ],
+    "ORDER-006": [
+      "Source test verifies updateOrderDetails reads order_progress_summary total_meters_produced before updating.",
+      "Source test verifies updateOrderDetails rejects targets below already-produced meters and invalid deadlines.",
+      "Source test verifies existing audit_orders trigger and log_audit_event old_data/new_data audit behavior."
+    ],
+    "ORDER-008": [
+      "Source test verifies updateOrderStatus uses getOrderCompletionSummary, confirmBelowTarget, confirmPendingDispatch, and confirmationRequired.",
+      "Source test verifies OrdersClient includes CompleteOrderConfirmationDialog with Remaining quantity and Pending dispatch warnings from both card and drawer completion paths.",
+      "Browser/runtime proof with disposable QA data was not collected because the request prohibits Supabase mutations and no existing disposable below-target order was used."
+    ]
+  },
+  "pass_ready_candidates": [
+    "EST-011",
+    "ORDER-006"
+  ],
+  "rows_left_open_or_partial": {
+    "QUOTE-007": "Open. Strict accepted-quote plus active-order atomicity requires database/RPC transaction work; no migration/RPC changes were made.",
+    "ORDER-008": "Partial/source-fixed. Confirmation UX and server guard are implemented and source-tested, but runtime/browser proof with disposable QA data was not collected."
+  },
+  "test_commands_run": [
+    {
+      "command": "npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts",
+      "result": "passed",
+      "details": "1 test file, 6 tests passed"
+    },
+    {
+      "command": "npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts",
+      "result": "passed",
+      "details": "2 test files, 33 tests passed"
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "passed",
+      "details": "Exited 0 after fixing TypeScript union narrowing"
+    },
+    {
+      "command": "npx eslint 'lib/estimator-validation.ts' 'app/(dashboard)/owner/estimator/actions.ts' 'app/(dashboard)/owner/orders/actions.ts' 'app/(dashboard)/owner/orders/OrdersClient.tsx' '__tests__/batch11-estimator-order-lifecycle.test.ts'",
+      "result": "passed",
+      "details": "Exited 0"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "details": "Exited 0"
+    },
+    {
+      "command": "jq empty output/qa/batch11/BATCH11-estimator-order-lifecycle-proof.json",
+      "result": "passed",
+      "details": "Exited 0"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed",
+      "details": "Prebuild Vitest passed with 42 test files, 351 tests passed, and 1 skipped. Next compiled successfully in 27.2s, TypeScript finished in 36.8s, static page generation completed for 40 pages, and the command exited 0."
+    }
+  ],
+  "pending_required_checks": [],
+  "safety_confirmations": {
+    "no_migrations_created_or_modified": true,
+    "no_supabase_commands_run": true,
+    "no_supabase_mutations_run_by_codex": true,
+    "no_direct_sql_used": true,
+    "no_db_push_db_pull_migration_repair_or_include_all": true,
+    "no_package_install_or_npm_audit": true,
+    "lockfile_touched": false,
+    "production_stock_dispatch_commercial_payroll_paths_intentionally_changed": false,
+    "batch_1_to_10_closed_statuses_disturbed": false,
+    "staged_committed_pushed": false
+  }
+}

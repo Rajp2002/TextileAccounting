@@ -68,6 +68,8 @@ import {
     getDispatchesForOrder,
     type DispatchRow,
     type DispatchSummary,
+    type OrderCompletionOptions,
+    type OrderCompletionSummary,
 } from './actions'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -130,6 +132,76 @@ function getLinkedOrderStatus(linkedOrder: MachineOption['linked_order']) {
     return Array.isArray(linkedOrder) ? linkedOrder[0]?.status : linkedOrder?.status
 }
 
+type PendingCompletion = {
+    orderId: string
+    summary: OrderCompletionSummary
+}
+
+function formatMeters(value: number) {
+    return Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })
+}
+
+function CompleteOrderConfirmationDialog({
+    pending,
+    busy,
+    onCancel,
+    onConfirm,
+}: {
+    pending: PendingCompletion | null
+    busy: boolean
+    onCancel: () => void
+    onConfirm: () => void
+}) {
+    const summary = pending?.summary
+
+    return (
+        <Dialog open={Boolean(pending)} onOpenChange={(open) => { if (!open && !busy) onCancel() }}>
+            <DialogContent className="bg-white text-slate-900 border-slate-200 sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-slate-900">
+                        <AlertTriangle className="h-5 w-5 text-amber-500" />
+                        Complete order?
+                    </DialogTitle>
+                    <DialogDescription className="text-slate-600">
+                        Confirm the remaining quantity and dispatch status before closing this order.
+                    </DialogDescription>
+                </DialogHeader>
+
+                {summary && (
+                    <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+                        {summary.belowTarget && (
+                            <div>
+                                <p className="font-bold text-amber-900">Remaining quantity</p>
+                                <p className="text-amber-800">
+                                    {formatMeters(summary.remainingMeters)} m remains from a {formatMeters(summary.targetMeters)} m target.
+                                </p>
+                            </div>
+                        )}
+                        {summary.hasPendingDispatch && (
+                            <div>
+                                <p className="font-bold text-amber-900">Pending dispatch</p>
+                                <p className="text-amber-800">
+                                    {formatMeters(summary.pendingDispatchMeters)} m is still pending dispatch.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <DialogFooter>
+                    <Button variant="outline" onClick={onCancel} disabled={busy}>
+                        Keep Active
+                    </Button>
+                    <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={onConfirm} disabled={busy}>
+                        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                        Complete Anyway
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
 // ─── Machine Assign Inline ───────────────────────────────────────────────────
 
 function MachineAssignInline({
@@ -159,7 +231,7 @@ function MachineAssignInline({
         setSaving(true)
         const res = await assignMachinesToOrder(orderId, Array.from(selected))
         setSaving(false)
-        if (res.success) {
+        if ('success' in res && res.success) {
             toast.success(t('orders_page.machines_updated'))
             onSuccess()
         } else {
@@ -576,6 +648,8 @@ function OrderDetailDrawer({
     // Access code dialog state
     const [codeDialogOpen, setCodeDialogOpen] = useState(false)
     const [codeDialogAction, setCodeDialogAction] = useState<'target' | 'deadline'>('target')
+    const [pendingCompletion, setPendingCompletion] = useState<PendingCompletion | null>(null)
+    const [completingOrder, setCompletingOrder] = useState(false)
 
     const load = useCallback(async () => {
         if (!orderId) return
@@ -600,11 +674,37 @@ function OrderDetailDrawer({
         return () => clearTimeout(timer)
     }, [open, orderId, load])
 
-    const handleComplete = async () => {
+    const completeOrder = async (options: OrderCompletionOptions = {}) => {
         if (!orderId) return
-        const res = await updateOrderStatus(orderId, 'completed')
-        if (res.success) { toast.success('Order marked complete'); onClose(); onRefresh() }
-        else toast.error(res.error ?? 'Failed to update')
+        setCompletingOrder(true)
+        const res = await updateOrderStatus(orderId, 'completed', options)
+        setCompletingOrder(false)
+
+        if ('confirmationRequired' in res && res.confirmationRequired) {
+            setPendingCompletion({ orderId, summary: res.summary })
+            return
+        }
+
+        if ('success' in res && res.success) {
+            setPendingCompletion(null)
+            toast.success('Order marked complete')
+            onClose()
+            onRefresh()
+        } else {
+            toast.error(res.error ?? 'Failed to update')
+        }
+    }
+
+    const handleComplete = () => {
+        void completeOrder()
+    }
+
+    const confirmCompletion = () => {
+        if (!pendingCompletion) return
+        void completeOrder({
+            confirmBelowTarget: pendingCompletion.summary.belowTarget,
+            confirmPendingDispatch: pendingCompletion.summary.hasPendingDispatch,
+        })
     }
 
     const handleCancel = async () => {
@@ -634,7 +734,7 @@ function OrderDetailDrawer({
         setSavingEdit(true)
         const res = await updateOrderDetails(orderId, { deadline: deadlineVal }, accessCode)
         setSavingEdit(false)
-        if (res.success) {
+        if ('success' in res && res.success) {
             toast.success('Deadline updated')
             setEditingDeadline(false)
             load()
@@ -945,8 +1045,10 @@ function OrderDetailDrawer({
                                     <Button
                                         className="h-11 lg:h-9 flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
                                         onClick={handleComplete}
+                                        disabled={completingOrder}
                                     >
-                                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" /> Mark Complete
+                                        {completingOrder ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
+                                        Mark Complete
                                     </Button>
                                 </>
                             )}
@@ -968,6 +1070,12 @@ function OrderDetailDrawer({
                 onClose={() => setCodeDialogOpen(false)}
                 onVerified={handleCodeVerified}
                 actionLabel={codeDialogAction === 'target' ? 'update the target meters' : 'update the deadline'}
+            />
+            <CompleteOrderConfirmationDialog
+                pending={pendingCompletion}
+                busy={completingOrder}
+                onCancel={() => setPendingCompletion(null)}
+                onConfirm={confirmCompletion}
             />
         </>
     )
@@ -1150,6 +1258,8 @@ export function OrdersClient({ initialOrders, orgId }: { initialOrders: OrderPro
     const hasShownCreatedToast = useRef(false)
 
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(() => initialOrderId)
+    const [pendingCompletion, setPendingCompletion] = useState<PendingCompletion | null>(null)
+    const [completingOrderId, setCompletingOrderId] = useState<string | null>(null)
 
     // Auto-open drawer if ?orderId= is in URL (e.g. from Start Party Order redirect)
     useEffect(() => {
@@ -1180,10 +1290,35 @@ export function OrdersClient({ initialOrders, orgId }: { initialOrders: OrderPro
         return () => { supabase.removeChannel(channel) }
     }, [fetchOrders, orgId])
 
-    const handleComplete = async (id: string) => {
-        const res = await updateOrderStatus(id, 'completed')
-        if (res.success) { toast.success(t('orders_page.order_marked_complete')); fetchOrders() }
-        else toast.error(res.error ?? t('orders_page.failed_to_update'))
+    const completeOrder = async (id: string, options: OrderCompletionOptions = {}) => {
+        setCompletingOrderId(id)
+        const res = await updateOrderStatus(id, 'completed', options)
+        setCompletingOrderId(null)
+
+        if ('confirmationRequired' in res && res.confirmationRequired) {
+            setPendingCompletion({ orderId: id, summary: res.summary })
+            return
+        }
+
+        if ('success' in res && res.success) {
+            setPendingCompletion(null)
+            toast.success(t('orders_page.order_marked_complete'))
+            fetchOrders()
+        } else {
+            toast.error(res.error ?? t('orders_page.failed_to_update'))
+        }
+    }
+
+    const handleComplete = (id: string) => {
+        void completeOrder(id)
+    }
+
+    const confirmCompletion = () => {
+        if (!pendingCompletion) return
+        void completeOrder(pendingCompletion.orderId, {
+            confirmBelowTarget: pendingCompletion.summary.belowTarget,
+            confirmPendingDispatch: pendingCompletion.summary.hasPendingDispatch,
+        })
     }
 
     const handleCancel = async (id: string) => {
@@ -1325,6 +1460,12 @@ export function OrdersClient({ initialOrders, orgId }: { initialOrders: OrderPro
                 open={Boolean(selectedOrderId)}
                 onClose={() => setSelectedOrderId(null)}
                 onRefresh={fetchOrders}
+            />
+            <CompleteOrderConfirmationDialog
+                pending={pendingCompletion}
+                busy={Boolean(completingOrderId)}
+                onCancel={() => setPendingCompletion(null)}
+                onConfirm={confirmCompletion}
             />
         </div>
     )

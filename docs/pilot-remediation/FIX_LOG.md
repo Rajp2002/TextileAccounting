@@ -18,7 +18,7 @@ Rules for entries:
 | `SEC-C` webhook/export/compliance fail-closed | Partially closed in Batch 9 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Webhook, export, audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
-| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Server-boundary validation, fast-path atomicity/idempotency, target/deadline audit guards, and below-target completion confirmation remain open. |
+| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Start Party Order fast-path atomicity remains open; below-target completion is source-fixed but still needs runtime/browser proof. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
 | `DISP-B` receipt-state coherence | Closed in Batch 3 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
@@ -1208,4 +1208,51 @@ Data safety:
 Resolution status:
 
 - `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and `QUOTE-003` are pass-ready and documented as pass in the active QA matrix.
-- `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remain open as listed above.
+- At Batch 10 closeout, `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remained open as listed above.
+
+## Batch 11 - Estimator Order Lifecycle Closeout
+
+Date/time: 2026-06-30 20:05 IST. Source base `2ecf27c6b0619dec201395c4cc0c52ca9c11ff8c`.
+
+Scope:
+
+- `EST-011`
+- `ORDER-006`
+
+Rows explicitly not closed by Batch 11:
+
+- `QUOTE-007` remains open because strict Start Party Order accepted-quote plus active-order atomicity requires combined database/RPC transaction work.
+- `ORDER-008` remains open/partial because the server guard and confirmation UI are source-fixed and tested, but runtime/browser proof with disposable below-target order data was not collected.
+- `ORDER-005`, `ORDER-009`, `PROD-011`, `PROD-002`, `PROD-004`, `SIGNOFF-01`, `SIGNOFF-02`, payroll/kharchi rows, offline/cache rows already handled by Batch 9, external-evidence rows, `OFF-009`, and other unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch11/BATCH11-estimator-order-lifecycle-proof.json`.
+- `EST-011`: `lib/estimator-validation.ts` adds server-boundary validation for empty warp/weft arrays, zero or negative required fields, non-finite numbers, and extreme yarn/width/rate values.
+- `EST-011`: estimator validation is called before `estimator_quotes` persistence in Save Quote, Start Party Order, and market-run creation paths.
+- `ORDER-006`: `updateOrderDetails` rejects invalid deadlines and target meters below already-produced meters before the order update.
+- `ORDER-006`: existing `audit_orders` trigger evidence covers old/new target/deadline history without schema work.
+- `ORDER-008`: `updateOrderStatus` now requires explicit confirmation for below-target or pending-dispatch completion, and `OrdersClient` uses one shared completion confirmation UI from card and drawer paths. This is not closed without runtime/browser proof.
+- `QUOTE-007`: no migration/RPC change was made; strict atomicity remains out of scope for Batch 11.
+
+Verification commands:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch11/BATCH11-estimator-order-lifecycle-proof.json` -> passed.
+- Targeted `npx eslint lib/estimator-validation.ts app/\(dashboard\)/owner/estimator/actions.ts app/\(dashboard\)/owner/orders/actions.ts app/\(dashboard\)/owner/orders/OrdersClient.tsx __tests__/batch11-estimator-order-lifecycle.test.ts` -> passed.
+- `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` -> passed, 2 test files and 33 tests.
+- `npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts` -> passed, 1 test file and 6 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npm run build` -> passed. Prebuild Vitest passed with 42 test files, 351 tests passed, and 1 skipped; Next compiled successfully, static page generation completed for 40 pages, and the command exited 0.
+
+Data safety:
+
+- No migration was needed or created.
+- No Supabase command, db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production/customer data mutation, staging, commit, push, or docs work outside the approved Batch 11 scope was used during implementation/review.
+- Docs closeout force-adds only the ignored Batch 11 proof artifact and stages only the approved Batch 11 implementation, docs, matrix, and proof files.
+
+Resolution status:
+
+- `EST-011` and `ORDER-006` are pass-ready and documented as pass in the active QA matrix.
+- `ORDER-008` is documented as `code_verified`/open-partial pending runtime/browser proof.
+- `QUOTE-007` remains fail/open pending database/RPC transaction work.

@@ -7,6 +7,7 @@ import { generateAndStoreAccessCode, validateAndConsumeAccessCode } from '@/lib/
 import { assignMachinesToOrderForOrg, type AssignmentResult } from '@/lib/actions/order-assignment'
 import { CreateFabricDispatchSchema, safeParse } from '@/lib/schemas'
 import { shouldArchiveDispatchGroup } from '@/lib/dispatch/archive'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -39,6 +40,110 @@ type UpdatableOrderFields = {
 }
 
 type UpdatableOrderPayload = UpdatableOrderFields & { status?: OrderStatus }
+
+export type OrderCompletionSummary = {
+    targetMeters: number
+    producedMeters: number
+    remainingMeters: number
+    pendingDispatchMeters: number
+    belowTarget: boolean
+    hasPendingDispatch: boolean
+}
+
+export type OrderCompletionOptions = {
+    confirmBelowTarget?: boolean
+    confirmPendingDispatch?: boolean
+}
+
+type PendingCompletionSaleRow = {
+    pending_dispatch_meters?: number
+    fabric_stock_lots: {
+        order_id: string | null
+        quality_label: string | null
+    } | Array<{
+        order_id: string | null
+        quality_label: string | null
+    }>
+}
+
+function isValidDateOnly(value: string) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+    const date = new Date(`${value}T00:00:00.000Z`)
+    return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value)
+}
+
+async function getPendingDispatchMetersForOrder(
+    supabase: SupabaseClient,
+    orgId: string,
+    orderId: string,
+    qualityLabel: string | null
+): Promise<{ pendingDispatchMeters: number } | { error: string }> {
+    const { data, error } = await supabase
+        .from('fabric_stock_sales')
+        .select(`
+            pending_dispatch_meters,
+            fabric_stock_lots!inner (
+                order_id,
+                quality_label
+            )
+        `)
+        .eq('org_id', orgId)
+        .gt('pending_dispatch_meters', 0)
+
+    if (error) return { error: error.message }
+
+    const normalizedQuality = qualityLabel?.trim().toLowerCase()
+    const rows = (data ?? []) as unknown as PendingCompletionSaleRow[]
+    const pendingDispatchMeters = rows.reduce((sum, sale) => {
+        const lot = Array.isArray(sale.fabric_stock_lots) ? sale.fabric_stock_lots[0] : sale.fabric_stock_lots
+        const matchesOrder = lot?.order_id === orderId
+        const matchesLegacyQuality = !lot?.order_id
+            && Boolean(normalizedQuality)
+            && lot?.quality_label?.trim().toLowerCase() === normalizedQuality
+
+        return matchesOrder || matchesLegacyQuality
+            ? sum + Number(sale.pending_dispatch_meters ?? 0)
+            : sum
+    }, 0)
+
+    return { pendingDispatchMeters }
+}
+
+async function getOrderCompletionSummary(
+    supabase: SupabaseClient,
+    orgId: string,
+    orderId: string
+): Promise<OrderCompletionSummary | { error: string }> {
+    const { data: order, error } = await supabase
+        .from('order_progress_summary')
+        .select('order_id, status, quality_label, total_target_meters, total_meters_produced')
+        .eq('order_id', orderId)
+        .eq('org_id', orgId)
+        .maybeSingle()
+
+    if (error) return { error: error.message }
+    if (!order) return { error: 'Order not found.' }
+
+    const targetMeters = Number(order.total_target_meters ?? 0)
+    const producedMeters = Number(order.total_meters_produced ?? 0)
+    const remainingMeters = Math.max(targetMeters - producedMeters, 0)
+    const pendingResult = await getPendingDispatchMetersForOrder(
+        supabase,
+        orgId,
+        orderId,
+        typeof order.quality_label === 'string' ? order.quality_label : null
+    )
+    if ('error' in pendingResult) return pendingResult
+
+    return {
+        targetMeters,
+        producedMeters,
+        remainingMeters,
+        pendingDispatchMeters: pendingResult.pendingDispatchMeters,
+        belowTarget: producedMeters + 0.01 < targetMeters,
+        hasPendingDispatch: pendingResult.pendingDispatchMeters > 0.01,
+    }
+}
 
 // ─── Read ──────────────────────────────────────────────────────────────────────
 
@@ -91,9 +196,24 @@ export async function getActiveOrders() {
 
 
 
-export async function updateOrderStatus(orderId: string, status: OrderStatus) {
+export async function updateOrderStatus(orderId: string, status: OrderStatus, options: OrderCompletionOptions = {}) {
     const { profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    if (status === 'completed') {
+        const summary = await getOrderCompletionSummary(supabase, profile.org_id, orderId)
+        if ('error' in summary) return summary
+
+        const needsBelowTargetConfirmation = summary.belowTarget && !options.confirmBelowTarget
+        const needsPendingDispatchConfirmation = summary.hasPendingDispatch && !options.confirmPendingDispatch
+        if (needsBelowTargetConfirmation || needsPendingDispatchConfirmation) {
+            return {
+                error: 'Confirm remaining quantity and pending dispatch before completing this order.',
+                confirmationRequired: true,
+                summary,
+            }
+        }
+    }
 
     const { error } = await supabase
         .from('orders')
@@ -146,6 +266,17 @@ export async function updateOrderDetails(orderId: string, data: {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
+    if (data.deadline !== undefined && !isValidDateOnly(data.deadline)) {
+        return { error: 'Deadline must be a valid date.' }
+    }
+
+    if (data.total_target_meters !== undefined) {
+        const targetMeters = Number(data.total_target_meters)
+        if (!Number.isFinite(targetMeters) || targetMeters <= 0) {
+            return { error: 'Target meters must be greater than 0.' }
+        }
+    }
+
     // Validate access code
     let isCodeValid = false
     try {
@@ -156,13 +287,26 @@ export async function updateOrderDetails(orderId: string, data: {
     }
     if (!isCodeValid) return { error: 'Invalid or expired access code' }
 
-    // Fetch current order state before updating
-    const { data: currentOrder } = await supabase
-        .from('orders')
-        .select('status, total_target_meters')
-        .eq('id', orderId)
+    // Fetch current order state and produced meters before updating.
+    const { data: currentOrder, error: currentOrderError } = await supabase
+        .from('order_progress_summary')
+        .select('status, total_target_meters, total_meters_produced')
+        .eq('order_id', orderId)
         .eq('org_id', profile.org_id)
-        .single()
+        .maybeSingle()
+
+    if (currentOrderError) return { error: currentOrderError.message }
+    if (!currentOrder) return { error: 'Order not found.' }
+
+    if (data.total_target_meters !== undefined) {
+        const targetMeters = Number(data.total_target_meters)
+        const producedMeters = Number(currentOrder.total_meters_produced ?? 0)
+        if (targetMeters + 0.01 < producedMeters) {
+            return {
+                error: `Target meters cannot be below already-produced ${producedMeters.toFixed(2)} m.`,
+            }
+        }
+    }
 
     const updatePayload: UpdatableOrderPayload = { ...data }
 
