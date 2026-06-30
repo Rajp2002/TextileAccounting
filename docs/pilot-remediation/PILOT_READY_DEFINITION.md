@@ -82,6 +82,8 @@ Batch 11 note: `EST-011` and `ORDER-006` are closed by focused estimator/order l
 
 Batch 12 note: `STOCK-012` and `DISP-013` are closed by focused local proof in `output/qa/batch12/BATCH12-code-verified-proof-sweep.json`. `npx vitest run __tests__/p1-stock-lifecycle.test.ts` passed 10 tests for closed/sold-out zero-meter market-run archive eligibility, and `npx vitest run __tests__/dispatch-archive.test.ts` passed 7 tests for delivered-complete dispatch group archive eligibility. `ORDER-008`, `GOLDEN-B-12`, `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial under their exact proof requirements.
 
+Batch 13 note: `EST-001`, `EST-005`, and `EST-012` are closed by focused local estimator proof in `output/qa/batch13/BATCH13-code-verified-proof-sweep.json`. `npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts` passed 3 test files and 39 tests for the single warp/weft cost stack, paise-per-pick 100x guard, and invalid commission-plus-margin boundary. `EST-004`, `SETUP-001`, `SETUP-002`, `BILL-002`, `PAY-017`, `TIME-003`, and `TIME-004` remain partial/code-verified under their exact proof requirements.
+
 ## Pilot Sign-Off Evidence Package
 
 Final sign-off must include:

@@ -14,14 +14,14 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, and Batch 12 code-verified proof sweep:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, and Batch 13 targeted estimator proof sweep:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 184 | Runtime/test evidence exists. |
+| `pass` | 187 | Runtime/test evidence exists. |
 | `fail` | 40 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
-| `code_verified` | 130 | Source evidence only. This is not a pass. |
+| `code_verified` | 127 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
@@ -52,6 +52,8 @@ Batch 10 moved `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and 
 Batch 11 moved `EST-011` and `ORDER-006` from fail to pass with server-boundary estimator validation, produced-meter target edit guards, existing audit-trigger evidence, focused regression tests, TypeScript, targeted ESLint, and a successful production build. `ORDER-008` moved from fail to `code_verified`/source-fixed but remains open pending disposable runtime/browser proof of the below-target completion confirmation. `QUOTE-007` remains fail/open because strict Start Party Order accepted-quote plus active-order atomicity requires combined database/RPC transaction work.
 
 Batch 12 moved `STOCK-012` and `DISP-013` from `code_verified` to pass with exact local proof for closed/sold-out market lot archive eligibility and delivered-complete dispatch group archive eligibility. `ORDER-008` remains `code_verified` because disposable runtime/browser proof is still missing. `GOLDEN-B-12` remains blocked because the active row requires a full Golden B second-batch exact-receipt rerun. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain `code_verified` because Batch 12 proof was partial for their exact row wording.
+
+Batch 13 moved `EST-001`, `EST-005`, and `EST-012` from `code_verified` to pass with exact local estimator proof for the single warp/weft cost stack, paise-per-pick 100x guard, and invalid commission-plus-margin boundary. `EST-004`, `SETUP-001`, and `SETUP-002` remain `code_verified` because their safe helper tests were supporting evidence only and did not directly prove persisted width value or completed-onboarding browser navigation persistence. `BILL-002`, `PAY-017`, `TIME-003`, `TIME-004`, `ORDER-008`, `GOLDEN-B-12`, `QUOTE-007`, external-provider, restore/rollback, Sentry live-event, WhatsApp deployed-callback, production service-worker, throttled mobile, and Batch 12 partial stock/market rows remain unchanged.
 
 ## Operating Rules
 
@@ -879,3 +881,50 @@ Resolution status:
 
 - `STOCK-012` and `DISP-013` are documented as pass in the active matrix.
 - `ORDER-008`, `GOLDEN-B-12`, `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain unchanged/open as listed above.
+
+## Batch 13 Targeted Code-Verified Proof Sweep Closeout
+
+Date/time: 2026-07-01 03:02 IST.
+
+Batch 13: targeted proof-only sweep for safe `code_verified` rows.
+
+Target rows closed:
+
+- `EST-001`
+- `EST-005`
+- `EST-012`
+
+Rows kept open, partial, or blocked:
+
+- `EST-004` remains `code_verified` because the width helper proof passed, but it did not directly prove persisted estimator/quote width value.
+- `SETUP-001` and `SETUP-002` remain `code_verified` because workflow visibility helper proof passed, but completed-onboarding browser navigation persistence was not directly proven.
+- `BILL-002`, `PAY-017`, `TIME-003`, and `TIME-004` remain `code_verified` because their exact row wording still needs stronger proof than the inspected local/static evidence.
+- `ORDER-008`, `GOLDEN-B-12`, `QUOTE-007`, `SEC-011`, `TECH-009`, `WA-008`, `TECH-011`, `TECH-012`, `OFF-007`, `OFF-010`, `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain unchanged under their existing proof requirements.
+
+Repository state:
+
+- Branch: `codex/batch-13-code-verified-proof-sweep`.
+- Source base: `40fca35170b5127e6a37eb43f8238f0bf99816fa`.
+
+Migrations:
+
+- No migration or RPC change was made.
+- No Supabase command, db push, migration repair, db pull, direct SQL, or `--include-all` command was run.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch13/BATCH13-code-verified-proof-sweep.json`.
+- `EST-001`: `npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts` passed 3 test files and 39 tests; the estimator tests directly cover representative single warp/weft cost-stack fixtures through `calcFullTotals` and `calcOrderQuote`.
+- `EST-005`: the same proof run directly covers direct wage conversion, paise direct entry, safe weave cost, and the old dangerous 100x paise/rupee failure mode.
+- `EST-012`: the same proof run directly covers invalid commission-plus-margin boundary behavior with `isValid=false`, a clear error message, and zero quote price.
+
+Verification:
+
+- `git diff --check` -> passed before docs closeout.
+- `jq empty output/qa/batch13/BATCH13-code-verified-proof-sweep.json` -> passed.
+- `npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts` -> passed, 3 test files, 39 tests.
+
+Resolution status:
+
+- `EST-001`, `EST-005`, and `EST-012` are documented as pass in the active matrix.
+- All unproven supporting candidates remain unchanged/open as listed above.

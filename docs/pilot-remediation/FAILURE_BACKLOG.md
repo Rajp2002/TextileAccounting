@@ -46,6 +46,8 @@ Closed in Batch 11 and removed from the open failure coverage rows: server-bound
 
 Closed in Batch 12 and removed from `code_verified` evidence debt: stock archive policy and dispatch archive eligibility (`STOCK-012`, `DISP-013`). `ORDER-008`, `GOLDEN-B-12`, `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial under their existing proof requirements.
 
+Closed in Batch 13 and removed from `code_verified` evidence debt: focused estimator math and boundary rows (`EST-001`, `EST-005`, `EST-012`). `EST-004`, `SETUP-001`, `SETUP-002`, `BILL-002`, `PAY-017`, `TIME-003`, and `TIME-004` remain `code_verified` because their inspected local/static evidence was supporting or partial, not exact proof of the active row wording.
+
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
 Closed rows: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
@@ -181,7 +183,7 @@ Evidence: `logs/business-reconciliation.json`, `logs/estimator-quotes-source-evi
 
 Invariant: business snapshots used for quotes, orders, wage rates, due dates, and lifecycle state must be exact, server-validated, and stable across timezones. A restored draft or lifecycle shortcut must not silently overwrite or create inconsistent accepted-order state.
 
-Impact: Batch 10 fixes worker-rate floating drift in estimator-origin quote/order snapshots and quote restore/lifecycle cleanup. Batch 11 fixes estimator save server-boundary validation and order target/deadline produced-meter/audit guards. Remaining impact is Start Party Order accepted-quote/order atomicity. Below-target completion has source/test coverage for server confirmation and UI warnings, but still lacks runtime/browser proof. Batch 7 closes the separate date-only rendering shift row.
+Impact: Batch 10 fixes worker-rate floating drift in estimator-origin quote/order snapshots and quote restore/lifecycle cleanup. Batch 11 fixes estimator save server-boundary validation and order target/deadline produced-meter/audit guards. Batch 13 closes exact local proof for the single warp/weft estimator cost stack, paise-per-pick 100x guard, and invalid commission-plus-margin boundary. Remaining impact is Start Party Order accepted-quote/order atomicity. Below-target completion has source/test coverage for server confirmation and UI warnings, but still lacks runtime/browser proof. Batch 7 closes the separate date-only rendering shift row.
 
 Remediation direction:
 
@@ -211,6 +213,13 @@ Batch 11 estimator/order lifecycle closeout:
 - Closed sub-scope: server-boundary validation for zero/negative/extreme/empty warp-weft estimator inputs and target/deadline edits guarded by produced-meter checks plus existing audit history.
 - Evidence: `output/qa/batch11/BATCH11-estimator-order-lifecycle-proof.json`; `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` passed 33 tests; `npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts` passed 6 tests; targeted ESLint, `npx tsc --noEmit --pretty false`, `git diff --check`, `jq empty`, and `npm run build` passed.
 - Matrix status: `EST-011` and `ORDER-006` are pass. `ORDER-008` is `code_verified`/open-partial pending runtime/browser proof. `QUOTE-007` remains fail/open pending database/RPC transaction work.
+
+Batch 13 targeted estimator proof sweep:
+
+- Date/time: 2026-07-01 03:02 IST.
+- Closed sub-scope: `EST-001`, `EST-005`, and `EST-012` only.
+- Evidence: `output/qa/batch13/BATCH13-code-verified-proof-sweep.json`; `npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts` passed 3 test files and 39 tests.
+- Matrix status: `EST-001`, `EST-005`, and `EST-012` are pass. `EST-004`, `SETUP-001`, `SETUP-002`, `BILL-002`, `PAY-017`, `TIME-003`, and `TIME-004` remain `code_verified`/partial under their exact proof requirements.
 
 ## Closed DISP-A - Multi-Batch Dispatch Package Identity
 

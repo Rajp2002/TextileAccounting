@@ -19,7 +19,7 @@ Rules for entries:
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
 | `STOCK-A` stock lifecycle/archive policy | Partially closed in Batch 12 / open remainder | Batch 12 closes `STOCK-012` with focused local lifecycle proof. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial because their exact row wording needs broader proof. |
-| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Start Party Order fast-path atomicity remains open; below-target completion is source-fixed but still needs runtime/browser proof. |
+| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated through Batch 13 / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Batch 13 closes `EST-001`, `EST-005`, and `EST-012` with exact local estimator proof. Start Party Order fast-path atomicity remains open; below-target completion is source-fixed but still needs runtime/browser proof. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
 | `DISP-B` receipt-state coherence | Closed through Batch 12 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. Batch 12 closes `DISP-013` with focused local dispatch archive proof. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
@@ -1297,3 +1297,43 @@ Resolution status:
 
 - `STOCK-012` and `DISP-013` are pass-ready and documented as pass in the active QA matrix.
 - `ORDER-008`, `GOLDEN-B-12`, `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain unchanged/open as listed above.
+
+## Batch 13 - Targeted Code-Verified Proof Sweep Closeout
+
+Date/time: 2026-07-01 03:02 IST. Source base `origin/main` at `40fca35170b5127e6a37eb43f8238f0bf99816fa`.
+
+Scope:
+
+- `EST-001`
+- `EST-005`
+- `EST-012`
+
+Rows explicitly not closed by Batch 13:
+
+- `EST-004` remains `code_verified` because the width helper proof passed, but it did not directly prove persisted estimator/quote width value.
+- `SETUP-001` and `SETUP-002` remain `code_verified` because workflow visibility helper proof passed, but completed-onboarding browser navigation persistence was not directly proven.
+- `BILL-002`, `PAY-017`, `TIME-003`, and `TIME-004` remain `code_verified` because their exact row wording still needs stronger proof than the inspected local/static evidence.
+- `ORDER-008`, `GOLDEN-B-12`, `QUOTE-007`, `SEC-011`, `TECH-009`, `WA-008`, `TECH-011`, `TECH-012`, `OFF-007`, `OFF-010`, `STOCK-011`, `STOCK-013`, `MARKET-009`, `MARKET-010`, external/provider, restore/rollback, Sentry live-event, WhatsApp deployed-callback, billing-provider, and unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch13/BATCH13-code-verified-proof-sweep.json`.
+- `EST-001`: focused local estimator proof directly covers representative single warp/weft cost-stack fixtures through `calcFullTotals` and `calcOrderQuote`, including yarn kg/cost, weave cost, warping/sizing, overhead, total/landed cost, quote price, and gross profit.
+- `EST-005`: focused local estimator proof directly covers direct wage conversion, paise direct entry, safe weave cost, and the old dangerous 100x paise/rupee failure mode.
+- `EST-012`: focused local estimator proof directly covers invalid commission-plus-margin boundary behavior with `isValid=false`, a clear error message, and zero quote price.
+
+Verification commands:
+
+- `git diff --check` -> passed before docs closeout.
+- `jq empty output/qa/batch13/BATCH13-code-verified-proof-sweep.json` -> passed.
+- `npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts` -> passed, 3 test files and 39 tests.
+
+Data safety:
+
+- No product code, test code, migration, schema, RPC, Supabase command, db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production data mutation, browser/runtime mutation, or external provider proof was used.
+- Docs closeout force-adds only the ignored Batch 13 proof artifact and stages only the approved Batch 13 docs, matrix, and proof files.
+
+Resolution status:
+
+- `EST-001`, `EST-005`, and `EST-012` are pass-ready and documented as pass in the active QA matrix.
+- `EST-004`, `SETUP-001`, `SETUP-002`, and all unproven supporting candidates remain unchanged/open as listed above.

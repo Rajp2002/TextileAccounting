@@ -1,0 +1,347 @@
+{
+  "batch": "Batch 13",
+  "title": "targeted proof-only code_verified to pass sweep",
+  "source_commit": "40fca35170b5127e6a37eb43f8238f0bf99816fa",
+  "branch": "codex/batch-13-code-verified-proof-sweep",
+  "created_at_ist": "2026-07-01T03:02:55+05:30",
+  "matrix_counts_before_batch13": {
+    "total": 377,
+    "pass": 184,
+    "fail": 40,
+    "blocked": 22,
+    "code_verified": 130,
+    "not_applicable": 1,
+    "not_run": 0
+  },
+  "scope": {
+    "intent": "Targeted proof-only sweep for safe code_verified rows where existing local tests directly satisfy the row requirement.",
+    "product_changes": "No product implementation, source code, test code, migration, schema, RPC, package, lockfile, Supabase, external-provider, or production data changes were made.",
+    "runtime_boundary": "Rows requiring browser/runtime mutation, external provider dashboards, live Sentry payloads, restore/rollback infrastructure, WhatsApp callback proof, production service-worker update proof, throttled mobile runtime proof, DB/RPC/schema work, or production-only access were left open."
+  },
+  "docs_and_artifacts_inspected": [
+    "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+    "docs/pilot-remediation/FIX_LOG.md",
+    "docs/pilot-remediation/LOOP_STATE.md",
+    "docs/pilot-remediation/FAILURE_BACKLOG.md",
+    "docs/pilot-remediation/RETEST_PLAN.md",
+    "docs/pilot-remediation/DOMAIN_INVARIANTS.md",
+    "docs/pilot-remediation/PILOT_READY_DEFINITION.md",
+    "output/qa/batch12/BATCH12-code-verified-proof-sweep.json",
+    "output/qa/PILOTQA-20260621-2058-8QIH/logs/estimator-quotes-source-evidence-20260624.json",
+    "__tests__/estimator.test.ts",
+    "__tests__/width-field.test.ts",
+    "__tests__/production-mode.test.ts",
+    "__tests__/payroll-cycle.test.ts",
+    "__tests__/p1-billing-gates.test.ts"
+  ],
+  "candidate_rows_inspected": [
+    {
+      "id": "EST-001",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Single warp and single weft recipe: yarn kg, yarn cost, weave cost, processing, overhead, landed cost, and quote match truth sheet.",
+      "existing_evidence": "__tests__/estimator.test.ts imports calcFullTotals and calcOrderQuote and asserts representative single warp/weft costing fixtures including yarn kg/cost, weave cost, overhead, total production cost, landed cost, quote price, and gross profit.",
+      "command_or_artifact_needed": "npx --no-install vitest run __tests__/estimator.test.ts",
+      "safe_to_attempt": true,
+      "reason": "Pure local deterministic estimator math proof; no DB, provider, browser, Supabase, package install, migration, or production mutation."
+    },
+    {
+      "id": "EST-004",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Width entered in centimeters and equivalent inches: equivalent calculation and persisted value.",
+      "existing_evidence": "__tests__/width-field.test.ts covers cm/inch conversion, equivalent costing parity, localStorage width-unit persistence, and warning behavior.",
+      "command_or_artifact_needed": "npx --no-install vitest run __tests__/width-field.test.ts",
+      "safe_to_attempt": true,
+      "reason": "Safe local proof, but self-review found it does not directly prove quote/runtime persistence of the width value, so it is not pass-ready in Batch 13."
+    },
+    {
+      "id": "EST-005",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Weaving rate entered in paise/pick: no rupee/paise 100x error.",
+      "existing_evidence": "__tests__/estimator.test.ts covers direct wage-to-rate conversion, paise direct entry, safe weave cost, and the old dangerous 100x failure mode.",
+      "command_or_artifact_needed": "npx --no-install vitest run __tests__/estimator.test.ts",
+      "safe_to_attempt": true,
+      "reason": "Pure local deterministic estimator conversion/math proof."
+    },
+    {
+      "id": "EST-012",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Commission plus margin at or above invalid boundary: invalid quote state; no misleading positive quote.",
+      "existing_evidence": "__tests__/estimator.test.ts asserts calcOrderQuote returns isValid=false, a clear error message, and zero quote price when commission plus margin reaches the invalid boundary.",
+      "command_or_artifact_needed": "npx --no-install vitest run __tests__/estimator.test.ts",
+      "safe_to_attempt": true,
+      "reason": "Pure local deterministic estimator function proof."
+    },
+    {
+      "id": "SETUP-001",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Complete market-run onboarding: Market Runs visible; Quotes/Orders hidden; core shared modules visible.",
+      "existing_evidence": "__tests__/production-mode.test.ts imports getWorkflowVisibility and asserts market-run workflow visibility.",
+      "command_or_artifact_needed": "npx --no-install vitest run __tests__/production-mode.test.ts",
+      "safe_to_attempt": true,
+      "reason": "Safe local helper proof, but self-review found it does not directly prove completed-onboarding/browser navigation persistence, so it is not pass-ready in Batch 13."
+    },
+    {
+      "id": "SETUP-002",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Complete order-based onboarding: Quotes/Orders visible; Market Runs hidden.",
+      "existing_evidence": "__tests__/production-mode.test.ts imports getWorkflowVisibility and asserts order-based workflow visibility.",
+      "command_or_artifact_needed": "npx --no-install vitest run __tests__/production-mode.test.ts",
+      "safe_to_attempt": true,
+      "reason": "Safe local helper proof, but self-review found it does not directly prove completed-onboarding/browser navigation persistence, so it is not pass-ready in Batch 13."
+    },
+    {
+      "id": "BILL-002",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Base versus Premium access gates: correct modules gated; Billing itself remains reachable.",
+      "existing_evidence": "__tests__/p1-billing-gates.test.ts statically checks route layouts and billing reachability.",
+      "command_or_artifact_needed": "No command selected.",
+      "safe_to_attempt": false,
+      "reason": "Supporting source evidence exists, but exact row wording still needs direct tier-behavior or browser comparison proof for base versus premium."
+    },
+    {
+      "id": "PAY-017",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Settle in reminder window/on pay date/overdue: allowed with correct status.",
+      "existing_evidence": "__tests__/payroll-cycle.test.ts covers scheduled, approaching, due_today, and overdue payroll window statuses.",
+      "command_or_artifact_needed": "No command selected.",
+      "safe_to_attempt": false,
+      "reason": "Helper status coverage is partial; row also depends on settlement action/UI allow behavior."
+    },
+    {
+      "id": "TIME-003",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Month-end/year-end: commercial collection and payroll cycles classify correctly.",
+      "existing_evidence": "Payroll/date helper tests and source-mirror evidence exist.",
+      "command_or_artifact_needed": "No command selected.",
+      "safe_to_attempt": false,
+      "reason": "Exact commercial plus runtime/browser classification proof remains partial."
+    },
+    {
+      "id": "TIME-004",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Leap day: valid date and cycle behavior.",
+      "existing_evidence": "Source-mirror leap-year payroll-cycle evidence exists.",
+      "command_or_artifact_needed": "No command selected.",
+      "safe_to_attempt": false,
+      "reason": "Exact browser/date-input proof remains partial, and the existing payroll-cycle test file does not directly assert the leap-day case."
+    }
+  ],
+  "selected_proof_targets": [
+    "EST-001",
+    "EST-004 supporting proof only",
+    "EST-005",
+    "EST-012",
+    "SETUP-001 supporting proof only",
+    "SETUP-002 supporting proof only"
+  ],
+  "commands_run": [
+    {
+      "command": "npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts",
+      "purpose": "Rerun selected safe local deterministic proof targets without allowing package installation.",
+      "result": "passed",
+      "output_summary": "3 test files passed; 39 tests passed; duration 537ms."
+    }
+  ],
+  "artifacts_reused": [
+    "output/qa/batch12/BATCH12-code-verified-proof-sweep.json",
+    "output/qa/PILOTQA-20260621-2058-8QIH/logs/estimator-quotes-source-evidence-20260624.json",
+    "docs/pilot-remediation/FIX_LOG.md",
+    "docs/pilot-remediation/LOOP_STATE.md",
+    "docs/pilot-remediation/FAILURE_BACKLOG.md",
+    "docs/pilot-remediation/RETEST_PLAN.md",
+    "docs/pilot-remediation/DOMAIN_INVARIANTS.md",
+    "docs/pilot-remediation/PILOT_READY_DEFINITION.md"
+  ],
+  "per_row_evidence": [
+    {
+      "id": "EST-001",
+      "status_before": "code_verified",
+      "recommended_status": "pass",
+      "evidence": [
+        "npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts -> 3 files passed, 39 tests passed",
+        "__tests__/estimator.test.ts: Estimator full totals covers single warp/weft fixtures using calcFullTotals",
+        "__tests__/estimator.test.ts: exact 60g Georgette fixture asserts warp kg/cost, weft kg/cost, weave cost, warping/sizing, overhead, and total/landed production cost",
+        "__tests__/estimator.test.ts: landed cost fixture asserts commission/transport additions and quote price"
+      ],
+      "rationale": "The row is a deterministic estimator math/truth-sheet requirement, and the rerun local tests assert the exact cost stack without requiring browser or production mutation."
+    },
+    {
+      "id": "EST-005",
+      "status_before": "code_verified",
+      "recommended_status": "pass",
+      "evidence": [
+        "npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts -> 3 files passed, 39 tests passed",
+        "__tests__/estimator.test.ts: handles direct wage to paise-per-pick conversion correctly",
+        "__tests__/estimator.test.ts: handles paise direct entry correctly",
+        "__tests__/estimator.test.ts: guards against the old dangerous behavior of treating user-facing 16 paise as Rs 16/pick",
+        "__tests__/estimator.test.ts: triggers high weave cost warning when weave cost exceeds Rs 100/m"
+      ],
+      "rationale": "The exact 100x rupee/paise failure mode is directly asserted with safe and dangerous calculations."
+    },
+    {
+      "id": "EST-012",
+      "status_before": "code_verified",
+      "recommended_status": "pass",
+      "evidence": [
+        "npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts -> 3 files passed, 39 tests passed",
+        "__tests__/estimator.test.ts: calcOrderQuote returns invalid when commission plus margin percentage is >= 100",
+        "__tests__/estimator.test.ts: invalid boundary returns error message and quotePricePerM=0"
+      ],
+      "rationale": "The invalid boundary and no-positive-quote expectation are direct local assertions against the estimator quote function."
+    },
+    {
+      "id": "EST-004",
+      "status_before": "code_verified",
+      "recommended_status": "code_verified",
+      "evidence": [
+        "npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts -> 3 files passed, 39 tests passed",
+        "__tests__/width-field.test.ts covers cm/inch conversion, parity, localStorage width-unit persistence, and warning behavior"
+      ],
+      "rationale": "Useful supporting proof, but not exact enough to prove persisted estimator/quote width value by the row wording."
+    },
+    {
+      "id": "SETUP-001",
+      "status_before": "code_verified",
+      "recommended_status": "code_verified",
+      "evidence": [
+        "npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts -> 3 files passed, 39 tests passed",
+        "__tests__/production-mode.test.ts asserts market_run workflow visibility"
+      ],
+      "rationale": "Useful supporting proof, but not exact enough to prove completed-onboarding/browser navigation persistence."
+    },
+    {
+      "id": "SETUP-002",
+      "status_before": "code_verified",
+      "recommended_status": "code_verified",
+      "evidence": [
+        "npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts -> 3 files passed, 39 tests passed",
+        "__tests__/production-mode.test.ts asserts order_based workflow visibility"
+      ],
+      "rationale": "Useful supporting proof, but not exact enough to prove completed-onboarding/browser navigation persistence."
+    }
+  ],
+  "pass_ready_candidates": [
+    {
+      "id": "EST-001",
+      "current_status": "code_verified",
+      "recommended_status": "pass",
+      "evidence": "Focused local estimator proof passed and directly covers the single warp/weft truth-sheet cost stack."
+    },
+    {
+      "id": "EST-005",
+      "current_status": "code_verified",
+      "recommended_status": "pass",
+      "evidence": "Focused local estimator proof passed and directly covers paise/pick conversion plus the old 100x failure mode."
+    },
+    {
+      "id": "EST-012",
+      "current_status": "code_verified",
+      "recommended_status": "pass",
+      "evidence": "Focused local estimator proof passed and directly covers invalid commission plus margin boundary behavior."
+    }
+  ],
+  "rows_left_code_verified_open_blocked": [
+    {
+      "id": "EST-004",
+      "reason": "Width helper proof passed, but persisted estimator/quote width value remains not directly proven by the local test."
+    },
+    {
+      "id": "SETUP-001",
+      "reason": "Workflow visibility helper proof passed, but completed-onboarding/browser navigation persistence remains unproven."
+    },
+    {
+      "id": "SETUP-002",
+      "reason": "Workflow visibility helper proof passed, but completed-onboarding/browser navigation persistence remains unproven."
+    },
+    {
+      "id": "BILL-002",
+      "reason": "Route layout static evidence exists, but exact base-versus-premium behavior proof remains missing."
+    },
+    {
+      "id": "PAY-017",
+      "reason": "Payroll window helper status proof is partial; settlement action/UI allow behavior remains unproven."
+    },
+    {
+      "id": "TIME-003",
+      "reason": "Commercial plus payroll month/year classification remains partially source-level."
+    },
+    {
+      "id": "TIME-004",
+      "reason": "Leap-day browser/date-input proof remains missing."
+    },
+    {
+      "id": "ORDER-008",
+      "reason": "Still needs disposable runtime/browser proof for below-target completion confirmation."
+    },
+    {
+      "id": "GOLDEN-B-12",
+      "reason": "Still needs full Golden B second-batch exact receipt rerun."
+    },
+    {
+      "id": "QUOTE-007",
+      "reason": "Still needs DB/RPC transaction work; out of scope for proof-only sweep."
+    },
+    {
+      "id": "SEC-011",
+      "reason": "Still needs live Sentry event payload redaction proof."
+    },
+    {
+      "id": "TECH-009/WA-008",
+      "reason": "Still need deployed WhatsApp callback proof."
+    },
+    {
+      "id": "TECH-011/TECH-012",
+      "reason": "Still need restore/rollback proof."
+    },
+    {
+      "id": "OFF-007",
+      "reason": "Still needs production service-worker update proof with active draft."
+    },
+    {
+      "id": "OFF-010",
+      "reason": "Still needs throttled mobile runtime sweep."
+    },
+    {
+      "id": "STOCK-011/STOCK-013/MARKET-009/MARKET-010",
+      "reason": "Still partial/open under Batch 12 exact-proof notes."
+    }
+  ],
+  "self_review_gate": {
+    "exact_row_requirement_satisfied": true,
+    "direct_evidence_not_analogous": true,
+    "no_production_mutation_used": true,
+    "no_external_provider_proof_missing_for_promoted_rows": true,
+    "no_product_code_changed": true,
+    "no_schema_rpc_migration_work_required": true,
+    "rows_left_open_documented": true,
+    "result": "clean_for_docs_closeout",
+    "notes": "The gate is clean only for EST-001, EST-005, and EST-012. EST-004, SETUP-001, and SETUP-002 were not promoted after self-review."
+  },
+  "safety_confirmations": {
+    "no_product_code_changes": true,
+    "no_test_code_changes": true,
+    "no_migrations_created": true,
+    "no_supabase_mutations": true,
+    "no_npx_supabase_db_push": true,
+    "no_migration_repair": true,
+    "no_db_pull": true,
+    "no_direct_sql": true,
+    "no_include_all": true,
+    "no_production_data_mutation": true,
+    "no_npm_audit": true,
+    "no_package_install": true,
+    "no_lockfile_changes": true,
+    "no_external_provider_flows": true,
+    "no_browser_runtime_mutation": true
+  }
+}
