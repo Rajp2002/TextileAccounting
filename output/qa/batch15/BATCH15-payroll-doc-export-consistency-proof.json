@@ -1,0 +1,304 @@
+{
+  "batch": 15,
+  "name": "payroll document/export/statutory consistency",
+  "source": {
+    "origin_main": "01c2f4d6f63cfe1870919b8678e2742122460608",
+    "branch": "codex/batch-15-payroll-doc-export-consistency",
+    "matrix_counts_at_start": {
+      "total": 377,
+      "pass": 187,
+      "fail": 40,
+      "blocked": 22,
+      "code_verified": 127,
+      "not_applicable": 1
+    }
+  },
+  "target_ids_evaluated": [
+    "PAY-013",
+    "PAY-015",
+    "PAY-023",
+    "PAY-024",
+    "SEC-014",
+    "DASH-003"
+  ],
+  "exact_row_definitions_inspected": [
+    {
+      "id": "PAY-013",
+      "status": "fail",
+      "severity": "Medium",
+      "workflow": "21. Payroll, Advances, Attendance, and Worker Money",
+      "guide_item": "PF/ESI enrolled and not enrolled.",
+      "expected": "Deductions apply only to intended workers using reviewed formulas.",
+      "failure": "PF/ESI enrollment gating exists, but the reviewed formulas are not consistent end-to-end. The UI preview applies employee ESIC as grossPay * 0.0075 for every enrolled worker; the settlement RPC applies ESIC only when adjusted gross is <= 21000. For an enrolled worker above that threshold, the preview and persisted settlement would disagree, so this cannot be approved as using one reviewed formula."
+    },
+    {
+      "id": "PAY-015",
+      "status": "fail",
+      "severity": "Medium",
+      "workflow": "21. Payroll, Advances, Attendance, and Worker Money",
+      "guide_item": "Preview versus settlement.",
+      "expected": "Persisted gross, each deduction, adjustment, debt, and net equal preview.",
+      "failure": "Preview-versus-settlement cannot be approved from source because enrolled-worker ESIC logic diverges: UI preview deducts ESIC for every enrolled worker, while the settlement RPC only deducts ESIC when adjusted gross is <= 21000. A high-gross enrolled worker would see a preview net payout lower than the persisted settlement net payout. No live high-gross enrolled settlement was executed."
+    },
+    {
+      "id": "PAY-023",
+      "status": "fail",
+      "severity": "Medium",
+      "workflow": "21. Payroll, Advances, Attendance, and Worker Money",
+      "guide_item": "Payslip PDF.",
+      "expected": "Name, cycle, earning lines, adjustments, deductions, net, and debt are correct.",
+      "failure": "Payslip PDF does not meet the guide requirement. The PDF generator includes worker name, month, earning lines, gross, advance deduction, and net pay, but it does not render manual inam/kapaat adjustments, PF, ESI, carried-forward debt, payment mode, or explicit cycle dates. The PDF button is also available from the row action without requiring a paid settlement. WhatsApp payslip details are richer, but this item asks for the PDF."
+    },
+    {
+      "id": "PAY-024",
+      "status": "fail",
+      "severity": "Medium",
+      "workflow": "21. Payroll, Advances, Attendance, and Worker Money",
+      "guide_item": "Past settlement history and CSV.",
+      "expected": "Search/filter, line reconstruction, totals, and filename are correct.",
+      "failure": "Settlement history search/filter, line reconstruction, totals, CSV download, and filename generation are present, but the CSV export reads PF/ESI from top-level employee_pf and employee_esic itemization fields. The latest settlement RPC persists statutory deductions as nested pf.employee and esic.employee objects, so real persisted settlements can export PF/ESI as 0 even when deducted."
+    },
+    {
+      "id": "SEC-014",
+      "status": "fail",
+      "severity": "Medium",
+      "workflow": "27. Security, Privacy, and Audit",
+      "guide_item": "File/PDF generation with malicious text.",
+      "expected": "Safe content and filenames.",
+      "failure": "PDF body text is generated via jsPDF text APIs, but payslip PDF filenames are not safely normalized: workerName.replace(/\\s+/g, '_') only replaces whitespace. Worker names are not character-restricted beyond non-empty validation, so filename-hostile characters can reach doc.save. CSV export has a stricter filename sanitizer, making this inconsistent."
+    },
+    {
+      "id": "DASH-003",
+      "status": "fail",
+      "severity": "Medium",
+      "workflow": "22. Factory Today and Analytics",
+      "guide_item": "After shift production.",
+      "expected": "Today meters, production status, work risk, order/run progress, and payroll signals update once.",
+      "failure": "Production, work-risk, dispatch, and payroll-count signals are recomputed from source data, but Factory Today hard-codes grossWagesSoFar to 0. After shift production, the gross wage signal therefore cannot update once on Factory Today even though worker count and analytics worker breakdown can update elsewhere."
+    }
+  ],
+  "files_changed": [
+    "app/(dashboard)/owner/payroll/page.tsx",
+    "app/(dashboard)/owner/today/actions.ts",
+    "lib/generate-payslip.ts",
+    "lib/payroll-statutory.ts",
+    "lib/payroll-read-models.ts",
+    "__tests__/batch15-payroll-doc-export-consistency.test.ts",
+    "output/qa/batch15/BATCH15-payroll-doc-export-consistency-proof.json"
+  ],
+  "implementation_summary": [
+    "Added a shared payroll statutory helper that applies PF on the 15000 wage ceiling and applies employee ESIC only when the adjusted gross is at or below the 21000 ESIC wage ceiling.",
+    "Moved payroll preview statutory calculations onto the shared helper so high-gross enrolled preview rows no longer deduct ESIC when the settlement formula would not.",
+    "Added a settlement itemization extractor that reads the nested persisted RPC shape pf.employee and esic.employee, while preserving legacy optimistic top-level fields as fallback.",
+    "Expanded payslip generation to include explicit cycle dates, manual inam/kapaat rows, advance recovery, PF, ESI, net pay, carry-forward debt, and payment mode.",
+    "Disabled payslip PDF generation until a row has a paid settlement, and wired PDF inputs from paid settlement values rather than unpaid preview-only values.",
+    "Sanitized payslip filenames to ASCII alphanumeric, underscore, and hyphen characters only, with path separators, traversal dots, and filename-hostile punctuation removed.",
+    "Replaced the Factory Today grossWagesSoFar placeholder with a focused read-model helper over existing production log meter/rate snapshots."
+  ],
+  "per_row_evidence": [
+    {
+      "id": "PAY-013",
+      "pass_ready_candidate": false,
+      "code_verified_pending_runtime": true,
+      "evidence": [
+        "lib/payroll-statutory.ts implements calculatePayrollStatutoryDeductions with PF basis min(adjustedGross, 15000), ESIC basis adjustedGross only when adjustedGross <= 21000, and zeroes both when the worker is not enrolled.",
+        "app/(dashboard)/owner/payroll/page.tsx getSettlementPreview delegates statutory deduction calculation to calculatePayrollStatutoryDeductions.",
+        "__tests__/batch15-payroll-doc-export-consistency.test.ts asserts enrolled worker at 20000 gross gets PF 1800 and ESIC 150, enrolled worker at 25000 gross gets PF 1800 and ESIC 0, and non-enrolled worker gets zero deductions."
+      ],
+      "runtime_browser_proof": "Not run because this implementation request bans Supabase mutations. Review kept this row code_verified pending disposable high-gross enrolled preview/settlement proof."
+    },
+    {
+      "id": "PAY-015",
+      "pass_ready_candidate": false,
+      "code_verified_pending_runtime": true,
+      "evidence": [
+        "The preview path now uses the same ESIC wage-ceiling condition as the persisted settlement RPC described by the matrix row.",
+        "Optimistic paid settlement itemization now writes nested pf/esic objects alongside legacy fields so the UI preview snapshot and history/export readers share the same statutory shape.",
+        "Automated test coverage verifies the exact high-gross ESIC divergence that caused this row to fail."
+      ],
+      "runtime_browser_proof": "Not run because the approved implementation rules prohibit Supabase mutations. Review kept this row code_verified pending live disposable persisted-settlement proof."
+    },
+    {
+      "id": "PAY-023",
+      "pass_ready_candidate": true,
+      "evidence": [
+        "lib/generate-payslip.ts renders payslip rows for gross pay, manual inam/kapaat, advance recovered, PF, ESI, net pay, carry-forward debt, and payment mode.",
+        "lib/generate-payslip.ts adds explicit payroll cycle start/end dates to the payslip header.",
+        "app/(dashboard)/owner/payroll/page.tsx disables meter and fixed PDF buttons until isPaid is true and passes settlement-backed deduction, debt, net pay, cycle dates, payment mode, and normalized itemization into the PDF generator.",
+        "__tests__/batch15-payroll-doc-export-consistency.test.ts asserts the payslip row labels and PDF/CSV source wiring."
+      ],
+      "runtime_browser_proof": "Not run. The PDF content path is covered by helper-level tests and build; visual PDF/browser download smoke can be run later with disposable data if required."
+    },
+    {
+      "id": "PAY-024",
+      "pass_ready_candidate": true,
+      "evidence": [
+        "app/(dashboard)/owner/payroll/page.tsx buildSettlementCsv reads statutory deductions through getItemizationStatutoryDeductions instead of top-level employee_pf and employee_esic.",
+        "Settlement history selected detail also reads PF/ESI through getItemizationStatutoryDeductions.",
+        "lib/payroll-statutory.ts prefers nested pf.employee and esic.employee when present and falls back to legacy top-level fields.",
+        "__tests__/batch15-payroll-doc-export-consistency.test.ts covers nested persisted, legacy top-level, and mixed stale-top-level/new-nested itemization shapes."
+      ],
+      "runtime_browser_proof": "Not run; no provider or DB mutation is required for this source/export reader fix."
+    },
+    {
+      "id": "SEC-014",
+      "pass_ready_candidate": true,
+      "evidence": [
+        "lib/generate-payslip.ts replaces whitespace-only filename handling with sanitizePayslipFilenamePart and buildPayslipFilename.",
+        "The sanitizer strips path separators, traversal dots, and filename-hostile punctuation and constrains generated payslip filenames to safe ASCII filename parts.",
+        "__tests__/batch15-payroll-doc-export-consistency.test.ts asserts a malicious worker name becomes payslip-Asha_Worker_bad-2026-06.pdf and contains no slash or dot-dot sequence."
+      ],
+      "runtime_browser_proof": "Not run; filename generation is deterministic and covered by focused unit tests."
+    },
+    {
+      "id": "DASH-003",
+      "pass_ready_candidate": false,
+      "code_verified_pending_runtime": true,
+      "evidence": [
+        "app/(dashboard)/owner/today/actions.ts now selects meters and worker_rate_snapshot for cycle production_logs instead of worker_id alone.",
+        "app/(dashboard)/owner/today/actions.ts sets grossWagesSoFar from calculatePieceRateGrossWages instead of hard-coding 0.",
+        "lib/payroll-read-models.ts sums nonnegative meters multiplied by nonnegative worker_rate_snapshot values.",
+        "__tests__/batch15-payroll-doc-export-consistency.test.ts verifies the wage helper and source wiring."
+      ],
+      "runtime_browser_proof": "Not run; no production data mutation was allowed. Review kept this row code_verified pending disposable after-shift Factory Today runtime proof."
+    }
+  ],
+  "pass_ready_candidates": [
+    "PAY-023",
+    "PAY-024",
+    "SEC-014"
+  ],
+  "code_verified_pending_runtime": [
+    "PAY-013",
+    "PAY-015",
+    "DASH-003"
+  ],
+  "rows_left_open_or_excluded": [
+    {
+      "ids": [
+        "PAY-013",
+        "PAY-015",
+        "DASH-003"
+      ],
+      "reason": "Source/test evidence fixes the identified code roots, but exact active row wording still requires disposable live settlement or Factory Today runtime/browser proof. These rows were moved to code_verified instead of pass during docs closeout review."
+    },
+    {
+      "ids": [
+        "PAY-006",
+        "PAY-018",
+        "PAY-020",
+        "PAY-027",
+        "PAY-028"
+      ],
+      "reason": "Out of approved Batch 15 payroll document/export/statutory consistency scope; these require broader payroll correctness, kharchi, or separate closure evidence."
+    },
+    {
+      "ids": [
+        "QUOTE-007",
+        "ORDER-005",
+        "ORDER-009",
+        "PROD-011",
+        "MASTER-014"
+      ],
+      "reason": "Out of scope production/order/master-data paths with higher regression or DB/RPC risk."
+    },
+    {
+      "ids": [
+        "SEC-015",
+        "TECH-001",
+        "TECH-005",
+        "TECH-006",
+        "TECH-009",
+        "WA-008"
+      ],
+      "reason": "Out of scope security, technical, webhook, or WhatsApp/provider rows."
+    },
+    {
+      "ids": [
+        "billing/provider rows",
+        "restore/rollback rows",
+        "Sentry live-event rows",
+        "production/order boundary rows",
+        "stock/dispatch/commercial flows"
+      ],
+      "reason": "Explicitly excluded by the implementation request."
+    }
+  ],
+  "commands_run": [
+    {
+      "command": "git fetch origin --prune",
+      "result": "completed before branch creation"
+    },
+    {
+      "command": "git switch -C codex/batch-15-payroll-doc-export-consistency origin/main",
+      "result": "branch created from origin/main"
+    },
+    {
+      "command": "git rev-parse origin/main",
+      "result": "01c2f4d6f63cfe1870919b8678e2742122460608"
+    },
+    {
+      "command": "rg -n \"PAY-013|PAY-015|PAY-023|PAY-024|SEC-014|DASH-003\" output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md docs/pilot-remediation/FIX_LOG.md docs/pilot-remediation/LOOP_STATE.md docs/pilot-remediation/FAILURE_BACKLOG.md docs/pilot-remediation/RETEST_PLAN.md docs/pilot-remediation/DOMAIN_INVARIANTS.md docs/pilot-remediation/PILOT_READY_DEFINITION.md",
+      "result": "exact target row definitions inspected"
+    },
+    {
+      "command": "npx vitest run __tests__/batch15-payroll-doc-export-consistency.test.ts",
+      "result": "passed, 1 test file, 7 tests"
+    },
+    {
+      "command": "npx vitest run __tests__/payroll-manual-adjustments.test.ts __tests__/payroll-settlement-history.test.ts __tests__/payroll-cycle.test.ts __tests__/payroll-pay-date-config.test.ts __tests__/p1-payroll-revert.test.ts __tests__/p1-payroll-guard.test.ts __tests__/p1-payroll-config-onboarding.test.ts",
+      "result": "passed, 7 test files, 40 tests"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "passed"
+    },
+    {
+      "command": "npx eslint __tests__/batch15-payroll-doc-export-consistency.test.ts 'app/(dashboard)/owner/payroll/page.tsx' 'app/(dashboard)/owner/today/actions.ts' lib/generate-payslip.ts lib/payroll-statutory.ts lib/payroll-read-models.ts",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed; prebuild test suite passed with 43 test files, 358 passed, 1 skipped; Next build exited 0"
+    },
+    {
+      "command": "jq empty output/qa/batch15/BATCH15-payroll-doc-export-consistency-proof.json",
+      "result": "passed after artifact creation"
+    }
+  ],
+  "runtime_browser_proof": {
+    "run": false,
+    "reason": "The implementation request explicitly prohibited Supabase mutations and production data mutation. Browser settlement proof would create or update payroll settlement data, so it was not run.",
+    "required_before_pass_for_code_verified_rows": [
+      "Disposable QA high-gross enrolled worker preview and settlement proof for PAY-013/PAY-015.",
+      "Disposable QA Factory Today refresh after production-log creation for DASH-003."
+    ],
+    "optional_smoke_after_pass": [
+      "Disposable QA paid payroll row PDF download smoke for PAY-023 if visual/browser proof is desired beyond the deterministic generator/source tests."
+    ]
+  },
+  "migration_or_rpc_work": {
+    "needed": false,
+    "details": "No migrations, RPC changes, direct SQL, db push, db pull, or migration repair were used."
+  },
+  "hard_rule_confirmations": {
+    "no_migrations_created": true,
+    "no_supabase_commands": true,
+    "no_direct_sql": true,
+    "no_supabase_db_push": true,
+    "no_migration_repair": true,
+    "no_db_pull": true,
+    "no_include_all": true,
+    "no_production_data_mutation": true,
+    "no_npm_audit": true,
+    "no_package_install": true,
+    "no_lockfile_changes": true,
+    "no_unapproved_stage_commit_push": true,
+    "authorized_docs_closeout_stage_commit_push_after_review": true,
+    "stock_dispatch_commercial_production_paths_not_intentionally_changed": true
+  }
+}

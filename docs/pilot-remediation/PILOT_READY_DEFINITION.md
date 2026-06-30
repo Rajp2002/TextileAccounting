@@ -84,6 +84,8 @@ Batch 12 note: `STOCK-012` and `DISP-013` are closed by focused local proof in `
 
 Batch 13 note: `EST-001`, `EST-005`, and `EST-012` are closed by focused local estimator proof in `output/qa/batch13/BATCH13-code-verified-proof-sweep.json`. `npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts` passed 3 test files and 39 tests for the single warp/weft cost stack, paise-per-pick 100x guard, and invalid commission-plus-margin boundary. `EST-004`, `SETUP-001`, `SETUP-002`, `BILL-002`, `PAY-017`, `TIME-003`, and `TIME-004` remain partial/code-verified under their exact proof requirements.
 
+Batch 15 note: `PAY-023`, `PAY-024`, and `SEC-014` are closed by focused payroll document/export/statutory proof in `output/qa/batch15/BATCH15-payroll-doc-export-consistency-proof.json`. `npx vitest run __tests__/batch15-payroll-doc-export-consistency.test.ts` passed 1 test file and 7 tests; the 7-file payroll regression pack passed 40 tests; `npx tsc --noEmit --pretty false`, targeted ESLint, `git diff --check`, and `npm run build` passed. `PAY-013`, `PAY-015`, and `DASH-003` remain `code_verified`, not pass, until disposable runtime/browser proof confirms high-gross payroll settlement equality and after-shift Factory Today wage updates.
+
 ## Pilot Sign-Off Evidence Package
 
 Final sign-off must include:

@@ -19,8 +19,8 @@ Current known state from `logs/technical-gates.md`:
 
 - `npm ci` fails until the lockfile is repaired.
 - `npm run lint` passed in the final QA run.
-- `npx vitest run` passed in the final QA run; Batch 9 full Vitest via `npm run build` passed with 339 passed and 1 skipped.
-- `npm run build` passed in the final QA run; Batch 9 also passed `npm run build` with the source-controlled `prebuild` Vitest gate.
+- `npx vitest run` passed in the final QA run; Batch 15 full Vitest via `npm run build` passed with 358 passed and 1 skipped.
+- `npm run build` passed in the final QA run; Batch 15 also passed `npm run build` with the source-controlled `prebuild` Vitest gate.
 - Both audit commands fail until advisories are fixed or formally accepted.
 
 Do not use passing lint/build/source checks to resolve runtime failures.
@@ -368,6 +368,7 @@ Acceptance:
 - `SIGNOFF-05` expected-stock reasonableness is already closed by Batch 2 production/stock atomicity proof and should be rerun here only if the dashboard read model changes again.
 - Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` with runtime proof. `SIGNOFF-10` was outside Batch 3 release/Sentry/source-map scope.
 - Batch 4 closes commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09` with runtime/browser proof. `SIGNOFF-10` was outside Batch 4 release/Sentry/source-map scope and is closed later by Batch 8C.
+- Batch 15 moves `DASH-003` from fail to `code_verified` by replacing the hard-coded gross wage placeholder with meter/rate snapshot aggregation and focused tests. It is not pass until after-shift Factory Today runtime/browser proof is captured with disposable QA data.
 
 ## P3 Payroll and Kharchi Retest
 
@@ -391,6 +392,7 @@ Acceptance:
 
 - `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-027`, and payroll-related sign-off rows have evidence.
 - Batch 9 closes `PAY-028` and `OFF-008` by truthful online-only offline-kharchi de-scope; online kharchi atomicity and payroll correctness rows remain separate.
+- Batch 15 closes `PAY-023` and `PAY-024` with focused payslip document/export tests and source proof, and closes `SEC-014` with deterministic payslip filename sanitization tests. Batch 15 moves `PAY-013` and `PAY-015` from fail to `code_verified`, not pass, because disposable live preview/settlement proof was not collected under the no-Supabase-mutation rule.
 
 ## P4 Idempotency, Offline, and Cache Retest
 

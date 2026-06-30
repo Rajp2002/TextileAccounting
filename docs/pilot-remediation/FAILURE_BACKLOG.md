@@ -9,11 +9,11 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | Priority band | Root-cause cluster | Failed matrix IDs |
 | --- | --- | --- |
 | P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008`, `PAY-018`, `PAY-020` |
-| P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-017` |
+| P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-015`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `QUOTE-007` |
-| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02` |
-| P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `DASH-003` |
+| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02` |
+| P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-018`, `PAY-020`, `PAY-027` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
 | P4 | `OFF-A` offline, cache, and public claims | `OFF-007`, `OFF-010` |
 | P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006` |
@@ -47,6 +47,8 @@ Closed in Batch 11 and removed from the open failure coverage rows: server-bound
 Closed in Batch 12 and removed from `code_verified` evidence debt: stock archive policy and dispatch archive eligibility (`STOCK-012`, `DISP-013`). `ORDER-008`, `GOLDEN-B-12`, `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial under their existing proof requirements.
 
 Closed in Batch 13 and removed from `code_verified` evidence debt: focused estimator math and boundary rows (`EST-001`, `EST-005`, `EST-012`). `EST-004`, `SETUP-001`, `SETUP-002`, `BILL-002`, `PAY-017`, `TIME-003`, and `TIME-004` remain `code_verified` because their inspected local/static evidence was supporting or partial, not exact proof of the active row wording.
+
+Closed in Batch 15 and removed from open failure coverage rows: payroll payslip PDF/export and payslip filename safety (`PAY-023`, `PAY-024`, `SEC-014`). Moved from fail to `code_verified` but still unresolved evidence debt: payroll PF/ESI preview/settlement formula rows and Factory Today gross wage signal (`PAY-013`, `PAY-015`, `DASH-003`). These three have source/test proof but still need disposable runtime/browser proof before they can be counted as pass.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -90,23 +92,22 @@ Required proof: SQL policy/grant metadata, rollback-only QA probes, and browser 
 
 ## P0 SEC-C - External Webhooks and Compliance Surfaces Do Not Fail Closed
 
-Failures: `TECH-009`, `WA-008`, `SEC-009`, `SEC-011`, `SEC-014`, `SEC-015`, `SEC-017`, `SEC-018`
+Failures: `TECH-009`, `WA-008`, `SEC-009`, `SEC-011`, `SEC-015`, `SEC-017`, `SEC-018`
 
 Evidence: `logs/technical-gates.md`, `logs/security-review.json`, `logs/security-export-erasure-evidence.json`, `logs/secrets-exposure-scan.json`, `logs/offline-pwa-evidence.json`
 
 Invariant: externally supplied data and compliance exports must be authenticated, audited, redacted, and consistent with the product's actual behavior.
 
-Impact: unsigned WhatsApp status callbacks can be accepted when `META_APP_SECRET` is absent; owner export is not wired/audited/redaction-reviewed; public legal/offline claims do not match implementation and require counsel review.
+Impact: unsigned WhatsApp status callbacks can be accepted when `META_APP_SECRET` is absent; owner export is not wired/audited/redaction-reviewed; public legal/offline claims do not match implementation and require counsel review. Batch 15 closes the payslip filename safety slice (`SEC-014`) with deterministic source/test proof.
 
 Remediation direction:
 
 - Fail WhatsApp webhook before DB lookup when signature secret is absent.
 - Keep data export hidden until redaction and audit events are proven.
-- Sanitize payslip filenames.
 - Align privacy/offline wording to implementation or implement the promised behavior.
 - Treat DPDP/public-policy wording as blocked until qualified counsel review exists.
 
-Required proof: webhook negative probes, export audit evidence, filename tests, and documented counsel sign-off or explicit de-scope.
+Required proof: webhook negative probes, export audit evidence, and documented counsel sign-off or explicit de-scope. `SEC-014` filename proof is satisfied by Batch 15 focused tests and active matrix promotion to pass.
 
 ## Closed PROD-A - Production Correction Is Not Atomic With Generated Stock
 
@@ -311,7 +312,9 @@ Required proof: satisfied by Batch 3 runtime/tests for `SALE-015`, Batch 4 runti
 
 ## P2 DASH-A - Dashboard and Daily Sign-Off Read Models Are Not Authoritative
 
-Failures: `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`
+Failures: `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`
+
+Code-verified evidence debt: `DASH-003`
 
 Closed in Batch 3: `DASH-007`, `SIGNOFF-07`, `SIGNOFF-08`
 
@@ -323,11 +326,12 @@ Evidence: `logs/dashboard-evidence.json`, `logs/prod-dashboard-ux-signoff-source
 
 Invariant: Factory Today and sign-off views are read models over authoritative production, stock, dispatch, commercial, payroll, and observability state. A sign-off card cannot clear when its source rows remain unresolved.
 
-Impact: gross wages were hard-coded to zero, historical analytics mixed historical and current data, and final sign-off rows still depend on unresolved production/payroll evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 4 closed commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 6 supplies Golden A Factory Today source reconciliation for production, dispatch, receipt, receivable, and deliberate discrepancy state. Batch 8C closes `SIGNOFF-10` with clean deployed browser/server/Sentry evidence.
+Impact: historical analytics mixes historical and current data, and final sign-off rows still depend on unresolved production/payroll evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 4 closed commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 6 supplies Golden A Factory Today source reconciliation for production, dispatch, receipt, receivable, and deliberate discrepancy state. Batch 8C closes `SIGNOFF-10` with clean deployed browser/server/Sentry evidence. Batch 15 source-fixes `DASH-003` by replacing hard-coded gross wages with meter/rate snapshot aggregation, but it remains `code_verified` pending after-shift runtime proof.
 
 Remediation direction:
 
-- Rebuild dashboard cards from the same authoritative queries used by reconciliation.
+- Runtime-prove the Batch 15 Factory Today gross wage read model after disposable production-log creation.
+- Rebuild remaining dashboard cards from the same authoritative queries used by reconciliation.
 - Add date-bounded historical queries that do not mix current machines/orders into historical views.
 - Make sign-off rows explicitly blocked when required external evidence, such as supervisor register truth, is missing.
 
@@ -335,18 +339,20 @@ Required proof: dashboard unit/read-model tests, runtime Factory Today checks af
 
 ## P3 PAY-A - Payroll, Attendance, Settlement, and Kharchi Ledgers Can Diverge
 
-Failures: `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `DASH-003`, `GOLDEN-B-18`
+Failures: `PAY-006`, `PAY-018`, `PAY-020`, `PAY-027`, `GOLDEN-B-18`
+
+Code-verified evidence debt: `PAY-013`, `PAY-015`, `DASH-003`
 
 Evidence: `logs/payroll-kharchi-source-evidence-20260624.json`, `logs/payroll-evidence.json`, `logs/offline-pwa-evidence.json`
 
 Invariant: payroll net equals gross plus inam minus kapaat, advance recovery, PF, and ESI. A kharchi operation creates the worker advance and supervisor float transaction atomically, or creates neither.
 
-Impact: legacy payroll RPCs remain executable; PF/ESI preview can disagree with persisted settlement; online kharchi can return success after partial ledger write. Batch 9 closes offline kharchi by making it online-only and removing the unsupported `kharchi_offline` queue path.
+Impact: legacy payroll RPCs remain executable; online kharchi can return success after partial ledger write; PF/ESI preview and Factory Today gross wages are source/test fixed but still need runtime proof. Batch 9 closes offline kharchi by making it online-only and removing the unsupported `kharchi_offline` queue path. Batch 15 closes payslip PDF and settlement CSV/history statutory export rows `PAY-023` and `PAY-024`.
 
 Remediation direction:
 
 - Revoke legacy RPCs or make them call the hardened path.
-- Share one PF/ESI formula between preview and settlement.
+- Runtime-prove the shared PF/ESI preview/settlement formula with disposable high-gross enrolled settlement data.
 - Make online kharchi a single transaction.
 - Keep offline kharchi online-only unless a real queue processor for the authoritative tables is later implemented and retested.
 

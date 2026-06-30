@@ -7,6 +7,7 @@ import { getPayrollCycleDetails, getPayrollCycleStatus, getPayrollMonthForDate, 
 import { normalizeProductionMode, hasExplicitProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { formatToSurat, getSuratTodayString } from '@/lib/time'
 import { formatDateOnly } from '@/lib/format'
+import { calculatePieceRateGrossWages } from '@/lib/payroll-read-models'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -665,7 +666,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
 
     const payrollWorkerLogsRes = await supabase
         .from('production_logs')
-        .select('worker_id')
+        .select('worker_id, meters, worker_rate_snapshot')
         .eq('org_id', orgId)
         .gte('date', bounds.cycle_start)
         .lte('date', bounds.cycle_end)
@@ -688,7 +689,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         isPayWindowOpen: payrollStatus.is_payroll_window_open,
         daysUntilPayDate: payrollStatus.days_until_pay_date,
         unsettledWorkerCount: uniqueWorkerIds.size,
-        grossWagesSoFar: 0, // summary-only; full calc lives in payroll page
+        grossWagesSoFar: calculatePieceRateGrossWages(payrollWorkerLogsRes.data ?? []),
         pendingAdvanceTotal,
         upcomingSettlementDate: null,
     }

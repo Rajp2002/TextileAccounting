@@ -14,14 +14,14 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, and Batch 13 targeted estimator proof sweep:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, and Batch 15 payroll document/export/statutory consistency closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 187 | Runtime/test evidence exists. |
-| `fail` | 40 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 190 | Runtime/test evidence exists. |
+| `fail` | 34 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
-| `code_verified` | 127 | Source evidence only. This is not a pass. |
+| `code_verified` | 130 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
@@ -54,6 +54,8 @@ Batch 11 moved `EST-011` and `ORDER-006` from fail to pass with server-boundary 
 Batch 12 moved `STOCK-012` and `DISP-013` from `code_verified` to pass with exact local proof for closed/sold-out market lot archive eligibility and delivered-complete dispatch group archive eligibility. `ORDER-008` remains `code_verified` because disposable runtime/browser proof is still missing. `GOLDEN-B-12` remains blocked because the active row requires a full Golden B second-batch exact-receipt rerun. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain `code_verified` because Batch 12 proof was partial for their exact row wording.
 
 Batch 13 moved `EST-001`, `EST-005`, and `EST-012` from `code_verified` to pass with exact local estimator proof for the single warp/weft cost stack, paise-per-pick 100x guard, and invalid commission-plus-margin boundary. `EST-004`, `SETUP-001`, and `SETUP-002` remain `code_verified` because their safe helper tests were supporting evidence only and did not directly prove persisted width value or completed-onboarding browser navigation persistence. `BILL-002`, `PAY-017`, `TIME-003`, `TIME-004`, `ORDER-008`, `GOLDEN-B-12`, `QUOTE-007`, external-provider, restore/rollback, Sentry live-event, WhatsApp deployed-callback, production service-worker, throttled mobile, and Batch 12 partial stock/market rows remain unchanged.
+
+Batch 15 moved `PAY-023`, `PAY-024`, and `SEC-014` from fail to pass with deterministic source/test/build proof for payslip PDF content, settlement history/CSV nested statutory extraction, and safe payslip filenames. `PAY-013`, `PAY-015`, and `DASH-003` moved from fail to `code_verified`: their identified source defects are fixed and tested, but exact row closure still needs disposable high-gross settlement proof or after-shift Factory Today runtime proof. No migration, Supabase command, direct SQL, npm audit, package install, lockfile change, production/customer data mutation, stock/dispatch/commercial path change, or production/order boundary change was used.
 
 ## Operating Rules
 
@@ -928,3 +930,55 @@ Resolution status:
 
 - `EST-001`, `EST-005`, and `EST-012` are documented as pass in the active matrix.
 - All unproven supporting candidates remain unchanged/open as listed above.
+
+## Batch 15 Payroll Document Export Statutory Consistency Closeout
+
+Date/time: 2026-07-01 04:08 IST.
+
+Batch 15: payroll document/export/statutory consistency with narrow Factory Today wage read-model fix.
+
+Target rows promoted to pass:
+
+- `PAY-023`
+- `PAY-024`
+- `SEC-014`
+
+Rows kept open as `code_verified`:
+
+- `PAY-013` is source/test fixed for the ESIC wage-ceiling formula but still needs disposable high-gross enrolled settlement proof.
+- `PAY-015` is source/test fixed for the preview-versus-settlement statutory mismatch but still needs live persisted-settlement proof.
+- `DASH-003` is source/test fixed for gross wage aggregation but still needs after-shift Factory Today runtime/browser proof.
+
+Repository state:
+
+- Branch: `codex/batch-15-payroll-doc-export-consistency`.
+- Source base: `origin/main` at `01c2f4d6f63cfe1870919b8678e2742122460608`.
+
+Migrations:
+
+- No migration or RPC change was made.
+- No Supabase command, db push, migration repair, db pull, direct SQL, or `--include-all` command was run.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch15/BATCH15-payroll-doc-export-consistency-proof.json`.
+- `PAY-023`: payslip PDFs now render explicit cycle dates, earning lines, manual inam/kapaat adjustments, advance recovery, PF, ESI, net pay, carry-forward debt, and payment mode, and PDF generation is disabled until a paid settlement exists.
+- `PAY-024`: settlement history and CSV export read statutory deductions from nested persisted `pf.employee` and `esic.employee` itemization with legacy fallback.
+- `SEC-014`: payslip filenames are deterministically sanitized to safe ASCII filename parts.
+- `PAY-013` and `PAY-015`: payroll preview statutory deductions now share the same PF/ESIC helper and ESIC wage-ceiling condition as the latest settlement formula, but runtime settlement proof is still missing.
+- `DASH-003`: Factory Today gross wages now aggregate existing production log meter/rate snapshots, but runtime dashboard proof is still missing.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch15/BATCH15-payroll-doc-export-consistency-proof.json` -> passed.
+- `npx vitest run __tests__/batch15-payroll-doc-export-consistency.test.ts` -> passed, 1 test file, 7 tests.
+- Payroll regression pack -> passed, 7 test files, 40 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- Targeted `npx eslint` for touched Batch 15 files -> passed.
+- `npm run build` -> passed. Prebuild full Vitest passed with 43 test files, 358 tests passed, and 1 skipped; Next build exited 0.
+
+Resolution status:
+
+- `PAY-023`, `PAY-024`, and `SEC-014` are documented as pass in the active matrix.
+- `PAY-013`, `PAY-015`, and `DASH-003` are documented as `code_verified`, not pass, pending disposable runtime/browser proof.

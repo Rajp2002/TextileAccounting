@@ -53,6 +53,10 @@ import {
     type PayrollManualAdjustmentReason,
     type PayrollManualAdjustmentType,
 } from '@/lib/payroll-manual-adjustments'
+import {
+    calculatePayrollStatutoryDeductions,
+    extractPayrollStatutoryDeductionsFromItemization,
+} from '@/lib/payroll-statutory'
 
 type PaymentMode = 'cash' | 'bank_transfer' | 'upi' | 'cheque'
 type PendingPayrollManualAdjustment = PayrollManualAdjustment & { id: string }
@@ -721,16 +725,7 @@ function isPfEsiEnrolled(worker: WorkerBase) {
 }
 
 function getStatutoryDeductions(gross: number, enrolled: boolean) {
-    if (!enrolled) {
-        return { pfEmployee: 0, esicEmployee: 0 }
-    }
-
-    const grossPay = Math.max(gross, 0)
-    const pfBasis = Math.min(grossPay, 15000)
-    return {
-        pfEmployee: pfBasis * 0.12,
-        esicEmployee: grossPay * 0.0075,
-    }
+    return calculatePayrollStatutoryDeductions(gross, enrolled)
 }
 
 function getSettlementPreview(params: {
@@ -831,9 +826,52 @@ function getItemizationNumber(payload: unknown, key: string) {
     return toPayrollNumber(value)
 }
 
+function getItemizationText(payload: unknown, ...keys: string[]) {
+    const itemization = getItemizationObject(payload)
+    for (const key of keys) {
+        const value = itemization[key]
+        if (typeof value === 'string' && value.trim()) return value.trim()
+    }
+
+    return null
+}
+
+function getItemizationStatutoryDeductions(payload: unknown) {
+    return extractPayrollStatutoryDeductionsFromItemization(payload)
+}
+
+function getAdvanceRecoveryRows(payload: unknown) {
+    const rows = getItemizationObject(payload).advances_recovered
+    if (!Array.isArray(rows)) return []
+
+    return rows
+        .filter((row): row is Record<string, unknown> => !!row && typeof row === 'object' && !Array.isArray(row))
+        .map((row) => ({
+            date: typeof row.date === 'string' ? row.date : null,
+            label: typeof row.label === 'string' ? row.label : null,
+            recovered: toPayrollNumber(row.recovered),
+        }))
+        .filter((row) => row.recovered > 0)
+}
+
 function getPayslipItemization(payload: unknown): PayslipItemization | undefined {
     const itemization = getItemizationObject(payload)
-    return Object.keys(itemization).length > 0 ? itemization as PayslipItemization : undefined
+    if (Object.keys(itemization).length === 0) return undefined
+
+    const statutory = getItemizationStatutoryDeductions(payload)
+
+    return {
+        advances_recovered: getAdvanceRecoveryRows(payload),
+        manualAdjustments: getManualAdjustmentRows(payload),
+        inamTotal: getItemizationNumber(payload, 'inamTotal'),
+        kapaatTotal: getItemizationNumber(payload, 'kapaatTotal'),
+        manualAdjustmentTotal: getItemizationNumber(payload, 'manualAdjustmentTotal'),
+        advanceRecovery: getItemizationNumber(payload, 'advanceRecovery'),
+        pfEmployee: statutory.pfEmployee,
+        esicEmployee: statutory.esicEmployee,
+        remainingDebt: getItemizationNumber(payload, 'remainingDebt'),
+        paymentMode: getItemizationText(payload, 'payment_mode', 'paymentMethod'),
+    }
 }
 
 function getManualAdjustmentRows(payload: unknown) {
@@ -955,6 +993,7 @@ function buildSettlementCsv(settlements: SettlementHistoryItem[]) {
     ]
     const rows = settlements.map((settlement) => {
         const manualAdjustments = getManualAdjustmentRows(settlement.itemization_payload)
+        const statutory = getItemizationStatutoryDeductions(settlement.itemization_payload)
         const paymentMode = settlement.payment_mode ? paymentModeLabels[settlement.payment_mode] : ''
         const totalMeters = settlement.earningLines.reduce((sum, line) => sum + (line.meters || 0), 0)
         const earningLines = settlement.earningLines.map((line) => {
@@ -976,8 +1015,8 @@ function buildSettlementCsv(settlements: SettlementHistoryItem[]) {
             getItemizationNumber(settlement.itemization_payload, 'inamTotal').toFixed(2),
             getItemizationNumber(settlement.itemization_payload, 'kapaatTotal').toFixed(2),
             toPayrollNumber(settlement.advance_deducted).toFixed(2),
-            getItemizationNumber(settlement.itemization_payload, 'employee_pf').toFixed(2),
-            getItemizationNumber(settlement.itemization_payload, 'employee_esic').toFixed(2),
+            statutory.pfEmployee.toFixed(2),
+            statutory.esicEmployee.toFixed(2),
             toPayrollNumber(settlement.net_payout).toFixed(2),
             toPayrollNumber(settlement.carried_forward_debt).toFixed(2),
             settlement.is_final_settlement ? 'Yes' : 'No',
@@ -1053,6 +1092,7 @@ function MeterWorkerRow({
     onToggle,
     isMutating,
     selectedMonth,
+    cycleStartDay,
     factoryName,
     canSettle,
     settleDisabledReason,
@@ -1061,6 +1101,7 @@ function MeterWorkerRow({
     onToggle: (isFinal?: boolean) => void
     isMutating?: boolean
     selectedMonth: string
+    cycleStartDay: number
     factoryName: string
     canSettle: boolean
     settleDisabledReason?: string
@@ -1068,9 +1109,12 @@ function MeterWorkerRow({
     const [expanded, setExpanded] = useState(false)
     const [isFinalSettlement, setIsFinalSettlement] = useState(false)
     const [waSending, setWaSending] = useState(false)
+    const { t } = useTranslation()
     const tl = useTransliterate()
     const isPaid = worker.settlement?.status === 'paid'
     const hasAdvances = worker.totalAdvances > 0
+    const cycleBounds = getPayrollCycleBounds(selectedMonth, cycleStartDay)
+    const paymentModeLabel = getPaymentModeLabel(worker.settlement?.payment_mode, t)
     
     const preview = getSettlementPreview({
         gross: worker.totalPay,
@@ -1286,16 +1330,25 @@ function MeterWorkerRow({
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-8 text-[11px] gap-1.5"
-                                        onClick={() => generateMeterPayslip({
+                                        className={cn(
+                                            'h-8 text-[11px] gap-1.5',
+                                            !isPaid && 'cursor-not-allowed text-gray-300'
+                                        )}
+                                        disabled={!isPaid}
+                                        title={!isPaid ? 'Settle payroll first to download a payslip' : undefined}
+                                        onClick={() => isPaid && generateMeterPayslip({
                                             factoryName,
                                             month: selectedMonth,
                                             workerName: worker.name,
+                                            cycleStartDate: cycleBounds.cycle_start,
+                                            cycleEndDate: cycleBounds.cycle_end,
                                             machines: worker.machines,
                                             totalMeters: worker.totalMeters,
                                             totalPay: worker.totalPay,
-                                            totalAdvances: worker.totalAdvances,
+                                            advanceDeducted: displayDeduction,
+                                            remainingDebt: displayRemaining,
                                             netPay: displayNet,
+                                            paymentMode: paymentModeLabel,
                                             itemization: getPayslipItemization(worker.settlement?.itemization_payload),
                                         })}
                                     >
@@ -1384,6 +1437,7 @@ function FixedWorkerRow({
     onToggle,
     isMutating,
     selectedMonth,
+    cycleStartDay,
     factoryName,
     canSettle,
     settleDisabledReason,
@@ -1392,6 +1446,7 @@ function FixedWorkerRow({
     onToggle: (isFinal?: boolean) => void
     isMutating?: boolean
     selectedMonth: string
+    cycleStartDay: number
     factoryName: string
     canSettle: boolean
     settleDisabledReason?: string
@@ -1404,6 +1459,8 @@ function FixedWorkerRow({
     const isPaid = worker.settlement?.status === 'paid'
     const isDaily = worker.role === 'daily'
     const hasAdvances = worker.totalAdvances > 0
+    const cycleBounds = getPayrollCycleBounds(selectedMonth, cycleStartDay)
+    const paymentModeLabel = getPaymentModeLabel(worker.settlement?.payment_mode, t)
 
     const preview = getSettlementPreview({
         gross: worker.earnedPay,
@@ -1579,17 +1636,26 @@ function FixedWorkerRow({
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-8 text-[11px] gap-1.5"
-                                        onClick={() => generateFixedPayslip({
+                                        className={cn(
+                                            'h-8 text-[11px] gap-1.5',
+                                            !isPaid && 'cursor-not-allowed text-gray-300'
+                                        )}
+                                        disabled={!isPaid}
+                                        title={!isPaid ? 'Settle payroll first to download a payslip' : undefined}
+                                        onClick={() => isPaid && generateFixedPayslip({
                                             factoryName,
                                             month: selectedMonth,
                                             workerName: worker.name,
+                                            cycleStartDate: cycleBounds.cycle_start,
+                                            cycleEndDate: cycleBounds.cycle_end,
                                             role: worker.role,
                                             monthlySalary: worker.monthly_salary,
                                             daysWorked: worker.daysWorked,
                                             earnedPay: worker.earnedPay,
-                                            totalAdvances: worker.totalAdvances,
+                                            advanceDeducted: displayDeduction,
+                                            remainingDebt: displayRemaining,
                                             netPay: displayNet,
+                                            paymentMode: paymentModeLabel,
                                             itemization: getPayslipItemization(worker.settlement?.itemization_payload),
                                         })}
                                     >
@@ -2559,8 +2625,11 @@ function SettlementHistoryDialog({
     const manualAdjustments = selectedSettlement ? getManualAdjustmentRows(selectedSettlement.itemization_payload) : []
     const selectedInam = selectedSettlement ? getItemizationNumber(selectedSettlement.itemization_payload, 'inamTotal') : 0
     const selectedKapaat = selectedSettlement ? getItemizationNumber(selectedSettlement.itemization_payload, 'kapaatTotal') : 0
-    const selectedPf = selectedSettlement ? getItemizationNumber(selectedSettlement.itemization_payload, 'employee_pf') : 0
-    const selectedEsic = selectedSettlement ? getItemizationNumber(selectedSettlement.itemization_payload, 'employee_esic') : 0
+    const selectedStatutory = selectedSettlement
+        ? getItemizationStatutoryDeductions(selectedSettlement.itemization_payload)
+        : { pfEmployee: 0, esicEmployee: 0 }
+    const selectedPf = selectedStatutory.pfEmployee
+    const selectedEsic = selectedStatutory.esicEmployee
     const paymentModeLabel = selectedSettlement ? getPaymentModeLabel(selectedSettlement.payment_mode, t) : null
     const selectedTotalMeters = selectedSettlement
         ? selectedSettlement.earningLines.reduce((sum, line) => sum + (line.meters || 0), 0)
@@ -3201,6 +3270,12 @@ export default function PayrollPage() {
                                     manual_adjustments: manualAdjustments,
                                     employee_pf: preview.pfEmployee,
                                     employee_esic: preview.esicEmployee,
+                                    pf: preview.pfEmployee > 0
+                                        ? { basis: Math.min(preview.adjustedGross, 15000), employee: preview.pfEmployee }
+                                        : null,
+                                    esic: preview.esicEmployee > 0
+                                        ? { employee: preview.esicEmployee }
+                                        : null,
                                     payment_mode: variables.paymentMode ?? null,
                                     verifiedByOwner: variables.verifiedByOwner ?? false,
                                 } : {
@@ -3212,6 +3287,10 @@ export default function PayrollPage() {
                                     finalPayout: preview.netPayout,
                                     remainingDebt: preview.remainingDebt,
                                     manual_adjustments: manualAdjustments,
+                                    employee_pf: preview.pfEmployee,
+                                    employee_esic: preview.esicEmployee,
+                                    pf: null,
+                                    esic: null,
                                     payment_mode: variables.paymentMode ?? null,
                                     verifiedByOwner: variables.verifiedByOwner ?? false,
                                 },
@@ -3697,6 +3776,7 @@ export default function PayrollPage() {
                                     onToggle={(isFinal) => handleTogglePaid('meter', w.id, w.settlement?.status === 'paid', isFinal)}
                                     isMutating={mutation.isPending && mutation.variables?.workerId === w.id && mutation.variables?.workerType === 'meter'}
                                     selectedMonth={selectedMonth}
+                                    cycleStartDay={cycleStartDay}
                                     factoryName={orgName}
                                     canSettle={selectedCycleStatus.is_payroll_window_open}
                                     settleDisabledReason={settleDisabledReason}
@@ -3757,6 +3837,7 @@ export default function PayrollPage() {
                                     onToggle={(isFinal) => handleTogglePaid('fixed', w.id, w.settlement?.status === 'paid', isFinal)}
                                     isMutating={mutation.isPending && mutation.variables?.workerId === w.id && mutation.variables?.workerType === 'fixed'}
                                     selectedMonth={selectedMonth}
+                                    cycleStartDay={cycleStartDay}
                                     factoryName={orgName}
                                     canSettle={selectedCycleStatus.is_payroll_window_open}
                                     settleDisabledReason={settleDisabledReason}

@@ -15,7 +15,7 @@ Rules for entries:
 | --- | --- | --- |
 | `SEC-A` mutable profile authorization | Closed in Batch 1 / pass | `SEC-002` through `SEC-005` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `SEC-B` privileged action/lockdown enforcement | Partially closed in Batch 1 / open remainder | Batch 1 closed `SEC-006` and `AUTH-016` with runtime/test evidence and active matrix rows promoted to pass. `AUTH-008`, `PAY-018`, and `PAY-020` remain open. |
-| `SEC-C` webhook/export/compliance fail-closed | Partially closed in Batch 9 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Webhook, export, audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
+| `SEC-C` webhook/export/compliance fail-closed | Partially closed through Batch 15 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Batch 15 closes `SEC-014` payslip filename safety with deterministic source/test proof. Webhook, owner export, settings audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
 | `STOCK-A` stock lifecycle/archive policy | Partially closed in Batch 12 / open remainder | Batch 12 closes `STOCK-012` with focused local lifecycle proof. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial because their exact row wording needs broader proof. |
@@ -23,8 +23,8 @@ Rules for entries:
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
 | `DISP-B` receipt-state coherence | Closed through Batch 12 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. Batch 12 closes `DISP-013` with focused local dispatch archive proof. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
-| `DASH-A` dashboard/sign-off read-model truth | Partially closed through Batch 8C / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10` with clean deployed browser/server/Sentry evidence. Payroll and historical analytics remain open. |
-| `PAY-A` payroll/kharchi ledger integrity | Partially remediated in Batch 9 / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Legacy RPCs, online kharchi atomicity, payroll deductions/history, and dashboard wage rows remain open. |
+| `DASH-A` dashboard/sign-off read-model truth | Partially closed/code-verified through Batch 15 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10`; Batch 15 source-fixes `DASH-003` gross wage read-model calculation but keeps it `code_verified` pending disposable after-shift runtime proof. Historical analytics and sign-off evidence debt remain open. |
+| `PAY-A` payroll/kharchi ledger integrity | Partially remediated through Batch 15 / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Batch 15 closes payroll payslip PDF/export rows `PAY-023` and `PAY-024`, and moves PF/ESI preview formula rows `PAY-013` and `PAY-015` to `code_verified` pending disposable settlement proof. Legacy RPCs, online kharchi atomicity, and broader settlement correctness remain open. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Partially closed in Batch 9 / open remainder | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016` with offline fallback, auth-boundary cache cleanup, online-only kharchi, and truthful public/privacy copy. `OFF-007`, `OFF-010`, and `OFF-009` remain open or partial. |
 | `REL-A` release gates | Partially remediated through Batch 8C / open remainder | Batch 7 closes `TECH-013` source-level release test gate. Batch 8 closes `TECH-007` migration-head alignment evidence. Batch 8B closes `TECH-010` Sentry release/source-map proof. Batch 8C closes final clean deployed signoff evidence for `SIGNOFF-10`. Clean install, audit, live Sentry payload inspection, restore, and rollback remain open or blocked. |
@@ -391,7 +391,7 @@ Proof commands recorded:
 Active matrix result:
 
 - `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` are promoted to pass.
-- `AUTH-008`, `PAY-018`, `PAY-020`, `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-017`, and other unrelated unresolved failures remain open.
+- `AUTH-008`, `PAY-018`, `PAY-020`, `TECH-009`, `WA-008`, `SEC-009`, `SEC-015`, `SEC-017`, and other unrelated unresolved failures remain open. `SEC-014` is closed later by Batch 15.
 
 Out of scope and still open for later batches:
 
@@ -1337,3 +1337,64 @@ Resolution status:
 
 - `EST-001`, `EST-005`, and `EST-012` are pass-ready and documented as pass in the active QA matrix.
 - `EST-004`, `SETUP-001`, `SETUP-002`, and all unproven supporting candidates remain unchanged/open as listed above.
+
+## Batch 15 - Payroll Document Export Statutory Consistency Closeout
+
+Date/time: 2026-07-01 04:08 IST. Source base `origin/main` at `01c2f4d6f63cfe1870919b8678e2742122460608`.
+
+Scope:
+
+- `PAY-013`
+- `PAY-015`
+- `PAY-023`
+- `PAY-024`
+- `SEC-014`
+- Secondary same-root row: `DASH-003`
+
+Rows promoted to pass:
+
+- `PAY-023`
+- `PAY-024`
+- `SEC-014`
+
+Rows moved to `code_verified` but not pass:
+
+- `PAY-013` remains unresolved evidence debt because the preview PF/ESI formula is source/test aligned, but no disposable high-gross enrolled settlement was executed.
+- `PAY-015` remains unresolved evidence debt because the preview-versus-settlement ESIC divergence is source/test fixed, but no live persisted settlement proof was collected.
+- `DASH-003` remains unresolved evidence debt because the Factory Today wage read model is source/test fixed, but no after-shift runtime/browser proof was collected.
+
+Rows explicitly not closed by Batch 15:
+
+- `PAY-006`, `PAY-018`, `PAY-020`, `PAY-027`, and `PAY-028` remain outside this document/export/statutory consistency scope. `PAY-028` was already closed by Batch 9 and was not disturbed.
+- `QUOTE-007`, `ORDER-005`, `ORDER-009`, `PROD-011`, `MASTER-014`, `SEC-015`, `TECH-001`, `TECH-005`, `TECH-006`, `TECH-009`, `WA-008`, billing/provider rows, restore/rollback rows, Sentry live-event rows, production/order boundary rows, and stock/dispatch/commercial flows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch15/BATCH15-payroll-doc-export-consistency-proof.json`.
+- `PAY-013`: `lib/payroll-statutory.ts` now centralizes PF/ESI preview calculations with PF basis capped at 15000 and employee ESIC applied only when adjusted gross is at or below 21000. Focused tests prove enrolled below-threshold, enrolled above-threshold, and non-enrolled behavior. Runtime settlement proof remains missing.
+- `PAY-015`: payroll preview now uses the shared statutory helper, and optimistic settlement itemization writes nested `pf`/`esic` objects alongside legacy fields. Focused tests cover the high-gross ESIC divergence that caused the row to fail. Runtime persisted-settlement proof remains missing.
+- `PAY-023`: `lib/generate-payslip.ts` now includes explicit cycle dates, earning lines, manual inam/kapaat adjustments, advance recovery, PF, ESI, net pay, carried-forward debt, and payment mode; the payroll page disables PDF generation until a paid settlement exists and passes settlement-backed values into the generator.
+- `PAY-024`: settlement history detail and CSV export now read statutory deductions through a shared extractor that prefers persisted nested `pf.employee` and `esic.employee` and falls back to legacy top-level fields.
+- `SEC-014`: payslip filename generation now strips path separators, traversal dots, and filename-hostile punctuation, constraining generated PDF filenames to safe ASCII filename parts.
+- `DASH-003`: Factory Today `grossWagesSoFar` now uses existing production log `meters * worker_rate_snapshot` snapshots through `calculatePieceRateGrossWages`; runtime after-shift proof remains missing.
+
+Verification commands:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch15/BATCH15-payroll-doc-export-consistency-proof.json` -> passed.
+- `npx vitest run __tests__/batch15-payroll-doc-export-consistency.test.ts` -> passed, 1 test file and 7 tests.
+- `npx vitest run __tests__/payroll-manual-adjustments.test.ts __tests__/payroll-settlement-history.test.ts __tests__/payroll-cycle.test.ts __tests__/payroll-pay-date-config.test.ts __tests__/p1-payroll-revert.test.ts __tests__/p1-payroll-guard.test.ts __tests__/p1-payroll-config-onboarding.test.ts` -> passed, 7 test files and 40 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint app/\(dashboard\)/owner/payroll/page.tsx app/\(dashboard\)/owner/today/actions.ts lib/generate-payslip.ts lib/payroll-statutory.ts lib/payroll-read-models.ts __tests__/batch15-payroll-doc-export-consistency.test.ts` -> passed.
+- `npm run build` -> passed. Prebuild full Vitest passed with 43 test files, 358 tests passed, and 1 skipped; Next production build exited 0.
+
+Data safety:
+
+- No migration was needed or created.
+- No Supabase command, db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production/customer data mutation, external provider call, stock/dispatch/commercial path change, or production/order boundary change was used.
+- Docs closeout force-adds only the ignored Batch 15 proof artifact and stages only the approved Batch 15 implementation, tests, docs, matrix, and proof files.
+
+Resolution status:
+
+- `PAY-023`, `PAY-024`, and `SEC-014` are documented as pass in the active QA matrix.
+- `PAY-013`, `PAY-015`, and `DASH-003` are documented as `code_verified`, not pass, pending disposable runtime/browser proof.

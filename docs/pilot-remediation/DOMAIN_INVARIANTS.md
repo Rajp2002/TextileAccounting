@@ -41,6 +41,8 @@ produced meters = sum(valid positive production_logs.meters)
 piece-rate gross = sum(log meters x stored worker-rate snapshot)
 ```
 
+Batch 15 proof note: `DASH-003` is source-fixed and `code_verified`, not pass. Factory Today now computes `grossWagesSoFar` from existing cycle production logs using `sum(nonnegative meters x nonnegative worker_rate_snapshot)` and focused tests cover the helper/source wiring. It still needs disposable after-shift runtime proof before pass.
+
 Required proof:
 
 - No negative meters at UI, server action, RPC, or table boundary.
@@ -198,6 +200,8 @@ Required proof:
 - Settlement and reversal cannot be executed through legacy bypass RPCs.
 - Online kharchi creates both ledger rows or neither.
 - Offline kharchi is disabled, de-scoped, or reconciles to authoritative tables.
+
+Batch 15 proof note: `PAY-023` and `PAY-024` are satisfied by focused source/test proof for payslip PDF content and settlement history/CSV statutory extraction. `PAY-013` and `PAY-015` are source-fixed and `code_verified`, not pass: preview PF/ESI now uses the same ESIC wage-ceiling formula as the latest settlement path, but disposable high-gross enrolled settlement runtime proof is still required. `SEC-014` is satisfied by deterministic payslip filename sanitization tests.
 
 ## Idempotency and Unknown Outcomes
 
