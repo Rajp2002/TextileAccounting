@@ -18,9 +18,10 @@ Rules for entries:
 | `SEC-C` webhook/export/compliance fail-closed | Partially closed in Batch 9 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Webhook, export, audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
+| `STOCK-A` stock lifecycle/archive policy | Partially closed in Batch 12 / open remainder | Batch 12 closes `STOCK-012` with focused local lifecycle proof. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial because their exact row wording needs broader proof. |
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Start Party Order fast-path atomicity remains open; below-target completion is source-fixed but still needs runtime/browser proof. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
-| `DISP-B` receipt-state coherence | Closed in Batch 3 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. |
+| `DISP-B` receipt-state coherence | Closed through Batch 12 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. Batch 12 closes `DISP-013` with focused local dispatch archive proof. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
 | `DASH-A` dashboard/sign-off read-model truth | Partially closed through Batch 8C / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10` with clean deployed browser/server/Sentry evidence. Payroll and historical analytics remain open. |
 | `PAY-A` payroll/kharchi ledger integrity | Partially remediated in Batch 9 / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Legacy RPCs, online kharchi atomicity, payroll deductions/history, and dashboard wage rows remain open. |
@@ -1256,3 +1257,43 @@ Resolution status:
 - `EST-011` and `ORDER-006` are pass-ready and documented as pass in the active QA matrix.
 - `ORDER-008` is documented as `code_verified`/open-partial pending runtime/browser proof.
 - `QUOTE-007` remains fail/open pending database/RPC transaction work.
+
+## Batch 12 - Code-Verified Proof Sweep Closeout
+
+Date/time: 2026-06-30 20:29 IST. Source base `9b21acd2334cd4048fc999acb3d102926581540e`.
+
+Scope:
+
+- `STOCK-012`
+- `DISP-013`
+
+Rows explicitly not closed by Batch 12:
+
+- `ORDER-008` remains `code_verified` because Batch 11 source/test evidence still lacks disposable runtime/browser proof for below-target, pending-dispatch, and normal completion paths.
+- `GOLDEN-B-12` remains blocked because the active row requires a full Golden B second-batch exact receipt rerun; Batch 3 exact-receipt proof is analogous only.
+- `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain `code_verified` because Batch 12 safe tests did not fully satisfy their exact row wording.
+- External/provider, restore/rollback, Sentry live-event, WhatsApp deployed-callback, billing-provider, and unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch12/BATCH12-code-verified-proof-sweep.json`.
+- `STOCK-012`: `npx vitest run __tests__/p1-stock-lifecycle.test.ts` passed 10 tests and directly proved closed/sold-out market-run lots with zero available/reserved/pending meters and no discrepancy are non-actionable/archive-eligible.
+- `DISP-013`: `npx vitest run __tests__/dispatch-archive.test.ts` passed 7 tests and directly proved fully dispatched and confirmed groups archive, while incomplete, unconfirmed, disputed, discrepancy, or e-way-gap groups remain active.
+
+Verification commands:
+
+- `git status --short` -> clean before docs closeout.
+- `git diff --check` -> passed before docs closeout.
+- `jq empty output/qa/batch12/BATCH12-code-verified-proof-sweep.json` -> passed.
+- `npx vitest run __tests__/p1-stock-lifecycle.test.ts` -> passed, 1 test file and 10 tests.
+- `npx vitest run __tests__/dispatch-archive.test.ts` -> passed, 1 test file and 7 tests.
+
+Data safety:
+
+- No product code, migration, schema, RPC, Supabase command, db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production data mutation, or external provider proof was used.
+- Docs closeout force-adds only the ignored Batch 12 proof artifact and stages only the approved Batch 12 docs, matrix, and proof files.
+
+Resolution status:
+
+- `STOCK-012` and `DISP-013` are pass-ready and documented as pass in the active QA matrix.
+- `ORDER-008`, `GOLDEN-B-12`, `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain unchanged/open as listed above.

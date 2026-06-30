@@ -80,6 +80,8 @@ Batch 10 note: `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and 
 
 Batch 11 note: `EST-011` and `ORDER-006` are closed by focused estimator/order lifecycle proof. Estimator quote/order artifact paths now share server-boundary validation for empty, zero, negative, non-finite, and extreme warp/weft inputs; target/deadline edits reject targets below already-produced meters and rely on existing audit-trigger history evidence. `ORDER-008` is source-fixed and `code_verified` but not closed until runtime/browser proof confirms the below-target completion confirmation. `QUOTE-007` remains open because strict Start Party Order atomicity needs database/RPC transaction work.
 
+Batch 12 note: `STOCK-012` and `DISP-013` are closed by focused local proof in `output/qa/batch12/BATCH12-code-verified-proof-sweep.json`. `npx vitest run __tests__/p1-stock-lifecycle.test.ts` passed 10 tests for closed/sold-out zero-meter market-run archive eligibility, and `npx vitest run __tests__/dispatch-archive.test.ts` passed 7 tests for delivered-complete dispatch group archive eligibility. `ORDER-008`, `GOLDEN-B-12`, `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial under their exact proof requirements.
+
 ## Pilot Sign-Off Evidence Package
 
 Final sign-off must include:

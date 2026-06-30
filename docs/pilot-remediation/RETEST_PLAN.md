@@ -252,6 +252,7 @@ Acceptance:
 
 - Batch 3 satisfied this dispatch/receipt retest for `DISP-003`, `DISP-007`, `DISP-010`, `DISP-019`, `GOLDEN-B-09`, `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`.
 - Evidence: disposable QA runtime proof `BATCH3-fc791041`; migrations `20260627195152`, `20260628071340`, and `20260628073917` applied/aligned; focused Batch 3 Vitest passed 7 tests; targeted regression Vitest passed 27 tests; full Vitest passed 306 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
+- Batch 12 satisfied `DISP-013` with focused local dispatch archive proof: `npx vitest run __tests__/dispatch-archive.test.ts` passed 7 tests and verified fully dispatched/confirmed groups archive while partial, unconfirmed, disputed, discrepancy, and e-way-gap groups stay active.
 - `SIGNOFF-10` received partial dispatch/package/receipt runtime evidence here and is closed later by Batch 8C clean deployed browser/server/Sentry evidence.
 
 ## P2 Commercials Receivables Payments Retest
@@ -287,6 +288,7 @@ Acceptance:
 Commands:
 
 ```bash
+npx vitest run __tests__/p1-stock-lifecycle.test.ts
 npx vitest run __tests__/p2-stock-audit-refresh.test.ts
 npx vitest run __tests__/p2-stock-audit-refresh.test.ts __tests__/p1-stock-lifecycle.test.ts __tests__/p1-stock-source-validation.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/p0-atomicity.test.ts __tests__/p1-party-first-stock-sale-dispatch.test.ts __tests__/p2-dispatch-sale-receipt.test.ts __tests__/commercials-read-model.test.ts __tests__/p1-commercial-payments.test.ts __tests__/p2-commercials-receivables-payments.test.ts
 npx vitest run
@@ -304,6 +306,7 @@ Runtime checks:
 Acceptance:
 
 - Batch 5 satisfied this stock audit refresh retest for `STOCK-016` and `STOCK-017`.
+- Batch 12 satisfied `STOCK-012` with focused local stock lifecycle proof: `npx vitest run __tests__/p1-stock-lifecycle.test.ts` passed 10 tests and verified closed/sold-out zero-meter market-run lots are non-actionable/archive-eligible. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` still need exact broader proof before promotion.
 - Evidence: disposable QA proof `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json`; implementation commit `46ad361fa03d3fb9d561c639e5e3ed6424cb8e03`; focused Batch 5 Vitest passed 4 tests; Batch 2/3/4 stock, dispatch, and commercials regression pack passed 85 tests; full Vitest passed 317 tests with 1 skipped; `npx tsc --noEmit`, targeted ESLint, and `git diff --check` passed.
 - No migration was required.
 - `GOLDEN-A-19` and `GOLDEN-A-20` remained open at Batch 5 closeout and were closed later by Batch 6 Golden A runtime proof. `SIGNOFF-10` remained partial at Batch 5 closeout and is closed later by Batch 8C. `TIME-002` and `OFF-009` remain open or partial evidence only.

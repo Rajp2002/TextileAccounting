@@ -44,6 +44,8 @@ Closed in Batch 10 and removed from the open failure coverage rows: estimator/qu
 
 Closed in Batch 11 and removed from the open failure coverage rows: server-boundary estimator validation and target/deadline produced-meter/audit guard (`EST-011`, `ORDER-006`). `ORDER-008` is source-fixed and moved to `code_verified`, but remains open/partial pending runtime/browser proof. `QUOTE-007` remains fail/open because strict Start Party Order atomicity requires database/RPC transaction work.
 
+Closed in Batch 12 and removed from `code_verified` evidence debt: stock archive policy and dispatch archive eligibility (`STOCK-012`, `DISP-013`). `ORDER-008`, `GOLDEN-B-12`, `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial under their existing proof requirements.
+
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
 Closed rows: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
@@ -250,6 +252,24 @@ Resolution:
 - Archive helper did not archive unresolved dispatch/receipt obligations.
 
 Required proof: satisfied by Batch 3 runtime proof, targeted Vitest, full Vitest, TypeScript, targeted ESLint, migration alignment, and active matrix promotion to pass.
+
+Batch 12 follow-on archive proof: `DISP-013` is satisfied by focused local proof that a fully dispatched and confirmed dispatch group archives and is not actionable while partial, unconfirmed, disputed, discrepancy, and e-way-gap groups remain active. Evidence: `output/qa/batch12/BATCH12-code-verified-proof-sweep.json`; `npx vitest run __tests__/dispatch-archive.test.ts` passed 7 tests.
+
+## Closed STOCK-A - Sold-Out Market Lot Archive Eligibility
+
+Closed rows: `STOCK-012`
+
+Evidence: `output/qa/batch12/BATCH12-code-verified-proof-sweep.json`, `lib/stock-lifecycle.ts`, `__tests__/p1-stock-lifecycle.test.ts`, active QA matrix closeout.
+
+Invariant: closed or sold-out market-run lots with zero available, zero reserved, zero pending dispatch, and no unresolved discrepancy are not active godown rows and are archive/history eligible.
+
+Resolution:
+
+- Focused local lifecycle proof verified the closed/sold-out zero-meter market-run cases through `isStockLotActionable`.
+- `npx vitest run __tests__/p1-stock-lifecycle.test.ts` passed 10 tests.
+- No product code, migration, Supabase command, direct SQL, package install, lockfile change, or production data mutation was used.
+
+Required proof: satisfied for `STOCK-012` only. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain `code_verified` because Batch 12 proof did not fully satisfy their exact row wording.
 
 ## Closed P2 COMM-A - Stock Audit Refresh And History Remainder
 

@@ -1,0 +1,693 @@
+{
+  "batch": "Batch 12",
+  "title": "code_verified to pass-ready proof sweep",
+  "source_commit": "9b21acd2334cd4048fc999acb3d102926581540e",
+  "branch": "codex/batch-12-code-verified-proof-sweep",
+  "created_at_ist": "2026-06-30T20:22:00+05:30",
+  "matrix_counts_before_batch12": {
+    "total": 377,
+    "pass": 182,
+    "fail": 40,
+    "blocked": 22,
+    "code_verified": 132,
+    "not_applicable": 1
+  },
+  "scope": {
+    "intent": "Proof-only sweep. No product implementation, migration, schema, RPC, provider, production data, or lockfile work.",
+    "active_proof_limit": "Safe, high-confidence candidates only.",
+    "runtime_boundary": "Local .env.local and supabase/.env.local point at the production Supabase host vzhwahudircrpgtitwzd.supabase.co and production site URL, so authenticated browser proof that creates or changes app data was treated as unsafe for this batch."
+  },
+  "docs_and_artifacts_inspected": [
+    "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+    "docs/pilot-remediation/FIX_LOG.md",
+    "docs/pilot-remediation/LOOP_STATE.md",
+    "docs/pilot-remediation/FAILURE_BACKLOG.md",
+    "docs/pilot-remediation/RETEST_PLAN.md",
+    "docs/pilot-remediation/DOMAIN_INVARIANTS.md",
+    "docs/pilot-remediation/PILOT_READY_DEFINITION.md",
+    "output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json",
+    "output/qa/batch6/BATCH6-20260628185811-golden-a-runtime-proof.json",
+    "output/qa/batch7/BATCH7-20260628194456-local-verification-summary.json",
+    "output/qa/batch7/BATCH7-20260628194456-release-runtime-evidence.json",
+    "output/qa/batch8/BATCH8-20260629103146-release-observability-evidence.json",
+    "output/qa/batch8b/BATCH8B-20260629153402-release-evidence-monitoring.json",
+    "output/qa/batch8c/BATCH8C-20260629184639-clean-deployed-smoke-after-dsn.json",
+    "output/qa/batch9/BATCH9-offline-cache-truth-proof.json",
+    "output/qa/batch10/BATCH10-estimator-quote-order-snapshots-proof.json",
+    "output/qa/batch11/BATCH11-estimator-order-lifecycle-proof.json",
+    "output/qa/PILOTQA-20260621-2058-8QIH/logs/business-reconciliation.json",
+    "output/qa/PILOTQA-20260621-2058-8QIH/logs/clock-and-deployment-evidence.json",
+    "output/qa/PILOTQA-20260621-2058-8QIH/logs/order-stock-sale-source-evidence-20260624.json",
+    "output/qa/PILOTQA-20260621-2058-8QIH/logs/estimator-quotes-source-evidence-20260624.json",
+    "output/qa/PILOTQA-20260621-2058-8QIH/logs/offline-pwa-evidence.json",
+    "output/qa/PILOTQA-20260621-2058-8QIH/logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
+    "output/qa/PILOTQA-20260621-2058-8QIH/logs/security-review.json",
+    "output/qa/PILOTQA-20260621-2058-8QIH/logs/whatsapp-code-evidence-20260624.json"
+  ],
+  "code_verified_rows_inspected": {
+    "count": 132,
+    "by_section": {
+      "9. Authentication, Signup, and Tenant Isolation": [
+        "AUTH-003",
+        "AUTH-005",
+        "AUTH-006",
+        "AUTH-012",
+        "AUTH-013"
+      ],
+      "10. Onboarding and Factory Setup": [
+        "SETUP-001",
+        "SETUP-002",
+        "SETUP-007",
+        "SETUP-010",
+        "SETUP-012"
+      ],
+      "11. Machines, Workers, and Assignments": [
+        "MASTER-001",
+        "MASTER-003",
+        "MASTER-006",
+        "MASTER-008",
+        "MASTER-009",
+        "MASTER-011",
+        "MASTER-012",
+        "MASTER-013",
+        "MASTER-015"
+      ],
+      "12. Estimator and Costing": [
+        "EST-001",
+        "EST-002",
+        "EST-004",
+        "EST-005",
+        "EST-006",
+        "EST-007",
+        "EST-008",
+        "EST-009",
+        "EST-010",
+        "EST-012",
+        "EST-013",
+        "EST-014",
+        "EST-015",
+        "EST-018"
+      ],
+      "13. Quote Lifecycle": [
+        "QUOTE-004",
+        "QUOTE-006"
+      ],
+      "14. Order-Centric End-to-End Tests": [
+        "ORDER-007",
+        "ORDER-008",
+        "ORDER-010",
+        "ORDER-011",
+        "ORDER-012",
+        "ORDER-013",
+        "ORDER-014",
+        "ORDER-015"
+      ],
+      "15. Market-Centric End-to-End Tests": [
+        "MARKET-009",
+        "MARKET-010",
+        "MARKET-013"
+      ],
+      "16. Supervisor Production Logging": [
+        "PROD-005",
+        "PROD-006",
+        "PROD-007",
+        "PROD-010",
+        "PROD-014",
+        "PROD-017",
+        "PROD-018",
+        "PROD-019",
+        "PROD-024",
+        "PROD-025",
+        "PROD-026",
+        "PROD-027",
+        "PROD-030"
+      ],
+      "17. Stock and Godown": [
+        "STOCK-004",
+        "STOCK-005",
+        "STOCK-007",
+        "STOCK-009",
+        "STOCK-010",
+        "STOCK-011",
+        "STOCK-012",
+        "STOCK-013"
+      ],
+      "18. Party-First Sale": [
+        "SALE-010",
+        "SALE-011",
+        "SALE-012",
+        "SALE-014",
+        "SALE-016"
+      ],
+      "19. Dispatch, Receipt, and Difference Reconciliation": [
+        "DISP-012",
+        "DISP-013",
+        "DISP-017",
+        "DISP-018"
+      ],
+      "20. Commercials, Receivables, and Collections": [
+        "COMM-003",
+        "COMM-009",
+        "COMM-013",
+        "COMM-015",
+        "COMM-018"
+      ],
+      "21. Payroll, Advances, Attendance, and Worker Money": [
+        "PAY-002",
+        "PAY-005",
+        "PAY-010",
+        "PAY-011",
+        "PAY-012",
+        "PAY-014",
+        "PAY-017",
+        "PAY-019",
+        "PAY-021",
+        "PAY-022",
+        "PAY-025",
+        "PAY-026"
+      ],
+      "22. Factory Today and Analytics": [
+        "DASH-001",
+        "DASH-002",
+        "DASH-005",
+        "DASH-006",
+        "DASH-008",
+        "DASH-009",
+        "DASH-010"
+      ],
+      "23. WhatsApp": [
+        "WA-001",
+        "WA-002",
+        "WA-003",
+        "WA-004",
+        "WA-005",
+        "WA-006",
+        "WA-007",
+        "WA-009"
+      ],
+      "24. Billing, Trial, and Referrals": [
+        "BILL-002",
+        "BILL-004",
+        "BILL-005",
+        "BILL-008"
+      ],
+      "25. Offline, PWA, Cache, and Network Resilience": [
+        "OFF-001",
+        "OFF-003",
+        "OFF-004"
+      ],
+      "26. Timezone, Date, and Localization": [
+        "TIME-003",
+        "TIME-004"
+      ],
+      "27. Security, Privacy, and Audit": [
+        "SEC-007",
+        "SEC-010",
+        "SEC-012",
+        "SEC-013"
+      ],
+      "28. UX, Accessibility, and Operational Fit": [
+        "UX-001",
+        "UX-002",
+        "UX-003",
+        "UX-004",
+        "UX-005",
+        "UX-006",
+        "UX-007",
+        "UX-008",
+        "UX-009",
+        "UX-010",
+        "UX-011"
+      ]
+    }
+  },
+  "candidate_rows_inspected": [
+    {
+      "id": "ORDER-008",
+      "current_status": "code_verified",
+      "severity": "Medium",
+      "row_requirement": "Completion warns about remaining quantity and pending dispatch.",
+      "existing_evidence": "Batch 11 artifact plus source-level Vitest verify updateOrderStatus confirmationRequired wiring and shared Orders UI dialog.",
+      "proof_needed": "Disposable runtime/browser proof for below-target completion, pending-dispatch completion, and normal completion.",
+      "safe_to_attempt_in_batch12": false,
+      "reason": "Authenticated browser proof would create/change order data against production-configured Supabase. Rerun of existing Vitest is supporting evidence only, not exact runtime proof."
+    },
+    {
+      "id": "GOLDEN-B-12",
+      "current_status": "blocked",
+      "severity": "Critical",
+      "row_requirement": "Record exact receipt for the second Golden B batch and preserve downstream invariants.",
+      "existing_evidence": "Batch 3 docs/tests provide analogous exact-receipt proof in a fresh disposable run, but the active row states the original Golden B second-batch receipt was not promoted.",
+      "proof_needed": "Rerun the full Golden B second-batch exact receipt step.",
+      "safe_to_attempt_in_batch12": false,
+      "reason": "Exact proof requires app data mutation and current local runtime is production-configured. Existing evidence is analogous rather than exact by row wording."
+    },
+    {
+      "id": "STOCK-012",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Closed/sold-out market lot with zero available moves to archive/history as intended.",
+      "existing_evidence": "Stock lifecycle helper and p1-stock-lifecycle unit tests already cover closed/sold-out zero-available market lots.",
+      "proof_needed": "Rerun focused local deterministic unit test.",
+      "safe_to_attempt_in_batch12": true,
+      "reason": "Pure local Vitest, no database, provider, Supabase command, direct SQL, or production data mutation."
+    },
+    {
+      "id": "STOCK-011",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Order lot while order active/completed/cancelled reserved/actionable/archive behavior matches policy.",
+      "existing_evidence": "Stock lifecycle helper and p1-stock-lifecycle unit tests cover completed order stock with reserved/pending meters and fulfilled completed order archive behavior.",
+      "proof_needed": "Broader exact proof for cancelled-order branch or accepted source/test consolidation.",
+      "safe_to_attempt_in_batch12": true,
+      "reason": "Local test was safe and passed, but exact row includes cancelled branch beyond the directly asserted helper cases, so no pass-ready recommendation."
+    },
+    {
+      "id": "STOCK-013",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Sold-out lot with pending dispatch remains in Dispatches/Commercials even if not in Active Stock.",
+      "existing_evidence": "Stock lifecycle tests cover Active Stock hiding; source evidence covers Dispatches/Commercials queries.",
+      "proof_needed": "Direct runtime/query proof or exact local test covering external visibility.",
+      "safe_to_attempt_in_batch12": true,
+      "reason": "Local tests were safe and passed, but Dispatches/Commercials visibility remains source-level, so no pass-ready recommendation."
+    },
+    {
+      "id": "MARKET-009",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Closed sold-out run with pending dispatch leaves Active Stock while pending dispatch remains visible in Dispatches/Commercials.",
+      "existing_evidence": "Stock lifecycle tests cover Active Stock hiding; source evidence covers Dispatches/Commercials visibility.",
+      "proof_needed": "Direct runtime/query proof or exact local test covering external visibility.",
+      "safe_to_attempt_in_batch12": true,
+      "reason": "Safe local tests passed, but only part of the row is directly exercised."
+    },
+    {
+      "id": "MARKET-010",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Sell out and receive all batches; run displays sold-out/closed correctly and archive is complete.",
+      "existing_evidence": "Stock lifecycle tests cover hidden sold-out/closed lots; source evidence covers market summary/archive aggregates.",
+      "proof_needed": "Runtime display/archive proof.",
+      "safe_to_attempt_in_batch12": false,
+      "reason": "Exact row spans runtime display and archive completeness; current local env is production-configured."
+    },
+    {
+      "id": "DISP-013",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Delivered group with all quantities complete moves to archive.",
+      "existing_evidence": "Dispatch archive helper and dispatch-archive unit test cover fully dispatched and confirmed groups archiving; DispatchesClient filters archived groups through the helper.",
+      "proof_needed": "Rerun focused local deterministic unit test.",
+      "safe_to_attempt_in_batch12": true,
+      "reason": "Pure local Vitest, no database, provider, Supabase command, direct SQL, or production data mutation."
+    },
+    {
+      "id": "UX-002",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Buttons during submission have disabled/progress state preventing double action.",
+      "existing_evidence": "Source audit of representative form states.",
+      "proof_needed": "Browser double-submit proof.",
+      "safe_to_attempt_in_batch12": false,
+      "reason": "Requires authenticated runtime and likely data mutation."
+    },
+    {
+      "id": "OFF-003",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Production draft while online, then offline remains local and clearly unsent.",
+      "existing_evidence": "Offline source evidence for localStorage draft behavior.",
+      "proof_needed": "Authenticated browser offline proof.",
+      "safe_to_attempt_in_batch12": false,
+      "reason": "Requires authenticated runtime against production-configured app."
+    },
+    {
+      "id": "OFF-004",
+      "current_status": "code_verified",
+      "severity": "",
+      "row_requirement": "Submit production offline must not claim success and must not duplicate on reconnect.",
+      "existing_evidence": "Offline source evidence for success/error and draft clearing paths.",
+      "proof_needed": "Authenticated browser offline transport proof.",
+      "safe_to_attempt_in_batch12": false,
+      "reason": "Requires authenticated runtime against production-configured app."
+    }
+  ],
+  "selected_proof_targets": [
+    "ORDER-008 supporting test rerun only",
+    "GOLDEN-B-12 consolidation inspection only",
+    "STOCK-012",
+    "DISP-013",
+    "STOCK-011/STOCK-013/MARKET-009 safe local test rerun but not pass-ready"
+  ],
+  "per_row_proof_summary": [
+    {
+      "id": "ORDER-008",
+      "result": "kept_code_verified",
+      "proof_summary": "Reran Batch 11 source-level Vitest: 1 file, 6 tests passed. This confirms server confirmationRequired wiring and UI dialog text/wiring but does not satisfy the row's required disposable runtime/browser proof for below-target, pending-dispatch, and normal completion paths.",
+      "commands": [
+        "npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts"
+      ],
+      "pass_ready": false
+    },
+    {
+      "id": "GOLDEN-B-12",
+      "result": "kept_blocked",
+      "proof_summary": "Inspected row wording and Batch 3 evidence. Batch 3 supplies analogous exact-receipt proof, but the active row explicitly requires rerunning the full Golden B second-batch exact receipt step before closing. No runtime rerun was attempted because it would mutate production-configured app data.",
+      "commands": [
+        "npx vitest run __tests__/p2-dispatch-sale-receipt.test.ts"
+      ],
+      "pass_ready": false
+    },
+    {
+      "id": "STOCK-012",
+      "result": "pass_ready_candidate",
+      "proof_summary": "Focused local stock lifecycle test passed 10/10. The test directly covers closed market-run lots and sold-out/closed exhausted lots returning non-actionable/archive behavior through isStockLotActionable.",
+      "commands": [
+        "npx vitest run __tests__/p1-stock-lifecycle.test.ts"
+      ],
+      "pass_ready": true
+    },
+    {
+      "id": "DISP-013",
+      "result": "pass_ready_candidate",
+      "proof_summary": "Focused local dispatch archive test passed 7/7. The test directly proves a fully dispatched and confirmed group archives and is not actionable, while incomplete/blocked groups remain active. DispatchesClient uses this helper for active dispatch filtering.",
+      "commands": [
+        "npx vitest run __tests__/dispatch-archive.test.ts"
+      ],
+      "pass_ready": true
+    },
+    {
+      "id": "STOCK-011",
+      "result": "kept_code_verified",
+      "proof_summary": "Local stock lifecycle test passed, but the row includes cancelled-order behavior not directly exercised by the focused helper test. Kept open pending exact coverage.",
+      "commands": [
+        "npx vitest run __tests__/p1-stock-lifecycle.test.ts"
+      ],
+      "pass_ready": false
+    },
+    {
+      "id": "STOCK-013",
+      "result": "kept_code_verified",
+      "proof_summary": "Local stock lifecycle and party-first stock sale/dispatch tests passed, but Dispatches/Commercials visibility remains source-level rather than direct runtime/query proof.",
+      "commands": [
+        "npx vitest run __tests__/p1-stock-lifecycle.test.ts",
+        "npx vitest run __tests__/p1-party-first-stock-sale-dispatch.test.ts"
+      ],
+      "pass_ready": false
+    },
+    {
+      "id": "MARKET-009",
+      "result": "kept_code_verified",
+      "proof_summary": "Local stock lifecycle and party-first stock sale/dispatch tests passed, but the exact row still needs direct proof that pending dispatch remains visible in Dispatches/Commercials after closed sold-out market-run handling.",
+      "commands": [
+        "npx vitest run __tests__/p1-stock-lifecycle.test.ts",
+        "npx vitest run __tests__/p1-party-first-stock-sale-dispatch.test.ts"
+      ],
+      "pass_ready": false
+    },
+    {
+      "id": "MARKET-010",
+      "result": "kept_code_verified",
+      "proof_summary": "No pass-ready proof collected. Existing tests cover only lifecycle hiding; row requires sold-out/closed display and archive completeness.",
+      "commands": [
+        "npx vitest run __tests__/p1-stock-lifecycle.test.ts"
+      ],
+      "pass_ready": false
+    }
+  ],
+  "test_results": [
+    {
+      "command": "npx vitest run __tests__/p1-stock-lifecycle.test.ts",
+      "result": "passed",
+      "details": "1 file passed, 10 tests passed"
+    },
+    {
+      "command": "npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts",
+      "result": "passed",
+      "details": "1 file passed, 6 tests passed"
+    },
+    {
+      "command": "npx vitest run __tests__/dispatch-archive.test.ts",
+      "result": "passed",
+      "details": "1 file passed, 7 tests passed"
+    },
+    {
+      "command": "npx vitest run __tests__/p2-dispatch-sale-receipt.test.ts",
+      "result": "passed",
+      "details": "1 file passed, 7 tests passed"
+    },
+    {
+      "command": "npx vitest run __tests__/p1-party-first-stock-sale-dispatch.test.ts",
+      "result": "passed",
+      "details": "1 file passed, 14 tests passed"
+    }
+  ],
+  "commands_run": [
+    {
+      "command": "git fetch origin --prune && git switch -C codex/batch-12-code-verified-proof-sweep origin/main && git status --short && git rev-parse origin/main",
+      "result": "passed",
+      "notes": "Switched branch to origin/main at 9b21acd2334cd4048fc999acb3d102926581540e; initial status was clean."
+    },
+    {
+      "command": "rg -n \"code_verified|ORDER-008|GOLDEN-B-12|Batch 3|Batch 11|exact-receipt|receipt\" ...",
+      "result": "passed",
+      "notes": "Large output truncated by terminal; followed with focused parsers and file reads."
+    },
+    {
+      "command": "find output/qa -maxdepth 4 -type f | sort",
+      "result": "passed",
+      "notes": "Inspected QA artifact inventory."
+    },
+    {
+      "command": "node parser for TEST_MATRIX.md status counts and code_verified grouping",
+      "result": "passed",
+      "notes": "Confirmed 377 total rows and 132 code_verified rows."
+    },
+    {
+      "command": "sed focused reads for Batch 10/11 docs, retest plan, and GOLDEN-B-12 matrix row",
+      "result": "passed"
+    },
+    {
+      "command": "for f in output/qa/batch3/* output/qa/batch10/* output/qa/batch11/* output/qa/batch6/* 2>/dev/null; do ...",
+      "result": "failed",
+      "notes": "Non-mutating zsh parse error while probing artifact files; replaced with find commands."
+    },
+    {
+      "command": "find output/qa -maxdepth 2 -type f -path '*/batch*/*' -o -path 'output/qa/PILOTQA-20260621-2058-8QIH/logs/*' | sort",
+      "result": "passed"
+    },
+    {
+      "command": "rg -n \"playwright|browser|qa|test:e2e|vitest|mock|MSW|msw|NEXT_PUBLIC_SUPABASE_URL|supabase start|supabase\" ... playwright.config.* vitest.config.* .",
+      "result": "failed",
+      "notes": "Non-mutating zsh glob failure because playwright.config.* did not match; replaced with direct package/env inspection."
+    },
+    {
+      "command": "node safe env key/host inspection for .env.local and supabase/.env.local",
+      "result": "passed",
+      "notes": "Printed keys and host hints only, not secrets. Confirmed production Supabase host and production Vercel site URL."
+    },
+    {
+      "command": "node package.json scripts inspection",
+      "result": "passed",
+      "notes": "Scripts include dev, build, lint, test, and a Batch 7 QA script; no e2e runner script found."
+    },
+    {
+      "command": "npx vitest run __tests__/p1-stock-lifecycle.test.ts",
+      "result": "passed"
+    },
+    {
+      "command": "npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts",
+      "result": "passed"
+    },
+    {
+      "command": "rg -n \"archive|Dispatch|dispatch group|shouldArchive|isDispatchGroupActionable|DISP-013|Delivered group\" __tests__ lib/dispatch app/(dashboard)/owner/dispatches",
+      "result": "failed",
+      "notes": "Non-mutating zsh glob failure due unquoted route path; rerun with quoted path."
+    },
+    {
+      "command": "rg -n \"archive|Dispatch|dispatch group|shouldArchive|isDispatchGroupActionable|DISP-013|Delivered group\" __tests__ lib/dispatch \"app/(dashboard)/owner/dispatches\"",
+      "result": "passed"
+    },
+    {
+      "command": "npx vitest run __tests__/dispatch-archive.test.ts",
+      "result": "passed"
+    },
+    {
+      "command": "npx vitest run __tests__/p2-dispatch-sale-receipt.test.ts",
+      "result": "passed"
+    },
+    {
+      "command": "npx vitest run __tests__/p1-party-first-stock-sale-dispatch.test.ts",
+      "result": "passed"
+    },
+    {
+      "command": "mkdir -p output/qa/batch12",
+      "result": "passed",
+      "notes": "Created artifact directory only."
+    }
+  ],
+  "artifacts_reused": [
+    {
+      "path": "output/qa/batch11/BATCH11-estimator-order-lifecycle-proof.json",
+      "used_for": "ORDER-008 source-fixed/supporting evidence only"
+    },
+    {
+      "path": "docs/pilot-remediation/FIX_LOG.md",
+      "used_for": "Batch 3 dispatch/receipt and GOLDEN-B-12 consolidation assessment"
+    },
+    {
+      "path": "docs/pilot-remediation/LOOP_STATE.md",
+      "used_for": "Batch 3/11 source-of-truth status and open-proof notes"
+    },
+    {
+      "path": "docs/pilot-remediation/DOMAIN_INVARIANTS.md",
+      "used_for": "Dispatch/receipt exact-receipt invariant context"
+    },
+    {
+      "path": "__tests__/p1-stock-lifecycle.test.ts",
+      "used_for": "STOCK-012 proof and partial support for related stock/market rows"
+    },
+    {
+      "path": "__tests__/dispatch-archive.test.ts",
+      "used_for": "DISP-013 proof"
+    },
+    {
+      "path": "__tests__/p2-dispatch-sale-receipt.test.ts",
+      "used_for": "Batch 3 dispatch/receipt consolidation support"
+    },
+    {
+      "path": "__tests__/p1-party-first-stock-sale-dispatch.test.ts",
+      "used_for": "Partial support for pending-dispatch stock/market consolidation rows"
+    }
+  ],
+  "pass_ready_candidates": [
+    {
+      "id": "STOCK-012",
+      "current_status": "code_verified",
+      "recommended_status": "pass-ready",
+      "evidence": [
+        "npx vitest run __tests__/p1-stock-lifecycle.test.ts -> passed, 1 file, 10 tests",
+        "lib/stock-lifecycle.ts",
+        "__tests__/p1-stock-lifecycle.test.ts"
+      ],
+      "rationale": "The exact policy for closed/sold-out market lots with zero available/reserved/pending meters is covered by the local lifecycle helper and rerun test; no runtime data mutation or external dependency is involved."
+    },
+    {
+      "id": "DISP-013",
+      "current_status": "code_verified",
+      "recommended_status": "pass-ready",
+      "evidence": [
+        "npx vitest run __tests__/dispatch-archive.test.ts -> passed, 1 file, 7 tests",
+        "lib/dispatch/archive.ts",
+        "app/(dashboard)/owner/dispatches/DispatchesClient.tsx"
+      ],
+      "rationale": "The exact delivered-complete archive eligibility condition is covered by the local dispatch archive helper test and the Dispatches client filters active rows through that helper."
+    }
+  ],
+  "rows_left_open_or_blocked": [
+    {
+      "id": "ORDER-008",
+      "status": "code_verified",
+      "reason": "Missing disposable runtime/browser proof for below-target, pending-dispatch, and normal completion. Existing Batch 11 Vitest is source-level only."
+    },
+    {
+      "id": "GOLDEN-B-12",
+      "status": "blocked",
+      "reason": "Active row explicitly requires full Golden B second-batch exact receipt rerun. Existing Batch 3 evidence is analogous, not exact."
+    },
+    {
+      "id": "STOCK-011",
+      "status": "code_verified",
+      "reason": "Focused lifecycle tests passed but did not directly cover all row branches, especially cancelled-order behavior."
+    },
+    {
+      "id": "STOCK-013",
+      "status": "code_verified",
+      "reason": "Active Stock hiding is tested, but Dispatches/Commercials visibility is still source-level."
+    },
+    {
+      "id": "MARKET-009",
+      "status": "code_verified",
+      "reason": "Active Stock hiding is tested, but exact row still needs direct Dispatches/Commercials pending-dispatch proof."
+    },
+    {
+      "id": "MARKET-010",
+      "status": "code_verified",
+      "reason": "Requires sold-out/closed runtime display and archive completeness proof beyond helper tests."
+    },
+    {
+      "id": "remaining_code_verified_rows",
+      "status": "code_verified",
+      "reason": "The other inspected code_verified rows require browser/runtime proof, external providers, production-only proof, destructive/anonymizing workflows, schema/RPC/database work, or broader evidence than Batch 12 safely collected."
+    }
+  ],
+  "explicitly_not_attempted": [
+    {
+      "id": "QUOTE-007",
+      "reason": "Requires DB/RPC transaction work."
+    },
+    {
+      "id": "SEC-011",
+      "reason": "Requires live Sentry event payload redaction proof."
+    },
+    {
+      "id": "TECH-009/WA-008",
+      "reason": "Requires deployed WhatsApp valid/invalid callback proof."
+    },
+    {
+      "id": "TECH-011/TECH-012",
+      "reason": "Requires restore/rollback exercise."
+    },
+    {
+      "id": "BILL-* external provider rows",
+      "reason": "Require provider/dashboard/live webhook evidence."
+    },
+    {
+      "id": "SEC-018",
+      "reason": "External/compliance proof."
+    },
+    {
+      "id": "OFF-007",
+      "reason": "Production service-worker update proof with active draft not safely satisfied by this local sweep."
+    },
+    {
+      "id": "OFF-010",
+      "reason": "Broad throttled mobile runtime sweep not already proven by exact Batch 12 evidence."
+    }
+  ],
+  "status_update_recommendation": {
+    "matrix_not_modified": true,
+    "recommended_for_review": [
+      "Promote STOCK-012 from code_verified to pass/pass-ready if reviewers accept focused local lifecycle helper proof for the row.",
+      "Promote DISP-013 from code_verified to pass/pass-ready if reviewers accept focused local dispatch archive helper proof for the row."
+    ],
+    "not_recommended_for_promotion": [
+      "ORDER-008",
+      "GOLDEN-B-12",
+      "STOCK-011",
+      "STOCK-013",
+      "MARKET-009",
+      "MARKET-010"
+    ]
+  },
+  "safety_confirmation": {
+    "product_code_changed": false,
+    "migrations_created_or_modified": false,
+    "supabase_commands_run": false,
+    "supabase_mutations_run": false,
+    "direct_sql_used": false,
+    "npx_supabase_db_push_run": false,
+    "migration_repair_run": false,
+    "db_pull_run": false,
+    "include_all_used": false,
+    "production_data_mutated": false,
+    "npm_audit_run": false,
+    "packages_installed": false,
+    "lockfile_touched": false,
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "docs_closeout_run": false
+  }
+}

@@ -90,6 +90,8 @@ Batch 3 proof note: `SALE-015` is satisfied for the stock sale/dispatch path by 
 
 Batch 5 proof note: `STOCK-016` and `STOCK-017` are satisfied by disposable runtime proof `output/qa/batch5/BATCH5-20260628173243-stock-audit-refresh.json`, focused Batch 5 tests, regression tests, and full Vitest. The proof retrieved 506 stock movement rows through cursor pagination as 100, 100, 100, 100, 100, and 6 with no duplicates/missing rows and deterministic newest-to-oldest ordering. It also verified sale-only no-dispatch refresh to 75m available / 25m pending, one stock sale movement, one receivable, and a matching second owner session. No migration was required.
 
+Batch 12 proof note: `STOCK-012` is satisfied by focused local stock lifecycle proof. `npx vitest run __tests__/p1-stock-lifecycle.test.ts` passed 10 tests and directly verifies closed/sold-out market-run lots with zero available/reserved/pending meters and no unresolved discrepancy are non-actionable/archive-eligible. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial because their exact row wording needs broader proof.
+
 Batch 6 proof note: `GOLDEN-A-15` is satisfied by disposable runtime proof that sold 120m of valid order-linked completed-order stock on credit, created the expected sale/stock/receivable state, and preserved committed refresh/second-session reconciliation.
 
 ## Dispatch and Receipt
@@ -113,6 +115,8 @@ Required proof:
 Batch 3 proof note: the current pilot policy blocks zero and negative received meters. Runtime proof `BATCH3-fc791041` confirms 50m plus 30m dispatch batches for one 80m sale, exact receipt closure, shortage/excess discrepancy creation, duplicate receipt idempotency, archive protection, and dashboard/signoff/second-session reconciliation.
 
 Batch 6 proof note: `GOLDEN-A-16`, `GOLDEN-A-17`, and `GOLDEN-A-18` are satisfied by disposable runtime proof that allowed valid completed-order dispatch, rejected invalid completed-order dispatch state through the RPC gate, recorded a 70m exact receipt with no discrepancy, recorded a 50m dispatch with 45m received, and created exactly one actionable 5m shortage discrepancy plus one open party claim.
+
+Batch 12 proof note: `DISP-013` is satisfied by focused local dispatch archive proof. `npx vitest run __tests__/dispatch-archive.test.ts` passed 7 tests and directly verifies a fully dispatched and confirmed group archives while partial, unconfirmed, disputed, discrepancy, and e-way-gap groups stay active. `GOLDEN-B-12` remains blocked because it requires a full Golden B second-batch exact receipt rerun.
 
 ## Commercials
 

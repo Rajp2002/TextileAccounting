@@ -14,14 +14,14 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, and Batch 11 estimator/order lifecycle closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, and Batch 12 code-verified proof sweep:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 182 | Runtime/test evidence exists. |
+| `pass` | 184 | Runtime/test evidence exists. |
 | `fail` | 40 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
-| `code_verified` | 132 | Source evidence only. This is not a pass. |
+| `code_verified` | 130 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
@@ -50,6 +50,8 @@ Batch 9 moved `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-02
 Batch 10 moved `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and `QUOTE-003` from fail to pass with Decimal-backed worker-rate snapshot normalization, quote restore draft-collision handling, explicit quote lifecycle transitions, focused regression tests, TypeScript, targeted ESLint, and a successful production build. At Batch 10 closeout, `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remained open under distinct server-boundary validation, fast-path atomicity/idempotency, order edit audit/produced-meter guard, and below-target completion confirmation roots.
 
 Batch 11 moved `EST-011` and `ORDER-006` from fail to pass with server-boundary estimator validation, produced-meter target edit guards, existing audit-trigger evidence, focused regression tests, TypeScript, targeted ESLint, and a successful production build. `ORDER-008` moved from fail to `code_verified`/source-fixed but remains open pending disposable runtime/browser proof of the below-target completion confirmation. `QUOTE-007` remains fail/open because strict Start Party Order accepted-quote plus active-order atomicity requires combined database/RPC transaction work.
+
+Batch 12 moved `STOCK-012` and `DISP-013` from `code_verified` to pass with exact local proof for closed/sold-out market lot archive eligibility and delivered-complete dispatch group archive eligibility. `ORDER-008` remains `code_verified` because disposable runtime/browser proof is still missing. `GOLDEN-B-12` remains blocked because the active row requires a full Golden B second-batch exact-receipt rerun. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain `code_verified` because Batch 12 proof was partial for their exact row wording.
 
 ## Operating Rules
 
@@ -831,3 +833,49 @@ Resolution status:
 - `EST-011` and `ORDER-006` are documented as pass in the active matrix.
 - `ORDER-008` remains open/partial as `code_verified` pending runtime/browser proof.
 - `QUOTE-007` remains open as fail pending database/RPC transaction work.
+
+## Batch 12 Code-Verified Proof Sweep Closeout
+
+Date/time: 2026-06-30 20:29 IST.
+
+Batch 12: proof-only sweep for safe `code_verified` rows.
+
+Target rows closed:
+
+- `STOCK-012`
+- `DISP-013`
+
+Rows kept open, partial, or blocked:
+
+- `ORDER-008` remains `code_verified` because Batch 11 source/test evidence does not replace the required disposable runtime/browser proof for below-target, pending-dispatch, and normal completion paths.
+- `GOLDEN-B-12` remains blocked because Batch 3 exact-receipt proof is analogous only; the active row requires a full Golden B second-batch exact receipt rerun.
+- `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain `code_verified` because Batch 12 safe tests did not fully satisfy their exact row wording.
+
+Repository state:
+
+- Branch: `codex/batch-12-code-verified-proof-sweep`.
+- Source base: `9b21acd2334cd4048fc999acb3d102926581540e`.
+
+Migrations:
+
+- No migration or RPC change was made.
+- No Supabase command, db push, migration repair, db pull, direct SQL, or `--include-all` command was run.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch12/BATCH12-code-verified-proof-sweep.json`.
+- `STOCK-012`: `npx vitest run __tests__/p1-stock-lifecycle.test.ts` passed 10 tests and directly covers closed/sold-out market-run lots with zero available/reserved/pending meters and no discrepancy as non-actionable/archive-eligible.
+- `DISP-013`: `npx vitest run __tests__/dispatch-archive.test.ts` passed 7 tests and directly covers a fully dispatched and confirmed group archiving while incomplete, unconfirmed, disputed, discrepancy, or e-way-gap groups stay active.
+
+Verification:
+
+- `git status --short` -> clean before docs closeout.
+- `git diff --check` -> passed before docs closeout.
+- `jq empty output/qa/batch12/BATCH12-code-verified-proof-sweep.json` -> passed.
+- `npx vitest run __tests__/p1-stock-lifecycle.test.ts` -> passed, 1 test file, 10 tests.
+- `npx vitest run __tests__/dispatch-archive.test.ts` -> passed, 1 test file, 7 tests.
+
+Resolution status:
+
+- `STOCK-012` and `DISP-013` are documented as pass in the active matrix.
+- `ORDER-008`, `GOLDEN-B-12`, `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain unchanged/open as listed above.
