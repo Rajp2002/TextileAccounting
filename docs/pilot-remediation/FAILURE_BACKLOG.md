@@ -9,13 +9,13 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | Priority band | Root-cause cluster | Failed matrix IDs |
 | --- | --- | --- |
 | P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008`, `PAY-018`, `PAY-020` |
-| P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-016`, `SEC-017` |
+| P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008` |
 | P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02` |
-| P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `PAY-028`, `OFF-008`, `DASH-003` |
+| P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `DASH-003` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
-| P4 | `OFF-A` offline, cache, and public claims | `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-008`, `OFF-010`, `SEC-016` |
+| P4 | `OFF-A` offline, cache, and public claims | `OFF-007`, `OFF-010` |
 | P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006` |
 
 Blocked rows also remain unresolved evidence debt. Critical or high blocked rows must be re-run or de-scoped before pilot: `TECH-011`, `TECH-012`, `BILL-003`, `SEC-018`, `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, `GOLDEN-B-12`, `GOLDEN-B-17`, `GOLDEN-B-18`.
@@ -37,6 +37,8 @@ Closed in Batch 6 and removed from the blocked evidence rows: Golden A runtime c
 Closed in Batch 7 and removed from the open failure coverage rows: date-only timezone stability and source-controlled release test gate (`TIME-002`, `TECH-013`). `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` remained blocked or partial evidence only at Batch 7 closeout because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
 
 Closed in Batch 8 and removed from the open failure coverage rows: migration-head alignment evidence (`TECH-007`). Closed in Batch 8B and removed from the open failure coverage rows: Sentry release/source-map evidence (`TECH-010`). Closed in Batch 8C and removed from the open failure coverage rows: clean deployed browser/server/Sentry signoff (`SIGNOFF-10`). `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, live Sentry payload inspection, restore, and rollback/forward-fix evidence are still unavailable.
+
+Closed in Batch 9 and removed from the open failure coverage rows: offline fallback, auth-boundary cache cleanup, offline kharchi truthful de-scope, and privacy/public offline claim truth (`OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, `PAY-028`). `OFF-007` and `OFF-010` remain partial/open because production service-worker update proof with an active draft and throttled slow/intermittent-network runtime proof across core mobile screens are still unavailable. `OFF-009` remains open under unknown-timeout/idempotency scope and was not touched.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -80,7 +82,7 @@ Required proof: SQL policy/grant metadata, rollback-only QA probes, and browser 
 
 ## P0 SEC-C - External Webhooks and Compliance Surfaces Do Not Fail Closed
 
-Failures: `TECH-009`, `WA-008`, `SEC-009`, `SEC-011`, `SEC-014`, `SEC-015`, `SEC-016`, `SEC-017`, `SEC-018`
+Failures: `TECH-009`, `WA-008`, `SEC-009`, `SEC-011`, `SEC-014`, `SEC-015`, `SEC-017`, `SEC-018`
 
 Evidence: `logs/technical-gates.md`, `logs/security-review.json`, `logs/security-export-erasure-evidence.json`, `logs/secrets-exposure-scan.json`, `logs/offline-pwa-evidence.json`
 
@@ -286,22 +288,22 @@ Required proof: dashboard unit/read-model tests, runtime Factory Today checks af
 
 ## P3 PAY-A - Payroll, Attendance, Settlement, and Kharchi Ledgers Can Diverge
 
-Failures: `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `PAY-028`, `OFF-008`, `DASH-003`, `GOLDEN-B-18`
+Failures: `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `DASH-003`, `GOLDEN-B-18`
 
 Evidence: `logs/payroll-kharchi-source-evidence-20260624.json`, `logs/payroll-evidence.json`, `logs/offline-pwa-evidence.json`
 
 Invariant: payroll net equals gross plus inam minus kapaat, advance recovery, PF, and ESI. A kharchi operation creates the worker advance and supervisor float transaction atomically, or creates neither.
 
-Impact: legacy payroll RPCs remain executable; PF/ESI preview can disagree with persisted settlement; online kharchi can return success after partial ledger write; offline kharchi queues to a missing table.
+Impact: legacy payroll RPCs remain executable; PF/ESI preview can disagree with persisted settlement; online kharchi can return success after partial ledger write. Batch 9 closes offline kharchi by making it online-only and removing the unsupported `kharchi_offline` queue path.
 
 Remediation direction:
 
 - Revoke legacy RPCs or make them call the hardened path.
 - Share one PF/ESI formula between preview and settlement.
 - Make online kharchi a single transaction.
-- Disable offline kharchi or implement a real queue processor for the authoritative tables.
+- Keep offline kharchi online-only unless a real queue processor for the authoritative tables is later implemented and retested.
 
-Required proof: payroll unit tests, rollback-only RPC probes, online kharchi partial-failure test, offline disabled/queued runtime QA, and dashboard wage check.
+Required proof: payroll unit tests, rollback-only RPC probes, online kharchi partial-failure test, and dashboard wage check. Batch 9 supplies offline-disabled proof for `OFF-008` and `PAY-028`.
 
 ## P4 IDEMP-A - Mutations Lack Idempotency and Unknown-Outcome Recovery
 
@@ -327,22 +329,21 @@ Required proof: rapid double-submit tests, timeout simulation, and runtime recon
 
 ## P4 OFF-A - Offline, Cache, and Public Claims Are Not Pilot-Safe
 
-Failures: `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-008`, `OFF-010`, `SEC-016`
+Failures: `OFF-007`, `OFF-010`
 
 Evidence: `logs/offline-pwa-evidence.json`, `logs/billing-offline-time-code-evidence-20260624.json`, `logs/prod-dashboard-ux-signoff-source-evidence-20260624.json`
 
 Invariant: offline support must either be correct, tenant-safe, and reconcilable, or be explicitly unsupported. Logout/account switch must clear persisted tenant data and mutation queues.
 
-Impact: `/_offline` fallback renders login, persisted cache/IndexedDB are not cleared on logout/account switch, production offline logging is not queued, and public policy claims offline sync that does not exist.
+Impact: Batch 9 fixed the offline fallback, auth-boundary cache cleanup, unsupported offline kharchi promise, and privacy/public offline claims. Remaining impact is limited to partial service-worker update proof and slow/intermittent-network runtime proof gaps.
 
 Remediation direction:
 
-- Make `/_offline` publicly reachable or remove the PWA offline promise.
-- Clear React Query persister, local drafts, and IndexedDB queue on logout/account switch.
-- Disable offline kharchi/production sync promises unless implemented.
-- Add service-worker update UX that protects drafts.
+- Capture production service-worker update proof with an active draft.
+- Capture throttled slow/intermittent-network runtime proof across core mobile screens.
+- Keep unsupported offline production/kharchi/payroll/sale/dispatch/payment write promises removed unless a real sync architecture is implemented and retested.
 
-Required proof: browser offline route, logout/account switch cache inspection, IndexedDB queue check, and policy wording review.
+Required proof: Batch 9 satisfies browser offline route, logout/account-switch cache cleanup, IndexedDB queue cleanup, offline kharchi de-scope, and policy wording review for `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016`. Remaining proof is production service-worker update runtime evidence for `OFF-007` and throttled slow/intermittent-network runtime evidence for `OFF-010`.
 
 ## P5 REL-A - Release Gates Are Not Repeatable
 

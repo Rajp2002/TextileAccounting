@@ -17,7 +17,8 @@ export default function OfflinePage() {
 
         <h1 className="mt-5 text-2xl font-semibold leading-tight text-ink">You are offline</h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Weavly will keep cached screens available where possible. Reconnect to load fresh factory data and sync pending changes.
+          Cached screens may still open, but new production, kharchi, payroll, sale, dispatch, and payment entries must wait for an internet connection.
+          Reconnect before saving factory changes.
         </p>
 
         <div className="mt-6 grid gap-2 sm:grid-cols-2">

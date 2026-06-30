@@ -62,8 +62,8 @@ The following must be hidden, disabled, or documented as unsupported before pilo
 
 | Feature/surface | Current finding | Required pilot action if unfixed |
 | --- | --- | --- |
-| Offline production logging | Not queued; public copy implies planned/available behavior. | Mark online-only; remove auto-sync claims. |
-| Offline kharchi | Queues to missing `kharchi_offline` table. | Disable offline kharchi submit/sync; mark online-only. |
+| Offline production logging | Batch 9 public/privacy/offline copy marks unsupported offline writes as online-only. | Keep auto-sync claims removed unless a real sync path is implemented and retested. |
+| Offline kharchi | Batch 9 disables offline kharchi submit/sync and removes the unsupported `kharchi_offline` queue path. | Keep offline kharchi online-only unless a real reconciled queue path is implemented and retested. |
 | Direct market-run sale path | Batch 4 disables the direct path so it cannot bypass commercial receivables. | Keep disabled for pilot unless it is routed through the normal receivable-creating sale path and retested. |
 | Day-only factories | Production logging requires both day/night assignments. | Limit pilot to factories with both shifts configured or fix support. |
 | Substitute worker logging | Actual substitute cannot be logged without remapping assignment. | Document unsupported or add intentional substitute flow. |
@@ -73,6 +73,8 @@ The following must be hidden, disabled, or documented as unsupported before pilo
 | Archived modules | Historical archived routes exist. | Keep hidden/archived and do not market as pilot features. |
 
 Batch 8 note: `TECH-007` migration-head alignment is closed for repository head `20260628185344` by supplied Supabase migration-list evidence. Batch 8B note: `TECH-010` Sentry release/source-map proof is closed by fresh production release `2538da25b2fa` with 529 source-map artifacts. Batch 8C note: `SIGNOFF-10` clean deployed signoff is closed by post-DSN browser smoke, Vercel runtime/server logs, and Sentry production release `7c6449a59061` no-error evidence. These do not satisfy live Sentry payload inspection, backup restore, rollback/forward-fix, audit, clean install, or deployed WhatsApp webhook proof.
+
+Batch 9 note: `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` are closed by public offline fallback proof, awaited auth-boundary cache cleanup, IndexedDB queue cleanup, privacy/public copy truth, and truthful online-only offline kharchi de-scope. `OFF-007` and `OFF-010` remain partial, and `OFF-009` remains open.
 
 ## Pilot Sign-Off Evidence Package
 

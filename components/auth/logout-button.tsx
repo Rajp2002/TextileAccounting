@@ -1,5 +1,7 @@
 'use client'
 
+import type { FormEvent } from 'react'
+import { useRef } from 'react'
 import { useState } from 'react'
 import { LogOut, Loader2 } from 'lucide-react'
 import { signOut } from '@/app/(auth)/actions'
@@ -8,6 +10,7 @@ import LoadingModal from './loading-modal'
 import { useTranslation } from '@/lib/i18n/context'
 
 import { globalQueryClient } from '@/components/providers'
+import { clearClientSessionState } from '@/lib/client-storage-cleanup'
 
 interface LogoutButtonProps {
     variant?: 'sidebar' | 'header'
@@ -16,14 +19,28 @@ interface LogoutButtonProps {
 
 export default function LogoutButton({ variant = 'sidebar', className }: LogoutButtonProps) {
     const [isLoggingOut, setIsLoggingOut] = useState(false)
+    const formRef = useRef<HTMLFormElement>(null)
+    const readyForServerLogoutRef = useRef(false)
     const { t } = useTranslation()
 
-    const handleLogout = async () => {
+    const handleLogout = async (event: FormEvent<HTMLFormElement>) => {
+        if (readyForServerLogoutRef.current) return
+
+        event.preventDefault()
         setIsLoggingOut(true)
         // Clear React Query cache immediately to prevent session leakage
         if (globalQueryClient) {
             globalQueryClient.clear()
         }
+
+        try {
+            await clearClientSessionState()
+        } catch (error) {
+            console.warn('Unable to complete client session cleanup before logout', error)
+        }
+
+        readyForServerLogoutRef.current = true
+        formRef.current?.requestSubmit()
         // The signOut action will handle the redirect
         // We just need to show the loading state until then
     }
@@ -31,7 +48,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
     if (variant === 'header') {
         return (
             <>
-                <form action={signOut} onSubmit={handleLogout}>
+                <form ref={formRef} action={signOut} onSubmit={handleLogout}>
                     <button
                         type="submit"
                         disabled={isLoggingOut}
@@ -53,7 +70,7 @@ export default function LogoutButton({ variant = 'sidebar', className }: LogoutB
 
     return (
         <>
-            <form action={signOut} onSubmit={handleLogout}>
+            <form ref={formRef} action={signOut} onSubmit={handleLogout}>
                 <button
                     type="submit"
                     disabled={isLoggingOut}

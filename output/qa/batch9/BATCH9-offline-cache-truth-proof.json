@@ -1,0 +1,240 @@
+{
+  "batch": "9",
+  "scope": "offline-cache-public-claims-truth-cleanup",
+  "created_at": "2026-06-30T03:41:58+0530",
+  "updated_at": "2026-06-30T14:59:28+0530",
+  "branch": "codex/batch-9-offline-cache-truth-cleanup",
+  "base_origin_main": "bb02aaaa95616b2c6be8ac515c5cf76c23b8135a",
+  "head_at_implementation_start": "bb02aaaa95616b2c6be8ac515c5cf76c23b8135a",
+  "matrix_source": "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+  "target_ids": [
+    "OFF-002",
+    "OFF-005",
+    "OFF-006",
+    "OFF-007",
+    "OFF-008",
+    "OFF-010",
+    "SEC-016",
+    "PAY-028"
+  ],
+  "explicitly_out_of_scope": [
+    "OFF-009",
+    "SEC-011",
+    "TECH-009",
+    "TECH-011",
+    "TECH-012",
+    "WA-008",
+    "WA-010",
+    "BILL-003",
+    "BILL-006",
+    "BILL-007",
+    "BILL-009",
+    "BILL-010",
+    "SEC-018",
+    "GOLDEN-A-03",
+    "SIGNOFF-04",
+    "UX-012"
+  ],
+  "row_evidence": {
+    "OFF-002": {
+      "status_recommendation": "pass_ready_candidate",
+      "proof_level": "runtime_browser_and_http",
+      "summary": "The service-worker fallback path /_offline and direct /offline route are public, return 200, do not render the login form, and state that new offline writes must wait for internet.",
+      "evidence": [
+        "next.config.ts keeps the PWA document fallback at /_offline and rewrites /_offline to /offline.",
+        "proxy.ts treats both /_offline and /offline as public routes.",
+        "app/offline/page.tsx renders a truthful offline fallback.",
+        "HTTP proof: GET http://localhost:3000/offline returned 200 http://localhost:3000/offline.",
+        "HTTP proof: GET http://localhost:3000/_offline returned 200 http://localhost:3000/_offline.",
+        "Captured /offline and /_offline HTML contains: new production, kharchi, payroll, sale, dispatch, and payment entries must wait.",
+        "Captured /offline and /_offline HTML does not contain login-form copy such as Welcome back, Sign in to your Weavly account, Enter your password, or name@example.com.",
+        "__tests__/batch9-offline-cache-truth.test.ts verifies both /offline and /_offline are intentional public offline routes.",
+        "In-app Browser proof: URL http://localhost:3000/_offline, title Offline | Weavly, no login form, no redirect to /login, no Next.js error overlay, no console issues observed."
+      ]
+    },
+    "OFF-005": {
+      "status_recommendation": "pass_ready_candidate",
+      "proof_level": "source_and_unit_test",
+      "summary": "Logout, PWA session guard, and login-before-auth boundaries clear user-specific browser cache so prior account/org local state is not retained across account switches.",
+      "evidence": [
+        "lib/client-storage-cleanup.ts defines exact user-cache keys and prefixes for React Query persistence, user id, fixed-staff skip state, production-meter drafts, and estimator drafts.",
+        "components/auth/logout-button.tsx prevents the first logout form submit, awaits clearClientSessionState(), then flips a ref guard and calls requestSubmit() so the server logout proceeds only after client cleanup completes.",
+        "hooks/use-pwa-session-guard.ts clears client session state before forced sign-out.",
+        "app/(auth)/login/login-form.tsx clears client session state before new sign-in.",
+        "__tests__/batch9-offline-cache-truth.test.ts verifies the account-switch/auth-boundary source hooks, the awaited logout cleanup ordering, and executes localStorage cleanup against a memory Storage implementation."
+      ]
+    },
+    "OFF-006": {
+      "status_recommendation": "pass_ready_candidate",
+      "proof_level": "source_and_unit_test",
+      "summary": "User-specific persisted localStorage keys, sessionStorage, and the IndexedDB offline mutation queue are cleared through the shared auth-boundary cleanup utility.",
+      "evidence": [
+        "clearClientSessionState clears selected localStorage user cache, all sessionStorage, and the Dexie offline mutation queue when IndexedDB is available.",
+        "components/auth/logout-button.tsx awaits clearClientSessionState() before requestSubmit(), so IndexedDB/offline queue cleanup is not fire-and-forget on logout.",
+        "__tests__/batch9-offline-cache-truth.test.ts verifies user-specific keys are removed while non-user preferences such as weavly-language and weavly-estimator-width-unit remain."
+      ]
+    },
+    "OFF-007": {
+      "status_recommendation": "partial_needs_pwa_update_runtime_proof",
+      "proof_level": "source_and_unit_test_only",
+      "summary": "The generated service worker is no longer configured to force immediate activation, and the app now prompts the user to save drafts before refreshing, but a real production service-worker update with an active draft was not executed in local dev.",
+      "evidence": [
+        "next.config.ts sets workboxOptions.skipWaiting to false and clientsClaim to false.",
+        "components/pwa-update-notice.tsx shows an App update ready toast instructing the user to save drafts before refresh.",
+        "components/providers.tsx mounts the update notice.",
+        "__tests__/batch9-offline-cache-truth.test.ts verifies the source behavior."
+      ],
+      "remaining_gap": "Dev mode does not provide the production PWA service-worker lifecycle needed to prove a waiting service worker update during an active draft."
+    },
+    "OFF-008": {
+      "status_recommendation": "pass_ready_candidate_via_truthful_descope",
+      "proof_level": "source_and_unit_test",
+      "summary": "Unsupported offline kharchi is no longer queued to a missing kharchi_offline table; the UI makes kharchi online-only while preserving the online server action path.",
+      "evidence": [
+        "components/supervisor/KharchiDialog.tsx no longer imports or calls queueMutation for kharchi.",
+        "components/supervisor/KharchiDialog.tsx blocks offline kharchi with user-facing online-only copy.",
+        "hooks/use-offline-sync.ts no longer replays arbitrary queued mutations into Supabase tables or emits a false sync-success toast.",
+        "__tests__/batch9-offline-cache-truth.test.ts verifies no kharchi_offline table reference and no unsupported offline replay path remain."
+      ]
+    },
+    "OFF-010": {
+      "status_recommendation": "partial_needs_slow_network_runtime_proof",
+      "proof_level": "source_http_and_unit_test",
+      "summary": "Public and in-app copy no longer overclaims unsupported offline writes, and unsupported queued mutations are discarded instead of reported as synced. This does not prove full slow-2G usability across core mobile screens.",
+      "evidence": [
+        "components/landing/faq.tsx now says production, kharchi, payroll, sale, dispatch, and payment entries require an internet connection.",
+        "components/offline-sync-provider.tsx offline banner says cached screens may remain visible but new factory changes are online-only.",
+        "hooks/use-offline-sync.ts discards unsupported offline mutations with an error toast rather than replaying them as if synced.",
+        "HTTP proof: GET http://localhost:3000/ returned 200 and captured HTML contains the new online-required FAQ copy.",
+        "__tests__/batch9-offline-cache-truth.test.ts verifies removal of the old unsupported offline expense queue claim."
+      ],
+      "remaining_gap": "No throttled 2G/3G browser run or repeated-submit runtime proof was executed for the broader OFF-010 matrix expectation."
+    },
+    "SEC-016": {
+      "status_recommendation": "pass_ready_candidate",
+      "proof_level": "runtime_browser_http_and_unit_test",
+      "summary": "Privacy/offline wording now matches implementation: cached screens and limited browser storage are described, unsupported offline writes are not claimed, and logout cache clearing is documented and implemented.",
+      "evidence": [
+        "app/privacy/page.tsx removes the old IndexedDB autosync/removal claim for offline production entries.",
+        "app/privacy/page.tsx states unsupported production, kharchi, payroll, sale, dispatch, and payment writes are not reliable offline-sync features.",
+        "app/privacy/page.tsx states logout clears user-specific cached data.",
+        "HTTP proof: GET http://localhost:3000/privacy returned 200.",
+        "Captured HTML contains the online-only offline-write policy and logout-cache wording.",
+        "Captured HTML does not contain the old phrase: automatically synced to our servers upon reconnection.",
+        "In-app Browser proof: URL http://localhost:3000/privacy#offline-data, title Privacy Policy | Weavly, updated offline/privacy copy present, old autosync claim absent, no console issues observed."
+      ]
+    },
+    "PAY-028": {
+      "status_recommendation": "pass_ready_candidate_via_truthful_descope",
+      "proof_level": "source_and_unit_test",
+      "summary": "Kharchi offline/reconnect is no longer presented as an exactly-once real-table sync path; unsupported offline kharchi is blocked and old queued mutations are discarded with explicit error copy.",
+      "evidence": [
+        "components/supervisor/KharchiDialog.tsx disables offline kharchi input/action and tells the user to reconnect before recording cash so the advance and supervisor float ledger update together.",
+        "hooks/use-offline-sync.ts deletes unsupported unsynced mutation records instead of trying to insert into arbitrary tables.",
+        "__tests__/batch9-offline-cache-truth.test.ts verifies kharchi is online-only and the false synced toast path is removed."
+      ]
+    },
+    "OFF-009": {
+      "status_recommendation": "unchanged_out_of_scope",
+      "proof_level": "scope_guard",
+      "summary": "No timeout/unknown-outcome/idempotency architecture was implemented for this batch.",
+      "evidence": [
+        "__tests__/batch9-offline-cache-truth.test.ts verifies the active matrix still contains OFF-009 as fail and the row remains untouched by this proof."
+      ]
+    }
+  },
+  "browser_runtime_proof": {
+    "offline_route": {
+      "url": "http://localhost:3000/_offline",
+      "title": "Offline | Weavly",
+      "not_blank": true,
+      "truthful_online_only_copy_present": true,
+      "redirected_to_login": false,
+      "login_form_present": false,
+      "login_form_copy_present": false,
+      "next_error_overlay_present": false,
+      "console_issues": []
+    },
+    "privacy_route": {
+      "url": "http://localhost:3000/privacy#offline-data",
+      "title": "Privacy Policy | Weavly",
+      "online_only_write_copy_present": true,
+      "logout_clears_cache_copy_present": true,
+      "old_autosync_claim_present": false,
+      "console_issues": []
+    }
+  },
+  "http_proof": {
+    "offline_direct": {
+      "url": "http://localhost:3000/offline",
+      "status": 200,
+      "effective_url": "http://localhost:3000/offline",
+      "truthful_copy_present": true,
+      "login_form_copy_present": false
+    },
+    "offline": {
+      "url": "http://localhost:3000/_offline",
+      "status": 200,
+      "effective_url": "http://localhost:3000/_offline",
+      "truthful_copy_present": true,
+      "login_form_copy_present": false
+    },
+    "privacy": {
+      "url": "http://localhost:3000/privacy",
+      "status": 200,
+      "effective_url": "http://localhost:3000/privacy",
+      "online_only_copy_present": true,
+      "logout_cache_copy_present": true,
+      "old_autosync_claim_present": false
+    },
+    "home": {
+      "url": "http://localhost:3000/",
+      "status": 200,
+      "effective_url": "http://localhost:3000/",
+      "faq_online_required_copy_present": true,
+      "old_expense_queue_claim_present": false
+    }
+  },
+  "checks": [
+    {
+      "command": "npx eslint __tests__/batch9-offline-cache-truth.test.ts lib/client-storage-cleanup.ts components/auth/logout-button.tsx hooks/use-pwa-session-guard.ts 'app/(auth)/login/login-form.tsx' proxy.ts app/offline/page.tsx components/offline-sync-provider.tsx components/supervisor/KharchiDialog.tsx app/privacy/page.tsx components/landing/faq.tsx components/pwa-update-notice.tsx components/providers.tsx next.config.ts hooks/use-offline-sync.ts",
+      "result": "pass"
+    },
+    {
+      "command": "npx vitest run __tests__/batch9-offline-cache-truth.test.ts",
+      "result": "pass",
+      "details": "1 test file passed, 8 tests passed"
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "pass",
+      "details": "No diagnostics emitted"
+    },
+    {
+      "command": "git diff --check",
+      "result": "pass"
+    },
+    {
+      "command": "npm run build",
+      "result": "pass",
+      "details": "prebuild full Vitest suite passed with 40 test files, 339 tests passed, 1 skipped; Next production build completed successfully and generated /offline as a static route with PWA document fallback /_offline."
+    }
+  ],
+  "not_run": [],
+  "safety_constraints_observed": {
+    "supabase_mutations": false,
+    "npx_supabase_db_push": false,
+    "migration_repair": false,
+    "db_pull": false,
+    "direct_sql": false,
+    "include_all": false,
+    "npm_audit": false,
+    "package_install": false,
+    "lockfile_changed": false,
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "matrix_or_docs_closeout_edited": false,
+    "migration_needed": false
+  }
+}

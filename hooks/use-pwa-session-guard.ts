@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { clearClientSessionState } from '@/lib/client-storage-cleanup'
 
 /**
  * PWA Session Guard
@@ -49,6 +50,7 @@ export function usePwaSessionGuard() {
                 const { data: { session } } = await supabase.auth.getSession()
 
                 if (session) {
+                    await clearClientSessionState()
                     // Clear the server-side session and the inactivity cookie
                     await supabase.auth.signOut()
                     // Remove the inactivity cookie the middleware reads

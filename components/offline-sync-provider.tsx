@@ -12,7 +12,7 @@ export function OfflineSyncProvider({ children }: { children: React.ReactNode })
         <>
             {!isOnline && (
                 <div className="bg-yellow-100 text-yellow-800 text-xs px-4 py-2 text-center">
-                    ⚡ You are offline — changes will sync when reconnected
+                    You are offline. Cached screens may remain visible, but new factory changes are online-only.
                 </div>
             )}
             {children}

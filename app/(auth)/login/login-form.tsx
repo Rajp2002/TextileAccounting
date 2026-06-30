@@ -10,6 +10,7 @@ import { Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import AuthLayout from '@/components/auth/auth-layout'
 import { signIn } from '@/app/(auth)/actions/auth'
 import LoadingModal from '@/components/auth/loading-modal'
+import { clearClientSessionState } from '@/lib/client-storage-cleanup'
 
 export default function LoginForm() {
     const [loading, setLoading]             = useState(false)
@@ -31,6 +32,7 @@ export default function LoginForm() {
         setLoading(true)
 
         try {
+            await clearClientSessionState()
             const result = await signIn({ email: email.trim(), password })
 
             // result only returns on error — success triggers a redirect() on server

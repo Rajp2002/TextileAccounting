@@ -18,10 +18,8 @@ import { formatINR } from '@/lib/finance'
 import { toast } from 'sonner'
 import { recordKharchi, getSupervisorBalance } from '@/app/(dashboard)/supervisor/actions'
 import { useOnlineStatus } from '@/hooks/use-online-status'
-import { queueMutation } from '@/lib/db'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTransliterate } from '@/hooks/use-transliterate'
-import { getCurrentTimestampMs } from '@/lib/time'
 
 export function KharchiDialog({
     open,
@@ -63,26 +61,19 @@ export function KharchiDialog({
         const dispersalAmount = parseFloat(amount)
 
         try {
-            if (isOnline) {
-                const res = await recordKharchi({
-                    workerType,
-                    workerId,
-                    amount: dispersalAmount,
-                    description,
-                })
-                if (res.error) throw new Error(res.error)
-                toast.success(`₹${dispersalAmount} dispersed to ${tl(workerName)}`)
-            } else {
-                // Queue for offline sync
-                await queueMutation('kharchi_offline', 'INSERT', {
-                    worker_id: workerId,
-                    amount: dispersalAmount,
-                    description,
-                    supervisor_id: userProfile?.id,
-                    timestamp: getCurrentTimestampMs()
-                })
-                toast.success('Kharchi queued for sync')
+            if (!isOnline) {
+                toast.error('Kharchi is online-only. Reconnect before giving cash.')
+                return
             }
+
+            const res = await recordKharchi({
+                workerType,
+                workerId,
+                amount: dispersalAmount,
+                description,
+            })
+            if (res.error) throw new Error(res.error)
+            toast.success(`₹${dispersalAmount} dispersed to ${tl(workerName)}`)
             
             setAmount('')
             setDescription('')
@@ -127,6 +118,7 @@ export function KharchiDialog({
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             className="h-12 text-xl font-semibold"
+                            disabled={!isOnline}
                         />
                     </div>
 
@@ -136,8 +128,16 @@ export function KharchiDialog({
                             placeholder="Medicine, Travel, etc."
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
+                            disabled={!isOnline}
                         />
                     </div>
+
+                    {!isOnline && (
+                        <div className="flex items-start gap-2 rounded border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                            <span>Kharchi is not stored for offline sync. Reconnect before recording cash so the advance and supervisor float ledger update together.</span>
+                        </div>
+                    )}
 
                     {balance !== undefined && parseFloat(amount) > balance && (
                         <div className="flex items-center gap-2 rounded border border-risk-soft bg-risk-soft p-2 text-xs text-risk">
@@ -151,7 +151,7 @@ export function KharchiDialog({
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
                     <Button
                         className="font-semibold"
-                        disabled={!amount || isSubmitting || (balance !== undefined && parseFloat(amount) > balance)}
+                        disabled={!isOnline || !amount || isSubmitting || (balance !== undefined && parseFloat(amount) > balance)}
                         onClick={handleDisperse}
                     >
                         {isSubmitting ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <HandCoins className="h-4 w-4 mr-2" />}

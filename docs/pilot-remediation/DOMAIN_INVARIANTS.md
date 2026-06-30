@@ -209,6 +209,8 @@ Required proof:
 - IndexedDB mutation queue cannot replay under a different user/org.
 - Public privacy/PWA text matches actual implementation.
 
+Batch 9 proof note: `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` are satisfied by public `/offline` and `/_offline` route proof, awaited auth-boundary cleanup, persisted user-cache and IndexedDB queue cleanup, truthful online-only kharchi behavior, and privacy/public copy that no longer claims unsupported offline write sync. `OFF-007` still needs production service-worker update proof with an active draft, `OFF-010` still needs throttled slow/intermittent-network runtime proof, and `OFF-009` remains open for unknown-timeout UX.
+
 ## Release Readiness
 
 The pilot build must be reproducible, migrated, tested, observable, backed up, and rollback-ready.

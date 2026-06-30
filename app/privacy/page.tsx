@@ -88,7 +88,7 @@ export default async function PrivacyPolicyPage() {
                 <ul>
                     <li>Browser type and version</li>
                     <li>Device information</li>
-                    <li>Data stored locally via IndexedDB (offline production entries) and Service Worker (PWA caching)</li>
+                    <li>Limited browser storage for cached screens, local drafts, and Progressive Web App assets</li>
                 </ul>
             </PolicySection>
 
@@ -130,7 +130,7 @@ export default async function PrivacyPolicyPage() {
                     <li><strong>Row Level Security (RLS)</strong> — PostgreSQL-level policies ensure every database query is automatically scoped to the user&apos;s organization. Cross-organization data access is architecturally impossible.</li>
                     <li><strong>JWT-based authentication</strong> — Organization ID and user role are embedded in session tokens and verified on every request.</li>
                     <li><strong>Access code system</strong> — Single-use authorization codes gate sensitive operations (editing locked production, backdated entries, worker deletion).</li>
-                    <li><strong>Local storage</strong> — Offline data (IndexedDB) is stored locally on the user&apos;s device and synced to the server when connectivity is restored. This data is scoped to the authenticated user.</li>
+                    <li><strong>Local storage</strong> — The app may keep temporary browser data such as cached screens, local drafts, and app assets. Logging out clears user-specific local cache and offline queues on that browser profile.</li>
                 </ul>
             </PolicySection>
 
@@ -181,7 +181,7 @@ export default async function PrivacyPolicyPage() {
 
             <PolicySection id="offline-data" title="10. Local Storage &amp; Offline Data">
                 <p>
-                    The Weavly Progressive Web App (PWA) uses <strong>IndexedDB</strong> to store production entries locally on your device when an internet connection is unavailable. This data is automatically synced to our servers upon reconnection and removed from local storage after sync. The app also uses a <strong>Service Worker</strong> for offline caching of application assets. No cookies are used for tracking purposes.
+                    The Weavly Progressive Web App (PWA) uses a <strong>Service Worker</strong> to cache application assets and may keep temporary browser drafts for forms you are editing. Offline production, kharchi, payroll, sale, dispatch, and payment writes are not presented as reliable offline-sync features; reconnect before saving those changes. Logging out clears user-specific cached data and the local offline mutation queue on that browser profile. No cookies are used for tracking purposes.
                 </p>
             </PolicySection>
 

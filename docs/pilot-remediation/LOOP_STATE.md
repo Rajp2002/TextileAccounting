@@ -14,18 +14,18 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, and Batch 8C clean deployed signoff closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, and Batch 9 offline/cache truth closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 168 | Runtime/test evidence exists. |
-| `fail` | 55 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 174 | Runtime/test evidence exists. |
+| `fail` | 49 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
-Critical failures: 0. High failures: 18. Critical blocked golden-journey follow-ons: 6.
+Critical failures: 0. High failures: 15. Critical blocked golden-journey follow-ons: 6.
 
 Batch 1 security foundation moved `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` from fail to pass with runtime/test/migration evidence. `AUTH-008`, `PAY-018`, `PAY-020`, external webhook/export/compliance security rows, release gates, and unrelated unresolved failures remain open.
 
@@ -44,6 +44,8 @@ Batch 6 moved `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDE
 Batch 7 moved `TIME-002` and `TECH-013` from fail to pass with focused timezone-stability tests, source-controlled release gate evidence, a successful prebuild Vitest/build run, full Vitest evidence, and local production smoke. At Batch 7 closeout, `SIGNOFF-10`, `TECH-007`, `TECH-009`, `TECH-010`, `TECH-011`, `TECH-012`, and `SEC-011` were blocked or partial evidence only because external deployed, Sentry/source-map, restore, rollback, and production migration proof was unavailable.
 
 Batch 8 moved `TECH-007` from fail to pass with supplied Supabase migration-list evidence showing local/remote alignment through repository migration head `20260628185344` and no pending, failed, or out-of-order migrations. Batch 8B moved `TECH-010` from fail to pass with fresh production Sentry release/source-map proof for deployed release `2538da25b2fa` and 529 artifacts. Batch 8C moved `SIGNOFF-10` from fail to pass with clean deployed browser smoke, Vercel runtime/server logs, and Sentry no-error release evidence after the Sentry DSN fix. `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, live Sentry payload inspection, restore, and rollback/forward-fix evidence are still unavailable.
+
+Batch 9 moved `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` from fail to pass with focused source/test/build proof, local HTTP/browser evidence for `/offline`, `/_offline`, `/privacy`, and public copy, and truthful de-scope of unsupported offline kharchi. `OFF-007` remains partial because a production service-worker update with an active draft was not exercised. `OFF-010` remains partial because throttled slow/intermittent-network runtime proof across core mobile screens was not executed. `OFF-009` remains open and out of scope for unknown-timeout UX and status reconciliation.
 
 ## Operating Rules
 
@@ -666,3 +668,57 @@ Resolution status:
 
 - `SIGNOFF-10` is documented as pass in the active matrix.
 - `SEC-011`, `TECH-009`, `TECH-011`, `TECH-012`, and `WA-008` remain open, blocked, or partial because the required live Sentry payload, deployed WhatsApp callback, restore, and rollback/forward-fix evidence is still unavailable.
+
+## Batch 9 Offline Cache Truth Closeout
+
+Date/time: 2026-06-30 15:15 IST.
+
+Batch 9: offline/cache/public-claims truth cleanup.
+
+Target failures closed:
+
+- `OFF-002`
+- `OFF-005`
+- `OFF-006`
+- `OFF-008`
+- `SEC-016`
+- `PAY-028`
+
+Repository state:
+
+- Branch: `codex/batch-9-offline-cache-truth-cleanup`.
+- Source base: `origin/main` at `bb02aaaa95616b2c6be8ac515c5cf76c23b8135a`.
+
+Migrations:
+
+- No migration was needed.
+- No Supabase command, db push, migration repair, db pull, direct SQL, or `--include-all` command was run.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch9/BATCH9-offline-cache-truth-proof.json`.
+- `/offline` and `/_offline` are intentional public routes. The PWA fallback remains `/_offline`, and `/_offline` rewrites to `/offline`.
+- Local HTTP proof returned 200 for `/offline`, `/_offline`, `/privacy`, and `/`.
+- In-app browser proof for `/_offline` showed the offline page instead of a login redirect or login form, with no blocking console issues.
+- Privacy/public copy no longer claims unsupported IndexedDB autosync for production/kharchi/payroll/sale/dispatch/payment writes.
+- Logout/account-switch cleanup now clears user-specific persisted React Query cache, user id, fixed-staff skip state, production-meter drafts, estimator drafts, sessionStorage, and the Dexie offline mutation queue.
+- Logout prevents the first submit, awaits `clearClientSessionState()`, catches cleanup errors so logout is not permanently blocked, then uses a guarded `requestSubmit()` so the server logout action still executes.
+- Offline kharchi is truthfully online-only. The old `kharchi_offline` queue path is removed, and unsupported queued mutations are discarded with explicit error copy instead of being replayed or reported as synced.
+- Sentry `/monitoring` remains excluded in the proxy matcher; dashboard/auth gating is unchanged except for the two public offline routes.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch9/BATCH9-offline-cache-truth-proof.json` -> passed.
+- Targeted `npx eslint` for touched Batch 9 files -> passed.
+- `npx vitest run __tests__/batch9-offline-cache-truth.test.ts` -> passed, 1 test file, 8 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npm run build` -> passed. Prebuild full Vitest passed with 40 test files, 339 tests passed, and 1 skipped; Next production build completed and generated `/offline` as a static route with PWA document fallback `/_offline`.
+
+Resolution status:
+
+- `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` are documented as pass in the active matrix.
+- `OFF-007` remains partial/open because production service-worker update proof with an active draft was not captured.
+- `OFF-010` remains partial/open because throttled slow/intermittent-network runtime proof across core mobile screens was not captured.
+- `OFF-009` remains open and out of scope for unknown-timeout UX and status reconciliation.
+- `SEC-011`, `TECH-009`, `TECH-011`, `TECH-012`, `WA-008`, `WA-010`, billing/external evidence rows, restore/rollback rows, Sentry live payload rows, WhatsApp rows, and production/order/payroll rows outside the approved Batch 9 scope remain unchanged.

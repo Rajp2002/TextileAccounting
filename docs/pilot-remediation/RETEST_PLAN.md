@@ -19,8 +19,8 @@ Current known state from `logs/technical-gates.md`:
 
 - `npm ci` fails until the lockfile is repaired.
 - `npm run lint` passed in the final QA run.
-- `npx vitest run` passed in the final QA run; Batch 7 full Vitest also passed with 327 passed and 1 skipped.
-- `npm run build` passed in the final QA run; Batch 7 also passed `npm run build` with the source-controlled `prebuild` Vitest gate.
+- `npx vitest run` passed in the final QA run; Batch 9 full Vitest via `npm run build` passed with 339 passed and 1 skipped.
+- `npm run build` passed in the final QA run; Batch 9 also passed `npm run build` with the source-controlled `prebuild` Vitest gate.
 - Both audit commands fail until advisories are fixed or formally accepted.
 
 Do not use passing lint/build/source checks to resolve runtime failures.
@@ -377,11 +377,12 @@ Runtime checks:
 - Verify gross, inam, kapaat, advance recovery, PF, ESI, and net against source rows.
 - Attempt legacy settlement/reversal RPCs and confirm they are revoked or hardened.
 - Record online kharchi and verify worker advance plus supervisor float transaction are atomic.
-- Verify offline kharchi is disabled or queues to a real reconciled path.
+- Verify offline kharchi remains disabled unless it queues to a real reconciled path.
 
 Acceptance:
 
-- `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-027`, `PAY-028`, `OFF-008`, and payroll-related sign-off rows have evidence.
+- `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-027`, and payroll-related sign-off rows have evidence.
+- Batch 9 closes `PAY-028` and `OFF-008` by truthful online-only offline-kharchi de-scope; online kharchi atomicity and payroll correctness rows remain separate.
 
 ## P4 Idempotency, Offline, and Cache Retest
 
@@ -399,14 +400,16 @@ Runtime checks:
 - Rapid double-submit estimator save and market-run creation.
 - Rapid double-submit sale and dispatch.
 - Simulated timeout for sale/payment/payroll mutation with status reconciliation.
-- Logout and login as another QA account on same browser profile; inspect localStorage, React Query persister, and IndexedDB mutation queue.
+- Logout and login as another QA account on same browser profile; inspect localStorage, React Query persister, and IndexedDB mutation queue if auth-boundary cache behavior changes.
 - Offline route renders the offline page if offline support remains in pilot.
 
 Acceptance:
 
-- `EST-017`, `SALE-015`, `OFF-002`, `OFF-005`, `OFF-006`, `OFF-007`, `OFF-009`, `OFF-010`, and `SEC-016` are fixed or de-scoped.
+- `EST-017`, `OFF-007`, `OFF-009`, and `OFF-010` are fixed or de-scoped.
+- Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, and `SEC-016` with offline route proof, awaited auth-boundary cache cleanup, IndexedDB queue cleanup, and privacy/public copy truth.
 - Batch 3 closes `SALE-015` for rapid duplicate stock-sale submit. Other idempotency/offline/cache rows remain open.
 - Batch 4 closes commercial receivable payment duplicate-submit idempotency as part of `COMM-010` and `SIGNOFF-09`. `OFF-009` remains open for unknown-timeout UX and status reconciliation across high-value mutations.
+- Batch 9 leaves `OFF-007` partial pending production service-worker update proof with an active draft and leaves `OFF-010` partial pending throttled slow/intermittent-network runtime proof across core mobile screens.
 
 ## P5 Release Gate Retest
 

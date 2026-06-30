@@ -5,6 +5,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { useState } from 'react'
 import { I18nProvider } from '@/lib/i18n/context'
+import { PwaUpdateNotice } from '@/components/pwa-update-notice'
 
 export let globalQueryClient: QueryClient | null = null
 
@@ -42,6 +43,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 client={queryClient}
                 persistOptions={{ persister: persister! }}
             >
+                <PwaUpdateNotice />
                 {children}
             </PersistQueryClientProvider>
         </I18nProvider>

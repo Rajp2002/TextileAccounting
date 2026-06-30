@@ -15,7 +15,7 @@ Rules for entries:
 | --- | --- | --- |
 | `SEC-A` mutable profile authorization | Closed in Batch 1 / pass | `SEC-002` through `SEC-005` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `SEC-B` privileged action/lockdown enforcement | Partially closed in Batch 1 / open remainder | Batch 1 closed `SEC-006` and `AUTH-016` with runtime/test evidence and active matrix rows promoted to pass. `AUTH-008`, `PAY-018`, and `PAY-020` remain open. |
-| `SEC-C` webhook/export/compliance fail-closed | Open | Some items may require de-scope or counsel review. |
+| `SEC-C` webhook/export/compliance fail-closed | Partially closed in Batch 9 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Webhook, export, audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Server-boundary validation, idempotency, and quote/order lifecycle rows remain open. |
@@ -23,9 +23,9 @@ Rules for entries:
 | `DISP-B` receipt-state coherence | Closed in Batch 3 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
 | `DASH-A` dashboard/sign-off read-model truth | Partially closed through Batch 8C / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10` with clean deployed browser/server/Sentry evidence. Payroll and historical analytics remain open. |
-| `PAY-A` payroll/kharchi ledger integrity | Open | Includes legacy RPCs and offline kharchi. |
+| `PAY-A` payroll/kharchi ledger integrity | Partially remediated in Batch 9 / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Legacy RPCs, online kharchi atomicity, payroll deductions/history, and dashboard wage rows remain open. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
-| `OFF-A` offline/cache/PWA claims | Open | Some features likely de-scoped for pilot. |
+| `OFF-A` offline/cache/PWA claims | Partially closed in Batch 9 / open remainder | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016` with offline fallback, auth-boundary cache cleanup, online-only kharchi, and truthful public/privacy copy. `OFF-007`, `OFF-010`, and `OFF-009` remain open or partial. |
 | `REL-A` release gates | Partially remediated through Batch 8C / open remainder | Batch 7 closes `TECH-013` source-level release test gate. Batch 8 closes `TECH-007` migration-head alignment evidence. Batch 8B closes `TECH-010` Sentry release/source-map proof. Batch 8C closes final clean deployed signoff evidence for `SIGNOFF-10`. Clean install, audit, live Sentry payload inspection, restore, and rollback remain open or blocked. |
 
 ## Entry Template
@@ -390,7 +390,7 @@ Proof commands recorded:
 Active matrix result:
 
 - `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` are promoted to pass.
-- `AUTH-008`, `PAY-018`, `PAY-020`, `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-016`, `SEC-017`, and other unrelated unresolved failures remain open.
+- `AUTH-008`, `PAY-018`, `PAY-020`, `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-017`, and other unrelated unresolved failures remain open.
 
 Out of scope and still open for later batches:
 
@@ -1108,3 +1108,52 @@ Resolution status:
 
 - `SIGNOFF-10` is pass-ready and documented as pass in the active QA matrix.
 - `SEC-011`, `TECH-009`, `TECH-011`, `TECH-012`, and `WA-008` remain open, blocked, or partial as listed above.
+
+## Batch 9 - Offline Cache Truth Closeout
+
+Date/time: 2026-06-30 15:15 IST. Source base `origin/main` at `bb02aaaa95616b2c6be8ac515c5cf76c23b8135a`.
+
+Scope:
+
+- `OFF-002`
+- `OFF-005`
+- `OFF-006`
+- `OFF-008`
+- `SEC-016`
+- `PAY-028`
+
+Rows explicitly not closed by Batch 9:
+
+- `OFF-007` remains partial/open because production service-worker update proof with an active draft was not captured.
+- `OFF-010` remains partial/open because throttled slow/intermittent-network runtime proof across core mobile screens was not captured.
+- `OFF-009` remains open and out of scope for unknown-timeout UX and status reconciliation.
+- `SEC-011`, `TECH-009`, `TECH-011`, `TECH-012`, `WA-008`, `WA-010`, billing/external evidence rows, restore/rollback rows, Sentry live payload rows, WhatsApp rows, and production/order/payroll rows outside the approved Batch 9 scope remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch9/BATCH9-offline-cache-truth-proof.json`.
+- `OFF-002`: `/offline` and `/_offline` are public/proven, `/_offline` rewrites to `/offline`, both routes return 200 locally, and the rendered offline page states that production, kharchi, payroll, sale, dispatch, and payment writes require internet instead of showing a login fallback.
+- `OFF-005`: auth-boundary cleanup covers login, the PWA session guard, and logout. Logout prevents the first submit, clears the in-memory QueryClient, awaits `clearClientSessionState()`, catches cleanup errors, then uses a guarded `requestSubmit()` so server logout still runs after client cleanup.
+- `OFF-006`: `clearClientSessionState()` removes user-specific localStorage keys, clears sessionStorage, and awaits the Dexie offline mutation queue clear through `clearOfflineMutationQueue()`.
+- `OFF-008` and `PAY-028`: offline kharchi is truthfully online-only. The dialog disables offline cash entry, the old `kharchi_offline` queue path is removed, and unsupported queued mutations are discarded with explicit error copy instead of replayed or reported as synced.
+- `SEC-016`: privacy, FAQ, and offline banner copy no longer claim unsupported offline write sync. Privacy copy now describes cached screens, local drafts, PWA assets, logout cleanup, and online-only production/kharchi/payroll/sale/dispatch/payment writes.
+- Sentry `/monitoring` remains excluded in the proxy matcher; dashboard/auth gating is unchanged except for public `/offline` and `/_offline`.
+
+Verification commands:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch9/BATCH9-offline-cache-truth-proof.json` -> passed.
+- Targeted `npx eslint app/\(auth\)/login/login-form.tsx components/auth/logout-button.tsx hooks/use-pwa-session-guard.ts lib/client-storage-cleanup.ts app/offline/page.tsx next.config.ts proxy.ts components/supervisor/KharchiDialog.tsx hooks/use-offline-sync.ts app/privacy/page.tsx components/landing/faq.tsx components/offline-sync-provider.tsx components/pwa-update-notice.tsx components/providers.tsx __tests__/batch9-offline-cache-truth.test.ts` -> passed.
+- `npx vitest run __tests__/batch9-offline-cache-truth.test.ts` -> passed, 1 test file and 8 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npm run build` -> passed. Prebuild full Vitest passed with 40 test files, 339 tests passed, and 1 skipped; Next production build completed successfully and generated `/offline` as a static route with PWA document fallback `/_offline`.
+
+Data safety:
+
+- No migration was needed.
+- No Supabase command, db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production/customer data mutation, Sentry deployment, restore/rollback exercise, OFF-009 work, or broad payroll/product hardening outside the approved offline truth scope was used.
+
+Resolution status:
+
+- `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` are pass-ready and documented as pass in the active QA matrix.
+- `OFF-007`, `OFF-010`, and `OFF-009` remain open or partial as listed above.

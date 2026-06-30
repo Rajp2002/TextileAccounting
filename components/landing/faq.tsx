@@ -9,7 +9,7 @@ const faqs = [
     },
     {
         question: 'What happens if the factory internet is unreliable?',
-        answer: 'The production flow is designed for quick mobile entry in patchy factory conditions. While offline queueing is supported for expenses, offline production logging for meter readings is planned for a future update.',
+        answer: 'The production flow is designed for quick mobile entry in patchy factory conditions, with drafts kept on the device while you are signed in. Saving production, kharchi, payroll, sale, dispatch, and payment entries requires an internet connection.',
     },
     {
         question: 'What does Weavly replace?',

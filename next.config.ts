@@ -44,8 +44,8 @@ const withPWA = withPWAInit({
   ],
   workboxOptions: {
     exclude: [/\.map$/],
-    skipWaiting: true,
-    clientsClaim: true,
+    skipWaiting: false,
+    clientsClaim: false,
     cleanupOutdatedCaches: true,
   },
 })
@@ -53,6 +53,9 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]
+  },
+  async rewrites() {
+    return [{ source: '/_offline', destination: '/offline' }]
   },
   experimental: {
     serverActions: {
