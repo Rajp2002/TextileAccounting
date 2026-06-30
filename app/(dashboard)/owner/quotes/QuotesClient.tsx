@@ -3,6 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { makeDefaultEstimateState } from '@/lib/estimator'
+import {
+    getEstimatorDraftStorageKey,
+    parseEstimatorDraft,
+    shouldWarnBeforeQuoteRestore,
+    type EstimatorAutosaveData,
+} from '@/lib/estimator-drafts'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -28,6 +34,8 @@ import {
     ArrowRight,
     Loader2,
     Package,
+    AlertTriangle,
+    XCircle,
 } from 'lucide-react'
 
 const STATUS_CONFIG = {
@@ -134,6 +142,8 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
     const [filterStatus, setFilterStatus] = useState<string>(initialStatus || 'all')
     const [quoteToConvert, setQuoteToConvert] = useState<QuoteRow | null>(null)
     const [quoteToAccept, setQuoteToAccept] = useState<QuoteRow | null>(null)
+    const [quoteToRestore, setQuoteToRestore] = useState<QuoteRow | null>(null)
+    const [existingDraftForRestore, setExistingDraftForRestore] = useState<EstimatorAutosaveData<QuoteDraftState> | null>(null)
     const [convertMeters, setConvertMeters] = useState('')
     const [convertDeadline, setConvertDeadline] = useState(format(addDays(new Date(), 30), 'yyyy-MM-dd'))
     const [convertNotes, setConvertNotes] = useState('')
@@ -190,22 +200,35 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
         router.push(`/owner/orders?orderId=${res.orderId}`)
     }
 
+    const restoreQuoteToEstimator = (quote: QuoteRow) => {
+        const draftKey = getEstimatorDraftStorageKey(orgId, userId)
+        const linkedOrder = getLinkedOrder(quote)
+        const newDraft = {
+            state: buildDraftStateFromQuote(quote),
+            partyName: quote.party_name || '',
+            qualityLabel: quote.quality_label || '',
+            warpInstruction: quote.warp_instruction || linkedOrder?.warp_instruction || '',
+            weftInstruction: quote.weft_instruction || linkedOrder?.weft_instruction || '',
+            savedAt: getCurrentTimestampMs(),
+            sourceQuoteId: quote.id,
+        }
+        localStorage.setItem(draftKey, JSON.stringify(newDraft))
+        setQuoteToRestore(null)
+        setExistingDraftForRestore(null)
+        toast.success('Quote snapshot restored')
+        router.push('/owner/estimator')
+    }
+
     const handleReEstimate = (quote: QuoteRow) => {
         try {
-            const draftKey = `weavly-estimator-draft-${orgId}-${userId}`
-            const linkedOrder = getLinkedOrder(quote)
-            const newDraft = {
-                state: buildDraftStateFromQuote(quote),
-                partyName: quote.party_name || '',
-                qualityLabel: quote.quality_label || '',
-                warpInstruction: quote.warp_instruction || linkedOrder?.warp_instruction || '',
-                weftInstruction: quote.weft_instruction || linkedOrder?.weft_instruction || '',
-                savedAt: getCurrentTimestampMs(),
-                sourceQuoteId: quote.id,
+            const draftKey = getEstimatorDraftStorageKey(orgId, userId)
+            const existingDraft = parseEstimatorDraft<QuoteDraftState>(localStorage.getItem(draftKey))
+            if (shouldWarnBeforeQuoteRestore(existingDraft, quote.id)) {
+                setExistingDraftForRestore(existingDraft)
+                setQuoteToRestore(quote)
+                return
             }
-            localStorage.setItem(draftKey, JSON.stringify(newDraft))
-            toast.success('Quote snapshot restored')
-            router.push('/owner/estimator')
+            restoreQuoteToEstimator(quote)
         } catch (e) {
             toast.error('Failed to restore snapshot')
             console.error(e)
@@ -327,20 +350,48 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                                             )}
                                         </div>
 
-                                        {(quote.status === 'draft' || quote.status === 'sent') && !linkedOrder && (
+                                        {quote.status === 'draft' && !linkedOrder && (
                                             <Button
                                                 size="sm"
-                                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2"
-                                                onClick={() => setQuoteToAccept(quote)}
+                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold gap-2"
+                                                onClick={() => handleStatusChange(quote.id, 'sent')}
                                                 disabled={updatingId === quote.id}
                                             >
                                                 {updatingId === quote.id ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                 ) : (
-                                                    <CheckCircle2 className="h-4 w-4" />
+                                                    <FileText className="h-4 w-4" />
                                                 )}
-                                                Accept Quote
+                                                Mark Sent
                                             </Button>
+                                        )}
+
+                                        {quote.status === 'sent' && !linkedOrder && (
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2"
+                                                    onClick={() => setQuoteToAccept(quote)}
+                                                    disabled={updatingId === quote.id}
+                                                >
+                                                    {updatingId === quote.id ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <CheckCircle2 className="h-4 w-4" />
+                                                    )}
+                                                    Accept
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="border-red-200 text-red-700 hover:bg-red-50 font-bold gap-2"
+                                                    onClick={() => handleStatusChange(quote.id, 'rejected')}
+                                                    disabled={updatingId === quote.id}
+                                                >
+                                                    <XCircle className="h-4 w-4" />
+                                                    Reject
+                                                </Button>
+                                            </div>
                                         )}
 
                                         {canCreateOrder && (
@@ -475,6 +526,57 @@ export default function QuotesClient({ initialQuotes, initialStatus, orgId, user
                             }}
                         >
                             Yes, Accept
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog
+                open={!!quoteToRestore}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setQuoteToRestore(null)
+                        setExistingDraftForRestore(null)
+                    }
+                }}
+            >
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-amber-600" />
+                            Replace estimator draft?
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-500 text-sm leading-relaxed">
+                            A local estimator draft already exists. Restoring this quote will replace it.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {existingDraftForRestore && (
+                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+                            <p className="font-black">{existingDraftForRestore.partyName || 'Untitled draft'}</p>
+                            <p className="mt-1 text-xs font-bold uppercase tracking-widest text-amber-700">
+                                {existingDraftForRestore.qualityLabel || 'No quality label'}
+                            </p>
+                            <p className="mt-2 text-xs font-medium text-amber-800">
+                                Saved {format(new Date(existingDraftForRestore.savedAt), 'MMM d, h:mm a')}
+                            </p>
+                        </div>
+                    )}
+                    <DialogFooter className="flex gap-2 justify-end pt-2">
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                setQuoteToRestore(null)
+                                setExistingDraftForRestore(null)
+                            }}
+                        >
+                            Keep draft
+                        </Button>
+                        <Button
+                            className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+                            onClick={() => quoteToRestore && restoreQuoteToEstimator(quoteToRestore)}
+                        >
+                            Overwrite draft
+                            <ArrowRight className="h-4 w-4 ml-2" />
                         </Button>
                     </DialogFooter>
                 </DialogContent>

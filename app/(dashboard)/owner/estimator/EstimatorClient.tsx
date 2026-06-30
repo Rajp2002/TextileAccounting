@@ -50,6 +50,7 @@ import {
     DEFAULT_OVERHEAD_ITEMS,
     DEFAULT_FACTORY_SECTIONS,
     ensureOverheadIntegrity,
+    calcWorkerRateSnapshot,
     getEffectiveCostingWidthCm,
     getWidthWarnings,
     LOOM_TYPE_DEFAULTS,
@@ -1362,7 +1363,7 @@ export default function EstimatorClient({
         setSavingQuote(true)
         
         if (targetMode === 'market') {
-            const workerRatePerM = state.weftRows.reduce((sum, r) => sum + (r.picks ?? 0), 0) * (state.perPickCostPaisa ?? 0)
+            const workerRatePerM = calcWorkerRateSnapshot(state.weftRows, state.perPickCostPaisa ?? 0)
             const res = await createMarketRunFromEstimator({
                 fabricLabel:             resolvedPartyName,
                 qualityLabel:            qualityLabel.trim(),

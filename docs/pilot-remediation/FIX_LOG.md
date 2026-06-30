@@ -18,7 +18,7 @@ Rules for entries:
 | `SEC-C` webhook/export/compliance fail-closed | Partially closed in Batch 9 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Webhook, export, audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
-| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Server-boundary validation, idempotency, and quote/order lifecycle rows remain open. |
+| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Server-boundary validation, fast-path atomicity/idempotency, target/deadline audit guards, and below-target completion confirmation remain open. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
 | `DISP-B` receipt-state coherence | Closed in Batch 3 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
@@ -1157,3 +1157,55 @@ Resolution status:
 
 - `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` are pass-ready and documented as pass in the active QA matrix.
 - `OFF-007`, `OFF-010`, and `OFF-009` remain open or partial as listed above.
+
+## Batch 10 - Estimator Quote Order Snapshot Closeout
+
+Date/time: 2026-06-30 16:45 IST. Source base `origin/main` at `2ada670d32efeacdb39cc5827fcbd33cc626022d`.
+
+Scope:
+
+- `EST-003`
+- `EST-019`
+- `ORDER-001`
+- `ORDER-002`
+- `QUOTE-010`
+- Secondary same-root row: `QUOTE-003`
+
+Rows explicitly not closed by Batch 10:
+
+- `EST-011` remains open because server-boundary validation for negative/extreme estimator rows and empty row arrays is a distinct validation root.
+- `QUOTE-007` remains open because Start Party Order accepted-quote/order atomicity is a distinct transaction/idempotency root.
+- `ORDER-006` remains open because target/deadline audit rows and target >= produced-meter enforcement are a distinct order edit/audit root.
+- `ORDER-008` remains open because below-target completion confirmation and runtime proof are a distinct order completion root.
+- Production/order boundary rows, payroll/kharchi rows, offline/cache rows, Sentry/WhatsApp/restore/rollback/billing external-evidence rows, `OFF-009`, `ORDER-005`, `ORDER-009`, `PROD-011`, `PROD-002`, `PROD-004`, `SIGNOFF-01`, and `SIGNOFF-02` remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch10/BATCH10-estimator-quote-order-snapshots-proof.json`.
+- `EST-003`: Decimal-backed `calcWorkerRateSnapshot` and `normalizeCurrencySnapshot` preserve the two-decimal user-facing worker wage and cover the `2.5020000000000002` -> `2.50` regression case without changing estimator cost formulas.
+- `EST-019`: estimator quote save, Start Party Order, and market-run quote/order writes all store normalized `worker_rate_per_m`; commercial formulas and read models were not intentionally changed.
+- `ORDER-001`: new accepted quotes persist normalized worker-rate snapshots, and the existing `convert_accepted_quote_to_order` RPC copies `estimator_quotes.worker_rate_per_m` into `orders.worker_rate_per_m`.
+- `ORDER-002`: supervisor-visible worker rate is sourced from the order snapshot; assignment and supervisor production logic were not changed.
+- `QUOTE-010`: quote restore now parses the same autosave key used by the estimator, warns before replacing a different recoverable draft, offers Keep draft and Overwrite draft choices, and does not block same-quote restore.
+- `QUOTE-003`: `updateQuoteStatus` no longer performs a silent `draft -> sent -> accepted` shortcut; the server enforces `draft -> sent` and `sent -> accepted/rejected`, and Quote History exposes only those valid actions.
+- `app/(dashboard)/owner/estimator/EstimatorClient.tsx` change is intentional and narrow: the market-run worker-rate client value now uses `calcWorkerRateSnapshot(...)`, matching normalized server write paths.
+
+Verification commands:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch10/BATCH10-estimator-quote-order-snapshots-proof.json` -> passed.
+- Targeted `npx eslint __tests__/estimator.test.ts app/\(dashboard\)/owner/estimator/EstimatorClient.tsx app/\(dashboard\)/owner/estimator/actions.ts app/\(dashboard\)/owner/quotes/QuotesClient.tsx hooks/useAutosave.ts lib/estimator.ts __tests__/batch10-estimator-quote-order-snapshots.test.ts lib/estimator-drafts.ts` -> passed.
+- `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` -> passed, 2 test files and 33 tests.
+- `npx vitest run __tests__/batch10-estimator-quote-order-snapshots.test.ts` -> passed, 1 test file and 4 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npm run build` -> passed on review rerun. Prebuild full Vitest passed with 41 test files, 345 tests passed, and 1 skipped; Next compiled successfully in 4.0 minutes, TypeScript finished after 5.2 minutes, static page generation completed for 40 pages, and the command exited 0.
+
+Data safety:
+
+- No migration was needed.
+- No Supabase command, db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production/customer data mutation, production/stock/dispatch/commercial/payroll hardening, or docs work outside the approved Batch 10 scope was used.
+
+Resolution status:
+
+- `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and `QUOTE-003` are pass-ready and documented as pass in the active QA matrix.
+- `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remain open as listed above.

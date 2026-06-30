@@ -99,6 +99,27 @@ export interface WeftRow {
   shortagePct: number | null
 }
 
+export function normalizeCurrencySnapshot(value: unknown, scale = 2): number {
+  try {
+    const decimal = new Decimal(value as Decimal.Value)
+    if (!decimal.isFinite()) return 0
+    return decimal.toDecimalPlaces(scale, Decimal.ROUND_HALF_UP).toNumber()
+  } catch {
+    return 0
+  }
+}
+
+export function calcWorkerRateSnapshot(
+  weftRows: Pick<WeftRow, 'picks'>[],
+  perPickCostPaisa: number
+): number {
+  const totalPicks = weftRows.reduce(
+    (sum, row) => sum.plus(Number(row.picks ?? 0)),
+    new Decimal(0)
+  )
+  return normalizeCurrencySnapshot(totalPicks.times(perPickCostPaisa).toString())
+}
+
 /** Which optional cost sections apply to this factory/estimate */
 export interface FactorySections {
   winding:    boolean   // yarn arrives on hanks, needs rewinding onto cones

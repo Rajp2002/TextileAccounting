@@ -207,24 +207,27 @@ Completed evidence as of 2026-06-28:
 Commands:
 
 ```bash
+npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts
+npx vitest run __tests__/batch10-estimator-quote-order-snapshots.test.ts
 npx vitest run __tests__/estimator.test.ts __tests__/market-runs.test.ts __tests__/production-mode.test.ts
 npx vitest run __tests__/p1-stock-source-validation.test.ts __tests__/p1-commercial-payments.test.ts
 npx vitest run
 ```
 
-Add targeted tests for quote transition rules, target/deadline edit guards, and below-target completion confirmation before closing this cluster. Batch 7 closes `TIME-002` date-only formatting with focused timezone tests.
+Batch 10 adds targeted tests for worker-rate snapshot normalization, quote restore draft collision handling, and quote transition rules. Add targeted tests for server-boundary estimator validation, Start Party Order atomicity/idempotency, target/deadline edit guards, and below-target completion confirmation before closing the remaining `ECON-A` rows. Batch 7 closes `TIME-002` date-only formatting with focused timezone tests.
 
 Runtime checks:
 
-- Build a quote/order from a business truth sheet and verify rate, margin, worker-rate, order, and commercial snapshots remain exact.
-- Restore a quote into the estimator while a local draft exists and verify the user must choose whether to overwrite.
+- Build a quote/order from a business truth sheet and verify rate, margin, worker-rate, order, and commercial snapshots remain exact. Batch 10 covers the worker-rate snapshot drift by focused tests/source proof; business truth-sheet comparison still gates `GOLDEN-A-03`.
+- Restore a quote into the estimator while a local draft exists and verify the user must choose whether to overwrite. Batch 10 source/tests cover the local draft collision UI.
 - Edit target/deadline after production and verify audit plus target >= produced guard.
 - Attempt below-target completion and verify explicit warning/confirmation.
 - Batch 7 date-only proof covers representative date-only display paths under UTC, US Pacific, and Asia/Kolkata; rerun only if those display paths change.
 
 Acceptance:
 
-- `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, and `ORDER-008` have test or runtime evidence.
+- Batch 10 satisfies `EST-003`, `EST-019`, `QUOTE-003`, `QUOTE-010`, `ORDER-001`, and `ORDER-002` with focused test/source evidence and active matrix promotion.
+- `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` still need their distinct proof before `ECON-A` can be fully closed.
 - `GOLDEN-A-03` has a supplied truth sheet/business reference or remains blocked and de-scoped from pilot sign-off.
 
 ## P2 Dispatch and Receipt Retest

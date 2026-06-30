@@ -11,7 +11,7 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008`, `PAY-018`, `PAY-020` |
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-014`, `SEC-015`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
-| P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008` |
+| P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `EST-011`, `QUOTE-007`, `ORDER-006`, `ORDER-008` |
 | P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-003`, `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-023`, `PAY-024`, `PAY-027`, `DASH-003` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
@@ -39,6 +39,8 @@ Closed in Batch 7 and removed from the open failure coverage rows: date-only tim
 Closed in Batch 8 and removed from the open failure coverage rows: migration-head alignment evidence (`TECH-007`). Closed in Batch 8B and removed from the open failure coverage rows: Sentry release/source-map evidence (`TECH-010`). Closed in Batch 8C and removed from the open failure coverage rows: clean deployed browser/server/Sentry signoff (`SIGNOFF-10`). `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, live Sentry payload inspection, restore, and rollback/forward-fix evidence are still unavailable.
 
 Closed in Batch 9 and removed from the open failure coverage rows: offline fallback, auth-boundary cache cleanup, offline kharchi truthful de-scope, and privacy/public offline claim truth (`OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, `PAY-028`). `OFF-007` and `OFF-010` remain partial/open because production service-worker update proof with an active draft and throttled slow/intermittent-network runtime proof across core mobile screens are still unavailable. `OFF-009` remains open under unknown-timeout/idempotency scope and was not touched.
+
+Closed in Batch 10 and removed from the open failure coverage rows: estimator/quote/order worker-rate snapshot drift, quote restore draft collision warning, and quote transition shortcut cleanup (`EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, `QUOTE-003`). `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remain open because they require distinct server-boundary validation, fast-path atomicity/idempotency, order edit audit/produced-meter guard, and below-target completion confirmation work.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -165,7 +167,7 @@ Required proof: source tests plus rollback-only SQL/RPC probes for negative mete
 
 ## P1 ECON-A - Estimator, Quote, Order, and Date Snapshots Are Not Exact Enough
 
-Failures: `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, `ORDER-008`
+Failures: `EST-011`, `QUOTE-007`, `ORDER-006`, `ORDER-008`
 
 Blocked evidence debt: `GOLDEN-A-03`
 
@@ -173,24 +175,30 @@ Evidence: `logs/business-reconciliation.json`, `logs/estimator-quotes-source-evi
 
 Invariant: business snapshots used for quotes, orders, wage rates, due dates, and lifecycle state must be exact, server-validated, and stable across timezones. A restored draft or lifecycle shortcut must not silently overwrite or create inconsistent accepted-order state.
 
-Impact: worker rate entered as 2.50 persisted/displayed with floating drift, estimator save lacks server-boundary validation, accepted quote/order economics can drift, order target/deadline edits lack audit and produced-meter guards, and below-target completion lacks explicit confirmation. Batch 7 closes the separate date-only rendering shift row.
+Impact: Batch 10 fixes worker-rate floating drift in estimator-origin quote/order snapshots and quote restore/lifecycle cleanup. Remaining impact is estimator save server-boundary validation, Start Party Order accepted-quote/order atomicity, order target/deadline edits lacking audit and produced-meter guards, and below-target completion lacking explicit confirmation. Batch 7 closes the separate date-only rendering shift row.
 
 Remediation direction:
 
-- Use decimal-safe storage/serialization for rates and financial snapshots.
 - Validate estimator inputs at the server boundary.
-- Make quote/order lifecycle transitions explicit and auditable.
+- Make Start Party Order atomic/idempotent or document the recoverable non-atomic behavior for pilot.
 - Add guards and audit for target/deadline edits and below-target completion.
 - Require the external truth sheet or business-accepted reference estimate before closing `GOLDEN-A-03`.
 
-Required proof: estimator calculation tests, quote/order lifecycle tests, and runtime quote-to-order checks against a business truth sheet.
+Required proof: server-boundary estimator validation tests/probes, Start Party Order atomicity/idempotency proof, order edit audit/produced-meter guard tests, below-target completion confirmation proof, and runtime quote-to-order checks against a business truth sheet where applicable.
 
 Scoped estimator costing reconciliation closeout:
 
 - Date/time: 2026-06-28 00:54 IST.
 - Closed sub-scope: formula/manual/manual-practical costing, mixed formula/manual semantics, width unit handling, waste/crimp semantics, Cost Breakdown audit, and saved quote restore audit preservation.
 - Evidence: `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` passed 31 tests; full `npx vitest run` passed 298 tests with 1 skipped; `npx tsc --noEmit`, `npm run build`, and scoped estimator ESLint passed; browser QA validated formula mode at `₹55.75/m`, formula-equivalent manual at `₹55.75/m`, practical manual at `₹55.91/m` or `₹56.16/m` depending on overhead, width warning for `62 cm`, and quote restore preserving `₹56.16/m`.
-- Matrix status: unchanged for estimator costing rows. `EST-003`, `EST-011`, `EST-019`, `QUOTE-003`, `QUOTE-007`, `QUOTE-010`, `ORDER-001`, `ORDER-002`, `ORDER-006`, and `ORDER-008` remain open until the original row-level proof is captured. Batch 7 closes `TIME-002` with focused timezone-stability tests and display-path hardening.
+- Matrix status at that scoped estimator closeout was unchanged. Batch 7 later closed `TIME-002` with focused timezone-stability tests and display-path hardening.
+
+Batch 10 estimator/quote/order snapshot closeout:
+
+- Date/time: 2026-06-30 16:45 IST.
+- Closed sub-scope: Decimal-backed worker-rate snapshot normalization, quote/order worker-rate copy stability, quote restore draft collision warning, and explicit quote lifecycle transitions.
+- Evidence: `output/qa/batch10/BATCH10-estimator-quote-order-snapshots-proof.json`; `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` passed 33 tests; `npx vitest run __tests__/batch10-estimator-quote-order-snapshots.test.ts` passed 4 tests; targeted ESLint, `npx tsc --noEmit --pretty false`, `git diff --check`, `jq empty`, and `npm run build` passed.
+- Matrix status: `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and `QUOTE-003` are pass. `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remain open.
 
 ## Closed DISP-A - Multi-Batch Dispatch Package Identity
 

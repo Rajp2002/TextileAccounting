@@ -4,16 +4,33 @@ import {
     calcOrderQuote,
     calcWarpYarnKg,
     calcWeaveCostPerMeter,
+    calcWorkerRateSnapshot,
     calcWeftYarnKg,
     getWidthWarnings,
     inchesToCm,
     makeDefaultEstimateState,
+    normalizeCurrencySnapshot,
     type EstimateState,
 } from '../lib/estimator'
 
 function round2(value: number) {
     return Math.round(value * 100) / 100
 }
+
+describe('Batch 10 worker-rate snapshots', () => {
+    it('normalizes binary float drift at the quote/order snapshot boundary', () => {
+        expect(calcWorkerRateSnapshot([{ picks: 41.7 }], 0.06)).toBe(2.5)
+        expect(normalizeCurrencySnapshot(2.5020000000000002)).toBe(2.5)
+    })
+
+    it('preserves the user-facing two-decimal loom wage for derived per-pick rates', () => {
+        const perPickCostPaisa = Math.round((8 / 68) * 10000) / 10000
+
+        expect(perPickCostPaisa).toBe(0.1176)
+        expect(calcWeaveCostPerMeter(68, perPickCostPaisa)).toBe(7.9968)
+        expect(calcWorkerRateSnapshot([{ picks: 68 }], perPickCostPaisa)).toBe(8)
+    })
+})
 
 function makeDno252BaseEstimate(partial: Partial<EstimateState>): EstimateState {
     return {

@@ -76,6 +76,8 @@ Batch 8 note: `TECH-007` migration-head alignment is closed for repository head 
 
 Batch 9 note: `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` are closed by public offline fallback proof, awaited auth-boundary cache cleanup, IndexedDB queue cleanup, privacy/public copy truth, and truthful online-only offline kharchi de-scope. `OFF-007` and `OFF-010` remain partial, and `OFF-009` remains open.
 
+Batch 10 note: `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and `QUOTE-003` are closed by focused estimator/quote/order snapshot and lifecycle proof. Worker-rate snapshots are Decimal-normalized across estimator-origin quote/order paths, quote restore warns before replacing another local draft, and quote lifecycle transitions are explicit. `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remain open under distinct validation, atomicity/idempotency, order edit audit, and below-target completion roots.
+
 ## Pilot Sign-Off Evidence Package
 
 Final sign-off must include:

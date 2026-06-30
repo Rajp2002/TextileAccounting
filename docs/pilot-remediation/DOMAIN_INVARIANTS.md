@@ -166,6 +166,8 @@ Required proof:
 
 Batch 7 proof note: `TIME-002` is satisfied by reusable date-only rendering helpers, affected display-path hardening, and focused tests proving the same date-only value renders unchanged under UTC, Asia/Kolkata, and America/Los_Angeles. Timestamp/datetime fields are intentionally outside that date-only invariant.
 
+Batch 10 proof note: `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and `QUOTE-003` are satisfied by Decimal-backed worker-rate snapshot normalization, normalized estimator-origin quote/order/market-run writes, quote restore draft-collision handling, and explicit quote lifecycle transitions. Evidence is `output/qa/batch10/BATCH10-estimator-quote-order-snapshots-proof.json`, focused Batch 10 tests, estimator/width tests, TypeScript, targeted ESLint, and `npm run build`. No migration, Supabase command, direct SQL, or production/stock/dispatch/commercial/payroll logic change was used. `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remain open under distinct roots.
+
 ## Payroll and Kharchi
 
 Payroll is derived from production logs, stored rate snapshots, attendance, statutory settings, advances, and manual adjustments. Kharchi must affect worker advance and supervisor float ledgers atomically.

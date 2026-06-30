@@ -14,12 +14,12 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, and Batch 9 offline/cache truth closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, and Batch 10 estimator/quote/order snapshot closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
-| `pass` | 174 | Runtime/test evidence exists. |
-| `fail` | 49 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `pass` | 180 | Runtime/test evidence exists. |
+| `fail` | 43 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
 | `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
@@ -46,6 +46,8 @@ Batch 7 moved `TIME-002` and `TECH-013` from fail to pass with focused timezone-
 Batch 8 moved `TECH-007` from fail to pass with supplied Supabase migration-list evidence showing local/remote alignment through repository migration head `20260628185344` and no pending, failed, or out-of-order migrations. Batch 8B moved `TECH-010` from fail to pass with fresh production Sentry release/source-map proof for deployed release `2538da25b2fa` and 529 artifacts. Batch 8C moved `SIGNOFF-10` from fail to pass with clean deployed browser smoke, Vercel runtime/server logs, and Sentry no-error release evidence after the Sentry DSN fix. `TECH-009`, `TECH-011`, `TECH-012`, `SEC-011`, and `WA-008` remain blocked, partial, or open because deployed webhook proof, live Sentry payload inspection, restore, and rollback/forward-fix evidence are still unavailable.
 
 Batch 9 moved `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, `SEC-016`, and `PAY-028` from fail to pass with focused source/test/build proof, local HTTP/browser evidence for `/offline`, `/_offline`, `/privacy`, and public copy, and truthful de-scope of unsupported offline kharchi. `OFF-007` remains partial because a production service-worker update with an active draft was not exercised. `OFF-010` remains partial because throttled slow/intermittent-network runtime proof across core mobile screens was not executed. `OFF-009` remains open and out of scope for unknown-timeout UX and status reconciliation.
+
+Batch 10 moved `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and `QUOTE-003` from fail to pass with Decimal-backed worker-rate snapshot normalization, quote restore draft-collision handling, explicit quote lifecycle transitions, focused regression tests, TypeScript, targeted ESLint, and a successful production build. `EST-011`, `QUOTE-007`, `ORDER-006`, and `ORDER-008` remain open under distinct server-boundary validation, fast-path atomicity/idempotency, order edit audit/produced-meter guard, and below-target completion confirmation roots.
 
 ## Operating Rules
 
@@ -722,3 +724,56 @@ Resolution status:
 - `OFF-010` remains partial/open because throttled slow/intermittent-network runtime proof across core mobile screens was not captured.
 - `OFF-009` remains open and out of scope for unknown-timeout UX and status reconciliation.
 - `SEC-011`, `TECH-009`, `TECH-011`, `TECH-012`, `WA-008`, `WA-010`, billing/external evidence rows, restore/rollback rows, Sentry live payload rows, WhatsApp rows, and production/order/payroll rows outside the approved Batch 9 scope remain unchanged.
+
+## Batch 10 Estimator Quote Order Snapshot Closeout
+
+Date/time: 2026-06-30 16:45 IST.
+
+Batch 10: estimator/quote/order snapshot cleanup.
+
+Target failures closed:
+
+- `EST-003`
+- `EST-019`
+- `ORDER-001`
+- `ORDER-002`
+- `QUOTE-010`
+- `QUOTE-003`
+
+Repository state:
+
+- Branch: `codex/batch-10-estimator-quote-order-snapshots`.
+- Source base: `origin/main` at `2ada670d32efeacdb39cc5827fcbd33cc626022d`.
+
+Migrations:
+
+- No migration was needed.
+- No Supabase command, db push, migration repair, db pull, direct SQL, or `--include-all` command was run.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch10/BATCH10-estimator-quote-order-snapshots-proof.json`.
+- Decimal-backed `calcWorkerRateSnapshot` and `normalizeCurrencySnapshot` preserve the two-decimal worker-rate snapshot and cover the `2.5020000000000002` to `2.50` drift regression.
+- Estimator quote save, Start Party Order, and market-run quote/order writes all store normalized `worker_rate_per_m`.
+- The accepted quote-to-order path continues to use the existing RPC, which copies the normalized quote worker-rate snapshot into `orders.worker_rate_per_m`.
+- Quote restore now detects a different recoverable local estimator draft on the shared autosave key and gives Keep draft / Overwrite draft choices.
+- Quote lifecycle no longer silently performs `draft -> sent -> accepted`; server and UI now expose `draft -> sent` and `sent -> accepted/rejected` only.
+- Production, stock, dispatch, commercial, payroll, Supabase, migration, RPC, and server-boundary hardening areas were not intentionally changed.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch10/BATCH10-estimator-quote-order-snapshots-proof.json` -> passed.
+- Targeted `npx eslint` for touched Batch 10 files -> passed.
+- `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` -> passed, 2 test files, 33 tests.
+- `npx vitest run __tests__/batch10-estimator-quote-order-snapshots.test.ts` -> passed, 1 test file, 4 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npm run build` -> passed on review rerun. Prebuild full Vitest passed with 41 test files, 345 tests passed, and 1 skipped; Next compiled successfully, TypeScript finished after 5.2 minutes, static page generation completed, and the command exited 0.
+
+Resolution status:
+
+- `EST-003`, `EST-019`, `ORDER-001`, `ORDER-002`, `QUOTE-010`, and `QUOTE-003` are documented as pass in the active matrix.
+- `EST-011` remains open because server-boundary estimator validation is a distinct root.
+- `QUOTE-007` remains open because Start Party Order accepted-quote/order atomicity is a distinct transaction/idempotency root.
+- `ORDER-006` remains open because target/deadline audit and produced-meter guards are a distinct order edit/audit root.
+- `ORDER-008` remains open because below-target completion confirmation and runtime proof are a distinct order completion root.

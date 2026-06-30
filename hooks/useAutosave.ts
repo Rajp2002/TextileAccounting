@@ -1,16 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useCallback, useState } from 'react'
-
-interface AutosaveData<TState = unknown> {
-  state: TState
-  partyName: string
-  qualityLabel: string
-  warpInstruction: string
-  weftInstruction: string
-  savedAt: number  // timestamp
-  sourceQuoteId?: string
-}
+import {
+  getEstimatorDraftStorageKey,
+  parseEstimatorDraft,
+  ESTIMATOR_DRAFT_MAX_AGE_MS,
+  type EstimatorAutosaveData,
+} from '@/lib/estimator-drafts'
 
 interface UseAutosaveOptions {
   orgId: string
@@ -23,19 +19,15 @@ interface UseAutosaveReturn<TState = unknown> {
   /** Whether a recoverable draft was found on mount */
   hasDraft: boolean
   /** The draft data if found */
-  draft: AutosaveData<TState> | null
+  draft: EstimatorAutosaveData<TState> | null
   /** Restore the draft (call this when user clicks "Restore") */
-  restoreDraft: () => AutosaveData<TState> | null
+  restoreDraft: () => EstimatorAutosaveData<TState> | null
   /** Dismiss the draft (clear from localStorage) */
   dismissDraft: () => void
   /** Clear the autosaved draft (call on successful save/convert) */
   clearDraft: () => void
   /** Save current state (called automatically via debounce, but exposed for manual use) */
-  saveDraft: (data: Omit<AutosaveData<TState>, 'savedAt'>) => void
-}
-
-function getStorageKey(orgId: string, userId: string): string {
-  return `weavly-estimator-draft-${orgId}-${userId}`
+  saveDraft: (data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => void
 }
 
 /**
@@ -51,12 +43,12 @@ export function useAutosave<TState = unknown>({
   orgId,
   userId,
   debounceMs = 2000,
-  maxAgeMs = 24 * 60 * 60 * 1000,  // 24 hours
+  maxAgeMs = ESTIMATOR_DRAFT_MAX_AGE_MS,
 }: UseAutosaveOptions): UseAutosaveReturn<TState> {
   const [hasDraft, setHasDraft] = useState(false)
-  const [draft, setDraft] = useState<AutosaveData<TState> | null>(null)
+  const [draft, setDraft] = useState<EstimatorAutosaveData<TState> | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const keyRef = useRef(getStorageKey(orgId, userId))
+  const keyRef = useRef(getEstimatorDraftStorageKey(orgId, userId))
 
   // Check for existing draft on mount
   useEffect(() => {
@@ -64,10 +56,8 @@ export function useAutosave<TState = unknown>({
       const raw = localStorage.getItem(keyRef.current)
       if (!raw) return
 
-      const parsed = JSON.parse(raw) as AutosaveData<TState>
-      const age = Date.now() - parsed.savedAt
-
-      if (age > maxAgeMs) {
+      const parsed = parseEstimatorDraft<TState>(raw, Date.now(), maxAgeMs)
+      if (!parsed) {
         // Draft is too old — silently discard
         localStorage.removeItem(keyRef.current)
         return
@@ -83,13 +73,13 @@ export function useAutosave<TState = unknown>({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const saveDraft = useCallback((data: Omit<AutosaveData<TState>, 'savedAt'>) => {
+  const saveDraft = useCallback((data: Omit<EstimatorAutosaveData<TState>, 'savedAt'>) => {
     // Cancel any pending save
     if (timerRef.current) clearTimeout(timerRef.current)
 
     timerRef.current = setTimeout(() => {
       try {
-        const payload: AutosaveData<TState> = { ...data, savedAt: Date.now() }
+        const payload: EstimatorAutosaveData<TState> = { ...data, savedAt: Date.now() }
         localStorage.setItem(keyRef.current, JSON.stringify(payload))
       } catch {
         // localStorage full or unavailable — fail silently
@@ -104,7 +94,7 @@ export function useAutosave<TState = unknown>({
     setDraft(null)
   }, [])
 
-  const restoreDraft = useCallback((): AutosaveData<TState> | null => {
+  const restoreDraft = useCallback((): EstimatorAutosaveData<TState> | null => {
     const current = draft
     setHasDraft(false)
     // Don't clear from localStorage — keep it until next save or explicit dismiss

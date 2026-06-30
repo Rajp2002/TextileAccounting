@@ -1,0 +1,182 @@
+{
+  "batch": "Batch 10",
+  "title": "Estimator / Quote / Order Snapshot Cleanup",
+  "source_commit": "2ada670d32efeacdb39cc5827fcbd33cc626022d",
+  "branch": "codex/batch-10-estimator-quote-order-snapshots",
+  "target_ids_evaluated": [
+    "EST-003",
+    "EST-019",
+    "ORDER-001",
+    "ORDER-002",
+    "QUOTE-010",
+    "QUOTE-003",
+    "ORDER-006",
+    "ORDER-008",
+    "EST-011"
+  ],
+  "changed_files": [
+    "__tests__/batch10-estimator-quote-order-snapshots.test.ts",
+    "__tests__/estimator.test.ts",
+    "app/(dashboard)/owner/estimator/EstimatorClient.tsx",
+    "app/(dashboard)/owner/estimator/actions.ts",
+    "app/(dashboard)/owner/quotes/QuotesClient.tsx",
+    "hooks/useAutosave.ts",
+    "lib/estimator-drafts.ts",
+    "lib/estimator.ts",
+    "output/qa/batch10/BATCH10-estimator-quote-order-snapshots-proof.json"
+  ],
+  "implementation_summary": [
+    "Added Decimal-backed worker-rate snapshot normalization so quote/order worker_rate_per_m saves the two-decimal user-facing wage instead of binary float drift.",
+    "Routed estimator quote save, Start Party Order, and estimator-origin market-run quote/order writes through the normalized worker-rate snapshot value.",
+    "Added a shared estimator draft storage key/parser and changed quote restore to warn before overwriting another recoverable local estimator draft.",
+    "Removed the silent draft-to-accepted quote transition and exposed only draft-to-sent and sent-to-accepted/rejected UI actions."
+  ],
+  "per_row_evidence": {
+    "EST-003": {
+      "status": "pass_ready_candidate",
+      "evidence": [
+        "calcWorkerRateSnapshot([{ picks: 41.7 }], 0.06) returns 2.5 instead of 2.5020000000000002.",
+        "normalizeCurrencySnapshot(2.5020000000000002) returns 2.5.",
+        "npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts passed with 33 tests."
+      ]
+    },
+    "EST-019": {
+      "status": "pass_ready_candidate",
+      "evidence": [
+        "Estimator-origin quote/order worker-rate snapshots are normalized before persistence.",
+        "Start Party Order normalizes explicit workerRatePerM inputs before accepted quote creation and shared quote-to-order conversion.",
+        "No commercial read-model or commercial formula code was intentionally changed."
+      ]
+    },
+    "ORDER-001": {
+      "status": "pass_ready_candidate",
+      "evidence": [
+        "Accepted quotes saved after this patch store normalized worker_rate_per_m.",
+        "The existing convert_accepted_quote_to_order RPC copies estimator_quotes.worker_rate_per_m into orders.worker_rate_per_m, so newly converted orders inherit the normalized snapshot.",
+        "npx vitest run __tests__/batch10-estimator-quote-order-snapshots.test.ts passed and verifies the normalized quote/order write paths."
+      ]
+    },
+    "ORDER-002": {
+      "status": "pass_ready_candidate",
+      "evidence": [
+        "Supervisor-visible order worker_rate_per_m is sourced from the order snapshot, which is now written from normalized estimator/quote paths.",
+        "No assignment or supervisor production logic was intentionally changed."
+      ]
+    },
+    "QUOTE-010": {
+      "status": "pass_ready_candidate",
+      "evidence": [
+        "Quote restore now parses the same autosave key used by the estimator and prompts when a different recoverable draft exists.",
+        "The dialog offers Keep draft and Overwrite draft choices before replacing localStorage.",
+        "Same-source quote restore remains direct because it is not another draft collision.",
+        "npx vitest run __tests__/batch10-estimator-quote-order-snapshots.test.ts passed and verifies the collision helper and UI prompt wiring."
+      ]
+    },
+    "QUOTE-003": {
+      "status": "pass_ready_candidate",
+      "secondary": true,
+      "evidence": [
+        "updateQuoteStatus no longer special-cases draft to accepted through a silent sent write.",
+        "Allowed transitions remain draft -> sent and sent -> accepted/rejected.",
+        "Quote History exposes Mark Sent for drafts and Accept/Reject only for sent quotes.",
+        "npx vitest run __tests__/batch10-estimator-quote-order-snapshots.test.ts passed and verifies server/UI transition wiring."
+      ]
+    },
+    "EST-011": {
+      "status": "open",
+      "reason": "Server-boundary validation for negative/extreme estimator rows and empty row arrays is a distinct validation root and was not changed in this snapshot cleanup batch."
+    },
+    "ORDER-006": {
+      "status": "open",
+      "reason": "Target/deadline audit rows and target >= produced-meter server guard are a distinct order edit/audit root and likely require broader order-boundary design."
+    },
+    "ORDER-008": {
+      "status": "open",
+      "reason": "Below-target completion confirmation is a distinct order completion UI/runtime-proof root and was not needed for the estimator/quote/order snapshot fix."
+    }
+  },
+  "commands_run": [
+    {
+      "command": "git fetch origin --prune && git switch -C codex/batch-10-estimator-quote-order-snapshots origin/main && git status --short && git rev-parse origin/main",
+      "result": "passed",
+      "notes": "origin/main resolved to 2ada670d32efeacdb39cc5827fcbd33cc626022d."
+    },
+    {
+      "command": "npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts",
+      "result": "passed",
+      "notes": "2 files passed, 33 tests passed."
+    },
+    {
+      "command": "npx vitest run __tests__/batch10-estimator-quote-order-snapshots.test.ts",
+      "result": "passed",
+      "notes": "1 file passed, 4 tests passed."
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "passed",
+      "notes": "No output."
+    },
+    {
+      "command": "npx eslint __tests__/estimator.test.ts __tests__/batch10-estimator-quote-order-snapshots.test.ts lib/estimator.ts lib/estimator-drafts.ts hooks/useAutosave.ts app/'(dashboard)'/owner/estimator/EstimatorClient.tsx app/'(dashboard)'/owner/estimator/actions.ts app/'(dashboard)'/owner/quotes/QuotesClient.tsx",
+      "result": "passed",
+      "notes": "No output."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "notes": "No output."
+    },
+    {
+      "command": "npm run build",
+      "result": "passed",
+      "notes": "Review rerun completed successfully. Prebuild full Vitest passed with 41 files, 345 tests passed, 1 skipped. Next build compiled successfully in 4.0 minutes, the TypeScript phase finished after 5.2 minutes, static page generation completed for 40 pages, and the command exited 0."
+    },
+    {
+      "command": "jq empty output/qa/batch10/BATCH10-estimator-quote-order-snapshots-proof.json",
+      "result": "passed",
+      "notes": "Proof JSON validated after creation."
+    }
+  ],
+  "pass_ready_candidates": [
+    "EST-003",
+    "EST-019",
+    "ORDER-001",
+    "ORDER-002",
+    "QUOTE-010",
+    "QUOTE-003"
+  ],
+  "partial_or_open": [
+    {
+      "id": "EST-011",
+      "reason": "Distinct server-boundary validation root."
+    },
+    {
+      "id": "ORDER-006",
+      "reason": "Distinct target/deadline edit audit and produced-meter guard root."
+    },
+    {
+      "id": "ORDER-008",
+      "reason": "Distinct below-target completion confirmation root."
+    }
+  ],
+  "safety_confirmations": {
+    "migration_needed": false,
+    "migrations_created": false,
+    "supabase_mutations_run": false,
+    "supabase_db_push_run": false,
+    "migration_repair_run": false,
+    "db_pull_run": false,
+    "direct_sql_run": false,
+    "include_all_used": false,
+    "npm_audit_run": false,
+    "packages_installed": false,
+    "lockfile_changed": false,
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "docs_closeout_run": false,
+    "production_data_mutated": false,
+    "production_stock_dispatch_commercial_flows_intentionally_changed": false,
+    "notes": "Only estimator-origin quote/order/market-run worker-rate snapshot writes, quote restore local draft handling, and quote lifecycle UI/action guards were changed."
+  }
+}

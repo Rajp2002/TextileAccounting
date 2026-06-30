@@ -3,7 +3,7 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { getEffectiveCostingWidthCm, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
+import { calcWorkerRateSnapshot, normalizeCurrencySnapshot, getEffectiveCostingWidthCm, type EstimateState, type FactorySections, type WarpRow, type WeftRow, type OverheadItem } from '@/lib/estimator'
 import crypto from 'crypto'
 import { executeQuoteConversion } from '@/lib/quotes/convert-accepted-quote-to-order'
 import { getMarketRunDisplayStatus } from '@/lib/market-runs'
@@ -355,9 +355,7 @@ export async function saveEstimatorQuoteV3(params: {
 
     // Compute loom-worker wage rate: Σ(picks across all weft rows) × perPickCostPaisa
     // e.g. 58 picks × 0.16 = ₹9.28/m — this is what the weaver earns per metre
-    const workerRatePerM =
-        estimate.weftRows.reduce((sum, r) => sum + (r.picks ?? 0), 0)
-        * (estimate.perPickCostPaisa ?? 0)
+    const workerRatePerM = calcWorkerRateSnapshot(estimate.weftRows, estimate.perPickCostPaisa ?? 0)
 
     const { data: saved, error } = await supabase
         .from('estimator_quotes')
@@ -522,10 +520,10 @@ export async function startPartyOrderFromEstimator(input: StartPartyOrderInput) 
 
     // ── Compute worker rate from estimator state if not explicitly provided ──
     const { estimatorState } = input
-    const workerRatePerM =
+    const workerRatePerM = normalizeCurrencySnapshot(
         input.workerRatePerM ??
-        estimatorState.weftRows.reduce((sum, r) => sum + (r.picks ?? 0), 0) *
-        (estimatorState.perPickCostPaisa ?? 0)
+        calcWorkerRateSnapshot(estimatorState.weftRows, estimatorState.perPickCostPaisa ?? 0)
+    )
 
     // ── 1. Create accepted estimator quote ───────────────────────────────────
     const { data: savedQuote, error: quoteError } = await supabase
@@ -740,18 +738,6 @@ export async function updateQuoteStatus(id: string, status: 'draft' | 'sent' | '
     if (currentError || !current) return { error: currentError?.message ?? 'Quote not found.' }
     if (current.order_id) return { error: 'Converted quotes can no longer change status.' }
 
-    // Support silent transition from draft -> sent -> accepted for compliance audit logs
-    if (current.status === 'draft' && status === 'accepted') {
-        const { error: sentError } = await supabase
-            .from('estimator_quotes')
-            .update({ status: 'sent' })
-            .eq('id', id)
-            .eq('org_id', profile.org_id)
-        
-        if (sentError) return { error: sentError.message }
-        current.status = 'sent'
-    }
-
     const allowedTransitions: Record<string, string[]> = {
         draft: ['sent'],
         sent: ['accepted', 'rejected'],
@@ -812,6 +798,7 @@ export async function createMarketRunFromEstimator(params: {
     }
 
     const { estimate } = params
+    const workerRatePerM = normalizeCurrencySnapshot(params.workerRatePerM)
 
     // 1. Save estimator snapshot as a quote (party_name = fabric label for display)
     const { data: savedQuote, error: quoteError } = await supabase
@@ -851,7 +838,7 @@ export async function createMarketRunFromEstimator(params: {
             intended_margin_percent:  estimate.profitPct,
             meters:                   targetMeters,
             status:                   'accepted',       // auto-accept — no party negotiation needed
-            worker_rate_per_m:        params.workerRatePerM,
+            worker_rate_per_m:        workerRatePerM,
             ppi:     Math.round(estimate.weftRows[0]?.picks ?? 68),
             yarn_denier: Math.round(estimate.warpRows[0]?.calcDenier ?? 75),
             yarn_rate_per_kg: estimate.warpRows[0]?.yarnRate ?? 0,
@@ -872,7 +859,7 @@ export async function createMarketRunFromEstimator(params: {
             weft_instruction: params.weftInstruction?.trim() || null,
             target_meters:    targetMeters,
             cost_per_meter:   params.totalProductionCostPerM,
-            worker_rate_per_m: params.workerRatePerM,
+            worker_rate_per_m: workerRatePerM,
             quote_id:         savedQuote.id,
             status:           'production',
             notes:            params.notes?.trim() || null,
@@ -906,7 +893,7 @@ export async function createMarketRunFromEstimator(params: {
             start_date:          new Date().toISOString().split('T')[0],
             deadline:            params.deadline,
             status:              'active',
-            worker_rate_per_m:   params.workerRatePerM,
+            worker_rate_per_m:   workerRatePerM,
             notes:               params.notes?.trim() ?? '',
             tracking_token:      generateTrackingToken(),
             market_run_id:       marketRun.id,
