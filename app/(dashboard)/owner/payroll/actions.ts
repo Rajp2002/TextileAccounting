@@ -4,10 +4,9 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
 import { calculateTotalPay, calculateDailyPay } from '@/lib/finance'
-import { PayrollConfigSchema, safeParse } from '@/lib/schemas'
+import { AccessCodeSchema, PayrollConfigSchema, safeParse } from '@/lib/schemas'
 import { getPayrollCycleBounds, getPayrollCycleStatus } from '@/lib/payroll-cycle'
 import { getSuratTodayString } from '@/lib/time'
-import { validateAndConsumeAccessCode } from '@/lib/access-codes'
 import {
     calculatePayrollManualAdjustmentTotals,
     sanitizePayrollManualAdjustments,
@@ -42,15 +41,17 @@ export async function toggleWorkerPaid(
 ) {
     const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+    let reversalAccessCode: string | null = null
 
     if (currentPaid) {
         if (!accessCode) {
             return { error: 'Access code is required for reversal.' }
         }
-        const isValid = await validateAndConsumeAccessCode(user.id, profile.org_id, accessCode)
-        if (!isValid) {
-            return { error: 'Invalid or expired access code.' }
+        const parsedAccessCode = safeParse(AccessCodeSchema, accessCode)
+        if ('error' in parsedAccessCode) {
+            return { error: parsedAccessCode.error }
         }
+        reversalAccessCode = parsedAccessCode.data
     }
 
     const newPaid = !currentPaid
@@ -153,7 +154,7 @@ export async function toggleWorkerPaid(
             return { error: 'Kapaat cannot make the final payout negative.' }
         }
 
-        const { data, error } = await supabase.rpc('settle_worker_payroll', {
+        const { data, error } = await supabase.rpc('settle_worker_payroll_hardened', {
             p_org_id: profile.org_id,
             p_worker_type: workerType,
             p_worker_id: workerId,
@@ -202,12 +203,13 @@ export async function toggleWorkerPaid(
             settlement: data
         }
     } else {
-        const { data, error } = await supabase.rpc('unsettle_worker_payroll', {
+        const { data, error } = await supabase.rpc('unsettle_worker_payroll_hardened', {
             p_org_id: profile.org_id,
             p_worker_type: workerType,
             p_worker_id: workerId,
             p_month: month,
-            p_actor_id: user.id
+            p_actor_id: user.id,
+            p_access_code: reversalAccessCode
         })
 
         if (error) {

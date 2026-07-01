@@ -38,6 +38,11 @@ interface ProductionLogRow {
 type MessageError = { message?: string }
 type WorkerIdLogRow = { worker_id: number | null }
 
+type KharchiRpcResult = {
+    rolled_over?: boolean
+    cycle_start_date?: string
+}
+
 // ─── Internal Helpers ──────────────────────────────────────────────────────────
 
 /**
@@ -1429,75 +1434,26 @@ export async function recordKharchi(params: {
     amount: number
     description: string
 }) {
-    const { user, profile } = await requireRole(['supervisor', 'owner'])
+    await requireRole(['supervisor', 'owner'])
     const supabase = await createServerClient()
 
-    // 1. Get Cycle Config
-    const { data: config } = await supabase
-        .from('payroll_configs')
-        .select('cycle_start_day')
-        .eq('org_id', profile.org_id)
-        .maybeSingle()
-
-    const cycleStartDay = config?.cycle_start_day || 1
-
-    // 2. Derive Current Cycle Start Date (Postgres Helper)
-    const bounds = getCycleBoundsForDate(new Date().toISOString().split('T')[0], cycleStartDay)
-    let cycleStartDate = bounds.cycle_start
-
-    // 3. Late Sync Check: Is this specific worker's cycle already settled?
-    const { data: existingSettlement } = await supabase
-        .from('payroll_settlements')
-        .select('id, status')
-        .eq('org_id', profile.org_id)
-        .eq('cycle_start_date', cycleStartDate)
-        .eq(params.workerType === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', params.workerId)
-        .maybeSingle()
-
-    let wasLateSync = false
-    if (existingSettlement && existingSettlement.status === 'paid') {
-        // Already paid! Roll to NEXT cycle
-        const nextDateStr = new Date(new Date(cycleStartDate).getTime() + 32 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split('T')[0]
-        const nextBounds = getCycleBoundsForDate(nextDateStr, cycleStartDay)
-        cycleStartDate = nextBounds.cycle_start
-        wasLateSync = true
+    if (!Number.isFinite(params.amount) || params.amount <= 0) {
+        return { error: 'Kharchi amount must be greater than zero.' }
     }
 
-    // 4. Record advance
-    const { data: advance, error: advErr } = await supabase
-        .from('worker_advances')
-        .insert({
-            org_id: profile.org_id,
-            meter_worker_id: params.workerType === 'meter' ? params.workerId : null,
-            fixed_worker_id: params.workerType === 'fixed' ? params.workerId : null,
-            amount: params.amount,
-            description: params.description,
-            type: 'kharchi',
-            cycle_start_date: cycleStartDate,
-            status: 'pending',
-        })
-        .select('id')
-        .single()
-
-    if (advErr) {
-        console.error('Failed to record kharchi advance:', advErr)
-        return { error: 'Failed to record entry.' }
-    }
-
-    // 5. Log Float Disbursement
-    const { error: floatErr } = await supabase.from('supervisor_float_transactions').insert({
-        org_id: profile.org_id,
-        supervisor_id: user.id,
-        type: 'disbursement',
-        amount: params.amount,
-        worker_advance_id: advance.id,
+    const { data, error } = await supabase.rpc('record_supervisor_kharchi', {
+        p_worker_type: params.workerType,
+        p_worker_id: params.workerId,
+        p_amount: params.amount,
+        p_description: params.description?.trim() ?? '',
     })
 
-    if (floatErr) {
-        console.error('Failed to log float transaction:', floatErr)
+    if (error) {
+        console.error('Failed to record kharchi atomically:', error)
+        return { error: error.message || 'Failed to record entry.' }
     }
+
+    const result = data as KharchiRpcResult | null
 
     revalidatePath('/owner/advances')
     revalidatePath('/owner/payroll')
@@ -1505,8 +1461,8 @@ export async function recordKharchi(params: {
 
     return {
         success: true,
-        rolledOver: wasLateSync,
-        cycleStartDate,
+        rolledOver: Boolean(result?.rolled_over),
+        cycleStartDate: result?.cycle_start_date ?? null,
     }
 }
 

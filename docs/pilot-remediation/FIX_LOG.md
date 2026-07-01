@@ -14,7 +14,7 @@ Rules for entries:
 | Cluster | Status | Notes |
 | --- | --- | --- |
 | `SEC-A` mutable profile authorization | Closed in Batch 1 / pass | `SEC-002` through `SEC-005` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
-| `SEC-B` privileged action/lockdown enforcement | Partially closed in Batch 1 / open remainder | Batch 1 closed `SEC-006` and `AUTH-016` with runtime/test evidence and active matrix rows promoted to pass. `AUTH-008`, `PAY-018`, and `PAY-020` remain open. |
+| `SEC-B` privileged action/lockdown enforcement | Partially closed through Batch 20 / open remainder | Batch 1 closed `SEC-006` and `AUTH-016` with runtime/test evidence and active matrix rows promoted to pass. Batch 20 moves payroll RPC boundary rows `PAY-018` and `PAY-020` to `code_verified`, not pass, pending migration application and disposable QA runtime proof. `AUTH-008` remains open. |
 | `SEC-C` webhook/export/compliance fail-closed | Partially closed through Batch 15 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Batch 15 closes `SEC-014` payslip filename safety with deterministic source/test proof. Webhook, owner export, settings audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
@@ -24,7 +24,7 @@ Rules for entries:
 | `DISP-B` receipt-state coherence | Closed through Batch 12 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. Batch 12 closes `DISP-013` with focused local dispatch archive proof. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
 | `DASH-A` dashboard/sign-off read-model truth | Partially closed/code-verified through Batch 15 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10`; Batch 15 source-fixes `DASH-003` gross wage read-model calculation but keeps it `code_verified` pending disposable after-shift runtime proof. Historical analytics and sign-off evidence debt remain open. |
-| `PAY-A` payroll/kharchi ledger integrity | Partially remediated through Batch 15 / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Batch 15 closes payroll payslip PDF/export rows `PAY-023` and `PAY-024`, and moves PF/ESI preview formula rows `PAY-013` and `PAY-015` to `code_verified` pending disposable settlement proof. Legacy RPCs, online kharchi atomicity, and broader settlement correctness remain open. |
+| `PAY-A` payroll/kharchi ledger integrity | Partially remediated through Batch 20 / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Batch 15 closes payroll payslip PDF/export rows `PAY-023` and `PAY-024`, and moves PF/ESI preview formula rows `PAY-013` and `PAY-015` to `code_verified` pending disposable settlement proof. Batch 20 moves payroll RPC boundary and online Kharchi atomicity rows `PAY-018`, `PAY-020`, and `PAY-027` to `code_verified`, not pass, pending migration application and disposable QA runtime proof. Broader settlement correctness remains open. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Partially closed in Batch 9 / open remainder | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016` with offline fallback, auth-boundary cache cleanup, online-only kharchi, and truthful public/privacy copy. `OFF-007`, `OFF-010`, and `OFF-009` remain open or partial. |
 | `REL-A` release gates | Partially remediated through Batch 8C / open remainder | Batch 7 closes `TECH-013` source-level release test gate. Batch 8 closes `TECH-007` migration-head alignment evidence. Batch 8B closes `TECH-010` Sentry release/source-map proof. Batch 8C closes final clean deployed signoff evidence for `SIGNOFF-10`. Clean install, audit, live Sentry payload inspection, restore, and rollback remain open or blocked. |
@@ -1398,3 +1398,53 @@ Resolution status:
 
 - `PAY-023`, `PAY-024`, and `SEC-014` are documented as pass in the active QA matrix.
 - `PAY-013`, `PAY-015`, and `DASH-003` are documented as `code_verified`, not pass, pending disposable runtime/browser proof.
+
+## Batch 20 - Payroll RPC Hardening and Kharchi Atomicity Closeout
+
+Date/time: 2026-07-01 12:15 IST. Source base `origin/main` at `af1d8a59d24796f71abbfa04bac54e32e46d35f2`.
+
+Scope:
+
+- `PAY-018`
+- `PAY-020`
+- `PAY-027`
+
+Rows moved to `code_verified` but not pass:
+
+- `PAY-018` remains unresolved evidence debt because settlement blocking is source-fixed at the RPC boundary, but migration application and disposable runtime permission/settlement proof were not executed.
+- `PAY-020` remains unresolved evidence debt because reversal access-code enforcement is source-fixed at the RPC boundary, but migration application and missing/invalid/valid/reused access-code runtime proof were not executed.
+- `PAY-027` remains unresolved evidence debt because online Kharchi worker advance plus supervisor float ledger writes are source-fixed as one RPC transaction, but migration application and sufficient/insufficient-float runtime proof were not executed.
+
+Rows explicitly not closed by Batch 20:
+
+- `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, and `GOLDEN-B-18` remain blocked/open pending later Golden/runtime proof.
+- `PAY-013`, `PAY-015`, `DASH-003`, and `PAY-006` remain under their existing proof requirements.
+- Production/order boundary rows, stock/dispatch/commercial rows, billing/provider rows, Sentry/WhatsApp/restore/rollback rows, and all unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch20/BATCH20-payroll-rpc-kharchi-atomicity-proof.json`.
+- Migration file: `supabase/migrations/20260701105404_batch_20_payroll_rpc_kharchi_atomicity.sql`.
+- `PAY-018`: legacy `settle_worker_payroll` overloads are revoked from callable API roles, and `settle_worker_payroll_hardened` enforces auth.uid actor match, JWT org/owner claim, org-lock guard, payment mode, and owner verification before delegating to the latest settlement engine.
+- `PAY-020`: legacy `unsettle_worker_payroll` overloads are revoked from callable API roles, and `unsettle_worker_payroll_hardened` validates and consumes the access code inside the database transaction with rollback on underlying reversal failure.
+- `PAY-027`: `record_supervisor_kharchi` validates actor/org/role, worker ownership, paid-cycle rollover, float balance, and org-lock state, then inserts `worker_advances` and `supervisor_float_transactions` in one transaction under an advisory transaction lock.
+- App routing: owner payroll actions call the hardened settlement/reversal RPCs, and supervisor `recordKharchi` calls the atomic Kharchi RPC instead of split table inserts.
+
+Verification commands:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch20/BATCH20-payroll-rpc-kharchi-atomicity-proof.json` -> passed.
+- `npx vitest run __tests__/batch20-payroll-rpc-kharchi-atomicity.test.ts __tests__/p1-payroll-revert.test.ts` -> passed, 2 test files and 8 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint __tests__/batch20-payroll-rpc-kharchi-atomicity.test.ts __tests__/p1-payroll-revert.test.ts app/\(dashboard\)/owner/payroll/actions.ts app/\(dashboard\)/supervisor/actions.ts` -> passed.
+- `npm run build` -> passed. Prebuild full Vitest passed with 44 test files, 363 tests passed, and 1 skipped; Next production build exited 0.
+
+Data safety:
+
+- Migration file was created but not applied.
+- No Supabase command, db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production/customer data mutation, browser/runtime mutation proof, stock/dispatch/commercial path change, production/order boundary change, or external provider call was used.
+- Docs closeout force-adds only the ignored Batch 20 proof artifact and stages only the approved Batch 20 implementation, tests, docs, matrix, migration file, and proof artifact.
+
+Resolution status:
+
+- `PAY-018`, `PAY-020`, and `PAY-027` are documented as `code_verified`, not pass, pending migration application and disposable QA runtime/browser proof.

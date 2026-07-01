@@ -20,10 +20,12 @@ describe('P1 payroll revert access code validation', () => {
     const actionSource = readProjectFile('app/(dashboard)/owner/payroll/actions.ts')
     const action = functionBody(actionSource, 'toggleWorkerPaid')
 
-    it('requires access code for unsettling payroll in server action', () => {
-        expect(action).toContain("validateAndConsumeAccessCode")
+    it('passes access code to the hardened unsettle RPC for database-boundary validation', () => {
+        expect(action).toContain("supabase.rpc('unsettle_worker_payroll_hardened'")
         expect(action).toContain("currentPaid")
         expect(action).toContain("accessCode")
+        expect(action).toContain("safeParse(AccessCodeSchema, accessCode)")
+        expect(action).toContain("p_access_code: reversalAccessCode")
     })
 
     const pageSource = readProjectFile('app/(dashboard)/owner/payroll/page.tsx')

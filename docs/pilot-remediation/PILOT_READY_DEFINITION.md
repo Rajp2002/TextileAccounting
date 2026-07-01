@@ -86,6 +86,8 @@ Batch 13 note: `EST-001`, `EST-005`, and `EST-012` are closed by focused local e
 
 Batch 15 note: `PAY-023`, `PAY-024`, and `SEC-014` are closed by focused payroll document/export/statutory proof in `output/qa/batch15/BATCH15-payroll-doc-export-consistency-proof.json`. `npx vitest run __tests__/batch15-payroll-doc-export-consistency.test.ts` passed 1 test file and 7 tests; the 7-file payroll regression pack passed 40 tests; `npx tsc --noEmit --pretty false`, targeted ESLint, `git diff --check`, and `npm run build` passed. `PAY-013`, `PAY-015`, and `DASH-003` remain `code_verified`, not pass, until disposable runtime/browser proof confirms high-gross payroll settlement equality and after-shift Factory Today wage updates.
 
+Batch 20 note: `PAY-018`, `PAY-020`, and `PAY-027` are source-fixed and `code_verified`, not pass, by focused payroll RPC hardening and online Kharchi atomicity proof in `output/qa/batch20/BATCH20-payroll-rpc-kharchi-atomicity-proof.json`. The Batch 20 verification set passed focused Vitest, TypeScript, targeted ESLint, `git diff --check`, JSON validation, and `npm run build` with the full prebuild Vitest gate. These rows remain unresolved for pilot readiness until the migration is applied to disposable QA and runtime proof confirms RPC permissions, settlement blocking, reversal access-code behavior, and Kharchi atomicity.
+
 ## Pilot Sign-Off Evidence Package
 
 Final sign-off must include:

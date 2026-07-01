@@ -19,8 +19,8 @@ Current known state from `logs/technical-gates.md`:
 
 - `npm ci` fails until the lockfile is repaired.
 - `npm run lint` passed in the final QA run.
-- `npx vitest run` passed in the final QA run; Batch 15 full Vitest via `npm run build` passed with 358 passed and 1 skipped.
-- `npm run build` passed in the final QA run; Batch 15 also passed `npm run build` with the source-controlled `prebuild` Vitest gate.
+- `npx vitest run` passed in the final QA run; Batch 20 full Vitest via `npm run build` passed with 363 passed and 1 skipped.
+- `npm run build` passed in the final QA run; Batch 20 also passed `npm run build` with the source-controlled `prebuild` Vitest gate.
 - Both audit commands fail until advisories are fixed or formally accepted.
 
 Do not use passing lint/build/source checks to resolve runtime failures.
@@ -31,7 +31,7 @@ Failures targeted: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
 
 Security foundation follow-on rows closed in Batch 1B: `SEC-006`, `AUTH-016`
 
-Other follow-on checks that remain open unless separately proven: `AUTH-008`, `AUTH-012`, `AUTH-013`, `SEC-013`, `PAY-018`, `PAY-020`
+Other follow-on checks that remain open unless separately proven: `AUTH-008`, `AUTH-012`, `AUTH-013`, `SEC-013`. `PAY-018` and `PAY-020` are source-fixed/code_verified by Batch 20, but still require disposable QA migration/runtime proof before pass.
 
 ### Acceptance Criteria
 
@@ -393,6 +393,7 @@ Acceptance:
 - `PAY-006`, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-027`, and payroll-related sign-off rows have evidence.
 - Batch 9 closes `PAY-028` and `OFF-008` by truthful online-only offline-kharchi de-scope; online kharchi atomicity and payroll correctness rows remain separate.
 - Batch 15 closes `PAY-023` and `PAY-024` with focused payslip document/export tests and source proof, and closes `SEC-014` with deterministic payslip filename sanitization tests. Batch 15 moves `PAY-013` and `PAY-015` from fail to `code_verified`, not pass, because disposable live preview/settlement proof was not collected under the no-Supabase-mutation rule.
+- Batch 20 moves `PAY-018`, `PAY-020`, and `PAY-027` from fail to `code_verified`, not pass. The next disposable QA run must apply the Batch 20 migration, prove legacy payroll RPC overloads are no longer callable through API roles, prove settlement blocks missing payment mode or owner verification, prove reversal rejects missing/invalid/reused access codes and accepts one valid code exactly once, and prove online Kharchi creates worker advance plus supervisor float transaction atomically for sufficient float while rejecting insufficient float.
 
 ## P4 Idempotency, Offline, and Cache Retest
 

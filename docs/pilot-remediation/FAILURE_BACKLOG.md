@@ -8,12 +8,12 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 
 | Priority band | Root-cause cluster | Failed matrix IDs |
 | --- | --- | --- |
-| P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008`, `PAY-018`, `PAY-020` |
+| P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008` |
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-015`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `QUOTE-007` |
 | P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02` |
-| P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006`, `PAY-018`, `PAY-020`, `PAY-027` |
+| P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
 | P4 | `OFF-A` offline, cache, and public claims | `OFF-007`, `OFF-010` |
 | P5 | `REL-A` release gates and observability | `TECH-001`, `TECH-005`, `TECH-006` |
@@ -22,7 +22,7 @@ Blocked rows also remain unresolved evidence debt. Critical or high blocked rows
 
 Medium blocked rows still need evidence or explicit pilot de-scope, but they do not outrank critical/high business-data and security repair: `AUTH-014`, `AUTH-015`, `AUTH-018`, `BILL-006`, `BILL-007`, `BILL-009`, `BILL-010`, `GOLDEN-A-03`, `SIGNOFF-04`, `UX-012`, `WA-010`. `SEC-011` is blocked for Sentry event inspection and stays tied to release/security evidence.
 
-Closed in Batch 1 and removed from the open failure coverage rows: security foundation (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, `AUTH-016`). `SEC-A` is closed; `SEC-B` remains open only for `AUTH-008`, `PAY-018`, and `PAY-020`.
+Closed in Batch 1 and removed from the open failure coverage rows: security foundation (`SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, `AUTH-016`). `SEC-A` is closed; `SEC-B` remains open for `AUTH-008`. Batch 20 moves the payroll RPC boundary rows `PAY-018` and `PAY-020` to `code_verified`, not pass.
 
 Closed in Batch 2 and removed from the open failure coverage rows: `PROD-A` production correction and generated stock atomicity (`PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, `SIGNOFF-05`). `SIGNOFF-05` is also removed from open `DASH-A`; remaining dashboard/signoff rows stay open.
 
@@ -50,6 +50,8 @@ Closed in Batch 13 and removed from `code_verified` evidence debt: focused estim
 
 Closed in Batch 15 and removed from open failure coverage rows: payroll payslip PDF/export and payslip filename safety (`PAY-023`, `PAY-024`, `SEC-014`). Moved from fail to `code_verified` but still unresolved evidence debt: payroll PF/ESI preview/settlement formula rows and Factory Today gross wage signal (`PAY-013`, `PAY-015`, `DASH-003`). These three have source/test proof but still need disposable runtime/browser proof before they can be counted as pass.
 
+Moved from fail to `code_verified` in Batch 20 but still unresolved evidence debt: payroll RPC boundary and online Kharchi atomicity rows (`PAY-018`, `PAY-020`, `PAY-027`). These three have source/test proof, but still need migration application in disposable QA plus runtime/browser proof before they can be counted as pass.
+
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
 Closed rows: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
@@ -72,7 +74,9 @@ Required proof: satisfied by Batch 1A runtime/test/browser evidence, migration a
 
 ## P0 SEC-B - Privileged Action and Lockdown Enforcement Is Inconsistent
 
-Failures: `AUTH-008`, `PAY-018`, `PAY-020`
+Failures: `AUTH-008`
+
+Code-verified evidence debt: `PAY-018`, `PAY-020`
 
 Closed in Batch 1: `SEC-006`, `AUTH-016`
 
@@ -80,15 +84,15 @@ Evidence: `logs/auth-security-time-code-evidence-20260624.json`, `logs/security-
 
 Invariant: protected owner actions, access-code actions, locked-tenant writes, and join-code validation fail closed and are consistently rate-limited. Legacy privileged RPCs cannot bypass the app-level authorization trail.
 
-Impact: join-code brute-force/rate-limit coverage and legacy payroll settlement/reversal paths can still bypass intended controls. Batch 1 closed access-code validation (`SEC-006`) and locked-tenant write enforcement (`AUTH-016`).
+Impact: join-code brute-force/rate-limit coverage remains open. Batch 1 closed access-code validation (`SEC-006`) and locked-tenant write enforcement (`AUTH-016`). Batch 20 source-fixes legacy payroll settlement/reversal bypass paths, but migration application and disposable runtime proof are still missing.
 
 Remediation direction:
 
 - Add join-code attempt tracking/rate limiting without noisy production lockout.
-- Revoke or replace legacy payroll settlement/reversal RPC execute grants.
+- Runtime-prove Batch 20 payroll RPC revocation and hardened settlement/reversal wrapper behavior after applying the migration to disposable QA.
 - Keep Batch 1 access-code and locked-tenant boundaries under regression while closing the remaining SEC-B rows.
 
-Required proof: SQL policy/grant metadata, rollback-only QA probes, and browser checks for remaining join-code and payroll privileged-action paths. `SEC-006` proof is satisfied by `node scripts/qa/batch1b-access-code-probe.mjs`, `npx vitest run __tests__/p0-access-code-boundary.test.ts`, and migration `20260625215612_harden_access_code_fail_closed.sql`; `AUTH-016` proof is satisfied by `node scripts/qa/batch1b-locked-tenant-probe.mjs`, `npx vitest run __tests__/p0-locked-tenant-boundary.test.ts`, and migration `20260626051352_harden_locked_tenant_writes.sql`.
+Required proof: SQL policy/grant metadata, rollback-only QA probes, and browser checks for remaining join-code and payroll privileged-action paths. `SEC-006` proof is satisfied by `node scripts/qa/batch1b-access-code-probe.mjs`, `npx vitest run __tests__/p0-access-code-boundary.test.ts`, and migration `20260625215612_harden_access_code_fail_closed.sql`; `AUTH-016` proof is satisfied by `node scripts/qa/batch1b-locked-tenant-probe.mjs`, `npx vitest run __tests__/p0-locked-tenant-boundary.test.ts`, and migration `20260626051352_harden_locked_tenant_writes.sql`. `PAY-018` and `PAY-020` source proof is recorded in `output/qa/batch20/BATCH20-payroll-rpc-kharchi-atomicity-proof.json`, but runtime permission and settlement/reversal proof remains required.
 
 ## P0 SEC-C - External Webhooks and Compliance Surfaces Do Not Fail Closed
 
@@ -339,24 +343,24 @@ Required proof: dashboard unit/read-model tests, runtime Factory Today checks af
 
 ## P3 PAY-A - Payroll, Attendance, Settlement, and Kharchi Ledgers Can Diverge
 
-Failures: `PAY-006`, `PAY-018`, `PAY-020`, `PAY-027`, `GOLDEN-B-18`
+Failures: `PAY-006`, `GOLDEN-B-18`
 
-Code-verified evidence debt: `PAY-013`, `PAY-015`, `DASH-003`
+Code-verified evidence debt: `PAY-013`, `PAY-015`, `DASH-003`, `PAY-018`, `PAY-020`, `PAY-027`
 
 Evidence: `logs/payroll-kharchi-source-evidence-20260624.json`, `logs/payroll-evidence.json`, `logs/offline-pwa-evidence.json`
 
 Invariant: payroll net equals gross plus inam minus kapaat, advance recovery, PF, and ESI. A kharchi operation creates the worker advance and supervisor float transaction atomically, or creates neither.
 
-Impact: legacy payroll RPCs remain executable; online kharchi can return success after partial ledger write; PF/ESI preview and Factory Today gross wages are source/test fixed but still need runtime proof. Batch 9 closes offline kharchi by making it online-only and removing the unsupported `kharchi_offline` queue path. Batch 15 closes payslip PDF and settlement CSV/history statutory export rows `PAY-023` and `PAY-024`.
+Impact: `PAY-006` and `GOLDEN-B-18` still need payroll runtime proof. PF/ESI preview, Factory Today gross wages, payroll RPC boundaries, and online Kharchi atomicity are source/test fixed but still need migration/runtime proof before pass. Batch 9 closes offline kharchi by making it online-only and removing the unsupported `kharchi_offline` queue path. Batch 15 closes payslip PDF and settlement CSV/history statutory export rows `PAY-023` and `PAY-024`. Batch 20 source-fixes legacy payroll RPC exposure and online Kharchi atomicity.
 
 Remediation direction:
 
-- Revoke legacy RPCs or make them call the hardened path.
+- Apply the Batch 20 migration to disposable QA, then verify legacy RPCs are not callable through API roles and the hardened wrappers enforce payment-mode, owner-verification, and access-code behavior.
 - Runtime-prove the shared PF/ESI preview/settlement formula with disposable high-gross enrolled settlement data.
-- Make online kharchi a single transaction.
+- Runtime-prove online Kharchi as a single transaction with sufficient and insufficient supervisor float.
 - Keep offline kharchi online-only unless a real queue processor for the authoritative tables is later implemented and retested.
 
-Required proof: payroll unit tests, rollback-only RPC probes, online kharchi partial-failure test, and dashboard wage check. Batch 9 supplies offline-disabled proof for `OFF-008` and `PAY-028`.
+Required proof: payroll unit tests, rollback-only RPC probes, online kharchi partial-failure test, and dashboard wage check. Batch 9 supplies offline-disabled proof for `OFF-008` and `PAY-028`. Batch 20 supplies source/test proof for `PAY-018`, `PAY-020`, and `PAY-027`, but not migration-application or runtime proof.
 
 ## P4 IDEMP-A - Mutations Lack Idempotency and Unknown-Outcome Recovery
 

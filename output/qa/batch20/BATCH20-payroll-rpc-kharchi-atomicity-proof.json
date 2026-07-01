@@ -1,0 +1,120 @@
+{
+  "batch": 20,
+  "title": "payroll RPC hardening and Kharchi atomicity",
+  "created_at": "2026-07-01T11:06:00+05:30",
+  "branch": "codex/batch-20-payroll-rpc-kharchi-atomicity",
+  "source_commit": {
+    "origin_main": "af1d8a59d24796f71abbfa04bac54e32e46d35f2"
+  },
+  "scope": {
+    "primary_rows": ["PAY-018", "PAY-020", "PAY-027"],
+    "critical_unlock_candidates": ["GOLDEN-A-21", "GOLDEN-A-22", "GOLDEN-A-23", "GOLDEN-B-18"],
+    "runtime_browser_proof": "not_run_by_batch_rule",
+    "production_mutation": "not_performed"
+  },
+  "row_definitions": {
+    "PAY-018": {
+      "workflow": "21. Payroll, Advances, Attendance, and Worker Money",
+      "wording": "Payment mode and owner verification missing.",
+      "expected": "Settlement blocked.",
+      "starting_status": "fail",
+      "severity": "High"
+    },
+    "PAY-020": {
+      "workflow": "21. Payroll, Advances, Attendance, and Worker Money",
+      "wording": "Unsettle without/with invalid/valid used code.",
+      "expected": "Only valid one-time code reverts settlement.",
+      "starting_status": "fail",
+      "severity": "High"
+    },
+    "PAY-027": {
+      "workflow": "21. Payroll, Advances, Attendance, and Worker Money",
+      "wording": "Supervisor Kharchi online.",
+      "expected": "Float decreases and worker advance increases in one coherent operation.",
+      "starting_status": "fail",
+      "severity": "High"
+    }
+  },
+  "implementation_evidence": {
+    "migration": "supabase/migrations/20260701105404_batch_20_payroll_rpc_kharchi_atomicity.sql",
+    "PAY-018": [
+      "Revokes direct callable-role execute from legacy settle_worker_payroll overloads.",
+      "Adds settle_worker_payroll_hardened with auth.uid, JWT org_id, owner role, actor, org-lock, payment-mode, and verified-owner checks.",
+      "Routes owner payroll settlement action through settle_worker_payroll_hardened."
+    ],
+    "PAY-020": [
+      "Revokes direct callable-role execute from legacy unsettle_worker_payroll overload.",
+      "Adds unsettle_worker_payroll_hardened with owner/org/actor guard and database-transaction access-code validation and consumption.",
+      "Rolls back access-code consumption if the underlying unsettle returns success=false.",
+      "Routes owner payroll reversal action through unsettle_worker_payroll_hardened and passes normalized p_access_code."
+    ],
+    "PAY-027": [
+      "Adds record_supervisor_kharchi RPC that validates actor/org/role, worker ownership, paid-cycle rollover, float balance, and org lockdown.",
+      "Inserts worker_advances and supervisor_float_transactions inside one RPC transaction with an advisory transaction lock.",
+      "Routes supervisor recordKharchi action through record_supervisor_kharchi and removes split app-side inserts."
+    ]
+  },
+  "files_changed": [
+    "app/(dashboard)/owner/payroll/actions.ts",
+    "app/(dashboard)/supervisor/actions.ts",
+    "__tests__/p1-payroll-revert.test.ts",
+    "__tests__/batch20-payroll-rpc-kharchi-atomicity.test.ts",
+    "supabase/migrations/20260701105404_batch_20_payroll_rpc_kharchi_atomicity.sql"
+  ],
+  "verification": [
+    {
+      "command": "npx vitest run __tests__/batch20-payroll-rpc-kharchi-atomicity.test.ts __tests__/p1-payroll-revert.test.ts",
+      "result": "passed",
+      "summary": "2 files passed, 8 tests passed"
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "passed"
+    },
+    {
+      "command": "npx eslint app/(dashboard)/owner/payroll/actions.ts app/(dashboard)/supervisor/actions.ts __tests__/batch20-payroll-rpc-kharchi-atomicity.test.ts __tests__/p1-payroll-revert.test.ts",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "npm run build",
+      "result": "passed",
+      "summary": "prebuild full vitest suite passed: 44 files, 363 passed, 1 skipped; Next build completed"
+    }
+  ],
+  "migration_static_check": {
+    "result": "source_review_and_tests_only",
+    "notes": "No remote database, db push, db pull, migration repair, or direct SQL was used. No standalone SQL parser/linter dependency was available in the repo without invoking Supabase/database tooling."
+  },
+  "status_recommendation": {
+    "PAY-018": "source_fixed_candidate_pending_migration_application_and_QA_runtime_proof",
+    "PAY-020": "source_fixed_candidate_pending_migration_application_and_QA_runtime_proof",
+    "PAY-027": "source_fixed_candidate_pending_migration_application_and_QA_runtime_proof",
+    "critical_golden_rows": "not_closed_by_this_batch"
+  },
+  "future_proof_required": [
+    "Apply migration to disposable QA Supabase project only.",
+    "Verify legacy payroll RPC overloads are not executable through callable API roles.",
+    "Run owner payroll settlement with missing and valid payment-mode/owner-verification combinations.",
+    "Run payroll unsettle with missing, invalid, valid, and reused access code.",
+    "Run supervisor Kharchi online with sufficient and insufficient float and confirm atomic advance/float ledger behavior.",
+    "Rerun affected Golden A/B payroll steps after QA runtime proof exists."
+  ],
+  "explicit_non_actions": [
+    "No migrations applied.",
+    "No npx supabase db push.",
+    "No migration repair.",
+    "No db pull.",
+    "No direct SQL against a remote database.",
+    "No --include-all.",
+    "No production data mutation.",
+    "No runtime/browser mutation proof.",
+    "No npm audit.",
+    "No package installs.",
+    "No lockfile edits.",
+    "No staging, commit, push, or docs closeout."
+  ]
+}

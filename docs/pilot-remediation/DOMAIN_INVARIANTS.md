@@ -203,6 +203,8 @@ Required proof:
 
 Batch 15 proof note: `PAY-023` and `PAY-024` are satisfied by focused source/test proof for payslip PDF content and settlement history/CSV statutory extraction. `PAY-013` and `PAY-015` are source-fixed and `code_verified`, not pass: preview PF/ESI now uses the same ESIC wage-ceiling formula as the latest settlement path, but disposable high-gross enrolled settlement runtime proof is still required. `SEC-014` is satisfied by deterministic payslip filename sanitization tests.
 
+Batch 20 proof note: `PAY-018`, `PAY-020`, and `PAY-027` are source-fixed and `code_verified`, not pass. Payroll settlement now requires the hardened owner/payment-mode/verified-owner RPC boundary; payroll reversal now requires hardened database-transaction access-code validation; online Kharchi now inserts the worker advance and supervisor float transaction in one RPC transaction. Migration application and disposable QA runtime/browser proof remain required before any of these rows can be promoted to pass.
+
 ## Idempotency and Unknown Outcomes
 
 High-value mutations must be retry-safe. A network timeout is an unknown outcome, not a definite failure.
