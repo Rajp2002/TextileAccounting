@@ -52,6 +52,8 @@ Closed in Batch 15 and removed from open failure coverage rows: payroll payslip 
 
 Moved from fail to `code_verified` in Batch 20 but still unresolved evidence debt: payroll RPC boundary and online Kharchi atomicity rows (`PAY-018`, `PAY-020`, `PAY-027`). These three have source/test proof, but still need migration application in disposable QA plus runtime/browser proof before they can be counted as pass.
 
+Closed in Batch 21B and removed from `code_verified` evidence debt: `ORDER-008`. Disposable QA browser/runtime proof confirmed below-target completion and pending-dispatch completion both require explicit confirmation and do not complete silently, while normal completion works without a warning.
+
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
 Closed rows: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
@@ -180,7 +182,7 @@ Required proof: source tests plus rollback-only SQL/RPC probes for negative mete
 
 Failures: `QUOTE-007`
 
-Open source/runtime evidence debt: `ORDER-008` is `code_verified` but not pass until disposable runtime/browser proof confirms the below-target completion dialog and server confirmation path.
+Closed source/runtime evidence debt: `ORDER-008` is pass as of Batch 21B.
 
 Blocked evidence debt: `GOLDEN-A-03`
 
@@ -188,15 +190,14 @@ Evidence: `logs/business-reconciliation.json`, `logs/estimator-quotes-source-evi
 
 Invariant: business snapshots used for quotes, orders, wage rates, due dates, and lifecycle state must be exact, server-validated, and stable across timezones. A restored draft or lifecycle shortcut must not silently overwrite or create inconsistent accepted-order state.
 
-Impact: Batch 10 fixes worker-rate floating drift in estimator-origin quote/order snapshots and quote restore/lifecycle cleanup. Batch 11 fixes estimator save server-boundary validation and order target/deadline produced-meter/audit guards. Batch 13 closes exact local proof for the single warp/weft estimator cost stack, paise-per-pick 100x guard, and invalid commission-plus-margin boundary. Remaining impact is Start Party Order accepted-quote/order atomicity. Below-target completion has source/test coverage for server confirmation and UI warnings, but still lacks runtime/browser proof. Batch 7 closes the separate date-only rendering shift row.
+Impact: Batch 10 fixes worker-rate floating drift in estimator-origin quote/order snapshots and quote restore/lifecycle cleanup. Batch 11 fixes estimator save server-boundary validation and order target/deadline produced-meter/audit guards. Batch 13 closes exact local proof for the single warp/weft estimator cost stack, paise-per-pick 100x guard, and invalid commission-plus-margin boundary. Batch 21B closes below-target and pending-dispatch completion confirmation with disposable QA browser/runtime proof. Remaining impact is Start Party Order accepted-quote/order atomicity. Batch 7 closes the separate date-only rendering shift row.
 
 Remediation direction:
 
 - Make Start Party Order atomic/idempotent or document the recoverable non-atomic behavior for pilot.
-- Capture disposable runtime/browser proof for below-target completion confirmation before promoting `ORDER-008` to pass.
 - Require the external truth sheet or business-accepted reference estimate before closing `GOLDEN-A-03`.
 
-Required proof: Start Party Order atomicity/idempotency proof, below-target completion runtime/browser confirmation proof, and runtime quote-to-order checks against a business truth sheet where applicable. `EST-011` and `ORDER-006` are closed by Batch 11 source/test/audit proof.
+Required proof: Start Party Order atomicity/idempotency proof and runtime quote-to-order checks against a business truth sheet where applicable. `EST-011` and `ORDER-006` are closed by Batch 11 source/test/audit proof; `ORDER-008` is closed by Batch 21B runtime proof.
 
 Scoped estimator costing reconciliation closeout:
 
@@ -218,6 +219,13 @@ Batch 11 estimator/order lifecycle closeout:
 - Closed sub-scope: server-boundary validation for zero/negative/extreme/empty warp-weft estimator inputs and target/deadline edits guarded by produced-meter checks plus existing audit history.
 - Evidence: `output/qa/batch11/BATCH11-estimator-order-lifecycle-proof.json`; `npx vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts` passed 33 tests; `npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts` passed 6 tests; targeted ESLint, `npx tsc --noEmit --pretty false`, `git diff --check`, `jq empty`, and `npm run build` passed.
 - Matrix status: `EST-011` and `ORDER-006` are pass. `ORDER-008` is `code_verified`/open-partial pending runtime/browser proof. `QUOTE-007` remains fail/open pending database/RPC transaction work.
+
+Batch 21B ORDER-008 runtime proof closeout:
+
+- Date/time: 2026-07-02 03:58 IST.
+- Closed sub-scope: `ORDER-008` only.
+- Evidence: `output/qa/batch21b/BATCH21B-order-008-runtime-proof.json`; runtime host `http://localhost:3000`; QA Supabase ref `eutycrtzzxmlkcpipgod`; production ref `vzhwahudircrpgtitwzd` absent from `.env.qa.local` and rebuilt `.next` cache.
+- Matrix status: `ORDER-008` is pass. No payroll, dashboard, production/order boundary, stock/dispatch/commercial, billing/provider, Sentry/WhatsApp/restore/rollback, or other row was promoted.
 
 Batch 13 targeted estimator proof sweep:
 

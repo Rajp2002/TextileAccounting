@@ -1,0 +1,143 @@
+{
+  "branch": "codex/batch-21b-order-008-runtime-proof",
+  "source_commit": "1660e95db6cd1562ecaf95f56f1db9b60cb7696c",
+  "runtime_app_host": "http://localhost:3000",
+  "row": {
+    "id": "ORDER-008",
+    "exact_row_wording": "Complete below target.",
+    "expected_behavior": "Completion warns about remaining quantity and pending dispatch."
+  },
+  "qa_safety_metadata": {
+    "environment_label": "disposable QA Supabase runtime",
+    "qa_supabase_ref": "eutycrtzzxmlkcpipgod",
+    "production_supabase_ref_absent_from_env_qa_local": true,
+    "production_supabase_ref_absent_from_rebuilt_next_cache": true,
+    "env_qa_local_contains_qa_ref": true,
+    "rebuilt_next_cache_contains_qa_ref": true,
+    "production_supabase_ref": "vzhwahudircrpgtitwzd",
+    "deployed_production_app_used": false,
+    "production_mutation_occurred": false,
+    "secrets_copied_to_artifact": false
+  },
+  "disposable_data_identifiers": {
+    "run_prefix": "B21B-ORDER008-20260701212052",
+    "factory_name": "B21B-ORDER008-20260701212052 Factory",
+    "owner_email": "batch21b.order008.20260701212052@example.com",
+    "worker_name": "B21B-ORDER008-20260701212052 Worker",
+    "machine_name": "Rapier 1",
+    "scenario_a_order_id": "99592213-c441-4487-a59d-fda903711cc8",
+    "scenario_b_order_id": "be7d2ed8-9a18-450a-bc2b-93d7e08e9abe",
+    "scenario_c_order_id": "5b5fab1b-15e4-40a5-8d9a-f7c5a6bad35c"
+  },
+  "browser_runtime_steps": {
+    "common_setup": [
+      "Created a disposable QA owner/factory through the local browser runtime.",
+      "Completed onboarding for order-based production, one Rapier loom, one meter worker, payroll setup, and trial start.",
+      "Configured estimator baseline in the local runtime.",
+      "Created disposable active orders through Estimator -> accepted Quote -> Create active order.",
+      "Linked the disposable loom and worker assignments through the Machines UI when production logs were needed.",
+      "Used only http://localhost:3000 against the QA runtime."
+    ],
+    "scenario_a_below_target_warning": [
+      "Created Scenario A order with target 100m.",
+      "Opened the order detail drawer at 0m / 100m.",
+      "Clicked Mark Complete.",
+      "Observed completion confirmation before status changed.",
+      "Clicked Complete Anyway.",
+      "Observed the order leave active orders only after explicit confirmation."
+    ],
+    "scenario_b_pending_dispatch_warning": [
+      "Created Scenario B proof order with target 30m.",
+      "Linked Rapier 1 to the order and logged 20m production through the supervisor dashboard.",
+      "Opened Stock and used the order-linked 20m lot.",
+      "Saved a stock sale only, leaving 20m sold pending dispatch.",
+      "Returned to the order and clicked Mark Complete.",
+      "Observed completion confirmation containing both remaining quantity and pending dispatch warnings before status changed.",
+      "Clicked Complete Anyway.",
+      "Observed the order leave active orders only after explicit confirmation."
+    ],
+    "scenario_c_normal_completion": [
+      "Created Scenario C order with target 10m and no stock sale.",
+      "Linked Rapier 1 to the order and saved a 9.99m production log through the supervisor dashboard edit window.",
+      "Opened the order detail drawer showing 9.99m / 10m, no pending dispatch, and Mark Complete available.",
+      "Clicked Mark Complete.",
+      "Observed no completion warning dialog and the order completed normally."
+    ]
+  },
+  "observed_outcomes": {
+    "scenario_a": {
+      "target_meters": 100,
+      "produced_meters_before_completion": 0,
+      "pending_dispatch_meters_before_completion": 0,
+      "confirmation_required": true,
+      "confirmation_dialog_observed": true,
+      "dialog_evidence_sanitized": "Complete order dialog rendered with remaining quantity: 100 m remains from a 100 m target; Keep Active and Complete Anyway buttons were present.",
+      "silent_completion_before_confirmation": false,
+      "explicit_confirmation_clicked": "Complete Anyway",
+      "completed_after_explicit_confirmation": true
+    },
+    "scenario_b": {
+      "target_meters": 30,
+      "produced_meters_before_completion": 20,
+      "packed_or_available_meters_before_sale": 20,
+      "pending_dispatch_meters_before_completion": 20,
+      "stock_sale_mode": "sale only; no dispatch",
+      "confirmation_required": true,
+      "confirmation_dialog_observed": true,
+      "dialog_evidence_sanitized": "Complete order dialog rendered with remaining quantity: 10 m remains from a 30 m target, and pending dispatch: 20 m still pending dispatch; Keep Active and Complete Anyway buttons were present.",
+      "silent_completion_before_confirmation": false,
+      "explicit_confirmation_clicked": "Complete Anyway",
+      "completed_after_explicit_confirmation": true
+    },
+    "scenario_c": {
+      "target_meters": 10,
+      "produced_meters_before_completion": 9.99,
+      "remaining_meters_before_completion": 0.01,
+      "pending_dispatch_meters_before_completion": 0,
+      "completion_guard_tolerance_note": "The order completion guard treats produced_meters + 0.01 < target_meters as below target; 9.99m against 10m did not trigger below-target confirmation.",
+      "confirmation_warning_observed": false,
+      "normal_completion_succeeded": true,
+      "post_completion_active_count_zero": true
+    }
+  },
+  "pass_ready_decision": {
+    "order_008_pass_ready": true,
+    "reason": "Browser/runtime proof covers below-target confirmation, pending-dispatch confirmation, and no-warning normal completion in the disposable QA runtime."
+  },
+  "negative_confirmations": {
+    "production_mutation_occurred": false,
+    "secrets_copied": false,
+    "migrations_run": false,
+    "supabase_db_push_run": false,
+    "migration_repair_run": false,
+    "db_pull_run": false,
+    "direct_sql_used": false,
+    "include_all_used": false,
+    "package_install_run": false,
+    "npm_audit_run": false,
+    "lockfile_changed": false,
+    "staged_committed_or_pushed": false,
+    "docs_closeout_run": false
+  },
+  "commands_and_checks_run": [
+    "git fetch origin --prune",
+    "git switch -C codex/batch-21b-order-008-runtime-proof origin/main",
+    "git status --short",
+    "git rev-parse origin/main",
+    "sanitized .env.qa.local QA/prod ref check",
+    "sanitized rebuilt .next QA/prod ref check",
+    "NEXT_TELEMETRY_DISABLED=1 ./node_modules/.bin/next dev --webpack with .env.qa.local loaded",
+    "browser runtime interactions through http://localhost:3000",
+    "git diff --check",
+    "jq empty output/qa/batch21b/BATCH21B-order-008-runtime-proof.json",
+    "npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts",
+    "npx tsc --noEmit --pretty false"
+  ],
+  "final_check_results": {
+    "git_status_short": "passed: no output",
+    "git_diff_check": "passed: no output",
+    "jq_empty": "passed",
+    "vitest_batch11_estimator_order_lifecycle": "passed: 1 file, 6 tests",
+    "tsc_no_emit": "passed: no output"
+  }
+}

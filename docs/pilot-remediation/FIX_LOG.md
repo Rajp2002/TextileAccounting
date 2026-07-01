@@ -19,7 +19,7 @@ Rules for entries:
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
 | `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
 | `STOCK-A` stock lifecycle/archive policy | Partially closed in Batch 12 / open remainder | Batch 12 closes `STOCK-012` with focused local lifecycle proof. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial because their exact row wording needs broader proof. |
-| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated through Batch 13 / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Batch 13 closes `EST-001`, `EST-005`, and `EST-012` with exact local estimator proof. Start Party Order fast-path atomicity remains open; below-target completion is source-fixed but still needs runtime/browser proof. |
+| `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated through Batch 21B / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Batch 13 closes `EST-001`, `EST-005`, and `EST-012` with exact local estimator proof. Batch 21B closes `ORDER-008` below-target and pending-dispatch completion confirmation with disposable QA browser/runtime proof. Start Party Order fast-path atomicity remains open. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
 | `DISP-B` receipt-state coherence | Closed through Batch 12 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. Batch 12 closes `DISP-013` with focused local dispatch archive proof. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
@@ -1448,3 +1448,48 @@ Data safety:
 Resolution status:
 
 - `PAY-018`, `PAY-020`, and `PAY-027` are documented as `code_verified`, not pass, pending migration application and disposable QA runtime/browser proof.
+
+## Batch 21B - ORDER-008 Runtime Proof Closeout
+
+Date/time: 2026-07-02 03:58 IST. Source base `origin/main` at `1660e95db6cd1562ecaf95f56f1db9b60cb7696c`.
+
+Scope:
+
+- `ORDER-008`
+
+Rows promoted to pass:
+
+- `ORDER-008`
+
+Rows explicitly not closed by Batch 21B:
+
+- `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-027`, and `DASH-003` remain under their existing proof requirements.
+- Payroll, dashboard, production/order boundary, stock/dispatch/commercial, billing/provider, Sentry/WhatsApp/restore/rollback, Batch 1-20 closed statuses, and all unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch21b/BATCH21B-order-008-runtime-proof.json`.
+- Runtime host: `http://localhost:3000`.
+- QA safety: `.env.qa.local` and rebuilt `.next` contained QA Supabase ref `eutycrtzzxmlkcpipgod`; production ref `vzhwahudircrpgtitwzd` was absent from both; the deployed production app was not used.
+- Scenario A: below-target completion showed explicit confirmation with remaining quantity, did not complete silently before confirmation, and completed only after Complete Anyway.
+- Scenario B: pending-dispatch completion showed explicit confirmation with 10m remaining and 20m pending dispatch, did not complete silently before confirmation, and completed only after Complete Anyway.
+- Scenario C: normal completion with no pending dispatch showed no confirmation warning and completed normally.
+
+Verification commands:
+
+- `git status --short` -> passed before proof closeout.
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch21b/BATCH21B-order-008-runtime-proof.json` -> passed.
+- `npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts` -> passed, 1 test file and 6 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+
+Data safety:
+
+- No production mutation occurred.
+- No secrets were copied into the artifact or docs.
+- No migration, Supabase command, db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, app-code change, staging, commit, push, or docs closeout outside this Batch 21B closeout was used.
+
+Resolution status:
+
+- `ORDER-008` is documented as pass in the active QA matrix.
+- Matrix movement is pass +1 and `code_verified` -1: total 377, pass 191, fail 31, blocked 22, `code_verified` 132, `not_applicable` 1, `not_run` 0.

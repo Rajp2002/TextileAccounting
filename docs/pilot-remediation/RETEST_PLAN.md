@@ -214,14 +214,14 @@ npx vitest run __tests__/p1-stock-source-validation.test.ts __tests__/p1-commerc
 npx vitest run
 ```
 
-Batch 10 adds targeted tests for worker-rate snapshot normalization, quote restore draft collision handling, and quote transition rules. Batch 11 adds targeted tests for server-boundary estimator validation, target/deadline produced-meter edit guards, existing audit evidence, and source-level below-target completion confirmation. Batch 13 uses the existing estimator local proof to close `EST-001`, `EST-005`, and `EST-012`; the proof command was `npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts`, which passed 3 test files and 39 tests. Start Party Order atomicity/idempotency still needs database/RPC transaction proof. Below-target completion still needs disposable runtime/browser proof before it can close. Batch 7 closes `TIME-002` date-only formatting with focused timezone tests.
+Batch 10 adds targeted tests for worker-rate snapshot normalization, quote restore draft collision handling, and quote transition rules. Batch 11 adds targeted tests for server-boundary estimator validation, target/deadline produced-meter edit guards, existing audit evidence, and source-level below-target completion confirmation. Batch 13 uses the existing estimator local proof to close `EST-001`, `EST-005`, and `EST-012`; the proof command was `npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts`, which passed 3 test files and 39 tests. Batch 21B closes `ORDER-008` with disposable QA browser/runtime proof for below-target, pending-dispatch, and normal completion paths. Start Party Order atomicity/idempotency still needs database/RPC transaction proof. Batch 7 closes `TIME-002` date-only formatting with focused timezone tests.
 
 Runtime checks:
 
 - Build a quote/order from a business truth sheet and verify rate, margin, worker-rate, order, and commercial snapshots remain exact. Batch 10 covers the worker-rate snapshot drift by focused tests/source proof; business truth-sheet comparison still gates `GOLDEN-A-03`.
 - Restore a quote into the estimator while a local draft exists and verify the user must choose whether to overwrite. Batch 10 source/tests cover the local draft collision UI.
 - Edit target/deadline after production if browser proof is requested; Batch 11 source/tests and existing audit trigger evidence cover the target >= produced guard and audit/history requirement for `ORDER-006`.
-- Attempt below-target completion and verify explicit remaining-quantity and pending-dispatch warning/confirmation in the browser before promoting `ORDER-008` from `code_verified` to pass.
+- Batch 21B closes `ORDER-008`: disposable QA browser/runtime proof verified explicit remaining-quantity and pending-dispatch warning/confirmation before completion, plus normal completion without a warning.
 - Batch 7 date-only proof covers representative date-only display paths under UTC, US Pacific, and Asia/Kolkata; rerun only if those display paths change.
 
 Acceptance:
@@ -229,7 +229,7 @@ Acceptance:
 - Batch 10 satisfies `EST-003`, `EST-019`, `QUOTE-003`, `QUOTE-010`, `ORDER-001`, and `ORDER-002` with focused test/source evidence and active matrix promotion.
 - Batch 11 satisfies `EST-011` and `ORDER-006` with focused source/test/audit evidence and active matrix promotion.
 - Batch 13 satisfies `EST-001`, `EST-005`, and `EST-012` with focused local estimator proof and active matrix promotion.
-- `QUOTE-007` still needs database/RPC transaction proof, and `ORDER-008` still needs runtime/browser confirmation proof before `ECON-A` can be fully closed.
+- `QUOTE-007` still needs database/RPC transaction proof before `ECON-A` can be fully closed.
 - `GOLDEN-A-03` has a supplied truth sheet/business reference or remains blocked and de-scoped from pilot sign-off.
 
 ## P2 Dispatch and Receipt Retest
