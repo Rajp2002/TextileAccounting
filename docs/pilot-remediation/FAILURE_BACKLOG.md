@@ -11,7 +11,7 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008` |
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-015`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
-| P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `QUOTE-007` |
+| P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | None |
 | P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
@@ -58,7 +58,9 @@ Closed in Batch 21C and removed from `code_verified` evidence debt: `PAY-013` an
 
 Closed in Batch 21D and removed from `code_verified` evidence debt: `PAY-018` and `PAY-020`. Disposable QA payroll runtime proof confirmed missing payment/owner verification was blocked in the UI, hardened settlement RPC calls rejected missing payment mode and missing owner verification, valid UI settlement succeeded, legacy direct settlement RPC was permission denied, empty reversal code kept reversal disabled, invalid reversal code was rejected while settlement stayed paid, a valid one-time code reversed to pending, consumed-code reuse was rejected, and legacy direct unsettle RPC was permission denied. `PAY-027`, `DASH-003`, Golden rows, and all other rows remain unchanged.
 
-Moved from fail to `code_verified` in Batch 22 but still unresolved evidence debt: production/order boundary rows (`ORDER-005`, `ORDER-009`, `PROD-011`). Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` source-fixes over-target, cancelled/completed/stale-assignment order-attributed logs, and negative-meter guards at the RPC/table boundary, but it was not applied and QA runtime/API proof has not been collected. `SIGNOFF-02` dependency is improved through `ORDER-009`, but `SIGNOFF-02` remains fail/open until full current-run attribution proof exists. `GOLDEN-A-23`, `PAY-027`, `DASH-003`, Golden rows, `QUOTE-007`, and all other rows remain unchanged.
+Moved from fail to `code_verified` in Batch 22 but still unresolved evidence debt: production/order boundary rows (`ORDER-005`, `ORDER-009`, `PROD-011`). Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` source-fixes over-target, cancelled/completed/stale-assignment order-attributed logs, and negative-meter guards at the RPC/table boundary, but it was not applied and QA runtime/API proof has not been collected. `SIGNOFF-02` dependency is improved through `ORDER-009`, but `SIGNOFF-02` remains fail/open until full current-run attribution proof exists. `GOLDEN-A-23`, `PAY-027`, `DASH-003`, Golden rows, and all other rows remain unchanged.
+
+Moved from fail to `code_verified` in Batch 23 but still unresolved evidence debt: Start Party Order fast-path transaction boundary (`QUOTE-007`). Migration `20260702131500_batch_23_start_party_order_transaction_boundary.sql` source-fixes the accepted quote plus active order transaction boundary, but it was not applied and QA runtime/API proof has not been collected.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -188,7 +190,9 @@ Required proof: Batch 22 source tests are present for `ORDER-005`, `ORDER-009`, 
 
 ## P1 ECON-A - Estimator, Quote, Order, and Date Snapshots Are Not Exact Enough
 
-Failures: `QUOTE-007`
+Failures: None
+
+Code-verified evidence debt: `QUOTE-007`
 
 Closed source/runtime evidence debt: `ORDER-008` is pass as of Batch 21B.
 
@@ -198,14 +202,14 @@ Evidence: `logs/business-reconciliation.json`, `logs/estimator-quotes-source-evi
 
 Invariant: business snapshots used for quotes, orders, wage rates, due dates, and lifecycle state must be exact, server-validated, and stable across timezones. A restored draft or lifecycle shortcut must not silently overwrite or create inconsistent accepted-order state.
 
-Impact: Batch 10 fixes worker-rate floating drift in estimator-origin quote/order snapshots and quote restore/lifecycle cleanup. Batch 11 fixes estimator save server-boundary validation and order target/deadline produced-meter/audit guards. Batch 13 closes exact local proof for the single warp/weft estimator cost stack, paise-per-pick 100x guard, and invalid commission-plus-margin boundary. Batch 21B closes below-target and pending-dispatch completion confirmation with disposable QA browser/runtime proof. Remaining impact is Start Party Order accepted-quote/order atomicity. Batch 7 closes the separate date-only rendering shift row.
+Impact: Batch 10 fixes worker-rate floating drift in estimator-origin quote/order snapshots and quote restore/lifecycle cleanup. Batch 11 fixes estimator save server-boundary validation and order target/deadline produced-meter/audit guards. Batch 13 closes exact local proof for the single warp/weft estimator cost stack, paise-per-pick 100x guard, and invalid commission-plus-margin boundary. Batch 21B closes below-target and pending-dispatch completion confirmation with disposable QA browser/runtime proof. Batch 23 source-fixes Start Party Order accepted-quote/order atomicity at the database boundary via the `start_party_order_from_estimator` RPC. Batch 7 closes the separate date-only rendering shift row.
 
 Remediation direction:
 
-- Make Start Party Order atomic/idempotent or document the recoverable non-atomic behavior for pilot.
+- Apply the Batch 23 migration in QA and run runtime/API proof for atomic quote/order/yarn-requirements creation and rollback safety.
 - Require the external truth sheet or business-accepted reference estimate before closing `GOLDEN-A-03`.
 
-Required proof: Start Party Order atomicity/idempotency proof and runtime quote-to-order checks against a business truth sheet where applicable. `EST-011` and `ORDER-006` are closed by Batch 11 source/test/audit proof; `ORDER-008` is closed by Batch 21B runtime proof.
+Required proof: Batch 23 source tests are present; pass still requires migration application evidence and valid Start Party Order transaction boundary runtime proof.
 
 Scoped estimator costing reconciliation closeout:
 
@@ -234,6 +238,13 @@ Batch 21B ORDER-008 runtime proof closeout:
 - Closed sub-scope: `ORDER-008` only.
 - Evidence: `output/qa/batch21b/BATCH21B-order-008-runtime-proof.json`; runtime host `http://localhost:3000`; QA Supabase ref `eutycrtzzxmlkcpipgod`; production ref `vzhwahudircrpgtitwzd` absent from `.env.qa.local` and rebuilt `.next` cache.
 - Matrix status: `ORDER-008` is pass. No payroll, dashboard, production/order boundary, stock/dispatch/commercial, billing/provider, Sentry/WhatsApp/restore/rollback, or other row was promoted.
+
+Batch 23 Start Party Order transaction boundary closeout:
+
+- Date/time: 2026-07-02 18:58 IST.
+- Closed sub-scope: None. Promoted `QUOTE-007` to `code_verified`.
+- Evidence: `output/qa/batch23/BATCH23-start-party-order-transaction-boundary-proof.json`.
+- Matrix status: `QUOTE-007` is `code_verified`, not pass, pending migration application and QA runtime proof.
 
 Batch 13 targeted estimator proof sweep:
 

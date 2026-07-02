@@ -182,6 +182,9 @@ Batch 21B proof note: `ORDER-008` is satisfied by disposable QA browser/runtime 
 
 Batch 13 proof note: `EST-001`, `EST-005`, and `EST-012` are satisfied by focused local estimator proof. Evidence is `output/qa/batch13/BATCH13-code-verified-proof-sweep.json`; `npx --no-install vitest run __tests__/estimator.test.ts __tests__/width-field.test.ts __tests__/production-mode.test.ts` passed 3 test files and 39 tests. The proof directly covers representative single warp/weft cost-stack fixtures, paise-per-pick conversion and the old 100x failure mode, and invalid commission-plus-margin boundary behavior. No product code, test code, migration, Supabase command, direct SQL, browser/runtime mutation, package install, lockfile change, or production data mutation was used. `EST-004`, `SETUP-001`, and `SETUP-002` remain `code_verified` because their safe helper proof was supporting rather than exact row proof.
 
+Batch 23 proof note: `QUOTE-007` is source-fixed and moved to `code_verified` by focused atomic transaction boundary database design. Evidence is `output/qa/batch23/BATCH23-start-party-order-transaction-boundary-proof.json`, focused Batch 23 tests in `__tests__/batch23-start-party-order-atomicity.test.ts`, TypeScript, targeted ESLint, and Vitest runs. No migration was applied, and no Supabase command, direct SQL, or production mutation was performed. Pass still requires database migration application and valid Start Party Order runtime proof in QA.
+
+
 ## Payroll and Kharchi
 
 Payroll is derived from production logs, stored rate snapshots, attendance, statutory settings, advances, and manual adjustments. Kharchi must affect worker advance and supervisor float ledgers atomically.

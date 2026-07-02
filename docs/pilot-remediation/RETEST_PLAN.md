@@ -231,7 +231,7 @@ Acceptance:
 - Batch 10 satisfies `EST-003`, `EST-019`, `QUOTE-003`, `QUOTE-010`, `ORDER-001`, and `ORDER-002` with focused test/source evidence and active matrix promotion.
 - Batch 11 satisfies `EST-011` and `ORDER-006` with focused source/test/audit evidence and active matrix promotion.
 - Batch 13 satisfies `EST-001`, `EST-005`, and `EST-012` with focused local estimator proof and active matrix promotion.
-- `QUOTE-007` still needs database/RPC transaction proof before `ECON-A` can be fully closed.
+- `QUOTE-007` was source-fixed in Batch 23 and is `code_verified`. Retesting/pass still requires applying the database/RPC migration and verifying atomicity/rollback under runtime QA.
 - `GOLDEN-A-03` has a supplied truth sheet/business reference or remains blocked and de-scoped from pilot sign-off.
 
 ## P2 Dispatch and Receipt Retest

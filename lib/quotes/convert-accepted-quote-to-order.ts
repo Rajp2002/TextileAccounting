@@ -3,7 +3,10 @@
  *
  * Shared conversion service used by:
  *   1. convertAcceptedQuoteToOrder (app/owner/estimator/actions.ts) — Quote History path
- *   2. startPartyOrderFromEstimator (app/owner/estimator/actions.ts)  — Estimator fast path
+ *
+ * Note: startPartyOrderFromEstimator (Estimator fast path) previously used this
+ * service but was refactored in Batch 23 (QUOTE-007) to use the atomic
+ * start_party_order_from_estimator RPC directly for transaction-boundary safety.
  *
  * The caller is responsible for auth/role checks and supabase client creation.
  * This service focuses purely on conversion logic and yarn requirement generation.

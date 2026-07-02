@@ -26,7 +26,7 @@ describe('Batch 10 estimator quote/order snapshots', () => {
         const estimatorActions = readProjectFile('app/(dashboard)/owner/estimator/actions.ts')
         const estimatorClient = readProjectFile('app/(dashboard)/owner/estimator/EstimatorClient.tsx')
 
-        expect(estimatorActions).toContain("import { calcWorkerRateSnapshot, normalizeCurrencySnapshot")
+        expect(estimatorActions).toContain("import { calcFullTotals, calcWorkerRateSnapshot, normalizeCurrencySnapshot")
         expect(estimatorActions).toContain('const workerRatePerM = calcWorkerRateSnapshot(estimate.weftRows, estimate.perPickCostPaisa ?? 0)')
         expect(estimatorActions).toContain('const workerRatePerM = normalizeCurrencySnapshot(')
         expect(estimatorActions).toContain('worker_rate_per_m:        workerRatePerM')

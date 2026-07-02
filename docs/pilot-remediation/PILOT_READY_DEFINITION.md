@@ -95,6 +95,9 @@ Batch 21D note: `PAY-018` and `PAY-020` are closed by disposable QA payroll boun
 
 Batch 20 note: `PAY-018`, `PAY-020`, and `PAY-027` are source-fixed by focused payroll RPC hardening and online Kharchi atomicity proof in `output/qa/batch20/BATCH20-payroll-rpc-kharchi-atomicity-proof.json`. The Batch 20 verification set passed focused Vitest, TypeScript, targeted ESLint, `git diff --check`, JSON validation, and `npm run build` with the full prebuild Vitest gate. Batch 21D later closes `PAY-018` and `PAY-020`; `PAY-027` remains unresolved for pilot readiness until disposable QA runtime proof confirms online Kharchi atomicity.
 
+Batch 23 note: `QUOTE-007` is source-fixed and moved to `code_verified` by focused atomic transaction boundary database design in `output/qa/batch23/BATCH23-start-party-order-transaction-boundary-proof.json`. The Batch 23 verification set passed focused Vitest, TypeScript, targeted ESLint, and `git diff --check`. `QUOTE-007` remains unresolved for pilot readiness until database migration application and valid Start Party Order runtime proof are executed in QA.
+
+
 ## Pilot Sign-Off Evidence Package
 
 Final sign-off must include:

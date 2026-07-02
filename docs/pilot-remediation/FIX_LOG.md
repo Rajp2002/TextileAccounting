@@ -1641,3 +1641,52 @@ Resolution status:
 
 - `ORDER-005`, `ORDER-009`, and `PROD-011` are documented as `code_verified` in the active QA matrix.
 - Matrix movement is fail -3 and `code_verified` +3: total 377, pass 195, fail 28, blocked 22, `code_verified` 131, `not_applicable` 1, `not_run` 0.
+
+## Batch 23 - Start Party Order Transaction Boundary Source-Fix Closeout
+
+Date/time: 2026-07-02 18:58 IST. Source base `origin/main` at `2dddaea39208aa10bb3b06d6ab43a6b3a849428e`.
+
+Scope:
+
+- `QUOTE-007`
+
+Rows promoted to `code_verified`, not pass:
+
+- `QUOTE-007`: Start Party Order fast path is source-fixed at the database boundary. The new atomic RPC `start_party_order_from_estimator` inserts the accepted estimator_quote, active order, quote/order backlinks, and order_yarn_requirements in a single database transaction. If any write fails, the entire transaction is rolled back. The server action `startPartyOrderFromEstimator` is refactored to pre-compute the yarn requirements and invoke this RPC.
+
+Rows explicitly not closed by Batch 23:
+
+- `ORDER-005`, `ORDER-009`, `PROD-011` remain `code_verified`, not pass, pending database migration application and QA runtime proof.
+- `PAY-027` remains `code_verified`, not pass, pending disposable online Kharchi float runtime proof.
+- `DASH-003` remains `code_verified`, not pass, pending disposable after-shift wage updates runtime proof.
+- Golden rows, other payroll rows, stock/dispatch/commercial rows, billing/provider rows, Sentry/WhatsApp/restore/rollback rows, and all unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch23/BATCH23-start-party-order-transaction-boundary-proof.json`.
+- Migration created but not applied: `supabase/migrations/20260702131500_batch_23_start_party_order_transaction_boundary.sql`.
+- Focused source test: `__tests__/batch23-start-party-order-atomicity.test.ts`.
+- Regression coverage: Vitest checks on related lifecycle, snapshots, and atomicity test suites.
+
+Verification commands:
+
+- `git status --short` -> showed only the approved new Batch 23 test, migration, and updated action/test files before docs closeout; proof artifact is ignored/force-added under `output/qa`.
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch23/BATCH23-start-party-order-transaction-boundary-proof.json` -> passed.
+- `npx vitest run __tests__/batch23-start-party-order-atomicity.test.ts` -> passed, 1 test file and 21 tests.
+- `npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts` -> passed, 1 test file and 6 tests.
+- `npx vitest run __tests__/batch10-estimator-quote-order-snapshots.test.ts` -> passed, 1 test file and 4 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint __tests__/batch23-start-party-order-atomicity.test.ts` -> passed.
+
+Data safety:
+
+- No migration was applied.
+- No production mutation occurred.
+- No Supabase db push, migration repair, db pull, direct SQL, --include-all, npm audit, package install, lockfile change, runtime/browser proof, production/customer data mutation, external provider call, env file staging, Supabase temp-file staging, or secret copy was used.
+- Docs closeout force-adds only the ignored Batch 23 proof artifact and stages only the approved Batch 23 implementation, migration, docs, matrix, and proof files.
+
+Resolution status:
+
+- `QUOTE-007` is documented as `code_verified` in the active QA matrix.
+- Matrix movement is fail -1 and `code_verified` +1: total 377, pass 195, fail 27, blocked 22, `code_verified` 132, `not_applicable` 1, `not_run` 0.

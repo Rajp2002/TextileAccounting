@@ -104,7 +104,14 @@ describe('Batch 11 estimator server-boundary validation', () => {
         for (const actionName of ['saveEstimatorQuoteV3', 'startPartyOrderFromEstimator', 'createMarketRunFromEstimator']) {
             const action = functionBody(estimatorActions, actionName)
             expect(action).toContain('validateEstimatorQuoteBoundary')
-            expect(action.indexOf('validateEstimatorQuoteBoundary')).toBeLessThan(action.indexOf(".from('estimator_quotes')"))
+
+            // startPartyOrderFromEstimator uses an atomic RPC (Batch 23 QUOTE-007)
+            // instead of .from('estimator_quotes') directly
+            if (actionName === 'startPartyOrderFromEstimator') {
+                expect(action.indexOf('validateEstimatorQuoteBoundary')).toBeLessThan(action.indexOf("supabase.rpc("))
+            } else {
+                expect(action.indexOf('validateEstimatorQuoteBoundary')).toBeLessThan(action.indexOf(".from('estimator_quotes')"))
+            }
         }
     })
 })

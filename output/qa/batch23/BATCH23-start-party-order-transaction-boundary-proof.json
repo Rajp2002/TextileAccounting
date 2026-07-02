@@ -1,0 +1,129 @@
+{
+  "batch": 23,
+  "branch": "codex/batch-23-quote-order-transaction-boundary",
+  "source_commit": "2dddaea39208aa10bb3b06d6ab43a6b3a849428e",
+  "target_row": "QUOTE-007",
+  "row_wording": {
+    "category": "13. Quote Lifecycle",
+    "title": "Start Party Order fast path.",
+    "expectation": "Accepted quote and order form one consistent transaction.",
+    "failure_description": "The Start Party Order fast path is recoverable but not one consistent transaction. startPartyOrderFromEstimator inserts an accepted estimator_quote and then calls executeQuoteConversion. If conversion fails, the accepted quote is intentionally left behind for recovery from Quote History, so the accepted quote and active order are not guaranteed to be created atomically together.",
+    "severity": "Medium"
+  },
+  "failure_summary": "startPartyOrderFromEstimator performed three separate database operations (quote insert, order conversion RPC, yarn requirements upsert) across multiple network calls. If the conversion or yarn requirements step failed after the quote was inserted, an orphaned accepted quote was left in the database without an associated order.",
+  "files_changed": [
+    "app/(dashboard)/owner/estimator/actions.ts",
+    "lib/quotes/convert-accepted-quote-to-order.ts",
+    "__tests__/batch10-estimator-quote-order-snapshots.test.ts",
+    "__tests__/batch11-estimator-order-lifecycle.test.ts"
+  ],
+  "files_created": [
+    "supabase/migrations/20260702131500_batch_23_start_party_order_transaction_boundary.sql",
+    "__tests__/batch23-start-party-order-atomicity.test.ts",
+    "output/qa/batch23/BATCH23-start-party-order-transaction-boundary-proof.json"
+  ],
+  "migration": {
+    "file": "supabase/migrations/20260702131500_batch_23_start_party_order_transaction_boundary.sql",
+    "rpc_name": "start_party_order_from_estimator",
+    "description": "Creates a new SECURITY DEFINER plpgsql RPC that atomically inserts the accepted estimator_quote, active order, quote-to-order backlink, and order_yarn_requirements in a single database transaction. If any step fails, PostgreSQL rolls back the entire transaction. Uses the same auth.jwt() org_id/user_role pattern as convert_accepted_quote_to_order. Includes locked-org guard via assert_org_not_locked. Handles unique_violation for concurrent duplicate creation.",
+    "forward_only": true,
+    "no_drops": true,
+    "no_truncates": true,
+    "no_deletes": true,
+    "applied": false
+  },
+  "app_action_refactor": {
+    "function": "startPartyOrderFromEstimator",
+    "file": "app/(dashboard)/owner/estimator/actions.ts",
+    "description": "Refactored to pre-compute yarn requirements from the estimator state (using calcFullTotals), then call the single atomic start_party_order_from_estimator RPC. The separate quote insert and executeQuoteConversion call were removed. The server action still performs input validation, estimator boundary validation, and worker rate computation before the RPC call. The return shape (success, quoteId, orderId) is preserved.",
+    "non_fast_path_preserved": true,
+    "convertAcceptedQuoteToOrder_unchanged": true,
+    "saveEstimatorQuoteV3_unchanged": true,
+    "executeQuoteConversion_unchanged": true
+  },
+  "security_tenant_enforcement": {
+    "pattern": "auth.jwt() ->> 'org_id' and auth.jwt() ->> 'user_role' within SECURITY DEFINER RPC",
+    "matches_existing_rpc": "convert_accepted_quote_to_order",
+    "locked_org_guard": "PERFORM public.assert_org_not_locked(v_org_id)",
+    "grant": "GRANT EXECUTE TO authenticated"
+  },
+  "tests": {
+    "new_test": "__tests__/batch23-start-party-order-atomicity.test.ts",
+    "new_test_count": 21,
+    "updated_tests": [
+      "__tests__/batch10-estimator-quote-order-snapshots.test.ts",
+      "__tests__/batch11-estimator-order-lifecycle.test.ts"
+    ],
+    "test_coverage": [
+      "RPC definition and structure",
+      "All four atomic writes (quote, order, backlink, yarn requirements)",
+      "Auth/tenant boundary enforcement",
+      "Locked-org guard",
+      "Unique violation handling",
+      "Return shape with quote_id and order_id",
+      "Database input validation",
+      "Forward-only migration safety",
+      "GRANT to authenticated",
+      "Server action uses atomic RPC",
+      "No separate quote insert in action",
+      "No executeQuoteConversion call in action",
+      "Pre-computed yarn requirements",
+      "Server-side input validation preserved",
+      "Quote snapshot fields passed to RPC",
+      "Order fields passed to RPC",
+      "Return quoteId and orderId on success",
+      "No orphaned accepted quotes on failure",
+      "Worker rate normalization preserved",
+      "Non-fast-path conversion unchanged",
+      "saveEstimatorQuoteV3 unaffected",
+      "Existing estimator validation wired in all paths"
+    ]
+  },
+  "commands_run": [
+    "git fetch origin --prune",
+    "git switch -C codex/batch-23-quote-order-transaction-boundary origin/main",
+    "npx vitest run __tests__/batch23-start-party-order-atomicity.test.ts",
+    "npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts __tests__/batch10-estimator-quote-order-snapshots.test.ts __tests__/p0-atomicity.test.ts",
+    "npx tsc --noEmit --pretty false",
+    "npx eslint __tests__/batch23-start-party-order-atomicity.test.ts app/(dashboard)/owner/estimator/actions.ts",
+    "git diff --check",
+    "git status --short"
+  ],
+  "test_results": {
+    "batch23_atomicity_test": "21 passed",
+    "batch10_snapshot_test": "4 passed",
+    "batch11_lifecycle_test": "6 passed",
+    "p0_atomicity_test": "5 passed",
+    "total": "36 passed, 0 failed",
+    "typescript": "passed (0 errors)",
+    "eslint": "passed (0 errors, 0 warnings)"
+  },
+  "quote_007_status": "source-fixed / code_verified candidate",
+  "quote_007_not_pass_ready_reasons": [
+    "Migration 20260702131500_batch_23_start_party_order_transaction_boundary.sql was created but NOT applied.",
+    "QA runtime proof has not been collected.",
+    "Disposable QA proof must verify: (1) successful Start Party Order creates all four rows atomically, (2) a forced failure leaves no orphaned accepted quote, (3) the Quote History conversion path still works independently.",
+    "The new RPC must be added to the locked-tenant-boundary test whitelist after it is applied and confirmed working."
+  ],
+  "future_qa_runtime_proof_required": [
+    "Start Party Order success: accepted quote, active order, backlinks, and yarn requirements all created.",
+    "Start Party Order atomicity: simulate a constraint failure and confirm no orphaned accepted quote exists.",
+    "Quote History conversion: confirm convertAcceptedQuoteToOrder still works independently via convert_accepted_quote_to_order RPC.",
+    "Duplicate conversion guard: attempt to convert the same quote twice and confirm idempotent rejection.",
+    "Locked-org guard: confirm the new RPC respects org lockdown."
+  ],
+  "confirmations": {
+    "migration_not_applied": true,
+    "no_production_mutation": true,
+    "no_supabase_db_push": true,
+    "no_direct_sql": true,
+    "no_npm_audit": true,
+    "no_package_install": true,
+    "no_lockfile_change": true,
+    "no_staging": true,
+    "no_commit": true,
+    "no_push": true,
+    "no_docs_closeout": true,
+    "no_secrets_printed": true
+  }
+}
