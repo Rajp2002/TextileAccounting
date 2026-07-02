@@ -24,7 +24,7 @@ Rules for entries:
 | `DISP-B` receipt-state coherence | Closed through Batch 12 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. Batch 12 closes `DISP-013` with focused local dispatch archive proof. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
 | `DASH-A` dashboard/sign-off read-model truth | Partially closed/code-verified through Batch 15 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10`; Batch 15 source-fixes `DASH-003` gross wage read-model calculation but keeps it `code_verified` pending disposable after-shift runtime proof. Historical analytics and sign-off evidence debt remain open. |
-| `PAY-A` payroll/kharchi ledger integrity | Partially remediated through Batch 20 / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Batch 15 closes payroll payslip PDF/export rows `PAY-023` and `PAY-024`, and moves PF/ESI preview formula rows `PAY-013` and `PAY-015` to `code_verified` pending disposable settlement proof. Batch 20 moves payroll RPC boundary and online Kharchi atomicity rows `PAY-018`, `PAY-020`, and `PAY-027` to `code_verified`, not pass, pending migration application and disposable QA runtime proof. Broader settlement correctness remains open. |
+| `PAY-A` payroll/kharchi ledger integrity | Partially remediated through Batch 21C / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Batch 15 closes payroll payslip PDF/export rows `PAY-023` and `PAY-024`. Batch 21C promotes PF/ESI preview and preview-versus-settlement rows `PAY-013` and `PAY-015` to pass with disposable payroll settlement runtime proof. Batch 20 payroll RPC boundary and online Kharchi atomicity rows `PAY-018`, `PAY-020`, and `PAY-027` remain `code_verified`, not pass, pending migration application and disposable QA runtime proof. Broader settlement correctness remains open. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Partially closed in Batch 9 / open remainder | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016` with offline fallback, auth-boundary cache cleanup, online-only kharchi, and truthful public/privacy copy. `OFF-007`, `OFF-010`, and `OFF-009` remain open or partial. |
 | `REL-A` release gates | Partially remediated through Batch 8C / open remainder | Batch 7 closes `TECH-013` source-level release test gate. Batch 8 closes `TECH-007` migration-head alignment evidence. Batch 8B closes `TECH-010` Sentry release/source-map proof. Batch 8C closes final clean deployed signoff evidence for `SIGNOFF-10`. Clean install, audit, live Sentry payload inspection, restore, and rollback remain open or blocked. |
@@ -1357,10 +1357,10 @@ Rows promoted to pass:
 - `PAY-024`
 - `SEC-014`
 
-Rows moved to `code_verified` but not pass:
+Rows moved to `code_verified` but not pass at Batch 15 closeout:
 
-- `PAY-013` remains unresolved evidence debt because the preview PF/ESI formula is source/test aligned, but no disposable high-gross enrolled settlement was executed.
-- `PAY-015` remains unresolved evidence debt because the preview-versus-settlement ESIC divergence is source/test fixed, but no live persisted settlement proof was collected.
+- `PAY-013` was unresolved evidence debt because the preview PF/ESI formula was source/test aligned, but no disposable high-gross enrolled settlement was executed. Batch 21C later closed this row with disposable settlement runtime proof.
+- `PAY-015` was unresolved evidence debt because the preview-versus-settlement ESIC divergence was source/test fixed, but no live persisted settlement proof was collected. Batch 21C later closed this row with persisted settlement/history runtime proof.
 - `DASH-003` remains unresolved evidence debt because the Factory Today wage read model is source/test fixed, but no after-shift runtime/browser proof was collected.
 
 Rows explicitly not closed by Batch 15:
@@ -1371,8 +1371,8 @@ Rows explicitly not closed by Batch 15:
 Evidence:
 
 - Evidence artifact: `output/qa/batch15/BATCH15-payroll-doc-export-consistency-proof.json`.
-- `PAY-013`: `lib/payroll-statutory.ts` now centralizes PF/ESI preview calculations with PF basis capped at 15000 and employee ESIC applied only when adjusted gross is at or below 21000. Focused tests prove enrolled below-threshold, enrolled above-threshold, and non-enrolled behavior. Runtime settlement proof remains missing.
-- `PAY-015`: payroll preview now uses the shared statutory helper, and optimistic settlement itemization writes nested `pf`/`esic` objects alongside legacy fields. Focused tests cover the high-gross ESIC divergence that caused the row to fail. Runtime persisted-settlement proof remains missing.
+- `PAY-013`: `lib/payroll-statutory.ts` now centralizes PF/ESI preview calculations with PF basis capped at 15000 and employee ESIC applied only when adjusted gross is at or below 21000. Focused tests prove enrolled below-threshold, enrolled above-threshold, and non-enrolled behavior. Runtime settlement proof was missing at Batch 15 closeout and is supplied later by Batch 21C.
+- `PAY-015`: payroll preview now uses the shared statutory helper, and optimistic settlement itemization writes nested `pf`/`esic` objects alongside legacy fields. Focused tests cover the high-gross ESIC divergence that caused the row to fail. Runtime persisted-settlement proof was missing at Batch 15 closeout and is supplied later by Batch 21C.
 - `PAY-023`: `lib/generate-payslip.ts` now includes explicit cycle dates, earning lines, manual inam/kapaat adjustments, advance recovery, PF, ESI, net pay, carried-forward debt, and payment mode; the payroll page disables PDF generation until a paid settlement exists and passes settlement-backed values into the generator.
 - `PAY-024`: settlement history detail and CSV export now read statutory deductions through a shared extractor that prefers persisted nested `pf.employee` and `esic.employee` and falls back to legacy top-level fields.
 - `SEC-014`: payslip filename generation now strips path separators, traversal dots, and filename-hostile punctuation, constraining generated PDF filenames to safe ASCII filename parts.
@@ -1397,7 +1397,7 @@ Data safety:
 Resolution status:
 
 - `PAY-023`, `PAY-024`, and `SEC-014` are documented as pass in the active QA matrix.
-- `PAY-013`, `PAY-015`, and `DASH-003` are documented as `code_verified`, not pass, pending disposable runtime/browser proof.
+- At Batch 15 closeout, `PAY-013`, `PAY-015`, and `DASH-003` were documented as `code_verified`, not pass, pending disposable runtime/browser proof. Batch 21C later closes `PAY-013` and `PAY-015`; `DASH-003` remains `code_verified`.
 
 ## Batch 20 - Payroll RPC Hardening and Kharchi Atomicity Closeout
 
@@ -1418,7 +1418,7 @@ Rows moved to `code_verified` but not pass:
 Rows explicitly not closed by Batch 20:
 
 - `GOLDEN-A-21`, `GOLDEN-A-22`, `GOLDEN-A-23`, and `GOLDEN-B-18` remain blocked/open pending later Golden/runtime proof.
-- `PAY-013`, `PAY-015`, `DASH-003`, and `PAY-006` remain under their existing proof requirements.
+- At Batch 20 closeout, `PAY-013`, `PAY-015`, `DASH-003`, and `PAY-006` remained under their existing proof requirements. Batch 21C later closes `PAY-013` and `PAY-015`.
 - Production/order boundary rows, stock/dispatch/commercial rows, billing/provider rows, Sentry/WhatsApp/restore/rollback rows, and all unapproved rows remain unchanged.
 
 Evidence:
@@ -1463,7 +1463,7 @@ Rows promoted to pass:
 
 Rows explicitly not closed by Batch 21B:
 
-- `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-027`, and `DASH-003` remain under their existing proof requirements.
+- At Batch 21B closeout, `PAY-013`, `PAY-015`, `PAY-018`, `PAY-020`, `PAY-027`, and `DASH-003` remained under their existing proof requirements. Batch 21C later closes `PAY-013` and `PAY-015`.
 - Payroll, dashboard, production/order boundary, stock/dispatch/commercial, billing/provider, Sentry/WhatsApp/restore/rollback, Batch 1-20 closed statuses, and all unapproved rows remain unchanged.
 
 Evidence:
@@ -1493,3 +1493,50 @@ Resolution status:
 
 - `ORDER-008` is documented as pass in the active QA matrix.
 - Matrix movement is pass +1 and `code_verified` -1: total 377, pass 191, fail 31, blocked 22, `code_verified` 132, `not_applicable` 1, `not_run` 0.
+
+## Batch 21C - Payroll Preview Settlement Runtime Proof Closeout
+
+Date/time: 2026-07-02 16:53 IST. Source base `origin/main` at `b78b67806393dd30a84f82db58aadb01369a78c3`.
+
+Scope:
+
+- `PAY-013`
+- `PAY-015`
+
+Rows promoted to pass:
+
+- `PAY-013`
+- `PAY-015`
+
+Rows explicitly not closed by Batch 21C:
+
+- `PAY-018`, `PAY-020`, and `PAY-027` remain `code_verified`, not pass, pending Batch 20 migration application and disposable QA runtime proof for RPC permission, settlement blocking, reversal access-code behavior, and Kharchi atomicity.
+- `DASH-003` remains `code_verified`, not pass, pending disposable after-shift Factory Today runtime/browser proof.
+- `PAY-006`, Golden payroll follow-ons, dashboard/signoff rows, production/order boundary rows, stock/dispatch/commercial rows, billing/provider rows, Sentry/WhatsApp/restore/rollback rows, and all unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch21c/BATCH21C-payroll-preview-settlement-runtime-proof.json`.
+- Runtime host: `http://localhost:3000`.
+- QA safety: `.env.local`, `.env.qa.local`, and rebuilt `.next` cache were checked against QA Supabase ref `eutycrtzzxmlkcpipgod`; production ref `vzhwahudircrpgtitwzd` was absent from the targeted checks. The deployed production app was not used.
+- `PAY-013`: disposable fixed workers at Rs. 20000 gross proved enrolled PF Rs. 1800, ESI Rs. 150, net Rs. 18050; the not-enrolled worker proved PF/ESI Rs. 0 and net Rs. 20000. Settlement/history matched both workers.
+- `PAY-015`: preview gross, deductions, manual adjustments, advance recovery, debt, and net matched the paid payroll rows and persisted Past settlements history exactly. Past settlements was reopened after the stale window, and values remained unchanged.
+
+Verification commands:
+
+- `git status --short` -> clean before closeout edits.
+- `git diff --check` -> passed before closeout edits.
+- `jq empty output/qa/batch21c/BATCH21C-payroll-preview-settlement-runtime-proof.json` -> passed.
+- `npx vitest run __tests__/batch15-payroll-doc-export-consistency.test.ts` -> passed, 1 test file and 7 tests.
+- `npx vitest run __tests__/batch20-payroll-rpc-kharchi-atomicity.test.ts __tests__/p1-payroll-revert.test.ts` -> passed, 2 test files and 8 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+
+Data safety:
+
+- No app code, migration, Supabase command, db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production/customer data mutation, external provider call, or env/secret copy was used for closeout.
+- Docs closeout force-adds only the ignored Batch 21C proof artifact and stages only the approved Batch 21C docs, matrix, and proof files.
+
+Resolution status:
+
+- `PAY-013` and `PAY-015` are documented as pass in the active QA matrix.
+- Matrix movement is pass +2 and `code_verified` -2: total 377, pass 193, fail 31, blocked 22, `code_verified` 130, `not_applicable` 1, `not_run` 0.

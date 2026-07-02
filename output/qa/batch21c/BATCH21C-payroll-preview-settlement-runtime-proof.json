@@ -1,0 +1,433 @@
+{
+  "batch": "21C",
+  "name": "payroll preview/settlement exact QA runtime proof",
+  "branch": "codex/batch-21c-payroll-preview-settlement-runtime-proof",
+  "sourceCommit": "b78b67806393dd30a84f82db58aadb01369a78c3",
+  "runtime": {
+    "appHost": "http://localhost:3000",
+    "appHostUsed": "http://localhost:3000",
+    "deployedProductionAppUsed": false,
+    "localServer": {
+      "command": "npm run dev -- --hostname 127.0.0.1 --port 3000",
+      "envFileObservedByNext": ".env.local",
+      "serverReady": true
+    }
+  },
+  "qaSafetyMetadata": {
+    "environmentLabel": "QA disposable runtime",
+    "qaSupabaseProjectRef": "eutycrtzzxmlkcpipgod",
+    "productionSupabaseProjectRef": "vzhwahudircrpgtitwzd",
+    "localEnvRefs": {
+      ".env.local": "QA ref present; production ref absent in targeted ref check",
+      ".env.qa.local": "QA ref present; production ref absent in targeted ref check"
+    },
+    "rebuiltNextCache": {
+      "cacheClearedBeforeServerStart": true,
+      "qaRefPresent": true,
+      "productionRefAbsent": true
+    },
+    "productionMutationOccurred": false,
+    "secretsCopiedOrPrinted": false,
+    "directSqlUsed": false,
+    "migrationsRun": false,
+    "packageInstallRun": false,
+    "lockfileTouched": false,
+    "stagedCommittedOrPushed": true,
+    "docsCloseoutRun": true
+  },
+  "targetRows": [
+    {
+      "id": "PAY-013",
+      "row": "PF/ESI enrolled and not enrolled.",
+      "expected": "Deductions apply only to intended workers using reviewed formulas."
+    },
+    {
+      "id": "PAY-015",
+      "row": "Preview versus settlement.",
+      "expected": "Persisted gross, deductions, adjustments, debt, and net equal preview."
+    }
+  ],
+  "disposableData": {
+    "tenantFactoryName": "B21B-ORDER008-20260701212052 Factory",
+    "ownerDisplayName": "B21B-ORDER008-20260701212052 Owner",
+    "payrollPeriod": "July 2026",
+    "cycleCopyObserved": "Current cycle is still in progress; closes on 31 Jul 2026 and pays on 10 Aug 2026.",
+    "settlementModeUsed": "Final settlement through app UI because regular July payroll settlement is not open before the configured pay window.",
+    "workers": [
+      {
+        "scenario": "A",
+        "workerLabel": "B21C PAY013 Enrolled 20260702",
+        "workerType": "fixed",
+        "role": "Master",
+        "pfEsiEnrollment": "enrolled",
+        "grossBasis": "monthly salary",
+        "salary": 20000
+      },
+      {
+        "scenario": "B",
+        "workerLabel": "B21C PAY013 NoEnroll 20260702",
+        "workerType": "fixed",
+        "role": "Master",
+        "pfEsiEnrollment": "not enrolled",
+        "grossBasis": "monthly salary",
+        "salary": 20000
+      }
+    ],
+    "settlementIdsFromHistory": {
+      "B21C PAY013 Enrolled 20260702": 1,
+      "B21C PAY013 NoEnroll 20260702": 2
+    }
+  },
+  "browserRuntimeSteps": [
+    "Created branch from latest origin/main and confirmed clean starting worktree.",
+    "Confirmed .env.local and .env.qa.local point at QA project ref eutycrtzzxmlkcpipgod; production ref vzhwahudircrpgtitwzd was absent from .env.qa.local.",
+    "Cleared generated .next cache and started local Next dev server on http://localhost:3000; Next reported Environments: .env.local.",
+    "Confirmed rebuilt .next cache contains QA ref and does not contain production ref.",
+    "Opened http://localhost:3000/owner/payroll in the in-app browser and used the existing authenticated QA owner session.",
+    "Switched UI language to English for readable QA evidence.",
+    "Created disposable fixed worker B21C PAY013 Enrolled 20260702 with salary 20000 and PF/ESI enabled.",
+    "Created disposable fixed worker B21C PAY013 NoEnroll 20260702 with salary 20000 and PF/ESI not enabled.",
+    "Opened Payroll, selected Monthly/Daily tab, and captured preview values for both disposable workers.",
+    "Expanded enrolled worker row, opened final settlement dialog, captured PF, ESI, total statutory, advance, debt, and net values, selected Cash, checked final settlement and owner verification, and confirmed settlement.",
+    "Expanded not-enrolled worker row, opened final settlement dialog, confirmed no PF/ESI deduction line was present, selected Cash, checked final settlement and owner verification, and confirmed settlement.",
+    "Opened Past settlements, reviewed both persisted history records and compared them with preview values.",
+    "Waited past the history stale window, reopened Past settlements, and confirmed the same persisted values were displayed again."
+  ],
+  "scenarios": {
+    "A_enrolledWorker": {
+      "workerLabel": "B21C PAY013 Enrolled 20260702",
+      "previewValues": {
+        "gross": 20000,
+        "pf": 1800,
+        "esi": 150,
+        "otherDeductions": 0,
+        "manualAdjustments": {
+          "inam": 0,
+          "kapaat": 0,
+          "total": 0
+        },
+        "advanceRecovery": 0,
+        "debt": 0,
+        "net": 18050,
+        "formulaObserved": "PF 12% on 15000 wage ceiling = 1800; ESI 0.75% on 20000 because gross is within ESI ceiling = 150; net = 20000 - 1800 - 150."
+      },
+      "settlementValuesOnPayrollRow": {
+        "status": "paid",
+        "finalSettlement": true,
+        "paymentMode": "Cash",
+        "gross": 20000,
+        "advanceRecovery": 0,
+        "debt": 0,
+        "net": 18050
+      },
+      "historyValues": {
+        "settlementId": 1,
+        "workerType": "Fixed",
+        "finalSettlement": true,
+        "paymentMode": "Cash",
+        "gross": 20000,
+        "pfEsiCombined": 1950,
+        "advanceRecovery": 0,
+        "manualAdjustments": {
+          "inam": 0,
+          "kapaat": 0,
+          "total": 0
+        },
+        "carriedDebt": 0,
+        "netPaid": 18050
+      },
+      "deductionBehavior": "PF and ESI applied because worker is enrolled.",
+      "comparison": [
+        {
+          "field": "gross",
+          "preview": 20000,
+          "settlementOrHistory": 20000,
+          "match": true
+        },
+        {
+          "field": "deductions.pf",
+          "preview": 1800,
+          "settlementOrHistory": "included in PF/ESI combined 1950",
+          "match": true
+        },
+        {
+          "field": "deductions.esi",
+          "preview": 150,
+          "settlementOrHistory": "included in PF/ESI combined 1950",
+          "match": true
+        },
+        {
+          "field": "deductions.pfEsiTotal",
+          "preview": 1950,
+          "settlementOrHistory": 1950,
+          "match": true
+        },
+        {
+          "field": "adjustments",
+          "preview": 0,
+          "settlementOrHistory": 0,
+          "match": true
+        },
+        {
+          "field": "advanceRecovery",
+          "preview": 0,
+          "settlementOrHistory": 0,
+          "match": true
+        },
+        {
+          "field": "debt",
+          "preview": 0,
+          "settlementOrHistory": 0,
+          "match": true
+        },
+        {
+          "field": "net",
+          "preview": 18050,
+          "settlementOrHistory": 18050,
+          "match": true
+        }
+      ]
+    },
+    "B_notEnrolledWorker": {
+      "workerLabel": "B21C PAY013 NoEnroll 20260702",
+      "previewValues": {
+        "gross": 20000,
+        "pf": 0,
+        "esi": 0,
+        "otherDeductions": 0,
+        "manualAdjustments": {
+          "inam": 0,
+          "kapaat": 0,
+          "total": 0
+        },
+        "advanceRecovery": 0,
+        "debt": 0,
+        "net": 20000,
+        "formulaObserved": "Not enrolled status suppresses PF/ESI; net = 20000."
+      },
+      "settlementValuesOnPayrollRow": {
+        "status": "paid",
+        "finalSettlement": true,
+        "paymentMode": "Cash",
+        "gross": 20000,
+        "advanceRecovery": 0,
+        "debt": 0,
+        "net": 20000
+      },
+      "historyValues": {
+        "settlementId": 2,
+        "workerType": "Fixed",
+        "finalSettlement": true,
+        "paymentMode": "Cash",
+        "gross": 20000,
+        "pfEsiCombined": 0,
+        "advanceRecovery": 0,
+        "manualAdjustments": {
+          "inam": 0,
+          "kapaat": 0,
+          "total": 0
+        },
+        "carriedDebt": 0,
+        "netPaid": 20000
+      },
+      "deductionBehavior": "PF/ESI not applied because worker is not enrolled; the settlement dialog displayed Not Enrolled and no PF/ESI deduction line.",
+      "comparison": [
+        {
+          "field": "gross",
+          "preview": 20000,
+          "settlementOrHistory": 20000,
+          "match": true
+        },
+        {
+          "field": "deductions.pf",
+          "preview": 0,
+          "settlementOrHistory": 0,
+          "match": true
+        },
+        {
+          "field": "deductions.esi",
+          "preview": 0,
+          "settlementOrHistory": 0,
+          "match": true
+        },
+        {
+          "field": "deductions.pfEsiTotal",
+          "preview": 0,
+          "settlementOrHistory": 0,
+          "match": true
+        },
+        {
+          "field": "adjustments",
+          "preview": 0,
+          "settlementOrHistory": 0,
+          "match": true
+        },
+        {
+          "field": "advanceRecovery",
+          "preview": 0,
+          "settlementOrHistory": 0,
+          "match": true
+        },
+        {
+          "field": "debt",
+          "preview": 0,
+          "settlementOrHistory": 0,
+          "match": true
+        },
+        {
+          "field": "net",
+          "preview": 20000,
+          "settlementOrHistory": 20000,
+          "match": true
+        }
+      ]
+    },
+    "C_previewEqualsPersistedSettlement": {
+      "surfaceUsed": "Payroll paid rows and Past settlements history dialog",
+      "roundingRuleObserved": "Currency amounts displayed to two decimal places in settlement detail; preview and history matched exactly at paisa precision for all observed nonzero and zero fields.",
+      "workersCompared": [
+        "B21C PAY013 Enrolled 20260702",
+        "B21C PAY013 NoEnroll 20260702"
+      ],
+      "result": "pass_ready"
+    },
+    "D_historyExportStability": {
+      "surfaceUsed": "Past settlements history dialog",
+      "exportUsed": false,
+      "exportNotUsedReason": "The row requirement allows settlement history and/or export. History exposed gross, PF/ESI total when applicable, advance recovery, payment mode, carried debt, and final payout for both records.",
+      "firstOpenValues": {
+        "totalNetPaid": 38050,
+        "totalGross": 40000,
+        "totalRecovered": 0,
+        "enrolledNetPaid": 18050,
+        "notEnrolledNetPaid": 20000
+      },
+      "reopenedAfterStaleWindowValues": {
+        "totalNetPaid": 38050,
+        "totalGross": 40000,
+        "totalRecovered": 0,
+        "enrolledNetPaid": 18050,
+        "notEnrolledNetPaid": 20000
+      },
+      "valuesChangedOnRepeatedView": false,
+      "result": "pass_ready"
+    }
+  },
+  "passReadyDecisions": {
+    "PAY-013": {
+      "passReady": true,
+      "reason": "Runtime preview and persisted history proved PF/ESI apply to the enrolled worker and are absent for the not-enrolled worker at the same 20000 gross value."
+    },
+    "PAY-015": {
+      "passReady": true,
+      "reason": "Runtime preview values matched paid payroll rows and reopened settlement history values for gross, deductions, adjustments, advance recovery, debt, and net."
+    }
+  },
+  "docsCloseout": {
+    "dateTimeIst": "2026-07-02 16:53 IST",
+    "promotedRows": [
+      "PAY-013",
+      "PAY-015"
+    ],
+    "unchangedRows": [
+      "PAY-018",
+      "PAY-020",
+      "PAY-027",
+      "DASH-003"
+    ],
+    "matrixCountsAfterCloseout": {
+      "total": 377,
+      "pass": 193,
+      "fail": 31,
+      "blocked": 22,
+      "code_verified": 130,
+      "not_applicable": 1,
+      "not_run": 0
+    },
+    "docsUpdated": [
+      "docs/pilot-remediation/FIX_LOG.md",
+      "docs/pilot-remediation/LOOP_STATE.md",
+      "docs/pilot-remediation/FAILURE_BACKLOG.md",
+      "docs/pilot-remediation/RETEST_PLAN.md",
+      "docs/pilot-remediation/DOMAIN_INVARIANTS.md",
+      "docs/pilot-remediation/PILOT_READY_DEFINITION.md",
+      "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md"
+    ],
+    "artifactPath": "output/qa/batch21c/BATCH21C-payroll-preview-settlement-runtime-proof.json",
+    "result": "BATCH_21C_FULLY_CLOSED"
+  },
+  "rowsLeftCodeVerifiedOrOpen": [],
+  "limitations": [
+    "CSV export was not used because the app-visible Past settlements history view exposed the necessary persisted values and the scenario permits history and/or export.",
+    "The fixed-worker start-date field did not persist a June start date through the edit UI during setup, so July 2026 final settlements were used. This did not affect the statutory preview/settlement equality being proved."
+  ],
+  "commandsAndChecksRun": [
+    {
+      "command": "git status --short",
+      "result": "clean before branch creation"
+    },
+    {
+      "command": "git fetch origin --prune",
+      "result": "passed"
+    },
+    {
+      "command": "git switch -C codex/batch-21c-payroll-preview-settlement-runtime-proof origin/main",
+      "result": "passed"
+    },
+    {
+      "command": "git rev-parse origin/main",
+      "result": "b78b67806393dd30a84f82db58aadb01369a78c3"
+    },
+    {
+      "command": "rm -rf .next",
+      "result": "cleared generated Next cache before local QA runtime start"
+    },
+    {
+      "command": "npm run dev -- --hostname 127.0.0.1 --port 3000",
+      "result": "server started; Next reported Environments: .env.local"
+    },
+    {
+      "command": "targeted ref checks for .env.local, .env.qa.local, and rebuilt .next",
+      "result": "QA ref present; production ref absent from .env.qa.local and rebuilt .next"
+    },
+    {
+      "command": "in-app browser runtime proof",
+      "result": "completed for PAY-013 and PAY-015 scenarios A-D"
+    },
+    {
+      "command": "git status --short",
+      "result": "clean before artifact creation"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "jq empty output/qa/batch21c/BATCH21C-payroll-preview-settlement-runtime-proof.json",
+      "result": "passed"
+    },
+    {
+      "command": "npx vitest run __tests__/batch15-payroll-doc-export-consistency.test.ts",
+      "result": "passed; 1 test file, 7 tests"
+    },
+    {
+      "command": "npx vitest run __tests__/batch20-payroll-rpc-kharchi-atomicity.test.ts __tests__/p1-payroll-revert.test.ts",
+      "result": "passed; 2 test files, 8 tests"
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "passed"
+    }
+  ],
+  "confirmations": {
+    "noProductionMutationOccurred": true,
+    "noSecretsCopied": true,
+    "noMigrationsRun": true,
+    "noDirectSqlUsed": true,
+    "noPackageInstallRun": true,
+    "noLockfileChanges": true,
+    "noStagingCommitPushDuringRuntimeProof": true,
+    "docsCloseoutRun": true
+  },
+  "finalDecision": "BATCH_21C_FULLY_CLOSED"
+}

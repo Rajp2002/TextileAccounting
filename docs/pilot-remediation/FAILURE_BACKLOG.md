@@ -48,11 +48,13 @@ Closed in Batch 12 and removed from `code_verified` evidence debt: stock archive
 
 Closed in Batch 13 and removed from `code_verified` evidence debt: focused estimator math and boundary rows (`EST-001`, `EST-005`, `EST-012`). `EST-004`, `SETUP-001`, `SETUP-002`, `BILL-002`, `PAY-017`, `TIME-003`, and `TIME-004` remain `code_verified` because their inspected local/static evidence was supporting or partial, not exact proof of the active row wording.
 
-Closed in Batch 15 and removed from open failure coverage rows: payroll payslip PDF/export and payslip filename safety (`PAY-023`, `PAY-024`, `SEC-014`). Moved from fail to `code_verified` but still unresolved evidence debt: payroll PF/ESI preview/settlement formula rows and Factory Today gross wage signal (`PAY-013`, `PAY-015`, `DASH-003`). These three have source/test proof but still need disposable runtime/browser proof before they can be counted as pass.
+Closed in Batch 15 and removed from open failure coverage rows: payroll payslip PDF/export and payslip filename safety (`PAY-023`, `PAY-024`, `SEC-014`). Moved from fail to `code_verified` but not closed by Batch 15: payroll PF/ESI preview/settlement formula rows and Factory Today gross wage signal (`PAY-013`, `PAY-015`, `DASH-003`). `PAY-013` and `PAY-015` are later closed by Batch 21C; `DASH-003` still needs disposable after-shift runtime/browser proof before it can be counted as pass.
 
 Moved from fail to `code_verified` in Batch 20 but still unresolved evidence debt: payroll RPC boundary and online Kharchi atomicity rows (`PAY-018`, `PAY-020`, `PAY-027`). These three have source/test proof, but still need migration application in disposable QA plus runtime/browser proof before they can be counted as pass.
 
 Closed in Batch 21B and removed from `code_verified` evidence debt: `ORDER-008`. Disposable QA browser/runtime proof confirmed below-target completion and pending-dispatch completion both require explicit confirmation and do not complete silently, while normal completion works without a warning.
+
+Closed in Batch 21C and removed from `code_verified` evidence debt: `PAY-013` and `PAY-015`. Disposable QA payroll runtime proof confirmed enrolled Rs. 20000 gross -> PF Rs. 1800, ESI Rs. 150, net Rs. 18050; not-enrolled Rs. 20000 gross -> PF/ESI Rs. 0, net Rs. 20000; preview, paid row, and reopened Past settlements history matched.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -353,22 +355,22 @@ Required proof: dashboard unit/read-model tests, runtime Factory Today checks af
 
 Failures: `PAY-006`, `GOLDEN-B-18`
 
-Code-verified evidence debt: `PAY-013`, `PAY-015`, `DASH-003`, `PAY-018`, `PAY-020`, `PAY-027`
+Code-verified evidence debt: `DASH-003`, `PAY-018`, `PAY-020`, `PAY-027`
 
 Evidence: `logs/payroll-kharchi-source-evidence-20260624.json`, `logs/payroll-evidence.json`, `logs/offline-pwa-evidence.json`
 
 Invariant: payroll net equals gross plus inam minus kapaat, advance recovery, PF, and ESI. A kharchi operation creates the worker advance and supervisor float transaction atomically, or creates neither.
 
-Impact: `PAY-006` and `GOLDEN-B-18` still need payroll runtime proof. PF/ESI preview, Factory Today gross wages, payroll RPC boundaries, and online Kharchi atomicity are source/test fixed but still need migration/runtime proof before pass. Batch 9 closes offline kharchi by making it online-only and removing the unsupported `kharchi_offline` queue path. Batch 15 closes payslip PDF and settlement CSV/history statutory export rows `PAY-023` and `PAY-024`. Batch 20 source-fixes legacy payroll RPC exposure and online Kharchi atomicity.
+Impact: `PAY-006` and `GOLDEN-B-18` still need payroll runtime proof. Batch 21C closes PF/ESI preview and preview-versus-settlement equality rows `PAY-013` and `PAY-015` with disposable runtime proof. Factory Today gross wages, payroll RPC boundaries, and online Kharchi atomicity are source/test fixed but still need migration/runtime proof before pass. Batch 9 closes offline kharchi by making it online-only and removing the unsupported `kharchi_offline` queue path. Batch 15 closes payslip PDF and settlement CSV/history statutory export rows `PAY-023` and `PAY-024`. Batch 20 source-fixes legacy payroll RPC exposure and online Kharchi atomicity.
 
 Remediation direction:
 
 - Apply the Batch 20 migration to disposable QA, then verify legacy RPCs are not callable through API roles and the hardened wrappers enforce payment-mode, owner-verification, and access-code behavior.
-- Runtime-prove the shared PF/ESI preview/settlement formula with disposable high-gross enrolled settlement data.
+- Runtime-prove Factory Today gross wage read models after disposable after-shift production data.
 - Runtime-prove online Kharchi as a single transaction with sufficient and insufficient supervisor float.
 - Keep offline kharchi online-only unless a real queue processor for the authoritative tables is later implemented and retested.
 
-Required proof: payroll unit tests, rollback-only RPC probes, online kharchi partial-failure test, and dashboard wage check. Batch 9 supplies offline-disabled proof for `OFF-008` and `PAY-028`. Batch 20 supplies source/test proof for `PAY-018`, `PAY-020`, and `PAY-027`, but not migration-application or runtime proof.
+Required proof: payroll unit tests, rollback-only RPC probes, online kharchi partial-failure test, and dashboard wage check. Batch 9 supplies offline-disabled proof for `OFF-008` and `PAY-028`. Batch 21C supplies disposable runtime proof for `PAY-013` and `PAY-015`. Batch 20 supplies source/test proof for `PAY-018`, `PAY-020`, and `PAY-027`, but not migration-application or runtime proof.
 
 ## P4 IDEMP-A - Mutations Lack Idempotency and Unknown-Outcome Recovery
 

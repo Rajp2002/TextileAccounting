@@ -203,7 +203,9 @@ Required proof:
 - Online kharchi creates both ledger rows or neither.
 - Offline kharchi is disabled, de-scoped, or reconciles to authoritative tables.
 
-Batch 15 proof note: `PAY-023` and `PAY-024` are satisfied by focused source/test proof for payslip PDF content and settlement history/CSV statutory extraction. `PAY-013` and `PAY-015` are source-fixed and `code_verified`, not pass: preview PF/ESI now uses the same ESIC wage-ceiling formula as the latest settlement path, but disposable high-gross enrolled settlement runtime proof is still required. `SEC-014` is satisfied by deterministic payslip filename sanitization tests.
+Batch 15 proof note: `PAY-023` and `PAY-024` are satisfied by focused source/test proof for payslip PDF content and settlement history/CSV statutory extraction. `PAY-013` and `PAY-015` were source-fixed and moved to `code_verified` by Batch 15, pending disposable settlement runtime proof. `SEC-014` is satisfied by deterministic payslip filename sanitization tests.
+
+Batch 21C proof note: `PAY-013` and `PAY-015` are satisfied by disposable QA payroll runtime proof in `output/qa/batch21c/BATCH21C-payroll-preview-settlement-runtime-proof.json`. Enrolled Rs. 20000 gross produced PF Rs. 1800, ESI Rs. 150, and net Rs. 18050; not-enrolled Rs. 20000 gross produced PF/ESI Rs. 0 and net Rs. 20000. Preview, paid payroll rows, and Past settlements history matched, and reopened history values stayed unchanged after the stale window. No production mutation, direct SQL, migration, package install, lockfile change, app-code change, or secret copy was used during closeout.
 
 Batch 20 proof note: `PAY-018`, `PAY-020`, and `PAY-027` are source-fixed and `code_verified`, not pass. Payroll settlement now requires the hardened owner/payment-mode/verified-owner RPC boundary; payroll reversal now requires hardened database-transaction access-code validation; online Kharchi now inserts the worker advance and supervisor float transaction in one RPC transaction. Migration application and disposable QA runtime/browser proof remain required before any of these rows can be promoted to pass.
 
