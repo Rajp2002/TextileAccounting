@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { formatINR } from '@/lib/finance'
 import { RotateCcw, Check, X, CalendarDays, KeyRound, Loader2, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { savePastAttendance, verifyAccessCode } from '@/app/(dashboard)/supervisor/actions'
+import { savePastAttendance } from '@/app/(dashboard)/supervisor/actions'
 import { useUserProfile } from '@/hooks/use-user-profile'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
@@ -55,9 +55,7 @@ export default function AttendancePage() {
     // Authorization State
     const [unlocked, setUnlocked] = useState(false)
     const [verificationOpen, setVerificationOpen] = useState(false)
-    const [verificationMode, setVerificationMode] = useState<'unlock' | 'save'>('save')
     const [accessCode, setAccessCode] = useState('')
-    const [verifying, setVerifying] = useState(false)
 
     useEffect(() => {
         setSelectedDate(getSuratTodayString())
@@ -119,33 +117,14 @@ export default function AttendancePage() {
         setLocalAttendance(prev => ({ ...prev, [workerId]: !prev[workerId] }))
     }
 
-    const handleUnlockSubmit = async () => {
-        setVerifying(true)
-        try {
-            if (!userProfile?.org_id) throw new Error("Missing org_id")
-            const result = await verifyAccessCode(accessCode)
-            if (result.error) throw new Error(result.error)
-
-            setUnlocked(true)
-            setVerificationOpen(false)
-            setAccessCode('')
-            toast.success('Edit mode unlocked')
-        } catch (error) {
-            toast.error(getErrorMessage(error, 'Invalid access code'))
-        } finally {
-            setVerifying(false)
-        }
-    }
-
     const prepareSaveFlow = () => {
         if (!dailyWorkers || dailyWorkers.length === 0) return
 
         const today = getSuratTodayString()
         const isPastDate = selectedDate < today
 
-        // SEC-002: Supervisors editing past dates require an access code
-        if (isPastDate && userProfile?.role === 'supervisor' && !unlocked) {
-            setVerificationMode('save')
+        // SEC-002 / PAY-006: Supervisors editing past dates always require an access code at save time
+        if (isPastDate && userProfile?.role === 'supervisor') {
             setVerificationOpen(true)
         } else {
             executeSave()
@@ -259,7 +238,7 @@ export default function AttendancePage() {
                         <Lock className="h-4 w-4" />
                         <span>{t('attendance.locked_banner')}</span>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => { setVerificationMode('unlock'); setVerificationOpen(true); }} className="h-8 border-warning-soft text-xs text-warning hover:bg-warning-soft">
+                    <Button variant="outline" size="sm" onClick={() => { setUnlocked(true); }} className="h-8 border-warning-soft text-xs text-warning hover:bg-warning-soft">
                         {t('attendance.unlock_edit')}
                     </Button>
                 </div>
@@ -358,11 +337,11 @@ export default function AttendancePage() {
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setVerificationOpen(false)}>{t('common.cancel')}</Button>
                         <Button
-                            disabled={accessCode.length < 6 || saving || verifying}
-                            onClick={() => verificationMode === 'unlock' ? handleUnlockSubmit() : executeSave(accessCode)}
+                            disabled={accessCode.length < 6 || saving}
+                            onClick={() => executeSave(accessCode)}
                         >
-                            {(saving || verifying) ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
-                            {verificationMode === 'unlock' ? t('attendance.verify_unlock') : t('attendance.verify_save')}
+                            {saving ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                            {t('attendance.verify_save')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

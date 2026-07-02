@@ -216,6 +216,8 @@ Batch 21D proof note: `PAY-018` and `PAY-020` are satisfied by disposable QA pay
 
 Batch 20 proof note: `PAY-018`, `PAY-020`, and `PAY-027` were source-fixed and `code_verified`, not pass. Payroll settlement now requires the hardened owner/payment-mode/verified-owner RPC boundary; payroll reversal now requires hardened database-transaction access-code validation; online Kharchi now inserts the worker advance and supervisor float transaction in one RPC transaction. Batch 21D later closes `PAY-018` and `PAY-020`; `PAY-027` remains `code_verified` pending disposable QA runtime proof.
 
+Batch 24A proof note: `PAY-006` is source-fixed and `code_verified`, not pass. Attendance RLS date boundaries are hardened so supervisors can only directly insert/update today's attendance and owners today or past. Future dates are blocked. Supervisor past-date saves route through `savePastAttendance` with save-time owner access-code validation. Database migration exists but is not applied, requiring QA runtime verification before pass.
+
 ## Idempotency and Unknown Outcomes
 
 High-value mutations must be retry-safe. A network timeout is an unknown outcome, not a definite failure.

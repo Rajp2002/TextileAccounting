@@ -1,0 +1,62 @@
+{
+  "branch": "codex/batch-24a-attendance-rls-boundary",
+  "source_commit": "49c2c47857e15211216699d9d81b740a96d0d651",
+  "target_row": "PAY-006",
+  "exact_row_wording": {
+    "category": "21. Payroll, Advances, Attendance, and Worker Money",
+    "title": "Past/future attendance.",
+    "severity": "High",
+    "expected": "Future blocked; protected past edit uses valid access code.",
+    "status": "fail",
+    "actual_evidence": "The UI/server path tries to block future attendance and protect supervisor past-date edits with an owner access code, but production RLS does not enforce either rule. Live attendance INSERT/UPDATE policies allow org-scoped owner/supervisor writes without date predicates or access-code predicates."
+  },
+  "failure_summary": "RLS policy let supervisors directly modify attendance for past and future dates without verifying an owner access code. The UI 'Unlock Edit' action verified/consumed the code prematurely, relying on client-side upsert to save. Additionally, the initial second-pass audit identified that the UPDATE policies lacked explicit WITH CHECK clauses, which has been resolved by appending matching WITH CHECK constraints.",
+  "files_changed": [
+    "app/(dashboard)/supervisor/attendance/page.tsx",
+    "__tests__/p1-attendance-rls-boundary.test.ts",
+    "supabase/migrations/20260702191500_batch_24a_harden_attendance_rls_date_bounds.sql"
+  ],
+  "migration_file_created": "supabase/migrations/20260702191500_batch_24a_harden_attendance_rls_date_bounds.sql",
+  "rls_policy_summary": {
+    "supervisor_insert": "Restricted to TODAY only using database timezone: date = (now() AT TIME ZONE 'Asia/Kolkata')::date (WITH CHECK enforced)",
+    "supervisor_update": "Restricted to TODAY only using database timezone: date = (now() AT TIME ZONE 'Asia/Kolkata')::date (USING and WITH CHECK enforced)",
+    "owner_insert": "Restricted to PAST or TODAY: date <= (now() AT TIME ZONE 'Asia/Kolkata')::date (WITH CHECK enforced)",
+    "owner_update": "Restricted to PAST or TODAY: date <= (now() AT TIME ZONE 'Asia/Kolkata')::date (USING and WITH CHECK enforced)",
+    "future_date_writes": "Blocked for all roles directly via RLS (no policy matches date > today)"
+  },
+  "ui_server_action_refactor_summary": "Changed the supervisor attendance page's 'Unlock Edit' action to simply enable local checkboxes without validating or consuming any access code. When saving changes for past dates, the supervisor is prompted for the owner access code, which is then validated and consumed by the savePastAttendance server action during write execution via the service role client.",
+  "access_code_pattern_used": "validateAndConsumeAccessCode is called within savePastAttendance server action to securely hash, timing-safe compare, rate-limit, and consume the owner's single-use access code.",
+  "tests_added": [
+    "__tests__/p1-attendance-rls-boundary.test.ts"
+  ],
+  "commands_run": [
+    "npx eslint __tests__/p1-attendance-rls-boundary.test.ts \"app/(dashboard)/supervisor/attendance/page.tsx\"",
+    "npx tsc --noEmit --pretty false",
+    "npx vitest run __tests__/p1-attendance-rls-boundary.test.ts",
+    "npx vitest run",
+    "git status --short",
+    "git diff --check"
+  ],
+  "test_results": {
+    "vitest_p1_test": "Passed (11 tests passed)",
+    "vitest_full_run": "Passed (402 tests passed, 1 skipped)",
+    "eslint": "Passed (0 errors, 0 warnings)",
+    "typescript": "Passed (0 errors)"
+  },
+  "why_pay_006_is_source_fixed": "RLS date-boundaries are hardened to restrict supervisor client writes to today only (via USING + WITH CHECK) and owner client writes to today or past only (via USING + WITH CHECK). The UI bypass for past date edits has been eliminated by routing all past-date supervisor modifications through savePastAttendance where the access code is validated/consumed server-side. Missing WITH CHECK clauses discovered during the second-pass mechanical audit have been explicitly added.",
+  "why_pay_006_is_not_pass_ready": "The migration has been created but is not yet applied, and the new database policies and updated UI must be verified through runtime/browser execution in the QA environment.",
+  "future_qa_runtime_proof_required": "Deploy the migration to the QA database. Verify that a supervisor cannot save past/future dates directly through client-side query calls but succeeds through the UI after entering a valid access code at save time.",
+  "confirmations": {
+    "migration_applied": false,
+    "production_mutated": false,
+    "supabase_db_push": false,
+    "direct_sql_run": false,
+    "npm_audit_run": false,
+    "package_installed": false,
+    "lockfile_modified": false,
+    "staged": false,
+    "committed": false,
+    "pushed": false,
+    "docs_closeout": false
+  }
+}

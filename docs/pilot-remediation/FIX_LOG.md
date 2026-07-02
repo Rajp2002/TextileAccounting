@@ -1690,3 +1690,50 @@ Resolution status:
 
 - `QUOTE-007` is documented as `code_verified` in the active QA matrix.
 - Matrix movement is fail -1 and `code_verified` +1: total 377, pass 195, fail 27, blocked 22, `code_verified` 132, `not_applicable` 1, `not_run` 0.
+
+## Batch 24A - PAY-006 Past/Future Attendance RLS and Access-Code Boundary
+
+Date/time: 2026-07-02 19:35 IST. Source base `origin/main` at `49c2c47857e15211216699d9d81b740a96d0d651`.
+
+Scope:
+
+- `PAY-006`
+
+Rows promoted to `code_verified`, not pass:
+
+- `PAY-006`: Past/future attendance is source-fixed at the database and UI boundary. The new database migration `20260702191500` enforces date-bounds on direct client-side `INSERT`/`UPDATE` writes. Supervisor direct writes are limited to today's date using Surat DB date: `date = (now() AT TIME ZONE 'Asia/Kolkata')::date` (enforced via both USING and WITH CHECK). Owner direct writes are limited to today or past using Surat DB date: `date <= (now() AT TIME ZONE 'Asia/Kolkata')::date` (enforced via both USING and WITH CHECK). Future attendance writes are blocked at the RLS boundary. Supervisor past-date edits no longer bypass RLS via client-side upsert, and instead prompt for the owner access code at save time, validating/consuming it server-side.
+
+Rows explicitly not closed by Batch 24A:
+
+- `ORDER-005`, `ORDER-009`, `PROD-011`, `QUOTE-007` remain `code_verified`, not pass, pending database migration application and QA runtime proof.
+- `PAY-027` remains `code_verified`, not pass, pending disposable online Kharchi float runtime proof.
+- `DASH-003` remains `code_verified`, not pass, pending disposable after-shift wage updates runtime proof.
+- Golden rows, other payroll rows, stock/dispatch/commercial rows, billing/provider rows, Sentry/WhatsApp/restore/rollback rows, and all unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch24a/BATCH24A-attendance-rls-boundary-proof.json`.
+- Migration created but not applied: `supabase/migrations/20260702191500_batch_24a_harden_attendance_rls_date_bounds.sql`.
+- Focused source test: `__tests__/p1-attendance-rls-boundary.test.ts`.
+- Regression coverage: Vitest checks on related tests.
+
+Verification commands:
+
+- `git status --short` -> showed only the approved new Batch 24A test, migration, and updated page file before docs closeout; proof artifact is ignored under `output/qa`.
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24a/BATCH24A-attendance-rls-boundary-proof.json` -> passed.
+- `npx vitest run __tests__/p1-attendance-rls-boundary.test.ts` -> passed, 1 test file and 11 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint __tests__/p1-attendance-rls-boundary.test.ts "app/(dashboard)/supervisor/attendance/page.tsx"` -> passed.
+
+Data safety:
+
+- No migration was applied.
+- No production mutation occurred.
+- No Supabase db push, migration repair, db pull, direct SQL, --include-all, npm audit, package install, lockfile change, runtime/browser proof, production/customer data mutation, external provider call, env file staging, Supabase temp-file staging, or secret copy was used.
+- Docs closeout force-adds only the ignored Batch 24A proof artifact and stages only the approved Batch 24A implementation, migration, docs, matrix, and proof files.
+
+Resolution status:
+
+- `PAY-006` is documented as `code_verified` in the active QA matrix.
+- Matrix movement is fail -1 and `code_verified` +1: total 377, pass 195, fail 26, blocked 22, `code_verified` 133, `not_applicable` 1, `not_run` 0.

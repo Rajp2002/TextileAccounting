@@ -379,7 +379,7 @@ Commands:
 
 ```bash
 npx vitest run __tests__/p1-payroll-guard.test.ts __tests__/p1-payroll-revert.test.ts __tests__/payroll-manual-adjustments.test.ts __tests__/payroll-settlement-history.test.ts
-npx vitest run __tests__/payroll-cycle.test.ts __tests__/payroll-pay-date-config.test.ts
+npx vitest run __tests__/payroll-cycle.test.ts __tests__/payroll-pay-date-config.test.ts __tests__/p1-attendance-rls-boundary.test.ts
 npx vitest run
 ```
 
@@ -397,6 +397,7 @@ Acceptance:
 - Batch 9 closes `PAY-028` and `OFF-008` by truthful online-only offline-kharchi de-scope; online kharchi atomicity and payroll correctness rows remain separate.
 - Batch 15 closes `PAY-023` and `PAY-024` with focused payslip document/export tests and source proof, and closes `SEC-014` with deterministic payslip filename sanitization tests. Batch 15 moved `PAY-013` and `PAY-015` from fail to `code_verified`, not pass, because disposable live preview/settlement proof was not collected under the no-Supabase-mutation rule. Batch 21C closes `PAY-013` and `PAY-015` with disposable payroll preview/settlement runtime proof in `output/qa/batch21c/BATCH21C-payroll-preview-settlement-runtime-proof.json`.
 - Batch 20 moves `PAY-018`, `PAY-020`, and `PAY-027` from fail to `code_verified`, not pass. Batch 21D closes `PAY-018` and `PAY-020` with disposable payroll boundary runtime proof in `output/qa/batch21d/BATCH21D-payroll-boundary-runtime-proof.json`: legacy payroll RPC overloads were permission denied through API roles, settlement blocked missing payment mode and missing owner verification, valid UI settlement succeeded, reversal rejected empty/invalid/reused codes, and one valid code reversed exactly once. The next disposable QA payroll run still needs to prove online Kharchi creates worker advance plus supervisor float transaction atomically for sufficient float while rejecting insufficient float before `PAY-027` can move to pass.
+- Batch 24A moves `PAY-006` from fail to `code_verified`: it enforces attendance date boundaries at the RLS database layer, restricts direct writes to today (for supervisors) or today/past (for owners), blocks future direct writes, and routes supervisor past-date edits through the save-time access-code server action boundary. The migration has been created but is not yet applied, and the updated UI/database behavior still requires disposable QA runtime/browser verification.
 
 ## P4 Idempotency, Offline, and Cache Retest
 

@@ -97,6 +97,8 @@ Batch 20 note: `PAY-018`, `PAY-020`, and `PAY-027` are source-fixed by focused p
 
 Batch 23 note: `QUOTE-007` is source-fixed and moved to `code_verified` by focused atomic transaction boundary database design in `output/qa/batch23/BATCH23-start-party-order-transaction-boundary-proof.json`. The Batch 23 verification set passed focused Vitest, TypeScript, targeted ESLint, and `git diff --check`. `QUOTE-007` remains unresolved for pilot readiness until database migration application and valid Start Party Order runtime proof are executed in QA.
 
+Batch 24A note: `PAY-006` is source-fixed and moved to `code_verified` by focused attendance RLS date boundary and access-code validation server action design in `output/qa/batch24a/BATCH24A-attendance-rls-boundary-proof.json`. The Batch 24A verification set passed focused Vitest, TypeScript, targeted ESLint, and `git diff --check`. `PAY-006` remains unresolved for pilot readiness until database migration application and valid attendance RLS and access-code UI/database runtime proof are executed in QA.
+
 
 ## Pilot Sign-Off Evidence Package
 

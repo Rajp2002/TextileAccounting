@@ -370,15 +370,15 @@ Required proof: dashboard unit/read-model tests, runtime Factory Today checks af
 
 ## P3 PAY-A - Payroll, Attendance, Settlement, and Kharchi Ledgers Can Diverge
 
-Failures: `PAY-006`, `GOLDEN-B-18`
+Failures: `GOLDEN-B-18`
 
-Code-verified evidence debt: `DASH-003`, `PAY-027`
+Code-verified evidence debt: `DASH-003`, `PAY-027`, `PAY-006`
 
 Evidence: `logs/payroll-kharchi-source-evidence-20260624.json`, `logs/payroll-evidence.json`, `logs/offline-pwa-evidence.json`
 
 Invariant: payroll net equals gross plus inam minus kapaat, advance recovery, PF, and ESI. A kharchi operation creates the worker advance and supervisor float transaction atomically, or creates neither.
 
-Impact: `PAY-006` and `GOLDEN-B-18` still need payroll runtime proof. Batch 21C closes PF/ESI preview and preview-versus-settlement equality rows `PAY-013` and `PAY-015` with disposable runtime proof. Batch 21D closes payroll settlement/reversal boundary rows `PAY-018` and `PAY-020` with disposable QA runtime proof. Factory Today gross wages and online Kharchi atomicity are source/test fixed but still need runtime proof before pass. Batch 9 closes offline kharchi by making it online-only and removing the unsupported `kharchi_offline` queue path. Batch 15 closes payslip PDF and settlement CSV/history statutory export rows `PAY-023` and `PAY-024`. Batch 20 source-fixes legacy payroll RPC exposure and online Kharchi atomicity.
+Impact: `GOLDEN-B-18` still needs payroll runtime proof. Batch 24A source-fixes `PAY-006` by hardening attendance RLS date boundaries (restricting supervisor direct client writes to today's date and owner direct client writes to today or past only, using database Surat time), and routing supervisor past-date writes through the save-time access-code server boundary. Disposable QA runtime proof is still required for `PAY-006` to be promoted to pass. Batch 21C closes PF/ESI preview and preview-versus-settlement equality rows `PAY-013` and `PAY-015` with disposable runtime proof. Batch 21D closes payroll settlement/reversal boundary rows `PAY-018` and `PAY-020` with disposable QA runtime proof. Factory Today gross wages and online Kharchi atomicity are source/test fixed but still need runtime proof before pass. Batch 9 closes offline kharchi by making it online-only and removing the unsupported `kharchi_offline` queue path. Batch 15 closes payslip PDF and settlement CSV/history statutory export rows `PAY-023` and `PAY-024`. Batch 20 source-fixes legacy payroll RPC exposure and online Kharchi atomicity.
 
 Remediation direction:
 
