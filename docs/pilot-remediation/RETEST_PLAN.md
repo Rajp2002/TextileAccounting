@@ -142,6 +142,7 @@ Use after `PROD-B` fixes or when checking for regressions in the closed `PROD-A`
 Commands:
 
 ```bash
+npx vitest run __tests__/batch22-production-order-boundary-hardening.test.ts
 npx vitest run __tests__/p0-atomicity.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-dispatch-regressions.test.ts
 npx vitest run __tests__/p1-stock-lifecycle.test.ts __tests__/p1-stock-source-validation.test.ts
 npx vitest run
@@ -162,6 +163,7 @@ Acceptance:
 - Migration `20260626064830_production_stock_atomicity.sql` is applied and aligned.
 - Factory Today/signoff expected stock uses `order_progress_summary.total_meters_produced`.
 - Golden A follow-ons can be re-run from a clean QA order.
+- Batch 22 source-fixes `ORDER-005`, `ORDER-009`, and `PROD-011` but does not make them pass-ready. Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` must be applied to QA before runtime proof. Then rollback-only/API probes must prove over-target, cancelled/completed order-attributed logs, stale assignment, and negative-meter writes are rejected, while valid production/correction still reconciles generated stock, order progress, and payroll basis.
 
 ## P1 Estimator, Quote, Order, and Date Snapshot Retest
 
@@ -369,6 +371,7 @@ Acceptance:
 - Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08` with runtime proof. `SIGNOFF-10` was outside Batch 3 release/Sentry/source-map scope.
 - Batch 4 closes commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09` with runtime/browser proof. `SIGNOFF-10` was outside Batch 4 release/Sentry/source-map scope and is closed later by Batch 8C.
 - Batch 15 moves `DASH-003` from fail to `code_verified` by replacing the hard-coded gross wage placeholder with meter/rate snapshot aggregation and focused tests. It is not pass until after-shift Factory Today runtime/browser proof is captured with disposable QA data.
+- Batch 22 improves the `SIGNOFF-02` `ORDER-009` dependency by source-fixing cancelled/completed/stale-assignment order attribution at the RPC/table boundary, but `SIGNOFF-02` remains fail until full current-run attribution runtime proof is captured after the migration is applied in QA.
 
 ## P3 Payroll and Kharchi Retest
 

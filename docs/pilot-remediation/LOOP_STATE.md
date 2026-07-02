@@ -14,18 +14,18 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, and Batch 21D payroll boundary runtime proof closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, and Batch 22 production/order boundary source-fix closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
 | `pass` | 195 | Runtime/test evidence exists. |
-| `fail` | 31 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `fail` | 28 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
-| `code_verified` | 128 | Source evidence only. This is not a pass. |
+| `code_verified` | 131 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
-Critical failures: 0. High failures: 12. Critical blocked golden-journey follow-ons: 6.
+Critical failures: 0. High failures: 9. Critical blocked golden-journey follow-ons: 6.
 
 Batch 1 security foundation moved `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` from fail to pass with runtime/test/migration evidence. `AUTH-008`, external webhook/export/compliance security rows, release gates, and unrelated unresolved failures remain open. `PAY-018` and `PAY-020` were source-fixed by Batch 20 and later closed by Batch 21D disposable QA runtime proof.
 
@@ -64,6 +64,8 @@ Batch 21B moved `ORDER-008` from `code_verified` to pass with exact disposable Q
 Batch 21C moved `PAY-013` and `PAY-015` from `code_verified` to pass with exact disposable QA payroll preview/settlement runtime proof. The local runtime at `http://localhost:3000` used QA Supabase ref `eutycrtzzxmlkcpipgod`, and targeted checks found production ref `vzhwahudircrpgtitwzd` absent from `.env.local`, `.env.qa.local`, and rebuilt `.next` cache. `PAY-013` proved enrolled Rs. 20000 gross -> PF Rs. 1800, ESI Rs. 150, net Rs. 18050, and not-enrolled Rs. 20000 gross -> PF/ESI Rs. 0, net Rs. 20000, with settlement/history matching both. `PAY-015` proved preview gross, deductions, adjustments, advance recovery, debt, and net matched persisted settlement/history exactly, and reopened Past settlements after the stale window stayed unchanged. `PAY-018`, `PAY-020`, `PAY-027`, `DASH-003`, and all other rows remain unchanged.
 
 Batch 21D moved `PAY-018` and `PAY-020` from `code_verified` to pass with disposable QA payroll boundary runtime proof in `output/qa/batch21d/BATCH21D-payroll-boundary-runtime-proof.json`. The local runtime at `http://localhost:3000` used QA Supabase ref `eutycrtzzxmlkcpipgod`, and targeted checks found production ref `vzhwahudircrpgtitwzd` absent from `.env.qa.local` and rebuilt `.next` cache. `PAY-018` proved missing payment/owner verification blocked in UI, hardened settlement RPC rejected missing payment mode and missing owner verification, valid UI settlement succeeded, and legacy direct settlement RPC was permission denied. `PAY-020` proved empty code kept reversal disabled, invalid code was rejected while settlement stayed paid, valid one-time code reversed to pending, consumed-code reuse was rejected, and legacy direct unsettle RPC was permission denied. `PAY-027`, `DASH-003`, Golden rows, and all other rows remain unchanged.
+
+Batch 22 moved `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof in `output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json`. Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` was created but not applied. `ORDER-005` is source-fixed by over-target post-replacement total checks in the replacement RPC and table trigger. `ORDER-009` is source-fixed by active-order/current-loom attribution checks that block cancelled/completed/stale-assignment order-attributed logs and non-active order replacement. `PROD-011` is source-fixed by a forward-only `production_logs_meters_nonnegative` `NOT VALID` check plus RPC/trigger negative-meter guards. `SIGNOFF-02` remains fail/open: the `ORDER-009` dependency is improved, but full current-run owner sign-off attribution runtime proof is still required. `GOLDEN-A-23`, `PAY-027`, `DASH-003`, Golden rows, `QUOTE-007`, and all other rows remain unchanged.
 
 ## Operating Rules
 
@@ -1141,3 +1143,52 @@ Resolution status:
 
 - `PAY-018` and `PAY-020` are documented as pass in the active matrix.
 - Matrix movement is pass +2 and `code_verified` -2: total 377, pass 195, fail 31, blocked 22, `code_verified` 128, `not_applicable` 1, `not_run` 0.
+
+## Batch 22 Production/Order Boundary Source-Fix Closeout
+
+Date/time: 2026-07-02 18:12 IST.
+
+Scope:
+
+- `ORDER-005`
+- `ORDER-009`
+- `PROD-011`
+
+Rows promoted to `code_verified`, not pass:
+
+- `ORDER-005`: over-target production is blocked in the replacement RPC and direct table boundary before generated stock, order progress, pace, or payroll basis can be corrupted.
+- `ORDER-009`: cancelled/completed/stale-assignment order-attributed logs are blocked in the replacement RPC and direct table boundary; existing history is not migration-mutated.
+- `PROD-011`: negative meters are blocked through a forward-only `NOT VALID` table check plus replacement RPC and trigger guards.
+
+Rows explicitly not closed:
+
+- `SIGNOFF-02` remains fail/open. Batch 22 improves its `ORDER-009` dependency, but current-run attribution still requires runtime proof after migration application.
+- `GOLDEN-A-23`, `PAY-027`, `DASH-003`, Golden rows, `QUOTE-007`, stock/dispatch/commercial rows, billing/provider rows, Sentry/WhatsApp/restore/rollback rows, and all unapproved rows remain unchanged.
+
+Repository state:
+
+- Branch: `codex/batch-22-production-order-boundary-hardening`.
+- Source base: `origin/main` at `b0cef34910a255dfb1415bf3c605b09b02c7acc3`.
+- Evidence artifact: `output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json`.
+- Migration created but not applied: `supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql`.
+
+Verification:
+
+- `git status --short` -> approved Batch 22 test and migration untracked before docs closeout; proof artifact ignored under `output/qa`.
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json` -> passed.
+- `npx vitest run __tests__/batch22-production-order-boundary-hardening.test.ts` -> passed, 1 test file and 6 tests.
+- `npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts` -> passed, 1 test file and 6 tests.
+- `npx vitest run __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/p0-atomicity.test.ts __tests__/p2-golden-a-completed-order-dispatch.test.ts __tests__/p1-stock-lifecycle.test.ts` -> passed, 5 test files and 55 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint __tests__/batch22-production-order-boundary-hardening.test.ts` -> passed.
+
+Migrations and forbidden actions:
+
+- No migration was applied.
+- No Supabase db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production/customer data mutation, external provider call, env file staging, Supabase temp-file staging, or secret copy occurred.
+
+Resolution status:
+
+- `ORDER-005`, `ORDER-009`, and `PROD-011` are documented as `code_verified` in the active matrix.
+- Matrix movement is fail -3 and `code_verified` +3: total 377, pass 195, fail 28, blocked 22, `code_verified` 131, `not_applicable` 1, `not_run` 0.

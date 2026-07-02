@@ -10,7 +10,7 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | --- | --- | --- |
 | P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008` |
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-015`, `SEC-017` |
-| P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
+| P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | `QUOTE-007` |
 | P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006` |
@@ -57,6 +57,8 @@ Closed in Batch 21B and removed from `code_verified` evidence debt: `ORDER-008`.
 Closed in Batch 21C and removed from `code_verified` evidence debt: `PAY-013` and `PAY-015`. Disposable QA payroll runtime proof confirmed enrolled Rs. 20000 gross -> PF Rs. 1800, ESI Rs. 150, net Rs. 18050; not-enrolled Rs. 20000 gross -> PF/ESI Rs. 0, net Rs. 20000; preview, paid row, and reopened Past settlements history matched.
 
 Closed in Batch 21D and removed from `code_verified` evidence debt: `PAY-018` and `PAY-020`. Disposable QA payroll runtime proof confirmed missing payment/owner verification was blocked in the UI, hardened settlement RPC calls rejected missing payment mode and missing owner verification, valid UI settlement succeeded, legacy direct settlement RPC was permission denied, empty reversal code kept reversal disabled, invalid reversal code was rejected while settlement stayed paid, a valid one-time code reversed to pending, consumed-code reuse was rejected, and legacy direct unsettle RPC was permission denied. `PAY-027`, `DASH-003`, Golden rows, and all other rows remain unchanged.
+
+Moved from fail to `code_verified` in Batch 22 but still unresolved evidence debt: production/order boundary rows (`ORDER-005`, `ORDER-009`, `PROD-011`). Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` source-fixes over-target, cancelled/completed/stale-assignment order-attributed logs, and negative-meter guards at the RPC/table boundary, but it was not applied and QA runtime/API proof has not been collected. `SIGNOFF-02` dependency is improved through `ORDER-009`, but `SIGNOFF-02` remains fail/open until full current-run attribution proof exists. `GOLDEN-A-23`, `PAY-027`, `DASH-003`, Golden rows, `QUOTE-007`, and all other rows remain unchanged.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -166,21 +168,23 @@ Required proof: satisfied by disposable Batch 6 runtime proof with 26 assertions
 
 ## P1 PROD-B - Production Boundary Allows Invalid Attribution or Quantities
 
-Failures: `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `ORDER-005`, `ORDER-009`, `PROD-002`, `PROD-004`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02`
+Failures: `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02`
+
+Code-verified evidence debt: `ORDER-005`, `ORDER-009`, `PROD-011`
 
 Evidence: `logs/order-stock-sale-source-evidence-20260624.json`, `logs/production-logging-source-evidence-20260624.json`, `logs/prod-dashboard-ux-signoff-source-evidence-20260624.json`, `logs/setup-master-source-evidence-20260624.json`
 
 Invariant: each production entry belongs to one org, active machine, valid date, shift, worker, and active order/run; meters are non-negative and operationally plausible; day-only or substitute-worker support is either implemented or unsupported for pilot.
 
-Impact: direct authenticated RPC paths can allow negative meters, production against cancelled orders, or over-target production. Day-only factories and substitute workers are not supported by the current boundary.
+Impact: Batch 22 source-fixes the direct authenticated RPC/table paths for negative meters, order-attributed logs against cancelled/completed/stale assignments, and over-target production. These rows remain `code_verified`, not pass, until migration application and QA runtime/API proof. Day-only factories and substitute workers are not supported by the current boundary.
 
 Remediation direction:
 
-- Add database/RPC guards for active order/run, assignment, non-negative meters, and target/cancel constraints.
+- Apply the Batch 22 migration in QA after review and run rollback-only/API proof for active order/run, assignment, non-negative meters, and target/cancel constraints.
 - Decide pilot scope for day-only factories and substitute workers; fix or document unsupported.
 - Add duplicate loom-name prevention and atomic assignment updates.
 
-Required proof: source tests plus rollback-only SQL/RPC probes for negative meters, cancelled order, over-target, and assignment mismatch.
+Required proof: Batch 22 source tests are present for `ORDER-005`, `ORDER-009`, and `PROD-011`; pass still requires migration application evidence plus rollback-only/API probes for negative meters, cancelled/completed order, over-target, and assignment mismatch, and valid production/correction runtime proof that generated stock/order progress/payroll basis remain consistent.
 
 ## P1 ECON-A - Estimator, Quote, Order, and Date Snapshots Are Not Exact Enough
 
@@ -342,7 +346,7 @@ Evidence: `logs/dashboard-evidence.json`, `logs/prod-dashboard-ux-signoff-source
 
 Invariant: Factory Today and sign-off views are read models over authoritative production, stock, dispatch, commercial, payroll, and observability state. A sign-off card cannot clear when its source rows remain unresolved.
 
-Impact: historical analytics mixes historical and current data, and final sign-off rows still depend on unresolved production/payroll evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 4 closed commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 6 supplies Golden A Factory Today source reconciliation for production, dispatch, receipt, receivable, and deliberate discrepancy state. Batch 8C closes `SIGNOFF-10` with clean deployed browser/server/Sentry evidence. Batch 15 source-fixes `DASH-003` by replacing hard-coded gross wages with meter/rate snapshot aggregation, but it remains `code_verified` pending after-shift runtime proof.
+Impact: historical analytics mixes historical and current data, and final sign-off rows still depend on unresolved production/payroll evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 4 closed commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 6 supplies Golden A Factory Today source reconciliation for production, dispatch, receipt, receivable, and deliberate discrepancy state. Batch 8C closes `SIGNOFF-10` with clean deployed browser/server/Sentry evidence. Batch 15 source-fixes `DASH-003` by replacing hard-coded gross wages with meter/rate snapshot aggregation, but it remains `code_verified` pending after-shift runtime proof. Batch 22 source-fixes the `ORDER-009` dependency for `SIGNOFF-02`, but `SIGNOFF-02` remains fail/open pending full current-run attribution runtime proof.
 
 Remediation direction:
 

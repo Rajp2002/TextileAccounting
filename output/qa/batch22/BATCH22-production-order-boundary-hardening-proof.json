@@ -1,0 +1,226 @@
+{
+  "batch": "22",
+  "name": "production/order boundary hardening",
+  "source_commit": "b0cef34910a255dfb1415bf3c605b09b02c7acc3",
+  "branch": "codex/batch-22-production-order-boundary-hardening",
+  "batch_21d_prerequisite": {
+    "checked_on": "origin/main",
+    "status": "closed",
+    "evidence": [
+      "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md lists PAY-018 as pass with Batch 21D disposable runtime proof.",
+      "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md lists PAY-020 as pass with Batch 21D disposable runtime proof.",
+      "docs/pilot-remediation/LOOP_STATE.md records Batch 21D payroll boundary runtime proof closeout."
+    ]
+  },
+  "target_row_definitions": {
+    "ORDER-005": {
+      "suite": "14. Order-Centric End-to-End Tests",
+      "wording": "Produce beyond target.",
+      "expected": "Product behavior is explicit; progress, pace, stock, and payroll remain mathematically consistent.",
+      "current_status": "fail",
+      "severity": "High",
+      "affected_workflow": "Order-linked supervisor production logging, order progress, generated stock, payroll basis, and pace/read models.",
+      "vulnerable_or_broken_path": "replace_shift_production_logs accepted positive meters for same-org orders without checking cumulative total_target_meters, order status, or the machine current_order_id assignment.",
+      "fix_type": "Migration/RPC/table-boundary hardening plus focused source tests.",
+      "likely_or_actual_files_touched": [
+        "supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql",
+        "__tests__/batch22-production-order-boundary-hardening.test.ts"
+      ],
+      "proof_needed_for_code_verified": "Source proof that the active replacement RPC computes post-replacement totals before delete/insert and rejects totals greater than order total_target_meters while preserving Batch 2 generated-stock reconciliation.",
+      "future_qa_runtime_proof_required_for_pass_ready": "After migration application to a disposable QA database, run rollback-only/API probes showing over-target RPC attempts are rejected, exact/within-target production still works, order_progress_summary, stock, and payroll inputs remain consistent, and no production data is mutated outside the disposable proof tenant."
+    },
+    "ORDER-009": {
+      "suite": "14. Order-Centric End-to-End Tests",
+      "wording": "Cancel after some production.",
+      "expected": "Produced stock/history retained; no new logs accepted; loom unlinks.",
+      "current_status": "fail",
+      "severity": "High",
+      "affected_workflow": "Order cancellation followed by supervisor production logging or direct authenticated RPC submission.",
+      "vulnerable_or_broken_path": "Owner cancellation unlinked machines in app code, but replace_shift_production_logs only checked same-org order existence, so a direct authenticated RPC call could add production against a cancelled order.",
+      "fix_type": "Migration/RPC/table-boundary hardening plus focused source tests.",
+      "likely_or_actual_files_touched": [
+        "supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql",
+        "__tests__/batch22-production-order-boundary-hardening.test.ts"
+      ],
+      "proof_needed_for_code_verified": "Source proof that order-attributed rows require orders.status = active, machines.status = active, and machines.current_order_id matching the submitted order, and that replacing existing order-attributed logs for non-active orders is blocked.",
+      "future_qa_runtime_proof_required_for_pass_ready": "After migration application to QA, prove cancellation preserves existing production/stock history, unlinks the loom, and rejects new order-attributed logs through UI/server action and direct authenticated RPC/API probes."
+    },
+    "PROD-011": {
+      "suite": "16. Supervisor Production Logging",
+      "wording": "Negative meters.",
+      "expected": "Blocked on client and server.",
+      "current_status": "fail",
+      "severity": "High",
+      "affected_workflow": "Supervisor production logging and correction.",
+      "vulnerable_or_broken_path": "UI and server action rejected negative meters, but replace_shift_production_logs and production_logs table constraints did not enforce meters >= 0 at the authenticated RPC/database boundary.",
+      "fix_type": "Migration/RPC/table-boundary hardening plus focused source tests.",
+      "likely_or_actual_files_touched": [
+        "supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql",
+        "__tests__/batch22-production-order-boundary-hardening.test.ts"
+      ],
+      "proof_needed_for_code_verified": "Source proof that production_logs has a forward-only nonnegative-meter CHECK for new writes and both the table trigger and replacement RPC reject meters < 0 before persistence.",
+      "future_qa_runtime_proof_required_for_pass_ready": "After migration application to QA, prove direct authenticated RPC/table API attempts with negative meters are rejected, impossible corrections cannot reduce produced meters below zero, and valid production/correction paths still reconcile generated stock."
+    },
+    "SIGNOFF-02": {
+      "suite": "Daily owner sign-off",
+      "wording": "Order/run attribution correct.",
+      "expected": "Satisfied with current-run evidence.",
+      "current_status": "fail",
+      "severity": "High",
+      "affected_workflow": "Daily owner sign-off attribution over current production/order/run rows.",
+      "vulnerable_or_broken_path": "The active matrix ties this row to ORDER-009 because cancelled-order production remained possible at the database/RPC boundary.",
+      "fix_type": "Dependency source fix only if ORDER-009 boundary proof is accepted; no separate runtime sign-off proof in this batch.",
+      "likely_or_actual_files_touched": [
+        "supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql",
+        "__tests__/batch22-production-order-boundary-hardening.test.ts"
+      ],
+      "proof_needed_for_code_verified": "Source proof that cancelled/non-active order production is blocked at the database/RPC boundary.",
+      "future_qa_runtime_proof_required_for_pass_ready": "A full current-run sign-off QA proof after migration application, showing order/run attribution is correct from authoritative production rows."
+    }
+  },
+  "files_changed": [
+    "supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql",
+    "__tests__/batch22-production-order-boundary-hardening.test.ts",
+    "output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json"
+  ],
+  "migration_files_created": [
+    "supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql"
+  ],
+  "implementation_summary": [
+    "Added a NOT VALID production_logs_meters_nonnegative CHECK constraint so new production writes cannot persist negative meters without rewriting existing history.",
+    "Added public.enforce_production_log_order_boundary as a BEFORE INSERT OR UPDATE trigger to block negative meters, non-active order-attributed writes/corrections, stale loom/order assignments, and over-target direct table writes.",
+    "Replaced replace_shift_production_logs with the Batch 2 stock-atomic body plus pre-delete guards for negative meters, active assigned order attribution, non-active order-attributed replacement blocking, and post-replacement over-target totals.",
+    "Preserved the existing duplicate detection, audit row, affected production grain tracking, and reconcile_generated_stock_for_production_grain call path."
+  ],
+  "review_adjustments": [
+    {
+      "finding": "Initial review found zero-meter order-attributed logs could still be submitted against cancelled/completed or stale-assigned orders.",
+      "fix": "The migration and Batch 22 test were tightened so any order-attributed log, not only positive production, requires an active order assigned to the active loom; unanchored downtime/status rows remain valid."
+    }
+  ],
+  "per_row_source_code_evidence": {
+    "ORDER-005": [
+      "replace_shift_production_logs builds submitted_order_totals and weavly_order_totals_after_replacement before deleting existing rows.",
+      "The RPC rejects totals.next_meters > COALESCE(o.total_target_meters, 0) + 0.01.",
+      "The table trigger also rejects ROUND(v_existing_total + NEW.meters, 2) greater than the active order target."
+    ],
+    "ORDER-009": [
+      "replace_shift_production_logs requires order-attributed rows to join an active order and active machine where m.current_order_id matches the submitted order_id.",
+      "replace_shift_production_logs rejects replacement of existing order-attributed logs for non-active orders.",
+      "The table trigger applies the same active-order/current-loom assignment guard to direct production_logs writes."
+    ],
+    "PROD-011": [
+      "production_logs_meters_nonnegative CHECK (meters >= 0) is added as NOT VALID for forward-only enforcement on new writes.",
+      "replace_shift_production_logs raises Production meters cannot be negative when any submitted row has meters < 0.",
+      "public.enforce_production_log_order_boundary raises Production meters cannot be negative before direct insert/update writes."
+    ],
+    "SIGNOFF-02": [
+      "The ORDER-009 dependency is source-fixed by the active-order/current-assignment guard at the RPC and table boundary.",
+      "No pass-ready sign-off proof is claimed because current-run runtime proof is still required."
+    ]
+  },
+  "rows_considered_source_fixed_or_code_verified_candidates": [
+    "ORDER-005",
+    "ORDER-009",
+    "PROD-011",
+    "SIGNOFF-02 dependency only"
+  ],
+  "rows_still_open_and_why": {
+    "ORDER-005": "Source-fixed/code_verified candidate only; migration is not applied and over-target QA runtime proof is missing.",
+    "ORDER-009": "Source-fixed/code_verified candidate only; migration is not applied and cancelled-order runtime/API proof is missing.",
+    "PROD-011": "Source-fixed/code_verified candidate only; migration is not applied and negative-meter runtime/API proof is missing.",
+    "SIGNOFF-02": "Dependency source-fixed candidate only; daily owner sign-off still needs current-run runtime proof after migration application."
+  },
+  "future_qa_runtime_proof_required": [
+    "Apply the Batch 22 migration to a disposable QA database only after review.",
+    "Run rollback-only/API probes for negative meters, cancelled order production, completed/non-active order correction, stale machine assignment, and over-target production.",
+    "Run valid production and valid correction flows proving generated stock, order_progress_summary, and payroll basis remain consistent.",
+    "Run the daily owner sign-off current-run attribution proof before promoting SIGNOFF-02 beyond code_verified/source-fixed."
+  ],
+  "commands_run": [
+    {
+      "command": "git fetch origin --prune",
+      "result": "passed"
+    },
+    {
+      "command": "git switch -C codex/batch-22-production-order-boundary-hardening origin/main",
+      "result": "passed"
+    },
+    {
+      "command": "git status --short",
+      "result": "passed; clean immediately after branch switch"
+    },
+    {
+      "command": "git rev-parse origin/main",
+      "result": "b0cef34910a255dfb1415bf3c605b09b02c7acc3"
+    },
+    {
+      "command": "curl -L --fail --silent --show-error https://supabase.com/changelog.md | sed -n '1,220p'",
+      "result": "passed; no relevant migration/RPC breaking change identified for this local source-only change"
+    },
+    {
+      "command": "supabase --version",
+      "result": "2.109.0"
+    },
+    {
+      "command": "supabase migration new batch_22_production_order_boundary_hardening",
+      "result": "passed; created local migration file only"
+    },
+    {
+      "command": "npx vitest run __tests__/batch22-production-order-boundary-hardening.test.ts",
+      "result": "passed; 1 test file, 6 tests"
+    },
+    {
+      "command": "npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/p0-atomicity.test.ts __tests__/p2-golden-a-completed-order-dispatch.test.ts __tests__/p1-stock-lifecycle.test.ts",
+      "result": "passed; 6 test files, 61 tests"
+    },
+    {
+      "command": "npx vitest run __tests__/batch22-production-order-boundary-hardening.test.ts __tests__/batch11-estimator-order-lifecycle.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/p0-atomicity.test.ts __tests__/p2-golden-a-completed-order-dispatch.test.ts __tests__/p1-stock-lifecycle.test.ts",
+      "result": "passed after trigger insert/update refinement; 7 test files, 67 tests"
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "passed"
+    },
+    {
+      "command": "npx eslint __tests__/batch22-production-order-boundary-hardening.test.ts",
+      "result": "passed"
+    },
+    {
+      "command": "jq empty output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --no-index --check /dev/null __tests__/batch22-production-order-boundary-hardening.test.ts; git diff --no-index --check /dev/null supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql; git diff --no-index --check /dev/null output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json",
+      "result": "passed for untracked/ignored new files"
+    }
+  ],
+  "test_results": {
+    "focused_batch22": "passed",
+    "regression_pack": "passed",
+    "typescript": "passed",
+    "targeted_eslint": "passed"
+  },
+  "confirmations": {
+    "migration_was_not_applied": true,
+    "no_production_mutation_occurred": true,
+    "no_supabase_db_push": true,
+    "no_migration_repair": true,
+    "no_db_pull": true,
+    "no_direct_sql_against_remote_database": true,
+    "no_include_all": true,
+    "no_npm_audit": true,
+    "no_package_install": true,
+    "lockfile_changed": false,
+    "no_staging": true,
+    "no_commit": true,
+    "no_push": true,
+    "no_docs_closeout": true,
+    "no_runtime_browser_proof_claimed": true,
+    "no_row_marked_pass_ready": true
+  }
+}

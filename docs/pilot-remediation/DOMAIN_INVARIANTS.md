@@ -43,6 +43,8 @@ piece-rate gross = sum(log meters x stored worker-rate snapshot)
 
 Batch 15 proof note: `DASH-003` is source-fixed and `code_verified`, not pass. Factory Today now computes `grossWagesSoFar` from existing cycle production logs using `sum(nonnegative meters x nonnegative worker_rate_snapshot)` and focused tests cover the helper/source wiring. It still needs disposable after-shift runtime proof before pass.
 
+Batch 22 proof note: `ORDER-005`, `ORDER-009`, and `PROD-011` are source-fixed and `code_verified`, not pass. Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` adds a forward-only nonnegative-meter table check, direct table trigger, and hardened `replace_shift_production_logs` guard so over-target totals, cancelled/completed/stale-assignment order-attributed logs, and negative meters are rejected before production can feed progress, generated stock, or payroll basis. The migration is not applied and disposable QA runtime/API proof is still required before pass.
+
 Required proof:
 
 - No negative meters at UI, server action, RPC, or table boundary.

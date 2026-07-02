@@ -23,6 +23,7 @@ Production and stock:
 
 - Production logs reconcile with generated stock after create, edit, downtime correction, duplicate submit, and refresh.
 - Negative, cancelled-order, over-target, wrong-assignment, and unsupported day-only/substitute-worker cases are blocked or explicitly unsupported.
+- Batch 22 source-fixes negative-meter, cancelled/completed/stale-assignment, and over-target boundaries for `ORDER-005`, `ORDER-009`, and `PROD-011`, but those rows remain `code_verified`, not pass, until the migration is applied in QA and runtime/API proof confirms valid production/correction still reconciles stock, order progress, and payroll basis.
 
 Dispatch and receipt:
 

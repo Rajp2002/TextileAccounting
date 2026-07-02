@@ -17,13 +17,13 @@ Rules for entries:
 | `SEC-B` privileged action/lockdown enforcement | Partially closed through Batch 21D / open remainder | Batch 1 closed `SEC-006` and `AUTH-016` with runtime/test evidence and active matrix rows promoted to pass. Batch 20 source-fixed payroll RPC boundary rows `PAY-018` and `PAY-020`; Batch 21D closes them with disposable QA runtime proof. `AUTH-008` remains open. |
 | `SEC-C` webhook/export/compliance fail-closed | Partially closed through Batch 15 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Batch 15 closes `SEC-014` payslip filename safety with deterministic source/test proof. Webhook, owner export, settings audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
-| `PROD-B` production boundary validation | Open | Must clarify day-only/substitute-worker pilot scope. |
+| `PROD-B` production boundary validation | Partially source-fixed in Batch 22 / open remainder | Batch 22 moves `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof for over-target, cancelled/completed/stale-assignment, and negative-meter boundaries. The migration is not applied and runtime/API proof is still required. Day-only/substitute-worker, setup/master, and remaining production-boundary rows stay open. |
 | `STOCK-A` stock lifecycle/archive policy | Partially closed in Batch 12 / open remainder | Batch 12 closes `STOCK-012` with focused local lifecycle proof. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial because their exact row wording needs broader proof. |
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated through Batch 21B / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Batch 13 closes `EST-001`, `EST-005`, and `EST-012` with exact local estimator proof. Batch 21B closes `ORDER-008` below-target and pending-dispatch completion confirmation with disposable QA browser/runtime proof. Start Party Order fast-path atomicity remains open. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
 | `DISP-B` receipt-state coherence | Closed through Batch 12 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. Batch 12 closes `DISP-013` with focused local dispatch archive proof. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
-| `DASH-A` dashboard/sign-off read-model truth | Partially closed/code-verified through Batch 15 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10`; Batch 15 source-fixes `DASH-003` gross wage read-model calculation but keeps it `code_verified` pending disposable after-shift runtime proof. Historical analytics and sign-off evidence debt remain open. |
+| `DASH-A` dashboard/sign-off read-model truth | Partially closed/code-verified through Batch 22 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10`; Batch 15 source-fixes `DASH-003` gross wage read-model calculation but keeps it `code_verified` pending disposable after-shift runtime proof. Batch 22 improves the `SIGNOFF-02` dependency by source-fixing `ORDER-009`, but `SIGNOFF-02` remains fail/open pending full current-run attribution runtime proof. Historical analytics and sign-off evidence debt remain open. |
 | `PAY-A` payroll/kharchi ledger integrity | Partially remediated through Batch 21D / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Batch 15 closes payroll payslip PDF/export rows `PAY-023` and `PAY-024`. Batch 21C promotes PF/ESI preview and preview-versus-settlement rows `PAY-013` and `PAY-015` to pass with disposable payroll settlement runtime proof. Batch 21D promotes payroll settlement/reversal boundary rows `PAY-018` and `PAY-020` to pass with disposable QA runtime proof. Batch 20 online Kharchi atomicity row `PAY-027` remains `code_verified`, not pass, pending disposable QA runtime proof. Broader settlement correctness remains open. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Partially closed in Batch 9 / open remainder | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016` with offline fallback, auth-boundary cache cleanup, online-only kharchi, and truthful public/privacy copy. `OFF-007`, `OFF-010`, and `OFF-009` remain open or partial. |
@@ -1590,3 +1590,54 @@ Resolution status:
 
 - `PAY-018` and `PAY-020` are documented as pass in the active QA matrix.
 - Matrix movement is pass +2 and `code_verified` -2: total 377, pass 195, fail 31, blocked 22, `code_verified` 128, `not_applicable` 1, `not_run` 0.
+
+## Batch 22 - Production/Order Boundary Source-Fix Closeout
+
+Date/time: 2026-07-02 18:12 IST. Source base `origin/main` at `b0cef34910a255dfb1415bf3c605b09b02c7acc3`.
+
+Scope:
+
+- `ORDER-005`
+- `ORDER-009`
+- `PROD-011`
+
+Rows promoted to `code_verified`, not pass:
+
+- `ORDER-005`: over-target order production is source-fixed at the RPC/table boundary. `replace_shift_production_logs` computes post-replacement totals before any delete/insert and rejects totals above `orders.total_target_meters`; the direct table trigger rejects over-target writes too.
+- `ORDER-009`: cancelled/completed/stale-assignment order-attributed logs are source-fixed at the RPC/table boundary. Any order-attributed log must belong to an active order currently assigned to the active loom, and replacing order-attributed logs for non-active orders is blocked.
+- `PROD-011`: negative meters are source-fixed at the RPC/table boundary. The migration adds `production_logs_meters_nonnegative CHECK (meters >= 0) NOT VALID` for new writes and rejects negative meters in both the trigger and replacement RPC.
+
+Rows explicitly not closed by Batch 22:
+
+- `SIGNOFF-02` remains fail/open. Its `ORDER-009` dependency is improved, but full current-run order/run attribution runtime proof is still required after the migration is applied in QA.
+- `GOLDEN-A-23`, `PAY-027`, `DASH-003`, Golden rows, `QUOTE-007`, payroll rows, stock/dispatch/commercial rows, billing/provider rows, Sentry/WhatsApp/restore/rollback rows, and all unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json`.
+- Migration created but not applied: `supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql`.
+- Focused source test: `__tests__/batch22-production-order-boundary-hardening.test.ts`.
+- Regression coverage kept Batch 2/6/11 behavior under test: Batch 11 lifecycle test, production strictness, production stock atomicity, P0 atomicity, completed-order dispatch, and stock lifecycle tests.
+
+Verification commands:
+
+- `git status --short` -> showed only the approved new Batch 22 test and migration before docs closeout; proof artifact is ignored under `output/qa`.
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json` -> passed.
+- `npx vitest run __tests__/batch22-production-order-boundary-hardening.test.ts` -> passed, 1 test file and 6 tests.
+- `npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts` -> passed, 1 test file and 6 tests.
+- `npx vitest run __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/p0-atomicity.test.ts __tests__/p2-golden-a-completed-order-dispatch.test.ts __tests__/p1-stock-lifecycle.test.ts` -> passed, 5 test files and 55 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint __tests__/batch22-production-order-boundary-hardening.test.ts` -> passed.
+
+Data safety:
+
+- No migration was applied.
+- No production mutation occurred.
+- No Supabase db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, runtime/browser proof, production/customer data mutation, external provider call, env file staging, Supabase temp-file staging, or secret copy was used.
+- Docs closeout force-adds only the ignored Batch 22 proof artifact and stages only the approved Batch 22 implementation, migration, docs, matrix, and proof files.
+
+Resolution status:
+
+- `ORDER-005`, `ORDER-009`, and `PROD-011` are documented as `code_verified` in the active QA matrix.
+- Matrix movement is fail -3 and `code_verified` +3: total 377, pass 195, fail 28, blocked 22, `code_verified` 131, `not_applicable` 1, `not_run` 0.
