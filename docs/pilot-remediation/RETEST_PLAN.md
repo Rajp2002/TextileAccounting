@@ -31,7 +31,7 @@ Failures targeted: `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`
 
 Security foundation follow-on rows closed in Batch 1B: `SEC-006`, `AUTH-016`
 
-Other follow-on checks that remain open unless separately proven: `AUTH-008`, `AUTH-012`, `AUTH-013`, `SEC-013`. `PAY-018` and `PAY-020` are source-fixed/code_verified by Batch 20, but still require disposable QA migration/runtime proof before pass.
+Other follow-on checks that remain open unless separately proven: `AUTH-008`, `AUTH-012`, `AUTH-013`, `SEC-013`. `PAY-018` and `PAY-020` were source-fixed/code_verified by Batch 20 and are closed by Batch 21D disposable QA runtime proof.
 
 ### Acceptance Criteria
 
@@ -390,10 +390,10 @@ Runtime checks:
 
 Acceptance:
 
-- `PAY-006`, `PAY-018`, `PAY-020`, `PAY-027`, and payroll-related sign-off rows have evidence. `PAY-013` and `PAY-015` are already closed by Batch 21C disposable runtime proof.
+- `PAY-006`, `PAY-027`, and payroll-related sign-off rows have evidence. `PAY-013` and `PAY-015` are already closed by Batch 21C disposable runtime proof; `PAY-018` and `PAY-020` are already closed by Batch 21D disposable runtime proof.
 - Batch 9 closes `PAY-028` and `OFF-008` by truthful online-only offline-kharchi de-scope; online kharchi atomicity and payroll correctness rows remain separate.
 - Batch 15 closes `PAY-023` and `PAY-024` with focused payslip document/export tests and source proof, and closes `SEC-014` with deterministic payslip filename sanitization tests. Batch 15 moved `PAY-013` and `PAY-015` from fail to `code_verified`, not pass, because disposable live preview/settlement proof was not collected under the no-Supabase-mutation rule. Batch 21C closes `PAY-013` and `PAY-015` with disposable payroll preview/settlement runtime proof in `output/qa/batch21c/BATCH21C-payroll-preview-settlement-runtime-proof.json`.
-- Batch 20 moves `PAY-018`, `PAY-020`, and `PAY-027` from fail to `code_verified`, not pass. The next disposable QA run must apply the Batch 20 migration, prove legacy payroll RPC overloads are no longer callable through API roles, prove settlement blocks missing payment mode or owner verification, prove reversal rejects missing/invalid/reused access codes and accepts one valid code exactly once, and prove online Kharchi creates worker advance plus supervisor float transaction atomically for sufficient float while rejecting insufficient float.
+- Batch 20 moves `PAY-018`, `PAY-020`, and `PAY-027` from fail to `code_verified`, not pass. Batch 21D closes `PAY-018` and `PAY-020` with disposable payroll boundary runtime proof in `output/qa/batch21d/BATCH21D-payroll-boundary-runtime-proof.json`: legacy payroll RPC overloads were permission denied through API roles, settlement blocked missing payment mode and missing owner verification, valid UI settlement succeeded, reversal rejected empty/invalid/reused codes, and one valid code reversed exactly once. The next disposable QA payroll run still needs to prove online Kharchi creates worker advance plus supervisor float transaction atomically for sufficient float while rejecting insufficient float before `PAY-027` can move to pass.
 
 ## P4 Idempotency, Offline, and Cache Retest
 
