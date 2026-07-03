@@ -1288,3 +1288,39 @@ Resolution status:
 
 - `PROD-013`, `PROD-023`, and `PROD-029` are documented as `code_verified` in the active matrix.
 - Matrix movement is fail -3 and `code_verified` +3: total 377, pass 195, fail 23, blocked 22, `code_verified` 136, `not_applicable` 1, `not_run` 0.
+
+## Batch 23 - Production Migration Signature Hotfix Closeout
+
+Date/time: 2026-07-03 12:20 IST. Branch `codex/batch-24c-factory-today-analytics-state`.
+
+Scope:
+
+- Batch 23 migration hotfix only.
+- Files in scope: `supabase/migrations/20260702131500_batch_23_start_party_order_transaction_boundary.sql` and `__tests__/batch23-start-party-order-atomicity.test.ts`.
+
+Root cause and fix:
+
+- Production migration push was blocked because `start_party_order_from_estimator(...)` had required parameters after earlier defaulted parameters.
+- `p_target_meters` and `p_deadline` now default to `NULL` to satisfy PostgreSQL function signature ordering.
+- The RPC still rejects `p_target_meters IS NULL OR p_target_meters <= 0`, and now explicitly rejects `p_deadline IS NULL` before inserting into `orders`.
+
+Production migration status:
+
+- Human production action completed outside this closeout: `npx supabase db push` succeeded.
+- The production-linked project applied Batch 23 and Batch 24A migrations: `20260702131500` and `20260702191500`.
+- Production DB is now migrated through the Batch 24A attendance migration.
+- No Batch 24C closure is claimed.
+
+Verification:
+
+- Static migration review passed: 44 parameters checked, no non-default parameter appears after a defaulted parameter, target/deadline validation present, and no destructive `DROP`, `TRUNCATE`, or `DELETE` statement introduced.
+- Static RPC/test review passed: signature/deadline assertions present and all 44 app RPC payload parameter names match the function.
+- `git diff --check` -> passed.
+- `npm test -- __tests__/batch23-start-party-order-atomicity.test.ts` -> passed, 1 test file and 21 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx supabase migration list` -> passed as read-only verification and showed remote/local history through `20260702191500`.
+
+Forbidden actions:
+
+- This closeout did not run `npx supabase db push`.
+- No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, merge to main, or Batch 24C staging occurred.

@@ -1787,3 +1787,44 @@ Resolution status:
 
 - `PROD-013`, `PROD-023`, and `PROD-029` are documented as `code_verified` in the active QA matrix.
 - Matrix movement is fail -3 and `code_verified` +3: total 377, pass 195, fail 23, blocked 22, `code_verified` 136, `not_applicable` 1, `not_run` 0.
+
+## Batch 23 - Production Migration Signature Hotfix Closeout
+
+Date/time: 2026-07-03 12:20 IST. Branch `codex/batch-24c-factory-today-analytics-state`.
+
+Scope:
+
+- Batch 23 migration hotfix only: `supabase/migrations/20260702131500_batch_23_start_party_order_transaction_boundary.sql`.
+- Regression coverage only: `__tests__/batch23-start-party-order-atomicity.test.ts`.
+
+Root cause:
+
+- The `start_party_order_from_estimator(...)` PostgreSQL function had required parameters after earlier defaulted parameters: `p_target_meters NUMERIC` and `p_deadline DATE`.
+- PostgreSQL rejected the migration with `ERROR: input parameters after one with a default value must also have defaults (SQLSTATE 42P13)`.
+
+Fix:
+
+- `p_target_meters` now defaults to `NULL`, while the existing RPC validation still rejects `NULL` or `<= 0` target meters before writes.
+- `p_deadline` now defaults to `NULL`, and the RPC now explicitly returns `Add a deadline before starting an order.` when `p_deadline IS NULL` before inserting into `orders`.
+- No destructive DB operation was added.
+
+Production migration status:
+
+- Human production action completed outside this agent run: `npx supabase db push` succeeded after the hotfix.
+- The successful push applied `20260702131500_batch_23_start_party_order_transaction_boundary.sql` and `20260702191500_batch_24a_harden_attendance_rls_date_bounds.sql`.
+- Production DB is now migrated through Batch 24A attendance migration. No Batch 24C closure is claimed.
+
+Verification commands:
+
+- Static migration review -> passed: 44 parameters checked, no non-default parameter appears after a defaulted parameter, target/deadline validation present, and no `DROP`, `TRUNCATE`, or `DELETE` statement introduced.
+- Static RPC/test review -> passed: signature/deadline assertions present and all 44 app RPC payload parameter names match the function.
+- `git diff --check` -> passed.
+- `npm test -- __tests__/batch23-start-party-order-atomicity.test.ts` -> passed, 1 test file and 21 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx supabase migration list` -> passed as read-only verification; remote/local history includes `20260702131500` and `20260702191500`.
+
+Data safety:
+
+- This closeout did not run `npx supabase db push`.
+- No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, or merge to main was performed.
+- Batch 24C/factory-today files were intentionally left unstaged and uncommitted.
