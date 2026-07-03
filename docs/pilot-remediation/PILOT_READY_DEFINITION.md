@@ -24,6 +24,7 @@ Production and stock:
 - Production logs reconcile with generated stock after create, edit, downtime correction, duplicate submit, and refresh.
 - Negative, cancelled-order, over-target, wrong-assignment, and unsupported day-only/substitute-worker cases are blocked or explicitly unsupported.
 - Batch 22 source-fixes negative-meter, cancelled/completed/stale-assignment, and over-target boundaries for `ORDER-005`, `ORDER-009`, and `PROD-011`, but those rows remain `code_verified`, not pass, until the migration is applied in QA and runtime/API proof confirms valid production/correction still reconciles stock, order progress, and payroll basis.
+- Batch 24B source-fixes supervisor production UX rows `PROD-013`, `PROD-023`, and `PROD-029`, but those rows remain `code_verified`, not pass, until QA/browser proof confirms suspicious large-meter confirmation, restored-unsaved draft behavior, and shift-total/shift-meter copy truth.
 
 Dispatch and receipt:
 
@@ -98,6 +99,8 @@ Batch 20 note: `PAY-018`, `PAY-020`, and `PAY-027` are source-fixed by focused p
 Batch 23 note: `QUOTE-007` is source-fixed and moved to `code_verified` by focused atomic transaction boundary database design in `output/qa/batch23/BATCH23-start-party-order-transaction-boundary-proof.json`. The Batch 23 verification set passed focused Vitest, TypeScript, targeted ESLint, and `git diff --check`. `QUOTE-007` remains unresolved for pilot readiness until database migration application and valid Start Party Order runtime proof are executed in QA.
 
 Batch 24A note: `PAY-006` is source-fixed and moved to `code_verified` by focused attendance RLS date boundary and access-code validation server action design in `output/qa/batch24a/BATCH24A-attendance-rls-boundary-proof.json`. The Batch 24A verification set passed focused Vitest, TypeScript, targeted ESLint, and `git diff --check`. `PAY-006` remains unresolved for pilot readiness until database migration application and valid attendance RLS and access-code UI/database runtime proof are executed in QA.
+
+Batch 24B note: `PROD-013`, `PROD-023`, and `PROD-029` are source-fixed and moved to `code_verified` by focused supervisor production UX proof in `output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json`. The Batch 24B verification set passed focused Vitest, TypeScript, targeted ESLint, existing production regression tests, JSON validation, and `git diff --check`. `PROD-013`, `PROD-023`, and `PROD-029` remain unresolved for pilot readiness until QA/browser proof is collected. `PROD-022` remains fail/open for separate date/shift draft-isolation runtime proof.
 
 
 ## Pilot Sign-Off Evidence Package

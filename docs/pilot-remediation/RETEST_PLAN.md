@@ -164,6 +164,7 @@ Acceptance:
 - Factory Today/signoff expected stock uses `order_progress_summary.total_meters_produced`.
 - Golden A follow-ons can be re-run from a clean QA order.
 - Batch 22 source-fixes `ORDER-005`, `ORDER-009`, and `PROD-011` but does not make them pass-ready. Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` must be applied to QA before runtime proof. Then rollback-only/API probes must prove over-target, cancelled/completed order-attributed logs, stale assignment, and negative-meter writes are rejected, while valid production/correction still reconciles generated stock, order progress, and payroll basis.
+- Batch 24B source-fixes `PROD-013`, `PROD-023`, and `PROD-029` but does not make them pass-ready. Browser proof must verify that suspicious large positive shift meters show a non-blocking confirmation and can proceed after confirmation, restored localStorage drafts after refresh/crash show the unsaved-draft indicator and clear after save/reset, and landing/setup copy no longer claims raw opening/closing meter-reading proof. `PROD-022` remains open for separate date/shift draft-isolation runtime proof.
 
 ## P1 Estimator, Quote, Order, and Date Snapshot Retest
 

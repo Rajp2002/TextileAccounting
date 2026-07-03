@@ -10,7 +10,7 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | --- | --- | --- |
 | P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008` |
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-015`, `SEC-017` |
-| P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02` |
+| P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `PROD-022`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | None |
 | P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006` |
@@ -61,6 +61,8 @@ Closed in Batch 21D and removed from `code_verified` evidence debt: `PAY-018` an
 Moved from fail to `code_verified` in Batch 22 but still unresolved evidence debt: production/order boundary rows (`ORDER-005`, `ORDER-009`, `PROD-011`). Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` source-fixes over-target, cancelled/completed/stale-assignment order-attributed logs, and negative-meter guards at the RPC/table boundary, but it was not applied and QA runtime/API proof has not been collected. `SIGNOFF-02` dependency is improved through `ORDER-009`, but `SIGNOFF-02` remains fail/open until full current-run attribution proof exists. `GOLDEN-A-23`, `PAY-027`, `DASH-003`, Golden rows, and all other rows remain unchanged.
 
 Moved from fail to `code_verified` in Batch 23 but still unresolved evidence debt: Start Party Order fast-path transaction boundary (`QUOTE-007`). Migration `20260702131500_batch_23_start_party_order_transaction_boundary.sql` source-fixes the accepted quote plus active order transaction boundary, but it was not applied and QA runtime/API proof has not been collected.
+
+Moved from fail to `code_verified` in Batch 24B but still unresolved evidence debt: supervisor production UX/source rows (`PROD-013`, `PROD-023`, `PROD-029`). Suspicious large positive shift meters now show a non-blocking confirmation at 10,000m, restored localStorage drafts now show a visible unsaved-draft indicator, and public/setup production copy now uses shift-total/shift-meter terminology instead of raw opening/closing meter-reading proof claims. QA/browser proof has not been collected. `PROD-022` remains fail/open for separate date/shift draft-isolation runtime proof.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -170,15 +172,15 @@ Required proof: satisfied by disposable Batch 6 runtime proof with 26 assertions
 
 ## P1 PROD-B - Production Boundary Allows Invalid Attribution or Quantities
 
-Failures: `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`, `SIGNOFF-01`, `SIGNOFF-02`
+Failures: `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `PROD-022`, `SIGNOFF-01`, `SIGNOFF-02`
 
-Code-verified evidence debt: `ORDER-005`, `ORDER-009`, `PROD-011`
+Code-verified evidence debt: `ORDER-005`, `ORDER-009`, `PROD-011`, `PROD-013`, `PROD-023`, `PROD-029`
 
 Evidence: `logs/order-stock-sale-source-evidence-20260624.json`, `logs/production-logging-source-evidence-20260624.json`, `logs/prod-dashboard-ux-signoff-source-evidence-20260624.json`, `logs/setup-master-source-evidence-20260624.json`
 
 Invariant: each production entry belongs to one org, active machine, valid date, shift, worker, and active order/run; meters are non-negative and operationally plausible; day-only or substitute-worker support is either implemented or unsupported for pilot.
 
-Impact: Batch 22 source-fixes the direct authenticated RPC/table paths for negative meters, order-attributed logs against cancelled/completed/stale assignments, and over-target production. These rows remain `code_verified`, not pass, until migration application and QA runtime/API proof. Day-only factories and substitute workers are not supported by the current boundary.
+Impact: Batch 22 source-fixes the direct authenticated RPC/table paths for negative meters, order-attributed logs against cancelled/completed/stale assignments, and over-target production. These rows remain `code_verified`, not pass, until migration application and QA runtime/API proof. Batch 24B source-fixes suspicious large-meter confirmation, restored-unsaved draft labeling, and shift-total/shift-meter copy truth for supervisor production UX; these rows remain `code_verified`, not pass, until QA/browser proof. Day-only factories and substitute workers are not supported by the current boundary.
 
 Remediation direction:
 
@@ -187,6 +189,7 @@ Remediation direction:
 - Add duplicate loom-name prevention and atomic assignment updates.
 
 Required proof: Batch 22 source tests are present for `ORDER-005`, `ORDER-009`, and `PROD-011`; pass still requires migration application evidence plus rollback-only/API probes for negative meters, cancelled/completed order, over-target, and assignment mismatch, and valid production/correction runtime proof that generated stock/order progress/payroll basis remain consistent.
+Batch 24B source tests are present for `PROD-013`, `PROD-023`, and `PROD-029`; pass still requires browser proof for large-meter warning/confirmation, restored-draft refresh/crash behavior, and copy review. `PROD-022` still requires separate date/shift draft-isolation runtime proof.
 
 ## P1 ECON-A - Estimator, Quote, Order, and Date Snapshots Are Not Exact Enough
 

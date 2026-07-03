@@ -203,7 +203,7 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
             ctaLabel: 'Add looms',
             isComplete: ({ checklist }) => checklist.hasMachine,
             help: {
-                intro: 'Looms are the production units that receive qualities, workers, and daily meter readings.',
+                intro: 'Looms are the production units that receive qualities, workers, and daily shift-meter totals.',
                 why: [
                     'Production logs need a loom so output can be traced to the right machine.',
                     'Loom status helps the owner see idle, active, and attention-needed machines.',
@@ -388,13 +388,13 @@ function buildSetupSteps(productionMode: ProductionMode): SetupStep[] {
                 intro: 'The first production log proves the setup can run from costing to actual output.',
                 why: [
                     'Meters drive progress, stock movement, payroll, and daily owner alerts.',
-                    'The log captures loom, worker, shift, quality, and meter readings in one record.',
+                    'The log captures loom, worker, shift, quality, and shift-total meters in one record.',
                     'Commercial and dispatch readiness depends on production being recorded first.',
                 ],
                 actions: [
                     'Sign in as supervisor or use the supervisor flow.',
                     'Open Production and choose the loom/shift.',
-                    'Enter opening and closing readings or produced meters, then save.',
+                    'Enter the shift-total meters produced, then save.',
                 ],
                 clickPath: ['Supervisor app', 'Production', 'Select loom and shift', 'Save production'],
                 doneWhen: 'At least one production log exists.',

@@ -14,14 +14,14 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, Batch 22 production/order boundary source-fix closeout, Batch 23 Start Party Order transaction boundary source-fix closeout, and Batch 24A attendance RLS and access-code boundary source-fix closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, Batch 22 production/order boundary source-fix closeout, Batch 23 Start Party Order transaction boundary source-fix closeout, Batch 24A attendance RLS and access-code boundary source-fix closeout, and Batch 24B supervisor production UX source-fix closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
 | `pass` | 195 | Runtime/test evidence exists. |
-| `fail` | 26 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `fail` | 23 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
-| `code_verified` | 133 | Source evidence only. This is not a pass. |
+| `code_verified` | 136 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
@@ -66,6 +66,8 @@ Batch 21C moved `PAY-013` and `PAY-015` from `code_verified` to pass with exact 
 Batch 21D moved `PAY-018` and `PAY-020` from `code_verified` to pass with disposable QA payroll boundary runtime proof in `output/qa/batch21d/BATCH21D-payroll-boundary-runtime-proof.json`. The local runtime at `http://localhost:3000` used QA Supabase ref `eutycrtzzxmlkcpipgod`, and targeted checks found production ref `vzhwahudircrpgtitwzd` absent from `.env.qa.local` and rebuilt `.next` cache. `PAY-018` proved missing payment/owner verification blocked in UI, hardened settlement RPC rejected missing payment mode and missing owner verification, valid UI settlement succeeded, and legacy direct settlement RPC was permission denied. `PAY-020` proved empty code kept reversal disabled, invalid code was rejected while settlement stayed paid, valid one-time code reversed to pending, consumed-code reuse was rejected, and legacy direct unsettle RPC was permission denied. `PAY-027`, `DASH-003`, Golden rows, and all other rows remain unchanged.
 
 Batch 22 moved `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof in `output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json`. Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` was created but not applied. `ORDER-005` is source-fixed by over-target post-replacement total checks in the replacement RPC and table trigger. `ORDER-009` is source-fixed by active-order/current-loom attribution checks that block cancelled/completed/stale-assignment order-attributed logs and non-active order replacement. `PROD-011` is source-fixed by a forward-only `production_logs_meters_nonnegative` `NOT VALID` check plus RPC/trigger negative-meter guards. `SIGNOFF-02` remains fail/open: the `ORDER-009` dependency is improved, but full current-run owner sign-off attribution runtime proof is still required. `GOLDEN-A-23`, `PAY-027`, `DASH-003`, Golden rows, `QUOTE-007`, and all other rows remain unchanged.
+
+Batch 24B moved `PROD-013`, `PROD-023`, and `PROD-029` from fail to `code_verified` with source/test proof in `output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json`. Suspicious large positive shift meters now show a non-blocking confirmation at 10,000m, restored localStorage drafts now show a visible unsaved-draft indicator, and public/setup production copy now uses shift-total/shift-meter terminology instead of raw opening/closing meter-reading proof claims. `PROD-022` remains fail/open pending separate date/shift draft-isolation runtime proof. No row is pass-ready from Batch 24B.
 
 ## Operating Rules
 
@@ -1239,3 +1241,50 @@ Resolution status:
 
 - `QUOTE-007` is documented as `code_verified` in the active matrix.
 - Matrix movement is fail -1 and `code_verified` +1: total 377, pass 195, fail 27, blocked 22, `code_verified` 132, `not_applicable` 1, `not_run` 0.
+
+## Batch 24B - Supervisor UX and Production Logging Failure Source-Fix Closeout
+
+Date/time: 2026-07-03 11:23 IST. Source base `origin/main` at `d3aa28c488c280ef3cd54a049518f6d2c6ec80d6`.
+
+Scope:
+
+- `PROD-013`
+- `PROD-023`
+- `PROD-029`
+
+Rows promoted to `code_verified`, not pass:
+
+- `PROD-013`: suspicious large positive shift meters now show a non-blocking confirmation at 10,000m. The threshold is a warning threshold, not a hard business maximum, and negative-meter validation remains blocking.
+- `PROD-023`: restored localStorage shift-meter drafts now show a visible "Restored unsaved draft" indicator saying values were restored from this device and are not saved yet. The state clears on save/reset.
+- `PROD-029`: landing/setup copy now uses shift-total/shift-meter terminology and removes raw opening/closing meter-reading proof claims.
+
+Rows explicitly not closed:
+
+- `PROD-022` remains fail/open pending separate date/shift draft-isolation browser/runtime proof.
+- `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, `PAY-027`, `DASH-003`, Golden rows, and all unapproved rows remain unchanged.
+
+Repository state:
+
+- Branch: `codex/batch-24b-supervisor-ux-failures`.
+- Source base: `origin/main` at `d3aa28c488c280ef3cd54a049518f6d2c6ec80d6`.
+- Evidence artifact: `output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json`.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json` -> passed.
+- `npx vitest run __tests__/batch24b-supervisor-ux-failures.test.ts` -> passed, 1 test file and 4 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint __tests__/batch24b-supervisor-ux-failures.test.ts "app/(dashboard)/supervisor/dashboard/page.tsx" components/factory-today/SetupPanel.tsx components/landing/faq.tsx components/landing/features.tsx components/landing/pricing.tsx lib/production-log-validation.ts` -> passed.
+- `npx vitest run __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/p0-atomicity.test.ts __tests__/batch22-production-order-boundary-hardening.test.ts` -> passed, 5 test files and 56 tests.
+
+Migrations and forbidden actions:
+
+- No migration was created or applied.
+- No RPC/database work occurred.
+- No Supabase db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, production/customer data mutation, external provider call, env file staging, Supabase temp-file staging, or secret copy occurred.
+
+Resolution status:
+
+- `PROD-013`, `PROD-023`, and `PROD-029` are documented as `code_verified` in the active matrix.
+- Matrix movement is fail -3 and `code_verified` +3: total 377, pass 195, fail 23, blocked 22, `code_verified` 136, `not_applicable` 1, `not_run` 0.

@@ -114,7 +114,7 @@ export default function LandingFeatures() {
                             </h2>
                         </div>
                         <p className="max-w-2xl text-lg leading-8 text-zinc-600 dark:text-zinc-300 lg:ml-auto">
-                            Weavly follows how a weaving unit actually moves work: quote the fabric, assign the floor, log meters, dispatch stock, and settle people correctly.
+                            Weavly follows how a weaving unit actually moves work: quote the fabric, assign the floor, log shift totals, dispatch stock, and settle people correctly.
                         </p>
                     </div>
 

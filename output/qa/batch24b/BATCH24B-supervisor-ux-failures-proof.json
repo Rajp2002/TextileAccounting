@@ -1,0 +1,242 @@
+{
+  "batch": "24B",
+  "title": "supervisor UX / production logging failure fixes",
+  "branch": "codex/batch-24b-supervisor-ux-failures",
+  "source_commit": "d3aa28c488c280ef3cd54a049518f6d2c6ec80d6",
+  "matrix_before": {
+    "total": 377,
+    "pass": 195,
+    "fail": 26,
+    "blocked": 22,
+    "code_verified": 133,
+    "not_applicable": 1,
+    "not_run": 0
+  },
+  "source_of_truth_files_inspected": [
+    "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+    "docs/pilot-remediation/FIX_LOG.md",
+    "docs/pilot-remediation/LOOP_STATE.md",
+    "docs/pilot-remediation/FAILURE_BACKLOG.md",
+    "docs/pilot-remediation/RETEST_PLAN.md",
+    "docs/pilot-remediation/DOMAIN_INVARIANTS.md",
+    "docs/pilot-remediation/PILOT_READY_DEFINITION.md"
+  ],
+  "row_definitions_inspected": {
+    "PROD-013": {
+      "category": "16. Supervisor Production Logging",
+      "title": "Very large but plausible meters.",
+      "expected_behavior": "Suspicious-value behavior is explicit.",
+      "status": "fail",
+      "severity": "Medium",
+      "current_failure_evidence": "Suspiciously large but positive meter values have no explicit threshold, warning, or confirmation. Shared validation checks negative values and required worker/order/rate fields, but it does not cap or flag large positive meters; the UI number input also lacks a max/suspicious-value confirmation path.",
+      "matrix_evidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; lib/production-log-validation.ts:82; lib/production-log-validation.ts:85; lib/production-log-validation.ts:105; app/(dashboard)/supervisor/dashboard/page.tsx:517",
+      "implementation_type": "UI confirmation plus shared source helper; no hard block",
+      "migration_or_rpc_needed": false,
+      "tests_added_or_updated": "__tests__/batch24b-supervisor-ux-failures.test.ts",
+      "future_qa_runtime_proof_required": "Supervisor browser proof should enter a normal value and a suspiciously large shift-total value, confirm the warning, and verify the large value can still save in QA.",
+      "batch24b_decision": "included"
+    },
+    "PROD-022": {
+      "category": "16. Supervisor Production Logging",
+      "title": "Change date/shift while draft exists.",
+      "expected_behavior": "Draft stored under correct date/shift and never submitted to another shift.",
+      "status": "fail",
+      "severity": "Medium",
+      "current_failure_evidence": "Entered loom values remained visible when changing the date, then the date reset to June 22 on save; draft isolation by date was not reliable or clearly communicated.",
+      "matrix_evidence": "production supervisor DOM observations",
+      "implementation_type": "Risky without runtime draft/date-shift proof; current code keys localStorage by date/shift and resets visible state during transitions, but the row requires browser proof and may need deeper draft state review.",
+      "migration_or_rpc_needed": false,
+      "tests_added_or_updated": null,
+      "future_qa_runtime_proof_required": "Browser proof should enter draft values, switch date and shift, refresh, and prove no draft is submitted under another date/shift.",
+      "batch24b_decision": "excluded"
+    },
+    "PROD-023": {
+      "category": "16. Supervisor Production Logging",
+      "title": "Refresh/browser crash with draft.",
+      "expected_behavior": "Draft restores, clearly marked unsaved.",
+      "status": "fail",
+      "severity": "Medium",
+      "current_failure_evidence": "Draft production meters are persisted and restored from localStorage after refresh/crash, but the supervisor production UI does not explicitly mark restored values as an unsaved draft. The visible helper copy says loading, ready/pending, or all entries ready; repository search found no active supervisor production 'unsaved draft' or 'draft restored' indicator.",
+      "matrix_evidence": "logs/production-logging-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:815; app/(dashboard)/supervisor/dashboard/page.tsx:857; app/(dashboard)/supervisor/dashboard/page.tsx:1012; app/(dashboard)/supervisor/dashboard/page.tsx:1127; repository search for unsaved/draft markers, 2026-06-24",
+      "implementation_type": "UI-only restored unsaved draft indicator",
+      "migration_or_rpc_needed": false,
+      "tests_added_or_updated": "__tests__/batch24b-supervisor-ux-failures.test.ts",
+      "future_qa_runtime_proof_required": "Supervisor browser proof should enter shift meters, refresh before save, verify the restored-unsaved banner appears, then save or clear and verify the indicator is gone.",
+      "batch24b_decision": "included"
+    },
+    "PROD-029": {
+      "category": "16. Supervisor Production Logging",
+      "title": "Compare visible “shift meters” terminology with stored synthetic readings.",
+      "expected_behavior": "No user-facing claim of real opening/closing counter proof.",
+      "status": "fail",
+      "severity": "Medium",
+      "current_failure_evidence": "Production landing-page copy still claims supervisors enter or log meter readings, while the active production model records shift-total meters with synthetic opening/closing values.",
+      "matrix_evidence": "production landing DOM snapshot on 2026-06-21; repository: app landing copy and supervisor production implementation",
+      "implementation_type": "Copy-only UI/source wording update",
+      "migration_or_rpc_needed": false,
+      "tests_added_or_updated": "__tests__/batch24b-supervisor-ux-failures.test.ts",
+      "future_qa_runtime_proof_required": "Browser/content review should confirm public landing and setup/help surfaces no longer claim raw opening/closing meter readings.",
+      "batch24b_decision": "included"
+    }
+  },
+  "included_rows": [
+    "PROD-013",
+    "PROD-023",
+    "PROD-029"
+  ],
+  "excluded_rows": {
+    "PROD-022": "Excluded because exact closure requires date/shift draft-isolation runtime proof and possibly deeper draft-state architecture beyond this low-risk UI/copy batch."
+  },
+  "files_changed": [
+    "app/(dashboard)/supervisor/dashboard/page.tsx",
+    "components/factory-today/SetupPanel.tsx",
+    "components/landing/faq.tsx",
+    "components/landing/features.tsx",
+    "components/landing/pricing.tsx",
+    "lib/i18n/legacy-generated.ts",
+    "lib/production-log-validation.ts",
+    "__tests__/batch24b-supervisor-ux-failures.test.ts",
+    "output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json"
+  ],
+  "tests_added_or_updated": [
+    "__tests__/batch24b-supervisor-ux-failures.test.ts"
+  ],
+  "implementation_summary": {
+    "PROD-023": [
+      "Parses restored production meter drafts from localStorage with numeric coercion.",
+      "Compares restored device values against server-loaded existing logs so saved values are not labeled as unsaved.",
+      "Shows a visible 'Restored unsaved draft' banner when restored local values differ from server values.",
+      "Clears restored-draft state on successful save and date/shift reset."
+    ],
+    "PROD-029": [
+      "Replaced raw 'meter readings' and opening/closing-reading claims in public landing FAQ, pricing, workflow copy, setup guidance, and generated legacy translation entries.",
+      "Uses shift meters, shift-total meters, and shift-meter totals terminology aligned with the active production model."
+    ],
+    "PROD-013": [
+      "Added SUSPICIOUS_PRODUCTION_METERS_THRESHOLD = 10000 in shared validation source as a documented warning threshold, not a cap.",
+      "Added UI confirmation for valid production entries at or above the threshold.",
+      "Confirmed large positive values still pass validateEntry when worker, work anchor, and rate are present.",
+      "Kept existing negative-meter validation unchanged."
+    ]
+  },
+  "per_row_source_code_evidence": {
+    "PROD-013": [
+      "lib/production-log-validation.ts exports SUSPICIOUS_PRODUCTION_METERS_THRESHOLD and isSuspiciousProductionMeters.",
+      "app/(dashboard)/supervisor/dashboard/page.tsx opens 'Confirm large shift meters' before save for suspicious valid entries.",
+      "__tests__/batch24b-supervisor-ux-failures.test.ts proves threshold behavior, large positive validation, warning UI source, and negative validation."
+    ],
+    "PROD-023": [
+      "app/(dashboard)/supervisor/dashboard/page.tsx restores localStorage drafts through draftKey and countRestoredUnsavedDraftMeters.",
+      "app/(dashboard)/supervisor/dashboard/page.tsx renders 'Restored unsaved draft' and says restored entries have not been saved yet.",
+      "__tests__/batch24b-supervisor-ux-failures.test.ts asserts the restored-draft source and reset/save cleanup source."
+    ],
+    "PROD-029": [
+      "components/landing/faq.tsx says supervisors enter shift-total meters.",
+      "components/landing/pricing.tsx says shift production logs with shift-total meters.",
+      "components/factory-today/SetupPanel.tsx says daily shift-meter totals and shift-total meters, not opening/closing readings.",
+      "lib/i18n/legacy-generated.ts no longer contains the stale opening/closing meter-reading claim.",
+      "__tests__/batch24b-supervisor-ux-failures.test.ts asserts misleading copy is absent from touched copy sources."
+    ]
+  },
+  "rows_considered_source_fixed_code_verified_candidates": [
+    "PROD-013",
+    "PROD-023",
+    "PROD-029"
+  ],
+  "rows_still_open": {
+    "PROD-022": "Excluded from Batch 24B; needs separate browser/runtime draft isolation proof across date and shift changes.",
+    "PROD-013": "Source-fixed/code_verified candidate only; pass requires QA browser proof of warning/confirmation behavior.",
+    "PROD-023": "Source-fixed/code_verified candidate only; pass requires QA browser proof after refresh/crash restoration.",
+    "PROD-029": "Source-fixed/code_verified candidate only; pass requires content/browser review if matrix promotion requires runtime evidence."
+  },
+  "future_qa_runtime_proof_required": [
+    "PROD-013: enter normal and suspiciously large shift-total meters in QA, verify warning appears only for suspicious value, confirm, and verify valid save can proceed.",
+    "PROD-023: enter an unsaved production draft, refresh/browser-crash-recover the page, verify the restored-unsaved indicator appears and clears after save/clear.",
+    "PROD-029: inspect landing/setup/help UI in browser and verify wording no longer claims supervisors enter physical opening/closing meter readings.",
+    "PROD-022: separate runtime test should prove date/shift draft isolation before moving the row."
+  ],
+  "commands_run": [
+    {
+      "command": "git fetch origin --prune",
+      "result": "passed"
+    },
+    {
+      "command": "git switch -C codex/batch-24b-supervisor-ux-failures origin/main",
+      "result": "passed"
+    },
+    {
+      "command": "git status --short",
+      "result": "initially clean"
+    },
+    {
+      "command": "git rev-parse origin/main",
+      "result": "d3aa28c488c280ef3cd54a049518f6d2c6ec80d6"
+    },
+    {
+      "command": "rg/sed inspection across TEST_MATRIX, FIX_LOG, LOOP_STATE, FAILURE_BACKLOG, RETEST_PLAN, DOMAIN_INVARIANTS, PILOT_READY_DEFINITION",
+      "result": "passed; target rows and P1 production invariants inspected"
+    },
+    {
+      "command": "npx vitest run __tests__/batch24b-supervisor-ux-failures.test.ts",
+      "result": "passed; 1 test file, 4 tests"
+    },
+    {
+      "command": "npx vitest run __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/p0-atomicity.test.ts __tests__/batch22-production-order-boundary-hardening.test.ts",
+      "result": "passed; 5 test files, 56 tests"
+    },
+    {
+      "command": "npx eslint __tests__/batch24b-supervisor-ux-failures.test.ts lib/production-log-validation.ts 'app/(dashboard)/supervisor/dashboard/page.tsx' components/landing/faq.tsx components/landing/features.tsx components/landing/pricing.tsx components/factory-today/SetupPanel.tsx lib/i18n/legacy-generated.ts",
+      "result": "passed"
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "passed"
+    },
+    {
+      "command": "jq empty output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "git status --short",
+      "result": "modified app/(dashboard)/supervisor/dashboard/page.tsx; components/factory-today/SetupPanel.tsx; components/landing/faq.tsx; components/landing/features.tsx; components/landing/pricing.tsx; lib/i18n/legacy-generated.ts; lib/production-log-validation.ts; untracked __tests__/batch24b-supervisor-ux-failures.test.ts. The proof artifact is under ignored output/qa and does not appear in short status."
+    }
+  ],
+  "test_results": {
+    "focused_batch24b_vitest": "passed; 1 test file, 4 tests",
+    "existing_production_regression_vitest": "passed; 5 test files, 56 tests",
+    "targeted_eslint": "passed",
+    "typescript": "passed",
+    "json_validation": "passed",
+    "diff_check": "passed"
+  },
+  "safety_confirmations": {
+    "no_migration_created": true,
+    "no_rpc_change": true,
+    "no_database_work": true,
+    "no_production_mutation": true,
+    "no_supabase_db_push": true,
+    "no_migration_repair": true,
+    "no_db_pull": true,
+    "no_direct_sql": true,
+    "no_include_all": true,
+    "no_npm_audit": true,
+    "no_package_install": true,
+    "no_lockfile_change": true,
+    "no_staging": true,
+    "no_commit": true,
+    "no_push": true,
+    "no_docs_closeout": true,
+    "no_runtime_proof_promotion": true,
+    "no_pass_ready_marking": true
+  },
+  "matrix_changes": {
+    "test_matrix_modified": false,
+    "results_json_modified": false,
+    "rows_marked_pass_ready": []
+  },
+  "artifact_status": "validated"
+}

@@ -52,6 +52,10 @@ export const VALIDATION_MESSAGES = {
     NEGATIVE_METERS: 'Production meters cannot be negative.',
 } as const
 
+// A single loom producing this much in one shift is operationally suspicious,
+// but still plausible enough to allow after explicit supervisor confirmation.
+export const SUSPICIOUS_PRODUCTION_METERS_THRESHOLD = 10_000
+
 // ─── Entry Shape ─────────────────────────────────────────────────────────────
 
 export interface ProductionLogEntry {
@@ -73,6 +77,10 @@ export interface ValidationResult {
 }
 
 // ─── Validators ──────────────────────────────────────────────────────────────
+
+export function isSuspiciousProductionMeters(meters: number): boolean {
+    return Number.isFinite(meters) && meters >= SUSPICIOUS_PRODUCTION_METERS_THRESHOLD
+}
 
 /**
  * Validate a production log entry (meters > 0).

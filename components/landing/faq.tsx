@@ -5,7 +5,7 @@ const faqs = [
     },
     {
         question: 'Can my supervisor use this on the factory floor?',
-        answer: 'Yes. The supervisor flow is mobile-first and focused on daily actions: assign workers, update machine status, enter meter readings, and submit shift logs.',
+        answer: 'Yes. The supervisor flow is mobile-first and focused on daily actions: assign workers, update machine status, enter shift-total meters, and submit shift logs.',
     },
     {
         question: 'What happens if the factory internet is unreliable?',

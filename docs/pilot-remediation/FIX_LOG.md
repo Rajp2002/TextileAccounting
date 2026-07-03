@@ -1737,3 +1737,53 @@ Resolution status:
 
 - `PAY-006` is documented as `code_verified` in the active QA matrix.
 - Matrix movement is fail -1 and `code_verified` +1: total 377, pass 195, fail 26, blocked 22, `code_verified` 133, `not_applicable` 1, `not_run` 0.
+
+## Batch 24B - Supervisor UX and Production Logging Failure Source-Fix Closeout
+
+Date/time: 2026-07-03 11:23 IST. Source base `origin/main` at `d3aa28c488c280ef3cd54a049518f6d2c6ec80d6`.
+
+Scope:
+
+- `PROD-013`
+- `PROD-023`
+- `PROD-029`
+
+Rows promoted to `code_verified`, not pass:
+
+- `PROD-013`: suspicious large positive shift-meter behavior is source-fixed. A documented 10,000m warning threshold now triggers a non-blocking supervisor confirmation for large valid entries. The threshold is a warning threshold, not a hard business maximum; confirmed large positive entries can still proceed, and existing negative-meter validation remains blocking.
+- `PROD-023`: restored production drafts are source-fixed in the supervisor UX. Restored localStorage shift-meter drafts are compared with server-loaded existing logs, shown with a visible "Restored unsaved draft" indicator, and the copy says the values were restored from this device and have not been saved yet. The restored-draft state clears on save/reset.
+- `PROD-029`: production copy is source-fixed. Public landing, pricing, setup/help, and generated legacy translation copy now use shift-total/shift-meter terminology and remove raw opening/closing meter-reading proof claims.
+
+Rows explicitly not closed:
+
+- `PROD-022` remains fail/open because exact date/shift draft isolation still requires separate browser/runtime proof and likely separate draft-state work.
+- `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, `PAY-027`, `DASH-003`, Golden rows, production/order boundary rows, stock/dispatch/commercial rows, billing/provider rows, Sentry/WhatsApp/restore/rollback rows, and all unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json`.
+- Focused source test: `__tests__/batch24b-supervisor-ux-failures.test.ts`.
+- Regression coverage: supervisor production strictness, production dispatch regression, production stock atomicity, P0 atomicity, and Batch 22 production/order boundary tests.
+
+Verification commands:
+
+- `git status --short` -> showed only approved Batch 24B implementation files and new focused test before docs closeout; proof artifact ignored under `output/qa`.
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json` -> passed.
+- `npx vitest run __tests__/batch24b-supervisor-ux-failures.test.ts` -> passed, 1 test file and 4 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint __tests__/batch24b-supervisor-ux-failures.test.ts "app/(dashboard)/supervisor/dashboard/page.tsx" components/factory-today/SetupPanel.tsx components/landing/faq.tsx components/landing/features.tsx components/landing/pricing.tsx lib/production-log-validation.ts` -> passed.
+- `npx vitest run __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/p0-atomicity.test.ts __tests__/batch22-production-order-boundary-hardening.test.ts` -> passed, 5 test files and 56 tests.
+
+Data safety:
+
+- No migration was created or applied.
+- No RPC/database work occurred.
+- No production mutation occurred.
+- No Supabase db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, runtime/browser proof, production/customer data mutation, external provider call, env file staging, Supabase temp-file staging, or secret copy was used.
+- Docs closeout force-adds only the ignored Batch 24B proof artifact and stages only the approved Batch 24B implementation, test, docs, matrix, and proof files.
+
+Resolution status:
+
+- `PROD-013`, `PROD-023`, and `PROD-029` are documented as `code_verified` in the active QA matrix.
+- Matrix movement is fail -3 and `code_verified` +3: total 377, pass 195, fail 23, blocked 22, `code_verified` 136, `not_applicable` 1, `not_run` 0.

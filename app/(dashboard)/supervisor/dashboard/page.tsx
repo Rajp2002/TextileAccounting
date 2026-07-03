@@ -43,6 +43,8 @@ import {
     requestAccessCode,
 } from '../actions'
 import {
+    isSuspiciousProductionMeters,
+    SUSPICIOUS_PRODUCTION_METERS_THRESHOLD,
     ZERO_METER_REASONS,
     ZERO_METER_REASON_LABELS,
     type ZeroMeterReason,
@@ -103,6 +105,27 @@ function formatLoomName(name: string) {
     return name.replace(/^Machine\b/i, 'Loom')
 }
 
+function parseProductionMetersDraft(cached: string): Record<string, number> {
+    const parsed = JSON.parse(cached) as unknown
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+
+    return Object.entries(parsed).reduce<Record<string, number>>((acc, [machineId, value]) => {
+        const meters = Number(value)
+        if (Number.isFinite(meters)) acc[machineId] = meters
+        return acc
+    }, {})
+}
+
+function countRestoredUnsavedDraftMeters(
+    draftMeters: Record<string, number>,
+    savedMeters: Record<string, number>
+) {
+    return Object.entries(draftMeters).filter(([machineId, meters]) => {
+        const saved = savedMeters[machineId] ?? 0
+        return Math.abs(meters - saved) > 0.001
+    }).length
+}
+
 const PRODUCTION_LOG_FALLBACK_ERROR = 'Could not save production log. Your entry is still saved as a draft. Check your connection and try again.'
 
 interface ReadinessIssue {
@@ -154,6 +177,16 @@ type ShiftExistingLog = {
     meters: number
     submitted_at: string | null
     zero_meter_reason: string | null
+}
+
+type RestoredDraftInfo = {
+    count: number
+}
+
+type LargeMeterEntry = {
+    machineId: string
+    machineName: string
+    meters: number
 }
 
 function ShiftReadinessPanel({
@@ -743,6 +776,11 @@ export default function UnifiedDashboard() {
 
     // Bulk Entry state
     const [productionMeters, setProductionMeters] = useState<Record<string, number>>({})
+    const [restoredDraftInfo, setRestoredDraftInfo] = useState<RestoredDraftInfo | null>(null)
+    const [largeMeterEntries, setLargeMeterEntries] = useState<LargeMeterEntry[]>([])
+    const [largeMeterPendingCode, setLargeMeterPendingCode] = useState('')
+    const [largeMeterConfirmationKey, setLargeMeterConfirmationKey] = useState<string | null>(null)
+    const [showLargeMeterDialog, setShowLargeMeterDialog] = useState(false)
     const [correctionWindowExpiresAt, setCorrectionWindowExpiresAt] = useState<string | null>(null)
     const [correctionClockMs, setCorrectionClockMs] = useState<number | null>(null)
 
@@ -854,16 +892,22 @@ export default function UnifiedDashboard() {
             return acc
         }, {})
 
-        const cached = localStorage.getItem(`production_meters_${date}_${shift}`)
+        const draftKey = `production_meters_${date}_${shift}`
+        const cached = localStorage.getItem(draftKey)
         if (cached) {
             try {
-                setProductionMeters(JSON.parse(cached))
+                const restoredMeters = parseProductionMetersDraft(cached)
+                setProductionMeters(restoredMeters)
+                const unsavedCount = countRestoredUnsavedDraftMeters(restoredMeters, existingProductionMeters)
+                setRestoredDraftInfo(unsavedCount > 0 ? { count: unsavedCount } : null)
             } catch (error) {
                 console.error('Failed to parse cached production metre drafts', error)
                 setProductionMeters(existingProductionMeters)
+                setRestoredDraftInfo(null)
             }
         } else {
             setProductionMeters(existingProductionMeters)
+            setRestoredDraftInfo(null)
         }
 
         // Auto-map machine status to downtime mode defaults
@@ -892,6 +936,11 @@ export default function UnifiedDashboard() {
     const resetShiftDraftState = () => {
         setLoading(true)
         setProductionMeters({})
+        setRestoredDraftInfo(null)
+        setLargeMeterEntries([])
+        setLargeMeterPendingCode('')
+        setLargeMeterConfirmationKey(null)
+        setShowLargeMeterDialog(false)
         setCorrectionWindowExpiresAt(null)
         setShowDuplicateDialog(false)
         setDuplicateAccessCode('')
@@ -915,7 +964,10 @@ export default function UnifiedDashboard() {
 
 
 
-    const handleBulkSubmit = async (code: string = '') => {
+    const handleBulkSubmit = async (
+        code: string = '',
+        options: { confirmedLargeMeters?: boolean } = {}
+    ) => {
         if (submitLockRef.current || submitting) return
 
         if (loading) {
@@ -997,6 +1049,34 @@ export default function UnifiedDashboard() {
             return
         }
 
+        const suspiciousEntries = productionEntries
+            .filter((entry) => isSuspiciousProductionMeters(entry.meters))
+            .map((entry) => ({
+                machineId: entry.machine_id,
+                machineName: formatLoomName(machines.find((machine) => machine.id === entry.machine_id)?.name ?? 'Loom'),
+                meters: entry.meters,
+            }))
+        const suspiciousKey = `${date}_${shift}:${suspiciousEntries
+            .map((entry) => `${entry.machineId}:${entry.meters}`)
+            .sort()
+            .join('|')}`
+
+        if (
+            suspiciousEntries.length > 0 &&
+            !options.confirmedLargeMeters &&
+            largeMeterConfirmationKey !== suspiciousKey
+        ) {
+            setLargeMeterEntries(suspiciousEntries)
+            setLargeMeterPendingCode(code)
+            setShowLargeMeterDialog(true)
+            return
+        }
+
+        if (suspiciousEntries.length > 0 && options.confirmedLargeMeters) {
+            setLargeMeterConfirmationKey(suspiciousKey)
+            setShowLargeMeterDialog(false)
+        }
+
         submitLockRef.current = true
         setSubmitting(true)
         try {
@@ -1011,6 +1091,11 @@ export default function UnifiedDashboard() {
 
             toast.success(`Shift meters logged (${res.logged} looms)`)
             setProductionMeters({}) // Reset inputs after success
+            setRestoredDraftInfo(null)
+            setLargeMeterEntries([])
+            setLargeMeterPendingCode('')
+            setLargeMeterConfirmationKey(null)
+            setShowLargeMeterDialog(false)
             localStorage.removeItem(`production_meters_${date}_${shift}`) // Clear cache
             setShowDuplicateDialog(false)
             setDuplicateAccessCode('')
@@ -1127,7 +1212,7 @@ export default function UnifiedDashboard() {
     const saveHelperText = loading
         ? 'Loading shift data...'
         : validEntryCount === 0
-            ? 'Add meter readings or downtime reasons to save.'
+            ? 'Add shift meters or downtime reasons to save.'
             : pendingEntryCount > 0
                 ? `${validEntryCount} ready, ${pendingEntryCount} pending`
                 : 'All loom entries ready'
@@ -1169,6 +1254,20 @@ export default function UnifiedDashboard() {
                         </div>
                     )}
 
+                    {restoredDraftInfo && (
+                        <div className="rounded-xl border border-info-soft bg-info-soft px-4 py-3 text-sm font-medium text-info shadow-sm">
+                            <div className="flex items-start gap-2">
+                                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                                <div>
+                                    <p className="font-semibold">Restored unsaved draft</p>
+                                    <p className="mt-1 text-xs font-medium leading-5 text-info/85">
+                                        {restoredDraftInfo.count} shift-meter {restoredDraftInfo.count === 1 ? 'entry was' : 'entries were'} restored from this device and have not been saved yet.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-xl font-bold leading-tight tracking-normal text-ink">Shift Meter Log</h1>
@@ -1178,7 +1277,7 @@ export default function UnifiedDashboard() {
                                 </Badge>
                                 {loggedMetersCount > 0 && (
                                     <Badge variant="brand" className="shadow-sm animate-in fade-in zoom-in duration-300">
-                                        {loggedMetersCount} meter entries
+                                        {loggedMetersCount} shift-meter entries
                                     </Badge>
                                 )}
                             </div>
@@ -1334,6 +1433,45 @@ export default function UnifiedDashboard() {
                     })()}
                 </SheetContent>
             </Sheet>
+
+            {/* Suspicious Large Meter Confirmation Dialog */}
+            <Dialog open={showLargeMeterDialog} onOpenChange={setShowLargeMeterDialog}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-warning">
+                            <AlertTriangle className="h-5 w-5" /> Confirm large shift meters
+                        </DialogTitle>
+                        <DialogDescription>
+                            One or more loom totals are at least {SUSPICIOUS_PRODUCTION_METERS_THRESHOLD.toLocaleString('en-IN')} m for this shift. This is allowed, but confirm the totals before saving.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2 rounded-lg border border-warning-soft bg-warning-soft/60 p-3">
+                        {largeMeterEntries.map((entry) => (
+                            <div key={entry.machineId} className="flex items-center justify-between gap-3 text-sm">
+                                <span className="font-semibold text-ink">{entry.machineName}</span>
+                                <span className="font-mono font-semibold text-warning">{entry.meters.toLocaleString('en-IN')} m</span>
+                            </div>
+                        ))}
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-2">
+                        <Button
+                            variant="outline"
+                            className="h-11 flex-1 rounded-lg font-semibold"
+                            onClick={() => setShowLargeMeterDialog(false)}
+                        >
+                            Review totals
+                        </Button>
+                        <Button
+                            className="h-11 flex-1 rounded-lg font-semibold"
+                            disabled={submitting}
+                            onClick={() => handleBulkSubmit(largeMeterPendingCode, { confirmedLargeMeters: true })}
+                        >
+                            {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+                            Confirm and save
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Duplicate Log Warning Dialog */}
             <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
