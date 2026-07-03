@@ -1787,3 +1787,86 @@ Resolution status:
 
 - `PROD-013`, `PROD-023`, and `PROD-029` are documented as `code_verified` in the active QA matrix.
 - Matrix movement is fail -3 and `code_verified` +3: total 377, pass 195, fail 23, blocked 22, `code_verified` 136, `not_applicable` 1, `not_run` 0.
+
+## Batch 23 - Production Migration Signature Hotfix Closeout
+
+Date/time: 2026-07-03 12:20 IST. Branch `codex/batch-24c-factory-today-analytics-state`.
+
+Scope:
+
+- Batch 23 migration hotfix only: `supabase/migrations/20260702131500_batch_23_start_party_order_transaction_boundary.sql`.
+- Regression coverage only: `__tests__/batch23-start-party-order-atomicity.test.ts`.
+
+Root cause:
+
+- The `start_party_order_from_estimator(...)` PostgreSQL function had required parameters after earlier defaulted parameters: `p_target_meters NUMERIC` and `p_deadline DATE`.
+- PostgreSQL rejected the migration with `ERROR: input parameters after one with a default value must also have defaults (SQLSTATE 42P13)`.
+
+Fix:
+
+- `p_target_meters` now defaults to `NULL`, while the existing RPC validation still rejects `NULL` or `<= 0` target meters before writes.
+- `p_deadline` now defaults to `NULL`, and the RPC now explicitly returns `Add a deadline before starting an order.` when `p_deadline IS NULL` before inserting into `orders`.
+- No destructive DB operation was added.
+
+Production migration status:
+
+- Human production action completed outside this agent run: `npx supabase db push` succeeded after the hotfix.
+- The successful push applied `20260702131500_batch_23_start_party_order_transaction_boundary.sql` and `20260702191500_batch_24a_harden_attendance_rls_date_bounds.sql`.
+- Production DB is now migrated through Batch 24A attendance migration. No Batch 24C closure is claimed.
+
+Verification commands:
+
+- Static migration review -> passed: 44 parameters checked, no non-default parameter appears after a defaulted parameter, target/deadline validation present, and no `DROP`, `TRUNCATE`, or `DELETE` statement introduced.
+- Static RPC/test review -> passed: signature/deadline assertions present and all 44 app RPC payload parameter names match the function.
+- `git diff --check` -> passed.
+- `npm test -- __tests__/batch23-start-party-order-atomicity.test.ts` -> passed, 1 test file and 21 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx supabase migration list` -> passed as read-only verification; remote/local history includes `20260702131500` and `20260702191500`.
+
+Data safety:
+
+- This closeout did not run `npx supabase db push`.
+- No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, or merge to main was performed.
+- Batch 24C/factory-today files were intentionally left unstaged and uncommitted.
+
+## Batch 24C - Factory Today Setup and Historical Analytics State Closeout
+
+Date/time: 2026-07-03 12:35 IST. Branch `codex/batch-24c-factory-today-analytics-state`.
+
+Scope:
+
+- `SETUP-011`: Factory Today setup panel after creating estimates, machines, workers, and payroll config.
+- `DASH-004`: Historical date selection.
+
+Expected remaining dirty Batch 24C files:
+- `app/(dashboard)/owner/actions/dashboard.ts`
+- `app/(dashboard)/owner/analytics/_components/DashboardClient.tsx`
+- `app/(dashboard)/owner/today/actions.ts`
+- `__tests__/batch24c-factory-today-analytics-state.test.ts`
+- `lib/dashboard-trend.ts`
+- `lib/factory-today-checklist.ts`
+
+Root cause and implementation summary:
+
+- SETUP-011: Factory Today setup checklist had duplicated/inconsistent client-facing logic and did not recognize completed costing consistently from quote, order, machines, workers, assignments, and payroll config. Fixed by centralizing the setup checklist logic in `lib/factory-today-checklist.ts`. Costing completion recognizes quality, estimate, order, or market run. Day/night assignments require workers on the same loom. Worker checks use active rows only. Payroll config validation bounds mirror DB bounds.
+- DASH-004: Historical analytics selection mixed historical and current values. Fixed by clearing current-only today/orders/machines state for historical dates, scoping the 7-day trend to the selected date via `getDailyMeterTrend(supabase, org_id, targetDate)`, and replacing the full state on the client instead of merging over previous current state. Live state is restored when returning to today.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24c/BATCH24C-factory-today-analytics-state-proof.json` -> passed.
+- `npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts` -> passed, 1 test file and 7 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint 'app/(dashboard)/owner/actions/dashboard.ts' 'app/(dashboard)/owner/analytics/_components/DashboardClient.tsx' 'app/(dashboard)/owner/today/actions.ts' lib/factory-today-checklist.ts lib/dashboard-trend.ts __tests__/batch24c-factory-today-analytics-state.test.ts` -> passed.
+
+Data safety:
+
+- This closeout did not run `npx supabase db push`.
+- No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, or merge to main occurred.
+
+Result:
+
+- Batch 24C is completed as source-fixed/code-verified.
+- `SETUP-011` and `DASH-004` are closed as `code_verified`/`source-fixed` candidates.
+- Browser/runtime QA proof is still required before marking true pass-ready. No production/browser pass is claimed because actual runtime proof has not been performed in this agent run.
+

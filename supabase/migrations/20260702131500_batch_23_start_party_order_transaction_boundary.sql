@@ -70,8 +70,8 @@ CREATE OR REPLACE FUNCTION start_party_order_from_estimator(
   p_yarn_denier           INTEGER       DEFAULT 75,
   p_yarn_rate_per_kg      NUMERIC       DEFAULT 0,
   -- Order fields
-  p_target_meters         NUMERIC,
-  p_deadline              DATE,
+  p_target_meters         NUMERIC       DEFAULT NULL,
+  p_deadline              DATE          DEFAULT NULL,
   p_notes                 TEXT          DEFAULT '',
   p_tracking_token        TEXT          DEFAULT NULL,
   -- Yarn requirement fields (pre-computed by the server action)
@@ -117,6 +117,11 @@ BEGIN
 
   IF p_target_meters IS NULL OR p_target_meters <= 0 THEN
     RETURN QUERY SELECT FALSE, NULL::uuid, NULL::uuid, 'Target meters must be greater than zero.'::text;
+    RETURN;
+  END IF;
+
+  IF p_deadline IS NULL THEN
+    RETURN QUERY SELECT FALSE, NULL::uuid, NULL::uuid, 'Add a deadline before starting an order.'::text;
     RETURN;
   END IF;
 

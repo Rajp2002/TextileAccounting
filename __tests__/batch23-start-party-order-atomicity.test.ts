@@ -32,6 +32,8 @@ describe('Batch 23 Start Party Order atomicity (QUOTE-007)', () => {
         expect(migration).toContain('LANGUAGE plpgsql')
         expect(migration).toContain('SECURITY DEFINER')
         expect(migration).toContain("SET search_path = public")
+        expect(migration).toContain('p_target_meters         NUMERIC       DEFAULT NULL')
+        expect(migration).toContain('p_deadline              DATE          DEFAULT NULL')
     })
 
     it('creates accepted quote, active order, backlink, and yarn requirements in one transaction', () => {
@@ -78,6 +80,7 @@ describe('Batch 23 Start Party Order atomicity (QUOTE-007)', () => {
         expect(migration).toContain("'Add a party name before starting an order.'")
         expect(migration).toContain("'Add a quality label before starting an order.'")
         expect(migration).toContain("'Target meters must be greater than zero.'")
+        expect(migration).toContain("'Add a deadline before starting an order.'")
         expect(migration).toContain("'Quote price is missing. Complete the estimate first.'")
     })
 
