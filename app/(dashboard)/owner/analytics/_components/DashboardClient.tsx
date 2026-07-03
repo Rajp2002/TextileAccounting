@@ -82,6 +82,7 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
           orders:          liveData.orders,
           workerBreakdown: liveData.workerBreakdown,
           machines:        liveData.machines,
+          trend:           liveData.trend,
         }))
       } catch (err) {
         console.error('Failed to sync live dashboard data', err)
@@ -156,21 +157,20 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
 
     const isToday = newDate === getSuratTodayString()
     if (isToday) {
+      setConnectionStatus(typeof window !== 'undefined' && !navigator.onLine ? 'offline' : 'connecting')
       const liveData = await refreshLiveDashboard()
-      setData((prev) => ({
-        ...prev,
+      setData({
+        yesterday: initialData.yesterday,
         today: liveData.today,
+        orders: liveData.orders,
         workerBreakdown: liveData.workerBreakdown,
-        yesterday: initialData.yesterday
-      }))
+        machines: liveData.machines,
+        trend: liveData.trend,
+      })
     } else {
+      setConnectionStatus('historical')
       const history = await fetchHistoricalData(newDate)
-      setData((prev) => ({
-        ...prev,
-        yesterday: history.yesterday,
-        today: null,
-        workerBreakdown: history.workerBreakdown
-      }))
+      setData(history)
     }
   }
 
@@ -233,11 +233,12 @@ export function DashboardClient({ initialData, orgId }: { initialData: Dashboard
         <div className="flex min-w-0 flex-col gap-5">
           {isToday && <QuickActions className="xl:hidden" />}
 
-          {/* Analytics widgets — 2-col on md+ */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <OrderHealthSummary orders={data.orders} />
-            <MachineUtilization machines={data.machines} />
-          </div>
+          {isToday && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <OrderHealthSummary orders={data.orders} />
+              <MachineUtilization machines={data.machines} />
+            </div>
+          )}
 
           {/* 7-day trend — full width */}
           <ProductionTrend data={data.trend} />

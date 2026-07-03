@@ -1828,3 +1828,45 @@ Data safety:
 - This closeout did not run `npx supabase db push`.
 - No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, or merge to main was performed.
 - Batch 24C/factory-today files were intentionally left unstaged and uncommitted.
+
+## Batch 24C - Factory Today Setup and Historical Analytics State Closeout
+
+Date/time: 2026-07-03 12:35 IST. Branch `codex/batch-24c-factory-today-analytics-state`.
+
+Scope:
+
+- `SETUP-011`: Factory Today setup panel after creating estimates, machines, workers, and payroll config.
+- `DASH-004`: Historical date selection.
+
+Expected remaining dirty Batch 24C files:
+- `app/(dashboard)/owner/actions/dashboard.ts`
+- `app/(dashboard)/owner/analytics/_components/DashboardClient.tsx`
+- `app/(dashboard)/owner/today/actions.ts`
+- `__tests__/batch24c-factory-today-analytics-state.test.ts`
+- `lib/dashboard-trend.ts`
+- `lib/factory-today-checklist.ts`
+
+Root cause and implementation summary:
+
+- SETUP-011: Factory Today setup checklist had duplicated/inconsistent client-facing logic and did not recognize completed costing consistently from quote, order, machines, workers, assignments, and payroll config. Fixed by centralizing the setup checklist logic in `lib/factory-today-checklist.ts`. Costing completion recognizes quality, estimate, order, or market run. Day/night assignments require workers on the same loom. Worker checks use active rows only. Payroll config validation bounds mirror DB bounds.
+- DASH-004: Historical analytics selection mixed historical and current values. Fixed by clearing current-only today/orders/machines state for historical dates, scoping the 7-day trend to the selected date via `getDailyMeterTrend(supabase, org_id, targetDate)`, and replacing the full state on the client instead of merging over previous current state. Live state is restored when returning to today.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24c/BATCH24C-factory-today-analytics-state-proof.json` -> passed.
+- `npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts` -> passed, 1 test file and 7 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint 'app/(dashboard)/owner/actions/dashboard.ts' 'app/(dashboard)/owner/analytics/_components/DashboardClient.tsx' 'app/(dashboard)/owner/today/actions.ts' lib/factory-today-checklist.ts lib/dashboard-trend.ts __tests__/batch24c-factory-today-analytics-state.test.ts` -> passed.
+
+Data safety:
+
+- This closeout did not run `npx supabase db push`.
+- No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, or merge to main occurred.
+
+Result:
+
+- Batch 24C is completed as source-fixed/code-verified.
+- `SETUP-011` and `DASH-004` are closed as `code_verified`/`source-fixed` candidates.
+- Browser/runtime QA proof is still required before marking true pass-ready. No production/browser pass is claimed because actual runtime proof has not been performed in this agent run.
+

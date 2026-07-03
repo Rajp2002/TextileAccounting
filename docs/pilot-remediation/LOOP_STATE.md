@@ -14,14 +14,14 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, Batch 22 production/order boundary source-fix closeout, Batch 23 Start Party Order transaction boundary source-fix closeout, Batch 24A attendance RLS and access-code boundary source-fix closeout, and Batch 24B supervisor production UX source-fix closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, Batch 22 production/order boundary source-fix closeout, Batch 23 Start Party Order transaction boundary source-fix closeout, Batch 24A attendance RLS and access-code boundary source-fix closeout, Batch 24B supervisor production UX source-fix closeout, and Batch 24C Factory Today setup and historical analytics state closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
 | `pass` | 195 | Runtime/test evidence exists. |
-| `fail` | 23 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `fail` | 21 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
-| `code_verified` | 136 | Source evidence only. This is not a pass. |
+| `code_verified` | 138 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
@@ -1324,3 +1324,47 @@ Forbidden actions:
 
 - This closeout did not run `npx supabase db push`.
 - No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, merge to main, or Batch 24C staging occurred.
+
+## Batch 24C - Factory Today Setup and Historical Analytics State Closeout
+
+Date/time: 2026-07-03 12:35 IST. Branch `codex/batch-24c-factory-today-analytics-state`.
+
+Scope:
+
+- `SETUP-011`
+- `DASH-004`
+
+Rows promoted to `code_verified`, not pass:
+
+- `SETUP-011`: Factory Today setup checklist recognized completed costing, loom targets require active linked orders, day/night assignments require workers on same loom, worker checks use active rows only, and payroll config checks validate the cycle/pay/reminder bounds.
+- `DASH-004`: Historical date selection clears today's data, aggregates 7-day trend to the selected date, uses full state replacement instead of merging, and restores live dashboard state on return to today.
+
+Rows explicitly not closed:
+
+- `PROD-022` remains fail/open pending separate date/shift draft-isolation browser/runtime proof.
+- `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, `PAY-027`, `DASH-003`, Golden rows, and all unapproved rows remain unchanged.
+
+Repository state:
+
+- Branch: `codex/batch-24c-factory-today-analytics-state`.
+- Source base: `origin/main` at `d3aa28c488c280ef3cd54a049518f6d2c6ec80d6`.
+- Evidence artifact: `output/qa/batch24c/BATCH24C-factory-today-analytics-state-proof.json`.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24c/BATCH24C-factory-today-analytics-state-proof.json` -> passed.
+- `npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts` -> passed, 1 test file and 7 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint 'app/(dashboard)/owner/actions/dashboard.ts' 'app/(dashboard)/owner/analytics/_components/DashboardClient.tsx' 'app/(dashboard)/owner/today/actions.ts' lib/factory-today-checklist.ts lib/dashboard-trend.ts __tests__/batch24c-factory-today-analytics-state.test.ts` -> passed.
+
+Forbidden actions:
+
+- This closeout did not run `npx supabase db push`.
+- No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, merge to main, or Batch 23 Rework occurred.
+
+Resolution status:
+
+- `SETUP-011` and `DASH-004` are documented as `code_verified` in the active matrix.
+- Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 21, blocked 22, `code_verified` 138, `not_applicable` 1, `not_run` 0.
+

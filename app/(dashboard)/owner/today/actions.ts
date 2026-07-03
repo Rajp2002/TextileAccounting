@@ -4,10 +4,11 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 import { getPayrollCycleDetails, getPayrollCycleStatus, getPayrollMonthForDate, getPreviousPayrollMonth } from '@/lib/payroll-cycle'
-import { normalizeProductionMode, hasExplicitProductionMode, type ProductionMode } from '@/lib/production-mode'
+import { normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { formatToSurat, getSuratTodayString } from '@/lib/time'
 import { formatDateOnly } from '@/lib/format'
 import { calculatePieceRateGrossWages } from '@/lib/payroll-read-models'
+import { buildFactoryTodaySetupChecklist } from '@/lib/factory-today-checklist'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -197,7 +198,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         // 2. Active machines with latest assignment info
         supabase
             .from('machines')
-            .select('id, name, status, current_order_id, loom_type')
+            .select('id, name, status, current_order_id, loom_type, orders(status)')
             .eq('org_id', orgId),
 
         // 3. Active orders with progress summary for pace calculation
@@ -324,7 +325,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         // 17. Setup Checklist: Has Fixed Worker
         (async () => {
             try {
-                const { count } = await supabase.from('fixed_workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                const { count } = await supabase.from('fixed_workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('is_active', true).limit(1)
                 return { count }
             } catch {
                 return { count: 0 }
@@ -354,7 +355,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         // 20. Setup Checklist: Has Meter Worker
         (async () => {
             try {
-                const { count } = await supabase.from('workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                const { count } = await supabase.from('workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('is_active', true).limit(1)
                 return { count }
             } catch {
                 return { count: 0 }
@@ -365,7 +366,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             try {
                 const { data } = await supabase
                     .from('machine_assignments')
-                    .select('machine_id, shift')
+                    .select('machine_id, shift, worker_id')
                     .eq('org_id', orgId)
                     .in('shift', ['day', 'night'])
                 return { data: data ?? [] }
@@ -420,25 +421,6 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
     const hasCommercial = hasAnyCount(hasCommercialRes)
     const productionMode = normalizeProductionMode(orgSettingsRes.data?.production_mode)
 
-    // Setup checklist: production mode check mirrors onboarding logic
-    const setupHasProductionMode = orgSettingsRes.data?.onboarding_complete === true
-        ? true
-        : hasExplicitProductionMode(orgSettingsRes.data?.production_mode)
-    const setupHasMachine = (machinesRes.data ?? []).length > 0
-    const setupHasLoomTarget = (machinesRes.data ?? []).some((machine) => !!machine.current_order_id)
-    const assignmentsByMachine = new Map<string, Set<string>>()
-    for (const assignment of machineAssignmentsRes.data ?? []) {
-        const machineId = String((assignment as Record<string, unknown>).machine_id ?? '')
-        const shift = String((assignment as Record<string, unknown>).shift ?? '')
-        if (!machineId) continue
-        const shifts = assignmentsByMachine.get(machineId) ?? new Set<string>()
-        shifts.add(shift)
-        assignmentsByMachine.set(machineId, shifts)
-    }
-    const setupHasLoomAssignment = Array.from(assignmentsByMachine.values())
-        .some((shifts) => shifts.has('day') && shifts.has('night'))
-    const setupHasPayrollConfig = !!payrollConfigRes.data
-
     // Check subscription validity
     let setupHasPlan = false
     if (subscriptionRes.data) {
@@ -449,6 +431,22 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             setupHasPlan = true
         }
     }
+
+    const setupChecklist = buildFactoryTodaySetupChecklist({
+        onboardingComplete: orgSettingsRes.data?.onboarding_complete,
+        productionMode: orgSettingsRes.data?.production_mode,
+        machines: machinesRes.data ?? [],
+        machineAssignments: machineAssignmentsRes.data ?? [],
+        hasQuality,
+        hasEstimate,
+        hasOrder,
+        hasMarketRun,
+        hasMeterWorker,
+        hasFixedWorker,
+        hasSupervisor,
+        payrollConfig: payrollConfigRes.data ?? null,
+        hasPlan: setupHasPlan,
+    })
 
     // ── 1. Production ──────────────────────────────────────────────────────────
     const logs = productionRes.data ?? []
@@ -737,16 +735,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             hasCommercial,
         },
         setupChecklist: {
-            hasProductionMode: setupHasProductionMode,
-            hasMachine: setupHasMachine,
-            hasLoomAssignment: setupHasLoomAssignment,
-            hasLoomTarget: setupHasLoomTarget,
-            hasQuality,
-            hasMeterWorker,
-            hasFixedWorker,
-            hasSupervisor,
-            hasPayrollConfig: setupHasPayrollConfig,
-            hasPlan: setupHasPlan,
+            ...setupChecklist,
         },
     }
 }

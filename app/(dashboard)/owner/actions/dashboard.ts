@@ -1,9 +1,10 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getSuratTodayString, getSuratYesterdayString, formatToSurat } from '@/lib/time'
+import { getSuratTodayString, getSuratYesterdayString } from '@/lib/time'
 import { getAuthenticatedUser } from '@/lib/auth'
-import { getDaysInMonth, subDays, parseISO } from 'date-fns'
+import { getDaysInMonth, parseISO } from 'date-fns'
+import { aggregateDailyMeterTrend, getSevenDayTrendWindow, type ProductionLogTrendRow } from '@/lib/dashboard-trend'
 
 export type WorkerBreakdownEntry = {
   worker_id: string
@@ -106,6 +107,28 @@ function normalizeKpiSnapshot(data: unknown): KpiSnapshot | null {
   }
 }
 
+async function getDailyMeterTrend(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orgId: string,
+  anchorDate: string
+): Promise<DailyMeterPoint[]> {
+  const dates = getSevenDayTrendWindow(anchorDate)
+  const { data, error } = await supabase
+    .from('production_logs')
+    .select('date, meters')
+    .eq('org_id', orgId)
+    .gte('date', dates[0])
+    .lte('date', anchorDate)
+    .order('date', { ascending: true })
+
+  if (error) {
+    console.error('[dashboard] production trend query failed:', error)
+    return aggregateDailyMeterTrend(dates, [])
+  }
+
+  return aggregateDailyMeterTrend(dates, data as ProductionLogTrendRow[])
+}
+
 async function getKpiForDate(
   supabase: Awaited<ReturnType<typeof createClient>>,
   orgId: string,
@@ -198,28 +221,16 @@ export async function getDashboardData(): Promise<DashboardData> {
   const today     = getSuratTodayString()
   const yesterday = getSuratYesterdayString()
 
-  const todayDate = parseISO(today)
-  const last7Days = Array.from({ length: 7 }, (_, i) =>
-    formatToSurat(subDays(todayDate, 6 - i), 'yyyy-MM-dd')
-  )
-
   const results = await Promise.allSettled([
     getKpiForDate(supabase, org_id, yesterday),
     supabase.rpc('get_kpi_today_live',            { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_active_orders_with_pace',   { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_worker_breakdown_today',    { p_org_id: org_id, p_date: today }),
     supabase.from('machines').select('id, name, current_order_id').eq('org_id', org_id).eq('status', 'active'),
-    // 7-day trend: sum meters per day from production_logs
-    supabase
-      .from('production_logs')
-      .select('date, meters')
-      .eq('org_id', org_id)
-      .gte('date', last7Days[0])
-      .lte('date', today)
-      .order('date', { ascending: true }),
+    getDailyMeterTrend(supabase, org_id, today),
   ])
 
-  const [kpiYesterdayResult, kpiTodayResult, ordersResult, workerBreakdownResult, machinesResult, rawLogsResult] = results.map(r =>
+  const [kpiYesterdayResult, kpiTodayResult, ordersResult, workerBreakdownResult, machinesResult, trendResult] = results.map(r =>
     r.status === 'fulfilled' ? r.value : null
   )
   const kpiYesterday = kpiYesterdayResult as KpiSnapshot | null
@@ -227,17 +238,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   const orders = getResponseData<Order[]>(ordersResult)
   const workerBreakdown = getResponseData<WorkerBreakdownEntry[]>(workerBreakdownResult)
   const machines = getResponseData<Array<{ id: string, name: string, current_order_id: string | null }>>(machinesResult)
-  const rawLogs = getResponseData<Array<{ date: string; meters: number }>>(rawLogsResult)
-
-  // Aggregate production_logs rows into a daily DailyMeterPoint array
-  const trendMap = new Map<string, number>()
-  last7Days.forEach(d => trendMap.set(d, 0)) // seed all 7 days with 0
-  if (rawLogs) {
-    for (const row of rawLogs as Array<{ date: string; meters: number }>) {
-      trendMap.set(row.date, (trendMap.get(row.date) ?? 0) + row.meters)
-    }
-  }
-  const trend = last7Days.map(d => ({ date: d, total_meters: trendMap.get(d) ?? 0 }))
+  const trend = trendResult as DailyMeterPoint[] | null
 
   return {
     yesterday:       kpiYesterday,
@@ -245,7 +246,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     orders:          orders || null,
     workerBreakdown: workerBreakdown || null,
     machines:        machines || null,
-    trend,
+    trend:           trend || null,
   }
 }
 
@@ -259,21 +260,24 @@ export async function refreshLiveDashboard() {
     supabase.rpc('get_active_orders_with_pace',   { p_org_id: org_id, p_date: today }),
     supabase.rpc('get_worker_breakdown_today',    { p_org_id: org_id, p_date: today }),
     supabase.from('machines').select('id, name, current_order_id').eq('org_id', org_id).eq('status', 'active'),
+    getDailyMeterTrend(supabase, org_id, today),
   ])
 
-  const [kpiTodayResult, ordersResult, workerBreakdownResult, machinesResult] = results.map(r =>
+  const [kpiTodayResult, ordersResult, workerBreakdownResult, machinesResult, trendResult] = results.map(r =>
     r.status === 'fulfilled' ? r.value : null
   )
   const kpiToday = getResponseData<TodayKpiSnapshot>(kpiTodayResult)
   const orders = getResponseData<Order[]>(ordersResult)
   const workerBreakdown = getResponseData<WorkerBreakdownEntry[]>(workerBreakdownResult)
   const machines = getResponseData<Array<{ id: string, name: string, current_order_id: string | null }>>(machinesResult)
+  const trend = trendResult as DailyMeterPoint[] | null
 
   return {
     today:           kpiToday ? { ...kpiToday, date: today } : null,
     orders:          orders || null,
     workerBreakdown: workerBreakdown || null,
     machines:        machines || null,
+    trend:           trend || null,
   }
 }
 
@@ -284,16 +288,22 @@ export async function fetchHistoricalData(targetDate: string) {
   const results = await Promise.allSettled([
     getKpiForDate(supabase, org_id, targetDate),
     supabase.rpc('get_worker_breakdown_today', { p_org_id: org_id, p_date: targetDate }),
+    getDailyMeterTrend(supabase, org_id, targetDate),
   ])
 
-  const [kpiResult, workerBreakdownResult] = results.map(r =>
+  const [kpiResult, workerBreakdownResult, trendResult] = results.map(r =>
     r.status === 'fulfilled' ? r.value : null
   )
   const kpi = kpiResult as KpiSnapshot | null
   const workerBreakdown = getResponseData<WorkerBreakdownEntry[]>(workerBreakdownResult)
+  const trend = trendResult as DailyMeterPoint[] | null
 
   return {
     yesterday: kpi,
+    today: null,
+    orders: null,
     workerBreakdown: workerBreakdown || null,
+    machines: null,
+    trend: trend || null,
   }
 }
