@@ -165,6 +165,7 @@ Acceptance:
 - Golden A follow-ons can be re-run from a clean QA order.
 - Batch 22 source-fixes `ORDER-005`, `ORDER-009`, and `PROD-011` but does not make them pass-ready. Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` must be applied to QA before runtime proof. Then rollback-only/API probes must prove over-target, cancelled/completed order-attributed logs, stale assignment, and negative-meter writes are rejected, while valid production/correction still reconciles generated stock, order progress, and payroll basis.
 - Batch 24B source-fixes `PROD-013`, `PROD-023`, and `PROD-029` but does not make them pass-ready. Browser proof must verify that suspicious large positive shift meters show a non-blocking confirmation and can proceed after confirmation, restored localStorage drafts after refresh/crash show the unsaved-draft indicator and clear after save/reset, and landing/setup copy no longer claims raw opening/closing meter-reading proof. `PROD-022` remains open for separate date/shift draft-isolation runtime proof.
+- Batch 24D source-fixes `PROD-022` but does not make it pass-ready. Browser proof must verify production drafts are isolated by org, user, selected date, and shift; changing date/shift does not show another draft; returning restores the matching draft; and save submits the currently selected date/shift.
 - Batch 24C source-fixes `SETUP-011` but does not make it pass-ready. Browser proof must create/verify the quote or market-run costing, active linked loom target, day/night workers on the same loom, active workers, supervisor, payroll config, and plan, then refresh Factory Today and confirm the setup checklist remains complete from persisted data.
 
 ## P1 Estimator, Quote, Order, and Date Snapshot Retest
@@ -428,6 +429,7 @@ Acceptance:
 - Batch 3 closes `SALE-015` for rapid duplicate stock-sale submit. Other idempotency/offline/cache rows remain open.
 - Batch 4 closes commercial receivable payment duplicate-submit idempotency as part of `COMM-010` and `SIGNOFF-09`. `OFF-009` remains open for unknown-timeout UX and status reconciliation across high-value mutations.
 - Batch 9 leaves `OFF-007` partial pending production service-worker update proof with an active draft and leaves `OFF-010` partial pending throttled slow/intermittent-network runtime proof across core mobile screens.
+- Batch 24D moves `EST-017` from fail to `code_verified` by adding a synchronous estimator submit lock and focused source tests. It is not pass until browser rapid double-click proof is collected, and it does not claim server/database idempotency.
 
 ## P5 Release Gate Retest
 

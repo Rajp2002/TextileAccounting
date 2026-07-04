@@ -50,6 +50,11 @@ import {
     type ZeroMeterReason,
 } from '@/lib/production-log-validation'
 import {
+    countRestoredUnsavedDraftMeters,
+    getProductionMetersDraftKey,
+    parseProductionMetersDraft,
+} from '@/lib/production-drafts'
+import {
     Sheet,
     SheetContent,
     SheetHeader,
@@ -103,27 +108,6 @@ function formatMeters(value: number | null | undefined) {
 
 function formatLoomName(name: string) {
     return name.replace(/^Machine\b/i, 'Loom')
-}
-
-function parseProductionMetersDraft(cached: string): Record<string, number> {
-    const parsed = JSON.parse(cached) as unknown
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
-
-    return Object.entries(parsed).reduce<Record<string, number>>((acc, [machineId, value]) => {
-        const meters = Number(value)
-        if (Number.isFinite(meters)) acc[machineId] = meters
-        return acc
-    }, {})
-}
-
-function countRestoredUnsavedDraftMeters(
-    draftMeters: Record<string, number>,
-    savedMeters: Record<string, number>
-) {
-    return Object.entries(draftMeters).filter(([machineId, meters]) => {
-        const saved = savedMeters[machineId] ?? 0
-        return Math.abs(meters - saved) > 0.001
-    }).length
 }
 
 const PRODUCTION_LOG_FALLBACK_ERROR = 'Could not save production log. Your entry is still saved as a draft. Check your connection and try again.'
@@ -763,10 +747,18 @@ export default function UnifiedDashboard() {
     const queryClient = useQueryClient()
     const [date, setDate] = useState(getTodayString())
     const [shift, setShift] = useState<'day' | 'night'>('day')
+    const profileOrgId = userProfile?.org_id ?? null
+    const profileUserId = userProfile?.userId ?? null
+    const selectedDraftKey = profileOrgId && profileUserId
+        ? getProductionMetersDraftKey({ orgId: profileOrgId, userId: profileUserId, date, shift })
+        : null
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [copying, setCopying] = useState(false)
     const submitLockRef = useRef(false)
+    const fetchRequestRef = useRef(0)
+    const selectedDraftKeyRef = useRef(selectedDraftKey)
+    selectedDraftKeyRef.current = selectedDraftKey
 
     const [machines, setMachines] = useState<ShiftMachine[]>([])
     const [workers, setWorkers] = useState<ShiftWorker[]>([])
@@ -776,6 +768,7 @@ export default function UnifiedDashboard() {
 
     // Bulk Entry state
     const [productionMeters, setProductionMeters] = useState<Record<string, number>>({})
+    const [productionMetersDraftKey, setProductionMetersDraftKey] = useState<string | null>(null)
     const [restoredDraftInfo, setRestoredDraftInfo] = useState<RestoredDraftInfo | null>(null)
     const [largeMeterEntries, setLargeMeterEntries] = useState<LargeMeterEntry[]>([])
     const [largeMeterPendingCode, setLargeMeterPendingCode] = useState('')
@@ -853,10 +846,11 @@ export default function UnifiedDashboard() {
     // Save to localStorage whenever production metre drafts change
     useEffect(() => {
         if (loading) return // Prevent overwriting drafts during transitions
-        const key = `production_meters_${date}_${shift}`
-        if (Object.keys(productionMeters).length > 0) localStorage.setItem(key, JSON.stringify(productionMeters))
-        else localStorage.removeItem(key)
-    }, [productionMeters, date, shift, loading])
+        if (!selectedDraftKey) return
+        if (productionMetersDraftKey !== selectedDraftKey) return
+        if (Object.keys(productionMeters).length > 0) localStorage.setItem(selectedDraftKey, JSON.stringify(productionMeters))
+        else localStorage.removeItem(selectedDraftKey)
+    }, [productionMeters, productionMetersDraftKey, selectedDraftKey, loading])
 
     useEffect(() => {
         if (!correctionWindowExpiresAt) {
@@ -873,8 +867,18 @@ export default function UnifiedDashboard() {
     }, [correctionWindowExpiresAt])
 
     const fetchData = useCallback(async () => {
+        const requestId = fetchRequestRef.current + 1
+        fetchRequestRef.current = requestId
+        const requestedDate = date
+        const requestedShift = shift
+        const requestedDraftKey = selectedDraftKey
+
         setLoading(true)
-        const data = await getShiftSetupData(date, shift)
+        const data = await getShiftSetupData(requestedDate, requestedShift)
+
+        if (fetchRequestRef.current !== requestId) return
+        if (selectedDraftKeyRef.current !== requestedDraftKey) return
+
         setMachines(data.machines)
         setWorkers(data.workers)
         setOrders(data.orders)
@@ -892,21 +896,24 @@ export default function UnifiedDashboard() {
             return acc
         }, {})
 
-        const draftKey = `production_meters_${date}_${shift}`
-        const cached = localStorage.getItem(draftKey)
+        const draftKey = requestedDraftKey
+        const cached = draftKey ? localStorage.getItem(draftKey) : null
         if (cached) {
             try {
                 const restoredMeters = parseProductionMetersDraft(cached)
                 setProductionMeters(restoredMeters)
+                setProductionMetersDraftKey(draftKey)
                 const unsavedCount = countRestoredUnsavedDraftMeters(restoredMeters, existingProductionMeters)
                 setRestoredDraftInfo(unsavedCount > 0 ? { count: unsavedCount } : null)
             } catch (error) {
                 console.error('Failed to parse cached production metre drafts', error)
                 setProductionMeters(existingProductionMeters)
+                setProductionMetersDraftKey(draftKey)
                 setRestoredDraftInfo(null)
             }
         } else {
             setProductionMeters(existingProductionMeters)
+            setProductionMetersDraftKey(draftKey)
             setRestoredDraftInfo(null)
         }
 
@@ -929,13 +936,17 @@ export default function UnifiedDashboard() {
         setDowntimeNotes({})
 
         setLoading(false)
-    }, [date, shift])
+    }, [date, shift, selectedDraftKey])
 
     useEffect(() => { fetchData() }, [fetchData])
 
-    const resetShiftDraftState = () => {
+    const resetShiftDraftState = (nextDate: string, nextShift: 'day' | 'night') => {
         setLoading(true)
         setProductionMeters({})
+        setProductionMetersDraftKey(profileOrgId && profileUserId
+            ? getProductionMetersDraftKey({ orgId: profileOrgId, userId: profileUserId, date: nextDate, shift: nextShift })
+            : null
+        )
         setRestoredDraftInfo(null)
         setLargeMeterEntries([])
         setLargeMeterPendingCode('')
@@ -952,13 +963,13 @@ export default function UnifiedDashboard() {
 
     const handleDateChange = (nextDate: string) => {
         if (nextDate === date) return
-        resetShiftDraftState()
+        resetShiftDraftState(nextDate, shift)
         setDate(nextDate)
     }
 
     const handleShiftChange = (nextShift: 'day' | 'night') => {
         if (nextShift === shift) return
-        resetShiftDraftState()
+        resetShiftDraftState(date, nextShift)
         setShift(nextShift)
     }
 
@@ -1096,7 +1107,7 @@ export default function UnifiedDashboard() {
             setLargeMeterPendingCode('')
             setLargeMeterConfirmationKey(null)
             setShowLargeMeterDialog(false)
-            localStorage.removeItem(`production_meters_${date}_${shift}`) // Clear cache
+            if (selectedDraftKey) localStorage.removeItem(selectedDraftKey) // Clear cache
             setShowDuplicateDialog(false)
             setDuplicateAccessCode('')
             setCorrectionWindowExpiresAt(res.correctionWindowExpiresAt ?? null)
@@ -1368,7 +1379,10 @@ export default function UnifiedDashboard() {
                                 orders={orders}
                                 assignment={assignment}
                                 producedMeters={productionMeters[machine.id] ?? 0}
-                                onProducedMetersChange={(v) => setProductionMeters(prev => ({ ...prev, [machine.id]: v }))}
+                                onProducedMetersChange={(v) => {
+                                    setProductionMetersDraftKey(selectedDraftKey)
+                                    setProductionMeters(prev => ({ ...prev, [machine.id]: v }))
+                                }}
                                 onStatusClick={setSelectedMachine}
                                 isSyncing={syncingState[machine.id] === 'syncing'}
                                 isSaved={syncingState[machine.id] === 'saved'}

@@ -14,18 +14,18 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, Batch 22 production/order boundary source-fix closeout, Batch 23 Start Party Order transaction boundary source-fix closeout, Batch 24A attendance RLS and access-code boundary source-fix closeout, Batch 24B supervisor production UX source-fix closeout, and Batch 24C Factory Today setup and historical analytics state closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, Batch 22 production/order boundary source-fix closeout, Batch 23 Start Party Order transaction boundary source-fix closeout, Batch 24A attendance RLS and access-code boundary source-fix closeout, Batch 24B supervisor production UX source-fix closeout, Batch 24C Factory Today setup and historical analytics state closeout, and Batch 24D estimator submit and production draft isolation source-fix closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
 | `pass` | 195 | Runtime/test evidence exists. |
-| `fail` | 21 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `fail` | 19 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
-| `code_verified` | 138 | Source evidence only. This is not a pass. |
+| `code_verified` | 140 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
-Critical failures: 0. High failures: 9. Critical blocked golden-journey follow-ons: 6.
+Critical failures: 0. High failures: 8. Critical blocked golden-journey follow-ons: 6.
 
 Batch 1 security foundation moved `SEC-002`, `SEC-003`, `SEC-004`, `SEC-005`, `SEC-006`, and `AUTH-016` from fail to pass with runtime/test/migration evidence. `AUTH-008`, external webhook/export/compliance security rows, release gates, and unrelated unresolved failures remain open. `PAY-018` and `PAY-020` were source-fixed by Batch 20 and later closed by Batch 21D disposable QA runtime proof.
 
@@ -67,7 +67,9 @@ Batch 21D moved `PAY-018` and `PAY-020` from `code_verified` to pass with dispos
 
 Batch 22 moved `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof in `output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json`. Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` was created but not applied. `ORDER-005` is source-fixed by over-target post-replacement total checks in the replacement RPC and table trigger. `ORDER-009` is source-fixed by active-order/current-loom attribution checks that block cancelled/completed/stale-assignment order-attributed logs and non-active order replacement. `PROD-011` is source-fixed by a forward-only `production_logs_meters_nonnegative` `NOT VALID` check plus RPC/trigger negative-meter guards. `SIGNOFF-02` remains fail/open: the `ORDER-009` dependency is improved, but full current-run owner sign-off attribution runtime proof is still required. `GOLDEN-A-23`, `PAY-027`, `DASH-003`, Golden rows, `QUOTE-007`, and all other rows remain unchanged.
 
-Batch 24B moved `PROD-013`, `PROD-023`, and `PROD-029` from fail to `code_verified` with source/test proof in `output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json`. Suspicious large positive shift meters now show a non-blocking confirmation at 10,000m, restored localStorage drafts now show a visible unsaved-draft indicator, and public/setup production copy now uses shift-total/shift-meter terminology instead of raw opening/closing meter-reading proof claims. `PROD-022` remains fail/open pending separate date/shift draft-isolation runtime proof. No row is pass-ready from Batch 24B.
+Batch 24B moved `PROD-013`, `PROD-023`, and `PROD-029` from fail to `code_verified` with source/test proof in `output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json`. Suspicious large positive shift meters now show a non-blocking confirmation at 10,000m, restored localStorage drafts now show a visible unsaved-draft indicator, and public/setup production copy now uses shift-total/shift-meter terminology instead of raw opening/closing meter-reading proof claims. No row is pass-ready from Batch 24B.
+
+Batch 24D moved `EST-017` and `PROD-022` from fail to `code_verified` with source/test proof in `output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json`. Estimator rapid double-submit is guarded client-side with a synchronous `saveQuoteLockRef` before Save Quote and Save & Create Market Run actions. Supervisor production drafts are now keyed by org, user, selected date, and shift, with stale date/shift fetch completions ignored and save using the current selected date/shift. Neither row is pass-ready until QA/browser proof is collected.
 
 ## Operating Rules
 
@@ -1260,7 +1262,7 @@ Rows promoted to `code_verified`, not pass:
 
 Rows explicitly not closed:
 
-- `PROD-022` remains fail/open pending separate date/shift draft-isolation browser/runtime proof.
+- `PROD-022` was outside Batch 24B and is later source-fixed by Batch 24D pending browser/runtime proof.
 - `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, `PAY-027`, `DASH-003`, Golden rows, and all unapproved rows remain unchanged.
 
 Repository state:
@@ -1348,7 +1350,7 @@ Rows promoted to `code_verified`, not pass:
 
 Rows explicitly not closed:
 
-- `PROD-022` remains fail/open pending separate date/shift draft-isolation browser/runtime proof.
+- `PROD-022` was outside Batch 24C and is later source-fixed by Batch 24D pending browser/runtime proof.
 - `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, `PAY-027`, `DASH-003`, Golden rows, and all unapproved rows remain unchanged.
 
 Repository state:
@@ -1374,3 +1376,47 @@ Resolution status:
 
 - `SETUP-011` and `DASH-004` are documented as `code_verified` in the active matrix.
 - Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 21, blocked 22, `code_verified` 138, `not_applicable` 1, `not_run` 0.
+
+## Batch 24D - Estimator Submit and Production Draft Isolation Closeout
+
+Date/time: 2026-07-04 IST. Branch `codex/batch-24d-submit-draft-isolation`.
+
+Scope:
+
+- `EST-017`
+- `PROD-022`
+
+Rows promoted to `code_verified`, not pass:
+
+- `EST-017`: estimator rapid double-submit is source-fixed with a synchronous `saveQuoteLockRef` guard before `createMarketRunFromEstimator` or `saveEstimatorQuoteV3`, save/create buttons disabled while saving, and lock cleanup in `finally`. This does not claim server/database idempotency.
+- `PROD-022`: supervisor production draft isolation is source-fixed by scoping localStorage keys to `orgId`, `userId`, selected date, and shift; using `userProfile.org_id` and `userProfile.userId`; avoiding unsafe date/shift-only fallback keys; ignoring stale date/shift fetch completions; restoring only the active draft key; and saving with the currently selected date/shift.
+
+Rows explicitly not closed:
+
+- `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, MASTER rows, `PROD-002`, `PROD-004`, `PAY-027`, `DASH-003`, TECH/audit/dependency rows, WA/OFF rows, SIGNOFF rows, Golden rows, and all unapproved rows remain unchanged.
+
+Repository state:
+
+- Branch: `codex/batch-24d-submit-draft-isolation`.
+- Source base: `origin/main` at `37b3ad0dc9516734699cc0137ccb1bc2059908d6`.
+- Evidence artifact: `output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json`.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json` -> passed.
+- `npx vitest run __tests__/batch24d-submit-draft-isolation.test.ts` -> passed, 1 test file and 13 tests.
+- `npx vitest run __tests__/batch24b-supervisor-ux-failures.test.ts` -> passed, 1 test file and 4 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint app/\(dashboard\)/owner/estimator/EstimatorClient.tsx app/\(dashboard\)/supervisor/dashboard/page.tsx lib/production-drafts.ts __tests__/batch24d-submit-draft-isolation.test.ts __tests__/batch24b-supervisor-ux-failures.test.ts` -> passed.
+- `npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts __tests__/batch23-start-party-order-atomicity.test.ts __tests__/batch10-estimator-quote-order-snapshots.test.ts __tests__/batch22-production-order-boundary-hardening.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/production-mode.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/estimator.test.ts` -> passed, 9 test files and 116 tests.
+
+Forbidden actions:
+
+- This closeout did not create migrations, apply migrations, run `npx supabase db push`, run migration repair, run `db pull`, use direct SQL, use `--include-all`, mutate production, run `npm audit`, install packages, touch the lockfile, stage env files, or stage Supabase temp files.
+- Browser/runtime proof was not collected, so no pass-ready status is claimed.
+
+Resolution status:
+
+- `EST-017` and `PROD-022` are documented as `code_verified` in the active matrix.
+- Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 19, blocked 22, `code_verified` 140, `not_applicable` 1, `not_run` 0.

@@ -25,7 +25,7 @@ describe('Batch 24B supervisor production UX fixes', () => {
         expect(supervisorPage).toContain('restored from this device and have not been saved yet')
 
         expect(supervisorPage).toContain('setRestoredDraftInfo(null)')
-        expect(supervisorPage).toContain('const resetShiftDraftState = () => {')
+        expect(supervisorPage).toContain("const resetShiftDraftState = (nextDate: string, nextShift: 'day' | 'night') => {")
         expect(supervisorPage).toContain('setProductionMeters({}) // Reset inputs after success')
     })
 

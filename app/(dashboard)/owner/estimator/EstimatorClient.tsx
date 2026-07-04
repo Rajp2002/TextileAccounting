@@ -1,6 +1,6 @@
 'use client'
 
-import { useReducer, useEffect, useMemo, useCallback, useState } from 'react'
+import { useReducer, useEffect, useMemo, useCallback, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { nanoid } from 'nanoid'
 import { Card, CardContent } from '@/components/ui/card'
@@ -983,6 +983,7 @@ export default function EstimatorClient({
     const [loading,   setLoading]   = useState(false)
     const [saving,    setSaving]    = useState(false)
     const [savingQuote, setSavingQuote] = useState(false)
+    const saveQuoteLockRef = useRef(false)
     const [savingTemplate, setSavingTemplate] = useState(false)
     const [templates, setTemplates] = useState<EstimatorTemplate[]>(initialTemplates ?? [])
     const [outputSuggestion, setOutputSuggestion] = useState<EstimateState['outputSuggestion'] | null>(null)
@@ -1348,6 +1349,8 @@ export default function EstimatorClient({
     }
 
     const handleSaveQuote = async (targetMode: 'quote' | 'market' = mode, status: 'draft' | 'accepted' = 'draft') => {
+        if (saveQuoteLockRef.current || savingQuote) return
+
         const resolvedPartyName = targetMode === 'market' 
             ? (qualityLabel.trim() || partyName.trim()) 
             : partyName.trim()
@@ -1360,47 +1363,54 @@ export default function EstimatorClient({
             return toast.error('Set a quantity before saving')
         }
 
+        saveQuoteLockRef.current = true
         setSavingQuote(true)
-        
-        if (targetMode === 'market') {
-            const workerRatePerM = calcWorkerRateSnapshot(state.weftRows, state.perPickCostPaisa ?? 0)
-            const res = await createMarketRunFromEstimator({
-                fabricLabel:             resolvedPartyName,
-                qualityLabel:            qualityLabel.trim(),
-                warpInstruction:         warpInstruction.trim() || undefined,
-                weftInstruction:         weftInstruction.trim() || undefined,
-                targetMeters:            state.orderQuantityM,
-                estimate:                state,
-                totalProductionCostPerM: totals.totalProductionCostPerM,
-                workerRatePerM:          workerRatePerM,
-                notes:                   '',
-                deadline:                new Date(new Date().getTime() + 30 * 86400000).toISOString().split('T')[0] // 30 days default
-            })
-            setSavingQuote(false)
-            if (res.error) {
-                toast.error(res.error)
+
+        try {
+            if (targetMode === 'market') {
+                const workerRatePerM = calcWorkerRateSnapshot(state.weftRows, state.perPickCostPaisa ?? 0)
+                const res = await createMarketRunFromEstimator({
+                    fabricLabel:             resolvedPartyName,
+                    qualityLabel:            qualityLabel.trim(),
+                    warpInstruction:         warpInstruction.trim() || undefined,
+                    weftInstruction:         weftInstruction.trim() || undefined,
+                    targetMeters:            state.orderQuantityM,
+                    estimate:                state,
+                    totalProductionCostPerM: totals.totalProductionCostPerM,
+                    workerRatePerM:          workerRatePerM,
+                    notes:                   '',
+                    deadline:                new Date(new Date().getTime() + 30 * 86400000).toISOString().split('T')[0] // 30 days default
+                })
+                if (res.error) {
+                    toast.error(res.error)
+                } else {
+                    toast.success('Market Run created successfully')
+                    router.push(`/owner/market-runs/${res.marketRunId}`)
+                }
             } else {
-                toast.success('Market Run created successfully')
-                router.push(`/owner/market-runs/${res.marketRunId}`)
+                const res = await saveEstimatorQuoteV3({
+                    partyName:               resolvedPartyName,
+                    qualityLabel:            qualityLabel.trim(),
+                    warpInstruction:         warpInstruction.trim() || undefined,
+                    weftInstruction:         weftInstruction.trim() || undefined,
+                    estimate:                state,
+                    quotePricePerM:          totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM,
+                    totalProductionCostPerM: totals.totalProductionCostPerM,
+                    status:                  status,
+                })
+                if (res.success) {
+                    toast.success(status === 'accepted' ? 'Quote saved & accepted!' : t('estimator.toast.converted_success'))
+                    router.push('/owner/quotes')
+                } else {
+                    toast.error(res.error ?? 'Failed to save quote')
+                }
             }
-        } else {
-            const res = await saveEstimatorQuoteV3({
-                partyName:               resolvedPartyName,
-                qualityLabel:            qualityLabel.trim(),
-                warpInstruction:         warpInstruction.trim() || undefined,
-                weftInstruction:         weftInstruction.trim() || undefined,
-                estimate:                state,
-                quotePricePerM:          totals.orderQuote?.quotePricePerM ?? totals.totalProductionCostPerM,
-                totalProductionCostPerM: totals.totalProductionCostPerM,
-                status:                  status,
-            })
+        } catch (error) {
+            console.error('Failed to save estimator quote:', error)
+            toast.error(error instanceof Error ? error.message : 'Failed to save quote')
+        } finally {
             setSavingQuote(false)
-            if (res.success) {
-                toast.success(status === 'accepted' ? 'Quote saved & accepted!' : t('estimator.toast.converted_success'))
-                router.push('/owner/quotes')
-            } else {
-                toast.error(res.error ?? 'Failed to save quote')
-            }
+            saveQuoteLockRef.current = false
         }
     }
 

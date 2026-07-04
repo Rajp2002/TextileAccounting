@@ -1756,7 +1756,7 @@ Rows promoted to `code_verified`, not pass:
 
 Rows explicitly not closed:
 
-- `PROD-022` remains fail/open because exact date/shift draft isolation still requires separate browser/runtime proof and likely separate draft-state work.
+- `PROD-022` was outside Batch 24B and is later source-fixed by Batch 24D pending browser/runtime proof for date/shift draft isolation.
 - `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, `PAY-027`, `DASH-003`, Golden rows, production/order boundary rows, stock/dispatch/commercial rows, billing/provider rows, Sentry/WhatsApp/restore/rollback rows, and all unapproved rows remain unchanged.
 
 Evidence:
@@ -1873,3 +1873,50 @@ Result:
 - `SETUP-011` and `DASH-004` are closed as `code_verified`/`source-fixed` candidates.
 - Browser/runtime QA proof is still required before marking true pass-ready. No production/browser pass is claimed because actual runtime proof has not been performed in this agent run.
 - Matrix movement from current main: fail -2 and `code_verified` +2, for total 377, pass 195, fail 21, blocked 22, `code_verified` 138, `not_applicable` 1, `not_run` 0.
+
+## Batch 24D - Estimator Submit and Production Draft Isolation Closeout
+
+Date/time: 2026-07-04 IST. Source base `origin/main` at `37b3ad0dc9516734699cc0137ccb1bc2059908d6`.
+
+Scope:
+
+- `EST-017`
+- `PROD-022`
+
+Rows promoted to `code_verified`, not pass:
+
+- `EST-017`: estimator rapid double-submit is source-fixed by a synchronous `saveQuoteLockRef` guard before `createMarketRunFromEstimator` or `saveEstimatorQuoteV3`, disabled save/create controls while saving, and lock reset in `finally`. This does not claim server/database idempotency.
+- `PROD-022`: production draft date/shift isolation is source-fixed by scoping draft localStorage keys to org, user, selected date, and shift. The supervisor dashboard uses `userProfile.org_id` and `userProfile.userId`, avoids date/shift-only fallback keys, ignores stale date/shift fetch completions, restores only the matching active draft, and saves with the currently selected date/shift. Batch 24B restored-draft indicator and suspicious large-meter warning behavior remain compatible.
+
+Rows explicitly not closed:
+
+- `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, MASTER rows, `PROD-002`, `PROD-004`, `PAY-027`, `DASH-003`, TECH/audit/dependency rows, WA/OFF rows, SIGNOFF rows, Golden rows, and all unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json`.
+- Focused source test: `__tests__/batch24d-submit-draft-isolation.test.ts`.
+- Compatibility source test: `__tests__/batch24b-supervisor-ux-failures.test.ts`.
+- Implementation files: `app/(dashboard)/owner/estimator/EstimatorClient.tsx`, `app/(dashboard)/supervisor/dashboard/page.tsx`, and `lib/production-drafts.ts`.
+
+Verification commands:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json` -> passed.
+- `npx vitest run __tests__/batch24d-submit-draft-isolation.test.ts` -> passed, 1 test file and 13 tests.
+- `npx vitest run __tests__/batch24b-supervisor-ux-failures.test.ts` -> passed, 1 test file and 4 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint app/\(dashboard\)/owner/estimator/EstimatorClient.tsx app/\(dashboard\)/supervisor/dashboard/page.tsx lib/production-drafts.ts __tests__/batch24d-submit-draft-isolation.test.ts __tests__/batch24b-supervisor-ux-failures.test.ts` -> passed.
+- `npx vitest run __tests__/batch11-estimator-order-lifecycle.test.ts __tests__/batch23-start-party-order-atomicity.test.ts __tests__/batch10-estimator-quote-order-snapshots.test.ts __tests__/batch22-production-order-boundary-hardening.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/production-mode.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/estimator.test.ts` -> passed, 9 test files and 116 tests.
+
+Data safety:
+
+- No migration was created or applied.
+- No RPC/database work occurred.
+- No production mutation occurred.
+- No Supabase db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, browser/runtime proof, env file staging, Supabase temp-file staging, or secret copy was used.
+
+Resolution status:
+
+- `EST-017` and `PROD-022` are documented as `code_verified` in the active QA matrix.
+- Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 19, blocked 22, `code_verified` 140, `not_applicable` 1, `not_run` 0.

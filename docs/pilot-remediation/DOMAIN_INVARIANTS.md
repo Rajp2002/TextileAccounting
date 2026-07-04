@@ -45,7 +45,7 @@ Batch 15 proof note: `DASH-003` is source-fixed and `code_verified`, not pass. F
 
 Batch 22 proof note: `ORDER-005`, `ORDER-009`, and `PROD-011` are source-fixed and `code_verified`, not pass. Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` adds a forward-only nonnegative-meter table check, direct table trigger, and hardened `replace_shift_production_logs` guard so over-target totals, cancelled/completed/stale-assignment order-attributed logs, and negative meters are rejected before production can feed progress, generated stock, or payroll basis. The migration is not applied and disposable QA runtime/API proof is still required before pass.
 
-Batch 24B proof note: `PROD-013`, `PROD-023`, and `PROD-029` are source-fixed and `code_verified`, not pass. Suspicious large positive shift meters now show a non-blocking confirmation at 10,000m, restored localStorage drafts now show a visible unsaved-draft indicator, and public/setup production copy now uses shift-total/shift-meter terminology instead of raw opening/closing meter-reading proof claims. QA/browser proof is still required before pass. `PROD-022` remains fail/open pending separate date/shift draft-isolation runtime proof.
+Batch 24B proof note: `PROD-013`, `PROD-023`, and `PROD-029` are source-fixed and `code_verified`, not pass. Suspicious large positive shift meters now show a non-blocking confirmation at 10,000m, restored localStorage drafts now show a visible unsaved-draft indicator, and public/setup production copy now uses shift-total/shift-meter terminology instead of raw opening/closing meter-reading proof claims. QA/browser proof is still required before pass. `PROD-022` was outside Batch 24B and is later source-fixed by Batch 24D pending browser proof.
 
 Batch 24C proof note: `SETUP-011` is source-fixed and `code_verified`, not pass. Factory Today setup checklist state now uses persisted source data for costing evidence, active linked loom targets, day/night worker assignments on the same loom, active worker rows, and payroll config bounds. Browser/runtime proof is still required before pass.
 
@@ -237,6 +237,10 @@ Required proof:
 - Client sends an idempotency key for duplicate-prone operations.
 - Server stores and enforces one result per operation key.
 - Timeout UI checks operation status before inviting retry.
+
+Batch 24D proof note: `EST-017` is source-fixed and `code_verified`, not pass. Estimator Save Quote and Save & Create Market Run now guard the client path with a synchronous `saveQuoteLockRef` before `createMarketRunFromEstimator` or `saveEstimatorQuoteV3`, keep save/create controls disabled while saving, and reset the lock in `finally`. Evidence is `output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json`, `__tests__/batch24d-submit-draft-isolation.test.ts`, focused Batch 24B compatibility tests, the estimator/quote/order and supervisor/production regression pack, TypeScript, targeted ESLint, JSON validation, and `git diff --check`. This does not claim server/database idempotency; browser rapid double-click proof remains required before pass.
+
+Batch 24D production draft note: `PROD-022` is source-fixed and `code_verified`, not pass. Supervisor production drafts are now scoped by org, user, selected date, and shift through `lib/production-drafts.ts`; the dashboard uses `userProfile.org_id` and `userProfile.userId`, avoids unsafe date/shift-only fallback keys, ignores stale date/shift fetch completions, restores only the active draft, and saves with the currently selected date/shift. Batch 24B restored-draft indicator and large-meter warning behavior remain compatible. Browser proof of org/user/date/shift draft isolation and save payload date/shift remains required before pass.
 
 ## Offline, Cache, and Account Switching
 

@@ -1,0 +1,235 @@
+{
+  "batch": "24D",
+  "title": "estimator double-submit idempotency and production draft date/shift isolation",
+  "branch": "codex/batch-24d-submit-draft-isolation",
+  "source_commit": "37b3ad0dc9516734699cc0137ccb1bc2059908d6",
+  "source_of_truth": {
+    "matrix": "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+    "remediation_docs_inspected": [
+      "docs/pilot-remediation/FIX_LOG.md",
+      "docs/pilot-remediation/LOOP_STATE.md",
+      "docs/pilot-remediation/FAILURE_BACKLOG.md",
+      "docs/pilot-remediation/RETEST_PLAN.md",
+      "docs/pilot-remediation/DOMAIN_INVARIANTS.md",
+      "docs/pilot-remediation/PILOT_READY_DEFINITION.md"
+    ]
+  },
+  "targeted_review_fix": {
+    "review_result_before_fix": "NEEDS_MORE_FIXES",
+    "finding": "PROD-022 review found that production draft keys were only scoped by date and shift, so same-browser drafts could cross org/user boundaries after logout/login or account switch.",
+    "fix": "Production draft keys now include org_id, userId, date, and shift when profile context is available. The supervisor dashboard passes userProfile.org_id and userProfile.userId to the draft-key helper and skips localStorage draft reads/writes until a scoped key exists.",
+    "new_key_shape": "production_meters_${orgId}_${userId}_${date}_${shift}",
+    "fallback_key_shape": "production_meters_unknownOrg_unknownUser_${date}_${shift}"
+  },
+  "exact_row_definitions_inspected": [
+    {
+      "id": "EST-017",
+      "category": "12. Estimator and Costing",
+      "row_wording": "Rapid double-submit.",
+      "expected_behavior": "One quote/order/run only.",
+      "status_before_batch": "fail",
+      "severity": "High",
+      "current_failure_evidence": "Estimator save and market-run creation are not idempotent at the server boundary. saveEstimatorQuoteV3 unconditionally inserts a new estimator_quote per call. createMarketRunFromEstimator separately inserts an estimator_quote, market_run, and backing order without an idempotency key or single transaction. Rapid duplicate server-action calls can create duplicate quotes/runs/orders even if the UI disables the button after React state updates.",
+      "matrix_evidence": "logs/estimator-quotes-source-evidence-20260624.json; app/(dashboard)/owner/estimator/actions.ts:341; app/(dashboard)/owner/estimator/actions.ts:362; app/(dashboard)/owner/estimator/actions.ts:791; app/(dashboard)/owner/estimator/actions.ts:817; app/(dashboard)/owner/estimator/actions.ts:864; app/(dashboard)/owner/estimator/actions.ts:897",
+      "affected_files_inspected": [
+        "app/(dashboard)/owner/estimator/EstimatorClient.tsx",
+        "app/(dashboard)/owner/estimator/actions.ts",
+        "__tests__/estimator.test.ts",
+        "__tests__/batch10-estimator-quote-order-snapshots.test.ts",
+        "__tests__/batch11-estimator-order-lifecycle.test.ts",
+        "__tests__/batch23-start-party-order-atomicity.test.ts"
+      ],
+      "implementation_type": "UI/client submit guard; durable server-action idempotency would require a safe persisted idempotency key or database/RPC design and was not implemented in this no-migration batch.",
+      "migration_or_rpc_needed": "Not for the UI guard implemented here. Durable server-boundary idempotency remains future product/database design work.",
+      "include_decision": "included"
+    },
+    {
+      "id": "PROD-022",
+      "category": "16. Supervisor Production Logging",
+      "row_wording": "Change date/shift while draft exists.",
+      "expected_behavior": "Draft stored under correct date/shift and never submitted to another shift.",
+      "status_before_batch": "fail",
+      "severity": "Medium",
+      "current_failure_evidence": "Entered loom values remained visible when changing the date, then the date reset to June 22 on save; draft isolation by date was not reliable or clearly communicated.",
+      "matrix_evidence": "production supervisor DOM observations",
+      "affected_files_inspected": [
+        "app/(dashboard)/supervisor/dashboard/page.tsx",
+        "app/(dashboard)/supervisor/actions.ts",
+        "__tests__/batch24b-supervisor-ux-failures.test.ts",
+        "__tests__/p1-production-dispatch-regressions.test.ts",
+        "__tests__/p1-production-log-strictness.test.ts",
+        "__tests__/p1-production-stock-atomicity.test.ts",
+        "__tests__/batch22-production-order-boundary-hardening.test.ts"
+      ],
+      "implementation_type": "client query/state/localStorage isolation logic",
+      "migration_or_rpc_needed": "No",
+      "include_decision": "included"
+    }
+  ],
+  "included_rows": [
+    "EST-017",
+    "PROD-022"
+  ],
+  "excluded_rows": [
+    { "id": "AUTH-008", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "SEC-009", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "SEC-015", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "SEC-017", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "MASTER rows", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "PROD-002", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "PROD-004", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "PAY-027", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "DASH-003", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "TECH/audit/dependency rows", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "WA/OFF rows", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "SIGNOFF rows", "reason": "explicitly out of Batch 24D scope" },
+    { "id": "Golden rows", "reason": "explicitly out of Batch 24D scope" }
+  ],
+  "files_changed": [
+    "app/(dashboard)/owner/estimator/EstimatorClient.tsx",
+    "app/(dashboard)/supervisor/dashboard/page.tsx",
+    "lib/production-drafts.ts",
+    "__tests__/batch24d-submit-draft-isolation.test.ts",
+    "__tests__/batch24b-supervisor-ux-failures.test.ts",
+    "output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json"
+  ],
+  "tests_added_or_updated": [
+    {
+      "path": "__tests__/batch24d-submit-draft-isolation.test.ts",
+      "coverage": [
+        "EST-017 rapid double-submit uses a synchronous ref lock before save/create actions",
+        "EST-017 duplicate rapid clicks are ignored while the guarded submit is pending",
+        "EST-017 normal quote and market-run submit paths remain wired",
+        "PROD-022 draft keys include org_id, userId, selected date, and selected shift",
+        "PROD-022 same date/shift drafts are separated by org_id and userId",
+        "PROD-022 changing date/shift clears visible values and rebinds the active draft key",
+        "PROD-022 returning to the original date/shift restores only the matching draft",
+        "PROD-022 save uses the currently selected date/shift",
+        "PROD-022 Batch 24B restored unsaved draft and large-meter warning behavior remains compatible",
+        "No Batch 24D migration/RPC/database artifacts were added"
+      ]
+    },
+    {
+      "path": "__tests__/batch24b-supervisor-ux-failures.test.ts",
+      "coverage": [
+        "Updated existing Batch 24B reset-state source assertion for the new date/shift-aware reset signature"
+      ]
+    }
+  ],
+  "implementation_summary": {
+    "EST-017": [
+      "Added saveQuoteLockRef to app/(dashboard)/owner/estimator/EstimatorClient.tsx.",
+      "handleSaveQuote now returns immediately when saveQuoteLockRef.current or savingQuote is active.",
+      "The lock is set before createMarketRunFromEstimator or saveEstimatorQuoteV3 can be invoked.",
+      "The lock and saving state are released in finally, and thrown action errors now surface through the existing toast path.",
+      "Submit buttons continue to disable from savingQuote while pending."
+    ],
+    "PROD-022": [
+      "Added lib/production-drafts.ts for org/user/date/shift-scoped draft keys, draft parsing, and restored-unsaved count helpers.",
+      "Supervisor dashboard now derives selectedDraftKey from userProfile.org_id, userProfile.userId, selected date, and selected shift.",
+      "LocalStorage writes are skipped unless productionMetersDraftKey matches selectedDraftKey.",
+      "LocalStorage draft reads/writes are skipped until the authenticated profile supplies org_id and userId, avoiding legacy date/shift-only draft reads.",
+      "Date/shift changes clear visible meter values immediately and bind the meter state to the next selected key.",
+      "fetchData captures requested date/shift/key and ignores stale completions by request id and live selected-key ref.",
+      "Save clears localStorage with the current selectedDraftKey, matching the selected org/user/date/shift payload."
+    ]
+  },
+  "per_row_source_code_evidence": [
+    {
+      "id": "EST-017",
+      "source_evidence": [
+        "app/(dashboard)/owner/estimator/EstimatorClient.tsx uses const saveQuoteLockRef = useRef(false).",
+        "handleSaveQuote starts with if (saveQuoteLockRef.current || savingQuote) return.",
+        "saveQuoteLockRef.current = true occurs before createMarketRunFromEstimator and saveEstimatorQuoteV3.",
+        "finally resets setSavingQuote(false) and saveQuoteLockRef.current = false.",
+        "__tests__/batch24d-submit-draft-isolation.test.ts asserts the guard ordering and that normal quote/market-run paths remain wired."
+      ],
+      "source_fixed_or_code_verified_candidate": "partial source-fixed candidate for the browser rapid double-click path only; durable server-boundary duplicate server-action calls remain open without a persisted idempotency key."
+    },
+    {
+      "id": "PROD-022",
+      "source_evidence": [
+        "lib/production-drafts.ts getProductionMetersDraftKey({ orgId, userId, date, shift }) returns production_meters_${orgId}_${userId}_${date}_${shift}.",
+        "app/(dashboard)/supervisor/dashboard/page.tsx reads profileOrgId from userProfile.org_id and profileUserId from userProfile.userId.",
+        "app/(dashboard)/supervisor/dashboard/page.tsx stores selectedDraftKey from current org/user/date/shift and uses null until org/user context exists.",
+        "LocalStorage persistence returns early when productionMetersDraftKey !== selectedDraftKey.",
+        "LocalStorage persistence also returns early when selectedDraftKey is null, so legacy date/shift-only drafts are not read or written before profile scope exists.",
+        "resetShiftDraftState(nextDate, nextShift) clears productionMeters and sets productionMetersDraftKey to the next org/user/date/shift key.",
+        "fetchData ignores stale completions when fetchRequestRef.current changes or selectedDraftKeyRef.current no longer matches requestedDraftKey.",
+        "__tests__/batch24d-submit-draft-isolation.test.ts verifies distinct org/user/date/shift draft restore behavior and selected date/shift save wiring."
+      ],
+      "source_fixed_or_code_verified_candidate": "source-fixed/code_verified candidate pending QA browser/runtime proof"
+    }
+  ],
+  "rows_considered_source_fixed_or_code_verified_candidates": [
+    {
+      "id": "EST-017",
+      "candidate_scope": "UI rapid double-submit prevention for the current estimator save and market-run buttons",
+      "caveat": "Not pass-ready and not a complete durable server-boundary idempotency fix. Repeated direct server-action calls can only be made fully idempotent with a safe persisted idempotency key or database/RPC design outside this batch."
+    },
+    {
+      "id": "PROD-022",
+      "candidate_scope": "org/user/date/shift-local production draft isolation and stale-fetch protection",
+      "caveat": "Not pass-ready until browser/runtime proof confirms date/shift switching and save behavior."
+    }
+  ],
+  "rows_still_open": [
+    {
+      "id": "EST-017",
+      "why": "No QA browser rapid-click proof was collected. Durable server-side idempotency for duplicate direct server-action calls remains open because migration/RPC/database changes were explicitly out of scope."
+    },
+    {
+      "id": "PROD-022",
+      "why": "No QA browser runtime proof was collected. Source/tests indicate the draft isolation fix, but matrix pass requires runtime date/shift switching and save proof."
+    }
+  ],
+  "future_qa_runtime_proof_required": [
+    {
+      "id": "EST-017",
+      "proof": "In QA/browser, rapidly click Save Quote, Save & Accept, and Start Market Run controls and verify only one quote/order/run is created. Separately decide whether to add persisted server-side idempotency keys for direct duplicate server-action calls."
+    },
+    {
+      "id": "PROD-022",
+      "proof": "In QA/browser, enter loom values on one org/user/date/shift, change date and shift, verify other selections do not show those values, return to the original date/shift and verify the matching draft restores, switch account/org in the same browser to verify drafts do not cross identity boundaries, then save and verify the submitted production rows use the currently selected date/shift."
+    }
+  ],
+  "commands_run": [
+    { "command": "git fetch origin --prune", "result": "passed" },
+    { "command": "git switch -C codex/batch-24d-submit-draft-isolation origin/main", "result": "passed" },
+    { "command": "git status --short", "result": "passed; clean before edits, later showed only scoped source/test/artifact changes" },
+    { "command": "git rev-parse origin/main", "result": "passed; 37b3ad0dc9516734699cc0137ccb1bc2059908d6" },
+    { "command": "rg -n \"EST-017|PROD-022\" output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md docs/pilot-remediation/*.md", "result": "passed; row definitions and remediation references inspected" },
+    { "command": "npx vitest run __tests__/batch24d-submit-draft-isolation.test.ts", "result": "passed after targeted org/user draft-key fix; 1 file, 13 tests" },
+    { "command": "npx vitest run __tests__/estimator.test.ts __tests__/batch10-estimator-quote-order-snapshots.test.ts __tests__/batch11-estimator-order-lifecycle.test.ts __tests__/batch23-start-party-order-atomicity.test.ts __tests__/production-mode.test.ts __tests__/batch24b-supervisor-ux-failures.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/batch22-production-order-boundary-hardening.test.ts", "result": "first run failed one source assertion in __tests__/batch24b-supervisor-ux-failures.test.ts after the reset function signature changed; assertion updated, rerun passed 10 files and 120 tests" },
+    { "command": "npx tsc --noEmit --pretty false", "result": "passed" },
+    { "command": "npx eslint app/(dashboard)/owner/estimator/EstimatorClient.tsx app/(dashboard)/supervisor/dashboard/page.tsx lib/production-drafts.ts __tests__/batch24d-submit-draft-isolation.test.ts __tests__/batch24b-supervisor-ux-failures.test.ts", "result": "passed" },
+    { "command": "git diff --check", "result": "passed" }
+  ],
+  "test_results": [
+    { "command": "npx vitest run __tests__/batch24d-submit-draft-isolation.test.ts", "result": "passed", "files": 1, "tests": 13 },
+    { "command": "npx vitest run __tests__/batch24b-supervisor-ux-failures.test.ts", "result": "passed", "files": 1, "tests": 4 },
+    { "command": "relevant estimator/quote/order and supervisor/production regression Vitest pack", "result": "passed after updating the Batch 24B source assertion", "files": 10, "tests": 120 },
+    { "command": "npx tsc --noEmit --pretty false", "result": "passed" },
+    { "command": "targeted ESLint on touched files/tests", "result": "passed" },
+    { "command": "git diff --check", "result": "passed" }
+  ],
+  "confirmations": {
+    "no_migration_created": true,
+    "no_rpc_created_or_modified": true,
+    "no_database_work": true,
+    "no_production_mutation": true,
+    "no_supabase_db_push": true,
+    "no_migration_repair": true,
+    "no_db_pull": true,
+    "no_direct_sql": true,
+    "no_include_all": true,
+    "no_npm_audit": true,
+    "no_package_install": true,
+    "no_lockfile_change": true,
+    "no_staging": true,
+    "no_commit": true,
+    "no_push": true,
+    "no_docs_closeout": true,
+    "no_pass_ready_marking": true
+  }
+}
