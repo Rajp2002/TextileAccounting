@@ -65,10 +65,12 @@ describe('Batch 22 production/order boundary hardening migration', () => {
 
     it('keeps the supervisor server action on the hardened replacement RPC', () => {
         const supervisorActions = readProjectFile('app/(dashboard)/supervisor/actions.ts')
+        const assignmentPolicy = readProjectFile('lib/production-worker-assignment-policy.ts')
 
         expect(supervisorActions).toContain("supabase.rpc('replace_shift_production_logs'")
-        expect(supervisorActions).toContain("activeOrder?.status !== 'active'")
-        expect(supervisorActions).toContain('machine.current_order_id !== log.order_id')
+        expect(supervisorActions).toContain('evaluateProductionWorkerAssignmentPolicy')
+        expect(assignmentPolicy).toContain("input.activeOrderStatus !== 'active'")
+        expect(assignmentPolicy).toContain('input.currentOrderId !== input.logOrderId')
         expect(supervisorActions).toContain('VALIDATION_MESSAGES.NEGATIVE_METERS')
         expect(supervisorActions).not.toContain(".from('production_logs').insert(logs)")
     })

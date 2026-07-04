@@ -341,8 +341,8 @@ export function MachineManagement({
             const hasDayWorker = assignments?.some(a => a.machine_id === machine.id && a.shift === 'day')
             const hasNightWorker = assignments?.some(a => a.machine_id === machine.id && a.shift === 'night')
 
-            if (!hasDayWorker || !hasNightWorker) {
-                toast.error('Assign workers for both day and night shifts before activating this loom.')
+            if (!hasDayWorker && !hasNightWorker) {
+                toast.error('Assign at least one day or night worker before activating this loom.')
                 return
             }
 
@@ -546,10 +546,10 @@ export function MachineManagement({
                                         const nightAssignment = assignments?.find(a => a.machine_id === machine.id && a.shift === 'night')
                                         const isInactive = machine.status === 'inactive'
 
-                                        const hasRequiredAssignments = !!dayAssignment && !!nightAssignment
+                                        const hasAnyShiftAssignment = !!dayAssignment || !!nightAssignment
                                         const activeTarget = productionTargets?.find((target) => target.order_id === machine.current_order_id)
                                         const hasActiveProductionTarget = !!machine.current_order_id && machine.orders?.status === 'active'
-                                        const isEffectivelyActive = !isInactive && hasRequiredAssignments && hasActiveProductionTarget
+                                        const isEffectivelyActive = !isInactive && hasAnyShiftAssignment && hasActiveProductionTarget
 
                                         // Derive the wage rate from the selected cost analysis / quality.
                                         const activeRate = activeTarget?.worker_rate_per_m ?? machine.orders?.worker_rate_per_m

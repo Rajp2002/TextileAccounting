@@ -22,10 +22,10 @@ Security:
 Production and stock:
 
 - Production logs reconcile with generated stock after create, edit, downtime correction, duplicate submit, and refresh.
-- Negative, cancelled-order, over-target, wrong-assignment, and unsupported day-only/substitute-worker cases are blocked or explicitly unsupported.
+- Negative, cancelled-order, over-target, wrong-assignment, missing selected-shift worker, and unsupported substitute-worker persistence cases are blocked or explicitly handled.
 - Batch 22 source-fixes negative-meter, cancelled/completed/stale-assignment, and over-target boundaries for `ORDER-005`, `ORDER-009`, and `PROD-011`, but those rows remain `code_verified`, not pass, until the migration is applied in QA and runtime/API proof confirms valid production/correction still reconciles stock, order progress, and payroll basis.
 - Batch 24B source-fixes supervisor production UX rows `PROD-013`, `PROD-023`, and `PROD-029`, but those rows remain `code_verified`, not pass, until QA/browser proof confirms suspicious large-meter confirmation, restored-unsaved draft behavior, and shift-total/shift-meter copy truth.
-- Batch 24C source-fixes Factory Today setup checklist correctness for `SETUP-011`, but the row remains `code_verified`, not pass, until QA/browser proof confirms completed costing, loom target, day/night workers, active workers, payroll config, and refresh-stability.
+- Batch 24C source-fixes Factory Today setup checklist correctness for `SETUP-011`, and Batch 24F updates the worker-assignment portion to selected-shift/day-only policy. The row remains `code_verified`, not pass, until QA/browser proof confirms completed costing, loom target, selected-shift worker assignment, active workers, payroll config, and refresh-stability.
 - Batch 24E source-fixes master-data loom guardrails for `MASTER-002` and `MASTER-005`, but those rows remain `code_verified`, not pass, until migration/DB-boundary proof confirms normalized duplicate loom-name protection and QA/browser proof confirms protected delete/deactivate/unlink behavior and unused-loom behavior.
 
 Dashboard:
@@ -74,8 +74,8 @@ The following must be hidden, disabled, or documented as unsupported before pilo
 | Offline production logging | Batch 9 public/privacy/offline copy marks unsupported offline writes as online-only. | Keep auto-sync claims removed unless a real sync path is implemented and retested. |
 | Offline kharchi | Batch 9 disables offline kharchi submit/sync and removes the unsupported `kharchi_offline` queue path. | Keep offline kharchi online-only unless a real reconciled queue path is implemented and retested. |
 | Direct market-run sale path | Batch 4 disables the direct path so it cannot bypass commercial receivables. | Keep disabled for pilot unless it is routed through the normal receivable-creating sale path and retested. |
-| Day-only factories | Production logging requires both day/night assignments. | Limit pilot to factories with both shifts configured or fix support. |
-| Substitute worker logging | Actual substitute cannot be logged without remapping assignment. | Document unsupported or add intentional substitute flow. |
+| Day-only factories | Batch 24F source-fixes selected-shift day-only support. | Capture browser/runtime proof before relying on it for pilot. |
+| Substitute worker logging | Batch 24F blocks mismatches with explicit reassignment-required behavior; no separate substitute persistence exists. | Capture browser/runtime proof for the reassignment-required flow before relying on it for pilot. |
 | Owner data export | Not wired/audited/redaction-reviewed. | Keep hidden until audited and runtime-tested. |
 | Public DPDP/legal claims | Requires qualified counsel review. | Do not rely on public legal readiness until review exists. |
 | Backup restore/rollback | Not exercised. | No pilot until exercise is completed. |

@@ -18,6 +18,7 @@ import {
 } from '@/lib/schemas'
 import { getCycleBoundsForDate } from '@/lib/payroll-cycle'
 import { validateEntry, VALIDATION_MESSAGES } from '@/lib/production-log-validation'
+import { evaluateProductionWorkerAssignmentPolicy } from '@/lib/production-worker-assignment-policy'
 import { generateAndStoreAccessCode, validateAndConsumeAccessCode } from '@/lib/access-codes'
 import {
     buildProtectedLoomActionError,
@@ -901,15 +902,9 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
         standingAssignmentsByMachineId.set(assignment.machine_id, current)
     }
 
-    const eligibleMachines = (machinesRes.data ?? []).filter((machine) => {
-        const standingAssignments = standingAssignmentsByMachineId.get(machine.id)
-        return Boolean(
-            machine.current_order_id &&
-            activeOrderIds.has(machine.current_order_id) &&
-            standingAssignments?.day &&
-            standingAssignments?.night
-        )
-    })
+    const eligibleMachines = (machinesRes.data ?? []).filter((machine) => (
+        Boolean(machine.current_order_id && activeOrderIds.has(machine.current_order_id))
+    ))
 
     const machineIds = eligibleMachines.map((machine) => machine.id)
     const orderIds = (ordersRes.data ?? []).map((order) => order.id)
@@ -928,14 +923,12 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
 
             return [{
                 ...existing,
-                worker_id: existing.worker_id ?? workerId,
+                worker_id: workerId,
                 order_id: mergedOrderId,
                 rate_per_m: existing.rate_per_m
                     ?? (mergedOrderId ? (orderRateById.get(mergedOrderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5)),
             }]
         }
-
-        if (!workerId && !orderId) return []
 
         return [{
             id: null,
@@ -1161,6 +1154,10 @@ export async function bulkLogProduction(entries: {
         })
 
         if (!validation.valid) {
+            const nonWorkerErrors = validation.errors.filter((error) => error !== VALIDATION_MESSAGES.WORKER_REQUIRED)
+            if (entry.meters > 0 && !entry.worker_id && nonWorkerErrors.length === 0) {
+                continue
+            }
             return { error: validation.errors[0], message: validation.errors[0] }
         }
     }
@@ -1268,22 +1265,19 @@ export async function bulkLogProduction(entries: {
         const machine = machineById.get(log.machine_id)
         const activeOrder = Array.isArray(machine?.orders) ? machine?.orders[0] : machine?.orders
         const standingAssignments = standingByMachineId.get(log.machine_id)
-        const expectedShiftWorkerId = standingAssignments?.[log.shift]
+        const policyResult = evaluateProductionWorkerAssignmentPolicy({
+            machineName: machine?.name,
+            machineStatus: machine?.status,
+            currentOrderId: machine?.current_order_id,
+            logOrderId: log.order_id,
+            activeOrderStatus: activeOrder?.status,
+            shift: log.shift,
+            logWorkerId: log.worker_id,
+            standingAssignments,
+        })
 
-        if (
-            !machine ||
-            machine.status !== 'active' ||
-            !machine.current_order_id ||
-            machine.current_order_id !== log.order_id ||
-            activeOrder?.status !== 'active' ||
-            !standingAssignments?.day ||
-            !standingAssignments?.night ||
-            expectedShiftWorkerId !== log.worker_id
-        ) {
-            return {
-                error: 'LOOM_SETUP_INCOMPLETE',
-                message: `${machine?.name ?? 'This loom'} needs day and night workers assigned and an active cost analysis before production can be saved.`,
-            }
+        if (!policyResult.ok) {
+            return { error: policyResult.code, message: policyResult.message }
         }
     }
 

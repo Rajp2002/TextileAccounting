@@ -12,6 +12,7 @@ import {
   aggregateDailyMeterTrend,
   getSevenDayTrendWindow,
 } from '../lib/dashboard-trend'
+import { hasAnyShiftLoomAssignment } from '../lib/production-worker-assignment-policy'
 
 const root = process.cwd()
 
@@ -70,6 +71,9 @@ describe('Batch 24C Factory Today setup and historical analytics state', () => {
       { machine_id: 'loom-1', shift: 'day', worker_id: 1 },
       { machine_id: 'loom-1', shift: 'night', worker_id: null },
     ])).toBe(false)
+    expect(hasAnyShiftLoomAssignment([
+      { machine_id: 'loom-1', shift: 'day', worker_id: 1 },
+    ])).toBe(true)
 
     expect(hasUsablePayrollConfig({ cycle_start_day: 1, pay_date_day: 10, pay_reminder_days: 5 })).toBe(true)
     expect(hasUsablePayrollConfig(null)).toBe(false)
@@ -130,7 +134,7 @@ describe('Batch 24C Factory Today setup and historical analytics state', () => {
     })
 
     expect(checklist.hasProductionMode).toBe(false)
-    expect(checklist.hasLoomAssignment).toBe(false)
+    expect(checklist.hasLoomAssignment).toBe(true)
     expect(checklist.hasLoomTarget).toBe(false)
     expect(checklist.hasQuality).toBe(false)
     expect(checklist.hasMeterWorker).toBe(false)

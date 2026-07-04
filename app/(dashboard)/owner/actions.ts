@@ -402,8 +402,8 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
             ? machineRes.data.orders[0]
             : machineRes.data.orders
 
-        if (!assignedShifts.has('day') || !assignedShifts.has('night')) {
-            return { error: 'Assign workers for both day and night shifts before activating this loom.' }
+        if (!assignedShifts.has('day') && !assignedShifts.has('night')) {
+            return { error: 'Assign at least one day or night worker before activating this loom.' }
         }
 
         if (!machineRes.data.current_order_id || activeOrder?.status !== 'active') {

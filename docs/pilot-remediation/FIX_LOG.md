@@ -17,7 +17,7 @@ Rules for entries:
 | `SEC-B` privileged action/lockdown enforcement | Partially closed through Batch 21D / open remainder | Batch 1 closed `SEC-006` and `AUTH-016` with runtime/test evidence and active matrix rows promoted to pass. Batch 20 source-fixed payroll RPC boundary rows `PAY-018` and `PAY-020`; Batch 21D closes them with disposable QA runtime proof. `AUTH-008` remains open. |
 | `SEC-C` webhook/export/compliance fail-closed | Partially closed through Batch 15 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Batch 15 closes `SEC-014` payslip filename safety with deterministic source/test proof. Webhook, owner export, settings audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
-| `PROD-B` production boundary validation | Partially source-fixed through Batch 24E / open remainder | Batch 22 moves `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof for over-target, cancelled/completed/stale-assignment, and negative-meter boundaries. Batch 24C moves `SETUP-011` to `code_verified` by source-fixing Factory Today setup checklist data-source correctness. Batch 24E moves `MASTER-002` and `MASTER-005` to `code_verified` by source-fixing normalized duplicate loom-name checks and protected loom delete/deactivate/unlink guardrails. Runtime/API, browser, or migration/DB-boundary proof is still required before these rows can pass. Day-only/substitute-worker, `MASTER-014`, and remaining production-boundary rows stay open. |
+| `PROD-B` production boundary validation | Partially source-fixed through Batch 24F / open remainder | Batch 22 moves `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof for over-target, cancelled/completed/stale-assignment, and negative-meter boundaries. Batch 24C moves `SETUP-011` to `code_verified` by source-fixing Factory Today setup checklist data-source correctness. Batch 24E moves `MASTER-002` and `MASTER-005` to `code_verified` by source-fixing normalized duplicate loom-name checks and protected loom delete/deactivate/unlink guardrails. Batch 24F moves `PROD-002` and `PROD-004` to `code_verified` by source-fixing selected-shift day-only worker assignment policy and explicit substitute-worker reassignment-required behavior. Runtime/API, browser, or migration/DB-boundary proof is still required before these rows can pass. `MASTER-014`, `SIGNOFF-01`, `SIGNOFF-02`, and remaining production-boundary rows stay open. |
 | `STOCK-A` stock lifecycle/archive policy | Partially closed in Batch 12 / open remainder | Batch 12 closes `STOCK-012` with focused local lifecycle proof. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial because their exact row wording needs broader proof. |
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated through Batch 21B / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Batch 13 closes `EST-001`, `EST-005`, and `EST-012` with exact local estimator proof. Batch 21B closes `ORDER-008` below-target and pending-dispatch completion confirmation with disposable QA browser/runtime proof. Start Party Order fast-path atomicity remains open. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
@@ -1965,3 +1965,53 @@ Resolution status:
 
 - `MASTER-002` and `MASTER-005` are documented as `code_verified` in the active QA matrix, not pass.
 - Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 17, blocked 22, `code_verified` 142, `not_applicable` 1, `not_run` 0.
+
+## Batch 24F - Production Worker Assignment Policy Closeout
+
+Date/time: 2026-07-05 IST. Branch `codex/batch-24f-production-worker-assignment-policy`.
+
+Scope:
+
+- `PROD-002`
+- `PROD-004`
+
+Rows promoted to `code_verified`, not pass:
+
+- `PROD-002`: selected-shift worker assignment policy is source-fixed. Day-shift/day-only production no longer requires a night worker, supervisor setup data no longer hides active day-only looms, and setup/checklist/activation no longer falsely fail only because the night worker is absent. Night-shift positive production without a night worker returns an actionable selected-shift accountability error. The code does not fake a night worker or silently assign the day worker as the night worker.
+- `PROD-004`: substitute/actual-worker mismatch is source-fixed by explicit blocking. Because the current logging path has only `production_logs.worker_id`, no unsafe substitute persistence model was added. If a submitted positive-production worker differs from the selected standing shift worker, the server returns `SUBSTITUTE_REASSIGNMENT_REQUIRED` and instructs reassignment before logging the substitute, preserving payroll and loom accountability.
+
+Rows explicitly not closed:
+
+- `SIGNOFF-01` dependency is improved only. It remains fail/open because current-run owner sign-off/browser proof has not been collected.
+- `SIGNOFF-02`, `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, `MASTER-014`, TECH/audit/dependency rows, `PAY-027`, `DASH-003`, WA/OFF rows, Golden rows, and all unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch24f/BATCH24F-production-worker-assignment-policy-proof.json`.
+- Focused source test: `__tests__/batch24f-production-worker-assignment-policy.test.ts`.
+- Related source tests: `__tests__/batch24c-factory-today-analytics-state.test.ts`, `__tests__/batch22-production-order-boundary-hardening.test.ts`.
+- Implementation files: `lib/production-worker-assignment-policy.ts`, `app/(dashboard)/supervisor/actions.ts`, `app/(dashboard)/owner/actions.ts`, `components/MachineManagement.tsx`, `components/factory-today/SetupPanel.tsx`, and `lib/factory-today-checklist.ts`.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24f/BATCH24F-production-worker-assignment-policy-proof.json` -> passed.
+- `npx vitest run __tests__/batch24f-production-worker-assignment-policy.test.ts` -> passed, 1 test file and 7 tests.
+- `npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts` -> passed, 1 test file and 7 tests.
+- `npx vitest run __tests__/batch22-production-order-boundary-hardening.test.ts` -> passed, 1 test file and 6 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- Targeted ESLint on touched source/tests -> passed.
+- Related production/supervisor/assignment/payroll regression pack -> passed, 9 test files and 79 tests.
+
+Data safety:
+
+- No migration was created or applied.
+- No RPC/database work occurred.
+- No production mutation occurred.
+- No Supabase db push, migration repair, db pull, direct SQL, `--include-all`, npm audit, package install, lockfile change, env-file staging, Supabase temp-file staging, or browser/runtime pass promotion was used.
+
+Resolution status:
+
+- `PROD-002` and `PROD-004` are documented as `code_verified` in the active QA matrix, not pass.
+- Browser/runtime QA proof is still required before pass: day-only/day-shift logging, night-shift missing-worker accountability, substitute/reassignment behavior, and current-run owner sign-off.
+- Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 15, blocked 22, `code_verified` 144, `not_applicable` 1, `not_run` 0.

@@ -1,4 +1,5 @@
 import { hasExplicitProductionMode } from './production-mode'
+import { hasAnyShiftLoomAssignment } from './production-worker-assignment-policy'
 
 export type FactoryTodayMachineSetupRow = {
   id?: string | null
@@ -111,7 +112,7 @@ export function buildFactoryTodaySetupChecklist(input: FactoryTodaySetupChecklis
       ? true
       : hasExplicitProductionMode(input.productionMode),
     hasMachine: input.machines.length > 0,
-    hasLoomAssignment: hasDayNightLoomAssignment(input.machineAssignments),
+    hasLoomAssignment: hasAnyShiftLoomAssignment(input.machineAssignments),
     hasLoomTarget: hasLinkedActiveProductionTarget(input.machines),
     hasQuality: hasCompletedCostingEvidence(input),
     hasMeterWorker: input.hasMeterWorker,

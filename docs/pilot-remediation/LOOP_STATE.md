@@ -1347,7 +1347,7 @@ Scope:
 
 Rows promoted to `code_verified`, not pass:
 
-- `SETUP-011`: Factory Today setup checklist recognized completed costing, loom targets require active linked orders, day/night assignments require workers on same loom, worker checks use active rows only, and payroll config checks validate the cycle/pay/reminder bounds.
+- `SETUP-011`: Factory Today setup checklist recognized completed costing, loom targets require active linked orders, worker checks use active rows only, and payroll config checks validate the cycle/pay/reminder bounds. Batch 24F later updates the worker-assignment portion to selected-shift/day-only policy.
 - `DASH-004`: Historical date selection clears today's data, aggregates 7-day trend to the selected date, uses full state replacement instead of merging, and restores live dashboard state on return to today.
 
 Rows explicitly not closed:
@@ -1465,3 +1465,48 @@ Resolution status:
 
 - `MASTER-002` and `MASTER-005` are documented as `code_verified` in the active matrix.
 - Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 17, blocked 22, `code_verified` 142, `not_applicable` 1, `not_run` 0.
+
+## Batch 24F - Production Worker Assignment Policy Closeout
+
+Date/time: 2026-07-05 IST. Branch `codex/batch-24f-production-worker-assignment-policy`.
+
+Scope:
+
+- `PROD-002`
+- `PROD-004`
+
+Rows promoted to `code_verified`, not pass:
+
+- `PROD-002`: selected-shift worker assignment policy source-fixes day-only production. Day-shift logging no longer requires a night worker, day-only setup/checklist/activation no longer falsely fails for missing night worker, and night-shift logging without a night worker returns an actionable selected-shift accountability error.
+- `PROD-004`: substitute-worker accountability source-fixes the unsupported mismatch path by returning explicit reassignment-required behavior. No unsafe substitute persistence field/model was added, and production remains attributable only to the selected standing shift worker.
+
+Rows explicitly not closed:
+
+- `SIGNOFF-01` is dependency-improved only and remains fail/open pending current-run sign-off browser/runtime proof.
+- `SIGNOFF-02`, `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, `MASTER-014`, TECH/audit/dependency rows, `PAY-027`, `DASH-003`, WA/OFF rows, Golden rows, and all unapproved rows remain unchanged.
+
+Repository state:
+
+- Source base: `origin/main` at `0fce80a1f7c7dfb202ca24bf3a6808b3ef11fe2a`.
+- Evidence artifact: `output/qa/batch24f/BATCH24F-production-worker-assignment-policy-proof.json`.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24f/BATCH24F-production-worker-assignment-policy-proof.json` -> passed.
+- `npx vitest run __tests__/batch24f-production-worker-assignment-policy.test.ts` -> passed, 1 test file and 7 tests.
+- `npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts` -> passed, 1 test file and 7 tests.
+- `npx vitest run __tests__/batch22-production-order-boundary-hardening.test.ts` -> passed, 1 test file and 6 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- Targeted ESLint on touched source/tests -> passed.
+- Related production/supervisor/assignment/payroll regression pack -> passed, 9 test files and 79 tests.
+
+Forbidden actions:
+
+- This closeout did not create migrations, modify RPCs, apply migrations, run `npx supabase db push`, run migration repair, run `db pull`, use direct SQL, use `--include-all`, mutate production, run `npm audit`, install packages, touch the lockfile, stage env files, or stage Supabase temp files.
+- Browser/runtime proof was not collected, so no pass-ready status is claimed.
+
+Resolution status:
+
+- `PROD-002` and `PROD-004` are documented as `code_verified` in the active matrix.
+- Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 15, blocked 22, `code_verified` 144, `not_applicable` 1, `not_run` 0.

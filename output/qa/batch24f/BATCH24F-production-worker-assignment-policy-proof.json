@@ -1,0 +1,348 @@
+{
+  "batch": "24F",
+  "title": "Production worker assignment policy fixes",
+  "branch": "codex/batch-24f-production-worker-assignment-policy",
+  "source_commit": "0fce80a1f7c7dfb202ca24bf3a6808b3ef11fe2a",
+  "origin_main": "0fce80a1f7c7dfb202ca24bf3a6808b3ef11fe2a",
+  "scope": {
+    "included_rows": ["PROD-002", "PROD-004"],
+    "inspected_dependency_only": ["SIGNOFF-01"],
+    "excluded_rows": [
+      { "row": "SIGNOFF-01", "reason": "Downstream dependency only; no signoff closeout or pass promotion in Batch 24F." },
+      { "row": "SIGNOFF-02", "reason": "Out of Batch 24F scope." },
+      { "row": "AUTH-008", "reason": "Out of Batch 24F scope." },
+      { "row": "SEC-009", "reason": "Out of Batch 24F scope." },
+      { "row": "SEC-015", "reason": "Out of Batch 24F scope." },
+      { "row": "SEC-017", "reason": "Out of Batch 24F scope." },
+      { "row": "MASTER-014", "reason": "Out of Batch 24F scope." },
+      { "row": "TECH/audit/dependency rows", "reason": "Out of Batch 24F scope." },
+      { "row": "PAY-027", "reason": "Out of Batch 24F scope." },
+      { "row": "DASH-003", "reason": "Out of Batch 24F scope." },
+      { "row": "WA/OFF rows", "reason": "Out of Batch 24F scope." },
+      { "row": "Golden rows", "reason": "Out of Batch 24F scope." }
+    ]
+  },
+  "row_definitions_inspected": {
+    "PROD-002": {
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Day-only factory with no night worker.",
+      "expected": "Must match the pilot's operating decision; if valid production is blocked, pilot is No-Go unless night assignment is genuinely mandatory.",
+      "status": "fail",
+      "severity": "High",
+      "actual": "Day-only factory operation is not currently supported by the production logging boundary. getShiftSetupData only exposes eligible looms when both day and night standing assignments exist, and bulkLogProduction rejects positive production unless both day and night workers are assigned. If the pilot decision allows day-only factories, this is a No-Go condition for those factories.",
+      "evidence": [
+        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
+        "app/(dashboard)/supervisor/actions.ts:824",
+        "app/(dashboard)/supervisor/actions.ts:1199",
+        "app/(dashboard)/supervisor/actions.ts:1205"
+      ]
+    },
+    "PROD-004": {
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Substitute worker.",
+      "expected": "Supervisor can intentionally select/log the actual worker or receives a workable owner-remapping flow.",
+      "status": "fail",
+      "severity": "Medium",
+      "actual": "A one-off substitute worker cannot be intentionally logged on the production screen unless that worker matches the standing assignment for the machine and shift. The server guard compares expectedShiftWorkerId to log.worker_id and rejects mismatches with LOOM_SETUP_INCOMPLETE, so the only workaround is remapping the assignment rather than logging the actual substitute on that shift.",
+      "evidence": [
+        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
+        "app/(dashboard)/supervisor/actions.ts:1191",
+        "app/(dashboard)/supervisor/actions.ts:1201",
+        "app/(dashboard)/supervisor/actions.ts:1204"
+      ]
+    },
+    "SIGNOFF-01": {
+      "section": "Daily owner sign-off",
+      "scenario": "All active looms accounted for with production or downtime reason.",
+      "expected": "Satisfied with current-run evidence.",
+      "status": "fail",
+      "severity": "High",
+      "actual": "Current-run evidence is still not sufficient to sign off that all active looms are accounted for with production or downtime. Batch 2 closed the production/stock correction portion, but day-only setup and substitute-worker production logging issues remain open.",
+      "evidence": [
+        "results.json:PROD-002",
+        "results.json:PROD-004",
+        "docs/pilot-remediation/FIX_LOG.md"
+      ],
+      "batch_24f_decision": "Inspected for dependency impact only; not closed or promoted."
+    }
+  },
+  "implementation_summary": {
+    "PROD-002": [
+      "Added a selected-shift worker assignment policy helper.",
+      "getShiftSetupData now exposes active looms with active production targets without requiring both day and night standing workers.",
+      "Supervisor production save now validates the worker assigned to the selected shift only.",
+      "Day-shift production with a day worker and no night worker is allowed at source level.",
+      "Night-shift production without a night worker returns SHIFT_WORKER_REQUIRED with an actionable night-worker assignment message.",
+      "Loom activation and Factory Today setup now require at least one day or night assignment instead of both shifts, avoiding false day-only setup blockage."
+    ],
+    "PROD-004": [
+      "No substitute-worker persistence was invented because production_logs has only one worker_id in the current logging path.",
+      "If a submitted worker differs from the selected standing shift worker, the server returns SUBSTITUTE_REASSIGNMENT_REQUIRED.",
+      "The mismatch message directs the user to reassign the shift worker before logging a substitute so payroll and loom accountability are not silently wrong.",
+      "Production remains attributable only to the selected standing shift worker."
+    ],
+    "SIGNOFF-01": [
+      "Dependency improved because day-only and substitute-worker source behavior is now explicit.",
+      "SIGNOFF-01 remains fail/open pending current-run owner sign-off runtime proof."
+    ]
+  },
+  "auto_repair_cycles": [
+    {
+      "cycle": 1,
+      "review_finding": "Initial review found that bulkLogProduction could return the generic WORKER_REQUIRED validation before the selected-shift assignment policy produced the actionable night-worker missing error for a positive-meter entry with no worker_id.",
+      "fix_applied": "bulkLogProduction now defers the worker-required-only validation case to evaluateProductionWorkerAssignmentPolicy, while still returning non-worker validation errors immediately. The Batch 24F focused test now asserts this server-action ordering.",
+      "tests_added_or_updated": [
+        "__tests__/batch24f-production-worker-assignment-policy.test.ts"
+      ],
+      "scope_confirmation": "The repair is limited to selected-shift worker validation and tests; it requires no migration, RPC redesign, database mutation, production mutation, or out-of-scope row change."
+    },
+    {
+      "cycle": "final-check-repair",
+      "review_finding": "After docs closeout, the focused Batch 24F test still asserted the old SIGNOFF-01 matrix wording even though SIGNOFF-01 correctly remained fail/open with an updated dependency-improved note.",
+      "fix_applied": "Updated the focused test to assert the new SIGNOFF-01 dependency-improved wording while preserving the fail/open and not-promoted assertions.",
+      "tests_added_or_updated": [
+        "__tests__/batch24f-production-worker-assignment-policy.test.ts"
+      ],
+      "scope_confirmation": "The repair is limited to test/docs consistency for Batch 24F closeout and does not alter product behavior or any out-of-scope row status."
+    }
+  ],
+  "files_changed": [
+    "__tests__/batch22-production-order-boundary-hardening.test.ts",
+    "__tests__/batch24c-factory-today-analytics-state.test.ts",
+    "__tests__/batch24f-production-worker-assignment-policy.test.ts",
+    "app/(dashboard)/owner/actions.ts",
+    "app/(dashboard)/supervisor/actions.ts",
+    "components/MachineManagement.tsx",
+    "components/factory-today/SetupPanel.tsx",
+    "docs/pilot-remediation/FIX_LOG.md",
+    "docs/pilot-remediation/LOOP_STATE.md",
+    "docs/pilot-remediation/FAILURE_BACKLOG.md",
+    "docs/pilot-remediation/RETEST_PLAN.md",
+    "docs/pilot-remediation/DOMAIN_INVARIANTS.md",
+    "docs/pilot-remediation/PILOT_READY_DEFINITION.md",
+    "lib/factory-today-checklist.ts",
+    "lib/production-worker-assignment-policy.ts",
+    "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+    "output/qa/batch24f/BATCH24F-production-worker-assignment-policy-proof.json"
+  ],
+  "tests_added_or_updated": [
+    {
+      "file": "__tests__/batch24f-production-worker-assignment-policy.test.ts",
+      "coverage": [
+        "PROD-002 day-only/day-shift logging does not require night worker.",
+        "PROD-002 night-shift logging without night worker is blocked with clear message.",
+        "PROD-002 worker-required-only server validation defers to selected-shift policy for actionable accountability text.",
+        "PROD-002 missing night worker does not make setup/accountability falsely incomplete for day-only path.",
+        "PROD-004 substitute mismatch is explicit and requires reassignment.",
+        "PROD-004 production is not silently attributed to the wrong assigned worker.",
+        "PROD-004 does not invent unsupported substitute persistence.",
+        "SIGNOFF-01 remains fail/open."
+      ]
+    },
+    {
+      "file": "__tests__/batch24c-factory-today-analytics-state.test.ts",
+      "coverage": [
+        "Factory Today setup helper now recognizes a day-only loom assignment as satisfying loom-assignment setup policy."
+      ]
+    },
+    {
+      "file": "__tests__/batch22-production-order-boundary-hardening.test.ts",
+      "coverage": [
+        "Updated source assertion to follow the new shared assignment policy helper while preserving hardened replace_shift_production_logs RPC evidence."
+      ]
+    }
+  ],
+  "commands_run": [
+    {
+      "command": "git fetch origin --prune && git switch -C codex/batch-24f-production-worker-assignment-policy origin/main && git status --short && git rev-parse origin/main",
+      "result": "passed; branch created from origin/main 0fce80a1f7c7dfb202ca24bf3a6808b3ef11fe2a"
+    },
+    {
+      "command": "rg/sed inspection of output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md and docs/pilot-remediation/*.md for PROD-002, PROD-004, SIGNOFF-01",
+      "result": "passed; exact row definitions and dependency context inspected"
+    },
+    {
+      "command": "npx vitest run __tests__/batch24f-production-worker-assignment-policy.test.ts",
+      "result": "initial failed before tests due stale sourceBlock end marker; test marker corrected"
+    },
+    {
+      "command": "npx vitest run __tests__/batch24f-production-worker-assignment-policy.test.ts",
+      "result": "passed; 1 test file, 6 tests before review auto-repair"
+    },
+    {
+      "command": "npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/batch24b-supervisor-ux-failures.test.ts __tests__/batch24d-submit-draft-isolation.test.ts",
+      "result": "passed; 5 test files, 61 tests"
+    },
+    {
+      "command": "npx vitest run __tests__/p1-payroll-guard.test.ts __tests__/payroll-settlement-history.test.ts __tests__/batch15-payroll-doc-export-consistency.test.ts __tests__/p0-atomicity.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/batch22-production-order-boundary-hardening.test.ts",
+      "result": "initially failed because Batch 22 source assertion expected old inline activeOrder guard text; test updated to assert shared policy helper boundary"
+    },
+    {
+      "command": "npx vitest run __tests__/p1-payroll-guard.test.ts __tests__/payroll-settlement-history.test.ts __tests__/batch15-payroll-doc-export-consistency.test.ts __tests__/p0-atomicity.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/batch22-production-order-boundary-hardening.test.ts",
+      "result": "passed; 6 test files, 31 tests"
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "passed"
+    },
+    {
+      "command": "npx eslint app/(dashboard)/supervisor/actions.ts app/(dashboard)/owner/actions.ts components/MachineManagement.tsx components/factory-today/SetupPanel.tsx lib/factory-today-checklist.ts lib/production-worker-assignment-policy.ts __tests__/batch24f-production-worker-assignment-policy.test.ts __tests__/batch24c-factory-today-analytics-state.test.ts __tests__/batch22-production-order-boundary-hardening.test.ts",
+      "result": "passed"
+    },
+    {
+      "command": "git status --short",
+      "result": "passed; showed modified source/test files and untracked new source/test files. output/qa/batch24f is git-ignored but artifact exists on disk."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "jq empty output/qa/batch24f/BATCH24F-production-worker-assignment-policy-proof.json",
+      "result": "passed"
+    },
+    {
+      "command": "npx vitest run __tests__/batch24f-production-worker-assignment-policy.test.ts",
+      "result": "final required rerun before docs closeout passed; 1 test file, 6 tests"
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "final required rerun passed"
+    },
+    {
+      "command": "git status --short --ignored output/qa/batch24f/BATCH24F-production-worker-assignment-policy-proof.json",
+      "result": "passed; artifact file exists and output/qa/batch24f is ignored by git"
+    },
+    {
+      "command": "npx eslint app/(dashboard)/supervisor/actions.ts app/(dashboard)/owner/actions.ts components/MachineManagement.tsx components/factory-today/SetupPanel.tsx lib/factory-today-checklist.ts lib/production-worker-assignment-policy.ts __tests__/batch24f-production-worker-assignment-policy.test.ts __tests__/batch24c-factory-today-analytics-state.test.ts __tests__/batch22-production-order-boundary-hardening.test.ts",
+      "result": "final targeted rerun passed"
+    },
+    {
+      "command": "npx vitest run __tests__/batch24f-production-worker-assignment-policy.test.ts",
+      "result": "passed after review auto-repair; 1 test file, 7 tests"
+    },
+    {
+      "command": "npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts",
+      "result": "passed; 1 test file, 7 tests"
+    },
+    {
+      "command": "npx vitest run __tests__/batch22-production-order-boundary-hardening.test.ts",
+      "result": "passed; 1 test file, 6 tests"
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "passed after review auto-repair"
+    },
+    {
+      "command": "npx eslint lib/production-worker-assignment-policy.ts app/(dashboard)/supervisor/actions.ts app/(dashboard)/owner/actions.ts components/MachineManagement.tsx components/factory-today/SetupPanel.tsx lib/factory-today-checklist.ts __tests__/batch24f-production-worker-assignment-policy.test.ts __tests__/batch24c-factory-today-analytics-state.test.ts __tests__/batch22-production-order-boundary-hardening.test.ts",
+      "result": "passed after review auto-repair"
+    },
+    {
+      "command": "npx vitest run __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-dispatch-regressions.test.ts __tests__/batch24b-supervisor-ux-failures.test.ts __tests__/batch24d-submit-draft-isolation.test.ts __tests__/p1-payroll-guard.test.ts __tests__/payroll-settlement-history.test.ts __tests__/batch15-payroll-doc-export-consistency.test.ts __tests__/p0-atomicity.test.ts __tests__/p1-production-stock-atomicity.test.ts",
+      "result": "passed; 9 test files, 79 tests"
+    },
+    {
+      "command": "node status-count script for output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "result": "passed; total 377, pass 195, fail 15, blocked 22, code_verified 144, not_applicable 1, not_run 0"
+    },
+    {
+      "command": "Phase 3 final checks after docs/test consistency repair",
+      "result": "passed: git diff --check, jq artifact validation, focused Batch 24F Vitest 7 tests, Batch 24C Vitest 7 tests, Batch 22 Vitest 6 tests, TypeScript, targeted ESLint, and related regression pack 9 files/79 tests"
+    }
+  ],
+  "test_results": {
+    "focused_batch24f": "passed after sourceBlock marker correction and review auto-repair; 7 tests",
+    "existing_production_supervisor_assignment_regression": "passed; 5 files, 61 tests",
+    "production_payroll_accountability_regression": "passed after updating stale source assertion; 6 files, 31 tests",
+    "related_production_supervisor_assignment_payroll_regression_after_review": "passed; 9 files, 79 tests",
+    "typescript": "passed",
+    "targeted_eslint": "passed"
+  },
+  "docs_matrix_closeout": {
+    "promoted_to_code_verified": ["PROD-002", "PROD-004"],
+    "not_promoted": ["SIGNOFF-01"],
+    "final_matrix_counts": {
+      "total": 377,
+      "pass": 195,
+      "fail": 15,
+      "blocked": 22,
+      "code_verified": 144,
+      "not_applicable": 1,
+      "not_run": 0
+    },
+    "pass_ready_claimed": false,
+    "runtime_proof_collected": false
+  },
+  "per_row_source_evidence": {
+    "PROD-002": [
+      "lib/production-worker-assignment-policy.ts evaluates selected-shift worker policy and allows day shift with only standingAssignments.day.",
+      "lib/production-worker-assignment-policy.ts returns SHIFT_WORKER_REQUIRED for night shift without standingAssignments.night and includes day-only-safe copy.",
+      "app/(dashboard)/supervisor/actions.ts getShiftSetupData filters eligible machines by active current_order_id only, not both day/night workers.",
+      "app/(dashboard)/supervisor/actions.ts returns selected-shift standing worker_id to the UI.",
+      "app/(dashboard)/owner/actions.ts and components/MachineManagement.tsx activate a loom with at least one assigned shift worker.",
+      "lib/factory-today-checklist.ts uses hasAnyShiftLoomAssignment for setup readiness."
+    ],
+    "PROD-004": [
+      "lib/production-worker-assignment-policy.ts returns SUBSTITUTE_REASSIGNMENT_REQUIRED when logWorkerId differs from the selected standing shift worker.",
+      "app/(dashboard)/supervisor/actions.ts returns the helper's code/message before calling replace_shift_production_logs.",
+      "No substitute_worker_id, actual_worker_id, or assigned_worker_id persistence field was added.",
+      "replace_shift_production_logs remains the production persistence path."
+    ],
+    "SIGNOFF-01": [
+      "Matrix row remains fail/open.",
+      "No pass-ready or closeout claim was made for SIGNOFF-01."
+    ]
+  },
+  "source_fixed_code_verified_candidates": [
+    {
+      "row": "PROD-002",
+      "candidate_status": "source-fixed/code_verified candidate",
+      "why_not_pass": "No disposable QA browser/runtime proof was collected."
+    },
+    {
+      "row": "PROD-004",
+      "candidate_status": "source-fixed/code_verified candidate",
+      "why_not_pass": "No disposable QA browser/runtime proof of substitute/reassignment flow was collected."
+    }
+  ],
+  "rows_still_open": [
+    {
+      "row": "PROD-002",
+      "reason": "Source-fixed candidate only; runtime proof required before pass."
+    },
+    {
+      "row": "PROD-004",
+      "reason": "Source-fixed candidate only; runtime proof required before pass."
+    },
+    {
+      "row": "SIGNOFF-01",
+      "reason": "Downstream owner sign-off row requires current-run runtime evidence; not closed in Batch 24F."
+    }
+  ],
+  "future_qa_runtime_proof_required": [
+    "Create or use a disposable day-only loom/factory with day worker and no night worker; verify day-shift production can be saved.",
+    "Select Night for the same loom without a night worker; verify the UI/server returns the clear night-worker assignment message and does not fake a worker.",
+    "Attempt or simulate a substitute-worker mismatch; verify the explicit reassignment-required message and no wrong worker attribution.",
+    "Run owner daily sign-off after disposable current-run evidence before considering SIGNOFF-01."
+  ],
+  "guardrail_confirmations": {
+    "no_migration_created": true,
+    "no_rpc_created_or_modified": true,
+    "no_database_work_occurred": true,
+    "no_production_mutation_occurred": true,
+    "no_supabase_db_push": true,
+    "no_migration_repair": true,
+    "no_db_pull": true,
+    "no_direct_sql": true,
+    "no_include_all": true,
+    "no_npm_audit": true,
+    "no_package_install": true,
+    "no_lockfile_change": true,
+    "pre_review_no_staging": true,
+    "pre_review_no_commit": true,
+    "pre_review_no_push": true,
+    "docs_closeout_completed_after_review": true,
+    "approved_stage_commit_push_pending_at_artifact_update": true,
+    "no_row_marked_pass_ready": true
+  }
+}
