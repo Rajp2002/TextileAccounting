@@ -165,6 +165,7 @@ Acceptance:
 - Golden A follow-ons can be re-run from a clean QA order.
 - Batch 22 source-fixes `ORDER-005`, `ORDER-009`, and `PROD-011` but does not make them pass-ready. Migration `20260702121238_batch_22_production_order_boundary_hardening.sql` must be applied to QA before runtime proof. Then rollback-only/API probes must prove over-target, cancelled/completed order-attributed logs, stale assignment, and negative-meter writes are rejected, while valid production/correction still reconciles generated stock, order progress, and payroll basis.
 - Batch 24B source-fixes `PROD-013`, `PROD-023`, and `PROD-029` but does not make them pass-ready. Browser proof must verify that suspicious large positive shift meters show a non-blocking confirmation and can proceed after confirmation, restored localStorage drafts after refresh/crash show the unsaved-draft indicator and clear after save/reset, and landing/setup copy no longer claims raw opening/closing meter-reading proof. `PROD-022` remains open for separate date/shift draft-isolation runtime proof.
+- Batch 24C source-fixes `SETUP-011` but does not make it pass-ready. Browser proof must create/verify the quote or market-run costing, active linked loom target, day/night workers on the same loom, active workers, supervisor, payroll config, and plan, then refresh Factory Today and confirm the setup checklist remains complete from persisted data.
 
 ## P1 Estimator, Quote, Order, and Date Snapshot Retest
 
@@ -362,7 +363,7 @@ Runtime checks:
 - After production, verify Today meters, active looms, downtime, and gross wages against source rows.
 - After sale and partial dispatch, verify Factory Today pending dispatch matches `fabric_stock_sales.pending_dispatch_meters`.
 - After receipt discrepancy, verify sign-off shows the unresolved difference and owner/next-action state.
-- Open a historical date and verify analytics use that date's production/orders/machines, not current state.
+- Open a historical date and verify analytics use that date's production, worker breakdown, and seven-day trend, while current-only orders/machines/today state is cleared or hidden instead of shown as historical data.
 - Confirm sign-off remains blocked when external supervisor-register truth is missing.
 
 Acceptance:
@@ -373,6 +374,7 @@ Acceptance:
 - Batch 4 closes commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09` with runtime/browser proof. `SIGNOFF-10` was outside Batch 4 release/Sentry/source-map scope and is closed later by Batch 8C.
 - Batch 15 moves `DASH-003` from fail to `code_verified` by replacing the hard-coded gross wage placeholder with meter/rate snapshot aggregation and focused tests. It is not pass until after-shift Factory Today runtime/browser proof is captured with disposable QA data.
 - Batch 22 improves the `SIGNOFF-02` `ORDER-009` dependency by source-fixing cancelled/completed/stale-assignment order attribution at the RPC/table boundary, but `SIGNOFF-02` remains fail until full current-run attribution runtime proof is captured after the migration is applied in QA.
+- Batch 24C moves `DASH-004` from fail to `code_verified` by replacing stale current-state merges with full selected-date state replacement and selected-date trend scoping. It is not pass until historical-date Analytics browser/runtime proof is captured.
 
 ## P3 Payroll and Kharchi Retest
 

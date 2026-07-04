@@ -25,6 +25,12 @@ Production and stock:
 - Negative, cancelled-order, over-target, wrong-assignment, and unsupported day-only/substitute-worker cases are blocked or explicitly unsupported.
 - Batch 22 source-fixes negative-meter, cancelled/completed/stale-assignment, and over-target boundaries for `ORDER-005`, `ORDER-009`, and `PROD-011`, but those rows remain `code_verified`, not pass, until the migration is applied in QA and runtime/API proof confirms valid production/correction still reconciles stock, order progress, and payroll basis.
 - Batch 24B source-fixes supervisor production UX rows `PROD-013`, `PROD-023`, and `PROD-029`, but those rows remain `code_verified`, not pass, until QA/browser proof confirms suspicious large-meter confirmation, restored-unsaved draft behavior, and shift-total/shift-meter copy truth.
+- Batch 24C source-fixes Factory Today setup checklist correctness for `SETUP-011`, but the row remains `code_verified`, not pass, until QA/browser proof confirms completed costing, loom target, day/night workers, active workers, payroll config, and refresh-stability.
+
+Dashboard:
+
+- Historical analytics must not mix selected-date production facts with current-only active order, machine, or today KPI state.
+- Batch 24C source-fixes historical Analytics state for `DASH-004`, but the row remains `code_verified`, not pass, until QA/browser proof confirms historical selected-date behavior and current-state restoration when returning to today.
 
 Dispatch and receipt:
 
@@ -101,6 +107,8 @@ Batch 23 note: `QUOTE-007` is source-fixed and moved to `code_verified` by focus
 Batch 24A note: `PAY-006` is source-fixed and moved to `code_verified` by focused attendance RLS date boundary and access-code validation server action design in `output/qa/batch24a/BATCH24A-attendance-rls-boundary-proof.json`. The Batch 24A verification set passed focused Vitest, TypeScript, targeted ESLint, and `git diff --check`. `PAY-006` remains unresolved for pilot readiness until database migration application and valid attendance RLS and access-code UI/database runtime proof are executed in QA.
 
 Batch 24B note: `PROD-013`, `PROD-023`, and `PROD-029` are source-fixed and moved to `code_verified` by focused supervisor production UX proof in `output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json`. The Batch 24B verification set passed focused Vitest, TypeScript, targeted ESLint, existing production regression tests, JSON validation, and `git diff --check`. `PROD-013`, `PROD-023`, and `PROD-029` remain unresolved for pilot readiness until QA/browser proof is collected. `PROD-022` remains fail/open for separate date/shift draft-isolation runtime proof.
+
+Batch 24C note: `SETUP-011` and `DASH-004` are source-fixed and moved to `code_verified` by focused Factory Today setup and historical Analytics state proof in `output/qa/batch24c/BATCH24C-factory-today-analytics-state-proof.json`. The Batch 24C verification set passed focused Vitest, TypeScript, targeted ESLint, JSON validation, and `git diff --check`. `SETUP-011` and `DASH-004` remain unresolved for pilot readiness until QA/browser proof is collected.
 
 
 ## Pilot Sign-Off Evidence Package

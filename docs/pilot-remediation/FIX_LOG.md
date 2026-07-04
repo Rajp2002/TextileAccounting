@@ -17,13 +17,13 @@ Rules for entries:
 | `SEC-B` privileged action/lockdown enforcement | Partially closed through Batch 21D / open remainder | Batch 1 closed `SEC-006` and `AUTH-016` with runtime/test evidence and active matrix rows promoted to pass. Batch 20 source-fixed payroll RPC boundary rows `PAY-018` and `PAY-020`; Batch 21D closes them with disposable QA runtime proof. `AUTH-008` remains open. |
 | `SEC-C` webhook/export/compliance fail-closed | Partially closed through Batch 15 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Batch 15 closes `SEC-014` payslip filename safety with deterministic source/test proof. Webhook, owner export, settings audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
-| `PROD-B` production boundary validation | Partially source-fixed in Batch 22 / open remainder | Batch 22 moves `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof for over-target, cancelled/completed/stale-assignment, and negative-meter boundaries. The migration is not applied and runtime/API proof is still required. Day-only/substitute-worker, setup/master, and remaining production-boundary rows stay open. |
+| `PROD-B` production boundary validation | Partially source-fixed through Batch 24C / open remainder | Batch 22 moves `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof for over-target, cancelled/completed/stale-assignment, and negative-meter boundaries. Batch 24C moves `SETUP-011` to `code_verified` by source-fixing Factory Today setup checklist data-source correctness. Runtime/API or browser proof is still required before these rows can pass. Day-only/substitute-worker, master, and remaining production-boundary rows stay open. |
 | `STOCK-A` stock lifecycle/archive policy | Partially closed in Batch 12 / open remainder | Batch 12 closes `STOCK-012` with focused local lifecycle proof. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial because their exact row wording needs broader proof. |
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated through Batch 21B / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Batch 13 closes `EST-001`, `EST-005`, and `EST-012` with exact local estimator proof. Batch 21B closes `ORDER-008` below-target and pending-dispatch completion confirmation with disposable QA browser/runtime proof. Start Party Order fast-path atomicity remains open. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
 | `DISP-B` receipt-state coherence | Closed through Batch 12 / pass | `DISP-007`, `DISP-010`, `DISP-019`, and `SIGNOFF-08` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. Batch 12 closes `DISP-013` with focused local dispatch archive proof. |
 | `COMM-A` sales/receivables/profit boundary | Closed through Batch 6 / pass | Batch 3 closes `SALE-015`. Batch 4 closes `COMM-002`, `COMM-010`, `COMM-012`, `COMM-014`, `COMM-016`, `SIGNOFF-06`, and `SIGNOFF-09` with runtime/test/migration evidence. Batch 5 closes `STOCK-016` and `STOCK-017`. Batch 6 closes the Golden A order-linked sale, dispatch, receipt, receivable, payment, and order-archive follow-ons `GOLDEN-A-13`, `GOLDEN-A-15`, `GOLDEN-A-16`, `GOLDEN-A-17`, `GOLDEN-A-18`, `GOLDEN-A-19`, `GOLDEN-A-20`, and `GOLDEN-A-24`. Broad timezone/offline rows and release/Sentry proof remain open separately. |
-| `DASH-A` dashboard/sign-off read-model truth | Partially closed/code-verified through Batch 22 / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10`; Batch 15 source-fixes `DASH-003` gross wage read-model calculation but keeps it `code_verified` pending disposable after-shift runtime proof. Batch 22 improves the `SIGNOFF-02` dependency by source-fixing `ORDER-009`, but `SIGNOFF-02` remains fail/open pending full current-run attribution runtime proof. Historical analytics and sign-off evidence debt remain open. |
+| `DASH-A` dashboard/sign-off read-model truth | Partially closed/code-verified through Batch 24C / open remainder | Batch 3 closes dispatch/receipt read-model rows `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 2 closes `SIGNOFF-05`; Batch 4 closes the commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 8C closes `SIGNOFF-10`; Batch 15 source-fixes `DASH-003` gross wage read-model calculation but keeps it `code_verified` pending disposable after-shift runtime proof. Batch 24C moves `DASH-004` to `code_verified` by source-fixing historical selected-date analytics state so stale current values are not mixed into historical views. `SIGNOFF-01`, `SIGNOFF-02`, and remaining dashboard runtime evidence debt stay open. |
 | `PAY-A` payroll/kharchi ledger integrity | Partially remediated through Batch 21D / open remainder | Batch 9 closes offline kharchi rows `OFF-008` and `PAY-028` by truthful online-only de-scope. Batch 15 closes payroll payslip PDF/export rows `PAY-023` and `PAY-024`. Batch 21C promotes PF/ESI preview and preview-versus-settlement rows `PAY-013` and `PAY-015` to pass with disposable payroll settlement runtime proof. Batch 21D promotes payroll settlement/reversal boundary rows `PAY-018` and `PAY-020` to pass with disposable QA runtime proof. Batch 20 online Kharchi atomicity row `PAY-027` remains `code_verified`, not pass, pending disposable QA runtime proof. Broader settlement correctness remains open. |
 | `IDEMP-A` mutation idempotency/unknown outcome | Partially closed in Batch 4 / open remainder | Batch 3 closes `SALE-015` duplicate sale idempotency for the stock sale/dispatch path. Batch 4 closes commercial payment duplicate-submit idempotency for receivable payments. Estimator, market-run creation, payroll, subscription, trial, timeout, and offline idempotency remain open. |
 | `OFF-A` offline/cache/PWA claims | Partially closed in Batch 9 / open remainder | Batch 9 closes `OFF-002`, `OFF-005`, `OFF-006`, `OFF-008`, and `SEC-016` with offline fallback, auth-boundary cache cleanup, online-only kharchi, and truthful public/privacy copy. `OFF-007`, `OFF-010`, and `OFF-009` remain open or partial. |
@@ -1812,7 +1812,7 @@ Production migration status:
 
 - Human production action completed outside this agent run: `npx supabase db push` succeeded after the hotfix.
 - The successful push applied `20260702131500_batch_23_start_party_order_transaction_boundary.sql` and `20260702191500_batch_24a_harden_attendance_rls_date_bounds.sql`.
-- Production DB is now migrated through Batch 24A attendance migration. No Batch 24C closure is claimed.
+- Production DB is now migrated through Batch 24A attendance migration. This Batch 23 note did not itself claim Batch 24C closure; it is superseded for Batch 24C by the recovery closeout below.
 
 Verification commands:
 
@@ -1827,24 +1827,27 @@ Data safety:
 
 - This closeout did not run `npx supabase db push`.
 - No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, or merge to main was performed.
-- Batch 24C/factory-today files were intentionally left unstaged and uncommitted.
+- Historical note superseded: at Batch 23 hotfix time the Batch 24C/factory-today files were intentionally left unstaged and uncommitted. Batch 24C code was later squash-merged through PR #4 and is now closed by the recovery closeout below.
 
-## Batch 24C - Factory Today Setup and Historical Analytics State Closeout
+## Batch 24C - Factory Today Setup and Historical Analytics State Recovery Closeout
 
-Date/time: 2026-07-03 12:35 IST. Branch `codex/batch-24c-factory-today-analytics-state`.
+Date/time: 2026-07-04 IST. Recovery branch `codex/batch-24c-recovery-closeout`.
+
+Context:
+
+- Batch 24C code was squash-merged to `main` through PR #4 at `9eeed018cf88553b37df6f4fc2db5ae3d23a4538`.
+- Original implementation commit before squash: `ee0ab46f6fc8dcd2b1c075e0464b77ab952f79eb`.
+- The active matrix is `output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md`.
+- This recovery closeout commits the ignored proof artifact and promotes only `SETUP-011` and `DASH-004` to `code_verified`.
 
 Scope:
 
 - `SETUP-011`: Factory Today setup panel after creating estimates, machines, workers, and payroll config.
 - `DASH-004`: Historical date selection.
 
-Expected remaining dirty Batch 24C files:
-- `app/(dashboard)/owner/actions/dashboard.ts`
-- `app/(dashboard)/owner/analytics/_components/DashboardClient.tsx`
-- `app/(dashboard)/owner/today/actions.ts`
-- `__tests__/batch24c-factory-today-analytics-state.test.ts`
-- `lib/dashboard-trend.ts`
-- `lib/factory-today-checklist.ts`
+Recovered proof artifact:
+
+- `output/qa/batch24c/BATCH24C-factory-today-analytics-state-proof.json`
 
 Root cause and implementation summary:
 
@@ -1869,4 +1872,4 @@ Result:
 - Batch 24C is completed as source-fixed/code-verified.
 - `SETUP-011` and `DASH-004` are closed as `code_verified`/`source-fixed` candidates.
 - Browser/runtime QA proof is still required before marking true pass-ready. No production/browser pass is claimed because actual runtime proof has not been performed in this agent run.
-
+- Matrix movement from current main: fail -2 and `code_verified` +2, for total 377, pass 195, fail 21, blocked 22, `code_verified` 138, `not_applicable` 1, `not_run` 0.

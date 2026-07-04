@@ -1,0 +1,173 @@
+{
+  "batch": "24C",
+  "title": "Factory Today setup checklist and historical analytics state fixes",
+  "closeout_type": "recovery_closeout_after_pr4_squash_merge",
+  "branch": "codex/batch-24c-recovery-closeout",
+  "original_batch_branch": "codex/batch-24c-factory-today-analytics-state",
+  "source_commit": "2d5e8a5e8d39822ec17f617e47f48e1df187b83c",
+  "original_implementation_commit": "ee0ab46f6fc8dcd2b1c075e0464b77ab952f79eb",
+  "pr4_main_commit": "9eeed018cf88553b37df6f4fc2db5ae3d23a4538",
+  "active_matrix_path": "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+  "recovery_closeout_goal": "Commit proof artifact and update the active matrix/docs so only SETUP-011 and DASH-004 are code_verified/source-fixed, not pass-ready.",
+  "row_definitions_inspected": [
+    {
+      "id": "SETUP-011",
+      "category": "10. Onboarding and Factory Setup",
+      "scenario": "Factory Today setup panel after creating estimates, machines, workers, and payroll config.",
+      "expected_behavior": "Completion state is accurate and refresh-stable.",
+      "status_before": "fail",
+      "severity": "Medium",
+      "failure_evidence": "Factory Today reported the setup checklist incomplete and did not recognize the completed costing consistently even after a quote, order, machines, workers, assignments, and payroll configuration existed.",
+      "evidence_source": "production Factory Today DOM observations"
+    },
+    {
+      "id": "DASH-004",
+      "category": "22. Factory Today and Analytics",
+      "scenario": "Historical date selection.",
+      "expected_behavior": "Shows selected date without mixing today’s values.",
+      "status_before": "fail",
+      "severity": "Medium",
+      "failure_evidence": "The analytics historical date selector mixes historical and current values. On a historical date it only replaces KPI/yesterday and workerBreakdown, while current active orders, machines, and seven-day trend remain in state. Factory Today itself is today-only and has no historical date selector.",
+      "evidence_source": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:167; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:238; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:243; app/(dashboard)/owner/actions/dashboard.ts:280; app/(dashboard)/owner/today/actions.ts:144"
+    }
+  ],
+  "included_rows": [
+    "SETUP-011",
+    "DASH-004"
+  ],
+  "excluded_rows": [
+    {
+      "scope": "AUTH-008, SEC-009, SEC-015, SEC-017, MASTER rows, EST-017, PROD-002, PROD-004, PROD-022, PAY-027, DASH-003, Golden rows, TECH/audit/dependency rows",
+      "reason": "Explicitly out of Batch 24C scope."
+    },
+    {
+      "scope": "migration/RPC/database work, production data mutation, runtime proof promotion",
+      "reason": "Explicitly forbidden for this source/test/code_verified batch. Docs closeout is performed only by the recovery closeout on top of the PR #4 squash merge."
+    }
+  ],
+  "files_changed": [
+    "app/(dashboard)/owner/actions/dashboard.ts",
+    "app/(dashboard)/owner/analytics/_components/DashboardClient.tsx",
+    "app/(dashboard)/owner/today/actions.ts",
+    "__tests__/batch24c-factory-today-analytics-state.test.ts",
+    "lib/dashboard-trend.ts",
+    "lib/factory-today-checklist.ts",
+    "output/qa/batch24c/BATCH24C-factory-today-analytics-state-proof.json",
+    "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+    "docs/pilot-remediation/FIX_LOG.md",
+    "docs/pilot-remediation/LOOP_STATE.md",
+    "docs/pilot-remediation/FAILURE_BACKLOG.md",
+    "docs/pilot-remediation/RETEST_PLAN.md",
+    "docs/pilot-remediation/DOMAIN_INVARIANTS.md",
+    "docs/pilot-remediation/PILOT_READY_DEFINITION.md"
+  ],
+  "tests_added_or_updated": [
+    {
+      "path": "__tests__/batch24c-factory-today-analytics-state.test.ts",
+      "coverage": [
+        "SETUP-011 completed costing from estimator quote, order, or market-run evidence",
+        "SETUP-011 linked active production target, day/night assignment, active worker source booleans, and payroll config constraints",
+        "SETUP-011 incomplete setup states remain incomplete",
+        "DASH-004 seven-day trend window ends on selected date and excludes future/current rows outside the selected window",
+        "DASH-004 historical fetch clears current-only today/orders/machines state and client uses full state replacement",
+        "DASH-004 current-day refresh restores live orders, machines, worker breakdown, and trend",
+        "No Batch 24C migration was added"
+      ]
+    }
+  ],
+  "implementation_evidence": {
+    "SETUP-011": [
+      "Factory Today setup checklist state is built by lib/factory-today-checklist.ts instead of duplicated inline client-facing logic.",
+      "Completed costing is recognized from a qualities row, estimator quote, order, or market run so quote/order-backed costing is not missed.",
+      "Loom target completion now requires a linked active order relation instead of any non-null current_order_id.",
+      "Day/night loom assignment completion requires both shifts for the same machine with worker IDs.",
+      "Piece-rate and fixed-worker setup counts use active workers only.",
+      "Payroll config completion validates the same cycle/pay/reminder bounds enforced by migrations."
+    ],
+    "DASH-004": [
+      "app/(dashboard)/owner/actions/dashboard.ts now builds trend data through getDailyMeterTrend for both live and historical selected dates.",
+      "fetchHistoricalData returns a complete DashboardData-shaped object with today, orders, and machines set to null and a trend scoped to the selected date.",
+      "DashboardClient uses setData(history) for historical dates instead of merging over previous current state.",
+      "Returning to today refreshes live today, orders, workerBreakdown, machines, and trend.",
+      "Current-only order and machine cards render only when selectedDate is today."
+    ]
+  },
+  "rows_considered_source_fixed_code_verified_candidates": [
+    {
+      "id": "SETUP-011",
+      "candidate_status": "code_verified/source-fixed",
+      "reason": "Source and focused tests cover completed costing recognition plus setup checklist source-of-truth conditions; no runtime browser proof was collected."
+    },
+    {
+      "id": "DASH-004",
+      "candidate_status": "code_verified/source-fixed",
+      "reason": "Source and focused tests cover selected-date trend scoping, historical full-state replacement, current-only state clearing, and live-state restoration; no runtime browser proof was collected."
+    }
+  ],
+  "rows_still_open": [
+    {
+      "id": "SETUP-011",
+      "status": "open_pending_runtime_proof",
+      "reason": "Factory Today must still be exercised in QA/browser after creating the real setup chain."
+    },
+    {
+      "id": "DASH-004",
+      "status": "open_pending_runtime_proof",
+      "reason": "Analytics historical date selection must still be exercised in QA/browser and reconciled to source rows."
+    }
+  ],
+  "future_qa_runtime_proof_required": [
+    "Open Factory Today after creating quote/order, looms, day/night assignments, active workers, supervisor, payroll config, and plan; verify setup/costing completion survives refresh.",
+    "Open Analytics for a historical date; verify KPI, worker breakdown, and seven-day trend are scoped to the selected date.",
+    "Verify historical Analytics does not show current active order or machine cards.",
+    "Return Analytics to today; verify current live KPI, orders, machines, worker breakdown, and trend are restored."
+  ],
+  "commands_run": [
+    {
+      "command": "git fetch origin --prune && git switch -C codex/batch-24c-factory-today-analytics-state origin/main && git status --short && git rev-parse origin/main",
+      "result": "passed; branch created from origin/main; origin/main=2d5e8a5e8d39822ec17f617e47f48e1df187b83c; initial status clean"
+    },
+    {
+      "command": "rg -n \"SETUP-011|DASH-004\" output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md docs/pilot-remediation/FIX_LOG.md docs/pilot-remediation/LOOP_STATE.md docs/pilot-remediation/FAILURE_BACKLOG.md docs/pilot-remediation/RETEST_PLAN.md docs/pilot-remediation/DOMAIN_INVARIANTS.md docs/pilot-remediation/PILOT_READY_DEFINITION.md",
+      "result": "passed; exact matrix rows and backlog/retest references inspected"
+    },
+    {
+      "command": "npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts",
+      "result": "passed; 1 test file, 7 tests"
+    },
+    {
+      "command": "npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts __tests__/batch15-payroll-doc-export-consistency.test.ts __tests__/p1-production-log-strictness.test.ts __tests__/p1-production-stock-atomicity.test.ts __tests__/p2-dispatch-sale-receipt.test.ts __tests__/p2-commercials-receivables-payments.test.ts __tests__/production-mode.test.ts __tests__/p1-payroll-config-onboarding.test.ts __tests__/payroll-pay-date-config.test.ts",
+      "result": "passed; 9 test files, 78 tests"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "npx tsc --noEmit --pretty false",
+      "result": "passed"
+    },
+    {
+      "command": "npx eslint 'app/(dashboard)/owner/actions/dashboard.ts' 'app/(dashboard)/owner/analytics/_components/DashboardClient.tsx' 'app/(dashboard)/owner/today/actions.ts' lib/factory-today-checklist.ts lib/dashboard-trend.ts __tests__/batch24c-factory-today-analytics-state.test.ts",
+      "result": "passed"
+    }
+  ],
+  "confirmations": {
+    "no_migration_or_rpc_work": true,
+    "no_database_schema_change": true,
+    "no_production_mutation": true,
+    "no_supabase_db_push": true,
+    "no_migration_repair": true,
+    "no_db_pull": true,
+    "no_direct_sql": true,
+    "no_include_all": true,
+    "no_npm_audit": true,
+    "no_package_install": true,
+    "no_lockfile_change": true,
+    "recovery_docs_closeout": true,
+    "proof_artifact_committed_by_recovery_closeout": true,
+    "active_matrix_updated_by_recovery_closeout": true,
+    "no_pass_ready_marking": true
+  },
+  "final_status": "recovery_closeout_ready_for_commit"
+}

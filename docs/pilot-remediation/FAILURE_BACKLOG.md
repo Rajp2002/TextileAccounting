@@ -10,9 +10,9 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | --- | --- | --- |
 | P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008` |
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-015`, `SEC-017` |
-| P1 | `PROD-B` production boundary, assignment, and setup validity | `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `PROD-022`, `SIGNOFF-01`, `SIGNOFF-02` |
+| P1 | `PROD-B` production boundary, assignment, and setup validity | `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `PROD-022`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | None |
-| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02` |
+| P2 | `DASH-A` dashboard and daily sign-off read-model truth | `SIGNOFF-01`, `SIGNOFF-02` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006` |
 | P4 | `IDEMP-A` mutation idempotency and unknown outcomes | `EST-017`, `OFF-009` |
 | P4 | `OFF-A` offline, cache, and public claims | `OFF-007`, `OFF-010` |
@@ -172,15 +172,15 @@ Required proof: satisfied by disposable Batch 6 runtime proof with 26 assertions
 
 ## P1 PROD-B - Production Boundary Allows Invalid Attribution or Quantities
 
-Failures: `SETUP-011`, `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `PROD-022`, `SIGNOFF-01`, `SIGNOFF-02`
+Failures: `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `PROD-022`, `SIGNOFF-01`, `SIGNOFF-02`
 
-Code-verified evidence debt: `ORDER-005`, `ORDER-009`, `PROD-011`, `PROD-013`, `PROD-023`, `PROD-029`
+Code-verified evidence debt: `SETUP-011`, `ORDER-005`, `ORDER-009`, `PROD-011`, `PROD-013`, `PROD-023`, `PROD-029`
 
 Evidence: `logs/order-stock-sale-source-evidence-20260624.json`, `logs/production-logging-source-evidence-20260624.json`, `logs/prod-dashboard-ux-signoff-source-evidence-20260624.json`, `logs/setup-master-source-evidence-20260624.json`
 
 Invariant: each production entry belongs to one org, active machine, valid date, shift, worker, and active order/run; meters are non-negative and operationally plausible; day-only or substitute-worker support is either implemented or unsupported for pilot.
 
-Impact: Batch 22 source-fixes the direct authenticated RPC/table paths for negative meters, order-attributed logs against cancelled/completed/stale assignments, and over-target production. These rows remain `code_verified`, not pass, until migration application and QA runtime/API proof. Batch 24B source-fixes suspicious large-meter confirmation, restored-unsaved draft labeling, and shift-total/shift-meter copy truth for supervisor production UX; these rows remain `code_verified`, not pass, until QA/browser proof. Day-only factories and substitute workers are not supported by the current boundary.
+Impact: Batch 22 source-fixes the direct authenticated RPC/table paths for negative meters, order-attributed logs against cancelled/completed/stale assignments, and over-target production. These rows remain `code_verified`, not pass, until migration application and QA runtime/API proof. Batch 24B source-fixes suspicious large-meter confirmation, restored-unsaved draft labeling, and shift-total/shift-meter copy truth for supervisor production UX; these rows remain `code_verified`, not pass, until QA/browser proof. Batch 24C source-fixes `SETUP-011` Factory Today setup checklist state by using the correct costing, loom-target, assignment, worker, and payroll-config data sources; it remains `code_verified`, not pass, until browser/runtime proof. Day-only factories and substitute workers are not supported by the current boundary.
 
 Remediation direction:
 
@@ -346,9 +346,9 @@ Required proof: satisfied by Batch 3 runtime/tests for `SALE-015`, Batch 4 runti
 
 ## P2 DASH-A - Dashboard and Daily Sign-Off Read Models Are Not Authoritative
 
-Failures: `DASH-004`, `SIGNOFF-01`, `SIGNOFF-02`
+Failures: `SIGNOFF-01`, `SIGNOFF-02`
 
-Code-verified evidence debt: `DASH-003`
+Code-verified evidence debt: `DASH-003`, `DASH-004`
 
 Closed in Batch 3: `DASH-007`, `SIGNOFF-07`, `SIGNOFF-08`
 
@@ -360,7 +360,7 @@ Evidence: `logs/dashboard-evidence.json`, `logs/prod-dashboard-ux-signoff-source
 
 Invariant: Factory Today and sign-off views are read models over authoritative production, stock, dispatch, commercial, payroll, and observability state. A sign-off card cannot clear when its source rows remain unresolved.
 
-Impact: historical analytics mixes historical and current data, and final sign-off rows still depend on unresolved production/payroll evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 4 closed commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 6 supplies Golden A Factory Today source reconciliation for production, dispatch, receipt, receivable, and deliberate discrepancy state. Batch 8C closes `SIGNOFF-10` with clean deployed browser/server/Sentry evidence. Batch 15 source-fixes `DASH-003` by replacing hard-coded gross wages with meter/rate snapshot aggregation, but it remains `code_verified` pending after-shift runtime proof. Batch 22 source-fixes the `ORDER-009` dependency for `SIGNOFF-02`, but `SIGNOFF-02` remains fail/open pending full current-run attribution runtime proof.
+Impact: final sign-off rows still depend on unresolved production/payroll evidence. Batch 2 closed `SIGNOFF-05` expected-stock truth. Batch 3 closed dispatch pending/receipt/difference queue truth for `DASH-007`, `SIGNOFF-07`, and `SIGNOFF-08`; Batch 4 closed commercial signoff rows `SIGNOFF-06` and `SIGNOFF-09`; Batch 6 supplies Golden A Factory Today source reconciliation for production, dispatch, receipt, receivable, and deliberate discrepancy state. Batch 8C closes `SIGNOFF-10` with clean deployed browser/server/Sentry evidence. Batch 15 source-fixes `DASH-003` by replacing hard-coded gross wages with meter/rate snapshot aggregation, but it remains `code_verified` pending after-shift runtime proof. Batch 24C source-fixes `DASH-004` historical analytics state so selected historical dates no longer retain stale current orders, machines, today KPI, or trend data; it remains `code_verified`, not pass, until browser/runtime proof. Batch 22 source-fixes the `ORDER-009` dependency for `SIGNOFF-02`, but `SIGNOFF-02` remains fail/open pending full current-run attribution runtime proof.
 
 Remediation direction:
 

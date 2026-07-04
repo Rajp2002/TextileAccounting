@@ -1309,7 +1309,7 @@ Production migration status:
 - Human production action completed outside this closeout: `npx supabase db push` succeeded.
 - The production-linked project applied Batch 23 and Batch 24A migrations: `20260702131500` and `20260702191500`.
 - Production DB is now migrated through the Batch 24A attendance migration.
-- No Batch 24C closure is claimed.
+- This Batch 23 hotfix note did not itself claim Batch 24C closure. It is superseded for Batch 24C by the recovery closeout below, after the PR #4 squash merge.
 
 Verification:
 
@@ -1323,11 +1323,18 @@ Verification:
 Forbidden actions:
 
 - This closeout did not run `npx supabase db push`.
-- No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, merge to main, or Batch 24C staging occurred.
+- No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, or merge to main occurred in the Batch 23 hotfix. Batch 24C staging/closure is superseded by the recovery closeout below.
 
-## Batch 24C - Factory Today Setup and Historical Analytics State Closeout
+## Batch 24C - Factory Today Setup and Historical Analytics State Recovery Closeout
 
-Date/time: 2026-07-03 12:35 IST. Branch `codex/batch-24c-factory-today-analytics-state`.
+Date/time: 2026-07-04 IST. Recovery branch `codex/batch-24c-recovery-closeout`.
+
+Context:
+
+- Batch 24C code was squash-merged to `main` through PR #4 at `9eeed018cf88553b37df6f4fc2db5ae3d23a4538`.
+- Original implementation commit before squash: `ee0ab46f6fc8dcd2b1c075e0464b77ab952f79eb`.
+- The active matrix is `output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md`.
+- This recovery closeout commits the ignored proof artifact and promotes only `SETUP-011` and `DASH-004` to `code_verified`.
 
 Scope:
 
@@ -1346,8 +1353,8 @@ Rows explicitly not closed:
 
 Repository state:
 
-- Branch: `codex/batch-24c-factory-today-analytics-state`.
-- Source base: `origin/main` at `d3aa28c488c280ef3cd54a049518f6d2c6ec80d6`.
+- Recovery branch: `codex/batch-24c-recovery-closeout`.
+- Source base: `origin/main` at PR #4 squash merge `9eeed018cf88553b37df6f4fc2db5ae3d23a4538`.
 - Evidence artifact: `output/qa/batch24c/BATCH24C-factory-today-analytics-state-proof.json`.
 
 Verification:
@@ -1361,10 +1368,9 @@ Verification:
 Forbidden actions:
 
 - This closeout did not run `npx supabase db push`.
-- No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, merge to main, or Batch 23 Rework occurred.
+- No direct SQL, production mutation, new migration, package install, npm audit, lockfile change, or Batch 23 rework occurred.
 
 Resolution status:
 
 - `SETUP-011` and `DASH-004` are documented as `code_verified` in the active matrix.
 - Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 21, blocked 22, `code_verified` 138, `not_applicable` 1, `not_run` 0.
-

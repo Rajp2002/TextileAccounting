@@ -47,11 +47,19 @@ Batch 22 proof note: `ORDER-005`, `ORDER-009`, and `PROD-011` are source-fixed a
 
 Batch 24B proof note: `PROD-013`, `PROD-023`, and `PROD-029` are source-fixed and `code_verified`, not pass. Suspicious large positive shift meters now show a non-blocking confirmation at 10,000m, restored localStorage drafts now show a visible unsaved-draft indicator, and public/setup production copy now uses shift-total/shift-meter terminology instead of raw opening/closing meter-reading proof claims. QA/browser proof is still required before pass. `PROD-022` remains fail/open pending separate date/shift draft-isolation runtime proof.
 
+Batch 24C proof note: `SETUP-011` is source-fixed and `code_verified`, not pass. Factory Today setup checklist state now uses persisted source data for costing evidence, active linked loom targets, day/night worker assignments on the same loom, active worker rows, and payroll config bounds. Browser/runtime proof is still required before pass.
+
 Required proof:
 
 - No negative meters at UI, server action, RPC, or table boundary.
 - No production against cancelled orders or unassigned machines.
 - One authoritative row per organization, machine, date, and shift according to the active database constraint/RPC.
+
+## Dashboard Read Models
+
+Dashboard and Factory Today read models must not mix selected-date facts with current-only operational state. Historical views must either scope their data to the selected date or hide/clear inherently current-only cards.
+
+Batch 24C proof note: `DASH-004` is source-fixed and `code_verified`, not pass. Historical Analytics now returns full selected-date state, scopes the seven-day trend to the selected date, clears current-only today/orders/machines values for historical dates, and replaces client state instead of merging stale current data. Browser/runtime proof is still required before pass.
 
 ## Generated Stock
 
