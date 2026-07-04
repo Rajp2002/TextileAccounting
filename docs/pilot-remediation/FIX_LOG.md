@@ -17,7 +17,7 @@ Rules for entries:
 | `SEC-B` privileged action/lockdown enforcement | Partially closed through Batch 21D / open remainder | Batch 1 closed `SEC-006` and `AUTH-016` with runtime/test evidence and active matrix rows promoted to pass. Batch 20 source-fixed payroll RPC boundary rows `PAY-018` and `PAY-020`; Batch 21D closes them with disposable QA runtime proof. `AUTH-008` remains open. |
 | `SEC-C` webhook/export/compliance fail-closed | Partially closed through Batch 15 / open remainder | Batch 9 closes `SEC-016` privacy/offline wording truth. Batch 15 closes `SEC-014` payslip filename safety with deterministic source/test proof. Webhook, owner export, settings audit, age/consent, counsel-review, and live Sentry payload rows remain open or blocked. |
 | `PROD-A` production correction/stock atomicity | Closed in Batch 2 / pass-ready | `PROD-016`, `PROD-028`, `STOCK-015`, `GOLDEN-A-11`, `GOLDEN-A-12`, `GOLDEN-A-14`, and `SIGNOFF-05` have post-fix test/runtime evidence below and active matrix rows are promoted to pass. |
-| `PROD-B` production boundary validation | Partially source-fixed through Batch 24C / open remainder | Batch 22 moves `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof for over-target, cancelled/completed/stale-assignment, and negative-meter boundaries. Batch 24C moves `SETUP-011` to `code_verified` by source-fixing Factory Today setup checklist data-source correctness. Runtime/API or browser proof is still required before these rows can pass. Day-only/substitute-worker, master, and remaining production-boundary rows stay open. |
+| `PROD-B` production boundary validation | Partially source-fixed through Batch 24E / open remainder | Batch 22 moves `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verified` with source/test/migration proof for over-target, cancelled/completed/stale-assignment, and negative-meter boundaries. Batch 24C moves `SETUP-011` to `code_verified` by source-fixing Factory Today setup checklist data-source correctness. Batch 24E moves `MASTER-002` and `MASTER-005` to `code_verified` by source-fixing normalized duplicate loom-name checks and protected loom delete/deactivate/unlink guardrails. Runtime/API, browser, or migration/DB-boundary proof is still required before these rows can pass. Day-only/substitute-worker, `MASTER-014`, and remaining production-boundary rows stay open. |
 | `STOCK-A` stock lifecycle/archive policy | Partially closed in Batch 12 / open remainder | Batch 12 closes `STOCK-012` with focused local lifecycle proof. `STOCK-011`, `STOCK-013`, `MARKET-009`, and `MARKET-010` remain open/partial because their exact row wording needs broader proof. |
 | `ECON-A` estimator/quote/order/date snapshot correctness | Partially remediated through Batch 21B / open remainder | Estimator costing reconciliation is complete for formula/manual modes with browser QA and tests. Batch 7 closes `TIME-002` date-only rendering stability. Batch 10 closes worker-rate snapshot drift, quote restore draft collision, and quote transition cleanup rows. Batch 11 closes server-boundary estimator validation and target/deadline produced-meter/audit guard rows. Batch 13 closes `EST-001`, `EST-005`, and `EST-012` with exact local estimator proof. Batch 21B closes `ORDER-008` below-target and pending-dispatch completion confirmation with disposable QA browser/runtime proof. Start Party Order fast-path atomicity remains open. |
 | `DISP-A` multi-batch dispatch identity | Closed in Batch 3 / pass | `DISP-003`, `GOLDEN-B-09`, `DASH-007`, and `SIGNOFF-07` have post-fix runtime/test/migration evidence below and active matrix rows are promoted to pass. `SIGNOFF-10` received partial dispatch/package evidence here and was closed later by Batch 8C clean deployed browser/server/Sentry evidence. |
@@ -1920,3 +1920,48 @@ Resolution status:
 
 - `EST-017` and `PROD-022` are documented as `code_verified` in the active QA matrix.
 - Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 19, blocked 22, `code_verified` 140, `not_applicable` 1, `not_run` 0.
+
+## Batch 24E - Master Data Loom Guardrails Source-Fix Closeout
+
+Date/time: 2026-07-05 IST. Source base `origin/main` at `04637f62746e9cbeae5821d944f558c65ec4f07b`.
+
+Scope:
+
+- `MASTER-002`
+- `MASTER-005`
+
+Rows promoted to `code_verified`, not pass:
+
+- `MASTER-002`: duplicate loom-name guardrails are source-fixed for manual add, bulk add, and rename/update. Names are normalized with trim/case-folding, duplicates are checked within the submitted bulk batch and against existing org looms, same-type different-name looms remain allowed, and duplicate database errors are mapped to a clear validation message. Migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` adds a normalized org-scoped unique index but was not applied.
+- `MASTER-005`: protected loom lifecycle behavior is source-fixed for owner deactivate/delete, supervisor delete-with-code, and cost-analysis null-target unlink. The shared guard blocks active/current targets, linked targets, standing worker assignments, dated shift-assignment history, and production history. The targeted review fix closes the null-target unlink/deactivate bypass by guarding unlink and clearing only `current_order_id` when safe.
+
+Rows explicitly not closed:
+
+- `MASTER-014` remains fail/open because assignment concurrency needs a separate transaction/RPC/lock design spanning `shift_assignments`, `machine_assignments`, and `machines.current_order_id`.
+- `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, `PROD-002`, `PROD-004`, `PAY-027`, `DASH-003`, TECH/audit/dependency rows, WA/OFF rows, SIGNOFF rows, Golden rows, and all unapproved rows remain unchanged.
+
+Evidence:
+
+- Evidence artifact: `output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json`.
+- Focused source test: `__tests__/batch24e-master-data-guardrails.test.ts`.
+- Implementation files: `app/(dashboard)/owner/actions.ts`, `app/(dashboard)/supervisor/actions.ts`, `components/MachineManagement.tsx`, `lib/master-data-loom-guardrails.ts`.
+- Unapplied migration file: `supabase/migrations/20260704120000_batch_24e_master_data_loom_guardrails.sql`.
+
+Verification commands:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json` -> passed.
+- `npx vitest run __tests__/batch24e-master-data-guardrails.test.ts` -> passed, 1 test file and 9 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint app/\(dashboard\)/owner/actions.ts app/\(dashboard\)/supervisor/actions.ts components/MachineManagement.tsx lib/master-data-loom-guardrails.ts __tests__/batch24e-master-data-guardrails.test.ts` -> passed.
+- `npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts __tests__/production-mode.test.ts __tests__/p1-payroll-config-onboarding.test.ts __tests__/phase1-scope.test.ts` -> passed, 4 test files and 21 tests.
+
+Data safety:
+
+- Migration was created but not applied.
+- No Supabase db push, migration repair, db pull, direct SQL, `--include-all`, production mutation, npm audit, package install, lockfile change, env-file staging, Supabase temp-file staging, or browser/runtime pass promotion was used.
+
+Resolution status:
+
+- `MASTER-002` and `MASTER-005` are documented as `code_verified` in the active QA matrix, not pass.
+- Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 17, blocked 22, `code_verified` 142, `not_applicable` 1, `not_run` 0.

@@ -21,6 +21,16 @@ import {
 import { eraseWorkerPII } from './actions/compliance'
 import { formatToSurat } from '@/lib/time'
 import { generateAndStoreAccessCode, validateAndConsumeAccessCode } from '@/lib/access-codes'
+import {
+    DUPLICATE_LOOM_NAME_ERROR,
+    buildDuplicateLoomNameError,
+    buildProtectedLoomActionError,
+    findDuplicateLoomName,
+    findDuplicateLoomNameInBatch,
+    getLoomLifecycleProtectionReasons,
+    isDuplicateLoomNameDbError,
+    type LoomLifecycleProtectionInput,
+} from '@/lib/master-data-loom-guardrails'
 
 export type ProductionTargetOption = {
     source_type: 'order' | 'market_run'
@@ -58,7 +68,77 @@ function numericValue(value: unknown): number {
 }
 
 type DbPrimitivePayload = Record<string, string | number | boolean | null>
-type DbMutationError = { message?: string } | null
+type DbMutationError = { code?: string; message?: string; details?: string } | null
+
+type MachineLifecycleSupabase = Awaited<ReturnType<typeof createServerClient>>
+type MachineOrderStatusRelation = { status?: string | null } | Array<{ status?: string | null }> | null
+
+function getMachineOrderStatus(orders: MachineOrderStatusRelation) {
+    if (Array.isArray(orders)) return orders[0]?.status ?? null
+    return orders?.status ?? null
+}
+
+async function getMachineLifecycleProtectionInput(
+    supabase: MachineLifecycleSupabase,
+    orgId: string,
+    machineId: string
+): Promise<{ input?: LoomLifecycleProtectionInput; error?: string }> {
+    const [machineRes, standingAssignmentsRes, shiftAssignmentsRes, productionLogsRes] = await Promise.all([
+        supabase
+            .from('machines')
+            .select('current_order_id, orders(status)')
+            .eq('id', machineId)
+            .eq('org_id', orgId)
+            .single(),
+        supabase
+            .from('machine_assignments')
+            .select('id')
+            .eq('machine_id', machineId)
+            .eq('org_id', orgId)
+            .limit(1),
+        supabase
+            .from('shift_assignments')
+            .select('id')
+            .eq('machine_id', machineId)
+            .eq('org_id', orgId)
+            .limit(1),
+        supabase
+            .from('production_logs')
+            .select('id')
+            .eq('machine_id', machineId)
+            .eq('org_id', orgId)
+            .limit(1),
+    ])
+
+    if (machineRes.error || !machineRes.data) {
+        if (machineRes.error) console.error('Failed to verify loom references:', machineRes.error)
+        return { error: 'Failed to check loom references. Please try again.' }
+    }
+
+    if (standingAssignmentsRes.error || shiftAssignmentsRes.error || productionLogsRes.error) {
+        console.error('Failed to verify loom protected references:', {
+            standingAssignmentsError: standingAssignmentsRes.error,
+            shiftAssignmentsError: shiftAssignmentsRes.error,
+            productionLogsError: productionLogsRes.error,
+        })
+        return { error: 'Failed to check loom references. Please try again.' }
+    }
+
+    const machine = machineRes.data as {
+        current_order_id: string | null
+        orders: MachineOrderStatusRelation
+    }
+
+    return {
+        input: {
+            currentOrderId: machine.current_order_id,
+            currentOrderStatus: getMachineOrderStatus(machine.orders),
+            standingAssignmentCount: standingAssignmentsRes.data?.length ?? 0,
+            shiftAssignmentCount: shiftAssignmentsRes.data?.length ?? 0,
+            productionLogCount: productionLogsRes.data?.length ?? 0,
+        },
+    }
+}
 
 // ─── Machine Management (Server Actions) ──────────────────────────────────────
 // These run server-side so auth.uid() is always set in the audit trigger,
@@ -70,6 +150,20 @@ export async function addMachine(name: string, loomType?: string, customLabel?: 
 
     const trimmedName = name.trim()
     if (!trimmedName) return { error: 'Machine name is required.' }
+
+    const { data: existingMachines, error: existingMachinesError } = await supabase
+        .from('machines')
+        .select('id, name')
+        .eq('org_id', profile.org_id)
+
+    if (existingMachinesError) {
+        console.error('Failed to check duplicate loom name:', existingMachinesError)
+        return { error: 'Failed to validate loom name. Please try again.' }
+    }
+
+    if (findDuplicateLoomName(trimmedName, existingMachines ?? [])) {
+        return { error: buildDuplicateLoomNameError(trimmedName) }
+    }
 
     const insertData: DbPrimitivePayload = { name: trimmedName, org_id: profile.org_id, status: 'inactive' }
     
@@ -91,6 +185,9 @@ export async function addMachine(name: string, loomType?: string, customLabel?: 
         .insert(insertData)
 
     if (error) {
+        if (isDuplicateLoomNameDbError(error)) {
+            return { error: DUPLICATE_LOOM_NAME_ERROR }
+        }
         console.error('Failed to add machine:', error)
         return { error: 'Failed to add machine. Please try again.' }
     }
@@ -139,11 +236,37 @@ export async function addMachinesBulk(
         rows.push(row)
     }
 
+    const duplicateBatchName = findDuplicateLoomNameInBatch(rows.map((row) => ({ name: String(row.name ?? '') })))
+    if (duplicateBatchName) {
+        return { error: buildDuplicateLoomNameError(duplicateBatchName.duplicate.name ?? '') }
+    }
+
+    const { data: existingMachines, error: existingMachinesError } = await supabase
+        .from('machines')
+        .select('id, name')
+        .eq('org_id', profile.org_id)
+
+    if (existingMachinesError) {
+        console.error('Failed to check duplicate loom names:', existingMachinesError)
+        return { error: 'Failed to validate loom names. Please try again.' }
+    }
+
+    const existingDuplicate = rows
+        .map((row) => findDuplicateLoomName(String(row.name ?? ''), existingMachines ?? []))
+        .find(Boolean)
+
+    if (existingDuplicate) {
+        return { error: buildDuplicateLoomNameError(existingDuplicate.name ?? '') }
+    }
+
     const { error } = await supabase
         .from('machines')
         .insert(rows)
 
     if (error) {
+        if (isDuplicateLoomNameDbError(error)) {
+            return { error: DUPLICATE_LOOM_NAME_ERROR }
+        }
         console.error('Failed to bulk-add machines:', error)
         return { error: 'Failed to add machines. Please try again.' }
     }
@@ -161,6 +284,20 @@ export async function updateMachine(machineId: string, name: string, loomType?: 
 
     const trimmedName = name.trim()
     if (!trimmedName) return { error: 'Machine name cannot be empty.' }
+
+    const { data: existingMachines, error: existingMachinesError } = await supabase
+        .from('machines')
+        .select('id, name')
+        .eq('org_id', profile.org_id)
+
+    if (existingMachinesError) {
+        console.error('Failed to check duplicate loom name:', existingMachinesError)
+        return { error: 'Failed to validate loom name. Please try again.' }
+    }
+
+    if (findDuplicateLoomName(trimmedName, existingMachines ?? [], parsed.data)) {
+        return { error: buildDuplicateLoomNameError(trimmedName) }
+    }
 
     // Build update object — always update name; loom_type only when explicitly passed
     // (undefined = caller didn't touch it; null = caller explicitly cleared it)
@@ -186,6 +323,9 @@ export async function updateMachine(machineId: string, name: string, loomType?: 
         .eq('org_id', profile.org_id)
 
     if (error) {
+        if (isDuplicateLoomNameDbError(error)) {
+            return { error: DUPLICATE_LOOM_NAME_ERROR }
+        }
         console.error('Failed to update machine:', error)
         return { error: 'Failed to update machine. Please try again.' }
     }
@@ -271,6 +411,16 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
         }
     }
 
+    if (newStatus === 'inactive') {
+        const protection = await getMachineLifecycleProtectionInput(supabase, profile.org_id, parsed.data)
+        if (protection.error) return { error: protection.error }
+
+        const reasons = getLoomLifecycleProtectionReasons(protection.input ?? {})
+        if (reasons.length > 0) {
+            return { error: buildProtectedLoomActionError('deactivate', reasons) }
+        }
+    }
+
     const { error } = await supabase
         .from('machines')
         .update({ status: newStatus })
@@ -280,6 +430,38 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
     if (error) {
         console.error('Failed to update machine status:', error)
         return { error: 'Failed to update machine status. Please try again.' }
+    }
+
+    revalidatePath('/owner/machines')
+    revalidatePath('/supervisor/machines')
+    revalidatePath('/supervisor/dashboard')
+    return { success: true }
+}
+
+export async function deleteMachine(machineId: string) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const parsed = safeParse(UuidSchema, machineId)
+    if ('error' in parsed) return { error: parsed.error }
+
+    const protection = await getMachineLifecycleProtectionInput(supabase, profile.org_id, parsed.data)
+    if (protection.error) return { error: protection.error }
+
+    const reasons = getLoomLifecycleProtectionReasons(protection.input ?? {})
+    if (reasons.length > 0) {
+        return { error: buildProtectedLoomActionError('delete', reasons) }
+    }
+
+    const { error } = await supabase
+        .from('machines')
+        .delete()
+        .eq('id', parsed.data)
+        .eq('org_id', profile.org_id)
+
+    if (error) {
+        console.error('Failed to delete machine:', error)
+        return { error: 'Failed to delete loom. Please try again.' }
     }
 
     revalidatePath('/owner/machines')
@@ -1694,11 +1876,20 @@ export async function assignMachineProductionTarget(machineId: string, target: P
         }
     }
 
+    if (parsedOrderId === null) {
+        const protection = await getMachineLifecycleProtectionInput(supabase, profile.org_id, machineParsed.data)
+        if (protection.error) return { error: protection.error }
+
+        const reasons = getLoomLifecycleProtectionReasons(protection.input ?? {})
+        if (reasons.length > 0) {
+            return { error: buildProtectedLoomActionError('unlink', reasons) }
+        }
+    }
+
     const { error } = await supabase
         .from('machines')
         .update({
             current_order_id: parsedOrderId,
-            ...(parsedOrderId === null ? { status: 'inactive' } : {}),
         })
         .eq('id', machineParsed.data)
         .eq('org_id', profile.org_id)

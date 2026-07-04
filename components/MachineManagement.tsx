@@ -47,6 +47,7 @@ import { deleteMachineWithCode, requestAccessCode } from '@/app/(dashboard)/supe
 import {
     addMachine,
     updateMachine,
+    deleteMachine,
     toggleMachineStatus as toggleMachineStatusAction,
     updateMachineAssignment,
     assignMachineProductionTarget,
@@ -261,12 +262,17 @@ export function MachineManagement({
         if (userProfile?.role === 'owner') {
             if (confirm(t('machines.delete_confirm'))) {
                 setDeleting(true)
-                const { error } = await supabase.from('machines').delete().eq('id', id)
-                setDeleting(false)
-                if (error) toast.error(t('machines.machine_delete_failed'))
-                else {
-                    toast.success(t('machines.machine_deleted'))
-                    queryClient.invalidateQueries({ queryKey: ['machines'] })
+                try {
+                    const result = await deleteMachine(id)
+                    if (result.error) toast.error(result.error)
+                    else {
+                        toast.success(t('machines.machine_deleted'))
+                        queryClient.invalidateQueries({ queryKey: ['machines'] })
+                    }
+                } catch (error) {
+                    toast.error(getErrorMessage(error, t('machines.machine_delete_failed')))
+                } finally {
+                    setDeleting(false)
                 }
             }
         } else {

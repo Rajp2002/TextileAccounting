@@ -19,6 +19,11 @@ import {
 import { getCycleBoundsForDate } from '@/lib/payroll-cycle'
 import { validateEntry, VALIDATION_MESSAGES } from '@/lib/production-log-validation'
 import { generateAndStoreAccessCode, validateAndConsumeAccessCode } from '@/lib/access-codes'
+import {
+    buildProtectedLoomActionError,
+    getLoomLifecycleProtectionReasons,
+    type LoomLifecycleProtectionInput,
+} from '@/lib/master-data-loom-guardrails'
 
 type ShiftType = 'day' | 'night'
 
@@ -43,7 +48,77 @@ type KharchiRpcResult = {
     cycle_start_date?: string
 }
 
+type MachineLifecycleSupabase = Awaited<ReturnType<typeof createServerClient>>
+type MachineOrderStatusRelation = { status?: string | null } | Array<{ status?: string | null }> | null
+
 // ─── Internal Helpers ──────────────────────────────────────────────────────────
+
+function getMachineOrderStatus(orders: MachineOrderStatusRelation) {
+    if (Array.isArray(orders)) return orders[0]?.status ?? null
+    return orders?.status ?? null
+}
+
+async function getMachineLifecycleProtectionInput(
+    supabase: MachineLifecycleSupabase,
+    orgId: string,
+    machineId: string
+): Promise<{ input?: LoomLifecycleProtectionInput; error?: string }> {
+    const [machineRes, standingAssignmentsRes, shiftAssignmentsRes, productionLogsRes] = await Promise.all([
+        supabase
+            .from('machines')
+            .select('current_order_id, orders(status)')
+            .eq('id', machineId)
+            .eq('org_id', orgId)
+            .single(),
+        supabase
+            .from('machine_assignments')
+            .select('id')
+            .eq('machine_id', machineId)
+            .eq('org_id', orgId)
+            .limit(1),
+        supabase
+            .from('shift_assignments')
+            .select('id')
+            .eq('machine_id', machineId)
+            .eq('org_id', orgId)
+            .limit(1),
+        supabase
+            .from('production_logs')
+            .select('id')
+            .eq('machine_id', machineId)
+            .eq('org_id', orgId)
+            .limit(1),
+    ])
+
+    if (machineRes.error || !machineRes.data) {
+        if (machineRes.error) console.error('Failed to verify loom references:', machineRes.error)
+        return { error: 'Failed to check loom references. Please try again.' }
+    }
+
+    if (standingAssignmentsRes.error || shiftAssignmentsRes.error || productionLogsRes.error) {
+        console.error('Failed to verify loom protected references:', {
+            standingAssignmentsError: standingAssignmentsRes.error,
+            shiftAssignmentsError: shiftAssignmentsRes.error,
+            productionLogsError: productionLogsRes.error,
+        })
+        return { error: 'Failed to check loom references. Please try again.' }
+    }
+
+    const machine = machineRes.data as {
+        current_order_id: string | null
+        orders: MachineOrderStatusRelation
+    }
+
+    return {
+        input: {
+            currentOrderId: machine.current_order_id,
+            currentOrderStatus: getMachineOrderStatus(machine.orders),
+            standingAssignmentCount: standingAssignmentsRes.data?.length ?? 0,
+            shiftAssignmentCount: shiftAssignmentsRes.data?.length ?? 0,
+            productionLogCount: productionLogsRes.data?.length ?? 0,
+        },
+    }
+}
 
 /**
  * Returns a Supabase service-role client for operations that need to bypass RLS.
@@ -177,6 +252,15 @@ export async function deleteMachineWithCode(machineId: string, accessCode: strin
     // Validate inputs
     const machineParsed = safeParse(UuidSchema, machineId)
     if ('error' in machineParsed) return { error: machineParsed.error }
+
+    const supabase = await createServerClient()
+    const protection = await getMachineLifecycleProtectionInput(supabase, orgId, machineParsed.data)
+    if (protection.error) return { error: protection.error }
+
+    const reasons = getLoomLifecycleProtectionReasons(protection.input ?? {})
+    if (reasons.length > 0) {
+        return { error: buildProtectedLoomActionError('delete', reasons) }
+    }
 
     let isCodeValid = false
     try {

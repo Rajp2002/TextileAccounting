@@ -14,14 +14,14 @@ Source-of-truth artifacts:
 
 Status: No-Go for pilot.
 
-Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, Batch 22 production/order boundary source-fix closeout, Batch 23 Start Party Order transaction boundary source-fix closeout, Batch 24A attendance RLS and access-code boundary source-fix closeout, Batch 24B supervisor production UX source-fix closeout, Batch 24C Factory Today setup and historical analytics state closeout, and Batch 24D estimator submit and production draft isolation source-fix closeout:
+Current classification after Batch 1 security foundation closeout, Batch 2 documentation closeout, the estimator costing reconciliation closeout, Batch 3 dispatch sale receipt closeout, Batch 4 commercials receivables closeout, Batch 5 stock audit refresh closeout, Batch 6 Golden A runtime closeout, Batch 7 partial release/date closeout, Batch 8 migration-head evidence closeout, Batch 8B Sentry release/source-map evidence closeout, Batch 8C clean deployed signoff closeout, Batch 9 offline/cache truth closeout, Batch 10 estimator/quote/order snapshot closeout, Batch 11 estimator/order lifecycle closeout, Batch 12 code-verified proof sweep, Batch 13 targeted estimator proof sweep, Batch 15 payroll document/export/statutory consistency closeout, Batch 20 payroll RPC/Kharchi source-fix closeout, Batch 21B ORDER-008 runtime proof closeout, Batch 21C payroll preview/settlement runtime proof closeout, Batch 21D payroll boundary runtime proof closeout, Batch 22 production/order boundary source-fix closeout, Batch 23 Start Party Order transaction boundary source-fix closeout, Batch 24A attendance RLS and access-code boundary source-fix closeout, Batch 24B supervisor production UX source-fix closeout, Batch 24C Factory Today setup and historical analytics state closeout, Batch 24D estimator submit and production draft isolation source-fix closeout, and Batch 24E master data loom guardrails source-fix closeout:
 
 | Status | Count | Pilot meaning |
 | --- | ---: | --- |
 | `pass` | 195 | Runtime/test evidence exists. |
-| `fail` | 19 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
+| `fail` | 17 | Must be fixed, de-scoped, or explicitly accepted only where non-pilot scope. |
 | `blocked` | 22 | Not pilot-ready until evidence is captured or the feature is removed from pilot scope. |
-| `code_verified` | 140 | Source evidence only. This is not a pass. |
+| `code_verified` | 142 | Source evidence only. This is not a pass. |
 | `not_applicable` | 1 | Excluded by scope. |
 | `not_run` | 0 | Matrix was fully classified. |
 
@@ -70,6 +70,8 @@ Batch 22 moved `ORDER-005`, `ORDER-009`, and `PROD-011` from fail to `code_verif
 Batch 24B moved `PROD-013`, `PROD-023`, and `PROD-029` from fail to `code_verified` with source/test proof in `output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json`. Suspicious large positive shift meters now show a non-blocking confirmation at 10,000m, restored localStorage drafts now show a visible unsaved-draft indicator, and public/setup production copy now uses shift-total/shift-meter terminology instead of raw opening/closing meter-reading proof claims. No row is pass-ready from Batch 24B.
 
 Batch 24D moved `EST-017` and `PROD-022` from fail to `code_verified` with source/test proof in `output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json`. Estimator rapid double-submit is guarded client-side with a synchronous `saveQuoteLockRef` before Save Quote and Save & Create Market Run actions. Supervisor production drafts are now keyed by org, user, selected date, and shift, with stale date/shift fetch completions ignored and save using the current selected date/shift. Neither row is pass-ready until QA/browser proof is collected.
+
+Batch 24E moved `MASTER-002` and `MASTER-005` from fail to `code_verified` with source/test proof in `output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json`. Duplicate loom names are now blocked on normalized org-scoped add, bulk-add, and rename paths with a forward-only unique-index migration created but not applied. Protected loom delete, deactivate, supervisor delete-with-code, and null-target unlink now share lifecycle preflight coverage for active targets, assignments, shift-assignment history, and production history. Neither row is pass-ready until migration/DB-boundary proof and QA/browser proof are collected. `MASTER-014` remains fail/open.
 
 ## Operating Rules
 
@@ -1420,3 +1422,46 @@ Resolution status:
 
 - `EST-017` and `PROD-022` are documented as `code_verified` in the active matrix.
 - Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 19, blocked 22, `code_verified` 140, `not_applicable` 1, `not_run` 0.
+
+## Batch 24E - Master Data Loom Guardrails Closeout
+
+Date/time: 2026-07-05 IST. Branch `codex/batch-24e-master-data-guardrails`.
+
+Scope:
+
+- `MASTER-002`
+- `MASTER-005`
+
+Rows promoted to `code_verified`, not pass:
+
+- `MASTER-002`: normalized duplicate loom-name prevention is source-fixed for manual add, bulk add, and rename/update paths. A forward-only migration creates a database unique index on `machines (org_id, lower(btrim(name)))`, but it was not applied.
+- `MASTER-005`: protected loom lifecycle behavior is source-fixed for owner deactivate/delete, supervisor delete-with-code, and cost-analysis null-target unlink. Protected references include current/linked target, active standing worker assignments, dated shift-assignment history, and production history. Null-target unlink no longer silently sets loom status inactive.
+
+Rows explicitly not closed:
+
+- `MASTER-014` remains fail/open because assignment no-mixed-context behavior requires a separate transactional RPC/lock design spanning `shift_assignments`, `machine_assignments`, and `machines.current_order_id`.
+- `AUTH-008`, `SEC-009`, `SEC-015`, `SEC-017`, `PROD-002`, `PROD-004`, `PAY-027`, `DASH-003`, TECH/audit/dependency rows, WA/OFF rows, SIGNOFF rows, Golden rows, and all unapproved rows remain unchanged.
+
+Repository state:
+
+- Source base: `origin/main` at `04637f62746e9cbeae5821d944f558c65ec4f07b`.
+- Evidence artifact: `output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json`.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json` -> passed.
+- `npx vitest run __tests__/batch24e-master-data-guardrails.test.ts` -> passed, 1 test file and 9 tests.
+- `npx tsc --noEmit --pretty false` -> passed.
+- `npx eslint app/\(dashboard\)/owner/actions.ts app/\(dashboard\)/supervisor/actions.ts components/MachineManagement.tsx lib/master-data-loom-guardrails.ts __tests__/batch24e-master-data-guardrails.test.ts` -> passed.
+- `npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts __tests__/production-mode.test.ts __tests__/p1-payroll-config-onboarding.test.ts __tests__/phase1-scope.test.ts` -> passed, 4 test files and 21 tests.
+
+Forbidden actions:
+
+- This closeout did not apply the Batch 24E migration, run `npx supabase db push`, run migration repair, run `db pull`, use direct SQL, use `--include-all`, mutate production, run `npm audit`, install packages, touch the lockfile, stage env files, or stage Supabase temp files.
+- Browser/runtime proof was not collected, so no pass-ready status is claimed.
+
+Resolution status:
+
+- `MASTER-002` and `MASTER-005` are documented as `code_verified` in the active matrix.
+- Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 17, blocked 22, `code_verified` 142, `not_applicable` 1, `not_run` 0.

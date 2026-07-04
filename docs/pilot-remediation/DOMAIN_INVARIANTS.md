@@ -49,6 +49,8 @@ Batch 24B proof note: `PROD-013`, `PROD-023`, and `PROD-029` are source-fixed an
 
 Batch 24C proof note: `SETUP-011` is source-fixed and `code_verified`, not pass. Factory Today setup checklist state now uses persisted source data for costing evidence, active linked loom targets, day/night worker assignments on the same loom, active worker rows, and payroll config bounds. Browser/runtime proof is still required before pass.
 
+Batch 24E proof note: `MASTER-002` and `MASTER-005` are source-fixed and `code_verified`, not pass. Duplicate loom names are guarded in source for normalized org-scoped add, bulk-add, and rename paths, and migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` adds a database unique index but was not applied. Protected loom owner delete/deactivate, supervisor delete-with-code, and null-target unlink now share lifecycle guardrails for active targets, assignments, shift-assignment history, and production history; null-target unlink no longer silently deactivates protected looms. Migration/DB-boundary proof and QA/browser proof are still required before pass. `MASTER-014` remains fail/open.
+
 Required proof:
 
 - No negative meters at UI, server action, RPC, or table boundary.

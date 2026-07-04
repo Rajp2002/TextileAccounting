@@ -10,7 +10,7 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | --- | --- | --- |
 | P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008` |
 | P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-015`, `SEC-017` |
-| P1 | `PROD-B` production boundary, assignment, and setup validity | `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `SIGNOFF-01`, `SIGNOFF-02` |
+| P1 | `PROD-B` production boundary, assignment, and setup validity | `MASTER-014`, `PROD-002`, `PROD-004`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | None |
 | P2 | `DASH-A` dashboard and daily sign-off read-model truth | `SIGNOFF-01`, `SIGNOFF-02` |
 | P3 | `PAY-A` payroll, attendance, settlement, and kharchi ledgers | `PAY-006` |
@@ -65,6 +65,8 @@ Moved from fail to `code_verified` in Batch 23 but still unresolved evidence deb
 Moved from fail to `code_verified` in Batch 24B but still unresolved evidence debt: supervisor production UX/source rows (`PROD-013`, `PROD-023`, `PROD-029`). Suspicious large positive shift meters now show a non-blocking confirmation at 10,000m, restored localStorage drafts now show a visible unsaved-draft indicator, and public/setup production copy now uses shift-total/shift-meter terminology instead of raw opening/closing meter-reading proof claims. QA/browser proof has not been collected.
 
 Moved from fail to `code_verified` in Batch 24D but still unresolved evidence debt: estimator rapid double-submit (`EST-017`) and supervisor production date/shift draft isolation (`PROD-022`). Estimator Save Quote and Save & Create Market Run now have a synchronous client-side submit lock; production drafts are scoped by org, user, selected date, and shift, with stale date/shift fetch results ignored. QA/browser proof has not been collected, and `EST-017` does not claim server/database idempotency.
+
+Moved from fail to `code_verified` in Batch 24E but still unresolved evidence debt: master data loom guardrails (`MASTER-002`, `MASTER-005`). Duplicate loom names are guarded in source and a database unique-index migration was created but not applied. Protected loom delete/deactivate/unlink paths are source-fixed, including the prior null-target unlink bypass. Migration/DB-boundary proof and QA/browser proof have not been collected. `MASTER-014` remains fail/open.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -174,24 +176,25 @@ Required proof: satisfied by disposable Batch 6 runtime proof with 26 assertions
 
 ## P1 PROD-B - Production Boundary Allows Invalid Attribution or Quantities
 
-Failures: `MASTER-002`, `MASTER-005`, `MASTER-014`, `PROD-002`, `PROD-004`, `SIGNOFF-01`, `SIGNOFF-02`
+Failures: `MASTER-014`, `PROD-002`, `PROD-004`, `SIGNOFF-01`, `SIGNOFF-02`
 
-Code-verified evidence debt: `SETUP-011`, `ORDER-005`, `ORDER-009`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`
+Code-verified evidence debt: `MASTER-002`, `MASTER-005`, `SETUP-011`, `ORDER-005`, `ORDER-009`, `PROD-011`, `PROD-013`, `PROD-022`, `PROD-023`, `PROD-029`
 
 Evidence: `logs/order-stock-sale-source-evidence-20260624.json`, `logs/production-logging-source-evidence-20260624.json`, `logs/prod-dashboard-ux-signoff-source-evidence-20260624.json`, `logs/setup-master-source-evidence-20260624.json`
 
 Invariant: each production entry belongs to one org, active machine, valid date, shift, worker, and active order/run; meters are non-negative and operationally plausible; day-only or substitute-worker support is either implemented or unsupported for pilot.
 
-Impact: Batch 22 source-fixes the direct authenticated RPC/table paths for negative meters, order-attributed logs against cancelled/completed/stale assignments, and over-target production. These rows remain `code_verified`, not pass, until migration application and QA runtime/API proof. Batch 24B source-fixes suspicious large-meter confirmation, restored-unsaved draft labeling, and shift-total/shift-meter copy truth for supervisor production UX; these rows remain `code_verified`, not pass, until QA/browser proof. Batch 24C source-fixes `SETUP-011` Factory Today setup checklist state by using the correct costing, loom-target, assignment, worker, and payroll-config data sources; it remains `code_verified`, not pass, until browser/runtime proof. Batch 24D source-fixes `PROD-022` by scoping supervisor production draft keys by org, user, selected date, and shift and preventing stale date/shift fetch results from restoring the wrong visible draft. Day-only factories and substitute workers are not supported by the current boundary.
+Impact: Batch 22 source-fixes the direct authenticated RPC/table paths for negative meters, order-attributed logs against cancelled/completed/stale assignments, and over-target production. These rows remain `code_verified`, not pass, until migration application and QA runtime/API proof. Batch 24B source-fixes suspicious large-meter confirmation, restored-unsaved draft labeling, and shift-total/shift-meter copy truth for supervisor production UX; these rows remain `code_verified`, not pass, until QA/browser proof. Batch 24C source-fixes `SETUP-011` Factory Today setup checklist state by using the correct costing, loom-target, assignment, worker, and payroll-config data sources; it remains `code_verified`, not pass, until browser/runtime proof. Batch 24D source-fixes `PROD-022` by scoping supervisor production draft keys by org, user, selected date, and shift and preventing stale date/shift fetch results from restoring the wrong visible draft. Batch 24E source-fixes `MASTER-002` duplicate loom-name checks and `MASTER-005` protected loom delete/deactivate/unlink guardrails, including the prior null-target unlink bypass; these rows remain `code_verified`, not pass, until migration/DB-boundary and QA/browser proof. Day-only factories and substitute workers are not supported by the current boundary.
 
 Remediation direction:
 
 - Apply the Batch 22 migration in QA after review and run rollback-only/API proof for active order/run, assignment, non-negative meters, and target/cancel constraints.
 - Decide pilot scope for day-only factories and substitute workers; fix or document unsupported.
-- Add duplicate loom-name prevention and atomic assignment updates.
+- Apply or DB-boundary-prove the Batch 24E duplicate loom-name migration in QA after duplicate data review, then prove duplicate add/bulk-add/rename blocking and allowed different-org/different-name behavior.
+- Add atomic assignment updates for `MASTER-014`.
 
 Required proof: Batch 22 source tests are present for `ORDER-005`, `ORDER-009`, and `PROD-011`; pass still requires migration application evidence plus rollback-only/API probes for negative meters, cancelled/completed order, over-target, and assignment mismatch, and valid production/correction runtime proof that generated stock/order progress/payroll basis remain consistent.
-Batch 24B source tests are present for `PROD-013`, `PROD-023`, and `PROD-029`; pass still requires browser proof for large-meter warning/confirmation, restored-draft refresh/crash behavior, and copy review. Batch 24D source tests are present for `PROD-022`; pass still requires browser proof for org/user/date/shift draft isolation and save payload date/shift.
+Batch 24B source tests are present for `PROD-013`, `PROD-023`, and `PROD-029`; pass still requires browser proof for large-meter warning/confirmation, restored-draft refresh/crash behavior, and copy review. Batch 24D source tests are present for `PROD-022`; pass still requires browser proof for org/user/date/shift draft isolation and save payload date/shift. Batch 24E source tests are present for `MASTER-002` and `MASTER-005`; pass still requires migration/DB-boundary proof for normalized duplicate loom names and QA/browser proof for protected delete/deactivate/unlink messaging and unused-loom behavior.
 
 ## P1 ECON-A - Estimator, Quote, Order, and Date Snapshots Are Not Exact Enough
 
