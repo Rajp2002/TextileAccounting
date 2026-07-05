@@ -167,7 +167,7 @@ Acceptance:
 - Batch 24B source-fixes `PROD-013`, `PROD-023`, and `PROD-029` but does not make them pass-ready. Browser proof must verify that suspicious large positive shift meters show a non-blocking confirmation and can proceed after confirmation, restored localStorage drafts after refresh/crash show the unsaved-draft indicator and clear after save/reset, and landing/setup copy no longer claims raw opening/closing meter-reading proof. `PROD-022` remains open for separate date/shift draft-isolation runtime proof.
 - Batch 24D source-fixes `PROD-022` but does not make it pass-ready. Browser proof must verify production drafts are isolated by org, user, selected date, and shift; changing date/shift does not show another draft; returning restores the matching draft; and save submits the currently selected date/shift.
 - Batch 24C source-fixes `SETUP-011` but does not make it pass-ready. Batch 24F updates the worker-assignment portion to selected-shift/day-only policy. Browser proof must create/verify the quote or market-run costing, active linked loom target, at least one selected-shift worker assignment for the operating shift, active workers, supervisor, payroll config, and plan, then refresh Factory Today and confirm the setup checklist remains complete from persisted data.
-- Batch 24E source-fixes `MASTER-002` and `MASTER-005` but does not make them pass-ready. Before promoting `MASTER-002`, review/apply or otherwise DB-boundary-prove migration `20260704120000_batch_24e_master_data_loom_guardrails.sql`, then prove duplicate manual add, duplicate bulk add, duplicate rename, trim/case duplicate rejection, same-name different-org allowance, and different-name same-type allowance. Before promoting `MASTER-005`, browser/API proof must verify owner delete/deactivate, supervisor delete-with-code, and cost-analysis unlink are blocked for protected looms with active targets, assignments, shift-assignment history, and production history; verify unlink does not silently deactivate; and verify unused loom behavior remains intentional.
+- Batch 24E source-fixes `MASTER-002` and `MASTER-005` but does not make them pass-ready. Migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` was revised from a retroactive unique index to a trigger-backed duplicate guard and reportedly applied during the production DB push incident; this improves DB-boundary evidence but does not replace controlled proof. Before promoting `MASTER-002`, run controlled QA/browser proof for duplicate manual add, duplicate bulk add, duplicate rename, trim/case duplicate rejection, same-name different-org allowance, and different-name same-type allowance. Before promoting `MASTER-005`, browser/API proof must verify owner delete/deactivate, supervisor delete-with-code, and cost-analysis unlink are blocked for protected looms with active targets, assignments, shift-assignment history, and production history; verify unlink does not silently deactivate; and verify unused loom behavior remains intentional.
 - Batch 24F source-fixes `PROD-002` and `PROD-004` but does not make them pass-ready. Browser proof must verify day-only/day-shift production saves without requiring a night worker, night-shift positive production without a night worker returns the selected-shift accountability error, day-only setup/checklist/activation does not falsely fail for missing night worker, and substitute-worker mismatch returns reassignment-required behavior without silently attributing production to the wrong worker. `SIGNOFF-01` remains fail/open until current-run owner sign-off proof is collected.
 
 ## P1 Estimator, Quote, Order, and Date Snapshot Retest
@@ -433,6 +433,31 @@ Acceptance:
 - Batch 4 closes commercial receivable payment duplicate-submit idempotency as part of `COMM-010` and `SIGNOFF-09`. `OFF-009` remains open for unknown-timeout UX and status reconciliation across high-value mutations.
 - Batch 9 leaves `OFF-007` partial pending production service-worker update proof with an active draft and leaves `OFF-010` partial pending throttled slow/intermittent-network runtime proof across core mobile screens.
 - Batch 24D moves `EST-017` from fail to `code_verified` by adding a synchronous estimator submit lock and focused source tests. It is not pass until browser rapid double-click proof is collected, and it does not claim server/database idempotency.
+
+## Batch 24G Security Audit And Export Retest
+
+Production reconciliation note:
+
+- A Supabase DB push reportedly occurred before reconciliation while linked to production ref `vzhwahudircrpgtitwzd`, applying migration history `20260704120000`, `20260705100000`, and `20260705182406`.
+- The repo is reconciled to that production-applied reality. No rollback and no additional DB command occurred during reconciliation.
+- This incident does not make any row pass-ready.
+- `MASTER-002` still needs controlled duplicate-flow proof; `MASTER-005` still needs browser lifecycle proof; `SEC-015` still needs settings-change audit-row proof with redacted payloads; `SEC-009` still needs owner export browser/security proof and audit-log EXPORT proof; `SEC-017` and `AUTH-008` remain open.
+
+Commands:
+
+```bash
+npm test -- __tests__/batch24e-master-data-guardrails.test.ts __tests__/batch24g-security-audit-guardrails.test.ts
+npx tsc --noEmit --pretty false
+npx eslint 'app/(auth)/actions/auth.ts' 'app/(dashboard)/owner/actions.ts' 'app/(dashboard)/owner/estimator/actions.ts' 'app/(dashboard)/owner/settings/data-export.ts' 'app/(dashboard)/owner/settings/page.tsx' 'lib/actions/compliance.ts' '__tests__/batch24g-security-audit-guardrails.test.ts' '__tests__/batch24e-master-data-guardrails.test.ts'
+```
+
+Runtime/security checks required before pass:
+
+- In controlled QA or a disposable tenant, make representative settings changes for organizations, factory_cost_profile, compliance_settings, notification_consents, and whatsapp_settings.
+- Verify audit_log rows include actor, org where applicable, table/action/record, timestamp, and redacted old/new payloads.
+- Run owner data export from the active settings UI.
+- Verify the export payload is current-org only, excludes/redacts sensitive fields, and does not include runtime secrets, auth headers, cookies, request bodies, service-role keys, Supabase keys, or DB URLs.
+- Verify an EXPORT audit row exists before considering the export proof complete.
 
 ## P5 Release Gate Retest
 

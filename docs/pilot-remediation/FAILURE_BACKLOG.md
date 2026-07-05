@@ -9,7 +9,7 @@ All failed matrix rows are represented below. Some IDs also appear in detailed c
 | Priority band | Root-cause cluster | Failed matrix IDs |
 | --- | --- | --- |
 | P0 | `SEC-B` privileged action and lockdown enforcement | `AUTH-008` |
-| P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-009`, `SEC-015`, `SEC-017` |
+| P0 | `SEC-C` webhook, export, audit, and compliance fail-closed surfaces | `TECH-009`, `WA-008`, `SEC-017` |
 | P1 | `PROD-B` production boundary, assignment, and setup validity | `MASTER-014`, `SIGNOFF-01`, `SIGNOFF-02` |
 | P1 | `ECON-A` estimator, quote, order, and date snapshot correctness | None |
 | P2 | `DASH-A` dashboard and daily sign-off read-model truth | `SIGNOFF-01`, `SIGNOFF-02` |
@@ -66,7 +66,9 @@ Moved from fail to `code_verified` in Batch 24B but still unresolved evidence de
 
 Moved from fail to `code_verified` in Batch 24D but still unresolved evidence debt: estimator rapid double-submit (`EST-017`) and supervisor production date/shift draft isolation (`PROD-022`). Estimator Save Quote and Save & Create Market Run now have a synchronous client-side submit lock; production drafts are scoped by org, user, selected date, and shift, with stale date/shift fetch results ignored. QA/browser proof has not been collected, and `EST-017` does not claim server/database idempotency.
 
-Moved from fail to `code_verified` in Batch 24E but still unresolved evidence debt: master data loom guardrails (`MASTER-002`, `MASTER-005`). Duplicate loom names are guarded in source and a database unique-index migration was created but not applied. Protected loom delete/deactivate/unlink paths are source-fixed, including the prior null-target unlink bypass. Migration/DB-boundary proof and QA/browser proof have not been collected. `MASTER-014` remains fail/open.
+Moved from fail to `code_verified` in Batch 24E but still unresolved evidence debt: master data loom guardrails (`MASTER-002`, `MASTER-005`). Duplicate loom names are guarded in source. Migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` was later revised from a retroactive unique index to a trigger-backed duplicate guard and reportedly applied to production during the DB push incident; existing duplicate production rows are preserved and future normalized duplicates are reportedly blocked. Controlled QA/browser proof has not been collected, so `MASTER-002` and `MASTER-005` remain `code_verified`, not pass. `MASTER-014` remains fail/open.
+
+Moved from fail to `code_verified` in Batch 24G production reconciliation but still unresolved evidence debt: security audit/export rows (`SEC-015`, `SEC-009`). A production DB push reportedly applied `20260705100000_batch_24g_security_audit_guardrails.sql` and `20260705182406_harden_settings_audit_function.sql` while linked to production ref `vzhwahudircrpgtitwzd`; no rollback or additional DB command was run during reconciliation. `SEC-015` still needs controlled settings-change audit-row proof with redacted payloads. `SEC-009` still needs owner export browser/security proof and audit-log EXPORT proof. `SEC-017` and `AUTH-008` remain fail/open.
 
 ## Closed SEC-A - Mutable Profile Authorization Boundary
 
@@ -112,22 +114,27 @@ Required proof: SQL policy/grant metadata, rollback-only QA probes, and browser 
 
 ## P0 SEC-C - External Webhooks and Compliance Surfaces Do Not Fail Closed
 
-Failures: `TECH-009`, `WA-008`, `SEC-009`, `SEC-011`, `SEC-015`, `SEC-017`, `SEC-018`
+Failures: `TECH-009`, `WA-008`, `SEC-017`
+
+Blocked evidence debt: `SEC-011`, `SEC-018`
+
+Code-verified evidence debt: `SEC-009`, `SEC-015`
 
 Evidence: `logs/technical-gates.md`, `logs/security-review.json`, `logs/security-export-erasure-evidence.json`, `logs/secrets-exposure-scan.json`, `logs/offline-pwa-evidence.json`
 
 Invariant: externally supplied data and compliance exports must be authenticated, audited, redacted, and consistent with the product's actual behavior.
 
-Impact: unsigned WhatsApp status callbacks can be accepted when `META_APP_SECRET` is absent; owner export is not wired/audited/redaction-reviewed; public legal/offline claims do not match implementation and require counsel review. Batch 15 closes the payslip filename safety slice (`SEC-014`) with deterministic source/test proof.
+Impact: unsigned WhatsApp status callbacks can be accepted when `META_APP_SECRET` is absent; owner export and settings audit are source-fixed/code_verified by Batch 24G but still lack controlled browser/security/audit-row proof; public legal/offline claims do not match implementation and require counsel review. Batch 15 closes the payslip filename safety slice (`SEC-014`) with deterministic source/test proof.
 
 Remediation direction:
 
 - Fail WhatsApp webhook before DB lookup when signature secret is absent.
-- Keep data export hidden until redaction and audit events are proven.
+- Treat the Batch 24G owner export as source-fixed only until redaction and audit events are proven in controlled QA/browser/security proof.
+- Treat the Batch 24G settings audit migrations as production-reconciled/source-fixed only until settings-change audit rows with redacted payloads are proven in controlled QA.
 - Align privacy/offline wording to implementation or implement the promised behavior.
 - Treat DPDP/public-policy wording as blocked until qualified counsel review exists.
 
-Required proof: webhook negative probes, export audit evidence, and documented counsel sign-off or explicit de-scope. `SEC-014` filename proof is satisfied by Batch 15 focused tests and active matrix promotion to pass.
+Required proof: webhook negative probes, export audit evidence, settings-change audit-row evidence with redacted payloads, and documented counsel sign-off or explicit de-scope. `SEC-014` filename proof is satisfied by Batch 15 focused tests and active matrix promotion to pass. Batch 24G does not mark any security row pass-ready.
 
 ## Closed PROD-A - Production Correction Is Not Atomic With Generated Stock
 

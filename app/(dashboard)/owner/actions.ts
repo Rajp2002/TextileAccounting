@@ -73,6 +73,14 @@ type DbMutationError = { code?: string; message?: string; details?: string } | n
 type MachineLifecycleSupabase = Awaited<ReturnType<typeof createServerClient>>
 type MachineOrderStatusRelation = { status?: string | null } | Array<{ status?: string | null }> | null
 
+async function setAuditActorForMutation(supabase: MachineLifecycleSupabase, actorId: string) {
+    try {
+        await supabase.rpc('set_actor_for_audit', { p_actor_id: actorId })
+    } catch {
+        // Non-fatal: authenticated writes still fall back to auth.uid() in the audit trigger.
+    }
+}
+
 function getMachineOrderStatus(orders: MachineOrderStatusRelation) {
     if (Array.isArray(orders)) return orders[0]?.status ?? null
     return orders?.status ?? null
@@ -766,11 +774,13 @@ export async function generateAccessCode() {
 }
 
 export async function updateOrganizationName(newName: string) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(UpdateOrgNameSchema, { name: newName })
     if ('error' in parsed) return { error: parsed.error }
+
+    await setAuditActorForMutation(supabase, user.id)
 
     const { error } = await supabase
         .from('organizations')
@@ -787,11 +797,13 @@ export async function updateOrganizationName(newName: string) {
 }
 
 export async function updateOrganizationProductionMode(productionMode: string) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const parsed = safeParse(ProductionModeSchema, productionMode)
     if ('error' in parsed) return { error: parsed.error }
+
+    await setAuditActorForMutation(supabase, user.id)
 
     const { error } = await supabase
         .from('organizations')
@@ -811,8 +823,10 @@ export async function updateOrganizationProductionMode(productionMode: string) {
 }
 
 export async function setBeamTrackingEnabled(enabled: boolean) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    await setAuditActorForMutation(supabase, user.id)
 
     const { error } = await supabase
         .from('organizations')

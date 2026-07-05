@@ -12,6 +12,7 @@ import {
     AlertTriangle,
     CheckCircle2,
     Copy,
+    Download,
     Factory,
     KeyRound,
     Loader2,
@@ -36,6 +37,7 @@ import { FactoryCostProfile } from '@/components/settings/factory-cost-profile'
 import { TemplateManager } from '@/components/settings/template-manager'
 import { regenerateJoinCode } from '@/app/(auth)/actions/auth'
 import { updateOrganizationName, updateOrganizationProductionMode } from '@/app/(dashboard)/owner/actions'
+import { exportOrganizationData } from '@/app/(dashboard)/owner/settings/data-export'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PRODUCTION_MODE_OPTIONS, getProductionModeOption, normalizeProductionMode, type ProductionMode } from '@/lib/production-mode'
 import { Badge } from '@/components/ui/badge'
@@ -201,6 +203,25 @@ export default function SettingsPage() {
         },
         onError: (err: unknown) => {
             toast.error(getErrorMessage(err, 'Failed to update production mode'))
+        }
+    })
+
+    const dataExportMutation = useMutation({
+        mutationFn: exportOrganizationData,
+        onSuccess: (payload) => {
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+            const url = URL.createObjectURL(blob)
+            const anchor = document.createElement('a')
+            anchor.href = url
+            anchor.download = `weavly-org-export-${new Date().toISOString().slice(0, 10)}.json`
+            document.body.appendChild(anchor)
+            anchor.click()
+            anchor.remove()
+            URL.revokeObjectURL(url)
+            toast.success('Data export downloaded')
+        },
+        onError: (err: unknown) => {
+            toast.error(getErrorMessage(err, 'Failed to export organization data'))
         }
     })
 
@@ -546,6 +567,15 @@ export default function SettingsPage() {
                                 <SlidersHorizontal className="h-4 w-4" />
                                 Review Cost Defaults
                             </a>
+                            <Button
+                                variant="outline"
+                                className="w-full justify-start"
+                                onClick={() => dataExportMutation.mutate()}
+                                disabled={dataExportMutation.isPending}
+                            >
+                                {dataExportMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                                {dataExportMutation.isPending ? 'Preparing Export' : 'Download Data Export'}
+                            </Button>
                         </div>
                     </SettingsPanel>
                 </aside>

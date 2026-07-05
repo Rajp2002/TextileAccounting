@@ -65,10 +65,18 @@ describe('Batch 24E master data loom guardrails', () => {
         expect(migration).toContain('ON public.machines (org_id, lower(btrim(name)))')
     })
 
-    it('MASTER-002 includes a database uniqueness boundary for race safety without applying it', () => {
-        expect(migration).toContain('CREATE UNIQUE INDEX IF NOT EXISTS machines_org_normalized_name_unique')
+    it('MASTER-002 includes a database uniqueness boundary for race safety without mutating legacy rows', () => {
+        expect(migration).toContain('CREATE INDEX IF NOT EXISTS machines_org_normalized_name_lookup_idx')
+        expect(migration).not.toMatch(/CREATE\s+UNIQUE\s+INDEX/i)
+        expect(migration).toContain('CREATE OR REPLACE FUNCTION public.enforce_machines_org_normalized_name_unique()')
+        expect(migration).toContain('CREATE TRIGGER machines_org_normalized_name_unique_guard')
+        expect(migration).toContain('BEFORE INSERT OR UPDATE OF org_id, name ON public.machines')
+        expect(migration).toContain('pg_advisory_xact_lock')
+        expect(migration).toContain("ERRCODE = '23505'")
+        expect(migration).toContain('CONSTRAINT = \'machines_org_normalized_name_unique\'')
         expect(migration).toContain('lower(btrim(name))')
-        expect(migration).toContain('Do not apply without QA review')
+        expect(migration).not.toMatch(/DROP\s+TABLE|TRUNCATE|DELETE\s+FROM/i)
+        expect(migration).not.toMatch(/UPDATE\s+public\.machines/i)
         expect(isDuplicateLoomNameDbError({
             code: '23505',
             message: 'duplicate key value violates unique constraint "machines_org_normalized_name_unique"',

@@ -1,358 +1,94 @@
 {
   "batch": "Batch 24E",
-  "title": "master data loom guardrails",
-  "created_at_local": "2026-07-04",
-  "updated_at_local": "2026-07-05",
-  "branch": "codex/batch-24e-master-data-guardrails",
-  "source_commit": "04637f62746e9cbeae5821d944f558c65ec4f07b",
-  "scope": {
-    "included_rows": [
-      "MASTER-002",
-      "MASTER-005"
+  "title": "master data loom guardrails production DB-push reconciliation",
+  "updated_at_local": "2026-07-06",
+  "branch": "codex/batch-24g-security-audit-guardrails",
+  "reconciliation_base_commit": "55cb131c4fb2eb4b072d9cf3257eec6020655340",
+  "classification": "source-fixed/code_verified; not pass-ready",
+  "production_db_push_incident": {
+    "occurred_before_this_reconciliation": true,
+    "linked_supabase_ref": "vzhwahudircrpgtitwzd",
+    "linked_ref_classification": "production",
+    "remote_migration_history_reportedly_includes": [
+      "20260704120000",
+      "20260705100000",
+      "20260705182406"
     ],
-    "excluded_rows": [
-      {
-        "id": "MASTER-014",
-        "reason": "The row requires one atomic transaction or RPC spanning shift_assignments, machine_assignments, and machines.current_order_id. A source-only partial change would not prove the no-mixed-context requirement, so it is excluded for a separate transactional database/RPC batch."
-      }
-    ],
-    "out_of_scope_confirmed": [
-      "AUTH-008",
-      "SEC-009",
-      "SEC-015",
-      "SEC-017",
-      "TECH/audit/dependency rows",
-      "PROD-002",
-      "PROD-004",
-      "PAY-027",
-      "DASH-003",
-      "WA/OFF rows",
-      "SIGNOFF rows",
-      "Golden rows",
-      "runtime proof promotion",
-      "docs closeout"
-    ]
+    "additional_db_commands_run_during_reconciliation": false,
+    "rollback_attempted": false,
+    "direct_sql_used": false,
+    "db_pull_or_repair_used": false
   },
-  "row_definitions_inspected": [
-    {
-      "id": "MASTER-002",
-      "category": "11. Machines, Workers, and Assignments",
-      "severity": "Medium",
-      "status": "fail",
-      "exact_row_wording": "Bulk-add looms with duplicate names or types.",
-      "expected_behavior": "Intended duplicate rule is enforced; no silent overwrite.",
-      "current_failure_evidence": "The intended duplicate loom-name rule is not enforced in source/schema. addMachine, addMachinesBulk, and updateMachine do not check for an existing org-scoped name, and the machines table/migrations do not define UNIQUE(org_id, name). Duplicate names can therefore be silently accepted instead of blocked with a clear duplicate rule.",
-      "matrix_evidence_refs": [
-        "logs/setup-master-source-evidence-20260624.json",
-        "app/(dashboard)/owner/actions.ts:67",
-        "app/(dashboard)/owner/actions.ts:106",
-        "app/(dashboard)/owner/actions.ts:155",
-        "supabase/migrations/20240216123000_initial_schema.sql:28"
-      ]
-    },
-    {
-      "id": "MASTER-005",
-      "category": "11. Machines, Workers, and Assignments",
-      "severity": "Medium",
-      "status": "fail",
-      "exact_row_wording": "Deactivate/delete loom with active order or history.",
-      "expected_behavior": "Protected action; history preserved; downstream UI remains consistent.",
-      "current_failure_evidence": "Machine deletion protection is inconsistent. The supervisor path requires a one-time owner access code, but the owner Machines UI still performs a direct client-side Supabase delete after a browser confirm. The server delete helper also has no history preflight; production-log FKs may block deletion, while machine_assignments and shift_assignments are cascade-linked. This does not prove the guide's protected-action/history-preserved expectation end-to-end.",
-      "matrix_evidence_refs": [
-        "logs/setup-master-source-evidence-20260624.json",
-        "components/MachineManagement.tsx:260",
-        "components/MachineManagement.tsx:264",
-        "app/(dashboard)/supervisor/actions.ts:165",
-        "app/(dashboard)/supervisor/actions.ts:175",
-        "supabase/migrations/20260404010000_orders_v2_flat.sql:34"
-      ]
-    },
+  "included_rows": [
+    "MASTER-002",
+    "MASTER-005"
+  ],
+  "excluded_or_open_rows": [
     {
       "id": "MASTER-014",
-      "category": "11. Machines, Workers, and Assignments",
-      "severity": "Medium",
-      "status": "fail",
-      "exact_row_wording": "Two users edit same loom assignment.",
-      "expected_behavior": "Last-write/concurrency behavior is visible and does not create mixed context.",
-      "current_failure_evidence": "The assignment/concurrency path is not atomic. upsertShiftAssignment first writes the dated shift_assignments row, then separately upserts machine_assignments and updates machines.current_order_id; updateMachineAssignment is another independent mutation. There is a unique dated-assignment key, but no advisory lock or single transaction spanning the dated row, standing worker, and standing order. A failure or race between these writes can leave mixed context, contradicting the guide's no-mixed-context expectation.",
-      "matrix_evidence_refs": [
-        "logs/setup-master-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/actions.ts:955",
-        "app/(dashboard)/supervisor/actions.ts:976",
-        "app/(dashboard)/supervisor/actions.ts:995",
-        "app/(dashboard)/owner/actions.ts:291",
-        "supabase/migrations/20260404010000_orders_v2_flat.sql:39"
-      ]
+      "status": "fail/open",
+      "reason": "Assignment no-mixed-context behavior still needs a separate transactional RPC/lock design spanning shift_assignments, machine_assignments, and machines.current_order_id."
     }
   ],
-  "inspection_report": [
-    {
-      "id": "MASTER-002",
-      "affected_files": [
-        "app/(dashboard)/owner/actions.ts",
-        "lib/master-data-loom-guardrails.ts",
-        "supabase/migrations/20260704120000_batch_24e_master_data_loom_guardrails.sql",
-        "__tests__/batch24e-master-data-guardrails.test.ts"
-      ],
-      "implementation_type": "server-action plus unapplied migration",
-      "risky": false,
-      "migration_or_rpc_needed": "Migration needed for true concurrent duplicate prevention. Created a forward-only unique index migration file but did not apply it.",
-      "tests_added_or_updated": [
-        "__tests__/batch24e-master-data-guardrails.test.ts"
-      ],
-      "future_qa_runtime_proof_required": "Apply or otherwise validate the migration in QA after review, then prove duplicate manual add, duplicate bulk add, duplicate rename, normalized trim/case duplicate rejection, and same name in a different org allowed. Also prove normal different-name same-type looms remain allowed.",
-      "include_decision": "included"
-    },
-    {
-      "id": "MASTER-005",
-      "affected_files": [
-        "app/(dashboard)/owner/actions.ts",
-        "app/(dashboard)/supervisor/actions.ts",
-        "components/MachineManagement.tsx",
-        "lib/master-data-loom-guardrails.ts",
-        "__tests__/batch24e-master-data-guardrails.test.ts"
-      ],
-      "implementation_type": "server-action and UI routing",
-      "risky": false,
-      "migration_or_rpc_needed": "No migration/RPC created for this row. Source guard checks protected references before delete/deactivate.",
-      "tests_added_or_updated": [
-        "__tests__/batch24e-master-data-guardrails.test.ts"
-      ],
-      "future_qa_runtime_proof_required": "Browser/API proof in QA that delete/deactivate is blocked for active production targets, active worker assignments, dated shift assignment history, and production history, with a clear message; prove unused loom delete/deactivate remains allowed if product behavior permits it.",
-      "include_decision": "included"
-    },
-    {
-      "id": "MASTER-014",
-      "affected_files": [
-        "app/(dashboard)/supervisor/actions.ts",
-        "app/(dashboard)/owner/actions.ts",
-        "supabase/migrations/20260404010000_orders_v2_flat.sql"
-      ],
-      "implementation_type": "would require transactional database/RPC design",
-      "risky": true,
-      "migration_or_rpc_needed": "Yes. Requires single transaction, RPC, or lock spanning dated assignment, standing assignment, and current loom target.",
-      "tests_added_or_updated": [
-        "__tests__/batch24e-master-data-guardrails.test.ts includes exclusion/source-scope assertion only"
-      ],
-      "future_qa_runtime_proof_required": "Separate batch should add transactional assignment update and race/rollback proof for two editors updating the same loom assignment.",
-      "include_decision": "excluded"
-    }
-  ],
-  "files_changed": [
-    "app/(dashboard)/owner/actions.ts",
-    "app/(dashboard)/supervisor/actions.ts",
-    "components/MachineManagement.tsx",
-    "lib/master-data-loom-guardrails.ts",
-    "__tests__/batch24e-master-data-guardrails.test.ts",
-    "supabase/migrations/20260704120000_batch_24e_master_data_loom_guardrails.sql",
-    "output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json"
-  ],
-  "implementation_summary": {
-    "MASTER-002": [
-      "Added trim/case-fold duplicate loom-name helper.",
-      "addMachine blocks existing normalized org-scoped duplicate names before insert.",
-      "addMachinesBulk blocks duplicate names inside the submitted batch and against existing org looms before insert.",
-      "updateMachine blocks normalized duplicate rename/update while excluding the same machine ID.",
-      "Create/update paths map future database unique-violation errors to a duplicate loom-name validation message.",
-      "Created unapplied migration to enforce unique org_id plus lower(btrim(name)) at the database boundary."
-    ],
-    "MASTER-005": [
-      "Targeted review fix closes the assignMachineProductionTarget(machine.id, null) alternate deactivate/unlink path.",
-      "Added protected-reference reason helper for active production target, linked target, standing worker assignments, dated shift assignment history, and production history.",
-      "Owner deactivation now checks protected loom references before changing status to inactive.",
-      "Owner delete now runs through a server action instead of direct client-side Supabase delete.",
-      "Supervisor delete-with-code now checks protected references before consuming the one-time owner access code.",
-      "Null-target cost-analysis unlink now runs the same lifecycle preflight and returns a clear unlink-specific protected-reference error when blocked.",
-      "Null-target cost-analysis unlink no longer sets machine status to inactive as a side effect; it only clears current_order_id when no protected references are found.",
-      "Owner and supervisor delete paths preserve truly unused loom deletion when no protected references are found."
-    ],
-    "MASTER-014": [
-      "Inspected and excluded. No assignment atomicity behavior was changed."
-    ]
-  },
-  "review_findings_addressed": [
-    {
-      "finding": "MASTER-005 still had an alternate deactivate path: components/MachineManagement.tsx Unlink called assignMachineProductionTarget(machine.id, null), and app/(dashboard)/owner/actions.ts set status: 'inactive' when parsedOrderId was null.",
-      "fix": "assignMachineProductionTarget now treats null-target unlink as a guarded server-side action. It calls getMachineLifecycleProtectionInput, blocks protected looms with buildProtectedLoomActionError('unlink', reasons), and preserves machine status instead of silently setting inactive.",
-      "status": "fixed"
-    }
-  ],
-  "per_row_source_code_evidence": {
-    "MASTER-002": [
-      "lib/master-data-loom-guardrails.ts: normalizeLoomName, findDuplicateLoomName, findDuplicateLoomNameInBatch, isDuplicateLoomNameDbError",
-      "app/(dashboard)/owner/actions.ts: addMachine duplicate preflight and duplicate DB error mapping",
-      "app/(dashboard)/owner/actions.ts: addMachinesBulk submitted-batch and existing-org duplicate preflights",
-      "app/(dashboard)/owner/actions.ts: updateMachine duplicate rename preflight excluding the same machine ID",
-      "supabase/migrations/20260704120000_batch_24e_master_data_loom_guardrails.sql: unique index on public.machines (org_id, lower(btrim(name)))"
-    ],
-    "MASTER-005": [
-      "lib/master-data-loom-guardrails.ts: getLoomLifecycleProtectionReasons and buildProtectedLoomActionError",
-      "app/(dashboard)/owner/actions.ts: getMachineLifecycleProtectionInput queries machines, machine_assignments, shift_assignments, and production_logs",
-      "app/(dashboard)/owner/actions.ts: toggleMachineStatus blocks protected deactivation",
-      "app/(dashboard)/owner/actions.ts: assignMachineProductionTarget null-target unlink blocks protected references before clearing current_order_id and no longer changes status to inactive",
-      "app/(dashboard)/owner/actions.ts: deleteMachine blocks protected delete and performs scoped server-side delete for unused looms",
-      "app/(dashboard)/supervisor/actions.ts: deleteMachineWithCode blocks protected delete before access-code consumption",
-      "components/MachineManagement.tsx: owner delete now calls deleteMachine(id) instead of direct client Supabase delete"
-    ],
-    "MASTER-014": [
-      "__tests__/batch24e-master-data-guardrails.test.ts asserts Batch 24E migration does not change shift_assignments or machine_assignments and records exclusion rationale"
-    ]
-  },
-  "tests_added_or_updated": [
-    {
-      "path": "__tests__/batch24e-master-data-guardrails.test.ts",
-      "coverage": [
-        "MASTER-002 duplicate create helper blocks normalized trim/case duplicate",
-        "MASTER-002 duplicate rename/update helper blocks normalized duplicate while allowing same ID",
-        "MASTER-002 bulk duplicate helper blocks normalized duplicate within submitted rows",
-        "MASTER-002 same-type different-name looms remain allowed",
-        "MASTER-002 org-scoped uniqueness is asserted through source query and migration index shape",
-        "MASTER-005 active target, active assignment, shift assignment history, and production history reasons block delete/deactivate",
-        "MASTER-005 unused loom path has no protection reasons",
-        "MASTER-005 owner and supervisor delete source paths route through server-side guards",
-        "MASTER-005 null-target cost-analysis unlink runs the lifecycle guard before machine update and does not set status inactive",
-        "MASTER-005 null-target cost-analysis unlink returns unlink-specific protected-reference errors for active assignments, shift assignment history, and production history",
-        "MASTER-014 exclusion is asserted so no partial assignment atomicity claim is added"
-      ]
-    }
-  ],
-  "commands_run": [
-    {
-      "command": "git fetch origin --prune",
-      "result": "passed"
-    },
-    {
-      "command": "git switch -C codex/batch-24e-master-data-guardrails origin/main",
-      "result": "passed"
-    },
-    {
-      "command": "git status --short",
-      "result": "passed; initially clean"
-    },
-    {
-      "command": "git rev-parse origin/main",
-      "result": "04637f62746e9cbeae5821d944f558c65ec4f07b"
-    },
-    {
-      "command": "rg -n \"MASTER-002|MASTER-005|MASTER-014\" output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md docs/pilot-remediation/FIX_LOG.md docs/pilot-remediation/LOOP_STATE.md docs/pilot-remediation/FAILURE_BACKLOG.md docs/pilot-remediation/RETEST_PLAN.md docs/pilot-remediation/DOMAIN_INVARIANTS.md docs/pilot-remediation/PILOT_READY_DEFINITION.md",
-      "result": "passed; exact row definitions and remediation context inspected"
-    },
-    {
-      "command": "npx vitest run __tests__/batch24e-master-data-guardrails.test.ts",
-      "result": "passed; 1 test file, 9 tests"
-    },
-    {
-      "command": "npx eslint 'app/(dashboard)/owner/actions.ts' 'app/(dashboard)/supervisor/actions.ts' components/MachineManagement.tsx lib/master-data-loom-guardrails.ts __tests__/batch24e-master-data-guardrails.test.ts",
-      "result": "passed"
-    },
-    {
-      "command": "npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts __tests__/production-mode.test.ts __tests__/p1-payroll-config-onboarding.test.ts __tests__/phase1-scope.test.ts",
-      "result": "passed; 4 test files, 21 tests"
-    },
-    {
-      "command": "git diff --check",
-      "result": "passed"
-    },
-    {
-      "command": "npx tsc --noEmit --pretty false",
-      "result": "passed"
-    },
-    {
-      "command": "jq empty output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json",
-      "result": "passed"
-    }
-  ],
-  "test_results": {
-    "focused_batch24e": {
-      "command": "npx vitest run __tests__/batch24e-master-data-guardrails.test.ts",
-      "status": "passed",
-      "files": 1,
-      "tests": 9
-    },
-    "existing_master_settings_factory_setup_regressions": {
-      "command": "npx vitest run __tests__/batch24c-factory-today-analytics-state.test.ts __tests__/production-mode.test.ts __tests__/p1-payroll-config-onboarding.test.ts __tests__/phase1-scope.test.ts",
-      "status": "passed",
-      "files": 4,
-      "tests": 21
-    },
-    "typescript": {
-      "command": "npx tsc --noEmit --pretty false",
-      "status": "passed"
-    },
-    "targeted_eslint": {
-      "command": "npx eslint 'app/(dashboard)/owner/actions.ts' 'app/(dashboard)/supervisor/actions.ts' components/MachineManagement.tsx lib/master-data-loom-guardrails.ts __tests__/batch24e-master-data-guardrails.test.ts",
-      "status": "passed"
-    },
-    "diff_check": {
-      "command": "git diff --check",
-      "status": "passed"
-    },
-    "json_validation": {
-      "command": "jq empty output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json",
-      "status": "passed"
-    }
-  },
-  "rows_considered_source_fixed_code_verified_candidates": [
-    {
-      "id": "MASTER-002",
-      "candidate_status": "source-fixed/code_verified candidate",
-      "why_not_pass_ready": "Database migration was created but not applied; QA/browser/API proof and DB uniqueness proof are still required."
-    },
-    {
-      "id": "MASTER-005",
-      "candidate_status": "source-fixed/code_verified candidate",
-      "why_not_pass_ready": "Runtime/browser proof is still required to verify protected delete/deactivate messaging and unused loom behavior against QA data."
-    }
-  ],
-  "rows_still_open": [
-    {
-      "id": "MASTER-002",
-      "reason": "Open until migration application or DB-boundary proof plus QA/browser duplicate-flow proof is collected."
-    },
-    {
-      "id": "MASTER-005",
-      "reason": "Open until QA/browser proof confirms protected action behavior and downstream consistency."
-    },
-    {
-      "id": "MASTER-014",
-      "reason": "Excluded and still fail/open; needs separate transactional assignment atomicity design."
-    }
-  ],
-  "future_qa_runtime_proof_required": [
-    "MASTER-002: duplicate manual add blocked with clear error.",
-    "MASTER-002: duplicate bulk add blocked with clear error before any insert.",
-    "MASTER-002: duplicate rename/update blocked with clear error.",
-    "MASTER-002: trim/case normalized duplicate is blocked.",
-    "MASTER-002: same loom name in a different org remains allowed, and different names with the same loom type remain allowed.",
-    "MASTER-002: migration is reviewed/applied or otherwise DB-boundary-proved in QA; existing duplicate preflight must be handled before applying.",
-    "MASTER-005: owner deactivate/delete is blocked for active target, active assignment, shift assignment history, and production history.",
-    "MASTER-005: cost-analysis unlink is blocked for active target, active assignment, shift assignment history, and production history, and does not silently deactivate the loom.",
-    "MASTER-005: supervisor delete-with-code is blocked for protected references without consuming a valid code.",
-    "MASTER-005: unused loom delete/deactivate remains allowed if existing product behavior permits it.",
-    "MASTER-014: separate transaction/RPC race proof is required before that row can move."
-  ],
-  "migration": {
-    "created": true,
+  "migration_reconciliation": {
     "path": "supabase/migrations/20260704120000_batch_24e_master_data_loom_guardrails.sql",
-    "purpose": "Enforce org-scoped normalized loom-name uniqueness using lower(btrim(name)).",
-    "applied": false,
-    "application_commands_run": []
+    "remote_status": "reportedly applied to production before reconciliation",
+    "design_change": "The migration was revised from a retroactive normalized unique index to a trigger-backed duplicate guard.",
+    "preserves_existing_duplicate_rows": true,
+    "known_existing_duplicate_example": "loom c / Loom C",
+    "blocks_future_normalized_duplicates": true,
+    "production_duplicate_probe": "A production duplicate LOOM C insert probe was reportedly blocked before this reconciliation.",
+    "non_destructive_review": {
+      "no_drop_table": true,
+      "no_truncate": true,
+      "no_delete_from": true,
+      "no_destructive_update_or_backfill": true
+    },
+    "implementation_notes": [
+      "A non-unique lookup index supports org_id plus lower(btrim(name)) checks.",
+      "public.enforce_machines_org_normalized_name_unique() runs before INSERT or UPDATE of org_id/name.",
+      "The trigger allows unchanged legacy duplicate rows to remain, but raises SQLSTATE 23505 for a new conflicting normalized name.",
+      "The guard uses a transaction advisory lock to reduce concurrent duplicate races."
+    ]
   },
+  "row_outcomes": {
+    "MASTER-002": {
+      "status_after_reconciliation": "code_verified/source-fixed",
+      "proof_improved": true,
+      "why_not_pass": "Production DB-boundary evidence improved, but full controlled QA/browser/runtime duplicate-flow proof is still incomplete."
+    },
+    "MASTER-005": {
+      "status_after_reconciliation": "code_verified/source-fixed",
+      "proof_improved": false,
+      "why_not_pass": "Browser lifecycle proof for protected delete/deactivate/unlink behavior and unused-loom behavior is still required."
+    }
+  },
+  "future_proof_required": [
+    "Controlled QA/browser proof that duplicate manual add, bulk add, and rename/update are blocked with clear messages.",
+    "Controlled QA proof that same-name different-org and different-name same-type loom cases remain allowed.",
+    "Controlled QA/browser proof that protected delete, deactivate, and unlink paths block active targets, assignments, shift-assignment history, and production history.",
+    "Controlled QA/browser proof that unused loom behavior remains intentional."
+  ],
+  "checks_recorded_for_reconciliation": [
+    "git diff --check",
+    "jq empty output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json",
+    "npm test -- __tests__/batch24e-master-data-guardrails.test.ts __tests__/batch24g-security-audit-guardrails.test.ts",
+    "npx tsc --noEmit --pretty false",
+    "targeted ESLint on touched source/test files"
+  ],
   "safety_confirmations": {
-    "production_mutation_occurred": false,
-    "supabase_db_push_run": false,
-    "migration_repair_run": false,
-    "db_pull_run": false,
-    "direct_sql_executed": false,
-    "include_all_used": false,
-    "npm_audit_run": false,
-    "package_install_run": false,
-    "lockfile_changed": false,
-    "staged": false,
-    "committed": false,
-    "pushed": false,
-    "docs_closeout_run": false,
-    "runtime_proof_promotion_done": false,
-    "rows_marked_pass_ready": false
+    "no_additional_db_push_run": true,
+    "no_supabase_db_pull_run": true,
+    "no_migration_repair_run": true,
+    "no_direct_sql_run": true,
+    "no_include_all_used": true,
+    "no_additional_production_mutation_run": true,
+    "no_npm_audit_run": true,
+    "no_package_install_run": true,
+    "no_lockfile_change": true,
+    "no_env_files_staged": true,
+    "no_supabase_temp_files_staged": true,
+    "no_rows_marked_pass_ready": true,
+    "no_secrets_env_auth_headers_tokens_cookies_request_bodies_or_db_urls_printed_or_committed": true
   }
 }

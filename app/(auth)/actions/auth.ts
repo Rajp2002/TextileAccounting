@@ -445,16 +445,20 @@ export async function signIn(input: { email: string; password: string }) {
  * Called from Owner Settings page.
  */
 export async function regenerateJoinCode() {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const orgId = profile.org_id
-    const adminClient = createAdminClient()
+    const supabase = await createClient()
 
     const newCode = generateJoinCode()
     const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
 
-    // Use admin client to bypass the "only owner can update own org" RLS check
-    // (which reads auth.jwt() ->> 'user_role' — safe since we verified above)
-    const { error } = await adminClient
+    try {
+        await supabase.rpc('set_actor_for_audit', { p_actor_id: user.id })
+    } catch {
+        // Non-fatal: authenticated writes still fall back to auth.uid() in the audit trigger.
+    }
+
+    const { error } = await supabase
         .from('organizations')
         .update({
             join_code: newCode,

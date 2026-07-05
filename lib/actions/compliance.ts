@@ -279,6 +279,12 @@ export async function updateGRODetails(data: {
 }) {
     const { user } = await requireRole(['admin'])
     const supabase = createAdminClient()
+    try {
+        await supabase.rpc('set_actor_for_audit', { p_actor_id: user.id })
+    } catch {
+        // Non-fatal: compliance_settings.updated_by still carries the actor for audit fallback.
+    }
+
     const { error } = await supabase
         .from('compliance_settings')
         .update({

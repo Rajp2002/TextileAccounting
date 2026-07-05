@@ -18,6 +18,7 @@ Security:
 - Profile role/org mutation is impossible for authenticated users.
 - Owner/supervisor/server authorization survives direct API attempts and token refresh.
 - Access-code, join-code, locked-tenant, and webhook paths fail closed.
+- Batch 24G source-fixes `SEC-015` and `SEC-009` and reconciles reported production-applied migrations `20260705100000` and `20260705182406`, but those rows remain `code_verified`, not pass. Pilot readiness still requires controlled settings-change audit-row proof with redacted payloads, owner export browser/security proof, and audit-log EXPORT proof.
 
 Production and stock:
 
@@ -26,7 +27,7 @@ Production and stock:
 - Batch 22 source-fixes negative-meter, cancelled/completed/stale-assignment, and over-target boundaries for `ORDER-005`, `ORDER-009`, and `PROD-011`, but those rows remain `code_verified`, not pass, until the migration is applied in QA and runtime/API proof confirms valid production/correction still reconciles stock, order progress, and payroll basis.
 - Batch 24B source-fixes supervisor production UX rows `PROD-013`, `PROD-023`, and `PROD-029`, but those rows remain `code_verified`, not pass, until QA/browser proof confirms suspicious large-meter confirmation, restored-unsaved draft behavior, and shift-total/shift-meter copy truth.
 - Batch 24C source-fixes Factory Today setup checklist correctness for `SETUP-011`, and Batch 24F updates the worker-assignment portion to selected-shift/day-only policy. The row remains `code_verified`, not pass, until QA/browser proof confirms completed costing, loom target, selected-shift worker assignment, active workers, payroll config, and refresh-stability.
-- Batch 24E source-fixes master-data loom guardrails for `MASTER-002` and `MASTER-005`, but those rows remain `code_verified`, not pass, until migration/DB-boundary proof confirms normalized duplicate loom-name protection and QA/browser proof confirms protected delete/deactivate/unlink behavior and unused-loom behavior.
+- Batch 24E source-fixes master-data loom guardrails for `MASTER-002` and `MASTER-005`, but those rows remain `code_verified`, not pass. Migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` was revised to a trigger-backed guard and reportedly applied during the production DB push incident, preserving existing duplicate rows while blocking future normalized duplicates. This improves DB-boundary evidence but does not replace controlled QA/browser duplicate-flow proof, protected delete/deactivate/unlink proof, or unused-loom behavior proof.
 
 Dashboard:
 
@@ -76,7 +77,7 @@ The following must be hidden, disabled, or documented as unsupported before pilo
 | Direct market-run sale path | Batch 4 disables the direct path so it cannot bypass commercial receivables. | Keep disabled for pilot unless it is routed through the normal receivable-creating sale path and retested. |
 | Day-only factories | Batch 24F source-fixes selected-shift day-only support. | Capture browser/runtime proof before relying on it for pilot. |
 | Substitute worker logging | Batch 24F blocks mismatches with explicit reassignment-required behavior; no separate substitute persistence exists. | Capture browser/runtime proof for the reassignment-required flow before relying on it for pilot. |
-| Owner data export | Not wired/audited/redaction-reviewed. | Keep hidden until audited and runtime-tested. |
+| Owner data export | Batch 24G source-fixes active UI wiring, audit-before-return behavior, org scoping, and redaction review, but runtime export proof is still missing. | Keep unavailable for pilot reliance until controlled export payload and audit-log EXPORT proof are complete. |
 | Public DPDP/legal claims | Requires qualified counsel review. | Do not rely on public legal readiness until review exists. |
 | Backup restore/rollback | Not exercised. | No pilot until exercise is completed. |
 | Archived modules | Historical archived routes exist. | Keep hidden/archived and do not market as pilot features. |
@@ -113,7 +114,9 @@ Batch 24C note: `SETUP-011` and `DASH-004` are source-fixed and moved to `code_v
 
 Batch 24D note: `EST-017` and `PROD-022` are source-fixed and moved to `code_verified` by focused estimator submit and supervisor production draft isolation proof in `output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json`. The Batch 24D verification set passed focused Vitest, Batch 24B compatibility tests, the estimator/quote/order and supervisor/production regression pack, TypeScript, targeted ESLint, JSON validation, and `git diff --check`. `EST-017` remains unresolved for pilot readiness until browser rapid double-click proof is collected and does not claim server/database idempotency. `PROD-022` remains unresolved for pilot readiness until browser proof confirms org/user/date/shift draft isolation and current date/shift save payload behavior.
 
-Batch 24E note: `MASTER-002` and `MASTER-005` are source-fixed and moved to `code_verified` by focused master data loom guardrail proof in `output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json`. The Batch 24E verification set passed focused Vitest, TypeScript, targeted ESLint, setup/factory/master regression tests, JSON validation, and `git diff --check`. `MASTER-002` remains unresolved for pilot readiness until the normalized duplicate-name migration is reviewed/applied or otherwise DB-boundary-proved and QA/browser duplicate-flow proof is collected. `MASTER-005` remains unresolved for pilot readiness until QA/browser proof confirms protected delete/deactivate/unlink behavior and unused-loom behavior. `MASTER-014` remains fail/open.
+Batch 24E note: `MASTER-002` and `MASTER-005` are source-fixed and moved to `code_verified` by focused master data loom guardrail proof in `output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json`. The Batch 24E verification set passed focused Vitest, TypeScript, targeted ESLint, setup/factory/master regression tests, JSON validation, and `git diff --check`. The migration was later revised from retroactive unique index to trigger-backed duplicate guard and reportedly applied during the production DB push incident. `MASTER-002` remains unresolved for pilot readiness until controlled QA/browser duplicate-flow proof is collected. `MASTER-005` remains unresolved for pilot readiness until QA/browser proof confirms protected delete/deactivate/unlink behavior and unused-loom behavior. `MASTER-014` remains fail/open.
+
+Batch 24E/24G production reconciliation note: a Supabase DB push reportedly occurred before reconciliation while linked to production ref `vzhwahudircrpgtitwzd`, applying migration history `20260704120000`, `20260705100000`, and `20260705182406`. The repository, docs, matrix, and proof artifacts are reconciled to that production-applied reality; no rollback or additional DB command was run during reconciliation. No row is pass-ready from this incident. `SEC-015` and `SEC-009` move to `code_verified/source-fixed`; `SEC-017` and `AUTH-008` remain open; `MASTER-002` and `MASTER-005` remain `code_verified/source-fixed`, not pass.
 
 
 ## Pilot Sign-Off Evidence Package

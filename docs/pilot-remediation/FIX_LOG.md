@@ -1932,7 +1932,7 @@ Scope:
 
 Rows promoted to `code_verified`, not pass:
 
-- `MASTER-002`: duplicate loom-name guardrails are source-fixed for manual add, bulk add, and rename/update. Names are normalized with trim/case-folding, duplicates are checked within the submitted bulk batch and against existing org looms, same-type different-name looms remain allowed, and duplicate database errors are mapped to a clear validation message. Migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` adds a normalized org-scoped unique index but was not applied.
+- `MASTER-002`: duplicate loom-name guardrails are source-fixed for manual add, bulk add, and rename/update. Names are normalized with trim/case-folding, duplicates are checked within the submitted bulk batch and against existing org looms, same-type different-name looms remain allowed, and duplicate database errors are mapped to a clear validation message. Migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` was later revised from a retroactive unique index to a trigger-backed normalized duplicate guard so existing duplicate production rows are preserved while future normalized duplicates are blocked.
 - `MASTER-005`: protected loom lifecycle behavior is source-fixed for owner deactivate/delete, supervisor delete-with-code, and cost-analysis null-target unlink. The shared guard blocks active/current targets, linked targets, standing worker assignments, dated shift-assignment history, and production history. The targeted review fix closes the null-target unlink/deactivate bypass by guarding unlink and clearing only `current_order_id` when safe.
 
 Rows explicitly not closed:
@@ -1945,7 +1945,7 @@ Evidence:
 - Evidence artifact: `output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json`.
 - Focused source test: `__tests__/batch24e-master-data-guardrails.test.ts`.
 - Implementation files: `app/(dashboard)/owner/actions.ts`, `app/(dashboard)/supervisor/actions.ts`, `components/MachineManagement.tsx`, `lib/master-data-loom-guardrails.ts`.
-- Unapplied migration file: `supabase/migrations/20260704120000_batch_24e_master_data_loom_guardrails.sql`.
+- Migration file: `supabase/migrations/20260704120000_batch_24e_master_data_loom_guardrails.sql`.
 
 Verification commands:
 
@@ -1958,7 +1958,7 @@ Verification commands:
 
 Data safety:
 
-- Migration was created but not applied.
+- At original Batch 24E source closeout, the migration was not applied. A later production DB push incident reportedly applied the revised trigger-backed migration and is documented in the Batch 24E/24G production reconciliation entry below.
 - No Supabase db push, migration repair, db pull, direct SQL, `--include-all`, production mutation, npm audit, package install, lockfile change, env-file staging, Supabase temp-file staging, or browser/runtime pass promotion was used.
 
 Resolution status:
@@ -2015,3 +2015,58 @@ Resolution status:
 - `PROD-002` and `PROD-004` are documented as `code_verified` in the active QA matrix, not pass.
 - Browser/runtime QA proof is still required before pass: day-only/day-shift logging, night-shift missing-worker accountability, substitute/reassignment behavior, and current-run owner sign-off.
 - Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 15, blocked 22, `code_verified` 144, `not_applicable` 1, `not_run` 0.
+
+## Batch 24E/24G - Production DB Push Reconciliation
+
+Date/time: 2026-07-06 IST. Branch `codex/batch-24g-security-audit-guardrails`.
+
+Incident context:
+
+- A Supabase DB push occurred before this reconciliation while the local project was linked to production ref `vzhwahudircrpgtitwzd`.
+- This closeout reconciles repository, docs, matrix, and proof artifacts to that production-applied migration reality. It is not normal QA migration proof.
+- Reported production remote migration history includes `20260704120000`, `20260705100000`, and `20260705182406`.
+- No rollback was attempted.
+- No additional Supabase command, DB push, DB pull, migration repair, direct SQL, `--include-all`, or production mutation was run during this reconciliation.
+
+Rows promoted to `code_verified`, not pass:
+
+- `SEC-015`: settings audit source coverage is fixed by migration `20260705100000_batch_24g_security_audit_guardrails.sql`, and follow-up migration `20260705182406_harden_settings_audit_function.sql` hardens SECURITY DEFINER helper search paths and revokes direct PUBLIC/anon/authenticated execute grants. Production application is recorded as reported evidence, but controlled settings-change audit-row proof with redacted payloads is still required before pass.
+- `SEC-009`: owner data export is source-fixed with active settings UI wiring, owner-only server action access, server-derived `profile.org_id` scoping, export audit logging before payload delivery, fail-closed audit behavior, and sensitive-field exclusion/redaction. Browser/security export proof and audit-log EXPORT proof are still required before pass.
+
+Rows explicitly not closed:
+
+- `SEC-017` remains fail/open pending worker age/consent product/legal policy and implementation proof.
+- `AUTH-008` remains fail/open pending join-code brute-force/rate-limit architecture and controlled QA proof.
+- `MASTER-002` remains `code_verified`, not pass. Production DB-boundary evidence improved after the trigger-backed migration reportedly blocked a duplicate `LOOM C` probe, but controlled QA/browser/runtime duplicate-flow proof is incomplete.
+- `MASTER-005` remains `code_verified`, not pass. Browser lifecycle proof for protected delete/deactivate/unlink and unused-loom behavior is still required.
+
+Batch 24E migration reconciliation:
+
+- Migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` changed from a retroactive normalized unique index to a trigger-backed guard.
+- Existing duplicate production data, including reported `loom c` / `Loom C` rows, is preserved.
+- New normalized duplicate looms are blocked by the remote DB guard according to the reported production duplicate probe.
+- The migration review remains non-destructive: no `DROP TABLE`, `TRUNCATE`, `DELETE FROM`, or destructive `UPDATE`/backfill.
+
+Evidence:
+
+- Batch 24E artifact: `output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json`.
+- Batch 24G artifact: `output/qa/batch24g/BATCH24G-security-audit-guardrails-proof.json`.
+- Active matrix: `output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md`.
+- Focused tests: `__tests__/batch24e-master-data-guardrails.test.ts`, `__tests__/batch24g-security-audit-guardrails.test.ts`.
+
+Verification:
+
+- `git diff --check` -> passed.
+- `jq empty output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json` -> passed.
+- `jq empty output/qa/batch24g/BATCH24G-security-audit-guardrails-proof.json` -> passed.
+- `npm test -- __tests__/batch24e-master-data-guardrails.test.ts __tests__/batch24g-security-audit-guardrails.test.ts` -> passed.
+- `npx tsc --noEmit --pretty false` -> passed.
+- Targeted ESLint on touched source/test files -> passed.
+
+Resolution status:
+
+- No row was marked pass-ready.
+- `SEC-015` and `SEC-009` are documented as `code_verified/source-fixed`.
+- `SEC-017` and `AUTH-008` remain open.
+- `MASTER-002` and `MASTER-005` remain `code_verified/source-fixed`, not pass.
+- Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 13, blocked 22, `code_verified` 146, `not_applicable` 1, `not_run` 0.

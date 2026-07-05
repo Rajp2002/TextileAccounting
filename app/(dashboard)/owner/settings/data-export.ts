@@ -4,14 +4,57 @@ import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth'
 
+const REDACTED = '[REDACTED]'
+const SENSITIVE_EXPORT_FIELD_NAMES = new Set([
+    'access_code_hash',
+    'authorization',
+    'client_ip',
+    'cookie',
+    'esi_number',
+    'join_code',
+    'last_code_plain',
+    'password',
+    'pf_number',
+    'phone',
+    'recipient_phone',
+    'service_role_key',
+    'test_password',
+    'tracking_token',
+    'whatsapp_number',
+])
+
+type ExportRecord = Record<string, unknown>
+
+function isSensitiveExportField(field: string) {
+    const normalized = field.toLowerCase()
+    return SENSITIVE_EXPORT_FIELD_NAMES.has(normalized)
+        || normalized.includes('secret')
+        || normalized.includes('token')
+        || normalized.includes('password')
+}
+
+function redactSensitiveFields(row: ExportRecord): ExportRecord {
+    return Object.fromEntries(
+        Object.entries(row).map(([key, value]) => [
+            key,
+            isSensitiveExportField(key) && value != null ? REDACTED : value,
+        ])
+    )
+}
+
+function redactRows(rows: ExportRecord[] | null | undefined) {
+    return (rows ?? []).map(redactSensitiveFields)
+}
+
 /**
  * Export all organization data as a structured JSON object.
  * DPDP Act 2023 — Right to Access (Section 11)
  */
 export async function exportOrganizationData() {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = createAdminClient()
     const orgId = profile.org_id
+    const exportedAt = new Date().toISOString()
 
     // Query all org-scoped tables in parallel
     const [
@@ -45,8 +88,8 @@ export async function exportOrganizationData() {
         { data: organization },
         { data: profiles },
     ] = await Promise.all([
-        supabase.from('workers').select('*').eq('org_id', orgId),
-        supabase.from('fixed_workers').select('*').eq('org_id', orgId),
+        supabase.from('workers').select('id, org_id, name, is_active, start_date, pf_esi_eligible, pf_esi_enrolled').eq('org_id', orgId),
+        supabase.from('fixed_workers').select('id, org_id, name, role, monthly_salary, is_active, start_date, pf_esi_eligible, pf_esi_enrolled').eq('org_id', orgId),
         supabase.from('machines').select('*').eq('org_id', orgId),
         supabase.from('production_logs').select('*').eq('org_id', orgId).order('date', { ascending: false }),
         supabase.from('payroll_payments').select('*').eq('org_id', orgId),
@@ -73,40 +116,65 @@ export async function exportOrganizationData() {
         supabase.from('grievances').select('*').eq('org_id', orgId),
         supabase.from('organization_dpas').select('*').eq('org_id', orgId),
         supabase.from('organizations').select('*').eq('id', orgId),
-        supabase.from('profiles').select('id, full_name, role, phone').eq('org_id', orgId),
+        supabase.from('profiles').select('id, full_name, role').eq('org_id', orgId),
     ])
 
+    const { error: auditError } = await supabase.rpc('log_export_event', {
+        p_org_id: orgId,
+        p_table_name: 'owner_data_export',
+        p_record_id: orgId,
+        p_description: `Owner organization data export generated at ${exportedAt}`,
+        p_actor_id: user.id,
+    })
+
+    if (auditError) {
+        console.error('Failed to audit organization export:', auditError.message)
+        throw new Error('Data export could not be audited. Please try again.')
+    }
+
     return {
-        exported_at: new Date().toISOString(),
-        organization: organization?.[0] || null,
-        profiles: profiles || [],
-        workers: workers || [],
-        fixed_workers: fixedWorkers || [],
-        machines: machines || [],
-        production_logs: productionLogs || [],
-        payroll_payments: payrollPayments || [],
-        payroll_settlements: payrollSettlements || [],
-        payroll_adjustments: payrollAdjustments || [],
-        worker_advances: workerAdvances || [],
-        supervisor_float_transactions: supervisorFloatTransactions || [],
-        attendance: attendance || [],
-        orders: orders || [],
-        qualities: qualities || [],
-        yarn_batches: yarnBatches || [],
-        yarn_lots: yarnLots || [],
-        yarn_movements: yarnMovements || [],
-        beam_cards: beamCards || [],
-        beam_card_lots: beamCardLots || [],
-        order_yarn_requirements: orderYarnRequirements || [],
-        dispatches: dispatches || [],
-        estimator_quotes: estimatorQuotes || [],
-        estimator_templates: estimatorTemplates || [],
-        factory_cost_profile: factoryCostProfile || [],
-        payroll_configs: payrollConfigs || [],
-        worker_consent_artifacts: workerConsentArtifacts || [],
-        language_requests: languageRequests || [],
-        grievances: grievances || [],
-        organization_dpas: organizationDpas || [],
+        exported_at: exportedAt,
+        export_scope: 'current_owner_org',
+        sensitive_fields_review: {
+            redaction_marker: REDACTED,
+            redacted_fields: Array.from(SENSITIVE_EXPORT_FIELD_NAMES).sort(),
+            excluded_runtime_sources: [
+                'auth headers',
+                'cookies',
+                'environment variables',
+                'request headers',
+                'service-role keys',
+            ],
+        },
+        organization: organization?.[0] ? redactSensitiveFields(organization[0] as ExportRecord) : null,
+        profiles: redactRows(profiles as ExportRecord[] | null),
+        workers: redactRows(workers as ExportRecord[] | null),
+        fixed_workers: redactRows(fixedWorkers as ExportRecord[] | null),
+        machines: redactRows(machines as ExportRecord[] | null),
+        production_logs: redactRows(productionLogs as ExportRecord[] | null),
+        payroll_payments: redactRows(payrollPayments as ExportRecord[] | null),
+        payroll_settlements: redactRows(payrollSettlements as ExportRecord[] | null),
+        payroll_adjustments: redactRows(payrollAdjustments as ExportRecord[] | null),
+        worker_advances: redactRows(workerAdvances as ExportRecord[] | null),
+        supervisor_float_transactions: redactRows(supervisorFloatTransactions as ExportRecord[] | null),
+        attendance: redactRows(attendance as ExportRecord[] | null),
+        orders: redactRows(orders as ExportRecord[] | null),
+        qualities: redactRows(qualities as ExportRecord[] | null),
+        yarn_batches: redactRows(yarnBatches as ExportRecord[] | null),
+        yarn_lots: redactRows(yarnLots as ExportRecord[] | null),
+        yarn_movements: redactRows(yarnMovements as ExportRecord[] | null),
+        beam_cards: redactRows(beamCards as ExportRecord[] | null),
+        beam_card_lots: redactRows(beamCardLots as ExportRecord[] | null),
+        order_yarn_requirements: redactRows(orderYarnRequirements as ExportRecord[] | null),
+        dispatches: redactRows(dispatches as ExportRecord[] | null),
+        estimator_quotes: redactRows(estimatorQuotes as ExportRecord[] | null),
+        estimator_templates: redactRows(estimatorTemplates as ExportRecord[] | null),
+        factory_cost_profile: redactRows(factoryCostProfile as ExportRecord[] | null),
+        payroll_configs: redactRows(payrollConfigs as ExportRecord[] | null),
+        worker_consent_artifacts: redactRows(workerConsentArtifacts as ExportRecord[] | null),
+        language_requests: redactRows(languageRequests as ExportRecord[] | null),
+        grievances: redactRows(grievances as ExportRecord[] | null),
+        organization_dpas: redactRows(organizationDpas as ExportRecord[] | null),
     }
 }
 

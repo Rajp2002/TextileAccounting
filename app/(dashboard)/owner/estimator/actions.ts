@@ -21,7 +21,7 @@ function generateTrackingToken(): string {
 // ─── Factory Cost Profile ─────────────────────────────────────────────────────
 
 export async function getFactoryCostProfile() {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
 
     const { data, error } = await supabase
@@ -34,6 +34,12 @@ export async function getFactoryCostProfile() {
 
     // Auto-create with sensible defaults on first visit
     if (!data) {
+        try {
+            await supabase.rpc('set_actor_for_audit', { p_actor_id: user.id })
+        } catch {
+            // Non-fatal: authenticated writes still fall back to auth.uid() in the audit trigger.
+        }
+
         const { data: created, error: createError } = await supabase
             .from('factory_cost_profile')
             .insert({
@@ -110,8 +116,14 @@ export async function upsertFactoryCostProfile(data: {
     warp_crimp_pct?:         number
     is_configured?:          boolean
 }) {
-    const { profile } = await requireRole(['owner'])
+    const { user, profile } = await requireRole(['owner'])
     const supabase = await createServerClient()
+
+    try {
+        await supabase.rpc('set_actor_for_audit', { p_actor_id: user.id })
+    } catch {
+        // Non-fatal: authenticated writes still fall back to auth.uid() in the audit trigger.
+    }
 
     const { error } = await supabase
         .from('factory_cost_profile')

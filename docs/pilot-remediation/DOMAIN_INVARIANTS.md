@@ -30,6 +30,18 @@ Required proof:
 - Missing Redis/rate-limit dependency does not silently convert a protected action into fail-open behavior.
 - Locked organizations cannot mutate pilot write tables.
 
+## Audit And Export Boundaries
+
+Security and compliance evidence must be created before sensitive payload delivery or protected settings mutation is considered complete.
+
+Required proof:
+
+- Settings changes create audit rows with actor, org where applicable, action, record, before/after context, timestamp, and redacted sensitive values.
+- Owner exports are current-org only, audited before payload delivery, and exclude or redact sensitive worker/profile/runtime fields.
+- Runtime secrets, auth headers, cookies, request bodies, service-role keys, Supabase keys, and DB URLs are never emitted in export payloads, logs, docs, or proof artifacts.
+
+Batch 24G production reconciliation note: `SEC-015` and `SEC-009` are source-fixed and `code_verified`, not pass. A production DB push reportedly occurred while linked to production ref `vzhwahudircrpgtitwzd`, applying `20260705100000_batch_24g_security_audit_guardrails.sql` and `20260705182406_harden_settings_audit_function.sql`; no rollback or additional DB command was run during reconciliation. `SEC-015` still needs controlled settings-change audit-row proof with redacted payloads, and `SEC-009` still needs owner export browser/security proof plus audit-log EXPORT proof. `SEC-017` and `AUTH-008` remain open.
+
 ## Production Logs
 
 A valid production row belongs to exactly one tenant, machine, date, shift, active worker, and active order/run context. Positive meters require a worker-rate snapshot. Zero-meter downtime never creates quantity or wages.
@@ -49,7 +61,7 @@ Batch 24B proof note: `PROD-013`, `PROD-023`, and `PROD-029` are source-fixed an
 
 Batch 24C proof note: `SETUP-011` is source-fixed and `code_verified`, not pass. Factory Today setup checklist state now uses persisted source data for costing evidence, active linked loom targets, worker assignment source data, active worker rows, and payroll config bounds. Batch 24F updates the worker-assignment portion to selected-shift/day-only policy. Browser/runtime proof is still required before pass.
 
-Batch 24E proof note: `MASTER-002` and `MASTER-005` are source-fixed and `code_verified`, not pass. Duplicate loom names are guarded in source for normalized org-scoped add, bulk-add, and rename paths, and migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` adds a database unique index but was not applied. Protected loom owner delete/deactivate, supervisor delete-with-code, and null-target unlink now share lifecycle guardrails for active targets, assignments, shift-assignment history, and production history; null-target unlink no longer silently deactivates protected looms. Migration/DB-boundary proof and QA/browser proof are still required before pass. `MASTER-014` remains fail/open.
+Batch 24E proof note: `MASTER-002` and `MASTER-005` are source-fixed and `code_verified`, not pass. Duplicate loom names are guarded in source for normalized org-scoped add, bulk-add, and rename paths, and migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` now uses a trigger-backed duplicate guard instead of a retroactive unique index. The production DB push incident reportedly applied this guard, preserving existing duplicate rows such as `loom c` / `Loom C` while blocking future normalized duplicates. Controlled QA/browser proof is still required before pass, and `MASTER-005` still needs browser lifecycle proof. `MASTER-014` remains fail/open.
 
 Batch 24F proof note: `PROD-002` and `PROD-004` are source-fixed and `code_verified`, not pass. Selected-shift worker policy now allows day-shift/day-only production without requiring a night worker, blocks night-shift production without a night worker with an actionable accountability error, and keeps day-only setup/checklist/activation from falsely failing for missing night worker. Substitute-worker mismatch now returns explicit reassignment-required behavior; no unsafe substitute persistence was added, and production is not silently attributed to the wrong assigned worker. Browser/runtime proof is still required before pass, and `SIGNOFF-01` remains fail/open pending current-run sign-off proof.
 

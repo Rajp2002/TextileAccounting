@@ -1,0 +1,121 @@
+{
+  "batch": "Batch 24G",
+  "title": "security and audit guardrails production DB-push reconciliation",
+  "updated_at_local": "2026-07-06",
+  "branch": "codex/batch-24g-security-audit-guardrails",
+  "reconciliation_base_commit": "55cb131c4fb2eb4b072d9cf3257eec6020655340",
+  "classification": "source-fixed/code_verified; not pass-ready",
+  "production_db_push_incident": {
+    "occurred_before_this_reconciliation": true,
+    "linked_supabase_ref": "vzhwahudircrpgtitwzd",
+    "linked_ref_classification": "production",
+    "remote_migration_history_reportedly_includes": [
+      "20260704120000",
+      "20260705100000",
+      "20260705182406"
+    ],
+    "additional_db_commands_run_during_reconciliation": false,
+    "rollback_attempted": false,
+    "direct_sql_used": false,
+    "db_pull_or_repair_used": false
+  },
+  "included_rows": [
+    "SEC-015",
+    "SEC-009"
+  ],
+  "excluded_or_open_rows": [
+    {
+      "id": "SEC-017",
+      "status": "fail/open",
+      "reason": "Worker age/consent flow still needs product/legal policy and implementation proof."
+    },
+    {
+      "id": "AUTH-008",
+      "status": "fail/open",
+      "reason": "Join-code brute-force/rate-limit behavior still needs unauthenticated attempt tracking and controlled QA proof."
+    }
+  ],
+  "migration_reconciliation": {
+    "settings_audit_migration": {
+      "path": "supabase/migrations/20260705100000_batch_24g_security_audit_guardrails.sql",
+      "remote_status": "reportedly applied to production before reconciliation",
+      "scope": "settings/audit only",
+      "redacts_sensitive_settings_values": true,
+      "non_destructive_review": {
+        "no_drop_table": true,
+        "no_truncate": true,
+        "no_delete_from": true,
+        "no_destructive_update_or_backfill": true
+      }
+    },
+    "hardening_migration": {
+      "path": "supabase/migrations/20260705182406_harden_settings_audit_function.sql",
+      "remote_status": "reportedly applied to production before reconciliation",
+      "hardens_security_definer_search_path": true,
+      "revokes_direct_public_anon_authenticated_execute": true,
+      "reported_remote_state": "Batch 24G audit functions reportedly now have fixed search_path and no anon/authenticated execute grant."
+    }
+  },
+  "source_reconciliation": {
+    "SEC-015": [
+      "Settings audit trigger coverage is source-fixed for organizations, factory_cost_profile, compliance_settings, notification_consents, and whatsapp_settings.",
+      "Settings audit payloads redact organization join/access-code values, WhatsApp setting values, and notification phone values before audit insertion.",
+      "Owner/admin settings mutation paths set the audit actor where available."
+    ],
+    "SEC-009": [
+      "Owner export is wired into active settings UI.",
+      "Export uses requireRole(['owner']) and server-derived profile.org_id.",
+      "Export keeps org_id, factory_id, and id scoping.",
+      "Export calls log_export_event before returning data and fails closed if audit logging fails.",
+      "Export excludes worker/profile phone/PF/ESI fields where practical and applies central redaction for sensitive field names."
+    ]
+  },
+  "row_outcomes": {
+    "SEC-015": {
+      "status_after_reconciliation": "code_verified/source-fixed",
+      "proof_improved": true,
+      "why_not_pass": "Production migration application is not a controlled disposable QA/security proof. Settings-change audit rows with redacted payloads still need controlled verification."
+    },
+    "SEC-009": {
+      "status_after_reconciliation": "code_verified/source-fixed",
+      "proof_improved": true,
+      "why_not_pass": "Owner export browser/security proof and audit-log EXPORT proof still need controlled verification."
+    },
+    "SEC-017": {
+      "status_after_reconciliation": "fail/open",
+      "proof_improved": false
+    },
+    "AUTH-008": {
+      "status_after_reconciliation": "fail/open",
+      "proof_improved": false
+    }
+  },
+  "future_proof_required": [
+    "Controlled QA/security proof that settings changes create audit_log rows with actor, org where applicable, action, record, timestamp, and redacted old/new payloads.",
+    "Controlled owner export browser proof that payloads are current-org only, sensitive fields are excluded/redacted, and an EXPORT audit row is written before delivery.",
+    "Separate SEC-017 legal/product policy and worker consent/age evidence design.",
+    "Separate AUTH-008 join-code brute-force/rate-limit implementation and negative probe proof."
+  ],
+  "checks_recorded_for_reconciliation": [
+    "git diff --check",
+    "jq empty output/qa/batch24g/BATCH24G-security-audit-guardrails-proof.json",
+    "npm test -- __tests__/batch24e-master-data-guardrails.test.ts __tests__/batch24g-security-audit-guardrails.test.ts",
+    "npx tsc --noEmit --pretty false",
+    "targeted ESLint on touched source/test files"
+  ],
+  "safety_confirmations": {
+    "no_additional_db_push_run": true,
+    "no_supabase_db_pull_run": true,
+    "no_migration_repair_run": true,
+    "no_direct_sql_run": true,
+    "no_include_all_used": true,
+    "no_additional_production_mutation_run": true,
+    "no_npm_audit_run": true,
+    "no_package_install_run": true,
+    "no_lockfile_change": true,
+    "no_env_files_staged": true,
+    "no_supabase_temp_files_staged": true,
+    "no_rows_marked_pass_ready": true,
+    "no_secrets_env_auth_headers_tokens_cookies_request_bodies_or_db_urls_printed_or_committed": true
+  }
+}
