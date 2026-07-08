@@ -4,6 +4,8 @@ import * as Sentry from '@sentry/nextjs'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { processReferralConversion, issueReferralRefund } from '@/lib/referral-webhook'
 import { checkPublicPostRateLimit, getClientIpFromHeaders } from '@/lib/rate-limit'
+import { razorpay } from '@/lib/razorpay'
+import { activateInitialPurchase } from '@/lib/billing-activation'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +26,13 @@ type RazorpayPaymentEntity = {
     order_id?: string | null
     amount: number
     method?: string | null
+    notes?: Record<string, string> | null
+}
+
+type RazorpayOrderEntity = {
+    id: string
+    amount: number
+    notes?: Record<string, string> | null
 }
 
 type RazorpayWebhookEvent = {
@@ -32,6 +41,7 @@ type RazorpayWebhookEvent = {
     payload?: {
         subscription?: { entity?: RazorpaySubscriptionEntity }
         payment?: { entity?: RazorpayPaymentEntity }
+        order?: { entity?: RazorpayOrderEntity }
     }
 }
 
@@ -153,6 +163,86 @@ export async function POST(req: NextRequest) {
 
     try {
         switch (eventType) {
+            case 'payment.captured': {
+                const payment = event.payload?.payment?.entity
+                if (!payment?.id) break
+
+                // If it is a subscription-based payment, subscription.charged will handle it.
+                if (payment.subscription_id) {
+                    break
+                }
+
+                const orderId = payment.order_id
+                if (!orderId) break
+
+                let orgId = payment.notes?.org_id
+                let paymentType = payment.notes?.payment_type
+
+                if (!orgId || !paymentType) {
+                    try {
+                        const order = await razorpay.orders.fetch(orderId)
+                        orgId = order.notes?.org_id as string
+                        paymentType = order.notes?.payment_type as string
+                    } catch (fetchErr) {
+                        Sentry.captureException(fetchErr, {
+                            tags: { route: 'razorpay_webhook', phase: 'payment_captured_fetch_order' }
+                        })
+                    }
+                }
+
+                if (orgId && paymentType === 'initial_purchase') {
+                    await activateInitialPurchase({
+                        orgId,
+                        razorpayOrderId: orderId,
+                        razorpayPaymentId: payment.id,
+                        amountPaise: payment.amount,
+                        method: payment.method ?? null,
+                    })
+                }
+                break
+            }
+
+            case 'order.paid': {
+                const order = event.payload?.order?.entity
+                if (!order?.id) break
+
+                let orgId = order.notes?.org_id
+                let paymentType = order.notes?.payment_type
+
+                if (!orgId || !paymentType) {
+                    try {
+                        const fetchedOrder = await razorpay.orders.fetch(order.id)
+                        orgId = fetchedOrder.notes?.org_id as string
+                        paymentType = fetchedOrder.notes?.payment_type as string
+                    } catch (fetchErr) {
+                        Sentry.captureException(fetchErr, {
+                            tags: { route: 'razorpay_webhook', phase: 'order_paid_fetch_order' }
+                        })
+                    }
+                }
+
+                if (orgId && paymentType === 'initial_purchase') {
+                    try {
+                        const paymentsList = await razorpay.orders.fetchPayments(order.id)
+                        const successfulPayment = paymentsList.items?.find((p: { status: string }) => p.status === 'captured')
+                        if (successfulPayment) {
+                            await activateInitialPurchase({
+                                orgId,
+                                razorpayOrderId: order.id,
+                                razorpayPaymentId: successfulPayment.id,
+                                amountPaise: Number(successfulPayment.amount),
+                                method: successfulPayment.method ?? null,
+                            })
+                        }
+                    } catch (err) {
+                        Sentry.captureException(err, {
+                            tags: { route: 'razorpay_webhook', phase: 'order_paid_fetch_payments' }
+                        })
+                    }
+                }
+                break
+            }
+
             case 'subscription.authenticated': {
                 const sub = event.payload?.subscription?.entity
                 if (!sub?.id) break
@@ -288,43 +378,95 @@ export async function POST(req: NextRequest) {
 
             case 'payment.failed': {
                 const payment = event.payload?.payment?.entity
-                if (!payment?.id || !payment?.subscription_id) break
+                if (!payment?.id) break
 
-                const { data: existingFailed } = await supabase
-                    .from('subscription_payments')
-                    .select('id')
-                    .eq('razorpay_payment_id', payment.id)
-                    .maybeSingle()
+                if (payment.subscription_id) {
+                    const { data: existingFailed } = await supabase
+                        .from('subscription_payments')
+                        .select('id')
+                        .eq('razorpay_payment_id', payment.id)
+                        .maybeSingle()
 
-                if (existingFailed) {
-                    Sentry.captureMessage(`Failed payment ${payment.id} already recorded`, 'info')
-                    break
-                }
+                    if (existingFailed) {
+                        Sentry.captureMessage(`Failed payment ${payment.id} already recorded`, 'info')
+                        break
+                    }
 
-                const { data: orgSub, error: orgSubError } = await supabase
-                    .from('org_subscriptions')
-                    .select('id, org_id')
-                    .eq('razorpay_subscription_id', payment.subscription_id)
-                    .single()
-                if (orgSubError) throw orgSubError
+                    const { data: orgSub, error: orgSubError } = await supabase
+                        .from('org_subscriptions')
+                        .select('id, org_id')
+                        .eq('razorpay_subscription_id', payment.subscription_id)
+                        .single()
+                    if (orgSubError) throw orgSubError
 
-                if (orgSub) {
-                    const { error: failedInsertError } = await supabase.from('subscription_payments').insert({
-                        org_id: orgSub.org_id,
-                        subscription_id: orgSub.id,
-                        razorpay_payment_id: payment.id,
-                        amount_paise: payment.amount,
-                        status: 'failed',
-                        method: payment.method ?? null,
-                    })
+                    if (orgSub) {
+                        const { error: failedInsertError } = await supabase.from('subscription_payments').insert({
+                            org_id: orgSub.org_id,
+                            subscription_id: orgSub.id,
+                            razorpay_payment_id: payment.id,
+                            amount_paise: payment.amount,
+                            status: 'failed',
+                            method: payment.method ?? null,
+                        })
 
-                    if (failedInsertError) {
-                        if (failedInsertError.code === '23505') {
-                            Sentry.captureMessage(`Failed payment ${payment.id} already recorded by concurrent webhook`, 'warning')
-                            break
+                        if (failedInsertError) {
+                            if (failedInsertError.code === '23505') {
+                                Sentry.captureMessage(`Failed payment ${payment.id} already recorded by concurrent webhook`, 'warning')
+                                break
+                            }
+                            Sentry.captureException(failedInsertError, { tags: { route: 'razorpay_webhook', phase: 'failed_payment_insert' } })
+                            throw failedInsertError
                         }
-                        Sentry.captureException(failedInsertError, { tags: { route: 'razorpay_webhook', phase: 'failed_payment_insert' } })
-                        throw failedInsertError
+                    }
+                } else if (payment.order_id) {
+                    const { data: existingFailed } = await supabase
+                        .from('subscription_payments')
+                        .select('id')
+                        .eq('razorpay_payment_id', payment.id)
+                        .maybeSingle()
+
+                    if (existingFailed) {
+                        Sentry.captureMessage(`Failed payment ${payment.id} already recorded`, 'info')
+                        break
+                    }
+
+                    let orgId = payment.notes?.org_id
+                    if (!orgId) {
+                        try {
+                            const order = await razorpay.orders.fetch(payment.order_id)
+                            orgId = order.notes?.org_id as string
+                        } catch (err) {
+                            Sentry.captureException(err, {
+                                tags: { route: 'razorpay_webhook', phase: 'payment_failed_fetch_order' }
+                            })
+                        }
+                    }
+
+                    if (orgId) {
+                        const { data: orgSub } = await supabase
+                            .from('org_subscriptions')
+                            .select('id')
+                            .eq('razorpay_order_id', payment.order_id)
+                            .maybeSingle()
+
+                        const { error: failedInsertError } = await supabase.from('subscription_payments').insert({
+                            org_id: orgId,
+                            subscription_id: orgSub?.id ?? null,
+                            razorpay_payment_id: payment.id,
+                            razorpay_order_id: payment.order_id,
+                            amount_paise: payment.amount,
+                            status: 'failed',
+                            method: payment.method ?? null,
+                        })
+
+                        if (failedInsertError) {
+                            if (failedInsertError.code === '23505') {
+                                Sentry.captureMessage(`Failed payment ${payment.id} already recorded by concurrent webhook`, 'warning')
+                                break
+                            }
+                            Sentry.captureException(failedInsertError, { tags: { route: 'razorpay_webhook', phase: 'failed_payment_insert' } })
+                            throw failedInsertError
+                        }
                     }
                 }
                 break
@@ -356,3 +498,4 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true })
 }
+

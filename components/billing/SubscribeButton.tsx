@@ -3,19 +3,21 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Loader2, CreditCard, RefreshCw, AlertTriangle } from 'lucide-react'
+import { Loader2, CreditCard } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 type RazorpayCheckoutOptions = {
     key: string
-    subscription_id: string
+    amount: number
+    currency: string
+    order_id: string
     name: string
     description: string
     image: string
     handler: (response: {
         razorpay_payment_id: string
-        razorpay_subscription_id: string
+        razorpay_order_id: string
         razorpay_signature: string
     }) => void
     modal: {
@@ -35,9 +37,11 @@ declare global {
     }
 }
 
-type CreateSubscriptionResponse = {
+type CreateOrderResponse = {
     error?: string
-    subscriptionId?: string
+    orderId?: string
+    amount?: number
+    currency?: string
     keyId?: string
 }
 
@@ -46,16 +50,16 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 interface SubscribeButtonProps {
-    planId: string
-    tierName: string       // e.g. "Base" or "Premium"
-    displayAmount: string  // e.g. "₹2,360/mo"
+    // Kept optional for backward compatibility
+    planId?: string
+    tierName?: string
+    displayAmount?: string
     onSuccess?: (paymentId: string) => void
     className?: string
 }
 
-export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, className }: SubscribeButtonProps) {
+export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) {
     const [loading, setLoading] = useState(false)
-    const [autoRenew, setAutoRenew] = useState(true)
     const router = useRouter()
 
     const loadRazorpayScript = () => {
@@ -72,21 +76,20 @@ export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, cl
     async function handleSubscribe() {
         setLoading(true)
         try {
-            console.log('[SubscribeButton] Initializing subscription for plan:', planId, '| autoRenew:', autoRenew)
+            console.log('[SubscribeButton] Initializing one-time checkout for Weavly Full Suite')
 
             const isLoaded = await loadRazorpayScript()
             if (!isLoaded) {
                 throw new Error('Failed to load payment gateway. Please check your internet connection.')
             }
 
-            // 1. Create subscription via our API, passing autoRenew preference
-            const res = await fetch('/api/subscriptions/create', {
+            // 1. Create Order via our backend endpoint
+            const res = await fetch('/api/billing/create-order', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
-                },
-                body: JSON.stringify({ planId, autoRenew }),
+                }
             })
 
             const contentType = res.headers.get('content-type')
@@ -96,36 +99,61 @@ export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, cl
                 throw new Error(`Server returned ${res.status} (${contentType}). Please refresh and try again.`)
             }
 
-            const data = await res.json() as CreateSubscriptionResponse
+            const data = await res.json() as CreateOrderResponse
             console.log('[SubscribeButton] API response:', data)
 
             if (!res.ok || data.error) {
-                throw new Error(data.error || 'Failed to create subscription')
+                throw new Error(data.error || 'Failed to create payment order')
             }
 
-            const { subscriptionId, keyId } = data
-            if (!subscriptionId || !keyId) {
+            const { orderId, amount, currency, keyId } = data
+            if (!orderId || !keyId || !amount || !currency) {
                 throw new Error('Payment setup response was incomplete.')
             }
 
             const rzp = new window.Razorpay({
                 key: keyId,
-                subscription_id: subscriptionId,
+                amount: amount,
+                currency: currency,
+                order_id: orderId,
                 name: 'Weavly',
-                description: `${tierName} Plan — ${autoRenew ? 'Monthly, auto-renews' : 'Monthly, no auto-renewal'}`,
+                description: 'Weavly Full Suite - First Year',
                 image: '/images/WeavlyLogo.png',
-                handler: function (response: {
+                handler: async function (response: {
                     razorpay_payment_id: string
-                    razorpay_subscription_id: string
+                    razorpay_order_id: string
                     razorpay_signature: string
                 }) {
-                    const msg = autoRenew
-                        ? '🎉 Payment successful! Your subscription is now activating.'
-                        : '🎉 Payment successful! Your plan is active. It will not auto-renew at the end of the period.'
-                    toast.success(msg)
-                    onSuccess?.(response.razorpay_payment_id)
-                    // Refresh server component so billing page shows updated subscription state
-                    setTimeout(() => router.refresh(), 1500)
+                    setLoading(true)
+                    try {
+                        console.log('[SubscribeButton] Verifying payment signature...')
+                        const verifyRes = await fetch('/api/billing/verify-payment', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                            })
+                        })
+
+                        const verifyData = await verifyRes.json()
+                        if (!verifyRes.ok || verifyData.error) {
+                            throw new Error(verifyData.error || 'Failed to verify payment signature')
+                        }
+
+                        toast.success('🎉 Payment successful! Weavly Full Suite is now active.')
+                        onSuccess?.(response.razorpay_payment_id)
+                        // Refresh server components
+                        setTimeout(() => router.refresh(), 1500)
+                    } catch (err) {
+                        toast.error(getErrorMessage(err, 'Payment verification failed.'))
+                    } finally {
+                        setLoading(false)
+                    }
                 },
                 modal: {
                     ondismiss: () => setLoading(false),
@@ -149,7 +177,7 @@ export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, cl
         <div className="space-y-3">
             <Button
                 type="button"
-                id={`subscribe-btn-${planId}`}
+                id="subscribe-btn-full-suite"
                 onClick={handleSubscribe}
                 disabled={loading}
                 size="lg"
@@ -163,49 +191,10 @@ export function SubscribeButton({ planId, tierName, displayAmount, onSuccess, cl
                 ) : (
                     <>
                         <CreditCard className="h-4 w-4" />
-                        Subscribe — {displayAmount}
+                        Pay ₹17,700 & Activate Weavly
                     </>
                 )}
             </Button>
-
-            {/* Auto-renew preference */}
-            <label className="flex items-start gap-2.5 cursor-pointer group select-none">
-                <div className="relative mt-0.5 shrink-0">
-                    <input
-                        type="checkbox"
-                        id={`auto-renew-${planId}`}
-                        checked={autoRenew}
-                        onChange={(e) => setAutoRenew(e.target.checked)}
-                        className="sr-only peer"
-                        disabled={loading}
-                    />
-                    {/* Custom styled checkbox */}
-                    <div className={cn(
-                        'h-4 w-4 rounded border-2 flex items-center justify-center transition-all',
-                        autoRenew
-                            ? 'bg-amber-500 border-amber-500'
-                            : 'bg-white border-gray-300 group-hover:border-gray-400'
-                    )}>
-                        {autoRenew && (
-                            <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 10 8" fill="none">
-                                <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                        )}
-                    </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                    <span className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                        <RefreshCw className="h-3 w-3 text-gray-400" />
-                        Auto-renew monthly
-                    </span>
-                    {!autoRenew && (
-                        <p className="text-[11px] text-amber-700 mt-0.5 flex items-start gap-1">
-                            <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
-                            Your plan will not renew after the first billing cycle. You can re-subscribe anytime.
-                        </p>
-                    )}
-                </div>
-            </label>
         </div>
     )
 }

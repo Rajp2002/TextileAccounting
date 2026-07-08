@@ -97,11 +97,11 @@ function UpgradeWall({
 
                 {/* Price highlight */}
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
-                    <p className="text-sm text-gray-500">Premium plan</p>
+                    <p className="text-sm text-gray-500">Weavly Full Suite</p>
                     <p className="text-3xl font-extrabold text-gray-900 mt-1">
-                        ₹5,000<span className="text-lg font-normal text-gray-400">/mo</span>
+                        ₹15,000<span className="text-lg font-normal text-gray-400">/year</span>
                     </p>
-                    <p className="text-xs text-gray-400">+ 18% GST = ₹5,900/month</p>
+                    <p className="text-xs text-gray-400">+ 18% GST = ₹17,700 first year</p>
                 </div>
 
                 {/* CTA */}
@@ -112,13 +112,13 @@ function UpgradeWall({
                         className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-200 rounded-xl"
                     >
                         <Zap className="h-4 w-4" />
-                        Upgrade to Premium
+                        Upgrade to Full Suite
                         <ArrowRight className="h-4 w-4" />
                     </Button>
                 </Link>
 
                 <p className="text-xs text-gray-400">
-                    Secured by Razorpay. Cancel anytime.
+                    Secured by Razorpay.
                 </p>
             </div>
         </div>
