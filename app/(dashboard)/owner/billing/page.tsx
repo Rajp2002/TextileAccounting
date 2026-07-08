@@ -162,7 +162,10 @@ export default async function BillingPage() {
     const referralStats = await getReferralStatsAction()
 
     const isActivating = subscription?.status === 'authenticated' || 
-                         (subscription?.status === 'created' && subscription.razorpay_order_id)
+                         (subscription?.status === 'created' && 
+                          subscription.razorpay_order_id && 
+                          subscription.created_at && 
+                          new Date(subscription.created_at).getTime() > Date.now() - 15 * 60 * 1000)
 
     // ── LAYOUT START ───────────────────────────────────────────────────────────
     return (
