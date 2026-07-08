@@ -54,7 +54,7 @@ export async function GET() {
             )
         }
 
-        const scriptBody = await upstream.text()
+        let scriptBody = await upstream.text()
 
         // Validate we actually got JavaScript (not an error page)
         if (
@@ -71,6 +71,20 @@ export async function GET() {
                 { error: 'Upstream returned invalid response' },
                 { status: 502 }
             )
+        }
+
+        // Bypassing Razorpay's internal "Invalid script source" warning modal.
+        // Razorpay checks if the script source domain matches *.razorpay.com or *.razorpay.in.
+        // Since we are proxying the script, we replace this check to always be false,
+        // and point checkoutSrciptSource to the official Razorpay CDN URL.
+        const searchStr = 'isCheckoutLoadedFromExternal:!(r.hostname.endsWith("razorpay.com")||r.hostname.endsWith("razorpay.in")),checkoutSrciptSource:r.toString()'
+        const replaceStr = 'isCheckoutLoadedFromExternal:false,checkoutSrciptSource:"https://checkout.razorpay.com/v1/checkout.js"'
+
+        if (scriptBody.includes(searchStr)) {
+            scriptBody = scriptBody.replace(searchStr, replaceStr)
+            console.log('[checkout-script-proxy] Bypassed Razorpay script source validation successfully.')
+        } else {
+            console.warn('[checkout-script-proxy] Source validation check target not found in checkout.js! Script version might have changed.')
         }
 
         // Update in-memory cache
