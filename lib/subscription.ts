@@ -74,6 +74,8 @@ export async function getSubscriptionDetail(orgId: string): Promise<{
         paid_count: number | null
         total_count: number | null
         razorpay_subscription_id: string | null
+        razorpay_order_id: string | null
+        billing_model: string | null
         cancel_at_cycle_end: boolean
     } | null
 }> {
@@ -81,7 +83,7 @@ export async function getSubscriptionDetail(orgId: string): Promise<{
 
     const { data } = await supabase
         .from('org_subscriptions')
-        .select('status, plan_tier, plan_id, current_start, current_end, paid_count, total_count, razorpay_subscription_id, cancel_at_cycle_end')
+        .select('status, plan_tier, plan_id, current_start, current_end, paid_count, total_count, razorpay_subscription_id, razorpay_order_id, billing_model, cancel_at_cycle_end')
         .eq('org_id', orgId)
         .order('created_at', { ascending: false })
         .limit(1)
