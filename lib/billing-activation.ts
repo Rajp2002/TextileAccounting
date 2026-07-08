@@ -17,21 +17,41 @@ export async function activateInitialPurchase({
 }) {
     const supabase = createAdminClient()
 
-    // 1. Idempotency Check: Check if this payment already exists
-    const { data: existingPayment } = await supabase
+    console.log(`[billing-activation] Starting activation for org: ${orgId}, order: ${razorpayOrderId}, payment: ${razorpayPaymentId}, amount: ${amountPaise}`)
+
+    // 1. Idempotency Check: Check if this payment already exists with 'captured' status
+    let { data: existingPayment } = await supabase
         .from('subscription_payments')
         .select('*')
         .eq('razorpay_payment_id', razorpayPaymentId)
+        .eq('status', 'captured')
         .maybeSingle()
 
+    // Also check if there's any captured payment for this order ID
+    if (!existingPayment) {
+        const { data: payByOrder } = await supabase
+            .from('subscription_payments')
+            .select('*')
+            .eq('razorpay_order_id', razorpayOrderId)
+            .eq('status', 'captured')
+            .maybeSingle()
+        if (payByOrder) {
+            console.log(`[billing-activation] Found existing captured payment by order ID: ${razorpayOrderId}`)
+            existingPayment = payByOrder
+        }
+    } else {
+        console.log(`[billing-activation] Found existing captured payment by payment ID: ${razorpayPaymentId}`)
+    }
+
     if (existingPayment) {
-        // Find existing subscription matching this payment
+        // Find existing subscription matching this payment/order
         const { data: existingSub } = await supabase
             .from('org_subscriptions')
             .select('*')
-            .eq('razorpay_payment_id', razorpayPaymentId)
+            .eq('id', existingPayment.subscription_id)
             .maybeSingle()
 
+        console.log(`[billing-activation] Payment already processed. Returning success. Sub status: ${existingSub?.status}`)
         return {
             success: true,
             subscription: existingSub,
@@ -56,7 +76,24 @@ export async function activateInitialPurchase({
         .maybeSingle()
 
     if (existingSub) {
-        // If it exists but is not active or has old details, update it.
+        if (existingSub.status === 'active' && existingSub.razorpay_payment_id) {
+            console.log(`[billing-activation] Subscription for order ${razorpayOrderId} is already active with payment ${existingSub.razorpay_payment_id}`)
+            const { data: pay } = await supabase
+                .from('subscription_payments')
+                .select('*')
+                .eq('razorpay_payment_id', existingSub.razorpay_payment_id)
+                .eq('status', 'captured')
+                .maybeSingle()
+
+            return {
+                success: true,
+                subscription: existingSub,
+                payment: pay || existingPayment,
+                alreadyProcessed: true,
+            }
+        }
+
+        console.log(`[billing-activation] Updating existing subscription ${existingSub.id} status to active...`)
         const { data: updated, error: updateError } = await supabase
             .from('org_subscriptions')
             .update({
@@ -73,6 +110,7 @@ export async function activateInitialPurchase({
             .single()
 
         if (updateError) {
+            console.error('[billing-activation] Update subscription error:', JSON.stringify(updateError, null, 2))
             Sentry.captureException(updateError, {
                 tags: { component: 'billing-activation', phase: 'update_subscription' },
             })
@@ -82,6 +120,7 @@ export async function activateInitialPurchase({
         subscriptionId = existingSub.id
     } else {
         // Create new active subscription
+        console.log(`[billing-activation] Creating new active subscription for org ${orgId}...`)
         const { data: inserted, error: insertError } = await supabase
             .from('org_subscriptions')
             .insert({
@@ -99,6 +138,7 @@ export async function activateInitialPurchase({
             .single()
 
         if (insertError) {
+            console.error('[billing-activation] Insert subscription error:', JSON.stringify(insertError, null, 2))
             Sentry.captureException(insertError, {
                 tags: { component: 'billing-activation', phase: 'insert_subscription' },
             })
@@ -109,6 +149,7 @@ export async function activateInitialPurchase({
     }
 
     // 3. Insert into subscription_payments
+    console.log(`[billing-activation] Recording payment history...`)
     let insertedPayment = null
     const { data: newPayment, error: paymentError } = await supabase
         .from('subscription_payments')
@@ -126,6 +167,7 @@ export async function activateInitialPurchase({
         .single()
 
     if (paymentError) {
+        console.error('[billing-activation] Insert payment error:', JSON.stringify(paymentError, null, 2))
         if (paymentError.code === '23505') {
             // Concurrent payment insert
             Sentry.captureMessage(

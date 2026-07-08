@@ -77,9 +77,11 @@ export async function POST(req: NextRequest) {
 
     // 4. Server-side validation against Razorpay API
     try {
+        console.log(`[verify-payment] Fetching order from Razorpay: ${razorpay_order_id}`)
         // Fetch order to verify details
         const order = await razorpay.orders.fetch(razorpay_order_id)
         if (!order) {
+            console.error(`[verify-payment] Order ${razorpay_order_id} not found on Razorpay`)
             return NextResponse.json({ error: 'Order not found on Razorpay' }, { status: 400 })
         }
 
@@ -89,6 +91,9 @@ export async function POST(req: NextRequest) {
         const paymentType = notes.payment_type
         const billingModel = notes.billing_model
 
+        console.log(`[verify-payment] Checking order notes: org_id=${notesOrgId} (expected: ${orgId}), payment_type=${paymentType}, billing_model=${billingModel}`)
+        console.log(`[verify-payment] Checking order properties: amount=${order.amount} (expected: ${FIRST_YEAR_TOTAL_PAISE}), currency=${order.currency} (expected: INR)`)
+
         if (
             Number(order.amount) !== FIRST_YEAR_TOTAL_PAISE ||
             order.currency !== 'INR' ||
@@ -96,17 +101,23 @@ export async function POST(req: NextRequest) {
             billingModel !== BILLING_MODEL ||
             notesOrgId !== orgId
         ) {
+            console.error(`[verify-payment] Context mismatch for order: ${razorpay_order_id}`)
             Sentry.captureMessage(`Razorpay order verification failed. Context mismatch for order: ${razorpay_order_id}`, 'warning')
             return NextResponse.json({ error: 'Payment validation failed' }, { status: 400 })
         }
 
+        console.log(`[verify-payment] Fetching payment from Razorpay: ${razorpay_payment_id}`)
         // Fetch payment details to check status and method
         const payment = await razorpay.payments.fetch(razorpay_payment_id)
         if (!payment) {
+            console.error(`[verify-payment] Payment ${razorpay_payment_id} not found on Razorpay`)
             return NextResponse.json({ error: 'Payment not found on Razorpay' }, { status: 400 })
         }
 
+        console.log(`[verify-payment] Checking payment: status=${payment.status}, order_id=${payment.order_id}`)
+
         if (payment.order_id !== razorpay_order_id) {
+            console.error(`[verify-payment] Payment ${razorpay_payment_id} order ID mismatch (expected: ${razorpay_order_id}, got: ${payment.order_id})`)
             return NextResponse.json({ error: 'Payment does not belong to this order' }, { status: 400 })
         }
 
@@ -119,11 +130,14 @@ export async function POST(req: NextRequest) {
             method: payment.method || null,
         })
 
+        console.log(`[verify-payment] Activation successful! Sub end: ${result.subscription?.current_end}`)
+
         return NextResponse.json({
             success: true,
             activeUntil: result.subscription?.current_end,
         })
     } catch (err) {
+        console.error('[verify-payment] Unexpected verification error:', err)
         Sentry.captureException(err, {
             tags: { route: 'billing_verify_payment', phase: 'verification_process' }
         })
