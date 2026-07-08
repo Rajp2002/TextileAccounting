@@ -62,13 +62,26 @@ export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) 
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
-    const loadRazorpayScript = () => {
+    const loadRazorpayScript = (): Promise<boolean> => {
         return new Promise((resolve) => {
-            if (typeof window !== 'undefined' && window.Razorpay) return resolve(true)
+            if (typeof window !== 'undefined' && window.Razorpay) {
+                console.log('[SubscribeButton] Razorpay already available on window')
+                return resolve(true)
+            }
+            const scriptUrl = 'https://checkout.razorpay.com/v1/checkout.js'
+            console.log('[SubscribeButton] Loading Razorpay script from:', scriptUrl)
             const script = document.createElement('script')
-            script.src = 'https://checkout.razorpay.com/v1/checkout.js'
-            script.onload = () => resolve(true)
-            script.onerror = () => resolve(false)
+            script.src = scriptUrl
+            script.onload = () => {
+                const available = typeof window !== 'undefined' && !!window.Razorpay
+                console.log('[SubscribeButton] Script onload fired. window.Razorpay exists:', available)
+                resolve(available)
+            }
+            script.onerror = (event) => {
+                console.error('[SubscribeButton] Script onerror fired for:', scriptUrl, 'Event:', event)
+                console.error('[SubscribeButton] This is typically caused by a content blocker, ad blocker, or CSP restriction.')
+                resolve(false)
+            }
             document.body.appendChild(script)
         })
     }
@@ -80,7 +93,9 @@ export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) 
 
             const isLoaded = await loadRazorpayScript()
             if (!isLoaded) {
-                throw new Error('Failed to load payment gateway. Please check your internet connection.')
+                throw new Error(
+                    'Razorpay Checkout could not load. Disable content blockers/adblock for this site or try another browser.'
+                )
             }
 
             // 1. Create Order via our backend endpoint

@@ -9,7 +9,7 @@ const cspHeader = `
   style-src 'self' 'unsafe-inline';
   img-src 'self' data: https:;
   font-src 'self' data: https://checkout.razorpay.com;
-  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.ingest.sentry.io https://api.razorpay.com https://lumberjack.razorpay.com https://lumberjack-dx.razorpay.com;
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.ingest.sentry.io https://api.razorpay.com https://checkout.razorpay.com https://lumberjack.razorpay.com https://lumberjack-dx.razorpay.com;
   media-src 'self';
   worker-src 'self' blob:;
   frame-src https://api.razorpay.com https://checkout.razorpay.com;
