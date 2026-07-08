@@ -62,28 +62,53 @@ export function SubscribeButton({ onSuccess, className }: SubscribeButtonProps) 
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
-    const loadRazorpayScript = (): Promise<boolean> => {
+    /**
+     * Load a script by URL and resolve true if window.Razorpay becomes available.
+     */
+    const tryLoadScript = (url: string): Promise<boolean> => {
         return new Promise((resolve) => {
-            if (typeof window !== 'undefined' && window.Razorpay) {
-                console.log('[SubscribeButton] Razorpay already available on window')
-                return resolve(true)
-            }
-            const scriptUrl = 'https://checkout.razorpay.com/v1/checkout.js'
-            console.log('[SubscribeButton] Loading Razorpay script from:', scriptUrl)
             const script = document.createElement('script')
-            script.src = scriptUrl
+            script.src = url
             script.onload = () => {
                 const available = typeof window !== 'undefined' && !!window.Razorpay
-                console.log('[SubscribeButton] Script onload fired. window.Razorpay exists:', available)
+                console.log(`[SubscribeButton] Script loaded from ${url}. window.Razorpay:`, available)
                 resolve(available)
             }
-            script.onerror = (event) => {
-                console.error('[SubscribeButton] Script onerror fired for:', scriptUrl, 'Event:', event)
-                console.error('[SubscribeButton] This is typically caused by a content blocker, ad blocker, or CSP restriction.')
+            script.onerror = () => {
+                console.warn(`[SubscribeButton] Script blocked/failed from: ${url}`)
                 resolve(false)
             }
             document.body.appendChild(script)
         })
+    }
+
+    /**
+     * Load Razorpay Checkout with ad-blocker bypass.
+     *
+     * Strategy:
+     * 1. If Razorpay is already on window → done
+     * 2. Try our same-origin proxy (/api/billing/checkout-script) — ad blockers
+     *    won't block this because it's a first-party request
+     * 3. Fall back to the direct Razorpay CDN URL (for users without ad blockers,
+     *    this is faster since it may already be in browser cache)
+     */
+    const loadRazorpayScript = async (): Promise<boolean> => {
+        if (typeof window !== 'undefined' && window.Razorpay) {
+            console.log('[SubscribeButton] Razorpay already available on window')
+            return true
+        }
+
+        // Try #1: Same-origin proxy (bypasses ad blockers)
+        console.log('[SubscribeButton] Attempting load via proxy...')
+        const proxyLoaded = await tryLoadScript('/api/billing/checkout-script')
+        if (proxyLoaded) return true
+
+        // Try #2: Direct CDN (fallback — may be blocked by ad blockers)
+        console.log('[SubscribeButton] Proxy failed, trying direct CDN...')
+        const cdnLoaded = await tryLoadScript('https://checkout.razorpay.com/v1/checkout.js')
+        if (cdnLoaded) return true
+
+        return false
     }
 
     async function handleSubscribe() {
