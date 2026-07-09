@@ -1,0 +1,33 @@
+{
+  "batchNumber": 2,
+  "issuesCompleted": [
+    "MASTER-002",
+    "MASTER-003",
+    "MASTER-005",
+    "MASTER-006",
+    "MASTER-008",
+    "MASTER-009",
+    "MASTER-011",
+    "MASTER-012",
+    "MASTER-013",
+    "MASTER-015",
+    "EST-002",
+    "EST-004"
+  ],
+  "passCount": 0,
+  "failCount": 12,
+  "runningPassTotal": 0,
+  "runningFailTotal": 24,
+  "remainingIssues": 121,
+  "checkpointSaved": "CHECKPOINT.json",
+  "lastCompletedIssue": "EST-004",
+  "nextIssueToProcess": "EST-006",
+  "matrixCounts": {
+    "pass": 196,
+    "fail": 37,
+    "blocked": 22,
+    "not_applicable": 1,
+    "code_verified": 121,
+    "not_run": 0
+  }
+}

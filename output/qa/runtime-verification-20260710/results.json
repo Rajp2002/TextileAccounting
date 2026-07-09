@@ -716,36 +716,30 @@
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Bulk-add looms with duplicate names or types.",
       "expected": "Intended duplicate rule is enforced; no silent overwrite.",
-      "status": "code_verified",
-      "actual": "Batch 24E source-fixes normalized duplicate loom-name prevention without making the row pass-ready. addMachine, addMachinesBulk, and updateMachine now block trim/case-normalized org-scoped duplicate names before write and map future database duplicate-guard errors to a clear duplicate message. Migration `20260704120000_batch_24e_master_data_loom_guardrails.sql` was revised from a retroactive unique index to a trigger-backed guard that preserves existing duplicate rows while blocking future normalized duplicates; it was reportedly applied during the production DB push incident. Controlled QA/browser duplicate-flow proof is still required before pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Bulk-add looms with duplicate names or types.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Intended duplicate rule is enforced; no silent overwrite. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json",
-        "lib/master-data-loom-guardrails.ts",
-        "app/(dashboard)/owner/actions.ts",
-        "supabase/migrations/20260704120000_batch_24e_master_data_loom_guardrails.sql",
-        "__tests__/batch24e-master-data-guardrails.test.ts"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 13/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "Medium",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:46.923Z"
     },
     {
       "id": "MASTER-003",
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Edit loom name/type and refresh.",
       "expected": "Assignment and historical production links remain intact.",
-      "status": "code_verified",
-      "actual": "Renaming a loom is source-verified to update the machine row by ID/org while production logs and assignments continue linking by machine_id. Machine updates are covered by the audit_machines trigger. No production rename was executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Edit loom name/type and refresh.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Assignment and historical production links remain intact. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/setup-master-source-evidence-20260624.json",
-        "app/(dashboard)/owner/actions.ts:155",
-        "app/(dashboard)/owner/actions.ts:182",
-        "supabase/migrations/20240216123000_initial_schema.sql:40",
-        "supabase/migrations/20260326000000_audit_trail_expansion.sql:30"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 14/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:47.174Z"
     },
     {
       "id": "MASTER-004",
@@ -766,38 +760,30 @@
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Deactivate/delete loom with active order or history.",
       "expected": "Protected action; history preserved; downstream UI remains consistent.",
-      "status": "code_verified",
-      "actual": "Batch 24E source-fixes owner/supervisor loom lifecycle protection without making the row pass-ready. Owner delete now routes through a guarded server action, owner deactivate checks active target/assignments/history before setting inactive, supervisor delete-with-code checks protected references before consuming an access code, and cost-analysis null-target unlink now runs the same guard and no longer silently deactivates protected looms. QA/browser proof is still required before pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Deactivate/delete loom with active order or history.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Protected action; history preserved; downstream UI remains consistent. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json",
-        "lib/master-data-loom-guardrails.ts",
-        "app/(dashboard)/owner/actions.ts",
-        "app/(dashboard)/supervisor/actions.ts",
-        "components/MachineManagement.tsx",
-        "__tests__/batch24e-master-data-guardrails.test.ts"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 15/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "Medium",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:47.421Z"
     },
     {
       "id": "MASTER-006",
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Add piece-rate worker with decimal rate.",
       "expected": "Rate persists accurately and appears in production/payroll.",
-      "status": "code_verified",
-      "actual": "Rate flow is source-verified: shift setup derives rate_per_m from the assigned order's worker_rate_per_m, production logging snapshots that value into production_logs.worker_rate_snapshot, and payroll settlement recomputes gross from meters times worker_rate_snapshot. No new production/payroll runtime execution was done in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Add piece-rate worker with decimal rate.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Rate persists accurately and appears in production/payroll. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/setup-master-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/actions.ts:790",
-        "app/(dashboard)/supervisor/actions.ts:836",
-        "app/(dashboard)/supervisor/actions.ts:1117",
-        "app/(dashboard)/owner/payroll/actions.ts:87",
-        "app/(dashboard)/owner/payroll/actions.ts:96"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 16/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:47.668Z"
     },
     {
       "id": "MASTER-007",
@@ -818,38 +804,30 @@
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Add daily worker and record attendance.",
       "expected": "Daily payroll uses attendance and never exceeds configured monthly salary.",
-      "status": "code_verified",
-      "actual": "Daily fixed-worker payroll is source-verified: daily workers use attendance present-count within the cycle, calculateDailyPay(daysWorked, monthly_salary / 30), and cap calculated pay at monthly_salary. This aligns with the already-recorded PAY-005 evidence but was not separately re-executed in the browser here.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Add daily worker and record attendance.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Daily payroll uses attendance and never exceeds configured monthly salary. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/setup-master-source-evidence-20260624.json",
-        "app/(dashboard)/owner/payroll/actions.ts:112",
-        "app/(dashboard)/owner/payroll/actions.ts:113",
-        "app/(dashboard)/owner/payroll/actions.ts:123",
-        "app/(dashboard)/owner/payroll/actions.ts:125",
-        "PAY-005"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 17/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:47.927Z"
     },
     {
       "id": "MASTER-009",
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Deactivate worker assigned to a loom.",
       "expected": "Loom/setup becomes visibly incomplete; old logs remain attributed.",
-      "status": "code_verified",
-      "actual": "Unlinking a loom's production target is source-verified to set current_order_id null and status inactive. Factory Today treats a missing current_order_id as missing loom target, while old production logs retain their machine/order/worker snapshots. No production unlink was executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Deactivate worker assigned to a loom.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Loom/setup becomes visibly incomplete; old logs remain attributed. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/setup-master-source-evidence-20260624.json",
-        "app/(dashboard)/owner/actions.ts:1735",
-        "app/(dashboard)/owner/actions.ts:1773",
-        "app/(dashboard)/owner/actions.ts:1776",
-        "app/(dashboard)/owner/today/actions.ts:397",
-        "supabase/migrations/20240216123000_initial_schema.sql:40"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 18/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:48.174Z"
     },
     {
       "id": "MASTER-010",
@@ -870,57 +848,45 @@
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Substitute worker for one dated shift.",
       "expected": "Shift-specific assignment is clear and payroll follows the actual logged worker.",
-      "status": "code_verified",
-      "actual": "Shift-specific assignment is source-verified: the UI has distinct day/night worker selectors, production logging validates the submitted worker against the standing worker for the submitted shift, and payroll follows production_logs.worker_id. No fresh two-shift runtime scenario was executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Substitute worker for one dated shift.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Shift-specific assignment is clear and payroll follows the actual logged worker. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/setup-master-source-evidence-20260624.json",
-        "components/MachineManagement.tsx:758",
-        "components/MachineManagement.tsx:807",
-        "app/(dashboard)/supervisor/actions.ts:1180",
-        "app/(dashboard)/supervisor/actions.ts:1201",
-        "app/(dashboard)/owner/payroll/actions.ts:90"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 19/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:48.419Z"
     },
     {
       "id": "MASTER-012",
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Assign order/run to loom, then replace it.",
       "expected": "New logs use the new context; historical logs retain old context.",
-      "status": "code_verified",
-      "actual": "Assignment changes are source-verified to affect future defaults while production logs retain worker_id/order_id/machine_id/rate snapshots. Existing dated shift assignments are stored separately from standing machine_assignments. No browser run across two dates was executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Assign order/run to loom, then replace it.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: New logs use the new context; historical logs retain old context. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/setup-master-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/actions.ts:955",
-        "app/(dashboard)/supervisor/actions.ts:976",
-        "app/(dashboard)/supervisor/actions.ts:995",
-        "app/(dashboard)/supervisor/actions.ts:1107",
-        "supabase/migrations/20260404010000_orders_v2_flat.sql:29"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 20/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:48.658Z"
     },
     {
       "id": "MASTER-013",
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Complete/cancel/delete order or close run.",
       "expected": "Related looms unlink and become inactive as intended; unrelated looms remain unchanged.",
-      "status": "code_verified",
-      "actual": "Closing/cancelling an order is source-verified to unlink only machines whose current_order_id matches that order and set them inactive; completed orders remain retrievable through the archive query. This was not executed as a live order-close mutation in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Complete/cancel/delete order or close run.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Related looms unlink and become inactive as intended; unrelated looms remain unchanged. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/setup-master-source-evidence-20260624.json",
-        "app/(dashboard)/owner/orders/actions.ts:95",
-        "app/(dashboard)/owner/orders/actions.ts:107",
-        "app/(dashboard)/owner/orders/actions.ts:111",
-        "app/(dashboard)/owner/orders/actions.ts:61",
-        "app/(dashboard)/owner/orders/actions.ts:69"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 21/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:48.935Z"
     },
     {
       "id": "MASTER-014",
@@ -946,20 +912,15 @@
       "section": "11. Machines, Workers, and Assignments",
       "scenario": "Worker WhatsApp phone/consent changes.",
       "expected": "Consent rows and sends reflect the latest valid state.",
-      "status": "code_verified",
-      "actual": "Worker WhatsApp consent is source-verified: worker edit/save actions upsert latest notification_consents state, and payslip/advance receipt send functions call checkWhatsAppConsent before sending and log skipped statuses for opted-out or missing consent. No live WhatsApp send was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Worker WhatsApp phone/consent changes.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Consent rows and sends reflect the latest valid state. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/setup-master-source-evidence-20260624.json",
-        "app/(dashboard)/owner/actions.ts:410",
-        "app/(dashboard)/owner/actions.ts:525",
-        "app/(dashboard)/owner/actions.ts:1360",
-        "supabase/functions/send-payslip/index.ts:103",
-        "supabase/functions/send-advance-receipt/index.ts:73",
-        "supabase/functions/_shared/whatsapp.ts:68"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 22/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:49.194Z"
     },
     {
       "id": "EST-001",
@@ -983,19 +944,15 @@
       "section": "12. Estimator and Costing",
       "scenario": "Multi-row blended warp and multi-row weft.",
       "expected": "Each row contributes once; total is exact within agreed rounding.",
-      "status": "code_verified",
-      "actual": "Multi-row blended warp/weft is source-verified: calcFullTotals maps every warp row and every weft row, then reduces row costs/weights once into totals. No runtime blended recipe was executed against production in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Multi-row blended warp and multi-row weft.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Each row contributes once; total is exact within agreed rounding. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "lib/estimator.ts:554",
-        "lib/estimator.ts:571",
-        "lib/estimator.ts:588",
-        "lib/estimator.ts:593",
-        "lib/estimator.ts:607"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 23/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:49.474Z"
     },
     {
       "id": "EST-003",
@@ -1018,18 +975,15 @@
       "section": "12. Estimator and Costing",
       "scenario": "Width entered in centimeters and equivalent inches.",
       "expected": "Equivalent calculation and persisted value.",
-      "status": "code_verified",
-      "actual": "Width cm/inch handling is source-verified: WidthField accepts inch display/input but converts inch values into cm before updating reedSpace, and calcWeftYarnKg treats reedSpace as cm and converts to inches internally. No persistence check was executed in production.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Width entered in centimeters and equivalent inches.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Equivalent calculation and persisted value. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/estimator-quotes-source-evidence-20260624.json",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:651",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:721",
-        "app/(dashboard)/owner/estimator/EstimatorClient.tsx:2111",
-        "lib/estimator.ts:306"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 2; campaign item 24/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.632Z"
+      "updatedAt": "2026-07-09T23:06:49.886Z"
     },
     {
       "id": "EST-005",
