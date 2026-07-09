@@ -1,0 +1,55 @@
+{
+  "artifactType": "runtime-proof-loop-group-a-partial-proof",
+  "generatedAt": "2026-07-05T19:05:37.516Z",
+  "qaEnvFilename": ".env.qa.local",
+  "appUrl": "http://localhost:3000",
+  "supabase": {
+    "cliProjectRefVerifiedBeforeRun": "eutycrtzzxmlkcpipgod",
+    "qaEnvProductionRefCheck": "QA_ENV_NO_PRODUCTION_REF",
+    "qaEnvQaRefCheck": "QA_REF_FOUND_IN_QA_ENV"
+  },
+  "git": {
+    "branch": "codex/runtime-proof-loop-code-verified-to-pass",
+    "head": "e0ed5ff49d3173fafe4a31c42459238e9d381304"
+  },
+  "rowsAttempted": [
+    "DASH-004"
+  ],
+  "proofs": [
+    {
+      "rowId": "DASH-004",
+      "exactExpectedBehavior": "Historical Analytics selected date should not mix stale current values, and returning to today should restore live/current behavior.",
+      "persona": "owner",
+      "stepsPerformed": [
+        "Attempted to log in with reusable owner QA credential after logging out of the supervisor session.",
+        "Attempted to open /owner/analytics on the local QA-env app.",
+        "Captured visible login/auth state and screenshot after redirect."
+      ],
+      "observedResult": {
+        "loginRetryState": {
+          "href": "http://localhost:3000/login",
+          "title": "Weavly — Factory OS for Textile Weaving Units",
+          "hasLoginForm": true,
+          "visibleError": "Incorrect"
+        },
+        "afterRetryState": {
+          "dateInputValue": null,
+          "hasLoginForm": true,
+          "headings": [
+            "Welcome back"
+          ],
+          "href": "http://localhost:3000/login",
+          "title": "Weavly — Factory OS for Textile Weaving Units"
+        },
+        "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/runtime-proof-loop/DASH-004-initial-today.png"
+      },
+      "decision": "left_code_verified",
+      "whyNotPromoted": "Owner analytics browser proof could not proceed because the reusable owner credential returned an incorrect-email-or-password error in this local QA-env session. No auth bypass or production fallback was attempted.",
+      "noProductionMutationOccurred": true,
+      "noSecretsCaptured": true,
+      "remainingLimitation": "Needs a valid owner QA session or a fresh disposable owner QA account before historical date switching can be tested."
+    }
+  ],
+  "productionMutation": false,
+  "secretsPrintedOrCaptured": false
+}

@@ -1,0 +1,71 @@
+{
+  "campaign": "Runtime Verification Campaign",
+  "runId": "RUNTIMEQA-20260710-0412-4R4C",
+  "checkpointTimestamp": "2026-07-09T23:05:54.835Z",
+  "batchNumber": 1,
+  "completedIssueCount": 12,
+  "remainingIssueCount": 133,
+  "passTotalThisCampaign": 0,
+  "failTotalThisCampaign": 12,
+  "lastCompletedIssueId": "MASTER-001",
+  "nextIssueId": "MASTER-002",
+  "authoritativeMatrix": "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+  "tracker": "output/qa/runtime-verification-20260710/results.json",
+  "evidenceDirectory": "output/qa/runtime-verification-20260710/evidence",
+  "branch": "codex/runtime-verification-20260710",
+  "commit": "cfeca96a5dc7bf2f687e82474b9b392e49ed0ea2",
+  "application": {
+    "name": "Weavly",
+    "packageVersion": "0.1.0",
+    "deployedUrl": "https://textile-accounting.vercel.app",
+    "deployedCommit": "not exposed by the application",
+    "qaUrl": "http://localhost:3001",
+    "qaDatabaseProjectRef": "eutycrtzzxmlkcpipgod",
+    "productionDatabaseProjectRef": "vzhwahudircrpgtitwzd",
+    "timezone": "Asia/Kolkata"
+  },
+  "qaAccounts": [
+    {
+      "email": "runtimeqa.20260710.0408.d6p6.owner@example.com",
+      "role": "owner",
+      "factory": "RUNTIMEQA-20260710-0408-D6P6-Factory",
+      "creationAttemptTimestamp": "2026-07-10T04:10:00+05:30",
+      "environment": "production deployment",
+      "status": "setup_failed",
+      "notes": "Signup returned 'Failed to create organization. Please try again.'; no usable tenant was created and credentials were discarded."
+    },
+    {
+      "email": "runtimeqa.20260710.0412.4r4c.owner@example.com",
+      "role": "owner",
+      "factory": "RUNTIMEQA-20260710-0412-4R4C-Factory",
+      "creationAttemptTimestamp": "2026-07-10T04:13:00+05:30",
+      "environment": "production deployment",
+      "status": "setup_failed",
+      "notes": "Valid form submission produced neither navigation nor a success/error result after 22 seconds; retained privately for one QA-environment recovery attempt."
+    },
+    {
+      "email": "runtimeqa.20260710.0428.y5ci.owner@gmail.com",
+      "role": "owner",
+      "factory": "RUNTIMEQA-20260710-0428-Y5CI-Factory",
+      "creationAttemptTimestamp": "2026-07-10T04:30:00+05:30",
+      "environment": "isolated QA deployment on localhost:3001",
+      "status": "setup_failed",
+      "notes": "Valid signup returned 'Failed to create organization. Please try again.'; exact QA reconciliation confirmed rollback and zero matching account rows."
+    }
+  ],
+  "environmentNotes": [
+    "The GitHub repository has no issue objects or Code Verified label; the tracked matrix is the authoritative queue.",
+    "The prior ignored runtime checkpoint was imported under prior-checkpoint; PROD-029 was already pass in the authoritative matrix and will not be reprocessed.",
+    "The dirty main worktree and its localhost:3000 server are out of scope; this campaign uses a clean worktree and isolated port 3001.",
+    "No passwords, tokens, cookies, service-role keys, or database URLs are stored in this checkpoint."
+  ],
+  "currentQaAccount": null,
+  "matrixCounts": {
+    "pass": 196,
+    "fail": 25,
+    "blocked": 22,
+    "not_applicable": 1,
+    "code_verified": 133,
+    "not_run": 0
+  }
+}

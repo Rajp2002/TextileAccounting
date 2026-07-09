@@ -1,0 +1,148 @@
+{
+  "artifactType": "runtime-proof-loop-group-a-proof",
+  "generatedAt": "2026-07-05T19:02:04.833Z",
+  "qaEnvFilename": ".env.qa.local",
+  "appUrl": "http://localhost:3000",
+  "appStart": {
+    "commandPattern": "set -a; source .env.qa.local; set +a; npm run dev",
+    "qaEnvExplicitlySourced": true,
+    "devServerObservedLocalUrl": "http://localhost:3000",
+    "nextReportedEnvFiles": [
+      ".env.local"
+    ],
+    "localEnvProductionRefSentinel": "LOCAL_ENV_NOT_PRODUCTION_OR_MISSING",
+    "note": "The shell explicitly sourced .env.qa.local. Next dev also reported .env.local; sentinel checks found no production ref in .env.local. No env values were printed or saved."
+  },
+  "supabase": {
+    "cliProjectRefVerifiedBeforeRun": "eutycrtzzxmlkcpipgod",
+    "qaRefExpected": "eutycrtzzxmlkcpipgod",
+    "productionRefExpectedButNotUsed": "vzhwahudircrpgtitwzd",
+    "qaEnvProductionRefCheck": "QA_ENV_NO_PRODUCTION_REF",
+    "qaEnvQaRefCheck": "QA_REF_FOUND_IN_QA_ENV"
+  },
+  "git": {
+    "branch": "codex/runtime-proof-loop-code-verified-to-pass",
+    "head": "e0ed5ff49d3173fafe4a31c42459238e9d381304",
+    "originMain": "e0ed5ff49d3173fafe4a31c42459238e9d381304"
+  },
+  "rowsAttempted": [
+    "PROD-029"
+  ],
+  "proofs": [
+    {
+      "rowId": "PROD-029",
+      "exactExpectedBehavior": "Visible production terminology must say shift meters / shift-total meters and must not claim real raw opening/closing counter proof where synthetic opening/closing values are used.",
+      "environment": {
+        "type": "local app with QA env explicitly sourced",
+        "dateTime": "2026-07-05T19:02:04.833Z",
+        "appUrl": "http://localhost:3000",
+        "branch": "codex/runtime-proof-loop-code-verified-to-pass",
+        "commit": "e0ed5ff49d3173fafe4a31c42459238e9d381304"
+      },
+      "personas": [
+        "logged-out public visitor",
+        "owner QA credential for owner route reachability",
+        "supervisor QA credential for production route"
+      ],
+      "stepsPerformed": [
+        "Opened local QA app at /, /#pricing, and /#faq in the in-app browser.",
+        "Checked bounded rendered page text for required shift-meter terminology and forbidden raw opening/closing proof phrases.",
+        "Logged in with the reusable owner QA credential, opened /owner/today, and observed that the setup checklist panel was not rendered for the already-complete reusable tenant.",
+        "Logged out, logged in with the reusable supervisor QA credential, opened /supervisor/dashboard, waited for floor data loading to finish, and checked the rendered production logging copy.",
+        "Captured screenshots and console warning/error checks for the exercised surfaces."
+      ],
+      "observedResult": {
+        "publicLandingPricingFaq": [
+          {
+            "label": "landing",
+            "observedUrl": "http://localhost:3000/",
+            "title": "Weavly — Factory OS for Textile Weaving Units",
+            "desiredSnippets": {
+              "log shift totals": "ows how a weaving unit actually moves work: quote the fabric, assign the floor, log shift totals, dispatch stock, and settle people correctly. 01 Estimate the job Enter yarn specs, crimp, conversi",
+              "shift meter logs": "WhatsApp. No missed meters. Weavly connects fabric estimates, loom assignments, shift meter logs, dispatches, advances, and payroll so owners know what happened on the floor without chasing regist",
+              "shift meters": "aving units. Factory vocabulary inside the product Market runs, Upaad, Kharchi, shift meters, loom assignments, worker rates, and dispatch shortages are first-class workflows. Built for the fl",
+              "shift-total meters": "stimating Orders, market runs, and dispatch tracking Shift production logs with shift-total meters Payroll, advances, and settlement WhatsApp briefs, payslips, and receipts Operational analytics for"
+            },
+            "forbiddenMatches": [],
+            "consoleMessages": [],
+            "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/runtime-proof-loop/PROD-029-landing.png"
+          },
+          {
+            "label": "pricing",
+            "observedUrl": "http://localhost:3000/#pricing",
+            "title": "Weavly — Factory OS for Textile Weaving Units",
+            "desiredSnippets": {
+              "log shift totals": "ows how a weaving unit actually moves work: quote the fabric, assign the floor, log shift totals, dispatch stock, and settle people correctly. 01 Estimate the job Enter yarn specs, crimp, conversi",
+              "shift meter logs": "WhatsApp. No missed meters. Weavly connects fabric estimates, loom assignments, shift meter logs, dispatches, advances, and payroll so owners know what happened on the floor without chasing regist",
+              "shift meters": "aving units. Factory vocabulary inside the product Market runs, Upaad, Kharchi, shift meters, loom assignments, worker rates, and dispatch shortages are first-class workflows. Built for the fl",
+              "shift-total meters": "stimating Orders, market runs, and dispatch tracking Shift production logs with shift-total meters Payroll, advances, and settlement WhatsApp briefs, payslips, and receipts Operational analytics for"
+            },
+            "forbiddenMatches": [],
+            "consoleMessages": [],
+            "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/runtime-proof-loop/PROD-029-pricing.png"
+          },
+          {
+            "label": "faq",
+            "observedUrl": "http://localhost:3000/#faq",
+            "title": "Weavly — Factory OS for Textile Weaving Units",
+            "desiredSnippets": {
+              "log shift totals": "ows how a weaving unit actually moves work: quote the fabric, assign the floor, log shift totals, dispatch stock, and settle people correctly. 01 Estimate the job Enter yarn specs, crimp, conversi",
+              "shift meter logs": "WhatsApp. No missed meters. Weavly connects fabric estimates, loom assignments, shift meter logs, dispatches, advances, and payroll so owners know what happened on the floor without chasing regist",
+              "shift meters": "aving units. Factory vocabulary inside the product Market runs, Upaad, Kharchi, shift meters, loom assignments, worker rates, and dispatch shortages are first-class workflows. Built for the fl",
+              "shift-total meters": "stimating Orders, market runs, and dispatch tracking Shift production logs with shift-total meters Payroll, advances, and settlement WhatsApp briefs, payslips, and receipts Operational analytics for"
+            },
+            "forbiddenMatches": [],
+            "consoleMessages": [],
+            "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/runtime-proof-loop/PROD-029-faq.png"
+          }
+        ],
+        "ownerFactoryToday": {
+          "observedUrl": "http://localhost:3000/owner/today",
+          "title": "Factory Today — Weavly",
+          "setupTextRendered": false,
+          "forbiddenMatches": [],
+          "consoleMessages": [],
+          "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/runtime-proof-loop/PROD-029-owner-today-setup.png",
+          "note": "The reusable owner tenant was already set up, so the setup checklist copy was not visible on this runtime pass."
+        },
+        "supervisorProduction": {
+          "observedUrl": "http://localhost:3000/supervisor/dashboard",
+          "title": "Weavly — Factory OS for Textile Weaving Units",
+          "isStillSyncing": false,
+          "headings": [
+            "Shift Meter Log"
+          ],
+          "snippets": {
+            "saveShiftLogs": "Activate looms in setup before logging shift meters. Add shift meters or downtime reasons to save. Save shift logs",
+            "shiftMeters": "B21B-ORDER008-20260701212052 Factory Factory floor DAILY WORK Shift Meters Workers Attendance SETUP Looms B21B-ORDER008-20260701212052 Owner English Log out PULL TO REFRESH Viewing as Owner Switch to Owner View Shift Meter Log 0/0 ass",
+            "shiftReadiness": "g 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift meters. Add shift meters or downtime reasons t",
+            "totalMetres": "iewing as Owner Switch to Owner View Shift Meter Log 0/0 assigned Copy previous Day Night Enter the total metres produced on each loom for this shift. SHIFT READINESS Ready to submit when meter entries are done 0/0 logs No looms found Activate looms in setup before logging shift m"
+          },
+          "forbiddenMatches": [],
+          "consoleMessages": [],
+          "screenshot": "/Users/rajpatel/Projects/textile Saas/output/qa/runtime-proof-loop/PROD-029-supervisor-dashboard-loaded.png"
+        }
+      },
+      "evidencePaths": [
+        "/Users/rajpatel/Projects/textile Saas/output/qa/runtime-proof-loop/PROD-029-landing.png",
+        "/Users/rajpatel/Projects/textile Saas/output/qa/runtime-proof-loop/PROD-029-pricing.png",
+        "/Users/rajpatel/Projects/textile Saas/output/qa/runtime-proof-loop/PROD-029-faq.png",
+        "/Users/rajpatel/Projects/textile Saas/output/qa/runtime-proof-loop/PROD-029-owner-today-setup.png",
+        "/Users/rajpatel/Projects/textile Saas/output/qa/runtime-proof-loop/PROD-029-supervisor-dashboard-loaded.png"
+      ],
+      "whyThisSatisfiesExpectedBehavior": "The rendered public landing/pricing/FAQ surfaces contained shift meters, shift-total meters, shift meter logs, and log shift totals language, with zero forbidden raw opening/closing proof phrases. The authenticated supervisor production surface, which is the UI that submits shift totals while the code stores synthetic opening/closing values, showed Shift Meter Log / Shift Meters / total metres produced / Save shift logs copy and zero forbidden raw opening/closing proof phrases after loading finished.",
+      "noProductionMutationOccurred": true,
+      "noSecretsCaptured": true,
+      "remainingLimitation": "The setup checklist copy path was not independently rendered because the reusable owner QA tenant was already set up. No row other than PROD-029 was attempted in this artifact."
+    }
+  ],
+  "rowDecisions": [
+    {
+      "rowId": "PROD-029",
+      "decision": "pass_candidate",
+      "rationale": "Core expected behavior was proven in browser against the local QA-env app; no production ref or secrets were used."
+    }
+  ],
+  "productionMutation": false,
+  "secretsPrintedOrCaptured": false
+}

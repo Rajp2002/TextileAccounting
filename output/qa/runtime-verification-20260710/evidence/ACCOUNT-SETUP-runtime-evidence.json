@@ -1,0 +1,52 @@
+{
+  "evidenceType": "qa-account-provisioning-runtime",
+  "capturedAt": "2026-07-10T04:32:35+05:30",
+  "timezone": "Asia/Kolkata",
+  "application": {
+    "name": "Weavly",
+    "packageVersion": "0.1.0",
+    "repositoryCommit": "cfeca96a5dc7bf2f687e82474b9b392e49ed0ea2",
+    "productionUrl": "https://textile-accounting.vercel.app/signup",
+    "qaUrl": "http://localhost:3001/signup",
+    "qaDatabaseProjectRef": "eutycrtzzxmlkcpipgod"
+  },
+  "attempts": [
+    {
+      "accountEmail": "runtimeqa.20260710.0408.d6p6.owner@example.com",
+      "factory": "RUNTIMEQA-20260710-0408-D6P6-Factory",
+      "environment": "production deployment",
+      "observed": "The valid signup form posted and displayed 'Failed to create organization. Please try again.'",
+      "result": "fail"
+    },
+    {
+      "accountEmail": "runtimeqa.20260710.0412.4r4c.owner@example.com",
+      "factory": "RUNTIMEQA-20260710-0412-4R4C-Factory",
+      "environment": "production deployment and isolated QA deployment",
+      "observed": "Production submission never reached onboarding. After removing a prior QA session, the QA submission executed createOrganizationAndRedirect but created no organization, profile, or auth user.",
+      "result": "fail"
+    },
+    {
+      "accountEmail": "runtimeqa.20260710.0428.y5ci.owner@gmail.com",
+      "factory": "RUNTIMEQA-20260710-0428-Y5CI-Factory",
+      "environment": "isolated clean worktree on localhost:3001 with QA database",
+      "observed": "The valid signup form posted and displayed 'Failed to create organization. Please try again.'",
+      "result": "fail"
+    }
+  ],
+  "databaseReconciliation": {
+    "accountEmail": "runtimeqa.20260710.0412.4r4c.owner@example.com",
+    "factory": "RUNTIMEQA-20260710-0412-4R4C-Factory",
+    "organizationCount": 0,
+    "profileCount": 0,
+    "authUserCount": 0,
+    "rollbackObserved": true,
+    "queryScope": "Exact QA factory name and email only; no unrelated tenant rows were saved."
+  },
+  "browserEvidence": [
+    "evidence/ACCOUNT-SETUP-signup-failed.png"
+  ],
+  "consoleWarningsOrErrors": [],
+  "conclusion": "A brand-new dedicated QA trial tenant cannot be provisioned through the application after reasonable recovery across production and QA. Account-dependent verification therefore meets the campaign's explicit FAIL condition: required setup fails.",
+  "secretsCaptured": false,
+  "nonQaTenantMutated": false
+}

@@ -1,0 +1,3483 @@
+{
+  "artifactType": "runtime-proof-loop-plan",
+  "generatedAt": "2026-07-05T18:52:07.482Z",
+  "objectiveSource": "/Users/rajpatel/.codex/attachments/e18a210d-6ab9-4323-926a-a1989638b036/goal-objective.md",
+  "currentMainHash": "e0ed5ff49d3173fafe4a31c42459238e9d381304",
+  "currentHeadHash": "e0ed5ff49d3173fafe4a31c42459238e9d381304",
+  "branch": "codex/runtime-proof-loop-code-verified-to-pass",
+  "currentCounts": {
+    "total": 377,
+    "pass": 195,
+    "fail": 13,
+    "blocked": 22,
+    "not_applicable": 1,
+    "code_verified": 146,
+    "not_run": 0
+  },
+  "sourcesRead": [
+    "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+    "docs/pilot-remediation/FIX_LOG.md",
+    "docs/pilot-remediation/LOOP_STATE.md",
+    "docs/pilot-remediation/FAILURE_BACKLOG.md",
+    "docs/pilot-remediation/RETEST_PLAN.md",
+    "docs/pilot-remediation/DOMAIN_INVARIANTS.md",
+    "docs/pilot-remediation/PILOT_READY_DEFINITION.md",
+    "/Users/rajpatel/.codex/skills/weavly-prepilot-runner/SKILL.md",
+    "/Users/rajpatel/.codex/skills/weavly-prepilot-runner/references/evidence-rules.md",
+    "/Users/rajpatel/.codex/skills/weavly-qa-account-setup/SKILL.md",
+    "/Users/rajpatel/.codex/skills/weavly-qa-account-setup/references/account-model.md",
+    "/Users/rajpatel/.codex/skills/weavly-browser-login/SKILL.md",
+    "/Users/rajpatel/.codex/skills/weavly-business-reconciliation/SKILL.md",
+    "/Users/rajpatel/.codex/skills/weavly-business-reconciliation/references/reconciliation-map.md"
+  ],
+  "safety": {
+    "productionMutationAllowed": false,
+    "productionDbCommandsAllowed": false,
+    "printSecretsAllowed": false,
+    "npmAuditAllowed": false,
+    "packageInstallAllowed": false,
+    "lockfileMutationAllowed": false,
+    "promoteWithoutRuntimeProofAllowed": false,
+    "proofArtifactsDir": "output/qa/runtime-proof-loop",
+    "supabaseGuard": {
+      "localProjectRef": "eutycrtzzxmlkcpipgod",
+      "allowedQaRef": "eutycrtzzxmlkcpipgod",
+      "productionRef": "vzhwahudircrpgtitwzd",
+      "status": "qa_ref_ok",
+      "supabaseCommandsAllowed": true,
+      "note": "Supabase commands may be considered only for rows that require QA DB proof and only under the remaining safety rules."
+    }
+  },
+  "environmentAndPersonas": {
+    "allowedEnvironment": [
+      "local app connected to QA data",
+      "QA deployment"
+    ],
+    "disallowedEnvironment": [
+      "production URL",
+      "production DB",
+      "non-QA tenant data"
+    ],
+    "personas": [
+      "owner",
+      "supervisor"
+    ],
+    "credentialHandling": "Use private weavly-browser-login secret loader; never print passwords, tokens, cookies, auth headers, Supabase keys, service-role keys, DB URLs, or request bodies."
+  },
+  "priorityOrder": [
+    {
+      "group": "A",
+      "name": "Recent low-risk browser/runtime proof",
+      "status": "candidate_for_safe_local_or_qa_browser_runtime_proof",
+      "rows": [
+        {
+          "id": "PROD-013",
+          "requiredProof": [
+            "Large positive meter value triggers a non-blocking confirmation.",
+            "Confirmed large value can save.",
+            "Negative value remains blocked."
+          ]
+        },
+        {
+          "id": "PROD-022",
+          "requiredProof": [
+            "Draft key isolation by org/user/date/shift.",
+            "Changing date/shift does not show another draft.",
+            "Returning to original date/shift restores matching draft.",
+            "Save payload uses selected date/shift."
+          ]
+        },
+        {
+          "id": "PROD-023",
+          "requiredProof": [
+            "Refresh/browser crash with restored production draft.",
+            "Restored unsaved draft indicator appears.",
+            "Indicator clears after save or reset."
+          ]
+        },
+        {
+          "id": "PROD-029",
+          "requiredProof": [
+            "User-facing production terminology says shift meters / shift-total meters.",
+            "No raw opening/closing proof claim appears where synthetic values are used."
+          ]
+        },
+        {
+          "id": "SETUP-011",
+          "requiredProof": [
+            "Factory Today setup checklist recognizes completed costing/setup chain.",
+            "Completed costing, active linked loom target, selected-shift worker assignment, active workers, supervisor, payroll config, and plan are represented.",
+            "State remains complete after refresh from persisted data."
+          ]
+        },
+        {
+          "id": "DASH-004",
+          "requiredProof": [
+            "Historical Analytics selected date does not mix stale current values.",
+            "Returning to today restores live/current behavior."
+          ]
+        },
+        {
+          "id": "EST-017",
+          "requiredProof": [
+            "Rapid double click does not create duplicate quote/order/market-run.",
+            "Normal single submit still works.",
+            "This proof does not claim server/database idempotency."
+          ]
+        },
+        {
+          "id": "PROD-002",
+          "requiredProof": [
+            "Day-shift/day-only logging does not require night worker.",
+            "Night-shift without night worker gives actionable selected-shift error.",
+            "Day-only setup/checklist/activation does not falsely fail for missing night worker."
+          ]
+        },
+        {
+          "id": "PROD-004",
+          "requiredProof": [
+            "Substitute mismatch gives reassignment-required behavior.",
+            "Production is not silently attributed to wrong worker."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "B",
+      "name": "DB/security proof after QA ref guard",
+      "status": "qa_ref_ok_candidate",
+      "guard": "qa_ref_ok",
+      "rows": [
+        {
+          "id": "MASTER-002",
+          "requiredProof": [
+            "Duplicate manual add is blocked.",
+            "Duplicate bulk add is blocked.",
+            "Duplicate rename is blocked.",
+            "Trim/case duplicate rejection works.",
+            "Same name in a different org is allowed.",
+            "Different name with same type is allowed.",
+            "DB duplicate guard is proven in QA before promotion."
+          ]
+        },
+        {
+          "id": "MASTER-005",
+          "requiredProof": [
+            "Owner delete/deactivate is blocked for protected looms.",
+            "Supervisor delete-with-code is blocked for protected looms.",
+            "Cost-analysis unlink is blocked for protected looms and does not silently deactivate.",
+            "Unused loom behavior remains intentional."
+          ]
+        },
+        {
+          "id": "SEC-015",
+          "requiredProof": [
+            "Controlled settings change creates audit rows.",
+            "Audit rows include actor, org/action/record, before/after context, and timestamp.",
+            "Sensitive old/new payload values are redacted."
+          ]
+        },
+        {
+          "id": "SEC-009",
+          "requiredProof": [
+            "Owner export is current-org only.",
+            "Export payload excludes or redacts sensitive fields.",
+            "EXPORT audit row exists before payload delivery."
+          ]
+        },
+        {
+          "id": "PAY-006",
+          "requiredProof": [
+            "Attendance RLS date boundaries are applied in QA.",
+            "Supervisor direct writes limited to today; owner direct writes limited to today/past.",
+            "Future direct writes blocked.",
+            "Supervisor past-date edit uses save-time owner access-code server boundary."
+          ]
+        }
+      ]
+    },
+    {
+      "group": "C",
+      "name": "Older code_verified rows grouped by workflow",
+      "status": "defer_until_group_a_done_and_exact_proof_criteria_are_clear",
+      "workflowOrder": [
+        "estimator/quote/order",
+        "production/order boundary",
+        "payroll/kharchi",
+        "dispatch/stock/commercials",
+        "security/export/audit",
+        "offline/release/external-service",
+        "auth/tenant-isolation",
+        "dashboard/ux/signoff-support",
+        "other"
+      ]
+    }
+  ],
+  "codeVerifiedRowCount": 146,
+  "codeVerifiedRowsDiscovered": [
+    {
+      "id": "PROD-013",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Very large but plausible meters.",
+      "expected": "Suspicious-value behavior is explicit.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "A",
+      "priorityRank": 1,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Large positive meter value triggers a non-blocking confirmation.",
+        "Confirmed large value can save.",
+        "Negative value remains blocked."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json; __tests__/batch24b-supervisor-ux-failures.test.ts; lib/production-log-validation.ts; app/(dashboard)/supervisor/dashboard/page.tsx"
+    },
+    {
+      "id": "PROD-022",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Change date/shift while draft exists.",
+      "expected": "Draft stored under correct date/shift and never submitted to another shift.",
+      "severity": "Medium",
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "A",
+      "priorityRank": 2,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Draft key isolation by org/user/date/shift.",
+        "Changing date/shift does not show another draft.",
+        "Returning to original date/shift restores matching draft.",
+        "Save payload uses selected date/shift."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json; lib/production-drafts.ts; app/(dashboard)/supervisor/dashboard/page.tsx; __tests__/batch24d-submit-draft-isolation.test.ts; __tests__/batch24b-supervisor-ux-failures.test.ts"
+    },
+    {
+      "id": "PROD-023",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Refresh/browser crash with draft.",
+      "expected": "Draft restores, clearly marked unsaved.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "A",
+      "priorityRank": 3,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Refresh/browser crash with restored production draft.",
+        "Restored unsaved draft indicator appears.",
+        "Indicator clears after save or reset."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json; __tests__/batch24b-supervisor-ux-failures.test.ts; app/(dashboard)/supervisor/dashboard/page.tsx"
+    },
+    {
+      "id": "PROD-029",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Compare visible “shift meters” terminology with stored synthetic readings.",
+      "expected": "No user-facing claim of real opening/closing counter proof.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "A",
+      "priorityRank": 4,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "User-facing production terminology says shift meters / shift-total meters.",
+        "No raw opening/closing proof claim appears where synthetic values are used."
+      ],
+      "runtimeProofDisposition": "promoted_to_pass_by_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json; __tests__/batch24b-supervisor-ux-failures.test.ts; components/landing/faq.tsx; components/landing/features.tsx; components/landing/pricing.tsx; components/factory-today/SetupPanel.tsx; lib/i18n/legacy-generated.ts",
+      "proofArtifact": "output/qa/runtime-proof-loop/GROUP_A-runtime-proof-20260706-PROD-029.json"
+    },
+    {
+      "id": "SETUP-011",
+      "section": "10. Onboarding and Factory Setup",
+      "scenario": "Factory Today setup panel after creating estimates, machines, workers, and payroll config.",
+      "expected": "Completion state is accurate and refresh-stable.",
+      "severity": "Medium",
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "A",
+      "priorityRank": 5,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Factory Today setup checklist recognizes completed costing/setup chain.",
+        "Completed costing, active linked loom target, selected-shift worker assignment, active workers, supervisor, payroll config, and plan are represented.",
+        "State remains complete after refresh from persisted data."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "output/qa/batch24c/BATCH24C-factory-today-analytics-state-proof.json; __tests__/batch24c-factory-today-analytics-state.test.ts; lib/factory-today-checklist.ts; app/(dashboard)/owner/today/actions.ts"
+    },
+    {
+      "id": "DASH-004",
+      "section": "22. Factory Today and Analytics",
+      "scenario": "Historical date selection.",
+      "expected": "Shows selected date without mixing today’s values.",
+      "severity": "Medium",
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "A",
+      "priorityRank": 6,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Historical Analytics selected date does not mix stale current values.",
+        "Returning to today restores live/current behavior."
+      ],
+      "runtimeProofDisposition": "left_code_verified_auth_blocked_in_current_pass",
+      "exclusionReason": null,
+      "sourceEvidence": "output/qa/batch24c/BATCH24C-factory-today-analytics-state-proof.json; __tests__/batch24c-factory-today-analytics-state.test.ts; lib/dashboard-trend.ts; app/(dashboard)/owner/actions/dashboard.ts; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx",
+      "partialProofArtifact": "output/qa/runtime-proof-loop/GROUP_A-runtime-proof-20260706-DASH-004-auth-blocked.json"
+    },
+    {
+      "id": "EST-017",
+      "section": "12. Estimator and Costing",
+      "scenario": "Rapid double-submit.",
+      "expected": "One quote/order/run only.",
+      "severity": "High",
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "A",
+      "priorityRank": 7,
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "Rapid double click does not create duplicate quote/order/market-run.",
+        "Normal single submit still works.",
+        "This proof does not claim server/database idempotency."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "output/qa/batch24d/BATCH24D-submit-draft-isolation-proof.json; app/(dashboard)/owner/estimator/EstimatorClient.tsx; __tests__/batch24d-submit-draft-isolation.test.ts"
+    },
+    {
+      "id": "PROD-002",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Day-only factory with no night worker.",
+      "expected": "Must match the pilot’s operating decision; if valid production is blocked, pilot is No-Go unless night assignment is genuinely mandatory.",
+      "severity": "High",
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "A",
+      "priorityRank": 8,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Day-shift/day-only logging does not require night worker.",
+        "Night-shift without night worker gives actionable selected-shift error.",
+        "Day-only setup/checklist/activation does not falsely fail for missing night worker."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "output/qa/batch24f/BATCH24F-production-worker-assignment-policy-proof.json; __tests__/batch24f-production-worker-assignment-policy.test.ts; lib/production-worker-assignment-policy.ts; app/(dashboard)/supervisor/actions.ts; app/(dashboard)/owner/actions.ts; components/MachineManagement.tsx; lib/factory-today-checklist.ts; components/factory-today/SetupPanel.tsx"
+    },
+    {
+      "id": "PROD-004",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Substitute worker.",
+      "expected": "Supervisor can intentionally select/log the actual worker or receives a workable owner-remapping flow.",
+      "severity": "Medium",
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "A",
+      "priorityRank": 9,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Substitute mismatch gives reassignment-required behavior.",
+        "Production is not silently attributed to wrong worker."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "output/qa/batch24f/BATCH24F-production-worker-assignment-policy-proof.json; __tests__/batch24f-production-worker-assignment-policy.test.ts; lib/production-worker-assignment-policy.ts; app/(dashboard)/supervisor/actions.ts"
+    },
+    {
+      "id": "MASTER-002",
+      "section": "11. Machines, Workers, and Assignments",
+      "scenario": "Bulk-add looms with duplicate names or types.",
+      "expected": "Intended duplicate rule is enforced; no silent overwrite.",
+      "severity": "Medium",
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "B",
+      "priorityRank": 101,
+      "proofType": [
+        "db",
+        "browser"
+      ],
+      "requiredProof": [
+        "Duplicate manual add is blocked.",
+        "Duplicate bulk add is blocked.",
+        "Duplicate rename is blocked.",
+        "Trim/case duplicate rejection works.",
+        "Same name in a different org is allowed.",
+        "Different name with same type is allowed.",
+        "DB duplicate guard is proven in QA before promotion."
+      ],
+      "runtimeProofDisposition": "candidate_for_qa_db_or_browser_proof_after_ref_guard",
+      "exclusionReason": null,
+      "sourceEvidence": "output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json; lib/master-data-loom-guardrails.ts; app/(dashboard)/owner/actions.ts; supabase/migrations/20260704120000_batch_24e_master_data_loom_guardrails.sql; __tests__/batch24e-master-data-guardrails.test.ts"
+    },
+    {
+      "id": "MASTER-005",
+      "section": "11. Machines, Workers, and Assignments",
+      "scenario": "Deactivate/delete loom with active order or history.",
+      "expected": "Protected action; history preserved; downstream UI remains consistent.",
+      "severity": "Medium",
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "B",
+      "priorityRank": 102,
+      "proofType": [
+        "db",
+        "browser",
+        "api"
+      ],
+      "requiredProof": [
+        "Owner delete/deactivate is blocked for protected looms.",
+        "Supervisor delete-with-code is blocked for protected looms.",
+        "Cost-analysis unlink is blocked for protected looms and does not silently deactivate.",
+        "Unused loom behavior remains intentional."
+      ],
+      "runtimeProofDisposition": "candidate_for_qa_db_or_browser_proof_after_ref_guard",
+      "exclusionReason": null,
+      "sourceEvidence": "output/qa/batch24e/BATCH24E-master-data-guardrails-proof.json; lib/master-data-loom-guardrails.ts; app/(dashboard)/owner/actions.ts; app/(dashboard)/supervisor/actions.ts; components/MachineManagement.tsx; __tests__/batch24e-master-data-guardrails.test.ts"
+    },
+    {
+      "id": "SEC-015",
+      "section": "27. Security, Privacy, and Audit",
+      "scenario": "Audit protected corrections, settlement reversal, deletion, write-off, and settings.",
+      "expected": "Actor, org, action, record, before/after context, and timestamp are adequate.",
+      "severity": "Medium",
+      "workflowGroup": "security/export/audit",
+      "priorityGroup": "B",
+      "priorityRank": 103,
+      "proofType": [
+        "db",
+        "browser",
+        "external-service"
+      ],
+      "requiredProof": [
+        "Controlled settings change creates audit rows.",
+        "Audit rows include actor, org/action/record, before/after context, and timestamp.",
+        "Sensitive old/new payload values are redacted."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "Security row has production-sourced/source-only evidence; controlled QA proof is required before any promotion.",
+      "sourceEvidence": "logs/source-audit-time-ux-evidence-20260624.json; supabase/migrations/20260705100000_batch_24g_security_audit_guardrails.sql; supabase/migrations/20260705182406_harden_settings_audit_function.sql; output/qa/batch24g/BATCH24G-security-audit-guardrails-proof.json; docs/pilot-remediation/FIX_LOG.md"
+    },
+    {
+      "id": "SEC-009",
+      "section": "27. Security, Privacy, and Audit",
+      "scenario": "Data export.",
+      "expected": "Only current org; export event audited; sensitive fields reviewed.",
+      "severity": "Medium",
+      "workflowGroup": "security/export/audit",
+      "priorityGroup": "B",
+      "priorityRank": 104,
+      "proofType": [
+        "db",
+        "browser",
+        "api"
+      ],
+      "requiredProof": [
+        "Owner export is current-org only.",
+        "Export payload excludes or redacts sensitive fields.",
+        "EXPORT audit row exists before payload delivery."
+      ],
+      "runtimeProofDisposition": "candidate_for_qa_db_or_browser_proof_after_ref_guard",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/security-export-erasure-evidence.json; app/(dashboard)/owner/settings/data-export.ts; app/(dashboard)/owner/settings/page.tsx; output/qa/batch24g/BATCH24G-security-audit-guardrails-proof.json; docs/pilot-remediation/FIX_LOG.md"
+    },
+    {
+      "id": "PAY-006",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Past/future attendance.",
+      "expected": "Future blocked; protected past edit uses valid access code.",
+      "severity": "High",
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "B",
+      "priorityRank": 105,
+      "proofType": [
+        "db",
+        "browser"
+      ],
+      "requiredProof": [
+        "Attendance RLS date boundaries are applied in QA.",
+        "Supervisor direct writes limited to today; owner direct writes limited to today/past.",
+        "Future direct writes blocked.",
+        "Supervisor past-date edit uses save-time owner access-code server boundary."
+      ],
+      "runtimeProofDisposition": "candidate_for_qa_db_or_browser_proof_after_ref_guard",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/payroll-remaining-source-evidence-20260624.json; app/(dashboard)/supervisor/attendance/page.tsx:147; app/(dashboard)/supervisor/attendance/page.tsx:229; app/(dashboard)/supervisor/actions.ts:115; lib/schemas.ts:294; supabase/migrations/20260702191500_batch_24a_harden_attendance_rls_date_bounds.sql"
+    },
+    {
+      "id": "EST-002",
+      "section": "12. Estimator and Costing",
+      "scenario": "Multi-row blended warp and multi-row weft.",
+      "expected": "Each row contributes once; total is exact within agreed rounding.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1022,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Each row contributes once; total is exact within agreed rounding."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; lib/estimator.ts:554; lib/estimator.ts:571; lib/estimator.ts:588; lib/estimator.ts:593; lib/estimator.ts:607"
+    },
+    {
+      "id": "EST-004",
+      "section": "12. Estimator and Costing",
+      "scenario": "Width entered in centimeters and equivalent inches.",
+      "expected": "Equivalent calculation and persisted value.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1023,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Equivalent calculation and persisted value."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; app/(dashboard)/owner/estimator/EstimatorClient.tsx:651; app/(dashboard)/owner/estimator/EstimatorClient.tsx:721; app/(dashboard)/owner/estimator/EstimatorClient.tsx:2111; lib/estimator.ts:306"
+    },
+    {
+      "id": "EST-006",
+      "section": "12. Estimator and Costing",
+      "scenario": "Outsourced sizing versus in-house sizing.",
+      "expected": "Sizing cost toggles exactly once.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1024,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Sizing cost toggles exactly once."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; lib/estimator.ts:613; lib/estimator.ts:616; app/(dashboard)/owner/estimator/EstimatorClient.tsx:2278; app/(dashboard)/owner/estimator/EstimatorClient.tsx:2292; app/(dashboard)/owner/estimator/EstimatorClient.tsx:2304; app/(dashboard)/owner/estimator/EstimatorClient.tsx:2315"
+    },
+    {
+      "id": "EST-007",
+      "section": "12. Estimator and Costing",
+      "scenario": "Optional winding, processing, finishing, commission, and transport.",
+      "expected": "Disabled sections contribute zero; enabled sections contribute correctly.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1025,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Disabled sections contribute zero; enabled sections contribute correctly."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; lib/estimator.ts:623; lib/estimator.ts:628; lib/estimator.ts:671; lib/estimator.ts:672; app/(dashboard)/owner/estimator/EstimatorClient.tsx:2687"
+    },
+    {
+      "id": "EST-008",
+      "section": "12. Estimator and Costing",
+      "scenario": "Overhead items and manual overhead override.",
+      "expected": "Override replaces, rather than double-counts, itemized overhead.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1026,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Override replaces, rather than double-counts, itemized overhead."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; lib/estimator.ts:637; lib/estimator.ts:647; lib/estimator.ts:662; app/(dashboard)/owner/estimator/EstimatorClient.tsx:2625; app/(dashboard)/owner/estimator/EstimatorClient.tsx:2640"
+    },
+    {
+      "id": "EST-009",
+      "section": "12. Estimator and Costing",
+      "scenario": "Capacity utilization and idle-capacity values.",
+      "expected": "Correct for loom count, output/day, working days, and monthly output.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1027,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Correct for loom count, output/day, working days, and monthly output."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; lib/estimator.ts:654; lib/estimator.ts:655; lib/estimator.ts:656; lib/estimator.ts:657; lib/estimator.ts:660"
+    },
+    {
+      "id": "EST-010",
+      "section": "12. Estimator and Costing",
+      "scenario": "Fixed workers added to overhead.",
+      "expected": "No duplicate fixed-worker cost after repeated merge/save.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1028,
+      "proofType": [
+        "db"
+      ],
+      "requiredProof": [
+        "No duplicate fixed-worker cost after repeated merge/save."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; app/(dashboard)/owner/estimator/actions.ts:75; app/(dashboard)/owner/estimator/EstimatorClient.tsx:221; app/(dashboard)/owner/estimator/EstimatorClient.tsx:223; app/(dashboard)/owner/estimator/EstimatorClient.tsx:236"
+    },
+    {
+      "id": "EST-013",
+      "section": "12. Estimator and Costing",
+      "scenario": "Save, rename, update, rate-update, apply, and delete template.",
+      "expected": "Template lifecycle is isolated to the org and refresh-stable.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1029,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Template lifecycle is isolated to the org and refresh-stable."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; app/(dashboard)/owner/estimator/actions.ts:132; app/(dashboard)/owner/estimator/actions.ts:147; app/(dashboard)/owner/estimator/actions.ts:213; app/(dashboard)/owner/estimator/actions.ts:245; app/(dashboard)/owner/estimator/actions.ts:305; app/(dashboard)/owner/estimator/actions.ts:322"
+    },
+    {
+      "id": "EST-014",
+      "section": "12. Estimator and Costing",
+      "scenario": "Autosaved draft after refresh/crash.",
+      "expected": "Latest intended draft restores without overwriting another quote.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1030,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Latest intended draft restores without overwriting another quote."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; hooks/useAutosave.ts:37; hooks/useAutosave.ts:61; hooks/useAutosave.ts:86; hooks/useAutosave.ts:107; app/(dashboard)/owner/estimator/EstimatorClient.tsx:1455"
+    },
+    {
+      "id": "EST-015",
+      "section": "12. Estimator and Costing",
+      "scenario": "Restore historical quote after factory profile/template rates change.",
+      "expected": "Historical snapshot remains unchanged.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1031,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Historical snapshot remains unchanged."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; app/(dashboard)/owner/estimator/actions.ts:370; app/(dashboard)/owner/estimator/actions.ts:381; app/(dashboard)/owner/estimator/actions.ts:397; app/(dashboard)/owner/quotes/QuotesClient.tsx:93; lib/quotes/convert-accepted-quote-to-order.ts:29"
+    },
+    {
+      "id": "EST-018",
+      "section": "12. Estimator and Costing",
+      "scenario": "Market-mode party-name race.",
+      "expected": "Fabric label and market run are saved correctly without a fake party.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1033,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Fabric label and market run are saved correctly without a fake party."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; app/(dashboard)/owner/estimator/EstimatorClient.tsx:1052; app/(dashboard)/owner/estimator/EstimatorClient.tsx:1327; app/(dashboard)/owner/estimator/actions.ts:821; app/(dashboard)/owner/estimator/actions.ts:869; app/(dashboard)/owner/estimator/actions.ts:901; app/(dashboard)/owner/estimator/actions.ts:912"
+    },
+    {
+      "id": "QUOTE-004",
+      "section": "13. Quote Lifecycle",
+      "scenario": "Convert non-accepted quote to order.",
+      "expected": "Blocked.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1034,
+      "proofType": [
+        "browser",
+        "db"
+      ],
+      "requiredProof": [
+        "Blocked."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; lib/quotes/convert-accepted-quote-to-order.ts:116; supabase/migrations/20260531040000_fix_quote_to_order_ambiguity.sql:49; app/(dashboard)/owner/quotes/QuotesClient.tsx:268"
+    },
+    {
+      "id": "QUOTE-006",
+      "section": "13. Quote Lifecycle",
+      "scenario": "Concurrent/double conversion.",
+      "expected": "Unique/atomic RPC returns the same or safe duplicate result; never two orders.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1035,
+      "proofType": [
+        "db"
+      ],
+      "requiredProof": [
+        "Unique/atomic RPC returns the same or safe duplicate result; never two orders."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/estimator-quotes-source-evidence-20260624.json; supabase/migrations/20260509140000_p0_atomic_quote_and_production.sql:16; supabase/migrations/20260509140000_p0_atomic_quote_and_production.sql:20; supabase/migrations/20260531040000_fix_quote_to_order_ambiguity.sql:37; supabase/migrations/20260531040000_fix_quote_to_order_ambiguity.sql:54; supabase/migrations/20260531040000_fix_quote_to_order_ambiguity.sql:99"
+    },
+    {
+      "id": "QUOTE-007",
+      "section": "13. Quote Lifecycle",
+      "scenario": "Start Party Order fast path.",
+      "expected": "Accepted quote and order form one consistent transaction.",
+      "severity": "Medium",
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1036,
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "Accepted quote and order form one consistent transaction."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "output/qa/batch23/BATCH23-start-party-order-transaction-boundary-proof.json; supabase/migrations/20260702131500_batch_23_start_party_order_transaction_boundary.sql; app/(dashboard)/owner/estimator/actions.ts; __tests__/batch23-start-party-order-atomicity.test.ts"
+    },
+    {
+      "id": "ORDER-007",
+      "section": "14. Order-Centric End-to-End Tests",
+      "scenario": "Complete with target met.",
+      "expected": "Status changes, looms unlink, history and reserved stock remain correct.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1038,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Status changes, looms unlink, history and reserved stock remain correct."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; app/(dashboard)/owner/orders/actions.ts:95; app/(dashboard)/owner/orders/actions.ts:107; app/(dashboard)/owner/stock/actions.ts:633; app/(dashboard)/owner/stock/actions.ts:440; lib/stock-lifecycle.ts:12; __tests__/p1-stock-lifecycle.test.ts:28"
+    },
+    {
+      "id": "ORDER-010",
+      "section": "14. Order-Centric End-to-End Tests",
+      "scenario": "Attempt delete with production/dispatch/payment history.",
+      "expected": "Safe restriction or documented archival behavior; no orphan records.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1040,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Safe restriction or documented archival behavior; no orphan records."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; app/(dashboard)/owner/orders/actions.ts:246; app/(dashboard)/owner/orders/actions.ts:250; app/(dashboard)/owner/orders/actions.ts:258; app/(dashboard)/owner/orders/OrdersClient.tsx:611; app/(dashboard)/owner/orders/OrdersClient.tsx:1189"
+    },
+    {
+      "id": "ORDER-011",
+      "section": "14. Order-Centric End-to-End Tests",
+      "scenario": "Order stock appears as reserved, not freely saleable market stock.",
+      "expected": "Correct stock classification.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1041,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Correct stock classification."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; app/(dashboard)/owner/stock/actions.ts:633; app/(dashboard)/owner/stock/actions.ts:440; app/(dashboard)/owner/stock/actions.ts:441; supabase/migrations/20260506120000_rolling_stock_inward.sql:31; supabase/migrations/20260506120000_rolling_stock_inward.sql:387"
+    },
+    {
+      "id": "ORDER-012",
+      "section": "14. Order-Centric End-to-End Tests",
+      "scenario": "Sell/dispatch order-linked stock.",
+      "expected": "Party/order/source links remain available in dispatch and Commercials.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1042,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Party/order/source links remain available in dispatch and Commercials."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; supabase/migrations/20260601010000_commercial_party_identity.sql:501; supabase/migrations/20260601010000_commercial_party_identity.sql:522; supabase/migrations/20260601030000_link_stock_sale_dispatch_orders.sql:4; supabase/migrations/20260601030000_link_stock_sale_dispatch_orders.sql:20; app/(dashboard)/owner/orders/actions.ts:1031; app/(dashboard)/owner/orders/actions.ts:1104"
+    },
+    {
+      "id": "ORDER-013",
+      "section": "14. Order-Centric End-to-End Tests",
+      "scenario": "Partial dispatch against order.",
+      "expected": "Remaining order sale/dispatch quantity remains actionable.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1043,
+      "proofType": [
+        "browser",
+        "db"
+      ],
+      "requiredProof": [
+        "Remaining order sale/dispatch quantity remains actionable."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; supabase/migrations/20260531010000_configurable_batch_dispatch.sql:90; supabase/migrations/20260531010000_configurable_batch_dispatch.sql:115; supabase/migrations/20260531010000_configurable_batch_dispatch.sql:246; supabase/migrations/20260531010000_configurable_batch_dispatch.sql:253; app/(dashboard)/owner/dispatches/DispatchesClient.tsx:700; app/(dashboard)/owner/dispatches/DispatchesClient.tsx:1018"
+    },
+    {
+      "id": "ORDER-014",
+      "section": "14. Order-Centric End-to-End Tests",
+      "scenario": "Receipt shortage/excess.",
+      "expected": "Dispatch and discrepancy update without rewriting original production.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1044,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Dispatch and discrepancy update without rewriting original production."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; supabase/migrations/20260515120000_expected_stock_dispatch_reconciliation.sql:334; supabase/migrations/20260515120000_expected_stock_dispatch_reconciliation.sql:371; supabase/migrations/20260515120000_expected_stock_dispatch_reconciliation.sql:388; supabase/migrations/20260515120000_expected_stock_dispatch_reconciliation.sql:392; supabase/migrations/20260515120000_expected_stock_dispatch_reconciliation.sql:416"
+    },
+    {
+      "id": "ORDER-015",
+      "section": "14. Order-Centric End-to-End Tests",
+      "scenario": "Close money and payroll.",
+      "expected": "Collection and worker settlement reconcile independently to the same production.",
+      "severity": null,
+      "workflowGroup": "estimator/quote/order",
+      "priorityGroup": "C",
+      "priorityRank": 1045,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Collection and worker settlement reconcile independently to the same production."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; supabase/migrations/20260601010000_commercial_party_identity.sql:501; app/(dashboard)/owner/commercials/actions.ts:159; app/(dashboard)/owner/payroll/page.tsx:254; app/(dashboard)/owner/payroll/page.tsx:328; app/(dashboard)/owner/payroll/page.tsx:510; app/(dashboard)/owner/payroll/page.tsx:582"
+    },
+    {
+      "id": "SETUP-001",
+      "section": "10. Onboarding and Factory Setup",
+      "scenario": "Complete market-run onboarding.",
+      "expected": "Market Runs visible; Quotes/Orders hidden; core shared modules visible.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1105,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Market Runs visible; Quotes/Orders hidden; core shared modules visible."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(dashboard)/owner/layout.tsx:24; components/navigation/owner-sidebar.tsx:38; components/navigation/owner-sidebar.tsx:118; lib/production-mode.ts:39"
+    },
+    {
+      "id": "SETUP-002",
+      "section": "10. Onboarding and Factory Setup",
+      "scenario": "Complete order-based onboarding.",
+      "expected": "Quotes/Orders visible; Market Runs hidden.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1106,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Quotes/Orders visible; Market Runs hidden."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; components/navigation/owner-sidebar.tsx:38; components/navigation/owner-sidebar.tsx:83; lib/production-mode.ts:62"
+    },
+    {
+      "id": "SETUP-007",
+      "section": "10. Onboarding and Factory Setup",
+      "scenario": "Fail a setup network request midway.",
+      "expected": "Step remains incomplete and retryable; no false success.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1107,
+      "proofType": [
+        "browser",
+        "db"
+      ],
+      "requiredProof": [
+        "Step remains incomplete and retryable; no false success."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(auth)/actions/auth.ts:481; app/(auth)/actions/auth.ts:532; app/(auth)/onboarding/checklist.tsx:892; app/(auth)/onboarding/checklist.tsx:968; app/(auth)/onboarding/checklist.tsx:1104"
+    },
+    {
+      "id": "SETUP-010",
+      "section": "10. Onboarding and Factory Setup",
+      "scenario": "Change production mode after data exists.",
+      "expected": "Navigation changes without deleting or cross-linking historical data.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1108,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Navigation changes without deleting or cross-linking historical data."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(dashboard)/owner/actions.ts:620; app/(dashboard)/owner/actions.ts:627; app/(dashboard)/owner/actions.ts:638"
+    },
+    {
+      "id": "SETUP-012",
+      "section": "10. Onboarding and Factory Setup",
+      "scenario": "Factory name and join-code regeneration.",
+      "expected": "New value persists; old join code stops working.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1110,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "New value persists; old join code stops working."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(auth)/actions/auth.ts:444; app/(auth)/actions/auth.ts:460; app/(auth)/actions/auth.ts:262; app/(auth)/actions/auth.ts:300; supabase/migrations/20260403000000_f1_auth_onboarding.sql:33"
+    },
+    {
+      "id": "MASTER-001",
+      "section": "11. Machines, Workers, and Assignments",
+      "scenario": "Add one loom manually and refresh.",
+      "expected": "Loom remains visible.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1111,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Loom remains visible."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(dashboard)/owner/actions.ts:67; app/(dashboard)/owner/actions.ts:74; components/MachineManagement.tsx:141; components/MachineManagement.tsx:145"
+    },
+    {
+      "id": "MASTER-003",
+      "section": "11. Machines, Workers, and Assignments",
+      "scenario": "Edit loom name/type and refresh.",
+      "expected": "Assignment and historical production links remain intact.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1113,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Assignment and historical production links remain intact."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(dashboard)/owner/actions.ts:155; app/(dashboard)/owner/actions.ts:182; supabase/migrations/20240216123000_initial_schema.sql:40; supabase/migrations/20260326000000_audit_trail_expansion.sql:30"
+    },
+    {
+      "id": "MASTER-006",
+      "section": "11. Machines, Workers, and Assignments",
+      "scenario": "Add piece-rate worker with decimal rate.",
+      "expected": "Rate persists accurately and appears in production/payroll.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1115,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Rate persists accurately and appears in production/payroll."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(dashboard)/supervisor/actions.ts:790; app/(dashboard)/supervisor/actions.ts:836; app/(dashboard)/supervisor/actions.ts:1117; app/(dashboard)/owner/payroll/actions.ts:87; app/(dashboard)/owner/payroll/actions.ts:96"
+    },
+    {
+      "id": "MASTER-008",
+      "section": "11. Machines, Workers, and Assignments",
+      "scenario": "Add daily worker and record attendance.",
+      "expected": "Daily payroll uses attendance and never exceeds configured monthly salary.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1116,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Daily payroll uses attendance and never exceeds configured monthly salary."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(dashboard)/owner/payroll/actions.ts:112; app/(dashboard)/owner/payroll/actions.ts:113; app/(dashboard)/owner/payroll/actions.ts:123; app/(dashboard)/owner/payroll/actions.ts:125; PAY-005"
+    },
+    {
+      "id": "MASTER-009",
+      "section": "11. Machines, Workers, and Assignments",
+      "scenario": "Deactivate worker assigned to a loom.",
+      "expected": "Loom/setup becomes visibly incomplete; old logs remain attributed.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1117,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Loom/setup becomes visibly incomplete; old logs remain attributed."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(dashboard)/owner/actions.ts:1735; app/(dashboard)/owner/actions.ts:1773; app/(dashboard)/owner/actions.ts:1776; app/(dashboard)/owner/today/actions.ts:397; supabase/migrations/20240216123000_initial_schema.sql:40"
+    },
+    {
+      "id": "MASTER-011",
+      "section": "11. Machines, Workers, and Assignments",
+      "scenario": "Substitute worker for one dated shift.",
+      "expected": "Shift-specific assignment is clear and payroll follows the actual logged worker.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1118,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Shift-specific assignment is clear and payroll follows the actual logged worker."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; components/MachineManagement.tsx:758; components/MachineManagement.tsx:807; app/(dashboard)/supervisor/actions.ts:1180; app/(dashboard)/supervisor/actions.ts:1201; app/(dashboard)/owner/payroll/actions.ts:90"
+    },
+    {
+      "id": "MASTER-012",
+      "section": "11. Machines, Workers, and Assignments",
+      "scenario": "Assign order/run to loom, then replace it.",
+      "expected": "New logs use the new context; historical logs retain old context.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1119,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "New logs use the new context; historical logs retain old context."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(dashboard)/supervisor/actions.ts:955; app/(dashboard)/supervisor/actions.ts:976; app/(dashboard)/supervisor/actions.ts:995; app/(dashboard)/supervisor/actions.ts:1107; supabase/migrations/20260404010000_orders_v2_flat.sql:29"
+    },
+    {
+      "id": "MASTER-013",
+      "section": "11. Machines, Workers, and Assignments",
+      "scenario": "Complete/cancel/delete order or close run.",
+      "expected": "Related looms unlink and become inactive as intended; unrelated looms remain unchanged.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1120,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Related looms unlink and become inactive as intended; unrelated looms remain unchanged."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(dashboard)/owner/orders/actions.ts:95; app/(dashboard)/owner/orders/actions.ts:107; app/(dashboard)/owner/orders/actions.ts:111; app/(dashboard)/owner/orders/actions.ts:61; app/(dashboard)/owner/orders/actions.ts:69"
+    },
+    {
+      "id": "MASTER-015",
+      "section": "11. Machines, Workers, and Assignments",
+      "scenario": "Worker WhatsApp phone/consent changes.",
+      "expected": "Consent rows and sends reflect the latest valid state.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1121,
+      "proofType": [
+        "external-service"
+      ],
+      "requiredProof": [
+        "Consent rows and sends reflect the latest valid state."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/setup-master-source-evidence-20260624.json; app/(dashboard)/owner/actions.ts:410; app/(dashboard)/owner/actions.ts:525; app/(dashboard)/owner/actions.ts:1360; supabase/functions/send-payslip/index.ts:103; supabase/functions/send-advance-receipt/index.ts:73; supabase/functions/_shared/whatsapp.ts:68"
+    },
+    {
+      "id": "ORDER-005",
+      "section": "14. Order-Centric End-to-End Tests",
+      "scenario": "Produce beyond target.",
+      "expected": "Product behavior is explicit; progress, pace, stock, and payroll remain mathematically consistent.",
+      "severity": "High",
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1137,
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "Product behavior is explicit; progress, pace, stock, and payroll remain mathematically consistent."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json; supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql; __tests__/batch22-production-order-boundary-hardening.test.ts; __tests__/p1-production-stock-atomicity.test.ts"
+    },
+    {
+      "id": "ORDER-009",
+      "section": "14. Order-Centric End-to-End Tests",
+      "scenario": "Cancel after some production.",
+      "expected": "Produced stock/history retained; no new logs accepted; loom unlinks.",
+      "severity": "High",
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1139,
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "Produced stock/history retained; no new logs accepted; loom unlinks."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json; supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql; __tests__/batch22-production-order-boundary-hardening.test.ts; app/(dashboard)/owner/orders/actions.ts:246; app/(dashboard)/owner/orders/actions.ts:258"
+    },
+    {
+      "id": "PROD-005",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Loom missing active order/run.",
+      "expected": "Clear blocked or review-queue behavior; entered draft is not silently lost.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1151,
+      "proofType": [
+        "browser",
+        "api"
+      ],
+      "requiredProof": [
+        "Clear blocked or review-queue behavior; entered draft is not silently lost."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/production-logging-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:926; app/(dashboard)/supervisor/dashboard/page.tsx:986; app/(dashboard)/supervisor/actions.ts:1132; supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:134; app/(dashboard)/supervisor/dashboard/page.tsx:1012"
+    },
+    {
+      "id": "PROD-006",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Loom missing worker.",
+      "expected": "Clear blocked or review-queue behavior.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1152,
+      "proofType": [
+        "browser",
+        "db"
+      ],
+      "requiredProof": [
+        "Clear blocked or review-queue behavior."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/production-logging-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:926; app/(dashboard)/supervisor/dashboard/page.tsx:1082; lib/production-log-validation.ts:82; app/(dashboard)/supervisor/actions.ts:1068; supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:134"
+    },
+    {
+      "id": "PROD-007",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Worker rate missing/zero.",
+      "expected": "Positive meters blocked; no fallback ₹1.50 rate.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1153,
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "Positive meters blocked; no fallback ₹1.50 rate."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/production-logging-source-evidence-20260624.json; lib/production-log-validation.ts:98; app/(dashboard)/supervisor/actions.ts:1068; app/(dashboard)/supervisor/actions.ts:1116; supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:56; supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:134"
+    },
+    {
+      "id": "PROD-010",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Zero meters with “Other” and no note.",
+      "expected": "Blocked.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1154,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Blocked."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/production-logging-source-evidence-20260624.json; lib/production-log-validation.ts:114; lib/production-log-validation.ts:134; app/(dashboard)/supervisor/actions.ts:1068; app/(dashboard)/supervisor/dashboard/page.tsx:949; app/(dashboard)/supervisor/dashboard/page.tsx:1066"
+    },
+    {
+      "id": "PROD-011",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Negative meters.",
+      "expected": "Blocked on client and server.",
+      "severity": "High",
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1155,
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "Blocked on client and server."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json; supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql; __tests__/batch22-production-order-boundary-hardening.test.ts; app/(dashboard)/supervisor/dashboard/page.tsx:980; lib/production-log-validation.ts:134; app/(dashboard)/supervisor/actions.ts:1068"
+    },
+    {
+      "id": "PROD-014",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Copy previous shift.",
+      "expected": "Correct source shift, no duplicate, editable before submit.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1157,
+      "proofType": [
+        "browser",
+        "db"
+      ],
+      "requiredProof": [
+        "Correct source shift, no duplicate, editable before submit."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:1051; app/(dashboard)/supervisor/actions.ts:1023; supabase/migrations/20260404010000_orders_v2_flat.sql:117; supabase/migrations/20260404010000_orders_v2_flat.sql:124"
+    },
+    {
+      "id": "PROD-017",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Correct after window without code.",
+      "expected": "Blocked.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1158,
+      "proofType": [
+        "browser",
+        "api"
+      ],
+      "requiredProof": [
+        "Blocked."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/production-logging-source-evidence-20260624.json; app/(dashboard)/supervisor/actions.ts:1210; app/(dashboard)/supervisor/actions.ts:1229; app/(dashboard)/supervisor/dashboard/page.tsx:1021; app/(dashboard)/supervisor/dashboard/page.tsx:1161; supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:163"
+    },
+    {
+      "id": "PROD-018",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Correct after window with valid/invalid/used/expired code.",
+      "expected": "Only valid one-time code succeeds.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1159,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Only valid one-time code succeeds."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/actions.ts:1222; app/(dashboard)/supervisor/actions.ts:1230; app/(dashboard)/supervisor/actions.ts:1241; lib/access-codes.ts:20; lib/access-codes.ts:48; lib/access-codes.ts:60"
+    },
+    {
+      "id": "PROD-019",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Correct period after worker payroll is settled.",
+      "expected": "Blocked.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1160,
+      "proofType": [
+        "browser",
+        "api"
+      ],
+      "requiredProof": [
+        "Blocked."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/production-logging-source-evidence-20260624.json; app/(dashboard)/supervisor/actions.ts:1251; app/(dashboard)/supervisor/actions.ts:1263; app/(dashboard)/supervisor/actions.ts:1278; app/(dashboard)/supervisor/dashboard/page.tsx:1021"
+    },
+    {
+      "id": "PROD-024",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Network drops before submit.",
+      "expected": "No success claim; draft remains locally.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1163,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "No success claim; draft remains locally."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/production-logging-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:815; app/(dashboard)/supervisor/dashboard/page.tsx:1000; app/(dashboard)/supervisor/dashboard/page.tsx:1012; app/(dashboard)/supervisor/dashboard/page.tsx:1021"
+    },
+    {
+      "id": "PROD-025",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Network drops after request reaches server but before response.",
+      "expected": "Retry is idempotent and resolves current server state.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1164,
+      "proofType": [
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "Retry is idempotent and resolves current server state."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/production-logging-source-evidence-20260624.json; supabase/migrations/20260509140000_p0_atomic_quote_and_production.sql:187; supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:99; supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:154; app/(dashboard)/supervisor/actions.ts:1210; app/(dashboard)/supervisor/dashboard/page.tsx:1021"
+    },
+    {
+      "id": "PROD-026",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Two supervisors submit same shift.",
+      "expected": "Atomic duplicate protection.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1165,
+      "proofType": [
+        "browser",
+        "db"
+      ],
+      "requiredProof": [
+        "Atomic duplicate protection."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/production-logging-source-evidence-20260624.json; production Supabase index metadata query, 2026-06-24; supabase/migrations/20260509140000_p0_atomic_quote_and_production.sql:187; supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:90; supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:154; app/(dashboard)/supervisor/actions.ts:1317"
+    },
+    {
+      "id": "PROD-027",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Machine status running/idle/maintenance and breakdown notes.",
+      "expected": "Status persists independently and aligns with downtime entry.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1166,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Status persists independently and aligns with downtime entry."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/actions.ts:1580; app/(dashboard)/supervisor/actions.ts:1609; app/(dashboard)/supervisor/dashboard/page.tsx:223; app/(dashboard)/supervisor/dashboard/page.tsx:869"
+    },
+    {
+      "id": "PROD-030",
+      "section": "16. Supervisor Production Logging",
+      "scenario": "Mobile usability with 20+ looms.",
+      "expected": "Fast selection, readable cards, no accidental cross-row edits, submit reachable.",
+      "severity": null,
+      "workflowGroup": "production/order boundary",
+      "priorityGroup": "C",
+      "priorityRank": 1168,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Fast selection, readable cards, no accidental cross-row edits, submit reachable."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:1135; app/(dashboard)/supervisor/dashboard/page.tsx:1246; app/(dashboard)/supervisor/dashboard/page.tsx:1290; app/globals.css:388"
+    },
+    {
+      "id": "PAY-002",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Change worker/current loom rate after old production.",
+      "expected": "Historical payroll keeps old snapshot.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1289,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Historical payroll keeps old snapshot."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/payroll-rate-and-advance-delete-evidence.json; app/(dashboard)/supervisor/actions.ts:1117; app/(dashboard)/owner/payroll/actions.ts:88"
+    },
+    {
+      "id": "PAY-005",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Daily fixed worker with attendance.",
+      "expected": "Present days × daily rate, capped as intended.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1290,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Present days × daily rate, capped as intended."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/payroll-remaining-source-evidence-20260624.json; app/(dashboard)/owner/payroll/page.tsx:390; app/(dashboard)/owner/payroll/page.tsx:440; app/(dashboard)/owner/payroll/page.tsx:441; app/(dashboard)/owner/payroll/actions.ts:112; app/(dashboard)/owner/payroll/actions.ts:125"
+    },
+    {
+      "id": "PAY-010",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Delete deducted advance.",
+      "expected": "Blocked.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1292,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Blocked."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/payroll-kharchi-source-evidence-20260624.json; app/(dashboard)/owner/advances/actions.ts:123"
+    },
+    {
+      "id": "PAY-011",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Standard recovery cap.",
+      "expected": "Total deductions do not exceed configured/legal cap; remaining debt carries forward.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1293,
+      "proofType": [
+        "db"
+      ],
+      "requiredProof": [
+        "Total deductions do not exceed configured/legal cap; remaining debt carries forward."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/payroll-kharchi-source-evidence-20260624.json; lib/finance.ts:124; app/(dashboard)/owner/payroll/page.tsx:746; supabase/migrations/20260516160000_payroll_manual_adjustments.sql:361; supabase/migrations/20260516160000_payroll_manual_adjustments.sql:476"
+    },
+    {
+      "id": "PAY-012",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Final settlement.",
+      "expected": "Full allowed recovery and remaining debt behavior are explicit.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1294,
+      "proofType": [
+        "db"
+      ],
+      "requiredProof": [
+        "Full allowed recovery and remaining debt behavior are explicit."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/payroll-kharchi-source-evidence-20260624.json; app/(dashboard)/owner/payroll/page.tsx:746; app/(dashboard)/owner/payroll/page.tsx:2068; supabase/migrations/20260516160000_payroll_manual_adjustments.sql:358; supabase/migrations/20260516160000_payroll_manual_adjustments.sql:516"
+    },
+    {
+      "id": "PAY-014",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Inam and kapaat adjustments.",
+      "expected": "Itemized; note/reason required; final payout never negative.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1295,
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "Itemized; note/reason required; final payout never negative."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/payroll-kharchi-source-evidence-20260624.json; lib/payroll-manual-adjustments.ts:93; app/(dashboard)/owner/payroll/page.tsx:1759; app/(dashboard)/owner/payroll/page.tsx:1787; supabase/migrations/20260516160000_payroll_manual_adjustments.sql:154; supabase/migrations/20260516160000_payroll_manual_adjustments.sql:322"
+    },
+    {
+      "id": "PAY-017",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Settle in reminder window/on pay date/overdue.",
+      "expected": "Allowed with correct status.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1296,
+      "proofType": [
+        "browser",
+        "api"
+      ],
+      "requiredProof": [
+        "Allowed with correct status."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/payroll-remaining-source-evidence-20260624.json; lib/payroll-cycle.ts:86; lib/payroll-cycle.ts:104; lib/payroll-cycle.ts:105; app/(dashboard)/owner/payroll/actions.ts:78; app/(dashboard)/owner/payroll/page.tsx:3509; app/(dashboard)/owner/payroll/page.tsx:2473"
+    },
+    {
+      "id": "PAY-019",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Double-settle/concurrent settle.",
+      "expected": "One settlement; advances deducted once.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1297,
+      "proofType": [
+        "db"
+      ],
+      "requiredProof": [
+        "One settlement; advances deducted once."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/payroll-kharchi-source-evidence-20260624.json; supabase/migrations/20260516160000_payroll_manual_adjustments.sql:134; supabase/migrations/20260516160000_payroll_manual_adjustments.sql:397; supabase/migrations/20260516160000_payroll_manual_adjustments.sql:423; supabase/migrations/20260516160000_payroll_manual_adjustments.sql:436"
+    },
+    {
+      "id": "PAY-021",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Unsettle restores advances and state.",
+      "expected": "Exact prior debt and status restored.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1298,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Exact prior debt and status restored."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/payroll-kharchi-source-evidence-20260624.json; supabase/migrations/20260421220000_fix_payroll_persistence_final.sql:266; supabase/migrations/20260421220000_fix_payroll_persistence_final.sql:279; supabase/migrations/20260421220000_fix_payroll_persistence_final.sql:294; supabase/migrations/20260421220000_fix_payroll_persistence_final.sql:317; supabase/migrations/20260421220000_fix_payroll_persistence_final.sql:331"
+    },
+    {
+      "id": "PAY-022",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Correct production after settlement.",
+      "expected": "Blocked.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1299,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Blocked."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/production-logging-source-evidence-20260624.json; logs/payroll-kharchi-source-evidence-20260624.json"
+    },
+    {
+      "id": "PAY-025",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Month/cycle boundaries including February and leap year.",
+      "expected": "Correct cycle start/end/pay date.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1300,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Correct cycle start/end/pay date."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/payroll-kharchi-source-evidence-20260624.json; lib/payroll-cycle.ts:39; lib/payroll-cycle.ts:59; lib/payroll-cycle.ts:72; lib/payroll-cycle.ts:157"
+    },
+    {
+      "id": "PAY-026",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Worker exits mid-cycle.",
+      "expected": "Final settlement and deactivation preserve history.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1301,
+      "proofType": [
+        "api"
+      ],
+      "requiredProof": [
+        "Final settlement and deactivation preserve history."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/payroll-kharchi-source-evidence-20260624.json; components/advances/WorkerExitDialog.tsx:59; app/(dashboard)/owner/fixed-workers/page.tsx:613; app/(dashboard)/owner/fixed-workers/page.tsx:1286; app/(dashboard)/owner/payroll/page.tsx:3360; app/(dashboard)/owner/payroll/page.tsx:3245; app/(dashboard)/owner/actions.ts:879"
+    },
+    {
+      "id": "PAY-027",
+      "section": "21. Payroll, Advances, Attendance, and Worker Money",
+      "scenario": "Supervisor Kharchi online.",
+      "expected": "Float decreases and worker advance increases in one coherent operation.",
+      "severity": null,
+      "workflowGroup": "payroll/kharchi",
+      "priorityGroup": "C",
+      "priorityRank": 1302,
+      "proofType": [
+        "browser",
+        "db"
+      ],
+      "requiredProof": [
+        "Float decreases and worker advance increases in one coherent operation."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "output/qa/batch20/BATCH20-payroll-rpc-kharchi-atomicity-proof.json; supabase/migrations/20260701105404_batch_20_payroll_rpc_kharchi_atomicity.sql; app/(dashboard)/supervisor/actions.ts; __tests__/batch20-payroll-rpc-kharchi-atomicity.test.ts"
+    },
+    {
+      "id": "MARKET-009",
+      "section": "15. Market-Centric End-to-End Tests",
+      "scenario": "Close sold-out run with pending dispatch.",
+      "expected": "Lot leaves active stock if intended; pending dispatch remains visible in Dispatches/Commercials.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1346,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Lot leaves active stock if intended; pending dispatch remains visible in Dispatches/Commercials."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; lib/stock-lifecycle.ts:17; __tests__/p1-stock-lifecycle.test.ts:78; __tests__/p1-stock-lifecycle.test.ts:91; app/(dashboard)/owner/stock/actions.ts:367; app/(dashboard)/owner/orders/actions.ts:1425; app/(dashboard)/owner/commercials/actions.ts:159"
+    },
+    {
+      "id": "MARKET-010",
+      "section": "15. Market-Centric End-to-End Tests",
+      "scenario": "Sell out and receive all batches.",
+      "expected": "Run displays sold-out/closed correctly and archive is complete.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1347,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Run displays sold-out/closed correctly and archive is complete."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; supabase/migrations/20260531030000_auto_unlink_closed_market_runs.sql:8; supabase/migrations/20260531030000_auto_unlink_closed_market_runs.sql:13; supabase/migrations/20260531030000_auto_unlink_closed_market_runs.sql:18; __tests__/p1-stock-lifecycle.test.ts:65; supabase/migrations/20260506120000_rolling_stock_inward.sql:812; supabase/migrations/20260506120000_rolling_stock_inward.sql:831; supabase/migrations/20260506120000_rolling_stock_inward.sql:872"
+    },
+    {
+      "id": "MARKET-013",
+      "section": "15. Market-Centric End-to-End Tests",
+      "scenario": "Market-run summary with many runs/sales.",
+      "expected": "Acceptable load time and fresh values after mutation.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1348,
+      "proofType": [
+        "browser",
+        "db"
+      ],
+      "requiredProof": [
+        "Acceptable load time and fresh values after mutation."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; supabase/migrations/20260506120000_rolling_stock_inward.sql:812; supabase/migrations/20260506120000_rolling_stock_inward.sql:838; supabase/migrations/20260506120000_rolling_stock_inward.sql:872; supabase/migrations/20260506120000_rolling_stock_inward.sql:896; supabase/migrations/20260531050000_index_market_run_summary_perf.sql:1; supabase/migrations/20260531050000_index_market_run_summary_perf.sql:10; supabase/migrations/20260531050000_index_market_run_summary_perf.sql:20"
+    },
+    {
+      "id": "STOCK-004",
+      "section": "17. Stock and Godown",
+      "scenario": "Create opening, manual, market-run, order, and adjustment sources.",
+      "expected": "Source IDs match declared type and current org.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1369,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Source IDs match declared type and current org."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; lib/schemas.ts:484; app/(dashboard)/owner/stock/actions.ts:555; app/(dashboard)/owner/stock/actions.ts:563; app/(dashboard)/owner/stock/actions.ts:576; app/(dashboard)/owner/stock/actions.ts:617; app/(dashboard)/owner/stock/actions.ts:623; app/(dashboard)/owner/stock/actions.ts:633"
+    },
+    {
+      "id": "STOCK-005",
+      "section": "17. Stock and Godown",
+      "scenario": "Submit mismatched quote/order or another org’s source.",
+      "expected": "Blocked.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1370,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Blocked."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; app/(dashboard)/owner/stock/actions.ts:555; app/(dashboard)/owner/stock/actions.ts:563; app/(dashboard)/owner/stock/actions.ts:579; app/(dashboard)/owner/stock/actions.ts:589; app/(dashboard)/owner/stock/actions.ts:598"
+    },
+    {
+      "id": "STOCK-007",
+      "section": "17. Stock and Godown",
+      "scenario": "Adjust stock up/down with reason.",
+      "expected": "Movement ledger records signed quantities and actor.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1371,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Movement ledger records signed quantities and actor."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; lib/schemas.ts:509; supabase/migrations/20260506120000_rolling_stock_inward.sql:606; supabase/migrations/20260506120000_rolling_stock_inward.sql:617; supabase/migrations/20260506120000_rolling_stock_inward.sql:622; supabase/migrations/20260506120000_rolling_stock_inward.sql:641"
+    },
+    {
+      "id": "STOCK-009",
+      "section": "17. Stock and Godown",
+      "scenario": "Concurrent sale/adjustment against same lot.",
+      "expected": "Row locking prevents negative or double-used stock.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1372,
+      "proofType": [
+        "db"
+      ],
+      "requiredProof": [
+        "Row locking prevents negative or double-used stock."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; supabase/migrations/20260506120000_rolling_stock_inward.sql:484; supabase/migrations/20260506120000_rolling_stock_inward.sql:606; supabase/migrations/20260601010000_commercial_party_identity.sql:337; supabase/migrations/20260601010000_commercial_party_identity.sql:351; supabase/migrations/20260531010000_configurable_batch_dispatch.sql:90"
+    },
+    {
+      "id": "STOCK-010",
+      "section": "17. Stock and Godown",
+      "scenario": "Sample cutting, damage, measurement correction, return.",
+      "expected": "Reason is traceable; chosen stock effect is correct.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1373,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Reason is traceable; chosen stock effect is correct."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; lib/schemas.ts:509; app/(dashboard)/owner/stock/actions.ts:766; app/(dashboard)/owner/stock/actions.ts:807; app/(dashboard)/owner/stock/actions.ts:853; supabase/migrations/20260506120000_rolling_stock_inward.sql:641"
+    },
+    {
+      "id": "STOCK-011",
+      "section": "17. Stock and Godown",
+      "scenario": "Order lot while order active/completed/cancelled.",
+      "expected": "Reserved/actionable/archive behavior matches policy.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1374,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Reserved/actionable/archive behavior matches policy."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; lib/stock-lifecycle.ts:12; __tests__/p1-stock-lifecycle.test.ts:28; __tests__/p1-stock-lifecycle.test.ts:65; app/(dashboard)/owner/stock/actions.ts:433; app/(dashboard)/owner/stock/actions.ts:440; app/(dashboard)/owner/stock/actions.ts:443"
+    },
+    {
+      "id": "STOCK-013",
+      "section": "17. Stock and Godown",
+      "scenario": "Sold-out lot with pending dispatch.",
+      "expected": "Pending quantity remains in Dispatches/Commercials even if lot is not in Active Stock.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1375,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Pending quantity remains in Dispatches/Commercials even if lot is not in Active Stock."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; app/(dashboard)/owner/stock/actions.ts:367; app/(dashboard)/owner/stock/actions.ts:410; app/(dashboard)/owner/stock/actions.ts:523; app/(dashboard)/owner/orders/actions.ts:1425; app/(dashboard)/owner/dispatches/DispatchesClient.tsx:1018; __tests__/p1-stock-lifecycle.test.ts:78; __tests__/p1-stock-lifecycle.test.ts:91"
+    },
+    {
+      "id": "SALE-010",
+      "section": "18. Party-First Sale",
+      "scenario": "Sell and dispatch now.",
+      "expected": "Sale and dispatch are consistent; no double dispatch.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1376,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Sale and dispatch are consistent; no double dispatch."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; app/(dashboard)/owner/dispatches/actions.ts:55; app/(dashboard)/owner/dispatches/actions.ts:82; supabase/migrations/20260601010000_commercial_party_identity.sql:318; supabase/migrations/20260601010000_commercial_party_identity.sql:361; supabase/migrations/20260601010000_commercial_party_identity.sql:437; supabase/migrations/20260601010000_commercial_party_identity.sql:501; supabase/migrations/20260530210000_confirm_party_stock_sale_dispatch.sql:370"
+    },
+    {
+      "id": "SALE-011",
+      "section": "18. Party-First Sale",
+      "scenario": "Credit days zero and positive.",
+      "expected": "Due date starts from first dispatch date per active product rule.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1377,
+      "proofType": [
+        "db"
+      ],
+      "requiredProof": [
+        "Due date starts from first dispatch date per active product rule."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; components/dispatches/SellAndDispatchDialog.tsx:430; supabase/migrations/20260601010000_commercial_party_identity.sql:331; supabase/migrations/20260530210000_confirm_party_stock_sale_dispatch.sql:374; supabase/migrations/20260530210000_confirm_party_stock_sale_dispatch.sql:512"
+    },
+    {
+      "id": "SALE-012",
+      "section": "18. Party-First Sale",
+      "scenario": "Sale recorded today, first dispatch later.",
+      "expected": "Receivable due date is deferred/rebased correctly.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1378,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Receivable due date is deferred/rebased correctly."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; components/dispatches/SellAndDispatchDialog.tsx:462; supabase/migrations/20260601010000_commercial_party_identity.sql:331; supabase/migrations/20260601010000_commercial_party_identity.sql:501; supabase/migrations/20260530210000_confirm_party_stock_sale_dispatch.sql:374; supabase/migrations/20260530210000_confirm_party_stock_sale_dispatch.sql:497; supabase/migrations/20260530210000_confirm_party_stock_sale_dispatch.sql:512"
+    },
+    {
+      "id": "SALE-014",
+      "section": "18. Party-First Sale",
+      "scenario": "Failure after sale but before optional dispatch.",
+      "expected": "Sale remains recoverable under Pending Dispatch; message is explicit.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1379,
+      "proofType": [
+        "db"
+      ],
+      "requiredProof": [
+        "Sale remains recoverable under Pending Dispatch; message is explicit."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; app/(dashboard)/owner/dispatches/actions.ts:202; app/(dashboard)/owner/dispatches/actions.ts:216; app/(dashboard)/owner/dispatches/actions.ts:252; app/(dashboard)/owner/dispatches/actions.ts:256; components/dispatches/SellAndDispatchDialog.tsx:270"
+    },
+    {
+      "id": "SALE-016",
+      "section": "18. Party-First Sale",
+      "scenario": "Broker/commission, claim, or rate-difference information.",
+      "expected": "If unsupported, UI/docs do not imply it is included in net realization.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1380,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "If unsupported, UI/docs do not imply it is included in net realization."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; components/dispatches/SellAndDispatchDialog.tsx:220; components/dispatches/SellAndDispatchDialog.tsx:420; components/dispatches/SellAndDispatchDialog.tsx:451; components/dispatches/SellAndDispatchDialog.tsx:456; components/dispatches/SellAndDispatchDialog.tsx:460"
+    },
+    {
+      "id": "DISP-012",
+      "section": "19. Dispatch, Receipt, and Difference Reconciliation",
+      "scenario": "Receipt for one of several batches.",
+      "expected": "Only that batch closes; remaining batches stay actionable.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1381,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Only that batch closes; remaining batches stay actionable."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; supabase/migrations/20260531020000_keep_partial_stock_sale_receipt_pending.sql:34; supabase/migrations/20260531020000_keep_partial_stock_sale_receipt_pending.sql:70; supabase/migrations/20260531020000_keep_partial_stock_sale_receipt_pending.sql:76; supabase/migrations/20260531020000_keep_partial_stock_sale_receipt_pending.sql:95; supabase/migrations/20260601030000_link_stock_sale_dispatch_orders.sql:52"
+    },
+    {
+      "id": "DISP-017",
+      "section": "19. Dispatch, Receipt, and Difference Reconciliation",
+      "scenario": "Consignment above/below relevant e-way threshold and non-supply movement.",
+      "expected": "App behaves as a reminder/checklist only unless all required compliance data is collected.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1382,
+      "proofType": [
+        "browser",
+        "db"
+      ],
+      "requiredProof": [
+        "App behaves as a reminder/checklist only unless all required compliance data is collected."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; supabase/migrations/20260531010000_configurable_batch_dispatch.sql:123; supabase/migrations/20260531010000_configurable_batch_dispatch.sql:138; supabase/migrations/20260601010000_commercial_party_identity.sql:484; components/dispatches/DispatchModals.tsx:273; components/dispatches/DispatchModals.tsx:277; app/(dashboard)/owner/dispatches/DispatchesClient.tsx:916"
+    },
+    {
+      "id": "DISP-018",
+      "section": "19. Dispatch, Receipt, and Difference Reconciliation",
+      "scenario": "Missing challan/e-way/transporter data.",
+      "expected": "Clear warning without falsely claiming compliance completion.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1383,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Clear warning without falsely claiming compliance completion."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/order-stock-sale-source-evidence-20260624.json; app/(dashboard)/owner/dispatches/DispatchesClient.tsx:249; app/(dashboard)/owner/dispatches/DispatchesClient.tsx:862; app/(dashboard)/owner/dispatches/DispatchesClient.tsx:916; lib/dispatch/archive.ts:19"
+    },
+    {
+      "id": "COMM-003",
+      "section": "20. Commercials, Receivables, and Collections",
+      "scenario": "Realized versus expected entries.",
+      "expected": "No double counting between quote, order, market run, stock sale, and invoice-like records.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1384,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "No double counting between quote, order, market run, stock sale, and invoice-like records."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/commercials-remaining-source-evidence-20260624.json; supabase/migrations/20260601010000_commercial_party_identity.sql:560; supabase/migrations/20260601010000_commercial_party_identity.sql:615; supabase/migrations/20260601010000_commercial_party_identity.sql:666; supabase/migrations/20260601010000_commercial_party_identity.sql:714; app/(dashboard)/owner/commercials/actions.ts:126"
+    },
+    {
+      "id": "COMM-009",
+      "section": "20. Commercials, Receivables, and Collections",
+      "scenario": "Payment mode cash/bank/UPI/cheque/other.",
+      "expected": "DB enum and UI label normalize correctly.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1385,
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "DB enum and UI label normalize correctly."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/commercials-payment-mode-evidence.json"
+    },
+    {
+      "id": "COMM-013",
+      "section": "20. Commercials, Receivables, and Collections",
+      "scenario": "Collected-this-month boundary at month start/end.",
+      "expected": "Correct India calendar month.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1386,
+      "proofType": [
+        "api"
+      ],
+      "requiredProof": [
+        "Correct India calendar month."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/commercials-remaining-source-evidence-20260624.json; app/(dashboard)/owner/commercials/actions.ts:575; app/(dashboard)/owner/commercials/actions.ts:579; app/(dashboard)/owner/commercials/actions.ts:581; app/(dashboard)/owner/commercials/actions.ts:587; app/(dashboard)/owner/commercials/CommercialsClient.tsx:1657"
+    },
+    {
+      "id": "COMM-015",
+      "section": "20. Commercials, Receivables, and Collections",
+      "scenario": "Duplicate names with different `party_id`.",
+      "expected": "Separate party rows; legacy name fallback only where ID is absent.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1387,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Separate party rows; legacy name fallback only where ID is absent."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/commercials-party-adjustments-code-evidence.json; app/(dashboard)/owner/commercials/actions.ts:400"
+    },
+    {
+      "id": "COMM-018",
+      "section": "20. Commercials, Receivables, and Collections",
+      "scenario": "Claim, shortage deduction, discount, rate difference, broker commission.",
+      "expected": "Unsupported effects are not silently included. Record as product gap if factory needs them.",
+      "severity": null,
+      "workflowGroup": "dispatch/stock/commercials",
+      "priorityGroup": "C",
+      "priorityRank": 1388,
+      "proofType": [
+        "browser",
+        "db"
+      ],
+      "requiredProof": [
+        "Unsupported effects are not silently included. Record as product gap if factory needs them."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/commercials-party-adjustments-code-evidence.json; supabase/migrations/20260601010000_commercial_party_identity.sql:560"
+    },
+    {
+      "id": "SEC-007",
+      "section": "27. Security, Privacy, and Audit",
+      "scenario": "Razorpay webhook HMAC and idempotency.",
+      "expected": "Invalid/replay safe.",
+      "severity": null,
+      "workflowGroup": "security/export/audit",
+      "priorityGroup": "C",
+      "priorityRank": 1529,
+      "proofType": [
+        "browser",
+        "api",
+        "external-service"
+      ],
+      "requiredProof": [
+        "Invalid/replay safe."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "Webhook/payment-provider proof requires controlled external Razorpay/webhook delivery; source proof alone cannot promote it.",
+      "sourceEvidence": "logs/security-review.json"
+    },
+    {
+      "id": "SEC-010",
+      "section": "27. Security, Privacy, and Audit",
+      "scenario": "Worker erasure/anonymization.",
+      "expected": "Intended PII removed while payroll/audit integrity remains.",
+      "severity": null,
+      "workflowGroup": "security/export/audit",
+      "priorityGroup": "C",
+      "priorityRank": 1531,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Intended PII removed while payroll/audit integrity remains."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "Worker erasure/anonymization is destructive and needs an explicitly disposable worker plus access-code proof before runtime execution.",
+      "sourceEvidence": "logs/security-export-erasure-evidence.json; app/(dashboard)/owner/fixed-workers/page.tsx:554; app/(dashboard)/owner/actions.ts:765; app/(dashboard)/owner/actions/compliance.ts:106"
+    },
+    {
+      "id": "SEC-012",
+      "section": "27. Security, Privacy, and Audit",
+      "scenario": "Stored XSS in party, notes, quality, worker, challan, and template fields.",
+      "expected": "Rendered safely.",
+      "severity": null,
+      "workflowGroup": "security/export/audit",
+      "priorityGroup": "C",
+      "priorityRank": 1532,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Rendered safely."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "Security row has production-sourced/source-only evidence; controlled QA proof is required before any promotion.",
+      "sourceEvidence": "logs/auth-security-time-code-evidence-20260624.json; app/layout.tsx:61; lib/schemas.ts:116; lib/schemas.ts:225; lib/schemas.ts:350; lib/schemas.ts:444; components/AddWorkerDialog.tsx:41"
+    },
+    {
+      "id": "SEC-013",
+      "section": "27. Security, Privacy, and Audit",
+      "scenario": "CSRF/session/cookie behavior.",
+      "expected": "Protected actions require valid same-user session.",
+      "severity": null,
+      "workflowGroup": "security/export/audit",
+      "priorityGroup": "C",
+      "priorityRank": 1533,
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "Protected actions require valid same-user session."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "Security row has production-sourced/source-only evidence; controlled QA proof is required before any promotion.",
+      "sourceEvidence": "logs/security-csrf-session-evidence.json; next.config.ts:5; next.config.ts:56; proxy.ts:121; proxy.ts:164; proxy.ts:214; proxy.ts:265; lib/auth.ts:90; lib/supabase/server.ts:4"
+    },
+    {
+      "id": "AUTH-003",
+      "section": "9. Authentication, Signup, and Tenant Isolation",
+      "scenario": "Duplicate email and rapid double-submit.",
+      "expected": "One account; safe error; no duplicate org.",
+      "severity": null,
+      "workflowGroup": "auth/tenant-isolation",
+      "priorityGroup": "C",
+      "priorityRank": 1600,
+      "proofType": [
+        "db",
+        "api",
+        "external-service"
+      ],
+      "requiredProof": [
+        "One account; safe error; no duplicate org."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/auth-security-time-code-evidence-20260624.json; app/(auth)/signup/page.tsx:86; app/(auth)/signup/page.tsx:317; app/(auth)/actions/auth.ts:91; app/(auth)/actions/auth.ts:98; app/(auth)/actions/auth.ts:126; app/(auth)/actions/auth.ts:179"
+    },
+    {
+      "id": "AUTH-005",
+      "section": "9. Authentication, Signup, and Tenant Isolation",
+      "scenario": "Forgot-password and valid/expired/used reset links.",
+      "expected": "Only valid link changes password; old sessions behave as designed.",
+      "severity": null,
+      "workflowGroup": "auth/tenant-isolation",
+      "priorityGroup": "C",
+      "priorityRank": 1601,
+      "proofType": [
+        "browser",
+        "db",
+        "external-service"
+      ],
+      "requiredProof": [
+        "Only valid link changes password; old sessions behave as designed."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "Password reset proof depends on email/reset-link consumption and should not be automated without a safe disposable mail setup.",
+      "sourceEvidence": "logs/auth-security-time-code-evidence-20260624.json; app/(auth)/forgot-password/ForgotPasswordForm.tsx:14; app/(auth)/actions/auth.ts:51; app/(auth)/reset-password/ResetPasswordForm.tsx:82; app/(auth)/reset-password/ResetPasswordForm.tsx:157; app/auth/callback/route.ts:11; https://supabase.com/docs/reference/javascript/auth-resetpasswordforemail; https://supabase.com/docs/guides/auth/passwords"
+    },
+    {
+      "id": "AUTH-006",
+      "section": "9. Authentication, Signup, and Tenant Isolation",
+      "scenario": "Owner with incomplete onboarding logs in.",
+      "expected": "Redirected to onboarding.",
+      "severity": null,
+      "workflowGroup": "auth/tenant-isolation",
+      "priorityGroup": "C",
+      "priorityRank": 1602,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Redirected to onboarding."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/auth-security-time-code-evidence-20260624.json; app/(auth)/actions/auth.ts:372; app/(auth)/actions/auth.ts:398; app/(auth)/actions/auth.ts:408; app/(auth)/actions/auth.ts:426; app/auth/callback/route.ts:29"
+    },
+    {
+      "id": "AUTH-012",
+      "section": "9. Authentication, Signup, and Tenant Isolation",
+      "scenario": "Org A user guesses Org D record IDs.",
+      "expected": "RLS/server actions return no data and perform no mutation.",
+      "severity": null,
+      "workflowGroup": "auth/tenant-isolation",
+      "priorityGroup": "C",
+      "priorityRank": 1603,
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "RLS/server actions return no data and perform no mutation."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/source-audit-time-ux-evidence-20260624.json; lib/auth.ts:90; app/(dashboard)/owner/commercials/actions.ts:87; app/(dashboard)/owner/ledger/actions.ts:518; production Supabase policy metadata query, 2026-06-24; production Supabase view metadata query, 2026-06-24"
+    },
+    {
+      "id": "AUTH-013",
+      "section": "9. Authentication, Signup, and Tenant Isolation",
+      "scenario": "Logout in one tab; use second tab.",
+      "expected": "Second tab loses protected access on next request.",
+      "severity": null,
+      "workflowGroup": "auth/tenant-isolation",
+      "priorityGroup": "C",
+      "priorityRank": 1604,
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "requiredProof": [
+        "Second tab loses protected access on next request."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/auth-security-time-code-evidence-20260624.json; app/(auth)/actions.ts:6; components/auth/logout-button.tsx:21; lib/supabase/server.ts:4; lib/auth.ts:90; app/(dashboard)/owner/layout.tsx:8; app/(dashboard)/supervisor/layout.tsx:7; app/(dashboard)/admin/layout.tsx:4"
+    },
+    {
+      "id": "WA-001",
+      "section": "23. WhatsApp",
+      "scenario": "Opted-in worker receives simulated advance receipt.",
+      "expected": "Business write succeeds; delivery log says simulated/sent.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1612,
+      "proofType": [
+        "external-service"
+      ],
+      "requiredProof": [
+        "Business write succeeds; delivery log says simulated/sent."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized.",
+      "sourceEvidence": "logs/whatsapp-code-evidence-20260624.json; app/(dashboard)/owner/advances/actions.ts:17; app/(dashboard)/owner/advances/actions.ts:40; app/(dashboard)/owner/advances/actions.ts:51; supabase/functions/send-advance-receipt/index.ts:21; supabase/functions/send-advance-receipt/index.ts:73; supabase/functions/send-advance-receipt/index.ts:127"
+    },
+    {
+      "id": "WA-002",
+      "section": "23. WhatsApp",
+      "scenario": "Opted-out worker.",
+      "expected": "Message skipped and logged; business write succeeds.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1613,
+      "proofType": [
+        "browser",
+        "external-service"
+      ],
+      "requiredProof": [
+        "Message skipped and logged; business write succeeds."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized.",
+      "sourceEvidence": "logs/whatsapp-code-evidence-20260624.json; supabase/functions/_shared/whatsapp.ts:68; supabase/functions/_shared/whatsapp.ts:87; supabase/functions/send-advance-receipt/index.ts:83; supabase/functions/send-payslip/index.ts:113"
+    },
+    {
+      "id": "WA-003",
+      "section": "23. WhatsApp",
+      "scenario": "Missing consent or phone.",
+      "expected": "Message skipped with correct reason.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1614,
+      "proofType": [
+        "browser",
+        "external-service"
+      ],
+      "requiredProof": [
+        "Message skipped with correct reason."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized.",
+      "sourceEvidence": "logs/whatsapp-code-evidence-20260624.json; supabase/functions/_shared/whatsapp.ts:45; supabase/functions/_shared/whatsapp.ts:83; supabase/functions/send-advance-receipt/index.ts:66; supabase/functions/send-advance-receipt/index.ts:83; supabase/functions/send-payslip/index.ts:96; supabase/functions/send-payslip/index.ts:113"
+    },
+    {
+      "id": "WA-004",
+      "section": "23. WhatsApp",
+      "scenario": "Provider timeout/failure.",
+      "expected": "Core advance/payroll/access-code write is not rolled back.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1615,
+      "proofType": [
+        "external-service"
+      ],
+      "requiredProof": [
+        "Core advance/payroll/access-code write is not rolled back."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized.",
+      "sourceEvidence": "logs/whatsapp-code-evidence-20260624.json; app/(dashboard)/owner/advances/actions.ts:40; app/(dashboard)/owner/advances/actions.ts:60; app/(dashboard)/owner/advances/actions.ts:95; app/(dashboard)/owner/payroll/actions.ts:156; app/(dashboard)/owner/payroll/actions.ts:175; app/(dashboard)/owner/actions.ts:562; app/(dashboard)/owner/actions.ts:576"
+    },
+    {
+      "id": "WA-005",
+      "section": "23. WhatsApp",
+      "scenario": "Payslip summary and itemized follow-up.",
+      "expected": "Correct worker/settlement, no PII leak to wrong number.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1616,
+      "proofType": [
+        "browser",
+        "external-service"
+      ],
+      "requiredProof": [
+        "Correct worker/settlement, no PII leak to wrong number."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized.",
+      "sourceEvidence": "logs/whatsapp-code-evidence-20260624.json; supabase/functions/send-payslip/index.ts:65; supabase/functions/send-payslip/index.ts:87; supabase/functions/send-payslip/index.ts:131; supabase/functions/send-payslip/index.ts:209; supabase/functions/send-payslip/index.ts:220; supabase/functions/send-payslip/index.ts:249"
+    },
+    {
+      "id": "WA-006",
+      "section": "23. WhatsApp",
+      "scenario": "Access code message.",
+      "expected": "Only intended opted-in owner/supervisor receives it.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1617,
+      "proofType": [
+        "browser",
+        "external-service"
+      ],
+      "requiredProof": [
+        "Only intended opted-in owner/supervisor receives it."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized.",
+      "sourceEvidence": "logs/whatsapp-code-evidence-20260624.json; app/(dashboard)/owner/actions.ts:553; app/(dashboard)/owner/actions.ts:576; supabase/functions/send-access-code/index.ts:40; supabase/functions/send-access-code/index.ts:89; supabase/functions/send-access-code/index.ts:109"
+    },
+    {
+      "id": "WA-007",
+      "section": "23. WhatsApp",
+      "scenario": "Deadline/daily/monthly cooldown.",
+      "expected": "No duplicate spam.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1618,
+      "proofType": [
+        "browser",
+        "external-service"
+      ],
+      "requiredProof": [
+        "No duplicate spam."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized.",
+      "sourceEvidence": "logs/whatsapp-code-evidence-20260624.json; supabase/functions/send-daily-brief/index.ts:82; supabase/functions/send-daily-brief/index.ts:174; supabase/functions/check-pace-index/index.ts:52; supabase/functions/monthly-brief/index.ts:85; supabase/migrations/20260401020000_whatsapp_cooldown.sql:10; supabase/migrations/20260401030000_pg_cron_schedule.sql:33; supabase/migrations/20260402090000_pace_check_cron.sql:26; supabase/migrations/20260402100000_monthly_brief_cron.sql:27"
+    },
+    {
+      "id": "WA-009",
+      "section": "23. WhatsApp",
+      "scenario": "Retry failed message.",
+      "expected": "Maximum retry and 24-hour rules enforced.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1619,
+      "proofType": [
+        "external-service"
+      ],
+      "requiredProof": [
+        "Maximum retry and 24-hour rules enforced."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized.",
+      "sourceEvidence": "logs/whatsapp-code-evidence-20260624.json; supabase/functions/retry-failed-messages/index.ts:32; supabase/functions/retry-failed-messages/index.ts:77; supabase/functions/retry-failed-messages/index.ts:102; supabase/migrations/20260402110000_retry_infrastructure.sql:17; supabase/migrations/20260402120000_retry_cron.sql:27"
+    },
+    {
+      "id": "BILL-002",
+      "section": "24. Billing, Trial, and Referrals",
+      "scenario": "Base versus Premium access gates.",
+      "expected": "Correct modules gated; Billing itself remains reachable.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1620,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Correct modules gated; Billing itself remains reachable."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/billing-offline-time-code-evidence-20260624.json; components/billing/AccessGate.tsx:21; lib/subscription.ts:14; app/(dashboard)/owner/billing/page.tsx:198; app/(dashboard)/owner/estimator/layout.tsx:1; app/(dashboard)/owner/quotes/layout.tsx:1; app/(dashboard)/owner/orders/layout.tsx:1; app/(dashboard)/owner/payroll/layout.tsx:1; app/(dashboard)/owner/analytics/layout.tsx:1"
+    },
+    {
+      "id": "BILL-004",
+      "section": "24. Billing, Trial, and Referrals",
+      "scenario": "Duplicate/replayed webhook.",
+      "expected": "Idempotent.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1621,
+      "proofType": [
+        "api",
+        "external-service"
+      ],
+      "requiredProof": [
+        "Idempotent."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "Webhook/payment-provider proof requires controlled external Razorpay/webhook delivery; source proof alone cannot promote it.",
+      "sourceEvidence": "logs/security-review.json"
+    },
+    {
+      "id": "BILL-005",
+      "section": "24. Billing, Trial, and Referrals",
+      "scenario": "Invalid webhook signature.",
+      "expected": "Rejected without state change.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1622,
+      "proofType": [
+        "api",
+        "external-service"
+      ],
+      "requiredProof": [
+        "Rejected without state change."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "Webhook/payment-provider proof requires controlled external Razorpay/webhook delivery; source proof alone cannot promote it.",
+      "sourceEvidence": "logs/security-review.json"
+    },
+    {
+      "id": "BILL-008",
+      "section": "24. Billing, Trial, and Referrals",
+      "scenario": "Referral code create/apply.",
+      "expected": "One valid relationship; no self-referral/duplicate use.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1623,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "One valid relationship; no self-referral/duplicate use."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/billing-offline-time-code-evidence-20260624.json; lib/referral.ts:24; lib/referral.ts:127; lib/referral-webhook.ts:22; lib/referral-webhook.ts:38; supabase/migrations/20260418000000_referral_scheme.sql:10; supabase/migrations/20260509180000_razorpay_idempotency_unique_guards.sql:16; production Supabase index metadata query, 2026-06-24"
+    },
+    {
+      "id": "OFF-001",
+      "section": "25. Offline, PWA, Cache, and Network Resilience",
+      "scenario": "Install PWA and reopen.",
+      "expected": "Correct icon, scope, start route, and update behavior.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1624,
+      "proofType": [
+        "browser",
+        "api",
+        "external-service"
+      ],
+      "requiredProof": [
+        "Correct icon, scope, start route, and update behavior."
+      ],
+      "runtimeProofDisposition": "excluded_from_automated_runtime_proof",
+      "exclusionReason": "Offline/PWA proof needs deployment/service-worker lifecycle or controlled network proof; only safe local browser slices should be considered later.",
+      "sourceEvidence": "logs/offline-pwa-evidence.json; app/manifest.ts:3; app/layout.tsx:23; next.config.ts:29; public/sw.js"
+    },
+    {
+      "id": "OFF-003",
+      "section": "25. Offline, PWA, Cache, and Network Resilience",
+      "scenario": "Production draft while online, then offline.",
+      "expected": "Draft remains local and clearly unsent.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1625,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Draft remains local and clearly unsent."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/offline-pwa-evidence.json; app/(dashboard)/supervisor/dashboard/page.tsx:815; app/(dashboard)/supervisor/dashboard/page.tsx:857; app/(dashboard)/supervisor/dashboard/page.tsx:1014"
+    },
+    {
+      "id": "OFF-004",
+      "section": "25. Offline, PWA, Cache, and Network Resilience",
+      "scenario": "Submit production offline.",
+      "expected": "Must not claim success; no duplicate on reconnect.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1626,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Must not claim success; no duplicate on reconnect."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/offline-pwa-evidence.json; app/(dashboard)/supervisor/dashboard/page.tsx:918; app/(dashboard)/supervisor/dashboard/page.tsx:1000; app/(dashboard)/supervisor/dashboard/page.tsx:1003; app/(dashboard)/supervisor/dashboard/page.tsx:1012"
+    },
+    {
+      "id": "TIME-003",
+      "section": "26. Timezone, Date, and Localization",
+      "scenario": "Month-end/year-end.",
+      "expected": "Commercial collection and payroll cycles classify correctly.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1627,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Commercial collection and payroll cycles classify correctly."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/source-audit-time-ux-evidence-20260624.json; lib/payroll-cycle.ts:39; lib/payroll-cycle.ts:157; app/(dashboard)/owner/commercials/actions.ts:429; app/(dashboard)/owner/commercials/CommercialsClient.tsx:303; local date-fns/commercial mirror output, 2026-06-24"
+    },
+    {
+      "id": "TIME-004",
+      "section": "26. Timezone, Date, and Localization",
+      "scenario": "Leap day.",
+      "expected": "Valid date and cycle behavior.",
+      "severity": null,
+      "workflowGroup": "offline/release/external-service",
+      "priorityGroup": "C",
+      "priorityRank": 1628,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Valid date and cycle behavior."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/billing-offline-time-code-evidence-20260624.json; lib/payroll-cycle.ts:21; lib/payroll-cycle.ts:39; lib/payroll-cycle.ts:59; local date-fns mirror output, 2026-06-24"
+    },
+    {
+      "id": "DASH-001",
+      "section": "22. Factory Today and Analytics",
+      "scenario": "Empty factory.",
+      "expected": "Helpful setup state; no false production/money.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1803,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Helpful setup state; no false production/money."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/owner/today/actions.ts:173; app/(dashboard)/owner/today/actions.ts:392; app/(dashboard)/owner/today/actions.ts:422; app/(dashboard)/owner/today/FactoryTodayClient.tsx:87"
+    },
+    {
+      "id": "DASH-002",
+      "section": "22. Factory Today and Analytics",
+      "scenario": "After onboarding data.",
+      "expected": "Setup completion accurate.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1804,
+      "proofType": [
+        "browser",
+        "db"
+      ],
+      "requiredProof": [
+        "Setup completion accurate."
+      ],
+      "runtimeProofDisposition": "browser_or_source_only_until_qa_db_guard",
+      "exclusionReason": "Do not run Supabase CLI/MCP/SQL commands. DB proof rows remain blocked until the local link is changed to the allowed QA ref.",
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/owner/today/actions.ts:392; app/(dashboard)/owner/today/actions.ts:407; app/(dashboard)/owner/today/actions.ts:671; app/(dashboard)/owner/today/FactoryTodayClient.tsx:111"
+    },
+    {
+      "id": "DASH-003",
+      "section": "22. Factory Today and Analytics",
+      "scenario": "After shift production.",
+      "expected": "Today meters, production status, work risk, order/run progress, and payroll signals update once.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1805,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Today meters, production status, work risk, order/run progress, and payroll signals update once."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "output/qa/batch15/BATCH15-payroll-doc-export-consistency-proof.json; __tests__/batch15-payroll-doc-export-consistency.test.ts; lib/payroll-read-models.ts; app/(dashboard)/owner/today/actions.ts"
+    },
+    {
+      "id": "DASH-005",
+      "section": "22. Factory Today and Analytics",
+      "scenario": "Realtime insert.",
+      "expected": "Owner sees update without duplicate totals.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1807,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Owner sees update without duplicate totals."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:74; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:78; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:103; app/(dashboard)/owner/actions/dashboard.ts:252"
+    },
+    {
+      "id": "DASH-006",
+      "section": "22. Factory Today and Analytics",
+      "scenario": "Realtime disconnect/reconnect.",
+      "expected": "Status visible; refetch recovers truth.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1808,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Status visible; refetch recovers truth."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:119; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:126; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:130; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:192"
+    },
+    {
+      "id": "DASH-008",
+      "section": "22. Factory Today and Analytics",
+      "scenario": "Work-at-risk and pace.",
+      "expected": "Correct deadline/remaining meter logic.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1809,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Correct deadline/remaining meter logic."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/owner/today/actions.ts:186; app/(dashboard)/owner/today/actions.ts:464; app/(dashboard)/owner/today/actions.ts:469; app/(dashboard)/owner/today/actions.ts:493"
+    },
+    {
+      "id": "DASH-009",
+      "section": "22. Factory Today and Analytics",
+      "scenario": "Completed/closed work.",
+      "expected": "Leaves active risk cards.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1810,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Leaves active risk cards."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/owner/today/actions.ts:186; app/(dashboard)/owner/today/actions.ts:194; app/(dashboard)/owner/today/actions.ts:468; app/(dashboard)/owner/today/actions.ts:544"
+    },
+    {
+      "id": "DASH-010",
+      "section": "22. Factory Today and Analytics",
+      "scenario": "Large data range.",
+      "expected": "Acceptable load time and no client freeze.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1811,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Acceptable load time and no client freeze."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/owner/today/actions.ts:216; app/(dashboard)/owner/today/actions.ts:225; app/(dashboard)/owner/actions/dashboard.ts:202; app/(dashboard)/owner/actions/dashboard.ts:217"
+    },
+    {
+      "id": "UX-001",
+      "section": "28. UX, Accessibility, and Operational Fit",
+      "scenario": "Supervisor logs 20 looms on a phone.",
+      "expected": "No excessive scrolling/error-prone row confusion.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1835,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "No excessive scrolling/error-prone row confusion."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:330; app/(dashboard)/supervisor/dashboard/page.tsx:517; app/(dashboard)/supervisor/dashboard/page.tsx:1246; app/(dashboard)/supervisor/dashboard/page.tsx:1290"
+    },
+    {
+      "id": "UX-002",
+      "section": "28. UX, Accessibility, and Operational Fit",
+      "scenario": "Buttons during submission.",
+      "expected": "Disabled/progress state prevents double action.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1836,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Disabled/progress state prevents double action."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/source-audit-time-ux-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:918; app/(dashboard)/supervisor/dashboard/page.tsx:1298; components/AddWorkerDialog.tsx:363; components/supervisor/KharchiDialog.tsx:150; components/dispatches/SellAndDispatchDialog.tsx:511; app/(dashboard)/owner/stock/TakaStockClient.tsx:362; components/billing/SubscribeButton.tsx:150; components/billing/TrialButton.tsx:84; app/(dashboard)/owner/payroll/page.tsx:3824"
+    },
+    {
+      "id": "UX-003",
+      "section": "28. UX, Accessibility, and Operational Fit",
+      "scenario": "Error recovery.",
+      "expected": "Entered values remain after validation/server error.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1837,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Entered values remain after validation/server error."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/source-audit-time-ux-evidence-20260624.json; components/AddWorkerDialog.tsx:128; components/supervisor/KharchiDialog.tsx:55; app/(dashboard)/owner/commercials/CommercialsClient.tsx:1492; components/dispatches/SellAndDispatchDialog.tsx:112; components/dispatches/SellAndDispatchDialog.tsx:242; app/(dashboard)/owner/stock/TakaStockClient.tsx:185; app/(dashboard)/owner/payroll/page.tsx:1712"
+    },
+    {
+      "id": "UX-004",
+      "section": "28. UX, Accessibility, and Operational Fit",
+      "scenario": "Mobile navigation and logout.",
+      "expected": "Controls do not overlap bottom navigation.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1838,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Controls do not overlap bottom navigation."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/layout.tsx:47; components/navigation/supervisor-nav.tsx:256; app/(dashboard)/supervisor/dashboard/page.tsx:1290; app/globals.css:388"
+    },
+    {
+      "id": "UX-005",
+      "section": "28. UX, Accessibility, and Operational Fit",
+      "scenario": "Dialogs and sheets.",
+      "expected": "Keyboard focus, labels, description, Escape/close behavior work.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1839,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "Keyboard focus, labels, description, Escape/close behavior work."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:621; app/(dashboard)/supervisor/dashboard/page.tsx:1313; app/(dashboard)/supervisor/dashboard/page.tsx:1338; app/(dashboard)/supervisor/dashboard/page.tsx:1345; components/ui/dialog.tsx:134; components/ui/sheet.tsx:124"
+    },
+    {
+      "id": "UX-006",
+      "section": "28. UX, Accessibility, and Operational Fit",
+      "scenario": "Keyboard-only desktop.",
+      "expected": "All core workflows are operable.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1840,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "All core workflows are operable."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:330; app/(dashboard)/supervisor/dashboard/page.tsx:517; app/(dashboard)/supervisor/dashboard/page.tsx:631; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:217; components/navigation/supervisor-nav.tsx:268"
+    },
+    {
+      "id": "UX-007",
+      "section": "28. UX, Accessibility, and Operational Fit",
+      "scenario": "Screen reader landmarks/names.",
+      "expected": "Critical form controls have useful names and errors.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1841,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Critical form controls have useful names and errors."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:518; components/navigation/supervisor-nav.tsx:277; components/factory-today/SetupPanel.tsx:582; components/factory-today/SetupPanel.tsx:1128; app/(dashboard)/supervisor/dashboard/page.tsx:992"
+    },
+    {
+      "id": "UX-008",
+      "section": "28. UX, Accessibility, and Operational Fit",
+      "scenario": "Color contrast and status meaning.",
+      "expected": "Risk/success is not communicated by color alone.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1842,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Risk/success is not communicated by color alone."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:223; app/(dashboard)/supervisor/dashboard/page.tsx:315; app/(dashboard)/supervisor/dashboard/page.tsx:1186; app/(dashboard)/owner/today/FactoryTodayClient.tsx:157"
+    },
+    {
+      "id": "UX-009",
+      "section": "28. UX, Accessibility, and Operational Fit",
+      "scenario": "200% zoom and large text.",
+      "expected": "No clipped totals/buttons.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1843,
+      "proofType": [
+        "browser"
+      ],
+      "requiredProof": [
+        "No clipped totals/buttons."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/layout.tsx:47; app/(dashboard)/supervisor/dashboard/page.tsx:311; app/(dashboard)/supervisor/dashboard/page.tsx:421; app/(dashboard)/owner/today/FactoryTodayClient.tsx:131; components/navigation/supervisor-nav.tsx:250"
+    },
+    {
+      "id": "UX-010",
+      "section": "28. UX, Accessibility, and Operational Fit",
+      "scenario": "Empty/loading/error/offline states.",
+      "expected": "Distinct and actionable.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1844,
+      "proofType": [
+        "runtime"
+      ],
+      "requiredProof": [
+        "Distinct and actionable."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:1250; app/(dashboard)/supervisor/dashboard/page.tsx:1254; components/offline-sync-provider.tsx:13; app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:192; app/(dashboard)/owner/today/FactoryTodayClient.tsx:184"
+    },
+    {
+      "id": "UX-011",
+      "section": "28. UX, Accessibility, and Operational Fit",
+      "scenario": "Owner and supervisor role copy.",
+      "expected": "No “Viewing as Owner” confusion for supervisors.",
+      "severity": null,
+      "workflowGroup": "dashboard/ux/signoff-support",
+      "priorityGroup": "C",
+      "priorityRank": 1845,
+      "proofType": [
+        "api"
+      ],
+      "requiredProof": [
+        "No “Viewing as Owner” confusion for supervisors."
+      ],
+      "runtimeProofDisposition": "candidate_for_safe_local_or_qa_runtime_proof",
+      "exclusionReason": null,
+      "sourceEvidence": "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json; app/(dashboard)/supervisor/dashboard/page.tsx:1157; components/RoleBanner.tsx:11; components/RoleBanner.tsx:22; updates-observed.json:AUTH-011"
+    }
+  ],
+  "rowsByWorkflow": {
+    "estimator/quote/order": [
+      "EST-017",
+      "EST-002",
+      "EST-004",
+      "EST-006",
+      "EST-007",
+      "EST-008",
+      "EST-009",
+      "EST-010",
+      "EST-013",
+      "EST-014",
+      "EST-015",
+      "EST-018",
+      "QUOTE-004",
+      "QUOTE-006",
+      "QUOTE-007",
+      "ORDER-007",
+      "ORDER-010",
+      "ORDER-011",
+      "ORDER-012",
+      "ORDER-013",
+      "ORDER-014",
+      "ORDER-015"
+    ],
+    "production/order boundary": [
+      "PROD-013",
+      "PROD-022",
+      "PROD-023",
+      "PROD-029",
+      "SETUP-011",
+      "PROD-002",
+      "PROD-004",
+      "MASTER-002",
+      "MASTER-005",
+      "SETUP-001",
+      "SETUP-002",
+      "SETUP-007",
+      "SETUP-010",
+      "SETUP-012",
+      "MASTER-001",
+      "MASTER-003",
+      "MASTER-006",
+      "MASTER-008",
+      "MASTER-009",
+      "MASTER-011",
+      "MASTER-012",
+      "MASTER-013",
+      "MASTER-015",
+      "ORDER-005",
+      "ORDER-009",
+      "PROD-005",
+      "PROD-006",
+      "PROD-007",
+      "PROD-010",
+      "PROD-011",
+      "PROD-014",
+      "PROD-017",
+      "PROD-018",
+      "PROD-019",
+      "PROD-024",
+      "PROD-025",
+      "PROD-026",
+      "PROD-027",
+      "PROD-030"
+    ],
+    "payroll/kharchi": [
+      "PAY-006",
+      "PAY-002",
+      "PAY-005",
+      "PAY-010",
+      "PAY-011",
+      "PAY-012",
+      "PAY-014",
+      "PAY-017",
+      "PAY-019",
+      "PAY-021",
+      "PAY-022",
+      "PAY-025",
+      "PAY-026",
+      "PAY-027"
+    ],
+    "dispatch/stock/commercials": [
+      "MARKET-009",
+      "MARKET-010",
+      "MARKET-013",
+      "STOCK-004",
+      "STOCK-005",
+      "STOCK-007",
+      "STOCK-009",
+      "STOCK-010",
+      "STOCK-011",
+      "STOCK-013",
+      "SALE-010",
+      "SALE-011",
+      "SALE-012",
+      "SALE-014",
+      "SALE-016",
+      "DISP-012",
+      "DISP-017",
+      "DISP-018",
+      "COMM-003",
+      "COMM-009",
+      "COMM-013",
+      "COMM-015",
+      "COMM-018"
+    ],
+    "security/export/audit": [
+      "SEC-015",
+      "SEC-009",
+      "SEC-007",
+      "SEC-010",
+      "SEC-012",
+      "SEC-013"
+    ],
+    "offline/release/external-service": [
+      "WA-001",
+      "WA-002",
+      "WA-003",
+      "WA-004",
+      "WA-005",
+      "WA-006",
+      "WA-007",
+      "WA-009",
+      "BILL-002",
+      "BILL-004",
+      "BILL-005",
+      "BILL-008",
+      "OFF-001",
+      "OFF-003",
+      "OFF-004",
+      "TIME-003",
+      "TIME-004"
+    ],
+    "auth/tenant-isolation": [
+      "AUTH-003",
+      "AUTH-005",
+      "AUTH-006",
+      "AUTH-012",
+      "AUTH-013"
+    ],
+    "dashboard/ux/signoff-support": [
+      "DASH-004",
+      "DASH-001",
+      "DASH-002",
+      "DASH-003",
+      "DASH-005",
+      "DASH-006",
+      "DASH-008",
+      "DASH-009",
+      "DASH-010",
+      "UX-001",
+      "UX-002",
+      "UX-003",
+      "UX-004",
+      "UX-005",
+      "UX-006",
+      "UX-007",
+      "UX-008",
+      "UX-009",
+      "UX-010",
+      "UX-011"
+    ],
+    "other": []
+  },
+  "rowsExcludedFromAutomatedRuntimeProof": [
+    {
+      "id": "SEC-017",
+      "reason": "Explicitly excluded by objective unless an exact product/legal/signoff decision and proof path exists."
+    },
+    {
+      "id": "AUTH-008",
+      "reason": "Explicitly excluded by objective unless an exact product/legal/signoff decision and proof path exists."
+    },
+    {
+      "id": "MASTER-014",
+      "reason": "Explicitly excluded by objective unless an exact product/legal/signoff decision and proof path exists."
+    },
+    {
+      "id": "TECH rows",
+      "reason": "Explicitly excluded by objective unless an exact product/legal/signoff decision and proof path exists."
+    },
+    {
+      "id": "SIGNOFF rows",
+      "reason": "Explicitly excluded by objective unless an exact product/legal/signoff decision and proof path exists."
+    },
+    {
+      "id": "Golden rows",
+      "reason": "Explicitly excluded by objective unless an exact product/legal/signoff decision and proof path exists."
+    },
+    {
+      "id": "SEC-015",
+      "section": "27. Security, Privacy, and Audit",
+      "workflowGroup": "security/export/audit",
+      "proofType": [
+        "db",
+        "browser",
+        "external-service"
+      ],
+      "reason": "Security row has production-sourced/source-only evidence; controlled QA proof is required before any promotion."
+    },
+    {
+      "id": "SEC-007",
+      "section": "27. Security, Privacy, and Audit",
+      "workflowGroup": "security/export/audit",
+      "proofType": [
+        "browser",
+        "api",
+        "external-service"
+      ],
+      "reason": "Webhook/payment-provider proof requires controlled external Razorpay/webhook delivery; source proof alone cannot promote it."
+    },
+    {
+      "id": "SEC-010",
+      "section": "27. Security, Privacy, and Audit",
+      "workflowGroup": "security/export/audit",
+      "proofType": [
+        "browser"
+      ],
+      "reason": "Worker erasure/anonymization is destructive and needs an explicitly disposable worker plus access-code proof before runtime execution."
+    },
+    {
+      "id": "SEC-012",
+      "section": "27. Security, Privacy, and Audit",
+      "workflowGroup": "security/export/audit",
+      "proofType": [
+        "browser"
+      ],
+      "reason": "Security row has production-sourced/source-only evidence; controlled QA proof is required before any promotion."
+    },
+    {
+      "id": "SEC-013",
+      "section": "27. Security, Privacy, and Audit",
+      "workflowGroup": "security/export/audit",
+      "proofType": [
+        "browser",
+        "db",
+        "api"
+      ],
+      "reason": "Security row has production-sourced/source-only evidence; controlled QA proof is required before any promotion."
+    },
+    {
+      "id": "AUTH-005",
+      "section": "9. Authentication, Signup, and Tenant Isolation",
+      "workflowGroup": "auth/tenant-isolation",
+      "proofType": [
+        "browser",
+        "db",
+        "external-service"
+      ],
+      "reason": "Password reset proof depends on email/reset-link consumption and should not be automated without a safe disposable mail setup."
+    },
+    {
+      "id": "WA-001",
+      "section": "23. WhatsApp",
+      "workflowGroup": "offline/release/external-service",
+      "proofType": [
+        "external-service"
+      ],
+      "reason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized."
+    },
+    {
+      "id": "WA-002",
+      "section": "23. WhatsApp",
+      "workflowGroup": "offline/release/external-service",
+      "proofType": [
+        "browser",
+        "external-service"
+      ],
+      "reason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized."
+    },
+    {
+      "id": "WA-003",
+      "section": "23. WhatsApp",
+      "workflowGroup": "offline/release/external-service",
+      "proofType": [
+        "browser",
+        "external-service"
+      ],
+      "reason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized."
+    },
+    {
+      "id": "WA-004",
+      "section": "23. WhatsApp",
+      "workflowGroup": "offline/release/external-service",
+      "proofType": [
+        "external-service"
+      ],
+      "reason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized."
+    },
+    {
+      "id": "WA-005",
+      "section": "23. WhatsApp",
+      "workflowGroup": "offline/release/external-service",
+      "proofType": [
+        "browser",
+        "external-service"
+      ],
+      "reason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized."
+    },
+    {
+      "id": "WA-006",
+      "section": "23. WhatsApp",
+      "workflowGroup": "offline/release/external-service",
+      "proofType": [
+        "browser",
+        "external-service"
+      ],
+      "reason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized."
+    },
+    {
+      "id": "WA-007",
+      "section": "23. WhatsApp",
+      "workflowGroup": "offline/release/external-service",
+      "proofType": [
+        "browser",
+        "external-service"
+      ],
+      "reason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized."
+    },
+    {
+      "id": "WA-009",
+      "section": "23. WhatsApp",
+      "workflowGroup": "offline/release/external-service",
+      "proofType": [
+        "external-service"
+      ],
+      "reason": "WhatsApp/provider proof requires controlled external service setup and must not be touched in this loop unless separately authorized."
+    },
+    {
+      "id": "BILL-004",
+      "section": "24. Billing, Trial, and Referrals",
+      "workflowGroup": "offline/release/external-service",
+      "proofType": [
+        "api",
+        "external-service"
+      ],
+      "reason": "Webhook/payment-provider proof requires controlled external Razorpay/webhook delivery; source proof alone cannot promote it."
+    },
+    {
+      "id": "BILL-005",
+      "section": "24. Billing, Trial, and Referrals",
+      "workflowGroup": "offline/release/external-service",
+      "proofType": [
+        "api",
+        "external-service"
+      ],
+      "reason": "Webhook/payment-provider proof requires controlled external Razorpay/webhook delivery; source proof alone cannot promote it."
+    },
+    {
+      "id": "OFF-001",
+      "section": "25. Offline, PWA, Cache, and Network Resilience",
+      "workflowGroup": "offline/release/external-service",
+      "proofType": [
+        "browser",
+        "api",
+        "external-service"
+      ],
+      "reason": "Offline/PWA proof needs deployment/service-worker lifecycle or controlled network proof; only safe local browser slices should be considered later."
+    }
+  ],
+  "promotionRules": [
+    "Promote from code_verified to pass only when the proof artifact includes row ID, expected behavior, local/QA environment, date/time, branch/hash, app URL without secrets, persona, steps, observed result, evidence path, satisfaction rationale, no-production-mutation confirmation, no-secrets confirmation, and remaining limitations.",
+    "If proof is partial, keep code_verified and record what is missing.",
+    "Do not promote blocked, legal/product-policy, TECH/audit/dependency, SIGNOFF, Golden, or external-service rows through unrelated proof.",
+    "Do not promote DB/security rows while the Supabase ref guard is production or unknown."
+  ],
+  "lastUpdatedAt": "2026-07-05T19:05:46.234Z",
+  "latestCounts": {
+    "total": 377,
+    "pass": 196,
+    "fail": 13,
+    "blocked": 22,
+    "not_applicable": 1,
+    "code_verified": 145,
+    "not_run": 0
+  },
+  "promotions": [
+    {
+      "rowId": "PROD-029",
+      "from": "code_verified",
+      "to": "pass",
+      "artifact": "output/qa/runtime-proof-loop/GROUP_A-runtime-proof-20260706-PROD-029.json",
+      "promotedAt": "2026-07-05T19:03:47.716Z"
+    }
+  ],
+  "attempts": [
+    {
+      "rowId": "DASH-004",
+      "outcome": "left_code_verified",
+      "reason": "Owner analytics runtime proof was blocked by invalid reusable owner credential in the local QA-env session.",
+      "artifact": "output/qa/runtime-proof-loop/GROUP_A-runtime-proof-20260706-DASH-004-auth-blocked.json",
+      "attemptedAt": "2026-07-05T19:05:46.234Z"
+    }
+  ]
+}
