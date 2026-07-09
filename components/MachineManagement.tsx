@@ -49,7 +49,7 @@ import {
     updateMachine,
     deleteMachine,
     toggleMachineStatus as toggleMachineStatusAction,
-    updateMachineAssignment,
+    upsertMachineOperatorAssignment,
     assignMachineProductionTarget,
     getActiveProductionTargets,
 } from '@/app/(dashboard)/owner/actions'
@@ -59,6 +59,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
 import { cn } from '@/lib/utils'
+import {
+    getDefaultPayModeForMachineType,
+    getOperatorWorkerTypeForPayMode,
+    normalizeMachineType,
+    type OperatorPayMode,
+    type OperatorWorkerType,
+} from '@/lib/machine-operator-payroll'
 
 function getErrorMessage(error: unknown, fallback: string) {
     return error instanceof Error ? error.message : fallback
@@ -67,6 +74,14 @@ function getErrorMessage(error: unknown, fallback: string) {
 interface Worker {
     id: number
     name: string
+    is_active: boolean
+}
+
+interface FixedWorker {
+    id: number
+    name: string
+    role: string
+    monthly_salary: number
     is_active: boolean
 }
 
@@ -90,8 +105,43 @@ interface Machine {
 
 interface Assignment {
     machine_id: string
-    worker_id: number
+    worker_id: number | null
     shift: 'day' | 'night'
+    operator_assignment_id?: string | null
+    operator_worker_type?: OperatorWorkerType | null
+    meter_worker_id?: number | null
+    fixed_worker_id?: number | null
+    pay_mode?: OperatorPayMode | null
+    rate?: number | null
+    machine_type?: string | null
+}
+
+type AssignmentEditorState = {
+    machine: Machine
+    shift: 'day' | 'night'
+    workerType: OperatorWorkerType
+    payMode: OperatorPayMode
+    meterWorkerId: string
+    fixedWorkerId: string
+    rate: string
+}
+
+type MachineOperatorAssignmentRow = {
+    id: string
+    machine_id: string
+    worker_type: OperatorWorkerType
+    meter_worker_id: number | null
+    fixed_worker_id: number | null
+    shift: string
+    pay_mode: OperatorPayMode
+    rate: number | string | null
+    machine_type: string | null
+}
+
+type LegacyMachineAssignmentRow = {
+    machine_id: string
+    worker_id: number
+    shift: string
 }
 
 interface MachineManagementProps {
@@ -130,6 +180,8 @@ export function MachineManagement({
     const [renameLoomType, setRenameLoomType] = useState<string>('')
     const [renameCustomLabel, setRenameCustomLabel] = useState('')
     const [renaming, setRenaming] = useState(false)
+    const [assignmentEditor, setAssignmentEditor] = useState<AssignmentEditorState | null>(null)
+    const [savingAssignment, setSavingAssignment] = useState(false)
 
     // Request Access Code state
     const [requestingCode, setRequestingCode] = useState(false)
@@ -191,6 +243,20 @@ export function MachineManagement({
         }
     })
 
+    const { data: fixedWorkers } = useQuery({
+        queryKey: ['fixed_workers', orgId],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('fixed_workers')
+                .select('id, name, role, monthly_salary, is_active')
+                .eq('org_id', orgId)
+                .eq('is_active', true)
+                .order('name')
+            if (error) throw error
+            return data as FixedWorker[]
+        }
+    })
+
     // Fetch assignable cost analyses / qualities across party orders and market runs.
     // staleTime: 30 s — avoids re-running the heavy market_run_summary view query on every
     // mount or tab switch. The query is invalidated immediately after any assignment change.
@@ -207,14 +273,54 @@ export function MachineManagement({
     })
 
     const { data: assignments } = useQuery({
-        queryKey: ['machine_assignments', orgId],
+        queryKey: ['machine_operator_assignments', orgId],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('machine_assignments')
-                .select('*')
-                .eq('org_id', orgId)
-            if (error) throw error
-            return data as Assignment[]
+            const [operatorRes, legacyRes] = await Promise.all([
+                supabase
+                    .from('machine_operator_assignments')
+                    .select('id, machine_id, worker_type, meter_worker_id, fixed_worker_id, shift, pay_mode, rate, machine_type')
+                    .eq('org_id', orgId)
+                    .eq('active', true)
+                    .is('effective_to', null),
+                supabase
+                    .from('machine_assignments')
+                    .select('machine_id, worker_id, shift')
+                    .eq('org_id', orgId),
+            ])
+            if (operatorRes.error) throw operatorRes.error
+            if (legacyRes.error) throw legacyRes.error
+
+            const operatorRows = (operatorRes.data ?? []) as MachineOperatorAssignmentRow[]
+            const legacyRows = (legacyRes.data ?? []) as LegacyMachineAssignmentRow[]
+            const operatorAssignments = operatorRows.map((assignment) => ({
+                machine_id: assignment.machine_id,
+                shift: assignment.shift as 'day' | 'night',
+                worker_id: assignment.worker_type === 'meter_worker' ? assignment.meter_worker_id : null,
+                operator_assignment_id: assignment.id,
+                operator_worker_type: assignment.worker_type as OperatorWorkerType,
+                meter_worker_id: assignment.meter_worker_id,
+                fixed_worker_id: assignment.fixed_worker_id,
+                pay_mode: assignment.pay_mode as OperatorPayMode,
+                rate: Number(assignment.rate ?? 0),
+                machine_type: assignment.machine_type,
+            })) as Assignment[]
+            const operatorKeys = new Set(operatorAssignments.map((assignment) => `${assignment.machine_id}:${assignment.shift}`))
+            const legacyAssignments = legacyRows
+                .filter((assignment) => !operatorKeys.has(`${assignment.machine_id}:${assignment.shift}`))
+                .map((assignment) => ({
+                    machine_id: assignment.machine_id,
+                    worker_id: assignment.worker_id,
+                    shift: assignment.shift as 'day' | 'night',
+                    operator_assignment_id: null,
+                    operator_worker_type: 'meter_worker' as OperatorWorkerType,
+                    meter_worker_id: assignment.worker_id,
+                    fixed_worker_id: null,
+                    pay_mode: 'per_meter' as OperatorPayMode,
+                    rate: null,
+                    machine_type: null,
+                }))
+
+            return [...operatorAssignments, ...legacyAssignments]
         }
     })
 
@@ -375,21 +481,79 @@ export function MachineManagement({
         }
     }
 
-    const handleAssignment = async (machineId: string, workerId: string, shift: 'day' | 'night') => {
+    const getFixedWorkerDefaultRate = (workerId: string, payMode: OperatorPayMode) => {
+        const worker = fixedWorkers?.find((item) => item.id.toString() === workerId)
+        const salary = Number(worker?.monthly_salary ?? 0)
+        if (payMode === 'fixed_monthly') return salary
+        if (payMode === 'fixed_daily' || payMode === 'fixed_shift') return salary > 0 ? Number((salary / 30).toFixed(2)) : 0
+        return 0
+    }
+
+    const getAssignmentDisplayName = (assignment: Assignment | undefined) => {
+        if (!assignment) return ''
+        if (assignment.operator_worker_type === 'fixed_worker') {
+            return fixedWorkers?.find((worker) => worker.id === assignment.fixed_worker_id)?.name ?? ''
+        }
+        return workers?.find((worker) => worker.id === (assignment.meter_worker_id ?? assignment.worker_id))?.name ?? ''
+    }
+
+    const getAssignmentPayLabel = (assignment: Assignment | undefined) => {
+        if (!assignment?.pay_mode) return ''
+        const modeLabels: Record<OperatorPayMode, string> = {
+            per_meter: 'per m',
+            fixed_monthly: 'monthly',
+            fixed_daily: 'daily',
+            fixed_shift: 'shift',
+        }
+        const amount = assignment.rate ? ` · ₹${assignment.rate}` : ''
+        return `${modeLabels[assignment.pay_mode]}${amount}`
+    }
+
+    const openAssignmentEditor = (machine: Machine, shift: 'day' | 'night', existing: Assignment | undefined, fallbackRate?: number | null) => {
+        const machineType = normalizeMachineType(machine.loom_type)
+        const payMode = existing?.pay_mode ?? getDefaultPayModeForMachineType(machineType)
+        const workerType = existing?.operator_worker_type ?? getOperatorWorkerTypeForPayMode(payMode)
+        const fixedWorkerId = existing?.fixed_worker_id?.toString() ?? ''
+        const meterWorkerId = (existing?.meter_worker_id ?? existing?.worker_id)?.toString() ?? ''
+        const initialRate = existing?.rate
+            ?? (workerType === 'fixed_worker'
+                ? getFixedWorkerDefaultRate(fixedWorkerId, payMode)
+                : (fallbackRate ?? 0))
+
+        setAssignmentEditor({
+            machine,
+            shift,
+            workerType,
+            payMode,
+            meterWorkerId,
+            fixedWorkerId,
+            rate: initialRate ? String(initialRate) : '',
+        })
+    }
+
+    const saveOperatorAssignment = async () => {
+        if (!assignmentEditor) return
+        setSavingAssignment(true)
         try {
-            const existing = assignments?.find(a => a.machine_id === machineId && a.shift === shift)
-            const result = await updateMachineAssignment(
-                machineId,
-                parseInt(workerId),
-                shift,
-                !!existing
-            )
+            const result = await upsertMachineOperatorAssignment({
+                machineId: assignmentEditor.machine.id,
+                shift: assignmentEditor.shift,
+                workerType: assignmentEditor.workerType,
+                meterWorkerId: assignmentEditor.workerType === 'meter_worker' ? Number(assignmentEditor.meterWorkerId) : null,
+                fixedWorkerId: assignmentEditor.workerType === 'fixed_worker' ? Number(assignmentEditor.fixedWorkerId) : null,
+                payMode: assignmentEditor.payMode,
+                rate: Number(assignmentEditor.rate),
+            })
             if (result.error) throw new Error(result.error)
             toast.success(t('machines.worker_assigned'))
+            setAssignmentEditor(null)
+            queryClient.invalidateQueries({ queryKey: ['machine_operator_assignments'] })
             queryClient.invalidateQueries({ queryKey: ['machine_assignments'] })
         } catch (error) {
             console.error(error)
-            toast.error(t('machines.worker_assign_failed'))
+            toast.error(getErrorMessage(error, t('machines.worker_assign_failed')))
+        } finally {
+            setSavingAssignment(false)
         }
     }
 
@@ -557,8 +721,8 @@ export function MachineManagement({
                                         const activeDetailLabel = activeTarget?.detail_label
                                             ?? (machine.orders?.market_run_id ? 'Market Run' : machine.orders?.party_name)
 
-                                        const dayWorkerName = workers?.find(w => w.id === dayAssignment?.worker_id)?.name
-                                        const nightWorkerName = workers?.find(w => w.id === nightAssignment?.worker_id)?.name
+                                        const dayWorkerName = getAssignmentDisplayName(dayAssignment)
+                                        const nightWorkerName = getAssignmentDisplayName(nightAssignment)
 
                                         return (
                                             <div
@@ -750,47 +914,30 @@ export function MachineManagement({
                                                                 <Sun className="h-3 w-3 text-saffron" />
                                                                 Day
                                                             </div>
-                                                            <Popover>
-                                                                <PopoverTrigger asChild>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        className={cn(
-                                                                            "h-9 w-full justify-start rounded-lg border-dashed px-3 text-left font-normal transition-all hover:border-solid",
-                                                                            dayAssignment ? "border-hairline bg-surface text-ink" : "border-hairline bg-surface-soft/50 text-muted-foreground"
-                                                                        )}
-                                                                    >
-                                                                        <span className="truncate text-xs">
-                                                                            {dayWorkerName ? tl(dayWorkerName) : t('machines.assign_worker')}
-                                                                        </span>
-                                                                    </Button>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent className="w-[200px] p-0" align="start">
-                                                                    <div className="max-h-[240px] overflow-auto p-1">
-                                                                        <div className="mb-1 border-b border-hairline px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">
-                                                                            Select day worker
-                                                                        </div>
-                                                                        {workers?.map(w => (
-                                                                            <button
-                                                                                key={w.id}
-                                                                                type="button"
-                                                                                className={cn(
-                                                                                    "w-full rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-surface-soft",
-                                                                                    dayAssignment?.worker_id === w.id && "bg-saffron-soft text-saffron-deep font-medium"
-                                                                                )}
-                                                                                onClick={() => {
-                                                                                    handleAssignment(machine.id, w.id.toString(), 'day')
-                                                                                }}
-                                                                            >
-                                                                                {tl(w.name)}
-                                                                            </button>
-                                                                        ))}
-                                                                        {workers?.length === 0 && (
-                                                                            <div className="p-3 text-center text-xs text-muted-foreground">No workers available</div>
-                                                                        )}
-                                                                    </div>
-                                                                </PopoverContent>
-                                                            </Popover>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className={cn(
+                                                                    "h-12 w-full flex-col items-start justify-center rounded-lg border-dashed px-3 text-left font-normal transition-all hover:border-solid",
+                                                                    dayAssignment ? "border-hairline bg-surface text-ink" : "border-hairline bg-surface-soft/50 text-muted-foreground"
+                                                                )}
+                                                                onClick={() => {
+                                                                    if (userProfile?.role !== 'owner') {
+                                                                        toast.error('Ask the owner to change machine operator payroll assignments.')
+                                                                        return
+                                                                    }
+                                                                    openAssignmentEditor(machine, 'day', dayAssignment, activeRate)
+                                                                }}
+                                                            >
+                                                                <span className="max-w-full truncate text-xs font-semibold">
+                                                                    {dayWorkerName ? tl(dayWorkerName) : t('machines.assign_worker')}
+                                                                </span>
+                                                                {dayAssignment?.pay_mode && (
+                                                                    <span className="max-w-full truncate text-[10px] text-muted-foreground">
+                                                                        {getAssignmentPayLabel(dayAssignment)}
+                                                                    </span>
+                                                                )}
+                                                            </Button>
                                                         </div>
 
                                                         {/* Night Shift */}
@@ -799,47 +946,30 @@ export function MachineManagement({
                                                                 <Moon className="h-3 w-3 text-loom" />
                                                                 Night
                                                             </div>
-                                                            <Popover>
-                                                                <PopoverTrigger asChild>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        className={cn(
-                                                                            "h-9 w-full justify-start rounded-lg border-dashed px-3 text-left font-normal transition-all hover:border-solid",
-                                                                            nightAssignment ? "border-hairline bg-surface text-ink" : "border-hairline bg-surface-soft/50 text-muted-foreground"
-                                                                        )}
-                                                                    >
-                                                                        <span className="truncate text-xs">
-                                                                            {nightWorkerName ? tl(nightWorkerName) : t('machines.assign_worker')}
-                                                                        </span>
-                                                                    </Button>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent className="w-[200px] p-0" align="start">
-                                                                    <div className="max-h-[240px] overflow-auto p-1">
-                                                                        <div className="mb-1 border-b border-hairline px-2 py-1.5 text-[11px] font-semibold text-muted-foreground">
-                                                                            Select night worker
-                                                                        </div>
-                                                                        {workers?.map(w => (
-                                                                            <button
-                                                                                key={w.id}
-                                                                                type="button"
-                                                                                className={cn(
-                                                                                    "w-full rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-surface-soft",
-                                                                                    nightAssignment?.worker_id === w.id && "bg-saffron-soft text-saffron-deep font-medium"
-                                                                                )}
-                                                                                onClick={() => {
-                                                                                    handleAssignment(machine.id, w.id.toString(), 'night')
-                                                                                }}
-                                                                            >
-                                                                                {tl(w.name)}
-                                                                            </button>
-                                                                        ))}
-                                                                        {workers?.length === 0 && (
-                                                                            <div className="p-3 text-center text-xs text-muted-foreground">No workers available</div>
-                                                                        )}
-                                                                    </div>
-                                                                </PopoverContent>
-                                                            </Popover>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className={cn(
+                                                                    "h-12 w-full flex-col items-start justify-center rounded-lg border-dashed px-3 text-left font-normal transition-all hover:border-solid",
+                                                                    nightAssignment ? "border-hairline bg-surface text-ink" : "border-hairline bg-surface-soft/50 text-muted-foreground"
+                                                                )}
+                                                                onClick={() => {
+                                                                    if (userProfile?.role !== 'owner') {
+                                                                        toast.error('Ask the owner to change machine operator payroll assignments.')
+                                                                        return
+                                                                    }
+                                                                    openAssignmentEditor(machine, 'night', nightAssignment, activeRate)
+                                                                }}
+                                                            >
+                                                                <span className="max-w-full truncate text-xs font-semibold">
+                                                                    {nightWorkerName ? tl(nightWorkerName) : t('machines.assign_worker')}
+                                                                </span>
+                                                                {nightAssignment?.pay_mode && (
+                                                                    <span className="max-w-full truncate text-[10px] text-muted-foreground">
+                                                                        {getAssignmentPayLabel(nightAssignment)}
+                                                                    </span>
+                                                                )}
+                                                            </Button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -858,6 +988,164 @@ export function MachineManagement({
                     )}
                 </div>
             </CardContent>
+
+            {/* ── Operator Assignment Dialog ── */}
+            <Dialog open={assignmentEditor !== null} onOpenChange={(open) => !open && setAssignmentEditor(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Assign Machine Operator</DialogTitle>
+                        <DialogDescription>
+                            Set the operator, pay mode, and rate snapshot for this loom shift.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {assignmentEditor && (
+                        <div className="space-y-4 py-4">
+                            <div className="rounded-md border border-hairline bg-surface-soft/70 px-3 py-2 text-sm">
+                                <div className="font-semibold text-ink">{assignmentEditor.machine.name.replace(/^Machine\b/i, 'Loom')}</div>
+                                <div className="text-xs font-medium text-muted-foreground">
+                                    {assignmentEditor.shift === 'day' ? 'Day shift' : 'Night shift'}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="operator-worker-type">Operator Type</Label>
+                                    <select
+                                        id="operator-worker-type"
+                                        value={assignmentEditor.workerType}
+                                        onChange={(e) => {
+                                            const workerType = e.target.value as OperatorWorkerType
+                                            const payMode = workerType === 'meter_worker' ? 'per_meter' : 'fixed_monthly'
+                                            setAssignmentEditor((current) => current && {
+                                                ...current,
+                                                workerType,
+                                                payMode,
+                                                meterWorkerId: workerType === 'meter_worker' ? current.meterWorkerId : '',
+                                                fixedWorkerId: workerType === 'fixed_worker' ? current.fixedWorkerId : '',
+                                                rate: workerType === 'fixed_worker'
+                                                    ? String(getFixedWorkerDefaultRate(current.fixedWorkerId, payMode) || '')
+                                                    : String(current.rate || ''),
+                                            })
+                                        }}
+                                        className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
+                                    >
+                                        <option value="meter_worker">Meter worker</option>
+                                        <option value="fixed_worker">Fixed worker</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="operator-pay-mode">Pay Mode</Label>
+                                    <select
+                                        id="operator-pay-mode"
+                                        value={assignmentEditor.payMode}
+                                        onChange={(e) => {
+                                            const payMode = e.target.value as OperatorPayMode
+                                            const workerType = getOperatorWorkerTypeForPayMode(payMode)
+                                            setAssignmentEditor((current) => current && {
+                                                ...current,
+                                                payMode,
+                                                workerType,
+                                                meterWorkerId: workerType === 'meter_worker' ? current.meterWorkerId : '',
+                                                fixedWorkerId: workerType === 'fixed_worker' ? current.fixedWorkerId : '',
+                                                rate: workerType === 'fixed_worker'
+                                                    ? String(getFixedWorkerDefaultRate(current.fixedWorkerId, payMode) || '')
+                                                    : current.rate,
+                                            })
+                                        }}
+                                        className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
+                                    >
+                                        {assignmentEditor.workerType === 'meter_worker' ? (
+                                            <option value="per_meter">Per meter</option>
+                                        ) : (
+                                            <>
+                                                <option value="fixed_monthly">Fixed monthly</option>
+                                                <option value="fixed_daily">Fixed daily</option>
+                                                <option value="fixed_shift">Fixed shift</option>
+                                            </>
+                                        )}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {assignmentEditor.workerType === 'meter_worker' ? (
+                                <div className="space-y-2">
+                                    <Label htmlFor="meter-worker">Meter Worker</Label>
+                                    <select
+                                        id="meter-worker"
+                                        value={assignmentEditor.meterWorkerId}
+                                        onChange={(e) => setAssignmentEditor((current) => current && { ...current, meterWorkerId: e.target.value })}
+                                        className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
+                                    >
+                                        <option value="">Select meter worker</option>
+                                        {workers?.map((worker) => (
+                                            <option key={worker.id} value={worker.id}>{tl(worker.name)}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <Label htmlFor="fixed-worker">Fixed Worker</Label>
+                                    <select
+                                        id="fixed-worker"
+                                        value={assignmentEditor.fixedWorkerId}
+                                        onChange={(e) => {
+                                            const fixedWorkerId = e.target.value
+                                            setAssignmentEditor((current) => current && {
+                                                ...current,
+                                                fixedWorkerId,
+                                                rate: String(getFixedWorkerDefaultRate(fixedWorkerId, current.payMode) || ''),
+                                            })
+                                        }}
+                                        className="h-10 w-full rounded-md border border-input bg-surface px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-ring/25"
+                                    >
+                                        <option value="">Select fixed worker</option>
+                                        {fixedWorkers?.map((worker) => (
+                                            <option key={worker.id} value={worker.id}>
+                                                {tl(worker.name)} · {worker.role}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <Label htmlFor="operator-rate">
+                                    {assignmentEditor.payMode === 'per_meter'
+                                        ? 'Rate per meter'
+                                        : assignmentEditor.payMode === 'fixed_monthly'
+                                            ? 'Monthly rate'
+                                            : assignmentEditor.payMode === 'fixed_daily'
+                                                ? 'Daily rate'
+                                                : 'Shift rate'}
+                                </Label>
+                                <Input
+                                    id="operator-rate"
+                                    inputMode="decimal"
+                                    value={assignmentEditor.rate}
+                                    onChange={(e) => setAssignmentEditor((current) => current && { ...current, rate: e.target.value })}
+                                    placeholder="0"
+                                />
+                            </div>
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setAssignmentEditor(null)}>{t('common.cancel')}</Button>
+                        <Button
+                            onClick={saveOperatorAssignment}
+                            disabled={
+                                !assignmentEditor ||
+                                savingAssignment ||
+                                Number(assignmentEditor.rate) <= 0 ||
+                                (assignmentEditor.workerType === 'meter_worker' ? !assignmentEditor.meterWorkerId : !assignmentEditor.fixedWorkerId)
+                            }
+                        >
+                            {savingAssignment ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            {t('common.save')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* ── Rename Dialog ── */}
             <Dialog open={machineToRename !== null} onOpenChange={(open) => !open && setMachineToRename(null)}>

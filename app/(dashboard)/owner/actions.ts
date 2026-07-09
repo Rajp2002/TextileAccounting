@@ -31,6 +31,13 @@ import {
     isDuplicateLoomNameDbError,
     type LoomLifecycleProtectionInput,
 } from '@/lib/master-data-loom-guardrails'
+import {
+    getDefaultPayModeForMachineType,
+    getOperatorWorkerTypeForPayMode,
+    normalizeMachineType,
+    type OperatorPayMode,
+    type OperatorWorkerType,
+} from '@/lib/machine-operator-payroll'
 
 export type ProductionTargetOption = {
     source_type: 'order' | 'market_run'
@@ -380,7 +387,7 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
 
     if (newStatus === 'active') {
-        const [machineRes, assignmentsRes] = await Promise.all([
+        const [machineRes, assignmentsRes, operatorAssignmentsRes] = await Promise.all([
             supabase
                 .from('machines')
                 .select('current_order_id, orders(status)')
@@ -393,6 +400,13 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
                 .eq('machine_id', parsed.data)
                 .eq('org_id', profile.org_id)
                 .in('shift', ['day', 'night']),
+            supabase
+                .from('machine_operator_assignments')
+                .select('shift')
+                .eq('machine_id', parsed.data)
+                .eq('org_id', profile.org_id)
+                .eq('active', true)
+                .in('shift', ['day', 'night']),
         ])
 
         if (machineRes.error) {
@@ -400,12 +414,15 @@ export async function toggleMachineStatus(machineId: string, currentStatus: stri
             return { error: 'Failed to check loom setup. Please try again.' }
         }
 
-        if (assignmentsRes.error) {
+        if (assignmentsRes.error || operatorAssignmentsRes.error) {
             console.error('Failed to verify machine shift assignments:', assignmentsRes.error)
             return { error: 'Failed to check worker assignments. Please try again.' }
         }
 
-        const assignedShifts = new Set((assignmentsRes.data ?? []).map((assignment) => assignment.shift))
+        const assignedShifts = new Set([
+            ...(assignmentsRes.data ?? []).map((assignment) => assignment.shift),
+            ...(operatorAssignmentsRes.data ?? []).map((assignment) => assignment.shift),
+        ])
         const activeOrder = Array.isArray(machineRes.data.orders)
             ? machineRes.data.orders[0]
             : machineRes.data.orders
@@ -517,6 +534,154 @@ export async function updateMachineAssignment(
     }
 
     revalidatePath('/owner/machines')
+    return { success: true }
+}
+
+export async function upsertMachineOperatorAssignment(data: {
+    machineId: string
+    shift: 'day' | 'night'
+    workerType: OperatorWorkerType
+    meterWorkerId?: number | null
+    fixedWorkerId?: number | null
+    payMode?: OperatorPayMode
+    rate: number
+}) {
+    const { profile } = await requireRole(['owner'])
+    const supabase = await createServerClient()
+
+    const machineParsed = safeParse(UuidSchema, data.machineId)
+    if ('error' in machineParsed) return { error: machineParsed.error }
+
+    if (!['day', 'night'].includes(data.shift)) return { error: 'Invalid shift.' }
+    if (!['meter_worker', 'fixed_worker'].includes(data.workerType)) return { error: 'Invalid operator type.' }
+
+    const exactlyOneWorker =
+        (data.workerType === 'meter_worker' && !!data.meterWorkerId && !data.fixedWorkerId) ||
+        (data.workerType === 'fixed_worker' && !!data.fixedWorkerId && !data.meterWorkerId)
+    if (!exactlyOneWorker) {
+        return { error: 'Choose exactly one meter or fixed worker for this loom shift.' }
+    }
+
+    const rate = numericValue(data.rate)
+    if (rate <= 0) return { error: 'Enter a valid operator rate before saving the assignment.' }
+
+    const { data: machine, error: machineError } = await supabase
+        .from('machines')
+        .select('id, loom_type')
+        .eq('id', machineParsed.data)
+        .eq('org_id', profile.org_id)
+        .single()
+
+    if (machineError || !machine) {
+        if (machineError) console.error('Failed to load loom for operator assignment:', machineError)
+        return { error: 'Loom not found for this factory.' }
+    }
+
+    const machineType = normalizeMachineType(machine.loom_type)
+    const payMode = data.payMode ?? getDefaultPayModeForMachineType(machineType)
+    if (getOperatorWorkerTypeForPayMode(payMode) !== data.workerType) {
+        return { error: 'Selected pay mode does not match the selected worker type.' }
+    }
+
+    if (data.workerType === 'meter_worker') {
+        const { data: worker, error } = await supabase
+            .from('workers')
+            .select('id')
+            .eq('id', data.meterWorkerId)
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .maybeSingle()
+
+        if (error || !worker) {
+            if (error) console.error('Failed to validate meter worker assignment:', error)
+            return { error: 'Active meter worker not found for this factory.' }
+        }
+    } else {
+        const { data: worker, error } = await supabase
+            .from('fixed_workers')
+            .select('id')
+            .eq('id', data.fixedWorkerId)
+            .eq('org_id', profile.org_id)
+            .eq('is_active', true)
+            .maybeSingle()
+
+        if (error || !worker) {
+            if (error) console.error('Failed to validate fixed worker assignment:', error)
+            return { error: 'Active fixed worker not found for this factory.' }
+        }
+    }
+
+    const today = formatToSurat(new Date(), 'yyyy-MM-dd')
+
+    const { error: closeError } = await supabase
+        .from('machine_operator_assignments')
+        .update({ active: false, effective_to: today })
+        .eq('org_id', profile.org_id)
+        .eq('machine_id', machineParsed.data)
+        .eq('shift', data.shift)
+        .eq('active', true)
+        .is('effective_to', null)
+
+    if (closeError) {
+        console.error('Failed to close previous machine operator assignment:', closeError)
+        return { error: 'Failed to update previous operator assignment. Please try again.' }
+    }
+
+    const { error: insertError } = await supabase
+        .from('machine_operator_assignments')
+        .insert({
+            org_id: profile.org_id,
+            machine_id: machineParsed.data,
+            machine_type: machineType,
+            shift: data.shift,
+            worker_type: data.workerType,
+            meter_worker_id: data.workerType === 'meter_worker' ? data.meterWorkerId : null,
+            fixed_worker_id: data.workerType === 'fixed_worker' ? data.fixedWorkerId : null,
+            pay_mode: payMode,
+            rate,
+            effective_from: today,
+            effective_to: null,
+            is_primary_operator: true,
+            active: true,
+        })
+
+    if (insertError) {
+        console.error('Failed to save machine operator assignment:', insertError)
+        return { error: 'Failed to save operator assignment. Please try again.' }
+    }
+
+    if (data.workerType === 'meter_worker') {
+        const { error: legacyError } = await supabase
+            .from('machine_assignments')
+            .upsert({
+                org_id: profile.org_id,
+                machine_id: machineParsed.data,
+                worker_id: data.meterWorkerId,
+                shift: data.shift,
+            }, { onConflict: 'org_id,machine_id,shift' })
+
+        if (legacyError) {
+            console.error('Failed to mirror meter assignment to legacy machine_assignments:', legacyError)
+            return { error: 'Saved operator assignment, but failed to update legacy meter assignment.' }
+        }
+    } else {
+        const { error: legacyDeleteError } = await supabase
+            .from('machine_assignments')
+            .delete()
+            .eq('org_id', profile.org_id)
+            .eq('machine_id', machineParsed.data)
+            .eq('shift', data.shift)
+
+        if (legacyDeleteError) {
+            console.error('Failed to clear legacy machine assignment for fixed operator:', legacyDeleteError)
+            return { error: 'Saved operator assignment, but failed to clear old meter assignment.' }
+        }
+    }
+
+    revalidatePath('/owner/machines')
+    revalidatePath('/supervisor/machines')
+    revalidatePath('/supervisor/dashboard')
+    revalidatePath('/owner/payroll')
     return { success: true }
 }
 

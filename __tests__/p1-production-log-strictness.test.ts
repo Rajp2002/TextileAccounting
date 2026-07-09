@@ -31,6 +31,41 @@ describe('Production Log Strictness / Forgiveness Validation', () => {
             expect(result.errors).toHaveLength(0)
         })
 
+        it('accepts positive meters with a fixed machine operator assignment snapshot', () => {
+            const result = validateProductionLog({
+                machine_id: 'machine-1',
+                meters: 50,
+                worker_id: null,
+                operator_assignment_id: 'assignment-uuid',
+                operator_worker_type: 'fixed_worker',
+                fixed_worker_id: 22,
+                operator_pay_mode_snapshot: 'fixed_shift',
+                operator_rate_snapshot: 900,
+                order_id: 'order-uuid',
+                rate_per_m: null,
+            })
+
+            expect(result.valid).toBe(true)
+        })
+
+        it('rejects fixed machine operators with per-meter pay mode', () => {
+            const result = validateProductionLog({
+                machine_id: 'machine-1',
+                meters: 50,
+                worker_id: null,
+                operator_assignment_id: 'assignment-uuid',
+                operator_worker_type: 'fixed_worker',
+                fixed_worker_id: 22,
+                operator_pay_mode_snapshot: 'per_meter',
+                operator_rate_snapshot: 2,
+                order_id: 'order-uuid',
+                rate_per_m: null,
+            })
+
+            expect(result.valid).toBe(false)
+            expect(result.errors).toContain(VALIDATION_MESSAGES.FIXED_OPERATOR_PER_METER)
+        })
+
         it('rejects positive meters without worker_id', () => {
             const result = validateProductionLog({ ...validEntry, worker_id: null })
             expect(result.valid).toBe(false)

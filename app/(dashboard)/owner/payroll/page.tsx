@@ -57,6 +57,15 @@ import {
     calculatePayrollStatutoryDeductions,
     extractPayrollStatutoryDeductionsFromItemization,
 } from '@/lib/payroll-statutory'
+import {
+    calculateFixedMachineOperatorGross,
+    calculateMeterOperatorGross,
+    type FixedMachineOperatorLine,
+    type OperatorAssignmentPayrollInput,
+    type OperatorPayMode,
+    type OperatorProductionLogInput,
+    type OperatorWorkerType,
+} from '@/lib/machine-operator-payroll'
 
 type PaymentMode = 'cash' | 'bank_transfer' | 'upi' | 'cheque'
 type PendingPayrollManualAdjustment = PayrollManualAdjustment & { id: string }
@@ -97,6 +106,9 @@ interface FixedWorkerPayroll extends WorkerBase {
     monthly_salary: number
     daysWorked?: number       // only for 'daily' role
     earnedPay: number         // gross pay
+    isMachineOperator?: boolean
+    machineOperatorLines?: FixedMachineOperatorLine[]
+    usedProductionDateProxy?: boolean
 }
 
 type PayrollWorker = MeterWorkerPayroll | FixedWorkerPayroll
@@ -108,12 +120,19 @@ type SettlementDialogWorker = PayrollWorker & {
 }
 
 type ProductionLogRow = {
-    worker_id: number
+    worker_id: number | null
+    meter_worker_id?: number | null
+    fixed_worker_id?: number | null
+    operator_assignment_id?: string | null
+    operator_worker_type?: OperatorWorkerType | null
+    operator_pay_mode_snapshot?: OperatorPayMode | null
+    operator_rate_snapshot?: number | string | null
     machine_id: string | number | null
     meters: number | string | null
     worker_rate_snapshot: number | string | null
     order_id: string | number | null
-    date?: string | null
+    date: string
+    shift?: 'day' | 'night' | null
 }
 
 type MeterWorkerDbRow = {
@@ -187,6 +206,19 @@ type FixedWorkerDbRow = {
 
 type AttendanceRow = {
     fixed_worker_id: number
+    date?: string
+    present?: boolean | null
+}
+
+type MachineOperatorAssignmentRow = {
+    id: string
+    worker_type: OperatorWorkerType
+    meter_worker_id?: number | null
+    fixed_worker_id?: number | null
+    pay_mode: OperatorPayMode
+    rate: number | string | null
+    effective_from?: string | null
+    effective_to?: string | null
 }
 
 type WorkerNameRow = {
@@ -257,7 +289,7 @@ async function fetchMeterWorkerPayroll(
 
     const [logsRes, workersRes, machinesRes, settlementsRes, advancesRes, ordersRes] = await Promise.all([
         supabase.from('production_logs')
-            .select('worker_id, machine_id, meters, worker_rate_snapshot, order_id')
+            .select('worker_id, meter_worker_id, fixed_worker_id, operator_assignment_id, operator_worker_type, operator_pay_mode_snapshot, operator_rate_snapshot, machine_id, meters, worker_rate_snapshot, order_id, date, shift')
             .eq('org_id', orgId)
             .gt('meters', 0)
             .gte('date', monthStart)
@@ -317,19 +349,27 @@ async function fetchMeterWorkerPayroll(
             order.quality_label ? `${order.party_name || 'Order'} · ${order.quality_label}` : order.party_name || 'Order',
         ])
     )
-    const workerIdsWithLogs = new Set(logs.map((log) => log.worker_id))
+    const resolveMeterWorkerId = (log: ProductionLogRow) => (
+        log.meter_worker_id ?? (!log.operator_assignment_id ? log.worker_id : null)
+    )
+    const workerIdsWithLogs = new Set(
+        logs
+            .map(resolveMeterWorkerId)
+            .filter((id): id is number => typeof id === 'number')
+    )
 
     const result: MeterWorkerPayroll[] = []
     for (const worker of workers) {
         if (!worker.is_active && !workerIdsWithLogs.has(worker.id)) continue
 
-        const workerLogs = logs.filter((log) => log.worker_id === worker.id)
+        const workerLogs = logs.filter((log) => resolveMeterWorkerId(log) === worker.id)
         if (workerLogs.length === 0 && !settlementMap[worker.id]) continue
 
         const machineGroups: Record<string, { meters: number; rate: number; name: string; orderLabel?: string }> = {}
         for (const log of workerLogs) {
+            if ((log.operator_pay_mode_snapshot ?? 'per_meter') !== 'per_meter') continue
             const machine = log.machine_id ? machineMap[String(log.machine_id)] : null
-            const rate = toPayrollNumber(log.worker_rate_snapshot)
+            const rate = toPayrollNumber(log.operator_rate_snapshot ?? log.worker_rate_snapshot)
             const orderId = log.order_id || '__no_order__'
             const key = `${orderId}-${log.machine_id}-${rate}`
 
@@ -352,7 +392,19 @@ async function fetchMeterWorkerPayroll(
             pay: group.meters * group.rate,
         }))
         const totalMeters = machineBreakdown.reduce((sum, item) => sum + item.meters, 0)
-        const totalPay = machineBreakdown.reduce((sum, item) => sum + item.pay, 0)
+        const totalPay = calculateMeterOperatorGross(workerLogs.map((log): OperatorProductionLogInput => ({
+            operatorAssignmentId: log.operator_assignment_id,
+            operatorWorkerType: log.operator_worker_type,
+            meterWorkerId: log.meter_worker_id,
+            fixedWorkerId: log.fixed_worker_id,
+            workerId: log.worker_id,
+            productionDate: log.date,
+            shift: log.shift ?? 'day',
+            meters: log.meters,
+            workerRateSnapshot: log.worker_rate_snapshot,
+            operatorRateSnapshot: log.operator_rate_snapshot,
+            operatorPayModeSnapshot: log.operator_pay_mode_snapshot,
+        })), worker.id)
 
         result.push({
             id: worker.id,
@@ -391,14 +443,14 @@ async function fetchFixedWorkerPayroll(
     if (workersRes.error) throw workersRes.error
 
     const workers = (workersRes.data || []) as FixedWorkerDbRow[]
-    const dailyIds = workers.filter((worker) => worker.role === 'daily').map((worker) => worker.id)
+    const fixedWorkerIds = workers.map((worker) => worker.id)
 
-    const [attRes, settlementsRes, advancesRes] = await Promise.all([
-        dailyIds.length > 0
+    const [attRes, settlementsRes, advancesRes, assignmentsRes, logsRes] = await Promise.all([
+        fixedWorkerIds.length > 0
             ? supabase.from('attendance')
-                .select('fixed_worker_id, present')
+                .select('fixed_worker_id, date, present')
                 .eq('org_id', orgId)
-                .in('fixed_worker_id', dailyIds)
+                .in('fixed_worker_id', fixedWorkerIds)
                 .gte('date', monthStart)
                 .lte('date', monthEnd)
                 .eq('present', true)
@@ -414,15 +466,37 @@ async function fetchFixedWorkerPayroll(
             .eq('status', 'pending')
             .is('writeoff_at', null)
             .not('fixed_worker_id', 'is', null),
+        fixedWorkerIds.length > 0
+            ? supabase.from('machine_operator_assignments')
+                .select('id, worker_type, fixed_worker_id, pay_mode, rate, effective_from, effective_to')
+                .eq('org_id', orgId)
+                .in('fixed_worker_id', fixedWorkerIds)
+            : Promise.resolve({ data: [], error: null }),
+        fixedWorkerIds.length > 0
+            ? supabase.from('production_logs')
+                .select('worker_id, meter_worker_id, fixed_worker_id, operator_assignment_id, operator_worker_type, operator_pay_mode_snapshot, operator_rate_snapshot, machine_id, meters, worker_rate_snapshot, order_id, date, shift')
+                .eq('org_id', orgId)
+                .in('fixed_worker_id', fixedWorkerIds)
+                .gt('meters', 0)
+                .gte('date', monthStart)
+                .lte('date', monthEnd)
+            : Promise.resolve({ data: [], error: null }),
     ])
 
     if (attRes.error) throw attRes.error
     if (settlementsRes.error) throw settlementsRes.error
     if (advancesRes.error) throw advancesRes.error
+    if (assignmentsRes.error) throw assignmentsRes.error
+    if (logsRes.error) throw logsRes.error
 
-    const attendanceMap: Record<number, number> = {}
-    ;((attRes.data || []) as AttendanceRow[]).forEach((attendance) => {
-        attendanceMap[attendance.fixed_worker_id] = (attendanceMap[attendance.fixed_worker_id] || 0) + 1
+    const attendanceRows = (attRes.data || []) as AttendanceRow[]
+    const assignments = (assignmentsRes.data || []) as MachineOperatorAssignmentRow[]
+    const logs = (logsRes.data || []) as ProductionLogRow[]
+    const attendanceMap: Record<number, Set<string>> = {}
+    attendanceRows.forEach((attendance) => {
+        if (!attendance.date) return
+        if (!attendanceMap[attendance.fixed_worker_id]) attendanceMap[attendance.fixed_worker_id] = new Set()
+        attendanceMap[attendance.fixed_worker_id].add(attendance.date)
     })
 
     const settlementMap = Object.fromEntries(
@@ -441,10 +515,48 @@ async function fetchFixedWorkerPayroll(
         .filter((worker) => !worker.start_date || worker.start_date <= monthEnd)
         .map((worker) => {
             const monthlySalary = toPayrollNumber(worker.monthly_salary)
-            const daysWorked = worker.role === 'daily' ? (attendanceMap[worker.id] || 0) : undefined
-            const earnedPay = worker.role === 'daily'
-                ? Math.min(monthlySalary, (monthlySalary / 30) * (daysWorked ?? 0))
-                : monthlySalary
+            const workerAssignments = assignments.filter((assignment) => assignment.fixed_worker_id === worker.id)
+            const workerLogs = logs.filter((log) => log.fixed_worker_id === worker.id)
+            const machineOperatorGross = calculateFixedMachineOperatorGross({
+                fixedWorker: {
+                    id: worker.id,
+                    role: worker.role,
+                    monthlySalary,
+                },
+                assignments: workerAssignments.map((assignment): OperatorAssignmentPayrollInput => ({
+                    id: assignment.id,
+                    workerType: assignment.worker_type,
+                    workerId: assignment.fixed_worker_id ?? worker.id,
+                    payMode: assignment.pay_mode,
+                    rate: assignment.rate,
+                    effectiveFrom: assignment.effective_from,
+                    effectiveTo: assignment.effective_to,
+                })),
+                productionLogs: workerLogs.map((log): OperatorProductionLogInput => ({
+                    operatorAssignmentId: log.operator_assignment_id,
+                    operatorWorkerType: log.operator_worker_type,
+                    meterWorkerId: log.meter_worker_id,
+                    fixedWorkerId: log.fixed_worker_id,
+                    workerId: log.worker_id,
+                    productionDate: log.date,
+                    shift: log.shift ?? 'day',
+                    meters: log.meters,
+                    workerRateSnapshot: log.worker_rate_snapshot,
+                    operatorRateSnapshot: log.operator_rate_snapshot,
+                    operatorPayModeSnapshot: log.operator_pay_mode_snapshot,
+                })),
+                attendance: attendanceRows.map((attendance) => ({
+                    fixedWorkerId: attendance.fixed_worker_id,
+                    date: attendance.date ?? '',
+                    present: attendance.present,
+                })),
+                cycleStart: monthStart,
+                cycleEnd: monthEnd,
+            })
+            const isMachineOperator = workerAssignments.length > 0 || workerLogs.some((log) => !!log.operator_pay_mode_snapshot)
+            const daysWorked = worker.role === 'daily' || workerAssignments.some((assignment) => assignment.pay_mode === 'fixed_daily')
+                ? (attendanceMap[worker.id]?.size || 0)
+                : undefined
 
             return {
                 id: worker.id,
@@ -455,7 +567,10 @@ async function fetchFixedWorkerPayroll(
                 role: worker.role,
                 monthly_salary: monthlySalary,
                 daysWorked,
-                earnedPay,
+                earnedPay: machineOperatorGross.gross,
+                isMachineOperator,
+                machineOperatorLines: isMachineOperator ? machineOperatorGross.lines : undefined,
+                usedProductionDateProxy: machineOperatorGross.usedProductionDateProxy,
                 totalAdvances: advanceMap[worker.id] || 0,
                 settlement: settlementMap[worker.id],
             } as FixedWorkerPayroll
@@ -1489,6 +1604,11 @@ function FixedWorkerRow({
                             <span className={cn('text-xs px-2 py-0.5 rounded-full font-black uppercase tracking-wider', ROLE_COLORS[worker.role] || 'bg-gray-100 text-gray-700')}>
                                 {t(`workers.roles.${worker.role}`) || worker.role}
                             </span>
+                            {worker.isMachineOperator && (
+                                <Badge variant="outline" className="border-saffron-soft bg-saffron-soft/45 text-[9px] font-black uppercase tracking-tight text-saffron-deep">
+                                    Machine operator
+                                </Badge>
+                            )}
                             {isPaid && <Check className="h-3 w-3 text-green-500" />}
                         </div>
                         <span className="font-bold text-gray-900 truncate block text-base">{tl(worker.name)}</span>
@@ -1567,7 +1687,36 @@ function FixedWorkerRow({
                                 <div className="space-y-2">
                                     <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest">Calculations</h4>
                                     <div className="bg-white border rounded-lg p-3 space-y-2 text-sm">
-                                        {isDaily ? (
+                                        {worker.machineOperatorLines?.length ? (
+                                            <>
+                                                {worker.machineOperatorLines.map((line, index) => (
+                                                    <div key={`${line.payMode}-${index}`} className="space-y-1 border-b border-gray-100 pb-2 last:border-0 last:pb-0">
+                                                        <div className="flex justify-between gap-3">
+                                                            <span className="text-gray-500">{line.label}</span>
+                                                            <span className="font-bold text-saffron-deep">{formatINR(line.amount)}</span>
+                                                        </div>
+                                                        <div className="flex flex-wrap justify-between gap-2 text-xs text-gray-500">
+                                                            <span>{line.quantityLabel}</span>
+                                                            <span>
+                                                                {line.payMode === 'fixed_monthly'
+                                                                    ? formatINR(line.rate)
+                                                                    : `${formatINR(line.rate)}/${line.payMode === 'fixed_shift' ? 'shift' : 'day'}`}
+                                                            </span>
+                                                        </div>
+                                                        {line.productionMeters !== undefined && (
+                                                            <div className="text-[10px] font-semibold text-gray-400">
+                                                                Production analytics: {line.productionMeters.toFixed(1)} m
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                                {worker.usedProductionDateProxy && (
+                                                    <div className="rounded border border-amber-100 bg-amber-50 p-2 text-[10px] font-semibold text-amber-700">
+                                                        Daily pay is using distinct production dates because no attendance source exists for this operator cycle.
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : isDaily ? (
                                             <>
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-500">Fixed Monthly</span>

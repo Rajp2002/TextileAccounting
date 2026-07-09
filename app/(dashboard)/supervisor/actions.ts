@@ -25,6 +25,7 @@ import {
     getLoomLifecycleProtectionReasons,
     type LoomLifecycleProtectionInput,
 } from '@/lib/master-data-loom-guardrails'
+import { normalizeMachineType, type OperatorPayMode, type OperatorWorkerType } from '@/lib/machine-operator-payroll'
 
 type ShiftType = 'day' | 'night'
 
@@ -42,7 +43,18 @@ interface ProductionLogRow {
 }
 
 type MessageError = { message?: string }
-type WorkerIdLogRow = { worker_id: number | null }
+type WorkerIdLogRow = { worker_id: number | null; meter_worker_id?: number | null; fixed_worker_id?: number | null }
+type ShiftOperatorAssignmentPayload = {
+    operator_assignment_id: string
+    operator_worker_type: OperatorWorkerType
+    meter_worker_id: number | null
+    fixed_worker_id: number | null
+    worker_id: number | null
+    operator_name: string
+    operator_pay_mode: OperatorPayMode
+    operator_rate: number
+    machine_type: string
+}
 
 type KharchiRpcResult = {
     rolled_over?: boolean
@@ -861,10 +873,10 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
     const orgId = profile.org_id
     const supabase = await createServerClient()
 
-    const [machinesRes, ordersRes, workersRes, assignmentsRes, standingAssignmentsRes] = await Promise.all([
+    const [machinesRes, ordersRes, workersRes, fixedWorkersRes, assignmentsRes, operatorAssignmentsRes, standingAssignmentsRes] = await Promise.all([
         supabase
             .from('machines')
-            .select('id, name, status, machine_status, default_rate_per_m, current_order_id')
+            .select('id, name, status, machine_status, default_rate_per_m, current_order_id, loom_type')
             .eq('org_id', orgId)
             .eq('status', 'active')
             .order('name'),
@@ -881,11 +893,23 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             .eq('is_active', true)
             .order('name'),
         supabase
+            .from('fixed_workers')
+            .select('id, name, role, monthly_salary, is_active')
+            .eq('org_id', orgId)
+            .eq('is_active', true)
+            .order('name'),
+        supabase
             .from('shift_assignments')
             .select('id, machine_id, worker_id, order_id, rate_per_m, breakdown_category, breakdown_notes')
             .eq('org_id', orgId)
             .eq('date', date)
             .eq('shift', shift),
+        supabase
+            .from('machine_operator_assignments')
+            .select('id, machine_id, worker_type, meter_worker_id, fixed_worker_id, shift, pay_mode, rate, machine_type')
+            .eq('org_id', orgId)
+            .eq('active', true)
+            .is('effective_to', null),
         supabase
             .from('machine_assignments')
             .select('machine_id, worker_id, shift')
@@ -894,6 +918,35 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
 
     const activeOrderIds = new Set((ordersRes.data ?? []).map((order) => order.id))
     const activeWorkerIds = new Set((workersRes.data ?? []).map((worker) => worker.id))
+    const activeFixedWorkerIds = new Set((fixedWorkersRes.data ?? []).map((worker) => worker.id))
+    const meterWorkerNameById = new Map((workersRes.data ?? []).map((worker) => [worker.id, worker.name]))
+    const fixedWorkerNameById = new Map((fixedWorkersRes.data ?? []).map((worker) => [worker.id, worker.name]))
+    const operatorAssignmentsByMachineId = new Map<string, Partial<Record<'day' | 'night', ShiftOperatorAssignmentPayload>>>()
+    for (const assignment of operatorAssignmentsRes.data ?? []) {
+        const workerType = assignment.worker_type as OperatorWorkerType
+        const shiftKey = assignment.shift as 'day' | 'night'
+        if (shiftKey !== 'day' && shiftKey !== 'night') continue
+        if (workerType === 'meter_worker' && !activeWorkerIds.has(Number(assignment.meter_worker_id))) continue
+        if (workerType === 'fixed_worker' && !activeFixedWorkerIds.has(Number(assignment.fixed_worker_id))) continue
+
+        const current = operatorAssignmentsByMachineId.get(assignment.machine_id) ?? {}
+        const meterWorkerId = workerType === 'meter_worker' ? Number(assignment.meter_worker_id) : null
+        const fixedWorkerId = workerType === 'fixed_worker' ? Number(assignment.fixed_worker_id) : null
+        current[shiftKey] = {
+            operator_assignment_id: assignment.id,
+            operator_worker_type: workerType,
+            meter_worker_id: meterWorkerId,
+            fixed_worker_id: fixedWorkerId,
+            worker_id: meterWorkerId,
+            operator_name: workerType === 'meter_worker'
+                ? (meterWorkerNameById.get(meterWorkerId ?? 0) ?? 'Meter worker')
+                : (fixedWorkerNameById.get(fixedWorkerId ?? 0) ?? 'Fixed worker'),
+            operator_pay_mode: assignment.pay_mode as OperatorPayMode,
+            operator_rate: Number(assignment.rate ?? 0),
+            machine_type: assignment.machine_type ?? 'other',
+        }
+        operatorAssignmentsByMachineId.set(assignment.machine_id, current)
+    }
     const standingAssignmentsByMachineId = new Map<string, { day?: number; night?: number }>()
     for (const assignment of standingAssignmentsRes.data ?? []) {
         if (!activeWorkerIds.has(assignment.worker_id)) continue
@@ -914,28 +967,58 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
     )
     const assignments = eligibleMachines.flatMap((machine) => {
         const existing = datedAssignmentByMachineId.get(machine.id)
+        const operatorAssignment = operatorAssignmentsByMachineId.get(machine.id)?.[shift]
         const standingAssignments = standingAssignmentsByMachineId.get(machine.id)
-        const workerId = standingAssignments?.[shift] ?? null
+        const workerId = operatorAssignment?.worker_id ?? standingAssignments?.[shift] ?? null
         const orderId = machine.current_order_id ?? null
+        const operatorPayload = operatorAssignment ?? (
+            workerId
+                ? {
+                    operator_assignment_id: null,
+                    operator_worker_type: 'meter_worker' as OperatorWorkerType,
+                    meter_worker_id: workerId,
+                    fixed_worker_id: null,
+                    worker_id: workerId,
+                    operator_name: meterWorkerNameById.get(workerId) ?? 'Meter worker',
+                    operator_pay_mode: 'per_meter' as OperatorPayMode,
+                    operator_rate: orderId ? (orderRateById.get(orderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5),
+                    machine_type: normalizeMachineType(machine.loom_type),
+                }
+                : {
+                    operator_assignment_id: null,
+                    operator_worker_type: null,
+                    meter_worker_id: null,
+                    fixed_worker_id: null,
+                    worker_id: null,
+                    operator_name: '',
+                    operator_pay_mode: null,
+                    operator_rate: 0,
+                    machine_type: normalizeMachineType(machine.loom_type),
+                }
+        )
+        const resolvedRate = operatorPayload.operator_rate
+            || (orderId ? (orderRateById.get(orderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5))
 
         if (existing) {
             const mergedOrderId = existing.order_id ?? orderId
 
             return [{
                 ...existing,
-                worker_id: workerId,
+                ...operatorPayload,
+                worker_id: operatorPayload.worker_id,
                 order_id: mergedOrderId,
                 rate_per_m: existing.rate_per_m
-                    ?? (mergedOrderId ? (orderRateById.get(mergedOrderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5)),
+                    ?? resolvedRate,
             }]
         }
 
         return [{
             id: null,
             machine_id: machine.id,
-            worker_id: workerId,
+            ...operatorPayload,
+            worker_id: operatorPayload.worker_id,
             order_id: orderId,
-            rate_per_m: orderId ? (orderRateById.get(orderId) ?? machine.default_rate_per_m ?? 1.5) : (machine.default_rate_per_m ?? 1.5),
+            rate_per_m: resolvedRate,
             breakdown_category: null,
             breakdown_notes: null,
         }]
@@ -980,6 +1063,7 @@ export async function getShiftSetupData(date: string, shift: 'day' | 'night') {
             ),
         })),
         workers: workersRes.data ?? [],
+        fixedWorkers: fixedWorkersRes.data ?? [],
         assignments,
         existingLogs: currentLogsRes.data ?? [],
         latestSubmittedAt: getLatestSubmittedAt((currentLogsRes.data ?? []) as Array<{ submitted_at: string | null }>),
@@ -1118,6 +1202,13 @@ export async function copyPreviousShiftAction(
 export async function bulkLogProduction(entries: {
     machine_id: string
     worker_id: number | null
+    operator_assignment_id?: string | null
+    operator_worker_type?: OperatorWorkerType | null
+    meter_worker_id?: number | null
+    fixed_worker_id?: number | null
+    operator_pay_mode?: OperatorPayMode | null
+    operator_rate?: number | null
+    machine_type?: string | null
     order_id: string | null
     meters: number
     opening_meter_reading: number
@@ -1147,6 +1238,12 @@ export async function bulkLogProduction(entries: {
             machine_id: entry.machine_id,
             meters: entry.meters,
             worker_id: entry.worker_id,
+            operator_assignment_id: entry.operator_assignment_id,
+            operator_worker_type: entry.operator_worker_type,
+            meter_worker_id: entry.meter_worker_id,
+            fixed_worker_id: entry.fixed_worker_id,
+            operator_pay_mode_snapshot: entry.operator_pay_mode,
+            operator_rate_snapshot: entry.operator_rate ?? entry.rate_per_m,
             order_id: entry.order_id,
             rate_per_m: entry.rate_per_m,
             zero_meter_reason: entry.zero_meter_reason,
@@ -1172,6 +1269,8 @@ export async function bulkLogProduction(entries: {
         .map((e) => {
             const isProduction = e.meters > 0
             const resolvedMeters = e.counter_was_reset ? e.closing_meter_reading : e.meters
+            const operatorWorkerType = e.operator_worker_type ?? (e.worker_id ? 'meter_worker' : null)
+            const operatorRateSnapshot = isProduction ? (e.operator_rate ?? e.rate_per_m ?? 0) : 0
             // Build the reason string: for status logs, combine reason + note
             let zeroReason: string | null = null
             if (!isProduction && e.zero_meter_reason?.trim()) {
@@ -1183,7 +1282,7 @@ export async function bulkLogProduction(entries: {
             return {
                 org_id: orgId,
                 machine_id: e.machine_id,
-                worker_id: isProduction ? e.worker_id : (e.worker_id || null),
+                worker_id: operatorWorkerType === 'meter_worker' ? (e.meter_worker_id ?? e.worker_id ?? null) : null,
                 order_id: isProduction ? e.order_id! : (e.order_id || null),
                 meters: resolvedMeters,
                 opening_meter_reading: e.counter_was_reset ? 0 : e.opening_meter_reading,
@@ -1191,7 +1290,14 @@ export async function bulkLogProduction(entries: {
                 counter_was_reset: e.counter_was_reset ?? false,
                 shift: e.shift,
                 date: e.date,
-                worker_rate_snapshot: isProduction ? e.rate_per_m! : 0,
+                worker_rate_snapshot: operatorWorkerType === 'meter_worker' ? operatorRateSnapshot : 0,
+                operator_assignment_id: e.operator_assignment_id ?? null,
+                operator_worker_type: operatorWorkerType,
+                meter_worker_id: operatorWorkerType === 'meter_worker' ? (e.meter_worker_id ?? e.worker_id ?? null) : null,
+                fixed_worker_id: operatorWorkerType === 'fixed_worker' ? (e.fixed_worker_id ?? null) : null,
+                operator_pay_mode_snapshot: e.operator_pay_mode ?? (operatorWorkerType === 'meter_worker' ? 'per_meter' : null),
+                operator_rate_snapshot: operatorRateSnapshot,
+                machine_type_snapshot: normalizeMachineType(e.machine_type),
                 created_by: user.id,
                 updated_by: user.id,
                 submitted_at: new Date().toISOString(),
@@ -1207,7 +1313,7 @@ export async function bulkLogProduction(entries: {
     const logShift = logs[0].shift
 
     // ── Guard: production can only be saved for looms that are fully active ──
-    const [machinesRes, standingAssignmentsRes] = await Promise.all([
+    const [machinesRes, standingAssignmentsRes, operatorAssignmentsRes] = await Promise.all([
         supabase
             .from('machines')
             .select('id, name, status, current_order_id, orders(status)')
@@ -1219,6 +1325,13 @@ export async function bulkLogProduction(entries: {
             .eq('org_id', orgId)
             .in('machine_id', machineIds)
             .in('shift', ['day', 'night']),
+        supabase
+            .from('machine_operator_assignments')
+            .select('machine_id, worker_type, meter_worker_id, fixed_worker_id, shift')
+            .eq('org_id', orgId)
+            .eq('active', true)
+            .in('machine_id', machineIds)
+            .in('shift', ['day', 'night']),
     ])
 
     if (machinesRes.error) {
@@ -1226,20 +1339,27 @@ export async function bulkLogProduction(entries: {
         return { error: 'Failed to validate loom setup. Please try again.' }
     }
 
-    if (standingAssignmentsRes.error) {
-        console.error('bulkLogProduction – standing assignment lookup error:', standingAssignmentsRes.error)
+    if (standingAssignmentsRes.error || operatorAssignmentsRes.error) {
+        console.error('bulkLogProduction – standing assignment lookup error:', standingAssignmentsRes.error || operatorAssignmentsRes.error)
         return { error: 'Failed to validate worker assignments. Please try again.' }
     }
 
     const workerIds = [...new Set((standingAssignmentsRes.data ?? []).map((assignment) => assignment.worker_id))]
+    const operatorMeterWorkerIds = [...new Set((operatorAssignmentsRes.data ?? [])
+        .map((assignment) => assignment.meter_worker_id)
+        .filter((id): id is number => id != null))]
+    const operatorFixedWorkerIds = [...new Set((operatorAssignmentsRes.data ?? [])
+        .map((assignment) => assignment.fixed_worker_id)
+        .filter((id): id is number => id != null))]
     const activeWorkerIds = new Set<number>()
-    if (workerIds.length > 0) {
+    const activeFixedWorkerIds = new Set<number>()
+    if (workerIds.length > 0 || operatorMeterWorkerIds.length > 0) {
         const { data: activeWorkers, error: activeWorkersError } = await supabase
             .from('workers')
             .select('id')
             .eq('org_id', orgId)
             .eq('is_active', true)
-            .in('id', workerIds)
+            .in('id', [...new Set([...workerIds, ...operatorMeterWorkerIds])])
 
         if (activeWorkersError) {
             console.error('bulkLogProduction – active worker lookup error:', activeWorkersError)
@@ -1248,10 +1368,36 @@ export async function bulkLogProduction(entries: {
 
         for (const worker of activeWorkers ?? []) activeWorkerIds.add(worker.id)
     }
+    if (operatorFixedWorkerIds.length > 0) {
+        const { data: activeFixedWorkers, error: activeFixedWorkersError } = await supabase
+            .from('fixed_workers')
+            .select('id')
+            .eq('org_id', orgId)
+            .eq('is_active', true)
+            .in('id', operatorFixedWorkerIds)
+
+        if (activeFixedWorkersError) {
+            console.error('bulkLogProduction – active fixed worker lookup error:', activeFixedWorkersError)
+            return { error: 'Failed to validate fixed worker assignments. Please try again.' }
+        }
+
+        for (const worker of activeFixedWorkers ?? []) activeFixedWorkerIds.add(worker.id)
+    }
 
     const machineById = new Map((machinesRes.data ?? []).map((machine) => [machine.id, machine]))
     const standingByMachineId = new Map<string, { day?: number; night?: number }>()
+    for (const assignment of operatorAssignmentsRes.data ?? []) {
+        const workerType = assignment.worker_type as OperatorWorkerType
+        const operatorWorkerId = workerType === 'fixed_worker' ? assignment.fixed_worker_id : assignment.meter_worker_id
+        if (!operatorWorkerId) continue
+        if (workerType === 'fixed_worker' && !activeFixedWorkerIds.has(operatorWorkerId)) continue
+        if (workerType === 'meter_worker' && !activeWorkerIds.has(operatorWorkerId)) continue
+        const current = standingByMachineId.get(assignment.machine_id) ?? {}
+        current[assignment.shift as 'day' | 'night'] = operatorWorkerId
+        standingByMachineId.set(assignment.machine_id, current)
+    }
     for (const assignment of standingAssignmentsRes.data ?? []) {
+        if (standingByMachineId.get(assignment.machine_id)?.[assignment.shift as 'day' | 'night']) continue
         if (!activeWorkerIds.has(assignment.worker_id)) continue
         const current = standingByMachineId.get(assignment.machine_id) ?? {}
         current[assignment.shift as 'day' | 'night'] = assignment.worker_id
@@ -1272,7 +1418,9 @@ export async function bulkLogProduction(entries: {
             logOrderId: log.order_id,
             activeOrderStatus: activeOrder?.status,
             shift: log.shift,
-            logWorkerId: log.worker_id,
+            logWorkerId: log.operator_worker_type === 'fixed_worker'
+                ? log.fixed_worker_id
+                : (log.meter_worker_id ?? log.worker_id),
             standingAssignments,
         })
 
@@ -1284,7 +1432,7 @@ export async function bulkLogProduction(entries: {
     // ── Guard: check for existing logs for the same machine, date, and shift ──
     const { data: existingLogs } = await supabase
         .from('production_logs')
-        .select('id, machine_id, worker_id, date, shift, meters, opening_meter_reading, closing_meter_reading, counter_was_reset, submitted_at')
+        .select('id, machine_id, worker_id, meter_worker_id, fixed_worker_id, date, shift, meters, opening_meter_reading, closing_meter_reading, counter_was_reset, submitted_at')
         .eq('org_id', orgId)
         .eq('date', logDate)
         .eq('shift', logShift)
@@ -1335,25 +1483,45 @@ export async function bulkLogProduction(entries: {
     const cycleStart = bounds.cycle_start
 
     if (cycleStart) {
-        const payrollWorkerIds = [...new Set([
-            ...logs.map((l) => l.worker_id),
-            ...(existingLogs?.map((l) => (l as WorkerIdLogRow).worker_id) || [])
+        const payrollMeterWorkerIds = [...new Set([
+            ...logs.map((l) => l.meter_worker_id ?? l.worker_id),
+            ...(existingLogs?.map((l) => (l as WorkerIdLogRow).meter_worker_id ?? (l as WorkerIdLogRow).worker_id) || [])
+        ])].filter((id): id is number => id != null)
+        const payrollFixedWorkerIds = [...new Set([
+            ...logs.map((l) => l.fixed_worker_id),
+            ...(existingLogs?.map((l) => (l as WorkerIdLogRow).fixed_worker_id) || [])
         ])].filter((id): id is number => id != null)
 
-        if (payrollWorkerIds.length > 0) {
-            const { data: settlements } = await supabase
-                .from('payroll_settlements')
-                .select('id')
-                .eq('org_id', orgId)
-                .eq('cycle_start_date', cycleStart)
-                .in('meter_worker_id', payrollWorkerIds)
-                .eq('status', 'paid')
+        const [meterSettlementsRes, fixedSettlementsRes] = await Promise.all([
+            payrollMeterWorkerIds.length > 0
+                ? supabase
+                    .from('payroll_settlements')
+                    .select('id')
+                    .eq('org_id', orgId)
+                    .eq('cycle_start_date', cycleStart)
+                    .in('meter_worker_id', payrollMeterWorkerIds)
+                    .eq('status', 'paid')
+                : Promise.resolve({ data: [], error: null }),
+            payrollFixedWorkerIds.length > 0
+                ? supabase
+                    .from('payroll_settlements')
+                    .select('id')
+                    .eq('org_id', orgId)
+                    .eq('cycle_start_date', cycleStart)
+                    .in('fixed_worker_id', payrollFixedWorkerIds)
+                    .eq('status', 'paid')
+                : Promise.resolve({ data: [], error: null }),
+        ])
 
-            if (settlements && settlements.length > 0) {
-                return {
-                    error: 'PAYROLL_ALREADY_SETTLED',
-                    message: 'Production logs cannot be modified because payroll for this period is already settled for one or more workers.',
-                }
+        if (meterSettlementsRes.error || fixedSettlementsRes.error) {
+            console.error('bulkLogProduction – settlement lookup error:', meterSettlementsRes.error || fixedSettlementsRes.error)
+            return { error: 'Failed to validate payroll settlement status. Please try again.' }
+        }
+
+        if ((meterSettlementsRes.data?.length ?? 0) > 0 || (fixedSettlementsRes.data?.length ?? 0) > 0) {
+            return {
+                error: 'PAYROLL_ALREADY_SETTLED',
+                message: 'Production logs cannot be modified because payroll for this period is already settled for one or more workers.',
             }
         }
     }

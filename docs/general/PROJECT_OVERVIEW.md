@@ -1,6 +1,6 @@
 # Weavly Project Overview
 
-Last analyzed from the active codebase on June 1, 2026.
+Last analyzed from the active codebase on July 9, 2026.
 
 Weavly is a multi-tenant operating system for Indian weaving factories. It is designed around the way a small or mid-sized weaving unit actually works: an owner prices fabric from yarn and loom assumptions, converts confirmed work into orders or speculative market runs, assigns looms on the floor, captures shift production, turns output into stock or dispatches, and settles workers with transparent wage and advance recovery.
 
@@ -17,7 +17,7 @@ The loop is:
 3. Save reusable templates and commercial quotes.
 4. Move accepted quotes into active orders, or start a market run when the factory is producing for stock rather than a committed party.
 5. Assign machines, workers, and order/run work on the supervisor production log screen.
-6. Capture day/night shift production from produced metre totals, with correction windows, duplicate protection, rate snapshots, downtime reasons, and machine status.
+6. Capture day/night shift production from produced metre totals, with correction windows, duplicate protection, operator assignment snapshots, downtime reasons, and machine status.
 7. Convert production into Factory Today signals, analytics, order progress, market-run progress, expected godown stock, payroll earnings, and sale/dispatch readiness.
 8. Sell stock to a saved or newly captured party, create a receivable, dispatch in one or more batches, confirm receipt, and review shortages/excesses.
 9. Settle payroll and advances with deduction caps, PF/ESI fields, final settlement behavior, payment modes, payslip generation, and WhatsApp communication.
@@ -95,7 +95,7 @@ Pain point translated: speculative production stops being invisible "market maal
 
 ### Supervisor Production Log
 
-The supervisor dashboard is the active production log workspace. Supervisors select date and day/night shift, assign workers and orders/runs to machines, update machine running/idle/maintenance status, enter produced metres or downtime reasons, copy previous shift setup, submit logs, and request owner access codes for protected corrections.
+The supervisor dashboard is the active production log workspace. Supervisors select date and day/night shift, use owner-configured machine operator assignments and orders/runs, update machine running/idle/maintenance status, enter produced metres or downtime reasons, copy previous shift setup, submit logs, and request owner access codes for protected corrections.
 
 Pain point translated: the production register becomes a mobile shift screen that feeds owner analytics and payroll directly.
 
@@ -121,7 +121,9 @@ Pain point translated: the owner can answer "Paisa/profit kya hua?" and track re
 
 ### Payroll and Advances
 
-Payroll reads production logs for meter workers and attendance/fixed salary data for fixed workers. The configured cycle start day defines the wage period, and the configured pay date/reminder window controls when normal settlements open. Payroll defaults to the current month for live wage accumulation, previews and records settlements, applies advance recovery caps, supports final settlement, PF/ESI deductions, manual adjustments, payment mode capture, payslip PDF generation, WhatsApp sending, and paid/unpaid state. The same surface includes past settlement history with search/date filters, detailed net-revenue-to-net-pay audit views, historical cycle reopening, and CSV downloads named by factory and pay-cycle/range, such as `AshokTextiles_Jan-01-2026-Jan-31-2026.csv`.
+Payroll reads production logs for meter workers, machine-operator assignment snapshots for fixed machine operators, and attendance/fixed salary data for fixed workers. The configured cycle start day defines the wage period, and the configured pay date/reminder window controls when normal settlements open. Payroll defaults to the current month for live wage accumulation, previews and records settlements, applies advance recovery caps, supports final settlement, PF/ESI deductions, manual adjustments, payment mode capture, payslip PDF generation, WhatsApp sending, and paid/unpaid state. The same surface includes past settlement history with search/date filters, detailed net-revenue-to-net-pay audit views, historical cycle reopening, and CSV downloads named by factory and pay-cycle/range, such as `AshokTextiles_Jan-01-2026-Jan-31-2026.csv`.
+
+Machine operator payroll keeps `workers` and `fixed_workers` separate. Jacquard and Power Loom assignments default to per-meter pay; Rapier, Water Jet, and Other assignments default to fixed monthly with owner override to fixed monthly, daily, or shift. Fixed-shift payroll counts each logged production shift once per `operator_assignment_id + production date + shift`; fixed-daily payroll prefers attendance and otherwise uses distinct production dates as an MVP proxy.
 
 Advances track Upaad for meter and fixed workers, pending and deducted balances, debt-to-typical-pay warnings, deletion rules, write-off support, and automatic recovery through settlement.
 

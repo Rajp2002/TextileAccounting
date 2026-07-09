@@ -148,6 +148,14 @@ type ShiftAssignment = {
     id: string | null
     machine_id: string
     worker_id: number | null
+    operator_assignment_id?: string | null
+    operator_worker_type?: 'meter_worker' | 'fixed_worker' | null
+    meter_worker_id?: number | null
+    fixed_worker_id?: number | null
+    operator_name?: string | null
+    operator_pay_mode?: 'per_meter' | 'fixed_monthly' | 'fixed_daily' | 'fixed_shift' | null
+    operator_rate?: number | null
+    machine_type?: string | null
     order_id: string | null
     rate_per_m: number
     breakdown_category: string | null
@@ -301,6 +309,10 @@ function MachineUnifiedRow({
 }: MachineUnifiedRowProps) {
     const { t } = useTranslation()
     const workerId = assignment?.worker_id?.toString() ?? ''
+    const hasOperator = Boolean(assignment?.operator_assignment_id || assignment?.worker_id || assignment?.fixed_worker_id || assignment?.meter_worker_id)
+    const operatorName = assignment?.operator_name
+        || workers.find((w) => w.id.toString() === workerId)?.name
+        || ''
     const orderId = assignment?.order_id ?? ''
     const status = (machine.machine_status || 'idle') as 'running' | 'idle' | 'maintenance'
 
@@ -426,7 +438,7 @@ function MachineUnifiedRow({
                                     <Users className="h-4 w-4 lg:h-3.5 lg:w-3.5 text-saffron-deep" />
                                 </div>
                                 <span className="truncate text-sm font-semibold text-ink">
-                                    {workers.find((w) => w.id.toString() === workerId)?.name ?? t('production.no_worker')}
+                                    {operatorName || t('production.no_worker')}
                                 </span>
                             </div>
 
@@ -503,9 +515,9 @@ function MachineUnifiedRow({
                                 <span className="rounded-full bg-warning-soft/60 px-2.5 py-1 lg:py-0.5 text-warning">
                                     0 m — downtime
                                 </span>
-                                {workerId && (
+                                {hasOperator && (
                                     <span className="rounded-full bg-surface-soft px-2.5 py-1 lg:py-0.5">
-                                        {workers.find(w => w.id.toString() === workerId)?.name ?? 'Worker'}
+                                        {operatorName || 'Worker'}
                                     </span>
                                 )}
                             </div>
@@ -517,12 +529,12 @@ function MachineUnifiedRow({
                 {!isDowntime && (
                     <div className={cn(
                         "flex flex-col lg:flex-row w-full lg:w-auto items-center justify-center border-t lg:border-t-0 lg:border-l border-hairline bg-surface-soft/35 p-4 lg:p-3",
-                        (!workerId || !orderId) && "opacity-55"
+                        (!hasOperator || !orderId) && "opacity-55"
                     )}>
                         <div className="flex w-full flex-col items-center gap-3 lg:gap-2">
-                            {(!workerId || !orderId) ? (
+                            {(!hasOperator || !orderId) ? (
                                 <div className="flex h-11 lg:h-12 flex-col items-center justify-center px-1 text-center text-xs font-semibold leading-tight text-muted-foreground/70 animate-in fade-in duration-500">
-                                     {!workerId ? t('production.no_worker') : 'Select cost analysis / quality'}
+                                     {!hasOperator ? t('production.no_worker') : 'Select cost analysis / quality'}
                                      <AlertCircle className="h-4 w-4 mt-1 opacity-40" />
                                 </div>
                             ) : (
@@ -995,6 +1007,13 @@ export default function UnifiedDashboard() {
                 return {
                     machine_id: m.id,
                     worker_id: assignment?.worker_id ?? null,
+                    operator_assignment_id: assignment?.operator_assignment_id ?? null,
+                    operator_worker_type: assignment?.operator_worker_type ?? null,
+                    meter_worker_id: assignment?.meter_worker_id ?? null,
+                    fixed_worker_id: assignment?.fixed_worker_id ?? null,
+                    operator_pay_mode: assignment?.operator_pay_mode ?? null,
+                    operator_rate: assignment?.operator_rate ?? assignment?.rate_per_m ?? null,
+                    machine_type: assignment?.machine_type ?? null,
                     order_id: assignment?.order_id ?? null,
                     meters: metersProduced,
                     opening_meter_reading: 0,
@@ -1007,7 +1026,7 @@ export default function UnifiedDashboard() {
                     zero_meter_note: null as string | null,
                 }
             })
-            .filter((e) => e.worker_id && e.order_id && e.meters > 0)
+            .filter((e) => (e.operator_assignment_id || e.worker_id) && e.order_id && e.meters > 0)
 
         // Build downtime entries (mode === 'downtime' with valid reason)
         const downtimeEntries = machines
@@ -1019,6 +1038,13 @@ export default function UnifiedDashboard() {
                 return {
                     machine_id: m.id,
                     worker_id: assignment?.worker_id ?? null,
+                    operator_assignment_id: assignment?.operator_assignment_id ?? null,
+                    operator_worker_type: assignment?.operator_worker_type ?? null,
+                    meter_worker_id: assignment?.meter_worker_id ?? null,
+                    fixed_worker_id: assignment?.fixed_worker_id ?? null,
+                    operator_pay_mode: assignment?.operator_pay_mode ?? null,
+                    operator_rate: assignment?.operator_rate ?? assignment?.rate_per_m ?? null,
+                    machine_type: assignment?.machine_type ?? null,
                     order_id: assignment?.order_id ?? null,
                     meters: 0,
                     opening_meter_reading: 0,
@@ -1157,7 +1183,7 @@ export default function UnifiedDashboard() {
         }
     }
 
-    const assignedCount = assignments.filter((a) => a.worker_id).length
+    const assignedCount = assignments.filter((a) => a.operator_assignment_id || a.worker_id).length
     const loggedMetersCount = Object.keys(productionMeters).filter((machineId) => (productionMeters[machineId] ?? 0) > 0).length
     const validEntryCount = machines.filter((machine) => {
         const mode = loggingModes[machine.id] ?? 'production'
@@ -1170,7 +1196,7 @@ export default function UnifiedDashboard() {
         // Production mode
         const assignment = assignments.find((a) => a.machine_id === machine.id)
         return Boolean(
-            assignment?.worker_id &&
+            (assignment?.operator_assignment_id || assignment?.worker_id) &&
             assignment?.order_id &&
             (productionMeters[machine.id] ?? 0) > 0
         )
@@ -1182,7 +1208,7 @@ export default function UnifiedDashboard() {
             count: machines.filter((machine) => {
                 const assignment = assignments.find((a) => a.machine_id === machine.id)
                 const hasMeters = (productionMeters[machine.id] ?? 0) > 0
-                return (machine.machine_status === 'running' || hasMeters) && !assignment?.worker_id
+                return (machine.machine_status === 'running' || hasMeters) && !(assignment?.operator_assignment_id || assignment?.worker_id)
             }).length,
             tone: 'blocker',
         },

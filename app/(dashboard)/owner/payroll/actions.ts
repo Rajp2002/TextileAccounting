@@ -3,10 +3,17 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { calculateTotalPay, calculateDailyPay } from '@/lib/finance'
 import { AccessCodeSchema, PayrollConfigSchema, safeParse } from '@/lib/schemas'
 import { getPayrollCycleBounds, getPayrollCycleStatus } from '@/lib/payroll-cycle'
 import { getSuratTodayString } from '@/lib/time'
+import {
+    calculateFixedMachineOperatorGross,
+    calculateMeterOperatorGross,
+    type OperatorAssignmentPayrollInput,
+    type OperatorPayMode,
+    type OperatorProductionLogInput,
+    type OperatorWorkerType,
+} from '@/lib/machine-operator-payroll'
 import {
     calculatePayrollManualAdjustmentTotals,
     sanitizePayrollManualAdjustments,
@@ -14,6 +21,15 @@ import {
 } from '@/lib/payroll-manual-adjustments'
 
 type PayrollProductionLog = {
+    worker_id?: number | null
+    meter_worker_id?: number | null
+    fixed_worker_id?: number | null
+    operator_assignment_id?: string | null
+    operator_worker_type?: OperatorWorkerType | null
+    operator_pay_mode_snapshot?: OperatorPayMode | null
+    operator_rate_snapshot?: number | null
+    date: string
+    shift: 'day' | 'night'
     meters: number
     worker_rate_snapshot: number | null
 }
@@ -87,48 +103,109 @@ export async function toggleWorkerPaid(
 
         const { data: logs } = await supabase
             .from('production_logs')
-            .select('meters, worker_rate_snapshot')
+            .select('worker_id, meter_worker_id, fixed_worker_id, operator_assignment_id, operator_worker_type, operator_pay_mode_snapshot, operator_rate_snapshot, date, shift, meters, worker_rate_snapshot')
             .eq('org_id', profile.org_id)
-            .eq('worker_id', workerId)
             .gt('meters', 0)
             .gte('date', monthStart)
             .lte('date', monthEnd)
+            .or(`meter_worker_id.eq.${workerId},worker_id.eq.${workerId}`)
 
-        const payItems = ((logs || []) as PayrollProductionLog[]).map((log) => ({
+        const gross = calculateMeterOperatorGross(((logs || []) as PayrollProductionLog[]).map((log) => ({
+            operatorAssignmentId: log.operator_assignment_id,
+            operatorWorkerType: log.operator_worker_type,
+            meterWorkerId: log.meter_worker_id,
+            fixedWorkerId: log.fixed_worker_id,
+            workerId: log.worker_id,
+            productionDate: log.date,
+            shift: log.shift,
             meters: log.meters,
-            rate: log.worker_rate_snapshot || 0,
-        }))
-
-        calculatedAmountStr = calculateTotalPay(payItems)
+            workerRateSnapshot: log.worker_rate_snapshot,
+            operatorRateSnapshot: log.operator_rate_snapshot,
+            operatorPayModeSnapshot: log.operator_pay_mode_snapshot,
+        })), workerId)
+        calculatedAmountStr = gross.toFixed(2)
     } else {
         const { data: worker, error: workerError } = await supabase
             .from('fixed_workers')
-            .select('role, monthly_salary')
+            .select('id, role, monthly_salary')
             .eq('id', workerId)
             .eq('org_id', profile.org_id)
             .maybeSingle()
 
         if (workerError || !worker) return { error: 'Worker not found' }
 
-        if (worker.role === 'daily') {
-            const { count } = await supabase
+        const [attendanceRes, assignmentsRes, logsRes] = await Promise.all([
+            supabase
                 .from('attendance')
-                .select('*', { count: 'exact', head: true })
+                .select('fixed_worker_id, date, present')
                 .eq('org_id', profile.org_id)
                 .eq('fixed_worker_id', workerId)
                 .gte('date', monthStart)
-                .lte('date', monthEnd)
-                .eq('present', true)
+                .lte('date', monthEnd),
+            supabase
+                .from('machine_operator_assignments')
+                .select('id, worker_type, fixed_worker_id, pay_mode, rate, effective_from, effective_to')
+                .eq('org_id', profile.org_id)
+                .eq('fixed_worker_id', workerId),
+            supabase
+                .from('production_logs')
+                .select('worker_id, meter_worker_id, fixed_worker_id, operator_assignment_id, operator_worker_type, operator_pay_mode_snapshot, operator_rate_snapshot, date, shift, meters, worker_rate_snapshot')
+                .eq('org_id', profile.org_id)
+                .eq('fixed_worker_id', workerId)
+                .gt('meters', 0)
+                .gte('date', monthStart)
+                .lte('date', monthEnd),
+        ])
 
-            const daysWorked = count || 0
-            calculatedAmountStr = calculateDailyPay(daysWorked, worker.monthly_salary / 30)
+        if (attendanceRes.error) return { error: 'Failed to load worker attendance.' }
+        if (assignmentsRes.error) return { error: 'Failed to load machine operator assignments.' }
+        if (logsRes.error) return { error: 'Failed to load production logs.' }
 
-            if (parseFloat(calculatedAmountStr) > worker.monthly_salary) {
-                calculatedAmountStr = worker.monthly_salary.toString()
-            }
-        } else {
-            calculatedAmountStr = worker.monthly_salary.toString()
-        }
+        const fixedGross = calculateFixedMachineOperatorGross({
+            fixedWorker: {
+                id: worker.id,
+                role: worker.role,
+                monthlySalary: worker.monthly_salary,
+            },
+            assignments: ((assignmentsRes.data || []) as Array<{
+                id: string
+                worker_type: OperatorWorkerType
+                fixed_worker_id: number
+                pay_mode: OperatorPayMode
+                rate: number
+                effective_from: string | null
+                effective_to: string | null
+            }>).map((assignment): OperatorAssignmentPayrollInput => ({
+                id: assignment.id,
+                workerType: assignment.worker_type,
+                workerId: assignment.fixed_worker_id,
+                payMode: assignment.pay_mode,
+                rate: assignment.rate,
+                effectiveFrom: assignment.effective_from,
+                effectiveTo: assignment.effective_to,
+            })),
+            productionLogs: ((logsRes.data || []) as PayrollProductionLog[]).map((log): OperatorProductionLogInput => ({
+                operatorAssignmentId: log.operator_assignment_id,
+                operatorWorkerType: log.operator_worker_type,
+                meterWorkerId: log.meter_worker_id,
+                fixedWorkerId: log.fixed_worker_id,
+                workerId: log.worker_id,
+                productionDate: log.date,
+                shift: log.shift,
+                meters: log.meters,
+                workerRateSnapshot: log.worker_rate_snapshot,
+                operatorRateSnapshot: log.operator_rate_snapshot,
+                operatorPayModeSnapshot: log.operator_pay_mode_snapshot,
+            })),
+            attendance: (attendanceRes.data || []).map((row) => ({
+                fixedWorkerId: row.fixed_worker_id,
+                date: row.date,
+                present: row.present,
+            })),
+            cycleStart: monthStart,
+            cycleEnd: monthEnd,
+        })
+        calculatedAmountStr = fixedGross.gross.toFixed(2)
     }
 
     const grossAmount = parseFloat(calculatedAmountStr)

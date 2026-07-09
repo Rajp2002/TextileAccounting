@@ -47,6 +47,8 @@ export const VALIDATION_MESSAGES = {
     RATE_MISSING:
         'No worker rate is set for this quality. Ask the owner to set the rate before saving production.',
     RATE_ZERO: 'Worker rate must be greater than zero for production logs.',
+    FIXED_OPERATOR_PER_METER:
+        'Fixed machine operator production can be logged for accountability, but it cannot use per-meter pay.',
     REASON_REQUIRED: 'Enter a reason for 0m production.',
     NOTE_REQUIRED_OTHER: "Add a note for 'Other' reason.",
     NEGATIVE_METERS: 'Production meters cannot be negative.',
@@ -62,6 +64,12 @@ export interface ProductionLogEntry {
     machine_id: string
     meters: number
     worker_id: number | null | undefined
+    operator_assignment_id?: string | null | undefined
+    operator_worker_type?: 'meter_worker' | 'fixed_worker' | null | undefined
+    meter_worker_id?: number | null | undefined
+    fixed_worker_id?: number | null | undefined
+    operator_pay_mode_snapshot?: 'per_meter' | 'fixed_monthly' | 'fixed_daily' | 'fixed_shift' | null | undefined
+    operator_rate_snapshot?: number | null | undefined
     /** order_id is the current quality/work anchor implementation */
     order_id: string | null | undefined
     rate_per_m: number | null | undefined
@@ -94,7 +102,21 @@ export function validateProductionLog(entry: ProductionLogEntry): ValidationResu
         errors.push(VALIDATION_MESSAGES.NEGATIVE_METERS)
     }
 
-    if (!entry.worker_id) {
+    const hasAssignmentOperator = Boolean(
+        entry.operator_assignment_id &&
+        (
+            (entry.operator_worker_type === 'meter_worker' && entry.meter_worker_id) ||
+            (entry.operator_worker_type === 'fixed_worker' && entry.fixed_worker_id)
+        )
+    )
+    const hasLegacyWorker = Boolean(entry.worker_id)
+    const payMode = entry.operator_pay_mode_snapshot ?? (hasLegacyWorker ? 'per_meter' : null)
+
+    if (entry.operator_worker_type === 'fixed_worker' && payMode === 'per_meter') {
+        errors.push(VALIDATION_MESSAGES.FIXED_OPERATOR_PER_METER)
+    }
+
+    if (!hasLegacyWorker && !hasAssignmentOperator) {
         errors.push(VALIDATION_MESSAGES.WORKER_REQUIRED)
     }
 
@@ -103,8 +125,9 @@ export function validateProductionLog(entry: ProductionLogEntry): ValidationResu
         errors.push(VALIDATION_MESSAGES.QUALITY_REQUIRED)
     }
 
-    const rate = Number(entry.rate_per_m)
-    if (entry.rate_per_m == null || isNaN(rate)) {
+    const rateSource = entry.operator_rate_snapshot ?? entry.rate_per_m
+    const rate = Number(rateSource)
+    if (rateSource == null || isNaN(rate)) {
         errors.push(VALIDATION_MESSAGES.RATE_MISSING)
     } else if (rate <= 0) {
         errors.push(VALIDATION_MESSAGES.RATE_ZERO)

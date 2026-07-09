@@ -1,6 +1,6 @@
 # Payroll and Settlements
 
-Last analyzed from the active codebase on May 31, 2026.
+Last analyzed from the active codebase on July 9, 2026.
 
 ## Phase 1 Status
 
@@ -18,7 +18,7 @@ Payroll converts production logs, worker rates, fixed-worker setup, attendance, 
 4. Owner sees the Pay Date Overview panel showing status, bounds, and quick actions for the current/previous payroll cycle.
 5. Owner reviews meter workers and fixed workers (visible at any time once the cycle has started to track live payroll/wage updates).
 6. Meter workers show meters, machine/order rows, rate, gross pay, advances, deductions, manual adjustments, and net pay.
-7. Fixed workers show role, salary/daily earnings, attendance where applicable, advances, deductions, manual adjustments, and net pay.
+7. Fixed workers show role, salary/daily earnings, fixed machine-operator earnings where applicable, attendance where applicable, advances, deductions, manual adjustments, and net pay.
 8. Owner expands a worker row to inspect itemization.
 9. Owner toggles final settlement if the worker is exiting.
 10. Owner selects payment mode and verifies the payout.
@@ -60,6 +60,14 @@ Weavly workflow:
 
 - Meter-worker gross pay comes from `production_logs`.
 - Rate snapshots protect historical payroll from later rate edits.
+- Machine operator payroll is assignment-aware through `machine_operator_assignments`, which keeps `workers` and `fixed_workers` split and stores `worker_type`, `meter_worker_id`, `fixed_worker_id`, `machine_type`, `pay_mode`, `rate`, effective dates, and active state.
+- Assignment validation requires exactly one worker reference: meter assignments use `meter_worker_id` with `per_meter`, while fixed assignments use `fixed_worker_id` with `fixed_monthly`, `fixed_daily`, or `fixed_shift`.
+- Production logs snapshot operator assignment context through `operator_assignment_id`, `operator_worker_type`, `meter_worker_id`, `fixed_worker_id`, `operator_pay_mode_snapshot`, `operator_rate_snapshot`, and `machine_type_snapshot`.
+- `per_meter` assignments pay produced metres multiplied by the rate snapshot.
+- `fixed_monthly` machine operators use the fixed monthly salary/rate setup. Production logs are accountability and analytics only.
+- `fixed_shift` machine operators are paid once per distinct `operator_assignment_id + production date + shift` with at least one positive production log in the payroll cycle. Multiple logs on the same assignment/date/shift add to production analytics but do not multiply shift wages.
+- `fixed_daily` machine operators use fixed-worker attendance where present. If there is no clean attendance source for the operator cycle, the MVP uses distinct positive production dates as the proxy.
+- Fixed machine operator production metres never create meter wages.
 - Advance deduction caps apply, with final settlement behavior where enabled.
 - PF/ESI deductions are computed for enrolled workers.
 - Payment mode supports cash, bank transfer, UPI, and cheque.
@@ -78,11 +86,15 @@ Weavly workflow:
 - `app/(dashboard)/owner/payroll/actions.ts`
 - `app/(dashboard)/owner/payroll/whatsapp-actions.ts`
 - `lib/finance.ts`
+- `lib/machine-operator-payroll.ts`
 - `lib/generate-payslip.ts`
 - `lib/payroll-cycle.ts`
 - `lib/wage-config.ts`
 - `__tests__/payroll-settlement-history.test.ts`
+- `__tests__/machine-operator-payroll.test.ts`
 - `production_logs`
+- `machine_operator_assignments`
+- `machine_type_pay_defaults`
 - `attendance`
 - `payroll_settlements`
 - `payroll_adjustments`
@@ -100,3 +112,5 @@ Weavly workflow:
 
 - Settlement preview and persisted settlement must match.
 - Tests should cover pay-window gating, caps, final settlement, PF/ESI, payment modes, manual adjustments, and advance recovery.
+- MVP limitation: fixed-shift payroll treats a logged production shift as proof of an attended shift. If a fixed operator attends but has no production log due downtime, breakdown, no yarn, maintenance, or factory closure, that needs a later dedicated attendance or adjustment flow.
+- MVP limitation: fixed-daily machine operators use distinct production dates only when attendance is not available for that cycle.
