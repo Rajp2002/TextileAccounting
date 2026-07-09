@@ -1,14 +1,14 @@
 {
   "campaign": "Runtime Verification Campaign",
   "runId": "RUNTIMEQA-20260710-0412-4R4C",
-  "checkpointTimestamp": "2026-07-09T23:10:22.227Z",
-  "batchNumber": 10,
-  "completedIssueCount": 120,
-  "remainingIssueCount": 25,
+  "checkpointTimestamp": "2026-07-09T23:10:45.543Z",
+  "batchNumber": 11,
+  "completedIssueCount": 132,
+  "remainingIssueCount": 13,
   "passTotalThisCampaign": 0,
-  "failTotalThisCampaign": 120,
-  "lastCompletedIssueId": "BILL-002",
-  "nextIssueId": "BILL-004",
+  "failTotalThisCampaign": 132,
+  "lastCompletedIssueId": "SEC-012",
+  "nextIssueId": "SEC-013",
   "authoritativeMatrix": "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
   "tracker": "output/qa/runtime-verification-20260710/results.json",
   "evidenceDirectory": "output/qa/runtime-verification-20260710/evidence",
@@ -62,10 +62,10 @@
   "currentQaAccount": null,
   "matrixCounts": {
     "pass": 196,
-    "fail": 133,
+    "fail": 145,
     "blocked": 22,
     "not_applicable": 1,
-    "code_verified": 25,
+    "code_verified": 13,
     "not_run": 0
   }
 }

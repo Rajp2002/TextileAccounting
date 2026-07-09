@@ -1,0 +1,33 @@
+{
+  "batchNumber": 11,
+  "issuesCompleted": [
+    "BILL-004",
+    "BILL-005",
+    "BILL-008",
+    "OFF-001",
+    "OFF-003",
+    "OFF-004",
+    "TIME-003",
+    "TIME-004",
+    "SEC-007",
+    "SEC-009",
+    "SEC-010",
+    "SEC-012"
+  ],
+  "passCount": 0,
+  "failCount": 12,
+  "runningPassTotal": 0,
+  "runningFailTotal": 132,
+  "remainingIssues": 13,
+  "checkpointSaved": "CHECKPOINT.json",
+  "lastCompletedIssue": "SEC-012",
+  "nextIssueToProcess": "SEC-013",
+  "matrixCounts": {
+    "pass": 196,
+    "fail": 145,
+    "blocked": 22,
+    "not_applicable": 1,
+    "code_verified": 13,
+    "not_run": 0
+  }
+}

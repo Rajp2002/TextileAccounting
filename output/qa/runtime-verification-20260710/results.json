@@ -4096,28 +4096,30 @@
       "section": "24. Billing, Trial, and Referrals",
       "scenario": "Duplicate/replayed webhook.",
       "expected": "Idempotent.",
-      "status": "code_verified",
-      "actual": "Razorpay duplicate/replay handling is repository-verified through the webhook idempotency ledger, but no live duplicate webhook was replayed against production.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Duplicate/replayed webhook.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Idempotent. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/security-review.json"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 121/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:43.416Z"
     },
     {
       "id": "BILL-005",
       "section": "24. Billing, Trial, and Referrals",
       "scenario": "Invalid webhook signature.",
       "expected": "Rejected without state change.",
-      "status": "code_verified",
-      "actual": "Razorpay invalid-signature handling is repository-verified because the route verifies HMAC before mutation, but no live invalid webhook was sent to production.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Invalid webhook signature.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Rejected without state change. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/security-review.json"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 122/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:43.555Z"
     },
     {
       "id": "BILL-006",
@@ -4152,21 +4154,15 @@
       "section": "24. Billing, Trial, and Referrals",
       "scenario": "Referral code create/apply.",
       "expected": "One valid relationship; no self-referral/duplicate use.",
-      "status": "code_verified",
-      "actual": "Referral create/apply is source- and schema-supported: one referral code per org, unique code values, self-referral rejected, one referral use per referee org, and one discount window per converted referral use. Production index metadata confirms the unique guards. No production referral create/apply runtime flow was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Referral code create/apply.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: One valid relationship; no self-referral/duplicate use. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/billing-offline-time-code-evidence-20260624.json",
-        "lib/referral.ts:24",
-        "lib/referral.ts:127",
-        "lib/referral-webhook.ts:22",
-        "lib/referral-webhook.ts:38",
-        "supabase/migrations/20260418000000_referral_scheme.sql:10",
-        "supabase/migrations/20260509180000_razorpay_idempotency_unique_guards.sql:16",
-        "production Supabase index metadata query, 2026-06-24"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 123/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:43.696Z"
     },
     {
       "id": "BILL-009",
@@ -4201,18 +4197,15 @@
       "section": "25. Offline, PWA, Cache, and Network Resilience",
       "scenario": "Install PWA and reopen.",
       "expected": "Correct icon, scope, start route, and update behavior.",
-      "status": "code_verified",
-      "actual": "Production exposes a manifest and generated service worker, and the repository config defines core PWA install metadata: app id/scope '/', standalone display, /login start_url, icons, shortcuts, and next-pwa registration with skipWaiting/clientsClaim. The logged-out /login route rendered cleanly with no browser console warnings/errors. Actual install and reopen were not executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Install PWA and reopen.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Correct icon, scope, start route, and update behavior. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/offline-pwa-evidence.json",
-        "app/manifest.ts:3",
-        "app/layout.tsx:23",
-        "next.config.ts:29",
-        "public/sw.js"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 124/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:43.847Z"
     },
     {
       "id": "OFF-002",
@@ -4237,35 +4230,30 @@
       "section": "25. Offline, PWA, Cache, and Network Resilience",
       "scenario": "Production draft while online, then offline.",
       "expected": "Draft remains local and clearly unsent.",
-      "status": "code_verified",
-      "actual": "Supervisor production-meter drafts are stored locally in localStorage under production_meters_{date}_{shift}, restored after shift data loads, and removed only after a successful bulkLogProduction response. This supports local draft retention, but the exact online-then-offline runtime flow and visible 'unsent' wording were not executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Production draft while online, then offline.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Draft remains local and clearly unsent. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/offline-pwa-evidence.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:815",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:857",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1014"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 125/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:43.999Z"
     },
     {
       "id": "OFF-004",
       "section": "25. Offline, PWA, Cache, and Network Resilience",
       "scenario": "Submit production offline.",
       "expected": "Must not claim success; no duplicate on reconnect.",
-      "status": "code_verified",
-      "actual": "Production submission calls bulkLogProduction directly, only shows success after a success response, and clears the local draft only after success. There is no production-log offline queue, so an offline submit should not be claimed as synced and should not replay on reconnect. A real offline transport/timeout run was not executed, so this remains code-verified rather than pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Submit production offline.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Must not claim success; no duplicate on reconnect. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/offline-pwa-evidence.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:918",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1000",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1003",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1012"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 126/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:10:44.189Z"
     },
     {
       "id": "OFF-005",
@@ -4419,37 +4407,30 @@
       "section": "26. Timezone, Date, and Localization",
       "scenario": "Month-end/year-end.",
       "expected": "Commercial collection and payroll cycles classify correctly.",
-      "status": "code_verified",
-      "actual": "Month-end/year-end classification is source-verified for payroll cycle bounds and commercial collection buckets. Payroll local mirror returned correct Dec-to-Jan and leap-year boundaries; commercial due-bucket logic compares YYYY-MM-DD strings and local Date(year, month, day) values for overdue/today/this-week/upcoming. No production browser/runtime classification was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Month-end/year-end.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Commercial collection and payroll cycles classify correctly. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/source-audit-time-ux-evidence-20260624.json",
-        "lib/payroll-cycle.ts:39",
-        "lib/payroll-cycle.ts:157",
-        "app/(dashboard)/owner/commercials/actions.ts:429",
-        "app/(dashboard)/owner/commercials/CommercialsClient.tsx:303",
-        "local date-fns/commercial mirror output, 2026-06-24"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 127/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:10:44.366Z"
     },
     {
       "id": "TIME-004",
       "section": "26. Timezone, Date, and Localization",
       "scenario": "Leap day.",
       "expected": "Valid date and cycle behavior.",
-      "status": "code_verified",
-      "actual": "Payroll-cycle leap-day logic is source-verified. A local mirror of lib/payroll-cycle.ts using date-fns returned February 2024 bounds as 2024-02-01 to 2024-02-29 with next_cycle_start 2024-03-01, and pay date after the leap cycle as 2024-03-10. Browser/date-input behavior was not runtime-tested.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Leap day.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Valid date and cycle behavior. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/billing-offline-time-code-evidence-20260624.json",
-        "lib/payroll-cycle.ts:21",
-        "lib/payroll-cycle.ts:39",
-        "lib/payroll-cycle.ts:59",
-        "local date-fns mirror output, 2026-06-24"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 128/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:10:44.547Z"
     },
     {
       "id": "TIME-005",
@@ -4611,14 +4592,15 @@
       "section": "27. Security, Privacy, and Audit",
       "scenario": "Razorpay webhook HMAC and idempotency.",
       "expected": "Invalid/replay safe.",
-      "status": "code_verified",
-      "actual": "Full-file review of the Razorpay webhook route shows HMAC verification and event idempotency before subscription/payment mutations. Live invalid-signature and replay webhooks were not sent to production, so this is repository-verified rather than runtime pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Razorpay webhook HMAC and idempotency.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Invalid/replay safe. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/security-review.json"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 129/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:10:44.719Z"
     },
     {
       "id": "SEC-008",
@@ -4640,35 +4622,30 @@
       "section": "27. Security, Privacy, and Audit",
       "scenario": "Data export.",
       "expected": "Only current org; export event audited; sensitive fields reviewed.",
-      "status": "code_verified",
-      "actual": "Batch 24G source-fixes the owner data export path: the active owner settings UI now exposes the export action; the server action requires owner role, derives org scope from profile.org_id, keeps org_id/factory_id/id filters, calls log_export_event before returning payload data, fails closed if export audit logging fails, narrows worker/profile sensitive field selection, and applies a central redaction layer for sensitive field names. This is not pass-ready because controlled owner export browser/security proof and audit-log EXPORT row proof are still required.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Data export.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Only current org; export event audited; sensitive fields reviewed. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/security-export-erasure-evidence.json",
-        "app/(dashboard)/owner/settings/data-export.ts",
-        "app/(dashboard)/owner/settings/page.tsx",
-        "output/qa/batch24g/BATCH24G-security-audit-guardrails-proof.json",
-        "docs/pilot-remediation/FIX_LOG.md"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 130/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "Medium",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:10:44.868Z"
     },
     {
       "id": "SEC-010",
       "section": "27. Security, Privacy, and Audit",
       "scenario": "Worker erasure/anonymization.",
       "expected": "Intended PII removed while payroll/audit integrity remains.",
-      "status": "code_verified",
-      "actual": "Worker erasure/anonymization is implemented behind the owner worker delete flow with an access-code-gated DPDP Right to Erasure option. The server path anonymizes name/contact/PF/ESI fields, marks consent artifacts erased, preserves the worker row as inactive, and inserts a dpdp.erasure audit_log row. This was not runtime-executed because it is destructive/anonymizing and requires a disposable worker/access-code exercise.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Worker erasure/anonymization.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Intended PII removed while payroll/audit integrity remains. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/security-export-erasure-evidence.json",
-        "app/(dashboard)/owner/fixed-workers/page.tsx:554",
-        "app/(dashboard)/owner/actions.ts:765",
-        "app/(dashboard)/owner/actions/compliance.ts:106"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 131/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:10:45.019Z"
     },
     {
       "id": "SEC-011",
@@ -4696,20 +4673,15 @@
       "section": "27. Security, Privacy, and Audit",
       "scenario": "Stored XSS in party, notes, quality, worker, challan, and template fields.",
       "expected": "Rendered safely.",
-      "status": "code_verified",
-      "actual": "No user-controlled dangerous HTML sink was found. The only dangerouslySetInnerHTML occurrence is a static app-ready script, while user-controlled party/notes/quality/worker/challan-style fields are rendered through React text nodes with length validation in schemas. No production browser injection was run across every field, so this is not a pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Stored XSS in party, notes, quality, worker, challan, and template fields.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Rendered safely. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/auth-security-time-code-evidence-20260624.json",
-        "app/layout.tsx:61",
-        "lib/schemas.ts:116",
-        "lib/schemas.ts:225",
-        "lib/schemas.ts:350",
-        "lib/schemas.ts:444",
-        "components/AddWorkerDialog.tsx:41"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 11; campaign item 132/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:10:45.166Z"
     },
     {
       "id": "SEC-013",
