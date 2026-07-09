@@ -1782,21 +1782,15 @@
       "section": "15. Market-Centric End-to-End Tests",
       "scenario": "Market-run summary with many runs/sales.",
       "expected": "Acceptable load time and fresh values after mutation.",
-      "status": "code_verified",
-      "actual": "Market-run summary performance/freshness is source-verified only. The summary view aggregates production, sales, stock lots, revenue, cost, and profit, and a dedicated migration adds indexes for market_run_summary's stock-lot, stock-sale, and order lookups. Runtime load time with many runs/sales was not executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Market-run summary with many runs/sales.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Acceptable load time and fresh values after mutation. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:812",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:838",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:872",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:896",
-        "supabase/migrations/20260531050000_index_market_run_summary_perf.sql:1",
-        "supabase/migrations/20260531050000_index_market_run_summary_perf.sql:10",
-        "supabase/migrations/20260531050000_index_market_run_summary_perf.sql:20"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 49/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:57.798Z"
     },
     {
       "id": "PROD-001",
@@ -1818,21 +1812,15 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Day-only factory with no night worker.",
       "expected": "Must match the pilot’s operating decision; if valid production is blocked, pilot is No-Go unless night assignment is genuinely mandatory.",
-      "status": "code_verified",
-      "actual": "Batch 24F source-fixes day-only assignment policy without marking the row pass-ready. Supervisor setup/loading now exposes active looms with active production targets without requiring both day and night workers, day-shift logging validates only the selected day worker, and setup/checklist/activation no longer falsely fail just because the night worker is absent. Night-shift positive production without a night worker is blocked by the selected-shift assignment policy with an actionable night-worker assignment message. No fake night worker or silent day-as-night assignment is used. Browser/runtime proof is still required.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Day-only factory with no night worker.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Must match the pilot’s operating decision; if valid production is blocked, pilot is No-Go unless night assignment is genuinely mandatory. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch24f/BATCH24F-production-worker-assignment-policy-proof.json",
-        "__tests__/batch24f-production-worker-assignment-policy.test.ts",
-        "lib/production-worker-assignment-policy.ts",
-        "app/(dashboard)/supervisor/actions.ts",
-        "app/(dashboard)/owner/actions.ts",
-        "components/MachineManagement.tsx",
-        "lib/factory-today-checklist.ts",
-        "components/factory-today/SetupPanel.tsx"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 50/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "High",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:58.053Z"
     },
     {
       "id": "PROD-003",
@@ -1853,74 +1841,60 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Substitute worker.",
       "expected": "Supervisor can intentionally select/log the actual worker or receives a workable owner-remapping flow.",
-      "status": "code_verified",
-      "actual": "Batch 24F source-fixes substitute-worker accountability without marking the row pass-ready. The current data model has only `production_logs.worker_id`, so no unsafe substitute/actual-worker persistence model was invented. If a positive production entry uses a worker different from the selected standing shift assignment, the server returns `SUBSTITUTE_REASSIGNMENT_REQUIRED` with a reassignment-required message, preserving payroll and loom accountability instead of silently attributing output to the wrong worker. Browser/runtime proof of the substitute/reassignment flow is still required.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Substitute worker.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Supervisor can intentionally select/log the actual worker or receives a workable owner-remapping flow. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch24f/BATCH24F-production-worker-assignment-policy-proof.json",
-        "__tests__/batch24f-production-worker-assignment-policy.test.ts",
-        "lib/production-worker-assignment-policy.ts",
-        "app/(dashboard)/supervisor/actions.ts"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 51/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "Medium",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:58.300Z"
     },
     {
       "id": "PROD-005",
       "section": "16. Supervisor Production Logging",
       "scenario": "Loom missing active order/run.",
       "expected": "Clear blocked or review-queue behavior; entered draft is not silently lost.",
-      "status": "code_verified",
-      "actual": "Source verifies that a positive-meter loom missing active order/run is blocked or made non-submittable: the UI filters out rows without order_id and shows a no-cost-analysis/quality toast when meters were entered without an order anchor; the server action verifies active machine/current_order_id/active order before saving. Draft localStorage is cleared only on success, so entered draft is not intentionally discarded on blocked submission. No production runtime flow was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Loom missing active order/run.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Clear blocked or review-queue behavior; entered draft is not silently lost. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/production-logging-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:926",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:986",
-        "app/(dashboard)/supervisor/actions.ts:1132",
-        "supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:134",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1012"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 52/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:58.552Z"
     },
     {
       "id": "PROD-006",
       "section": "16. Supervisor Production Logging",
       "scenario": "Loom missing worker.",
       "expected": "Clear blocked or review-queue behavior.",
-      "status": "code_verified",
-      "actual": "Source verifies that a positive-meter loom missing worker is blocked: the UI filters such rows and surfaces missing-worker readiness, shared validation returns WORKER_REQUIRED, and the production replacement RPC rejects positive-meter rows without worker_id. No production runtime flow was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Loom missing worker.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Clear blocked or review-queue behavior. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/production-logging-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:926",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1082",
-        "lib/production-log-validation.ts:82",
-        "app/(dashboard)/supervisor/actions.ts:1068",
-        "supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:134"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 53/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:58.812Z"
     },
     {
       "id": "PROD-007",
       "section": "16. Supervisor Production Logging",
       "scenario": "Worker rate missing/zero.",
       "expected": "Positive meters blocked; no fallback ₹1.50 rate.",
-      "status": "code_verified",
-      "actual": "Source verifies that positive-meter rows with missing/zero worker rate are blocked and the old ₹1.50 fallback is not present in the current strict replacement RPC. Shared validation rejects missing/zero rates, the server action validates before persistence, and the RPC rejects COALESCE(worker_rate_snapshot, 0) <= 0. No production runtime flow was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Worker rate missing/zero.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Positive meters blocked; no fallback ₹1.50 rate. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/production-logging-source-evidence-20260624.json",
-        "lib/production-log-validation.ts:98",
-        "app/(dashboard)/supervisor/actions.ts:1068",
-        "app/(dashboard)/supervisor/actions.ts:1116",
-        "supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:56",
-        "supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:134"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 54/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:59.065Z"
     },
     {
       "id": "PROD-008",
@@ -1955,38 +1929,30 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Zero meters with “Other” and no note.",
       "expected": "Blocked.",
-      "status": "code_verified",
-      "actual": "Source verifies the UI/server-action path blocks zero-meter downtime rows where reason is Other and no note is supplied. Shared validation requires a note for reason='other', the supervisor page filters out such rows, and validEntryCount keeps submit disabled if no other valid row exists. No production runtime flow was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Zero meters with “Other” and no note.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Blocked. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/production-logging-source-evidence-20260624.json",
-        "lib/production-log-validation.ts:114",
-        "lib/production-log-validation.ts:134",
-        "app/(dashboard)/supervisor/actions.ts:1068",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:949",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1066"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 55/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:59.314Z"
     },
     {
       "id": "PROD-011",
       "section": "16. Supervisor Production Logging",
       "scenario": "Negative meters.",
       "expected": "Blocked on client and server.",
-      "status": "code_verified",
-      "actual": "Batch 22 source-fixes the negative-meter database boundary but does not make the row pass-ready. The new migration adds a forward-only `production_logs_meters_nonnegative` `CHECK (meters >= 0) NOT VALID` constraint for new writes, and both the direct table trigger plus `replace_shift_production_logs` reject negative meters before persistence or correction. Existing UI/server-action validation remains in place. Migration application and QA runtime/API proof are still required before pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Negative meters.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Blocked on client and server. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json",
-        "supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql",
-        "__tests__/batch22-production-order-boundary-hardening.test.ts",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:980",
-        "lib/production-log-validation.ts:134",
-        "app/(dashboard)/supervisor/actions.ts:1068"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 56/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "High",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:59.571Z"
     },
     {
       "id": "PROD-012",
@@ -2007,35 +1973,30 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Very large but plausible meters.",
       "expected": "Suspicious-value behavior is explicit.",
-      "status": "code_verified",
-      "actual": "Batch 24B source-fixes suspicious large positive shift-meter behavior without making the row pass-ready. A documented 10,000m warning threshold now triggers a non-blocking supervisor confirmation for large valid entries; the threshold is not a hard business maximum, confirmed large positive entries can still proceed, and existing negative-meter validation remains blocking. QA/browser proof is still required before pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Very large but plausible meters.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Suspicious-value behavior is explicit. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch24b/BATCH24B-supervisor-ux-failures-proof.json",
-        "__tests__/batch24b-supervisor-ux-failures.test.ts",
-        "lib/production-log-validation.ts",
-        "app/(dashboard)/supervisor/dashboard/page.tsx"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 57/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:59.851Z"
     },
     {
       "id": "PROD-014",
       "section": "16. Supervisor Production Logging",
       "scenario": "Copy previous shift.",
       "expected": "Correct source shift, no duplicate, editable before submit.",
-      "status": "code_verified",
-      "actual": "Copy Previous uses the previous calendar day and the same shift, calls copy_previous_shift, then refetches setup data. The RPC deletes existing target date/shift assignments before inserting copied rows, which prevents duplicate target rows; this is source-verified only and was not browser-executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Copy previous shift.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Correct source shift, no duplicate, editable before submit. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1051",
-        "app/(dashboard)/supervisor/actions.ts:1023",
-        "supabase/migrations/20260404010000_orders_v2_flat.sql:117",
-        "supabase/migrations/20260404010000_orders_v2_flat.sql:124"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 58/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:00.114Z"
     },
     {
       "id": "PROD-015",
@@ -2071,39 +2032,30 @@
       "section": "16. Supervisor Production Logging",
       "scenario": "Correct after window without code.",
       "expected": "Blocked.",
-      "status": "code_verified",
-      "actual": "Source verifies that correcting after the 30-minute window without an owner code is blocked. The server action checks existing submitted_at timestamps, returns DUPLICATE_LOG_DETECTED if the window is closed and no access code is supplied, and the UI opens the duplicate/access-code flow. No production runtime correction was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Correct after window without code.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Blocked. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/production-logging-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/actions.ts:1210",
-        "app/(dashboard)/supervisor/actions.ts:1229",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1021",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1161",
-        "supabase/migrations/20260518100000_strictness_forgiveness_rpc.sql:163"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 59/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:00.459Z"
     },
     {
       "id": "PROD-018",
       "section": "16. Supervisor Production Logging",
       "scenario": "Correct after window with valid/invalid/used/expired code.",
       "expected": "Only valid one-time code succeeds.",
-      "status": "code_verified",
-      "actual": "Corrections after the 30-minute window require an access code, invalid or expired codes fail, and valid codes are consumed by clearing access_code_hash, access_code_expires_at, and last_code_plain. This verifies the one-time-code behavior from source; no new runtime overwrite was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Correct after window with valid/invalid/used/expired code.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Only valid one-time code succeeds. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/actions.ts:1222",
-        "app/(dashboard)/supervisor/actions.ts:1230",
-        "app/(dashboard)/supervisor/actions.ts:1241",
-        "lib/access-codes.ts:20",
-        "lib/access-codes.ts:48",
-        "lib/access-codes.ts:60"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 5; campaign item 60/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:08:00.734Z"
     },
     {
       "id": "PROD-019",
