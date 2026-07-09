@@ -1,7 +1,7 @@
 {
   "campaign": "Runtime Verification Campaign",
   "runId": "RUNTIMEQA-20260710-0412-4R4C",
-  "checkpointTimestamp": "2026-07-09T23:11:11.318Z",
+  "checkpointTimestamp": "2026-07-09T23:13:03.445Z",
   "batchNumber": 12,
   "completedIssueCount": 145,
   "remainingIssueCount": 0,
@@ -67,5 +67,11 @@
     "not_applicable": 1,
     "code_verified": 0,
     "not_run": 0
-  }
+  },
+  "campaignStatus": "complete",
+  "checkpointsConsolidated": true,
+  "completionPercentage": 100,
+  "releaseDecision": "No-Go",
+  "finalSummary": "output/qa/runtime-verification-20260710/FINAL_SUMMARY.md",
+  "failIssueIndex": "output/qa/runtime-verification-20260710/FAIL_ISSUES.csv"
 }

@@ -1,0 +1,607 @@
+{
+  "campaign": "Runtime Verification Campaign",
+  "closedAt": "2026-07-09T23:13:03.445Z",
+  "branch": "codex/runtime-verification-20260710",
+  "sourceCheckpointCommit": "6726884c6f18313465cc8ed12cc60cbad4ad6c91",
+  "totalIssuesProcessed": 145,
+  "totalPass": 0,
+  "totalFail": 145,
+  "completionPercentage": 100,
+  "remainingCodeVerified": 0,
+  "matrixCounts": {
+    "pass": 196,
+    "fail": 158,
+    "blocked": 22,
+    "not_applicable": 1,
+    "code_verified": 0,
+    "not_run": 0
+  },
+  "releaseDecision": "No-Go",
+  "failureCause": "Fresh dedicated QA account provisioning failed at organization creation in production and QA; exact QA reconciliation confirmed rollback and zero matching account records.",
+  "failIssues": [
+    {
+      "id": "AUTH-003",
+      "title": "Duplicate email and rapid double-submit."
+    },
+    {
+      "id": "AUTH-005",
+      "title": "Forgot-password and valid/expired/used reset links."
+    },
+    {
+      "id": "AUTH-006",
+      "title": "Owner with incomplete onboarding logs in."
+    },
+    {
+      "id": "AUTH-012",
+      "title": "Org A user guesses Org D record IDs."
+    },
+    {
+      "id": "AUTH-013",
+      "title": "Logout in one tab; use second tab."
+    },
+    {
+      "id": "SETUP-001",
+      "title": "Complete market-run onboarding."
+    },
+    {
+      "id": "SETUP-002",
+      "title": "Complete order-based onboarding."
+    },
+    {
+      "id": "SETUP-007",
+      "title": "Fail a setup network request midway."
+    },
+    {
+      "id": "SETUP-010",
+      "title": "Change production mode after data exists."
+    },
+    {
+      "id": "SETUP-011",
+      "title": "Factory Today setup panel after creating estimates, machines, workers, and payroll config."
+    },
+    {
+      "id": "SETUP-012",
+      "title": "Factory name and join-code regeneration."
+    },
+    {
+      "id": "MASTER-001",
+      "title": "Add one loom manually and refresh."
+    },
+    {
+      "id": "MASTER-002",
+      "title": "Bulk-add looms with duplicate names or types."
+    },
+    {
+      "id": "MASTER-003",
+      "title": "Edit loom name/type and refresh."
+    },
+    {
+      "id": "MASTER-005",
+      "title": "Deactivate/delete loom with active order or history."
+    },
+    {
+      "id": "MASTER-006",
+      "title": "Add piece-rate worker with decimal rate."
+    },
+    {
+      "id": "MASTER-008",
+      "title": "Add daily worker and record attendance."
+    },
+    {
+      "id": "MASTER-009",
+      "title": "Deactivate worker assigned to a loom."
+    },
+    {
+      "id": "MASTER-011",
+      "title": "Substitute worker for one dated shift."
+    },
+    {
+      "id": "MASTER-012",
+      "title": "Assign order/run to loom, then replace it."
+    },
+    {
+      "id": "MASTER-013",
+      "title": "Complete/cancel/delete order or close run."
+    },
+    {
+      "id": "MASTER-015",
+      "title": "Worker WhatsApp phone/consent changes."
+    },
+    {
+      "id": "EST-002",
+      "title": "Multi-row blended warp and multi-row weft."
+    },
+    {
+      "id": "EST-004",
+      "title": "Width entered in centimeters and equivalent inches."
+    },
+    {
+      "id": "EST-006",
+      "title": "Outsourced sizing versus in-house sizing."
+    },
+    {
+      "id": "EST-007",
+      "title": "Optional winding, processing, finishing, commission, and transport."
+    },
+    {
+      "id": "EST-008",
+      "title": "Overhead items and manual overhead override."
+    },
+    {
+      "id": "EST-009",
+      "title": "Capacity utilization and idle-capacity values."
+    },
+    {
+      "id": "EST-010",
+      "title": "Fixed workers added to overhead."
+    },
+    {
+      "id": "EST-013",
+      "title": "Save, rename, update, rate-update, apply, and delete template."
+    },
+    {
+      "id": "EST-014",
+      "title": "Autosaved draft after refresh/crash."
+    },
+    {
+      "id": "EST-015",
+      "title": "Restore historical quote after factory profile/template rates change."
+    },
+    {
+      "id": "EST-017",
+      "title": "Rapid double-submit."
+    },
+    {
+      "id": "EST-018",
+      "title": "Market-mode party-name race."
+    },
+    {
+      "id": "QUOTE-004",
+      "title": "Convert non-accepted quote to order."
+    },
+    {
+      "id": "QUOTE-006",
+      "title": "Concurrent/double conversion."
+    },
+    {
+      "id": "QUOTE-007",
+      "title": "Start Party Order fast path."
+    },
+    {
+      "id": "ORDER-005",
+      "title": "Produce beyond target."
+    },
+    {
+      "id": "ORDER-007",
+      "title": "Complete with target met."
+    },
+    {
+      "id": "ORDER-009",
+      "title": "Cancel after some production."
+    },
+    {
+      "id": "ORDER-010",
+      "title": "Attempt delete with production/dispatch/payment history."
+    },
+    {
+      "id": "ORDER-011",
+      "title": "Order stock appears as reserved, not freely saleable market stock."
+    },
+    {
+      "id": "ORDER-012",
+      "title": "Sell/dispatch order-linked stock."
+    },
+    {
+      "id": "ORDER-013",
+      "title": "Partial dispatch against order."
+    },
+    {
+      "id": "ORDER-014",
+      "title": "Receipt shortage/excess."
+    },
+    {
+      "id": "ORDER-015",
+      "title": "Close money and payroll."
+    },
+    {
+      "id": "MARKET-009",
+      "title": "Close sold-out run with pending dispatch."
+    },
+    {
+      "id": "MARKET-010",
+      "title": "Sell out and receive all batches."
+    },
+    {
+      "id": "MARKET-013",
+      "title": "Market-run summary with many runs/sales."
+    },
+    {
+      "id": "PROD-002",
+      "title": "Day-only factory with no night worker."
+    },
+    {
+      "id": "PROD-004",
+      "title": "Substitute worker."
+    },
+    {
+      "id": "PROD-005",
+      "title": "Loom missing active order/run."
+    },
+    {
+      "id": "PROD-006",
+      "title": "Loom missing worker."
+    },
+    {
+      "id": "PROD-007",
+      "title": "Worker rate missing/zero."
+    },
+    {
+      "id": "PROD-010",
+      "title": "Zero meters with “Other” and no note."
+    },
+    {
+      "id": "PROD-011",
+      "title": "Negative meters."
+    },
+    {
+      "id": "PROD-013",
+      "title": "Very large but plausible meters."
+    },
+    {
+      "id": "PROD-014",
+      "title": "Copy previous shift."
+    },
+    {
+      "id": "PROD-017",
+      "title": "Correct after window without code."
+    },
+    {
+      "id": "PROD-018",
+      "title": "Correct after window with valid/invalid/used/expired code."
+    },
+    {
+      "id": "PROD-019",
+      "title": "Correct period after worker payroll is settled."
+    },
+    {
+      "id": "PROD-022",
+      "title": "Change date/shift while draft exists."
+    },
+    {
+      "id": "PROD-023",
+      "title": "Refresh/browser crash with draft."
+    },
+    {
+      "id": "PROD-024",
+      "title": "Network drops before submit."
+    },
+    {
+      "id": "PROD-025",
+      "title": "Network drops after request reaches server but before response."
+    },
+    {
+      "id": "PROD-026",
+      "title": "Two supervisors submit same shift."
+    },
+    {
+      "id": "PROD-027",
+      "title": "Machine status running/idle/maintenance and breakdown notes."
+    },
+    {
+      "id": "PROD-030",
+      "title": "Mobile usability with 20+ looms."
+    },
+    {
+      "id": "STOCK-004",
+      "title": "Create opening, manual, market-run, order, and adjustment sources."
+    },
+    {
+      "id": "STOCK-005",
+      "title": "Submit mismatched quote/order or another org’s source."
+    },
+    {
+      "id": "STOCK-007",
+      "title": "Adjust stock up/down with reason."
+    },
+    {
+      "id": "STOCK-009",
+      "title": "Concurrent sale/adjustment against same lot."
+    },
+    {
+      "id": "STOCK-010",
+      "title": "Sample cutting, damage, measurement correction, return."
+    },
+    {
+      "id": "STOCK-011",
+      "title": "Order lot while order active/completed/cancelled."
+    },
+    {
+      "id": "STOCK-013",
+      "title": "Sold-out lot with pending dispatch."
+    },
+    {
+      "id": "SALE-010",
+      "title": "Sell and dispatch now."
+    },
+    {
+      "id": "SALE-011",
+      "title": "Credit days zero and positive."
+    },
+    {
+      "id": "SALE-012",
+      "title": "Sale recorded today, first dispatch later."
+    },
+    {
+      "id": "SALE-014",
+      "title": "Failure after sale but before optional dispatch."
+    },
+    {
+      "id": "SALE-016",
+      "title": "Broker/commission, claim, or rate-difference information."
+    },
+    {
+      "id": "DISP-012",
+      "title": "Receipt for one of several batches."
+    },
+    {
+      "id": "DISP-017",
+      "title": "Consignment above/below relevant e-way threshold and non-supply movement."
+    },
+    {
+      "id": "DISP-018",
+      "title": "Missing challan/e-way/transporter data."
+    },
+    {
+      "id": "COMM-003",
+      "title": "Realized versus expected entries."
+    },
+    {
+      "id": "COMM-009",
+      "title": "Payment mode cash/bank/UPI/cheque/other."
+    },
+    {
+      "id": "COMM-013",
+      "title": "Collected-this-month boundary at month start/end."
+    },
+    {
+      "id": "COMM-015",
+      "title": "Duplicate names with different `party_id`."
+    },
+    {
+      "id": "COMM-018",
+      "title": "Claim, shortage deduction, discount, rate difference, broker commission."
+    },
+    {
+      "id": "PAY-002",
+      "title": "Change worker/current loom rate after old production."
+    },
+    {
+      "id": "PAY-005",
+      "title": "Daily fixed worker with attendance."
+    },
+    {
+      "id": "PAY-006",
+      "title": "Past/future attendance."
+    },
+    {
+      "id": "PAY-010",
+      "title": "Delete deducted advance."
+    },
+    {
+      "id": "PAY-011",
+      "title": "Standard recovery cap."
+    },
+    {
+      "id": "PAY-012",
+      "title": "Final settlement."
+    },
+    {
+      "id": "PAY-014",
+      "title": "Inam and kapaat adjustments."
+    },
+    {
+      "id": "PAY-017",
+      "title": "Settle in reminder window/on pay date/overdue."
+    },
+    {
+      "id": "PAY-019",
+      "title": "Double-settle/concurrent settle."
+    },
+    {
+      "id": "PAY-021",
+      "title": "Unsettle restores advances and state."
+    },
+    {
+      "id": "PAY-022",
+      "title": "Correct production after settlement."
+    },
+    {
+      "id": "PAY-025",
+      "title": "Month/cycle boundaries including February and leap year."
+    },
+    {
+      "id": "PAY-026",
+      "title": "Worker exits mid-cycle."
+    },
+    {
+      "id": "PAY-027",
+      "title": "Supervisor Kharchi online."
+    },
+    {
+      "id": "DASH-001",
+      "title": "Empty factory."
+    },
+    {
+      "id": "DASH-002",
+      "title": "After onboarding data."
+    },
+    {
+      "id": "DASH-003",
+      "title": "After shift production."
+    },
+    {
+      "id": "DASH-004",
+      "title": "Historical date selection."
+    },
+    {
+      "id": "DASH-005",
+      "title": "Realtime insert."
+    },
+    {
+      "id": "DASH-006",
+      "title": "Realtime disconnect/reconnect."
+    },
+    {
+      "id": "DASH-008",
+      "title": "Work-at-risk and pace."
+    },
+    {
+      "id": "DASH-009",
+      "title": "Completed/closed work."
+    },
+    {
+      "id": "DASH-010",
+      "title": "Large data range."
+    },
+    {
+      "id": "WA-001",
+      "title": "Opted-in worker receives simulated advance receipt."
+    },
+    {
+      "id": "WA-002",
+      "title": "Opted-out worker."
+    },
+    {
+      "id": "WA-003",
+      "title": "Missing consent or phone."
+    },
+    {
+      "id": "WA-004",
+      "title": "Provider timeout/failure."
+    },
+    {
+      "id": "WA-005",
+      "title": "Payslip summary and itemized follow-up."
+    },
+    {
+      "id": "WA-006",
+      "title": "Access code message."
+    },
+    {
+      "id": "WA-007",
+      "title": "Deadline/daily/monthly cooldown."
+    },
+    {
+      "id": "WA-009",
+      "title": "Retry failed message."
+    },
+    {
+      "id": "BILL-002",
+      "title": "Base versus Premium access gates."
+    },
+    {
+      "id": "BILL-004",
+      "title": "Duplicate/replayed webhook."
+    },
+    {
+      "id": "BILL-005",
+      "title": "Invalid webhook signature."
+    },
+    {
+      "id": "BILL-008",
+      "title": "Referral code create/apply."
+    },
+    {
+      "id": "OFF-001",
+      "title": "Install PWA and reopen."
+    },
+    {
+      "id": "OFF-003",
+      "title": "Production draft while online, then offline."
+    },
+    {
+      "id": "OFF-004",
+      "title": "Submit production offline."
+    },
+    {
+      "id": "TIME-003",
+      "title": "Month-end/year-end."
+    },
+    {
+      "id": "TIME-004",
+      "title": "Leap day."
+    },
+    {
+      "id": "SEC-007",
+      "title": "Razorpay webhook HMAC and idempotency."
+    },
+    {
+      "id": "SEC-009",
+      "title": "Data export."
+    },
+    {
+      "id": "SEC-010",
+      "title": "Worker erasure/anonymization."
+    },
+    {
+      "id": "SEC-012",
+      "title": "Stored XSS in party, notes, quality, worker, challan, and template fields."
+    },
+    {
+      "id": "SEC-013",
+      "title": "CSRF/session/cookie behavior."
+    },
+    {
+      "id": "SEC-015",
+      "title": "Audit protected corrections, settlement reversal, deletion, write-off, and settings."
+    },
+    {
+      "id": "UX-001",
+      "title": "Supervisor logs 20 looms on a phone."
+    },
+    {
+      "id": "UX-002",
+      "title": "Buttons during submission."
+    },
+    {
+      "id": "UX-003",
+      "title": "Error recovery."
+    },
+    {
+      "id": "UX-004",
+      "title": "Mobile navigation and logout."
+    },
+    {
+      "id": "UX-005",
+      "title": "Dialogs and sheets."
+    },
+    {
+      "id": "UX-006",
+      "title": "Keyboard-only desktop."
+    },
+    {
+      "id": "UX-007",
+      "title": "Screen reader landmarks/names."
+    },
+    {
+      "id": "UX-008",
+      "title": "Color contrast and status meaning."
+    },
+    {
+      "id": "UX-009",
+      "title": "200% zoom and large text."
+    },
+    {
+      "id": "UX-010",
+      "title": "Empty/loading/error/offline states."
+    },
+    {
+      "id": "UX-011",
+      "title": "Owner and supervisor role copy."
+    }
+  ],
+  "tracker": "results.json",
+  "authoritativeMatrix": "output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+  "checkpoint": "CHECKPOINT.json",
+  "closeoutMethod": "Manual one-time documented fallback because the named documentation-closeout skill was unavailable."
+}
