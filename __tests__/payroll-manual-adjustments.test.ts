@@ -153,7 +153,7 @@ describe('Payroll manual adjustment validation', () => {
 
 describe('Payroll manual adjustment persistence guards', () => {
     const actionSource = readProjectFile('app/(dashboard)/owner/payroll/actions.ts')
-    const pageSource = readProjectFile('app/(dashboard)/owner/payroll/page.tsx')
+    const pageSource = readProjectFile('app/(dashboard)/owner/payroll/PayrollClient.tsx')
     const migrationSource = readProjectFile('supabase/migrations/20260516160000_payroll_manual_adjustments.sql')
 
     it('payroll confirmation saves adjustment snapshot and details', () => {

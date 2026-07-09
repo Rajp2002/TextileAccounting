@@ -21,8 +21,8 @@ describe('P1 priority 6 triage', () => {
     })
 
     it('shows pending advances before a worker is selected', () => {
-        const page = readProjectFile('app/(dashboard)/owner/advances/page.tsx')
-        expect(page).toContain("queryKey: ['all_pending_advances'")
-        expect(page).toContain('Pending advances')
+        const client = readProjectFile('app/(dashboard)/owner/advances/AdvancesClient.tsx')
+        expect(client).toContain("queryKey: ['all_pending_advances'")
+        expect(client).toContain('Pending advances')
     })
 })

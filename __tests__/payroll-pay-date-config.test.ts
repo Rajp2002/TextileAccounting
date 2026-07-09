@@ -11,7 +11,7 @@ function readProjectFile(path: string) {
 describe('payroll pay date configuration', () => {
     const migration = readProjectFile('supabase/migrations/20260530220517_payroll_pay_date_config.sql')
     const schemas = readProjectFile('lib/schemas.ts')
-    const payrollPage = readProjectFile('app/(dashboard)/owner/payroll/page.tsx')
+    const payrollPage = readProjectFile('app/(dashboard)/owner/payroll/PayrollClient.tsx')
     const todayActions = readProjectFile('app/(dashboard)/owner/today/actions.ts')
 
     it('adds pay date and reminder columns to payroll_configs', () => {

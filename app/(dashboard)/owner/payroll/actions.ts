@@ -101,7 +101,7 @@ export async function toggleWorkerPaid(
 
     if (workerType === 'meter') {
 
-        const { data: logs } = await supabase
+        const { data: logs, error: logsError } = await supabase
             .from('production_logs')
             .select('worker_id, meter_worker_id, fixed_worker_id, operator_assignment_id, operator_worker_type, operator_pay_mode_snapshot, operator_rate_snapshot, date, shift, meters, worker_rate_snapshot')
             .eq('org_id', profile.org_id)
@@ -109,6 +109,10 @@ export async function toggleWorkerPaid(
             .gte('date', monthStart)
             .lte('date', monthEnd)
             .or(`meter_worker_id.eq.${workerId},worker_id.eq.${workerId}`)
+
+        // Never treat an unavailable operator-schema projection as an empty
+        // ledger. Doing so would incorrectly permit a zero-value settlement.
+        if (logsError) return { error: 'Failed to load payroll production logs. Resolve the payroll schema issue before settling this worker.' }
 
         const gross = calculateMeterOperatorGross(((logs || []) as PayrollProductionLog[]).map((log) => ({
             operatorAssignmentId: log.operator_assignment_id,

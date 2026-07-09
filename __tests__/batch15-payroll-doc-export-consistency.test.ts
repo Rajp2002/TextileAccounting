@@ -103,7 +103,7 @@ describe('Batch 15 payroll document/export consistency', () => {
     })
 
     it('wires payroll page PDF and CSV paths through paid settlements and nested statutory reads', () => {
-        const payrollPage = readProjectFile('app/(dashboard)/owner/payroll/page.tsx')
+        const payrollPage = readProjectFile('app/(dashboard)/owner/payroll/PayrollClient.tsx')
 
         expect(payrollPage).toContain('disabled={!isPaid}')
         expect(payrollPage).toContain('Settle payroll first to download a payslip')

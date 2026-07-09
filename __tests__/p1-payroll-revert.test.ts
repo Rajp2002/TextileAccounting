@@ -28,14 +28,14 @@ describe('P1 payroll revert access code validation', () => {
         expect(action).toContain("p_access_code: reversalAccessCode")
     })
 
-    const pageSource = readProjectFile('app/(dashboard)/owner/payroll/page.tsx')
+    const pageSource = readProjectFile('app/(dashboard)/owner/payroll/PayrollClient.tsx')
 
-    it('passes access code to mutation in page.tsx', () => {
+    it('passes access code to the interactive payroll client', () => {
         expect(pageSource).toContain("mutation.mutate")
         expect(pageSource).toContain("accessCode: accessCode")
     })
 
-    it('removed client-side last_code_plain comparison from page.tsx', () => {
+    it('removed client-side last_code_plain comparison from the interactive payroll client', () => {
         expect(pageSource).not.toContain("org?.last_code_plain")
     })
 })

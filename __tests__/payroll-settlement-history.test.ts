@@ -9,7 +9,7 @@ function readProjectFile(path: string) {
 }
 
 describe('payroll settlement history', () => {
-    const payrollPage = readProjectFile('app/(dashboard)/owner/payroll/page.tsx')
+    const payrollPage = readProjectFile('app/(dashboard)/owner/payroll/PayrollClient.tsx')
 
     it('adds a past settlement history dialog backed by payroll settlement snapshots', () => {
         expect(payrollPage).toContain('SettlementHistoryDialog')

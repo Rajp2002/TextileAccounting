@@ -62,10 +62,12 @@ describe('Batch 2 — server route instrumentation', () => {
         expect(todayActions).toContain('24-query fanout plus payroll cycle')
 
         const dispatchesPage = read('app/(dashboard)/owner/dispatches/page.tsx')
+        const dispatchesLoader = read('app/(dashboard)/owner/dispatches/loaders.ts')
         expect(dispatchesPage).toContain("createPerfTimer('/owner/dispatches')")
-        expect(dispatchesPage).toContain('getAllDispatches()')
-        expect(dispatchesPage).toContain('getDispatchOverviewStats()')
-        expect(dispatchesPage).toContain('getPendingStockSales()')
+        expect(dispatchesPage).toContain('loadOwnerDispatchesInitialData')
+        expect(dispatchesLoader).toContain('getAllDispatches')
+        expect(dispatchesLoader).toContain('getDispatchOverviewStats')
+        expect(dispatchesLoader).toContain('getPendingStockSales')
 
         const commercialsPage = read('app/(dashboard)/owner/commercials/page.tsx')
         expect(commercialsPage).toContain("createPerfTimer('/owner/commercials')")
@@ -83,13 +85,19 @@ describe('Batch 2 — client bootstrap instrumentation', () => {
         expect(hook).toContain("label: 'useUserProfile.auth_user_id'")
         expect(hook).toContain("label: 'useUserProfile.profile'")
 
-        expect(read('app/(dashboard)/owner/payroll/page.tsx')).toContain("useUserProfile('/owner/payroll')")
+        const payrollPage = read('app/(dashboard)/owner/payroll/page.tsx')
+        const payrollClient = read('app/(dashboard)/owner/payroll/PayrollClient.tsx')
+        const advancesPage = read('app/(dashboard)/owner/advances/page.tsx')
+        const advancesClient = read('app/(dashboard)/owner/advances/AdvancesClient.tsx')
+        expect(payrollPage).toContain("requireRole(['owner'])")
+        expect(payrollClient).not.toContain('useUserProfile')
         expect(read('app/(dashboard)/owner/machines/page.tsx')).toContain("useUserProfile('/owner/machines')")
-        expect(read('app/(dashboard)/owner/advances/page.tsx')).toContain("useUserProfile('/owner/advances')")
+        expect(advancesPage).toContain("requireRole(['owner'])")
+        expect(advancesClient).not.toContain('useUserProfile')
     })
 
     it('measures payroll, machines, and advances client business queries', () => {
-        const payroll = read('app/(dashboard)/owner/payroll/page.tsx')
+        const payroll = read('app/(dashboard)/owner/payroll/PayrollClient.tsx')
         expect(payroll).toContain("label: 'payroll.config'")
         expect(payroll).toContain("label: 'payroll.org_name'")
         expect(payroll).toContain('payroll.meter.')
@@ -104,7 +112,7 @@ describe('Batch 2 — client bootstrap instrumentation', () => {
         expect(machines).toContain("label: 'machines.production_targets'")
         expect(machines).toContain("label: 'machines.assignments'")
 
-        const advances = read('app/(dashboard)/owner/advances/page.tsx')
+        const advances = read('app/(dashboard)/owner/advances/AdvancesClient.tsx')
         expect(advances).toContain("label: 'advances.workers'")
         expect(advances).toContain("label: 'advances.all_pending'")
         expect(advances).toContain("label: 'advances.selected_worker'")

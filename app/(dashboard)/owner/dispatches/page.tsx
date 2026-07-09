@@ -1,6 +1,7 @@
-import { getAllDispatches, getDispatchOverviewStats, getPendingStockSales } from "../orders/actions"
 import DispatchesClient from "./DispatchesClient"
+import { requireRole } from '@/lib/auth'
 import { createPerfTimer } from '@/lib/perf'
+import { loadOwnerDispatchesInitialData } from './loaders'
 
 export const metadata = {
     title: "Dispatches | Owner Dashboard",
@@ -9,24 +10,19 @@ export const metadata = {
 
 export default async function DispatchesPage() {
     const perf = createPerfTimer('/owner/dispatches')
-    const [dispatchesResult, overviewResult, pendingSalesResult] = await perf.measure(
+    await perf.measure('authSession', () => requireRole(['owner']), 0)
+    const initialData = await perf.measure(
         'businessData',
-        () => Promise.all([
-            getAllDispatches(),
-            getDispatchOverviewStats(),
-            getPendingStockSales(),
-        ]),
-        5
+        () => loadOwnerDispatchesInitialData(),
+        4
     )
-    perf.log({ note: 'business call count includes conditional stock_discrepancies lookup' })
+    perf.log({ note: 'server initial payload shares one open stock_discrepancies read across active dispatches and overview totals' })
 
-    const { data: dispatches, error } = dispatchesResult
-
-    if (error || overviewResult.error || pendingSalesResult.error || !overviewResult.data || !pendingSalesResult.data) {
+    if ('error' in initialData) {
         return (
             <div className="p-8 text-center">
                 <h1 className="text-2xl font-bold text-red-500">Error loading dispatches</h1>
-                <p className="text-muted-foreground">{error || overviewResult.error || pendingSalesResult.error || 'Unable to load dispatch overview'}</p>
+                <p className="text-muted-foreground">{initialData.error}</p>
             </div>
         )
     }
@@ -34,9 +30,9 @@ export default async function DispatchesPage() {
     return (
         <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
             <DispatchesClient
-                initialDispatches={dispatches || []}
-                initialOverview={overviewResult.data}
-                initialPendingSales={pendingSalesResult.data}
+                initialDispatches={initialData.data.dispatches}
+                initialOverview={initialData.data.overview}
+                initialPendingSales={initialData.data.pendingSales}
             />
         </div>
     )

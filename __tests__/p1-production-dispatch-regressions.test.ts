@@ -32,7 +32,7 @@ describe('P1 production and dispatch regressions', () => {
     })
 
     it('forces payroll production data to refetch instead of trusting persisted stale rows', () => {
-        const page = readProjectFile('app/(dashboard)/owner/payroll/page.tsx')
+        const page = readProjectFile('app/(dashboard)/owner/payroll/PayrollClient.tsx')
 
         expect(page).toContain('PAYROLL_QUERY_VERSION')
         expect(page).toContain("refetchOnMount: 'always'")
@@ -67,6 +67,7 @@ describe('P1 production and dispatch regressions', () => {
         expect(action).toContain('isMissingStockDiscrepanciesTable')
         expect(action).toContain("error?.code === '42P01'")
         expect(action).toContain("error?.code === 'PGRST205'")
-        expect(action).toContain('const discrepancies = discrepanciesRes.error ? []')
+        expect(action).toContain('loadOpenStockDiscrepanciesForOrg')
+        expect(action).toContain('return { data: error ? []')
     })
 })

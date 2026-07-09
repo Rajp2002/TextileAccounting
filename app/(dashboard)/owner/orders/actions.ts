@@ -620,6 +620,26 @@ export interface DispatchOverviewStats {
     open_discrepancy_meters: number
 }
 
+export type OpenStockDiscrepancy = {
+    dispatch_id: string | null
+    difference_meters: number | string | null
+}
+
+export type OpenStockDiscrepanciesResult =
+    | { data: OpenStockDiscrepancy[]; error?: never }
+    | { data?: never; error: string }
+
+type DispatchListOptions = {
+    scope?: DispatchListScope
+    /**
+     * Route loaders can begin the organization-wide discrepancy read alongside
+     * the dispatch and sales reads, then share it with both read models.
+     */
+    preloadedOpenDiscrepancies?: Promise<OpenStockDiscrepanciesResult>
+}
+
+type DispatchOverviewOptions = Pick<DispatchListOptions, 'preloadedOpenDiscrepancies'>
+
 type DispatchesResult =
     | { data: DispatchWithOrder[]; error?: never }
     | { data?: never; error: string }
@@ -680,6 +700,30 @@ function isMissingStockDiscrepanciesTable(error: MaybeSupabaseError | null | und
     return error?.code === '42P01'
         || error?.code === 'PGRST205'
         || /stock_discrepancies/i.test(error?.message ?? '') && /does not exist|schema cache|could not find/i.test(error?.message ?? '')
+}
+
+async function loadOpenStockDiscrepanciesForOrg(
+    supabase: SupabaseClient,
+    orgId: string
+): Promise<OpenStockDiscrepanciesResult> {
+    const { data, error } = await supabase
+        .from('stock_discrepancies')
+        .select('dispatch_id, difference_meters')
+        .eq('org_id', orgId)
+        .eq('status', 'needs_review')
+
+    if (error && !isMissingStockDiscrepanciesTable(error)) return { error: error.message }
+    return { data: error ? [] : (data ?? []) as OpenStockDiscrepancy[] }
+}
+
+/**
+ * Keeps the stock-discrepancy fallback in one place so initial route loaders
+ * can share a single organization-wide read without weakening authorization.
+ */
+export async function getOpenStockDiscrepancies(): Promise<OpenStockDiscrepanciesResult> {
+    const { profile } = await requireRole(['owner', 'supervisor'])
+    const supabase = await createServerClient()
+    return loadOpenStockDiscrepanciesForOrg(supabase, profile.org_id)
 }
 
 function getDispatchGroupId(dispatch: DispatchWithOrder) {
@@ -1082,7 +1126,7 @@ export async function createDispatch(
  * Fetch all dispatches across all orders for the org.
  * Includes order total_target_meters and status for grouped progress view.
  */
-export async function getAllDispatches(options: { scope?: DispatchListScope } = {}): Promise<DispatchesResult> {
+export async function getAllDispatches(options: DispatchListOptions = {}): Promise<DispatchesResult> {
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
     const scope = options.scope ?? 'active'
@@ -1219,9 +1263,19 @@ export async function getAllDispatches(options: { scope?: DispatchListScope } = 
             }
     })
 
-    const dispatchIds = mappedDispatches.map((dispatch) => dispatch.id)
     let openDiscrepancyDispatchIds = new Set<string>()
-    if (dispatchIds.length > 0) {
+    if (options.preloadedOpenDiscrepancies) {
+        const discrepancyResult = await options.preloadedOpenDiscrepancies
+        if (discrepancyResult.error) return { error: discrepancyResult.error }
+
+        openDiscrepancyDispatchIds = new Set(
+            (discrepancyResult.data ?? [])
+                .map((row) => row.dispatch_id)
+                .filter((id): id is string => Boolean(id))
+        )
+    } else {
+        const dispatchIds = mappedDispatches.map((dispatch) => dispatch.id)
+        if (dispatchIds.length > 0) {
         const { data: discrepancies, error: discrepancyError } = await supabase
             .from('stock_discrepancies')
             .select('dispatch_id')
@@ -1238,6 +1292,7 @@ export async function getAllDispatches(options: { scope?: DispatchListScope } = 
                 .map((row) => row.dispatch_id)
                 .filter((id): id is string => Boolean(id))
         )
+        }
     }
 
     return {
@@ -1351,30 +1406,24 @@ export async function getArchivedDispatchGroups(): Promise<{ data: ArchivedDispa
     return { data: archivedGroups }
 }
 
-export async function getDispatchOverviewStats(): Promise<DispatchOverviewResult> {
+export async function getDispatchOverviewStats(options: DispatchOverviewOptions = {}): Promise<DispatchOverviewResult> {
     const { profile } = await requireRole(['owner', 'supervisor'])
     const supabase = await createServerClient()
 
-    const [salesRes, discrepanciesRes] = await Promise.all([
+    const [salesRes, discrepanciesResult] = await Promise.all([
         supabase
             .from('fabric_stock_sales')
             .select('meters_sold, revenue_amount, pending_dispatch_meters, dispatch_status')
             .eq('org_id', profile.org_id)
             .in('dispatch_status', ['not_dispatched', 'partially_dispatched', 'discrepancy']),
-        supabase
-            .from('stock_discrepancies')
-            .select('difference_meters')
-            .eq('org_id', profile.org_id)
-            .eq('status', 'needs_review'),
+        options.preloadedOpenDiscrepancies ?? loadOpenStockDiscrepanciesForOrg(supabase, profile.org_id),
     ])
 
     if (salesRes.error) return { error: salesRes.error.message }
-    if (discrepanciesRes.error && !isMissingStockDiscrepanciesTable(discrepanciesRes.error)) {
-        return { error: discrepanciesRes.error.message }
-    }
+    if (discrepanciesResult.error) return { error: discrepanciesResult.error }
 
     const rows = salesRes.data ?? []
-    const discrepancies = discrepanciesRes.error ? [] : discrepanciesRes.data ?? []
+    const discrepancies = discrepanciesResult.data ?? []
     return {
         data: {
             pending_sales_count: rows.length,
