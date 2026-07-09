@@ -1313,17 +1313,15 @@
       "section": "13. Quote Lifecycle",
       "scenario": "Start Party Order fast path.",
       "expected": "Accepted quote and order form one consistent transaction.",
-      "status": "code_verified",
-      "actual": "Batch 23 source-fixes the Start Party Order fast-path transaction boundary but does not make the row pass-ready. The new atomic RPC start_party_order_from_estimator creates the accepted quote, active order, quote-to-order backlinks, and order_yarn_requirements inside a single PostgreSQL database transaction. If any step fails, the entire transaction is rolled back, leaving no orphaned accepted quote. The server action startPartyOrderFromEstimator pre-calculates the requirements and calls the new RPC. The migration is not applied and QA runtime/API proof is still required before pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Start Party Order fast path.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Accepted quote and order form one consistent transaction. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch23/BATCH23-start-party-order-transaction-boundary-proof.json",
-        "supabase/migrations/20260702131500_batch_23_start_party_order_transaction_boundary.sql",
-        "app/(dashboard)/owner/estimator/actions.ts",
-        "__tests__/batch23-start-party-order-atomicity.test.ts"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 37/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "Medium",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:35.437Z"
     },
     {
       "id": "QUOTE-008",
@@ -1441,17 +1439,15 @@
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Produce beyond target.",
       "expected": "Product behavior is explicit; progress, pace, stock, and payroll remain mathematically consistent.",
-      "status": "code_verified",
-      "actual": "Batch 22 source-fixes the over-target boundary but does not make the row pass-ready. The new forward-only migration hardens `replace_shift_production_logs` and the direct `production_logs` table boundary so post-replacement order totals are computed before any delete/insert and rejected when they would exceed `orders.total_target_meters`. The same RPC still preserves the Batch 2 affected-grain generated-stock reconciliation path, so over-target production cannot feed order progress, pace, generated stock, or payroll basis through the direct RPC/table boundary. Migration application and QA runtime/API proof are still required before pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Produce beyond target.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Product behavior is explicit; progress, pace, stock, and payroll remain mathematically consistent. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json",
-        "supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql",
-        "__tests__/batch22-production-order-boundary-hardening.test.ts",
-        "__tests__/p1-production-stock-atomicity.test.ts"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 38/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "High",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:35.691Z"
     },
     {
       "id": "ORDER-006",
@@ -1475,20 +1471,15 @@
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Complete with target met.",
       "expected": "Status changes, looms unlink, history and reserved stock remain correct.",
-      "status": "code_verified",
-      "actual": "Completion with a valid target-met order is source-verified for status and loom unlinking: updateOrderStatus writes status='completed', clears machines.current_order_id, sets machines inactive, and revalidates orders/archive/analytics. Stock classification remains order_reserved for order lots and active lifecycle logic keeps reserved/pending order stock visible until exhausted; no live target-met completion was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Complete with target met.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Status changes, looms unlink, history and reserved stock remain correct. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "app/(dashboard)/owner/orders/actions.ts:95",
-        "app/(dashboard)/owner/orders/actions.ts:107",
-        "app/(dashboard)/owner/stock/actions.ts:633",
-        "app/(dashboard)/owner/stock/actions.ts:440",
-        "lib/stock-lifecycle.ts:12",
-        "__tests__/p1-stock-lifecycle.test.ts:28"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 39/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:35.929Z"
     },
     {
       "id": "ORDER-008",
@@ -1511,135 +1502,105 @@
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Cancel after some production.",
       "expected": "Produced stock/history retained; no new logs accepted; loom unlinks.",
-      "status": "code_verified",
-      "actual": "Batch 22 source-fixes the cancelled/completed/stale-assignment production boundary but does not make the row pass-ready. The new migration requires any order-attributed production log submitted through `replace_shift_production_logs` or direct `production_logs` insert/update to belong to an active order currently assigned to the active loom, and it blocks replacement of existing order-attributed logs for non-active orders. Existing history is not migration-mutated; owner cancellation still unlinks looms in the app action. Migration application and QA runtime/API proof are still required before pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Cancel after some production.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Produced stock/history retained; no new logs accepted; loom unlinks. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "output/qa/batch22/BATCH22-production-order-boundary-hardening-proof.json",
-        "supabase/migrations/20260702121238_batch_22_production_order_boundary_hardening.sql",
-        "__tests__/batch22-production-order-boundary-hardening.test.ts",
-        "app/(dashboard)/owner/orders/actions.ts:246",
-        "app/(dashboard)/owner/orders/actions.ts:258"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 40/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "High",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:36.191Z"
     },
     {
       "id": "ORDER-010",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Attempt delete with production/dispatch/payment history.",
       "expected": "Safe restriction or documented archival behavior; no orphan records.",
-      "status": "code_verified",
-      "actual": "The active Orders page does not hard-delete orders. Its deleteOrder action updates status to cancelled and unlinks machines, so history is not removed from the orders table. A legacy hard-delete function still exists in app/(dashboard)/owner/actions.ts but is not referenced by the current Orders client; this item remains source-verified, not runtime-tested.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Attempt delete with production/dispatch/payment history.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Safe restriction or documented archival behavior; no orphan records. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "app/(dashboard)/owner/orders/actions.ts:246",
-        "app/(dashboard)/owner/orders/actions.ts:250",
-        "app/(dashboard)/owner/orders/actions.ts:258",
-        "app/(dashboard)/owner/orders/OrdersClient.tsx:611",
-        "app/(dashboard)/owner/orders/OrdersClient.tsx:1189"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 41/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:36.464Z"
     },
     {
       "id": "ORDER-011",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Order stock appears as reserved, not freely saleable market stock.",
       "expected": "Correct stock classification.",
-      "status": "code_verified",
-      "actual": "Order-linked stock classification is source-verified: order lots are inserted with stock_purpose='order_reserved', getTakaStockBoard sets available_for_sale_meters=0 for source_type='order', and active-order reserved meters remain separate from freely saleable market stock. No live stock-board browser check was executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Order stock appears as reserved, not freely saleable market stock.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Correct stock classification. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "app/(dashboard)/owner/stock/actions.ts:633",
-        "app/(dashboard)/owner/stock/actions.ts:440",
-        "app/(dashboard)/owner/stock/actions.ts:441",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:31",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:387"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 42/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:36.728Z"
     },
     {
       "id": "ORDER-012",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Sell/dispatch order-linked stock.",
       "expected": "Party/order/source links remain available in dispatch and Commercials.",
-      "status": "code_verified",
-      "actual": "Order-linked stock sale/dispatch links are source-verified. Stock sale receivables store order_id from the sold lot, dispatch rows are populated with the order_id when a stock_sale_id points to an order lot, and dispatch list mapping exposes source_type, order_id, order party, order quality, and order status.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Sell/dispatch order-linked stock.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Party/order/source links remain available in dispatch and Commercials. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "supabase/migrations/20260601010000_commercial_party_identity.sql:501",
-        "supabase/migrations/20260601010000_commercial_party_identity.sql:522",
-        "supabase/migrations/20260601030000_link_stock_sale_dispatch_orders.sql:4",
-        "supabase/migrations/20260601030000_link_stock_sale_dispatch_orders.sql:20",
-        "app/(dashboard)/owner/orders/actions.ts:1031",
-        "app/(dashboard)/owner/orders/actions.ts:1104"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 43/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:36.986Z"
     },
     {
       "id": "ORDER-013",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Partial dispatch against order.",
       "expected": "Remaining order sale/dispatch quantity remains actionable.",
-      "status": "code_verified",
-      "actual": "Partial dispatch against sold order stock is source-verified. The batch dispatch RPC locks each sale, rejects dispatch meters greater than pending, writes only the requested dispatch quantity, and reduces pending_dispatch_meters while leaving remaining meters available through the Pending Dispatch UI.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Partial dispatch against order.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Remaining order sale/dispatch quantity remains actionable. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "supabase/migrations/20260531010000_configurable_batch_dispatch.sql:90",
-        "supabase/migrations/20260531010000_configurable_batch_dispatch.sql:115",
-        "supabase/migrations/20260531010000_configurable_batch_dispatch.sql:246",
-        "supabase/migrations/20260531010000_configurable_batch_dispatch.sql:253",
-        "app/(dashboard)/owner/dispatches/DispatchesClient.tsx:700",
-        "app/(dashboard)/owner/dispatches/DispatchesClient.tsx:1018"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 44/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:37.240Z"
     },
     {
       "id": "ORDER-014",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Receipt shortage/excess.",
       "expected": "Dispatch and discrepancy update without rewriting original production.",
-      "status": "code_verified",
-      "actual": "Receipt shortage/excess handling is source-verified. confirm_fabric_dispatch_receipt locks only the target dispatch, records received meters on dispatch/package lines, moves package state to claimed when short, and inserts a stock_discrepancies row for shortage/excess. It does not update production_logs.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Receipt shortage/excess.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Dispatch and discrepancy update without rewriting original production. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "supabase/migrations/20260515120000_expected_stock_dispatch_reconciliation.sql:334",
-        "supabase/migrations/20260515120000_expected_stock_dispatch_reconciliation.sql:371",
-        "supabase/migrations/20260515120000_expected_stock_dispatch_reconciliation.sql:388",
-        "supabase/migrations/20260515120000_expected_stock_dispatch_reconciliation.sql:392",
-        "supabase/migrations/20260515120000_expected_stock_dispatch_reconciliation.sql:416"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 45/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:37.524Z"
     },
     {
       "id": "ORDER-015",
       "section": "14. Order-Centric End-to-End Tests",
       "scenario": "Close money and payroll.",
       "expected": "Collection and worker settlement reconcile independently to the same production.",
-      "status": "code_verified",
-      "actual": "Money and payroll close-out is source-verified at the data-flow level only. Commercial receivables are created from fabric stock sales with order/source references, while payroll derives meter-worker pay from production_logs.meters and worker_rate_snapshot plus payroll_settlements. I did not execute a live close-money-and-payroll reconciliation in production.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Close money and payroll.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Collection and worker settlement reconcile independently to the same production. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "supabase/migrations/20260601010000_commercial_party_identity.sql:501",
-        "app/(dashboard)/owner/commercials/actions.ts:159",
-        "app/(dashboard)/owner/payroll/page.tsx:254",
-        "app/(dashboard)/owner/payroll/page.tsx:328",
-        "app/(dashboard)/owner/payroll/page.tsx:510",
-        "app/(dashboard)/owner/payroll/page.tsx:582"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 46/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:37.826Z"
     },
     {
       "id": "MARKET-001",
@@ -1763,41 +1724,30 @@
       "section": "15. Market-Centric End-to-End Tests",
       "scenario": "Close sold-out run with pending dispatch.",
       "expected": "Lot leaves active stock if intended; pending dispatch remains visible in Dispatches/Commercials.",
-      "status": "code_verified",
-      "actual": "Closed market-run lots with pending dispatch are source-verified to leave Active Stock while remaining visible in Dispatches/Commercials. isStockLotActionable returns false for closed/sold_out market_run lots before considering pending_dispatch_meters, while pending sales are still queried from fabric_stock_sales and shown in dispatch/commercial flows.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Close sold-out run with pending dispatch.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Lot leaves active stock if intended; pending dispatch remains visible in Dispatches/Commercials. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "lib/stock-lifecycle.ts:17",
-        "__tests__/p1-stock-lifecycle.test.ts:78",
-        "__tests__/p1-stock-lifecycle.test.ts:91",
-        "app/(dashboard)/owner/stock/actions.ts:367",
-        "app/(dashboard)/owner/orders/actions.ts:1425",
-        "app/(dashboard)/owner/commercials/actions.ts:159"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 47/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:38.087Z"
     },
     {
       "id": "MARKET-010",
       "section": "15. Market-Centric End-to-End Tests",
       "scenario": "Sell out and receive all batches.",
       "expected": "Run displays sold-out/closed correctly and archive is complete.",
-      "status": "code_verified",
-      "actual": "Market run sold-out/closed archive behavior is source-verified. Closing a market run completes backing orders, unlinks machines, clears shift assignments, and lifecycle tests hide sold-out/closed lots with no active meters. market_run_summary aggregates produced, sold, in-godown, revenue, costs, profit, sales count, and lot count for archive display.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Sell out and receive all batches.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Run displays sold-out/closed correctly and archive is complete. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/order-stock-sale-source-evidence-20260624.json",
-        "supabase/migrations/20260531030000_auto_unlink_closed_market_runs.sql:8",
-        "supabase/migrations/20260531030000_auto_unlink_closed_market_runs.sql:13",
-        "supabase/migrations/20260531030000_auto_unlink_closed_market_runs.sql:18",
-        "__tests__/p1-stock-lifecycle.test.ts:65",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:812",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:831",
-        "supabase/migrations/20260506120000_rolling_stock_inward.sql:872"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 4; campaign item 48/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.633Z"
+      "updatedAt": "2026-07-09T23:07:38.349Z"
     },
     {
       "id": "MARKET-011",

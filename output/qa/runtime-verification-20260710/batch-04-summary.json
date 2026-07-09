@@ -1,0 +1,33 @@
+{
+  "batchNumber": 4,
+  "issuesCompleted": [
+    "QUOTE-007",
+    "ORDER-005",
+    "ORDER-007",
+    "ORDER-009",
+    "ORDER-010",
+    "ORDER-011",
+    "ORDER-012",
+    "ORDER-013",
+    "ORDER-014",
+    "ORDER-015",
+    "MARKET-009",
+    "MARKET-010"
+  ],
+  "passCount": 0,
+  "failCount": 12,
+  "runningPassTotal": 0,
+  "runningFailTotal": 48,
+  "remainingIssues": 97,
+  "checkpointSaved": "CHECKPOINT.json",
+  "lastCompletedIssue": "MARKET-010",
+  "nextIssueToProcess": "MARKET-013",
+  "matrixCounts": {
+    "pass": 196,
+    "fail": 61,
+    "blocked": 22,
+    "not_applicable": 1,
+    "code_verified": 97,
+    "not_run": 0
+  }
+}
