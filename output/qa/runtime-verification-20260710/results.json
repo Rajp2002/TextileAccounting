@@ -4688,22 +4688,15 @@
       "section": "27. Security, Privacy, and Audit",
       "scenario": "CSRF/session/cookie behavior.",
       "expected": "Protected actions require valid same-user session.",
-      "status": "code_verified",
-      "actual": "Source and logged-out production route checks support the same-user session requirement: protected pages redirect to /login, protected APIs return JSON 401, shared server actions use requireRole/getAuthenticatedUser to fetch the server-side profile row for the authenticated user, serverActions.allowedOrigins is configured, and production security headers plus a SameSite=Lax/HttpOnly/Secure last_activity cookie are present. This was not promoted to pass because I did not log in, inspect live Supabase auth cookie attributes after credential submission, or execute an authenticated cross-origin CSRF attempt.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “CSRF/session/cookie behavior.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Protected actions require valid same-user session. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/security-csrf-session-evidence.json",
-        "next.config.ts:5",
-        "next.config.ts:56",
-        "proxy.ts:121",
-        "proxy.ts:164",
-        "proxy.ts:214",
-        "proxy.ts:265",
-        "lib/auth.ts:90",
-        "lib/supabase/server.ts:4"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 133/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:09.048Z"
     },
     {
       "id": "SEC-014",
@@ -4726,18 +4719,15 @@
       "section": "27. Security, Privacy, and Audit",
       "scenario": "Audit protected corrections, settlement reversal, deletion, write-off, and settings.",
       "expected": "Actor, org, action, record, before/after context, and timestamp are adequate.",
-      "status": "code_verified",
-      "actual": "Batch 24G source-fixes settings audit coverage with migration `20260705100000_batch_24g_security_audit_guardrails.sql` for organizations, factory_cost_profile, compliance_settings, notification_consents, and whatsapp_settings, including redaction for access/join-code, WhatsApp value, and phone payload fields. Production DB push reportedly applied this migration and follow-up hardening migration `20260705182406_harden_settings_audit_function.sql`, which fixes SECURITY DEFINER search_path and revokes direct PUBLIC/anon/authenticated execute grants. This is not pass-ready because controlled settings-change audit-row proof with redacted old/new payloads is still required.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Audit protected corrections, settlement reversal, deletion, write-off, and settings.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Actor, org, action, record, before/after context, and timestamp are adequate. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/source-audit-time-ux-evidence-20260624.json",
-        "supabase/migrations/20260705100000_batch_24g_security_audit_guardrails.sql",
-        "supabase/migrations/20260705182406_harden_settings_audit_function.sql",
-        "output/qa/batch24g/BATCH24G-security-audit-guardrails-proof.json",
-        "docs/pilot-remediation/FIX_LOG.md"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 134/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "Medium",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:09.195Z"
     },
     {
       "id": "SEC-016",
@@ -4803,212 +4793,165 @@
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Supervisor logs 20 looms on a phone.",
       "expected": "No excessive scrolling/error-prone row confusion.",
-      "status": "code_verified",
-      "actual": "The supervisor production UI uses per-loom cards, a responsive one/two-column grid, assignment labels, meter inputs, downtime controls, and a fixed save bar. This supports phone entry for many looms from source, but no fresh 20-loom mobile browser screenshot was captured.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Supervisor logs 20 looms on a phone.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: No excessive scrolling/error-prone row confusion. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:330",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:517",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1246",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1290"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 135/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:09.340Z"
     },
     {
       "id": "UX-002",
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Buttons during submission.",
       "expected": "Disabled/progress state prevents double action.",
-      "status": "code_verified",
-      "actual": "Representative forms use pending/submitting/loading state to disable submit controls and show progress while mutations run: supervisor production has submitLockRef plus disabled save button, add-worker and kharchi forms disable during pending/submitting, stock sale/dispatch and taka stock forms disable during useTransition, billing buttons disable while loading, and payroll rows/dialogs receive mutation.isPending. No browser double-submit runtime proof was collected.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Buttons during submission.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Disabled/progress state prevents double action. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/source-audit-time-ux-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:918",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1298",
-        "components/AddWorkerDialog.tsx:363",
-        "components/supervisor/KharchiDialog.tsx:150",
-        "components/dispatches/SellAndDispatchDialog.tsx:511",
-        "app/(dashboard)/owner/stock/TakaStockClient.tsx:362",
-        "components/billing/SubscribeButton.tsx:150",
-        "components/billing/TrialButton.tsx:84",
-        "app/(dashboard)/owner/payroll/page.tsx:3824"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 136/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:09.485Z"
     },
     {
       "id": "UX-003",
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Error recovery.",
       "expected": "Entered values remain after validation/server error.",
-      "status": "code_verified",
-      "actual": "Representative forms preserve entered values after validation/server errors because field resets and dialog closes are on success paths only. Add-worker onError only toasts/captures, kharchi validation/action errors keep amount/description, commercial payment errors do not reset the payment form, stock create errors return before reset, and stock sale/dispatch non-recoverable errors keep component state. No browser-induced error proof was collected.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Error recovery.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Entered values remain after validation/server error. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/source-audit-time-ux-evidence-20260624.json",
-        "components/AddWorkerDialog.tsx:128",
-        "components/supervisor/KharchiDialog.tsx:55",
-        "app/(dashboard)/owner/commercials/CommercialsClient.tsx:1492",
-        "components/dispatches/SellAndDispatchDialog.tsx:112",
-        "components/dispatches/SellAndDispatchDialog.tsx:242",
-        "app/(dashboard)/owner/stock/TakaStockClient.tsx:185",
-        "app/(dashboard)/owner/payroll/page.tsx:1712"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 137/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:09.633Z"
     },
     {
       "id": "UX-004",
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Mobile navigation and logout.",
       "expected": "Controls do not overlap bottom navigation.",
-      "status": "code_verified",
-      "actual": "Supervisor layout reserves bottom padding for mobile navigation, the bottom nav is fixed with safe-area padding, and the production save bar uses pb-floating-button to sit above the bottom nav. This is source-verified only.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Mobile navigation and logout.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Controls do not overlap bottom navigation. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/layout.tsx:47",
-        "components/navigation/supervisor-nav.tsx:256",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1290",
-        "app/globals.css:388"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 138/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:09.787Z"
     },
     {
       "id": "UX-005",
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Dialogs and sheets.",
       "expected": "Keyboard focus, labels, description, Escape/close behavior work.",
-      "status": "code_verified",
-      "actual": "Core production dialogs/sheets include DialogDescription or SheetDescription text, labeled access-code fields, close-on-open-change behavior, and standard shadcn dialog/sheet primitives. Keyboard/escape behavior was not runtime-tested in this batch, so status remains code_verified.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Dialogs and sheets.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Keyboard focus, labels, description, Escape/close behavior work. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:621",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1313",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1338",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1345",
-        "components/ui/dialog.tsx:134",
-        "components/ui/sheet.tsx:124"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 139/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:09.931Z"
     },
     {
       "id": "UX-006",
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Keyboard-only desktop.",
       "expected": "All core workflows are operable.",
-      "status": "code_verified",
-      "actual": "Core workflows are built from native buttons, inputs, selects, links, dialogs, and sheets with visible text labels in the reviewed production/dashboard paths. No keyboard-only browser pass was executed in this batch.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Keyboard-only desktop.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: All core workflows are operable. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:330",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:517",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:631",
-        "app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:217",
-        "components/navigation/supervisor-nav.tsx:268"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 140/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:10.078Z"
     },
     {
       "id": "UX-007",
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Screen reader landmarks/names.",
       "expected": "Critical form controls have useful names and errors.",
-      "status": "code_verified",
-      "actual": "Critical reviewed controls expose useful names or visible text: production meter inputs have per-loom aria-labels, nav links have aria-labels, setup close buttons have labels, and validation toasts/errors are explicit. This is source-verified only; no screen-reader run was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Screen reader landmarks/names.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Critical form controls have useful names and errors. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:518",
-        "components/navigation/supervisor-nav.tsx:277",
-        "components/factory-today/SetupPanel.tsx:582",
-        "components/factory-today/SetupPanel.tsx:1128",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:992"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 141/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:10.229Z"
     },
     {
       "id": "UX-008",
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Color contrast and status meaning.",
       "expected": "Risk/success is not communicated by color alone.",
-      "status": "code_verified",
-      "actual": "Risk/success/status states are not color-only in the reviewed paths: badges include Running, Maintenance, Idle, critical/warnings text, setup-ready text, and existing-log/downtime text. This is source-verified only.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Color contrast and status meaning.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Risk/success is not communicated by color alone. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:223",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:315",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1186",
-        "app/(dashboard)/owner/today/FactoryTodayClient.tsx:157"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 142/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:10.401Z"
     },
     {
       "id": "UX-009",
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "200% zoom and large text.",
       "expected": "No clipped totals/buttons.",
-      "status": "code_verified",
-      "actual": "Reviewed layouts use min-w-0, responsive grids, truncation, safe-area padding, and bottom padding/floating-button clearance for zoom/large-text resilience. No 200% zoom browser screenshot was captured, so this remains code_verified.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “200% zoom and large text.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: No clipped totals/buttons. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/layout.tsx:47",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:311",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:421",
-        "app/(dashboard)/owner/today/FactoryTodayClient.tsx:131",
-        "components/navigation/supervisor-nav.tsx:250"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 143/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:10.694Z"
     },
     {
       "id": "UX-010",
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Empty/loading/error/offline states.",
       "expected": "Distinct and actionable.",
-      "status": "code_verified",
-      "actual": "Reviewed production/dashboard paths expose distinct loading, empty, offline, reconnecting, and setup/action states with text. This is source-verified only.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Empty/loading/error/offline states.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Distinct and actionable. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1250",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1254",
-        "components/offline-sync-provider.tsx:13",
-        "app/(dashboard)/owner/analytics/_components/DashboardClient.tsx:192",
-        "app/(dashboard)/owner/today/FactoryTodayClient.tsx:184"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 144/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:10.852Z"
     },
     {
       "id": "UX-011",
       "section": "28. UX, Accessibility, and Operational Fit",
       "scenario": "Owner and supervisor role copy.",
       "expected": "No “Viewing as Owner” confusion for supervisors.",
-      "status": "code_verified",
-      "actual": "The owner-as-supervisor banner is conditional on userProfile.role === owner. Supervisors therefore do not get the owner-viewing banner; owners using supervisor routes see a return link. Source verification only.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Owner and supervisor role copy.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: No “Viewing as Owner” confusion for supervisors. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/supervisor/dashboard/page.tsx:1157",
-        "components/RoleBanner.tsx:11",
-        "components/RoleBanner.tsx:22",
-        "updates-observed.json:AUTH-011"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 12; campaign item 145/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.636Z"
+      "updatedAt": "2026-07-09T23:11:10.996Z"
     },
     {
       "id": "UX-012",
