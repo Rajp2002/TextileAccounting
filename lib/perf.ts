@@ -61,16 +61,16 @@ export class PerfTimer {
         private readonly surface: PerfSurface = 'server'
     ) {}
 
-    async measure<T>(
+    async measure<R>(
         phase: PerfPhase,
-        operation: () => Promise<T>,
+        operation: () => R,
         supabaseCalls = 0
-    ): Promise<T> {
-        if (!this.enabled) return operation()
+    ): Promise<Awaited<R>> {
+        if (!this.enabled) return operation() as any
 
         const start = nowMs()
         try {
-            return await operation()
+            return await (operation() as any)
         } finally {
             this.phaseTimes[phase] += nowMs() - start
             this.supabaseCalls += supabaseCalls
@@ -105,7 +105,7 @@ export function createPerfTimer(route: string, surface: PerfSurface = 'server') 
     return new PerfTimer(route, surface)
 }
 
-export async function measurePerf<T>(
+export async function measurePerf<R>(
     options: {
         route: string
         surface?: PerfSurface
@@ -114,8 +114,8 @@ export async function measurePerf<T>(
         supabaseCalls?: number
         extra?: PerfLogExtra
     },
-    operation: () => Promise<T>
-): Promise<T> {
+    operation: () => R
+): Promise<Awaited<R>> {
     const timer = createPerfTimer(options.route, options.surface ?? 'server')
     let failed = false
 

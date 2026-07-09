@@ -66,6 +66,7 @@ import {
     type OperatorProductionLogInput,
     type OperatorWorkerType,
 } from '@/lib/machine-operator-payroll'
+import { measurePerf } from '@/lib/perf'
 
 type PaymentMode = 'cash' | 'bank_transfer' | 'upi' | 'cheque'
 type PendingPayrollManualAdjustment = PayrollManualAdjustment & { id: string }
@@ -3180,7 +3181,7 @@ export default function PayrollPage() {
         targetMonth: string
     } | null>(null)
 
-    const { data: userProfile } = useUserProfile()
+    const { data: userProfile } = useUserProfile('/owner/payroll')
     const todayStr = useMemo(() => formatToSurat(new Date(), 'yyyy-MM-dd'), [])
 
     // 1. Cycle Config
@@ -3188,7 +3189,16 @@ export default function PayrollPage() {
         queryKey: ['payroll_config', userProfile?.org_id],
         enabled: !!userProfile?.org_id,
         queryFn: async () => {
-            const { data } = await supabase.from('payroll_configs').select('*').eq('org_id', userProfile!.org_id).maybeSingle()
+            const { data } = await measurePerf(
+                {
+                    route: '/owner/payroll',
+                    surface: 'client',
+                    phase: 'businessData',
+                    label: 'payroll.config',
+                    supabaseCalls: 1,
+                },
+                () => supabase.from('payroll_configs').select('*').eq('org_id', userProfile!.org_id).maybeSingle()
+            )
             return data
         }
     })
@@ -3226,11 +3236,20 @@ export default function PayrollPage() {
         queryKey: ['org_name', userProfile?.org_id],
         enabled: !!userProfile?.org_id,
         queryFn: async () => {
-            const { data } = await supabase
-                .from('organizations')
-                .select('name')
-                .eq('id', userProfile!.org_id)
-                .single()
+            const { data } = await measurePerf(
+                {
+                    route: '/owner/payroll',
+                    surface: 'client',
+                    phase: 'profileOrgTier',
+                    label: 'payroll.org_name',
+                    supabaseCalls: 1,
+                },
+                () => supabase
+                    .from('organizations')
+                    .select('name')
+                    .eq('id', userProfile!.org_id)
+                    .single()
+            )
             return data
         }
     })
@@ -3277,7 +3296,16 @@ export default function PayrollPage() {
         staleTime: 0,
         refetchOnMount: 'always',
         refetchOnWindowFocus: true,
-        queryFn: () => fetchMeterWorkerPayroll(supabase, userProfile!.org_id, selectedMonth, cycleStartDay)
+        queryFn: () => measurePerf(
+            {
+                route: '/owner/payroll',
+                surface: 'client',
+                phase: 'businessData',
+                label: `payroll.meter.${selectedMonth}`,
+                supabaseCalls: 6,
+            },
+            () => fetchMeterWorkerPayroll(supabase, userProfile!.org_id, selectedMonth, cycleStartDay)
+        )
     })
 
     const { data: fixedWorkers, isLoading: fixedLoading } = useQuery({
@@ -3286,7 +3314,16 @@ export default function PayrollPage() {
         staleTime: 0,
         refetchOnMount: 'always',
         refetchOnWindowFocus: true,
-        queryFn: () => fetchFixedWorkerPayroll(supabase, userProfile!.org_id, selectedMonth, cycleStartDay)
+        queryFn: () => measurePerf(
+            {
+                route: '/owner/payroll',
+                surface: 'client',
+                phase: 'businessData',
+                label: `payroll.fixed.${selectedMonth}`,
+                supabaseCalls: 6,
+            },
+            () => fetchFixedWorkerPayroll(supabase, userProfile!.org_id, selectedMonth, cycleStartDay)
+        )
     })
 
     const isPayDateCycleSelected = selectedMonth === payDateCycleMonth
@@ -3302,7 +3339,16 @@ export default function PayrollPage() {
         staleTime: 0,
         refetchOnMount: 'always',
         refetchOnWindowFocus: true,
-        queryFn: () => fetchMeterWorkerPayroll(supabase, userProfile!.org_id, payDateCycleMonth, cycleStartDay),
+        queryFn: () => measurePerf(
+            {
+                route: '/owner/payroll',
+                surface: 'client',
+                phase: 'businessData',
+                label: `payroll.pay_date_meter.${payDateCycleMonth}`,
+                supabaseCalls: 6,
+            },
+            () => fetchMeterWorkerPayroll(supabase, userProfile!.org_id, payDateCycleMonth, cycleStartDay)
+        ),
     })
 
     const { data: payDateFixedWorkers, isLoading: payDateFixedLoading } = useQuery({
@@ -3311,7 +3357,16 @@ export default function PayrollPage() {
         staleTime: 0,
         refetchOnMount: 'always',
         refetchOnWindowFocus: true,
-        queryFn: () => fetchFixedWorkerPayroll(supabase, userProfile!.org_id, payDateCycleMonth, cycleStartDay),
+        queryFn: () => measurePerf(
+            {
+                route: '/owner/payroll',
+                surface: 'client',
+                phase: 'businessData',
+                label: `payroll.pay_date_fixed.${payDateCycleMonth}`,
+                supabaseCalls: 6,
+            },
+            () => fetchFixedWorkerPayroll(supabase, userProfile!.org_id, payDateCycleMonth, cycleStartDay)
+        ),
     })
 
     const payDateMeterSource = isPayDateCycleSelected ? meterWorkers : payDateMeterWorkers

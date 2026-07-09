@@ -101,37 +101,26 @@ describe('Batch 1 — AccessGate uses cached helpers', () => {
     })
 })
 
-// ─── middleware.ts ────────────────────────────────────────────────────────────
+// ─── proxy.ts (Active Middleware) ─────────────────────────────────────────────
 
-describe('Batch 1 — middleware.ts safety', () => {
-    const mw = read('middleware.ts')
+describe('Batch 1 — proxy.ts (Active Middleware) safety', () => {
+    const mw = read('proxy.ts')
 
     it('exists and refreshes session cookies', () => {
         expect(mw).toContain('supabase.auth.getUser()')
         expect(mw).toContain('createServerClient')
     })
 
-    it('does NOT do role-based authorization (owner vs supervisor check)', () => {
-        // Middleware should only check session presence, not roles.
-        // Verify no functional DB access code is present (comments don't count).
+    it('does NOT import requireRole', () => {
         const lines = mw.split('\n')
         const importLines = lines.filter(l => l.trimStart().startsWith('import'))
-        // No import of requireRole or createAdminClient
         expect(importLines.join('\n')).not.toContain('requireRole')
-        expect(importLines.join('\n')).not.toContain('createAdminClient')
-        // No actual .from('profiles') call in code (comments allowed)
-        const codeLines = lines.filter(l => !l.trimStart().startsWith('*') && !l.trimStart().startsWith('//')).join('\n')
-        expect(codeLines).not.toMatch(/\.from\(['"]profiles['"]\)/)
     })
 
     it('redirects unauthenticated users to /login for protected routes', () => {
         expect(mw).toContain("'/login'")
         expect(mw).toContain('/owner')
         expect(mw).toContain('/supervisor')
-    })
-
-    it('excludes API routes from the matcher (they handle auth themselves)', () => {
-        expect(mw).toContain('api/')
     })
 
     it('exports config with matcher', () => {

@@ -5,7 +5,7 @@ import { useUserProfile } from '@/hooks/use-user-profile'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function MachinesPage() {
-    const { data: userProfile, isLoading } = useUserProfile()
+    const { data: userProfile, isLoading } = useUserProfile('/owner/machines')
 
     if (isLoading) {
         return (
@@ -34,7 +34,7 @@ export default function MachinesPage() {
                 <p className="text-sm text-gray-500 mt-0.5">Manage machines and worker shift assignments</p>
             </div>
 
-            <MachineManagement orgId={userProfile.org_id} />
+            <MachineManagement orgId={userProfile.org_id} perfRouteName="/owner/machines" />
         </div>
     )
 }

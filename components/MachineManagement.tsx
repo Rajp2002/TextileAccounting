@@ -59,6 +59,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
 import { cn } from '@/lib/utils'
+import { measurePerf } from '@/lib/perf'
 import {
     getDefaultPayModeForMachineType,
     getOperatorWorkerTypeForPayMode,
@@ -150,6 +151,7 @@ interface MachineManagementProps {
     canToggleMachineStatus?: boolean
     canRenameMachines?: boolean
     canDeleteMachines?: boolean
+    perfRouteName?: string
 }
 
 export function MachineManagement({
@@ -158,6 +160,7 @@ export function MachineManagement({
     canToggleMachineStatus = true,
     canRenameMachines = true,
     canDeleteMachines = true,
+    perfRouteName,
 }: MachineManagementProps) {
     const supabase = createClient()
     const queryClient = useQueryClient()
@@ -194,13 +197,28 @@ export function MachineManagement({
     const { data: machines, isLoading: machinesLoading } = useQuery({
         queryKey: ['machines', orgId],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('machines')
-                .select('*, orders(worker_rate_per_m, quality_label, party_name, status, market_run_id)')
-                .eq('org_id', orgId)
-                .order('name')
-            if (error) throw error
-            return data as Machine[]
+            const loadMachines = async () => {
+                const { data, error } = await supabase
+                    .from('machines')
+                    .select('*, orders(worker_rate_per_m, quality_label, party_name, status, market_run_id)')
+                    .eq('org_id', orgId)
+                    .order('name')
+                if (error) throw error
+                return data as Machine[]
+            }
+
+            return perfRouteName
+                ? measurePerf(
+                    {
+                        route: perfRouteName,
+                        surface: 'client',
+                        phase: 'businessData',
+                        label: 'machines.list',
+                        supabaseCalls: 1,
+                    },
+                    loadMachines
+                )
+                : loadMachines()
         }
     })
 
@@ -232,28 +250,58 @@ export function MachineManagement({
     const { data: workers } = useQuery({
         queryKey: ['workers', orgId],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('workers')
-                .select('id, name, is_active')
-                .eq('org_id', orgId)
-                .eq('is_active', true)
-                .order('name')
-            if (error) throw error
-            return data as Worker[]
+            const loadWorkers = async () => {
+                const { data, error } = await supabase
+                    .from('workers')
+                    .select('id, name, is_active')
+                    .eq('org_id', orgId)
+                    .eq('is_active', true)
+                    .order('name')
+                if (error) throw error
+                return data as Worker[]
+            }
+
+            return perfRouteName
+                ? measurePerf(
+                    {
+                        route: perfRouteName,
+                        surface: 'client',
+                        phase: 'businessData',
+                        label: 'machines.meter_workers',
+                        supabaseCalls: 1,
+                    },
+                    loadWorkers
+                )
+                : loadWorkers()
         }
     })
 
     const { data: fixedWorkers } = useQuery({
         queryKey: ['fixed_workers', orgId],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('fixed_workers')
-                .select('id, name, role, monthly_salary, is_active')
-                .eq('org_id', orgId)
-                .eq('is_active', true)
-                .order('name')
-            if (error) throw error
-            return data as FixedWorker[]
+            const loadFixedWorkers = async () => {
+                const { data, error } = await supabase
+                    .from('fixed_workers')
+                    .select('id, name, role, monthly_salary, is_active')
+                    .eq('org_id', orgId)
+                    .eq('is_active', true)
+                    .order('name')
+                if (error) throw error
+                return data as FixedWorker[]
+            }
+
+            return perfRouteName
+                ? measurePerf(
+                    {
+                        route: perfRouteName,
+                        surface: 'client',
+                        phase: 'businessData',
+                        label: 'machines.fixed_workers',
+                        supabaseCalls: 1,
+                    },
+                    loadFixedWorkers
+                )
+                : loadFixedWorkers()
         }
     })
 
@@ -263,9 +311,24 @@ export function MachineManagement({
     const { data: productionTargets } = useQuery({
         queryKey: ['production_targets', orgId],
         queryFn: async () => {
-            const res = await getActiveProductionTargets()
-            if ('error' in res) throw new Error(res.error)
-            return res.data
+            const loadProductionTargets = async () => {
+                const res = await getActiveProductionTargets()
+                if ('error' in res) throw new Error(res.error)
+                return res.data
+            }
+
+            return perfRouteName
+                ? measurePerf(
+                    {
+                        route: perfRouteName,
+                        surface: 'client',
+                        phase: 'businessData',
+                        label: 'machines.production_targets',
+                        supabaseCalls: 4,
+                    },
+                    loadProductionTargets
+                )
+                : loadProductionTargets()
         },
         enabled: !!orgId && (userProfile?.role === 'owner' || userProfile?.role === 'supervisor'),
         staleTime: 30_000,           // keep fresh for 30 s before background refetch
@@ -275,18 +338,35 @@ export function MachineManagement({
     const { data: assignments } = useQuery({
         queryKey: ['machine_operator_assignments', orgId],
         queryFn: async () => {
-            const [operatorRes, legacyRes] = await Promise.all([
-                supabase
-                    .from('machine_operator_assignments')
-                    .select('id, machine_id, worker_type, meter_worker_id, fixed_worker_id, shift, pay_mode, rate, machine_type')
-                    .eq('org_id', orgId)
-                    .eq('active', true)
-                    .is('effective_to', null),
-                supabase
-                    .from('machine_assignments')
-                    .select('machine_id, worker_id, shift')
-                    .eq('org_id', orgId),
-            ])
+            const loadAssignments = async () => {
+                return Promise.all([
+                    supabase
+                        .from('machine_operator_assignments')
+                        .select('id, machine_id, worker_type, meter_worker_id, fixed_worker_id, shift, pay_mode, rate, machine_type')
+                        .eq('org_id', orgId)
+                        .eq('active', true)
+                        .is('effective_to', null),
+                    supabase
+                        .from('machine_assignments')
+                        .select('machine_id, worker_id, shift')
+                        .eq('org_id', orgId),
+                ])
+            }
+
+            const [operatorRes, legacyRes] = await (
+                perfRouteName
+                    ? measurePerf(
+                        {
+                            route: perfRouteName,
+                            surface: 'client',
+                            phase: 'businessData',
+                            label: 'machines.assignments',
+                            supabaseCalls: 2,
+                        },
+                        loadAssignments
+                    )
+                    : loadAssignments()
+            )
             if (operatorRes.error) throw operatorRes.error
             if (legacyRes.error) throw legacyRes.error
 

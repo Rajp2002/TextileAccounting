@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from '@/lib/i18n/context'
 import { useTransliterate } from '@/hooks/use-transliterate'
+import { measurePerf } from '@/lib/perf'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Worker {
@@ -110,7 +111,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 export default function AdvancesPage() {
     const supabase = createClient()
     const queryClient = useQueryClient()
-    const { data: userProfile } = useUserProfile()
+    const { data: userProfile } = useUserProfile('/owner/advances')
 
     const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null)
     const [search, setSearch] = useState('')
@@ -126,7 +127,7 @@ export default function AdvancesPage() {
         queryKey: ['all_workers', userProfile?.org_id],
         enabled: !!userProfile?.org_id,
         queryFn: async () => {
-            const [{ data: meterWorkers }, { data: fixedWorkers }] = await Promise.all([
+            const loadWorkers = async () => Promise.all([
                 supabase
                     .from('workers')
                     .select('id, name, whatsapp_number')
@@ -140,6 +141,17 @@ export default function AdvancesPage() {
                     .eq('is_active', true)
                     .order('name'),
             ])
+
+            const [{ data: meterWorkers }, { data: fixedWorkers }] = await measurePerf(
+                {
+                    route: '/owner/advances',
+                    surface: 'client',
+                    phase: 'businessData',
+                    label: 'advances.workers',
+                    supabaseCalls: 2,
+                },
+                loadWorkers
+            )
 
             const typedMeterWorkers = (meterWorkers || []) as (MeterWorkerRow & { whatsapp_number?: string })[]
             const typedFixedWorkers = (fixedWorkers || []) as (FixedWorkerRow & { whatsapp_number?: string })[]
@@ -160,12 +172,21 @@ export default function AdvancesPage() {
         queryKey: ['worker_advances', userProfile?.org_id, selectedWorker?.type, selectedWorker?.id],
         enabled: !!userProfile?.org_id && !!selectedWorker,
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('worker_advances')
-                .select('id, amount, description, status, created_at, deducted_at, deducted_in_month')
-                .eq('org_id', userProfile!.org_id)
-                .eq(selectedWorker!.type === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', selectedWorker!.id)
-                .order('created_at', { ascending: false })
+            const { data, error } = await measurePerf(
+                {
+                    route: '/owner/advances',
+                    surface: 'client',
+                    phase: 'businessData',
+                    label: 'advances.selected_worker',
+                    supabaseCalls: 1,
+                },
+                () => supabase
+                    .from('worker_advances')
+                    .select('id, amount, description, status, created_at, deducted_at, deducted_in_month')
+                    .eq('org_id', userProfile!.org_id)
+                    .eq(selectedWorker!.type === 'meter' ? 'meter_worker_id' : 'fixed_worker_id', selectedWorker!.id)
+                    .order('created_at', { ascending: false })
+            )
 
             if (error) throw error
             return (data || []) as Advance[]
@@ -176,12 +197,21 @@ export default function AdvancesPage() {
         queryKey: ['all_pending_advances', userProfile?.org_id],
         enabled: !!userProfile?.org_id && !selectedWorker,
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('worker_advances')
-                .select('id, amount, description, status, created_at, deducted_at, deducted_in_month, meter_worker_id, fixed_worker_id, workers(name), fixed_workers(name)')
-                .eq('org_id', userProfile!.org_id)
-                .eq('status', 'pending')
-                .order('created_at', { ascending: false })
+            const { data, error } = await measurePerf(
+                {
+                    route: '/owner/advances',
+                    surface: 'client',
+                    phase: 'businessData',
+                    label: 'advances.all_pending',
+                    supabaseCalls: 1,
+                },
+                () => supabase
+                    .from('worker_advances')
+                    .select('id, amount, description, status, created_at, deducted_at, deducted_in_month, meter_worker_id, fixed_worker_id, workers(name), fixed_workers(name)')
+                    .eq('org_id', userProfile!.org_id)
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false })
+            )
 
             if (error) throw error
             return ((data || []) as PendingAdvanceRow[]).map((advance) => ({
@@ -213,14 +243,23 @@ export default function AdvancesPage() {
             const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
             const monthStr = lastMonth.toISOString().substring(0, 7)
 
-            const { data: logs } = await supabase
-                .from('production_logs')
-                .select('meters, worker_rate_snapshot')
-                .eq('org_id', userProfile!.org_id)
-                .eq('worker_id', selectedWorker!.id)
-                .gt('meters', 0)
-                .gte('date', `${monthStr}-01`)
-                .lte('date', `${monthStr}-${new Date(Number(monthStr.split('-')[0]), Number(monthStr.split('-')[1]), 0).getDate()}`)
+            const { data: logs } = await measurePerf(
+                {
+                    route: '/owner/advances',
+                    surface: 'client',
+                    phase: 'businessData',
+                    label: 'advances.typical_monthly_meter',
+                    supabaseCalls: 1,
+                },
+                () => supabase
+                    .from('production_logs')
+                    .select('meters, worker_rate_snapshot')
+                    .eq('org_id', userProfile!.org_id)
+                    .eq('worker_id', selectedWorker!.id)
+                    .gt('meters', 0)
+                    .gte('date', `${monthStr}-01`)
+                    .lte('date', `${monthStr}-${new Date(Number(monthStr.split('-')[0]), Number(monthStr.split('-')[1]), 0).getDate()}`)
+            )
 
             const typedLogs = (logs || []) as ProductionLogRow[]
             const total = typedLogs.reduce((sum, log) => {

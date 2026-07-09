@@ -9,6 +9,7 @@ import { formatToSurat, getSuratTodayString } from '@/lib/time'
 import { formatDateOnly } from '@/lib/format'
 import { calculatePieceRateGrossWages } from '@/lib/payroll-read-models'
 import { buildFactoryTodaySetupChecklist } from '@/lib/factory-today-checklist'
+import { createPerfTimer } from '@/lib/perf'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -155,7 +156,8 @@ function hasAnyCount(result: unknown): boolean {
 // ─── Main Aggregation ─────────────────────────────────────────────────────────
 
 export async function getFactoryToday(): Promise<FactoryTodayData> {
-    const { profile } = await requireRole(['owner'])
+    const perf = createPerfTimer('/owner/today')
+    const { profile } = await perf.measure('authSession', () => requireRole(['owner']), 0)
     const supabase = await createServerClient()
     const orgId = profile.org_id
     const today = getSuratTodayString()
@@ -187,226 +189,230 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         hasDispatchRes,
         hasCommercialRes,
         commercialReceivablesRes,
-    ] = await Promise.all([
-        // 1. Production logs today
-        supabase
-            .from('production_logs')
-            .select('id, shift, meters, created_at, date')
-            .eq('org_id', orgId)
-            .eq('date', today),
+    ] = await perf.measure(
+        'businessData',
+        () => Promise.all([
+            // 1. Production logs today
+            supabase
+                .from('production_logs')
+                .select('id, shift, meters, created_at, date')
+                .eq('org_id', orgId)
+                .eq('date', today),
 
-        // 2. Active machines with latest assignment info
-        supabase
-            .from('machines')
-            .select('id, name, status, current_order_id, loom_type, orders(status)')
-            .eq('org_id', orgId),
+            // 2. Active machines with latest assignment info
+            supabase
+                .from('machines')
+                .select('id, name, status, current_order_id, loom_type, orders(status)')
+                .eq('org_id', orgId),
 
-        // 3. Active orders with progress summary for pace calculation
-        supabase
-            .from('order_progress_summary')
-            .select('order_id, party_name, quality_label, total_target_meters, total_meters_produced, deadline, status')
-            .eq('org_id', orgId)
-            .eq('status', 'active')
-            .not('deadline', 'is', null),
+            // 3. Active orders with progress summary for pace calculation
+            supabase
+                .from('order_progress_summary')
+                .select('order_id, party_name, quality_label, total_target_meters, total_meters_produced, deadline, status')
+                .eq('org_id', orgId)
+                .eq('status', 'active')
+                .not('deadline', 'is', null),
 
-        // 4. Active market runs (production or in_godown status)
-        supabase
-            .from('market_run_summary')
-            .select('market_run_id, fabric_label, quality_label, target_meters, meters_produced, status')
-            .eq('org_id', orgId)
-            .in('status', ['production', 'in_godown']),
+            // 4. Active market runs (production or in_godown status)
+            supabase
+                .from('market_run_summary')
+                .select('market_run_id, fabric_label, quality_label, target_meters, meters_produced, status')
+                .eq('org_id', orgId)
+                .in('status', ['production', 'in_godown']),
 
-        // 5. Most recent production for each market run (to detect inactive runs)
-        supabase
-            .from('production_logs')
-            .select('market_run_id, date')
-            .eq('org_id', orgId)
-            .gte('date', twoDaysAgo)
-            .not('market_run_id', 'is', null),
+            // 5. Most recent production for each market run (to detect inactive runs)
+            supabase
+                .from('production_logs')
+                .select('market_run_id, date')
+                .eq('org_id', orgId)
+                .gte('date', twoDaysAgo)
+                .not('market_run_id', 'is', null),
 
-        // 6. Sold stock not yet dispatched
-        supabase
-            .from('fabric_stock_sales')
-            .select('id, taka_sold, meters_sold, pending_dispatch_meters, revenue_amount, sale_date, fabric_stock_lots!inner(quality_label)')
-            .eq('org_id', orgId)
-            .gt('pending_dispatch_meters', 0)
-            .order('sale_date', { ascending: false })
-            .limit(20),
+            // 6. Sold stock not yet dispatched
+            supabase
+                .from('fabric_stock_sales')
+                .select('id, taka_sold, meters_sold, pending_dispatch_meters, revenue_amount, sale_date, fabric_stock_lots!inner(quality_label)')
+                .eq('org_id', orgId)
+                .gt('pending_dispatch_meters', 0)
+                .order('sale_date', { ascending: false })
+                .limit(20),
 
-        // 7. In-transit dispatches and unresolved receipt differences
-        supabase
-            .from('dispatches')
-            .select('id, dispatch_number, qty_meters_sent, dispatched_at, party_name, receipt_status, orders(party_name)')
-            .eq('org_id', orgId)
-            .or('status.eq.in_transit,receipt_status.eq.difference_reported')
-            .order('dispatched_at', { ascending: true })
-            .limit(15),
+            // 7. In-transit dispatches and unresolved receipt differences
+            supabase
+                .from('dispatches')
+                .select('id, dispatch_number, qty_meters_sent, dispatched_at, party_name, receipt_status, orders(party_name)')
+                .eq('org_id', orgId)
+                .or('status.eq.in_transit,receipt_status.eq.difference_reported')
+                .order('dispatched_at', { ascending: true })
+                .limit(15),
 
-        // 9. Payroll config
-        supabase
-            .from('payroll_configs')
-            .select('cycle_start_day, pay_date_day, pay_reminder_days')
-            .eq('org_id', orgId)
-            .maybeSingle(),
+            // 9. Payroll config
+            supabase
+                .from('payroll_configs')
+                .select('cycle_start_day, pay_date_day, pay_reminder_days')
+                .eq('org_id', orgId)
+                .maybeSingle(),
 
-        // 10. Pending advances total
-        supabase
-            .from('worker_advances')
-            .select('amount')
-            .eq('org_id', orgId)
-            .eq('status', 'pending')
-            .is('writeoff_at', null),
+            // 10. Pending advances total
+            supabase
+                .from('worker_advances')
+                .select('amount')
+                .eq('org_id', orgId)
+                .eq('status', 'pending')
+                .is('writeoff_at', null),
 
-        // 12. Activation Checklist: Has Estimate
-        (async () => {
-            try {
-                const { count } = await supabase.from('estimator_quotes').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                return { count }
-            } catch {
-                return { count: 0 }
-            }
-        })(),
-        
-        // 13. Activation Checklist: Has Quality
-        (async () => {
-            try {
-                const { count } = await supabase.from('qualities').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                return { count }
-            } catch {
-                return { count: 0 }
-            }
-        })(),
+            // 12. Activation Checklist: Has Estimate
+            (async () => {
+                try {
+                    const { count } = await supabase.from('estimator_quotes').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                    return { count }
+                } catch {
+                    return { count: 0 }
+                }
+            })(),
+            
+            // 13. Activation Checklist: Has Quality
+            (async () => {
+                try {
+                    const { count } = await supabase.from('qualities').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                    return { count }
+                } catch {
+                    return { count: 0 }
+                }
+            })(),
 
-        // 14. Activation Checklist: Has Order
-        (async () => {
-            try {
-                const { count } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                return { count }
-            } catch {
-                return { count: 0 }
-            }
-        })(),
+            // 14. Activation Checklist: Has Order
+            (async () => {
+                try {
+                    const { count } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                    return { count }
+                } catch {
+                    return { count: 0 }
+                }
+            })(),
 
-        // 15. Activation Checklist: Has Production Log
-        (async () => {
-            try {
-                const { count } = await supabase.from('production_logs').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                return { count }
-            } catch {
-                return { count: 0 }
-            }
-        })(),
+            // 15. Activation Checklist: Has Production Log
+            (async () => {
+                try {
+                    const { count } = await supabase.from('production_logs').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                    return { count }
+                } catch {
+                    return { count: 0 }
+                }
+            })(),
 
-        // 16. Activation Checklist: Has Stock Entry
-        (async () => {
-            try {
-                const { count } = await supabase.from('fabric_stock_lots').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                return { count }
-            } catch {
-                return { count: 0 }
-            }
-        })(),
+            // 16. Activation Checklist: Has Stock Entry
+            (async () => {
+                try {
+                    const { count } = await supabase.from('fabric_stock_lots').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                    return { count }
+                } catch {
+                    return { count: 0 }
+                }
+            })(),
 
-        (async () => {
-            try {
-                const { count } = await supabase.from('market_runs').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                return { count }
-            } catch {
-                return { count: 0 }
-            }
-        })(),
+            (async () => {
+                try {
+                    const { count } = await supabase.from('market_runs').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                    return { count }
+                } catch {
+                    return { count: 0 }
+                }
+            })(),
 
-        supabase
-            .from('organizations')
-            .select('production_mode, onboarding_complete')
-            .eq('id', orgId)
-            .maybeSingle(),
+            supabase
+                .from('organizations')
+                .select('production_mode, onboarding_complete')
+                .eq('id', orgId)
+                .maybeSingle(),
 
-        // 17. Setup Checklist: Has Fixed Worker
-        (async () => {
-            try {
-                const { count } = await supabase.from('fixed_workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('is_active', true).limit(1)
-                return { count }
-            } catch {
-                return { count: 0 }
-            }
-        })(),
+            // 17. Setup Checklist: Has Fixed Worker
+            (async () => {
+                try {
+                    const { count } = await supabase.from('fixed_workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('is_active', true).limit(1)
+                    return { count }
+                } catch {
+                    return { count: 0 }
+                }
+            })(),
 
-        // 18. Setup Checklist: Has Supervisor
-        (async () => {
-            try {
-                const admin = createAdminClient()
-                const { count } = await admin.from('profiles').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('role', 'supervisor').limit(1)
-                return { count }
-            } catch {
-                return { count: 0 }
-            }
-        })(),
+            // 18. Setup Checklist: Has Supervisor
+            (async () => {
+                try {
+                    const admin = createAdminClient()
+                    const { count } = await admin.from('profiles').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('role', 'supervisor').limit(1)
+                    return { count }
+                } catch {
+                    return { count: 0 }
+                }
+            })(),
 
-        // 19. Setup Checklist: Has Plan (subscription)
-        supabase.from('org_subscriptions')
-            .select('status, plan_tier, current_end')
-            .eq('org_id', orgId)
-            .in('status', ['active', 'authenticated'])
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle(),
+            // 19. Setup Checklist: Has Plan (subscription)
+            supabase.from('org_subscriptions')
+                .select('status, plan_tier, current_end')
+                .eq('org_id', orgId)
+                .in('status', ['active', 'authenticated'])
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle(),
 
-        // 20. Setup Checklist: Has Meter Worker
-        (async () => {
-            try {
-                const { count } = await supabase.from('workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('is_active', true).limit(1)
-                return { count }
-            } catch {
-                return { count: 0 }
-            }
-        })(),
+            // 20. Setup Checklist: Has Meter Worker
+            (async () => {
+                try {
+                    const { count } = await supabase.from('workers').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('is_active', true).limit(1)
+                    return { count }
+                } catch {
+                    return { count: 0 }
+                }
+            })(),
 
-        (async () => {
-            try {
-                const { data } = await supabase
-                    .from('machine_assignments')
-                    .select('machine_id, shift, worker_id')
-                    .eq('org_id', orgId)
-                    .in('shift', ['day', 'night'])
-                return { data: data ?? [] }
-            } catch {
-                return { data: [] }
-            }
-        })(),
+            (async () => {
+                try {
+                    const { data } = await supabase
+                        .from('machine_assignments')
+                        .select('machine_id, shift, worker_id')
+                        .eq('org_id', orgId)
+                        .in('shift', ['day', 'night'])
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
 
-        (async () => {
-            try {
-                const { count } = await supabase.from('dispatches').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                return { count }
-            } catch {
-                return { count: 0 }
-            }
-        })(),
+            (async () => {
+                try {
+                    const { count } = await supabase.from('dispatches').select('id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                    return { count }
+                } catch {
+                    return { count: 0 }
+                }
+            })(),
 
-        (async () => {
-            try {
-                const { count } = await supabase.from('commercial_profit_entries').select('source_id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
-                return { count }
-            } catch {
-                return { count: 0 }
-            }
-        })(),
+            (async () => {
+                try {
+                    const { count } = await supabase.from('commercial_profit_entries').select('source_id', { count: 'exact', head: true }).eq('org_id', orgId).limit(1)
+                    return { count }
+                } catch {
+                    return { count: 0 }
+                }
+            })(),
 
-        (async () => {
-            try {
-                const { data } = await supabase
-                    .from('commercial_receivables')
-                    .select('id, party_name, quality_label, total_amount, received_amount, balance_amount, payment_status, due_date')
-                    .eq('org_id', orgId)
-                    .order('due_date', { ascending: true })
-                    .limit(500)
-                return { data: data ?? [] }
-            } catch {
-                return { data: [] }
-            }
-        })(),
-    ])
+            (async () => {
+                try {
+                    const { data } = await supabase
+                        .from('commercial_receivables')
+                        .select('id, party_name, quality_label, total_amount, received_amount, balance_amount, payment_status, due_date')
+                        .eq('org_id', orgId)
+                        .order('due_date', { ascending: true })
+                        .limit(500)
+                    return { data: data ?? [] }
+                } catch {
+                    return { data: [] }
+                }
+            })(),
+        ]),
+        24
+    )
 
     const hasEstimate = hasAnyCount(hasEstimateRes)
     const hasQuality = hasAnyCount(hasQualityRes)
@@ -662,13 +668,17 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         0
     )
 
-    const payrollWorkerLogsRes = await supabase
-        .from('production_logs')
-        .select('worker_id, meters, worker_rate_snapshot')
-        .eq('org_id', orgId)
-        .gte('date', bounds.cycle_start)
-        .lte('date', bounds.cycle_end)
-        .not('worker_id', 'is', null)
+    const payrollWorkerLogsRes = await perf.measure(
+        'businessData',
+        () => supabase
+            .from('production_logs')
+            .select('worker_id, meters, worker_rate_snapshot')
+            .eq('org_id', orgId)
+            .gte('date', bounds.cycle_start)
+            .lte('date', bounds.cycle_end)
+            .not('worker_id', 'is', null),
+        1
+    )
 
     // Unique workers with logs this cycle = rough unsettled count
     const uniqueWorkerIds = new Set(
@@ -714,7 +724,7 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
         machinesData.assigned > 0 ? 1 : 0,
     ].reduce((a, b) => a + b, 0)
 
-    return {
+    const result = {
         date: today,
         productionMode,
         production,
@@ -738,4 +748,6 @@ export async function getFactoryToday(): Promise<FactoryTodayData> {
             ...setupChecklist,
         },
     }
+    perf.log({ note: 'business includes 24-query fanout plus payroll cycle log query' })
+    return result
 }
