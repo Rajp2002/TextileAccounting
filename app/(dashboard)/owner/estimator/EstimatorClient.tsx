@@ -809,7 +809,7 @@ function CalculationModeField({
     onChange: (value: YarnCalculationMode) => void
 }) {
     return (
-        <div className="space-y-1.5 min-w-0">
+        <div className="space-y-1.5 min-w-[130px]">
             <Label className="flex items-end h-8 text-[11px] uppercase tracking-[0.05em] font-semibold text-[var(--color-muted)] leading-tight">
                 Mode
             </Label>
@@ -819,7 +819,7 @@ function CalculationModeField({
                         key={mode}
                         type="button"
                         onClick={() => onChange(mode)}
-                        className={`rounded-[7px] px-2 text-[11px] font-semibold transition-all ${
+                        className={`rounded-[7px] px-1 text-[11px] font-semibold whitespace-nowrap transition-all ${
                             value === mode
                                 ? 'border border-[var(--color-hairline)] bg-white text-[var(--color-ink)] shadow-sm'
                                 : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
