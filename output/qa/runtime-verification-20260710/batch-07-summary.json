@@ -1,0 +1,33 @@
+{
+  "batchNumber": 7,
+  "issuesCompleted": [
+    "STOCK-010",
+    "STOCK-011",
+    "STOCK-013",
+    "SALE-010",
+    "SALE-011",
+    "SALE-012",
+    "SALE-014",
+    "SALE-016",
+    "DISP-012",
+    "DISP-017",
+    "DISP-018",
+    "COMM-003"
+  ],
+  "passCount": 0,
+  "failCount": 12,
+  "runningPassTotal": 0,
+  "runningFailTotal": 84,
+  "remainingIssues": 61,
+  "checkpointSaved": "CHECKPOINT.json",
+  "lastCompletedIssue": "COMM-003",
+  "nextIssueToProcess": "COMM-009",
+  "matrixCounts": {
+    "pass": 196,
+    "fail": 97,
+    "blocked": 22,
+    "not_applicable": 1,
+    "code_verified": 61,
+    "not_run": 0
+  }
+}
