@@ -1,0 +1,33 @@
+{
+  "batchNumber": 9,
+  "issuesCompleted": [
+    "PAY-019",
+    "PAY-021",
+    "PAY-022",
+    "PAY-025",
+    "PAY-026",
+    "PAY-027",
+    "DASH-001",
+    "DASH-002",
+    "DASH-003",
+    "DASH-004",
+    "DASH-005",
+    "DASH-006"
+  ],
+  "passCount": 0,
+  "failCount": 12,
+  "runningPassTotal": 0,
+  "runningFailTotal": 108,
+  "remainingIssues": 37,
+  "checkpointSaved": "CHECKPOINT.json",
+  "lastCompletedIssue": "DASH-006",
+  "nextIssueToProcess": "DASH-008",
+  "matrixCounts": {
+    "pass": 196,
+    "fail": 121,
+    "blocked": 22,
+    "not_applicable": 1,
+    "code_verified": 37,
+    "not_run": 0
+  }
+}
