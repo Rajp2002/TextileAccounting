@@ -3840,54 +3840,45 @@
       "section": "22. Factory Today and Analytics",
       "scenario": "Work-at-risk and pace.",
       "expected": "Correct deadline/remaining meter logic.",
-      "status": "code_verified",
-      "actual": "Factory Today computes remaining meters as max(target - produced, 0), excludes completed orders from work-at-risk, and assigns red/yellow risk based on deadline and pace heuristics for active orders. This is source verification only, not a fresh runtime reconciliation.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Work-at-risk and pace.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Correct deadline/remaining meter logic. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/owner/today/actions.ts:186",
-        "app/(dashboard)/owner/today/actions.ts:464",
-        "app/(dashboard)/owner/today/actions.ts:469",
-        "app/(dashboard)/owner/today/actions.ts:493"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 109/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:20.248Z"
     },
     {
       "id": "DASH-009",
       "section": "22. Factory Today and Analytics",
       "scenario": "Completed/closed work.",
       "expected": "Leaves active risk cards.",
-      "status": "code_verified",
-      "actual": "Factory Today work-at-risk reads only active orders and active market-run statuses production/in_godown. Completed orders with zero remaining meters return null and therefore leave the active risk list. Source verification only.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Completed/closed work.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Leaves active risk cards. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/owner/today/actions.ts:186",
-        "app/(dashboard)/owner/today/actions.ts:194",
-        "app/(dashboard)/owner/today/actions.ts:468",
-        "app/(dashboard)/owner/today/actions.ts:544"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 110/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:20.386Z"
     },
     {
       "id": "DASH-010",
       "section": "22. Factory Today and Analytics",
       "scenario": "Large data range.",
       "expected": "Acceptable load time and no client freeze.",
-      "status": "code_verified",
-      "actual": "Dashboard source keeps several lists bounded or scoped: sold-not-dispatched is limited to 20, pending receipts to 15, analytics trend to seven days, and live refresh queries current active records. No browser load test was executed, so this remains source-verified rather than pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Large data range.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Acceptable load time and no client freeze. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/prod-dashboard-ux-signoff-source-evidence-20260624.json",
-        "app/(dashboard)/owner/today/actions.ts:216",
-        "app/(dashboard)/owner/today/actions.ts:225",
-        "app/(dashboard)/owner/actions/dashboard.ts:202",
-        "app/(dashboard)/owner/actions/dashboard.ts:217"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 111/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:20.549Z"
     },
     {
       "id": "DASH-011",
@@ -3908,140 +3899,105 @@
       "section": "23. WhatsApp",
       "scenario": "Opted-in worker receives simulated advance receipt.",
       "expected": "Business write succeeds; delivery log says simulated/sent.",
-      "status": "code_verified",
-      "actual": "Owner advance creation inserts worker_advances first, then attempts send-advance-receipt with a 3 second timeout and returns the business write success with notification metadata. The edge function fetches the org-scoped advance/worker, checks worker WhatsApp consent, supports WHATSAPP_PROVIDER=simulate, sends weavly_advance_receipt, and logs sent/failed. No simulated or live production message send was executed, so this is not a pass.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Opted-in worker receives simulated advance receipt.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Business write succeeds; delivery log says simulated/sent. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/whatsapp-code-evidence-20260624.json",
-        "app/(dashboard)/owner/advances/actions.ts:17",
-        "app/(dashboard)/owner/advances/actions.ts:40",
-        "app/(dashboard)/owner/advances/actions.ts:51",
-        "supabase/functions/send-advance-receipt/index.ts:21",
-        "supabase/functions/send-advance-receipt/index.ts:73",
-        "supabase/functions/send-advance-receipt/index.ts:127"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 112/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:20.688Z"
     },
     {
       "id": "WA-002",
       "section": "23. WhatsApp",
       "scenario": "Opted-out worker.",
       "expected": "Message skipped and logged; business write succeeds.",
-      "status": "code_verified",
-      "actual": "Worker WhatsApp consent is checked through notification_consents. For an opted-out worker, send-advance-receipt and send-payslip log skipped_opted_out and return skipped without blocking the underlying advance or settlement write. No runtime opted-out worker send was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Opted-out worker.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Message skipped and logged; business write succeeds. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/whatsapp-code-evidence-20260624.json",
-        "supabase/functions/_shared/whatsapp.ts:68",
-        "supabase/functions/_shared/whatsapp.ts:87",
-        "supabase/functions/send-advance-receipt/index.ts:83",
-        "supabase/functions/send-payslip/index.ts:113"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 113/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:20.835Z"
     },
     {
       "id": "WA-003",
       "section": "23. WhatsApp",
       "scenario": "Missing consent or phone.",
       "expected": "Message skipped with correct reason.",
-      "status": "code_verified",
-      "actual": "Missing phone and missing consent paths exist. Missing phone returns a skipped response before provider send; missing consent returns skipped and writes a skipped_missing_consent delivery log. This was not runtime-executed, and missing-phone skip is not logged in the advance/payslip edge functions.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Missing consent or phone.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Message skipped with correct reason. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/whatsapp-code-evidence-20260624.json",
-        "supabase/functions/_shared/whatsapp.ts:45",
-        "supabase/functions/_shared/whatsapp.ts:83",
-        "supabase/functions/send-advance-receipt/index.ts:66",
-        "supabase/functions/send-advance-receipt/index.ts:83",
-        "supabase/functions/send-payslip/index.ts:96",
-        "supabase/functions/send-payslip/index.ts:113"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 114/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:20.985Z"
     },
     {
       "id": "WA-004",
       "section": "23. WhatsApp",
       "scenario": "Provider timeout/failure.",
       "expected": "Core advance/payroll/access-code write is not rolled back.",
-      "status": "code_verified",
-      "actual": "Provider failure/timeout does not roll back core business writes in the reviewed paths. Advance creation inserts the advance before a timeout-bounded notification attempt and still returns success; payroll settlement completes before a fire-and-forget send-payslip; access-code generation writes the hash/expiry before a fire-and-forget send-access-code. No live provider timeout/failure was induced.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Provider timeout/failure.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Core advance/payroll/access-code write is not rolled back. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/whatsapp-code-evidence-20260624.json",
-        "app/(dashboard)/owner/advances/actions.ts:40",
-        "app/(dashboard)/owner/advances/actions.ts:60",
-        "app/(dashboard)/owner/advances/actions.ts:95",
-        "app/(dashboard)/owner/payroll/actions.ts:156",
-        "app/(dashboard)/owner/payroll/actions.ts:175",
-        "app/(dashboard)/owner/actions.ts:562",
-        "app/(dashboard)/owner/actions.ts:576"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 115/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:21.122Z"
     },
     {
       "id": "WA-005",
       "section": "23. WhatsApp",
       "scenario": "Payslip summary and itemized follow-up.",
       "expected": "Correct worker/settlement, no PII leak to wrong number.",
-      "status": "code_verified",
-      "actual": "send-payslip fetches the settlement by settlement_id/org_id and the worker by worker_id/org_id, checks consent, sends the worker_payslips summary template, and then attempts an itemized free-form follow-up from settlement.itemization_payload. If the free-form detail fails, it logs payslip_details_fallback. No runtime send was executed, and itemized free-form delivery remains dependent on the WhatsApp 24-hour service window.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Payslip summary and itemized follow-up.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Correct worker/settlement, no PII leak to wrong number. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/whatsapp-code-evidence-20260624.json",
-        "supabase/functions/send-payslip/index.ts:65",
-        "supabase/functions/send-payslip/index.ts:87",
-        "supabase/functions/send-payslip/index.ts:131",
-        "supabase/functions/send-payslip/index.ts:209",
-        "supabase/functions/send-payslip/index.ts:220",
-        "supabase/functions/send-payslip/index.ts:249"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 116/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:21.260Z"
     },
     {
       "id": "WA-006",
       "section": "23. WhatsApp",
       "scenario": "Access code message.",
       "expected": "Only intended opted-in owner/supervisor receives it.",
-      "status": "code_verified",
-      "actual": "generateAccessCode writes the access-code hash/expiry before notification and returns the code to the owner even if notification fails. send-access-code selects only an opted-in owner with a WhatsApp number, sends weavly_floor_approval, and logs sent/failed access_code without placing the plaintext code in payload_snapshot. No runtime access-code WhatsApp send was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Access code message.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Only intended opted-in owner/supervisor receives it. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/whatsapp-code-evidence-20260624.json",
-        "app/(dashboard)/owner/actions.ts:553",
-        "app/(dashboard)/owner/actions.ts:576",
-        "supabase/functions/send-access-code/index.ts:40",
-        "supabase/functions/send-access-code/index.ts:89",
-        "supabase/functions/send-access-code/index.ts:109"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 117/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:21.417Z"
     },
     {
       "id": "WA-007",
       "section": "23. WhatsApp",
       "scenario": "Deadline/daily/monthly cooldown.",
       "expected": "No duplicate spam.",
-      "status": "code_verified",
-      "actual": "Cooldown/idempotency mechanisms exist in source and production metadata: daily brief uses whatsapp_cooldowns primary-key locking per org/day; deadline risk checks/upserts a 24-hour whatsapp_cooldowns row per order; pace check runs every 6 hours with the same 24-hour deadline cooldown; monthly brief uses daily_brief_logs to skip already-sent months. Production cron metadata shows daily/monthly/pace/retry jobs active. No cron run or duplicate-send runtime test was triggered.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Deadline/daily/monthly cooldown.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: No duplicate spam. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/whatsapp-code-evidence-20260624.json",
-        "supabase/functions/send-daily-brief/index.ts:82",
-        "supabase/functions/send-daily-brief/index.ts:174",
-        "supabase/functions/check-pace-index/index.ts:52",
-        "supabase/functions/monthly-brief/index.ts:85",
-        "supabase/migrations/20260401020000_whatsapp_cooldown.sql:10",
-        "supabase/migrations/20260401030000_pg_cron_schedule.sql:33",
-        "supabase/migrations/20260402090000_pace_check_cron.sql:26",
-        "supabase/migrations/20260402100000_monthly_brief_cron.sql:27"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 118/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:21.567Z"
     },
     {
       "id": "WA-008",
@@ -4067,19 +4023,15 @@
       "section": "23. WhatsApp",
       "scenario": "Retry failed message.",
       "expected": "Maximum retry and 24-hour rules enforced.",
-      "status": "code_verified",
-      "actual": "retry-failed-messages selects failed whatsapp_delivery_log rows only when sent_at is within the last 24 hours and retry_count is below 3, then updates the same row with incremented retry_count, last_retry_at, status, meta_message_id, and error_message. Production schema has retry_count/last_retry_at columns and active hourly retry cron metadata. No failed-message retry was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Retry failed message.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Maximum retry and 24-hour rules enforced. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/whatsapp-code-evidence-20260624.json",
-        "supabase/functions/retry-failed-messages/index.ts:32",
-        "supabase/functions/retry-failed-messages/index.ts:77",
-        "supabase/functions/retry-failed-messages/index.ts:102",
-        "supabase/migrations/20260402110000_retry_infrastructure.sql:17",
-        "supabase/migrations/20260402120000_retry_cron.sql:27"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 119/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:21.726Z"
     },
     {
       "id": "WA-010",
@@ -4115,22 +4067,15 @@
       "section": "24. Billing, Trial, and Referrals",
       "scenario": "Base versus Premium access gates.",
       "expected": "Correct modules gated; Billing itself remains reachable.",
-      "status": "code_verified",
-      "actual": "Base/Premium gating is implemented through AccessGate: none redirects to /owner/billing, base satisfies only base-required modules, trial/premium satisfy premium, and base users see an upgrade wall on premium modules. Billing itself is reachable from the owner billing page without AccessGate. No production base-versus-premium browser comparison was executed.",
+      "status": "fail",
+      "actual": "Runtime FAIL: “Base versus Premium access gates.” could not be executed because the mission-required brand-new dedicated QA account could not be provisioned. Production and QA signup both failed at organization creation; exact QA reconciliation found 0 matching organization, profile, and auth user. Expected behavior was: Correct modules gated; Billing itself remains reachable. Under the campaign's explicit criteria, required setup failure is a final FAIL.",
       "evidence": [
-        "logs/billing-offline-time-code-evidence-20260624.json",
-        "components/billing/AccessGate.tsx:21",
-        "lib/subscription.ts:14",
-        "app/(dashboard)/owner/billing/page.tsx:198",
-        "app/(dashboard)/owner/estimator/layout.tsx:1",
-        "app/(dashboard)/owner/quotes/layout.tsx:1",
-        "app/(dashboard)/owner/orders/layout.tsx:1",
-        "app/(dashboard)/owner/payroll/layout.tsx:1",
-        "app/(dashboard)/owner/analytics/layout.tsx:1"
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-runtime-evidence.json",
+        "output/qa/runtime-verification-20260710/evidence/ACCOUNT-SETUP-signup-failed.png"
       ],
-      "notes": "Authoritative baseline imported from output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md",
+      "notes": "Runtime campaign Batch 10; campaign item 120/145. Reviewed the row and its expected behavior. No personal or pre-existing account was used; processed exactly once.",
       "severity": "",
-      "updatedAt": "2026-07-09T22:46:02.635Z"
+      "updatedAt": "2026-07-09T23:10:21.914Z"
     },
     {
       "id": "BILL-003",

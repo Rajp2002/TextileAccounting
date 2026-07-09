@@ -1,0 +1,33 @@
+{
+  "batchNumber": 10,
+  "issuesCompleted": [
+    "DASH-008",
+    "DASH-009",
+    "DASH-010",
+    "WA-001",
+    "WA-002",
+    "WA-003",
+    "WA-004",
+    "WA-005",
+    "WA-006",
+    "WA-007",
+    "WA-009",
+    "BILL-002"
+  ],
+  "passCount": 0,
+  "failCount": 12,
+  "runningPassTotal": 0,
+  "runningFailTotal": 120,
+  "remainingIssues": 25,
+  "checkpointSaved": "CHECKPOINT.json",
+  "lastCompletedIssue": "BILL-002",
+  "nextIssueToProcess": "BILL-004",
+  "matrixCounts": {
+    "pass": 196,
+    "fail": 133,
+    "blocked": 22,
+    "not_applicable": 1,
+    "code_verified": 25,
+    "not_run": 0
+  }
+}
