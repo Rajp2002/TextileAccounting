@@ -5,22 +5,23 @@ import { OfflineSyncProvider } from '@/components/offline-sync-provider'
 import { BrandBackground } from '@/components/brand-background'
 
 export default async function SupervisorLayout({ children }: { children: React.ReactNode }) {
-    // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs
+    // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs.
+    // requireRole() uses getCachedSession() internally — subsequent calls in
+    // page server actions within this request will be cache hits.
     const { profile } = await requireRole(['supervisor', 'owner'])
     const userOrgId = profile.org_id
     const userFullName = profile.full_name
 
     // Fetch factory name for the sidebar
+    // requireRole() guarantees org_id is set, so no null guard needed.
     let factoryName = 'Weavly'
-    if (userOrgId) {
-        const supabase = await createClient()
-        const { data: org } = await supabase
-            .from('organizations')
-            .select('name')
-            .eq('id', userOrgId)
-            .single()
-        if (org?.name) factoryName = org.name
-    }
+    const supabase = await createClient()
+    const { data: org } = await supabase
+        .from('organizations')
+        .select('name')
+        .eq('id', userOrgId)
+        .single()
+    if (org?.name) factoryName = org.name
 
     return (
         <div className="relative isolate min-h-screen overflow-x-hidden bg-background">

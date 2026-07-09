@@ -1562,3 +1562,41 @@ Safety:
 Resolution status:
 
 - Final matrix counts: total 377, pass 195, fail 13, blocked 22, `code_verified` 146, `not_applicable` 1, `not_run` 0.
+
+## Runtime Proof Loop - PROD-029 Browser Copy Closeout
+
+Date/time: 2026-07-06 IST. Branch `codex/runtime-proof-loop-code-verified-to-pass`.
+
+Scope:
+
+- `PROD-029`
+
+Runtime proof:
+
+- QA env file `.env.qa.local` was selected by filename, verified to contain the QA ref, and verified not to contain the production ref.
+- Supabase CLI guard printed QA ref `eutycrtzzxmlkcpipgod` before the browser proof.
+- The local app was started by explicitly sourcing `.env.qa.local` before `npm run dev`.
+- Browser proof on `/`, `/#pricing`, and `/#faq` found shift meters, shift-total meters, shift meter logs, and log shift totals terminology with no raw opening/closing proof phrases and no console warnings/errors.
+- Authenticated supervisor proof on `/supervisor/dashboard` reached the loaded Shift Meter Log surface and found Shift Meters / total metres produced / Save shift logs terminology with no raw opening/closing proof phrases and no console warnings/errors.
+- The reusable owner tenant did not render the setup checklist panel because it was already set up; this did not block the row because the active supervisor production surface that stores synthetic readings was runtime-verified.
+
+Evidence:
+
+- `output/qa/runtime-proof-loop/GROUP_A-runtime-proof-20260706-PROD-029.json`
+- `output/qa/runtime-proof-loop/PROD-029-landing.png`
+- `output/qa/runtime-proof-loop/PROD-029-pricing.png`
+- `output/qa/runtime-proof-loop/PROD-029-faq.png`
+- `output/qa/runtime-proof-loop/PROD-029-supervisor-dashboard-loaded.png`
+
+Safety:
+
+- No production mutation occurred.
+- No production Supabase command, direct SQL, migration application, npm audit, package install, lockfile change, env-file staging, or Supabase temp-file staging was used.
+- No env values, secrets, auth headers, tokens, cookies, request bodies, service-role keys, Supabase keys, or DB URLs were printed or captured.
+
+Resolution status:
+
+- `PROD-029` moves from `code_verified` to `pass`.
+- All other Group A rows remain `code_verified`.
+- Group B remains unattempted in this closeout.
+- Final matrix counts: total 377, pass 196, fail 13, blocked 22, `code_verified` 145, `not_applicable` 1, `not_run` 0.

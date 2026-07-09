@@ -1,5 +1,6 @@
 import { getAllDispatches, getDispatchOverviewStats, getPendingStockSales } from "../orders/actions"
 import DispatchesClient from "./DispatchesClient"
+import { createPerfTimer } from '@/lib/perf'
 
 export const metadata = {
     title: "Dispatches | Owner Dashboard",
@@ -7,11 +8,18 @@ export const metadata = {
 }
 
 export default async function DispatchesPage() {
-    const [dispatchesResult, overviewResult, pendingSalesResult] = await Promise.all([
-        getAllDispatches(),
-        getDispatchOverviewStats(),
-        getPendingStockSales(),
-    ])
+    const perf = createPerfTimer('/owner/dispatches')
+    const [dispatchesResult, overviewResult, pendingSalesResult] = await perf.measure(
+        'businessData',
+        () => Promise.all([
+            getAllDispatches(),
+            getDispatchOverviewStats(),
+            getPendingStockSales(),
+        ]),
+        5
+    )
+    perf.log({ note: 'business call count includes conditional stock_discrepancies lookup' })
+
     const { data: dispatches, error } = dispatchesResult
 
     if (error || overviewResult.error || pendingSalesResult.error || !overviewResult.data || !pendingSalesResult.data) {

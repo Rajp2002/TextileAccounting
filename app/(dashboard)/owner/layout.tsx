@@ -1,30 +1,39 @@
-import { createClient } from '@/lib/supabase/server'
 import { OwnerSidebar } from '@/components/navigation/owner-sidebar'
 import { requireRole } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
 import { BrandBackground } from '@/components/brand-background'
 import { normalizeProductionMode } from '@/lib/production-mode'
+import { createPerfTimer } from '@/lib/perf'
 
 export default async function OwnerLayout({ children }: { children: React.ReactNode }) {
-    // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs
-    const { profile } = await requireRole(['owner'])
+    const perf = createPerfTimer('/owner/* layout')
+
+    // 🔐 F-8 fix: Server-side role check with DB-fallback against stale JWTs.
+    // requireRole() calls getCachedSession() internally — subsequent calls in
+    // AccessGate and page server actions within this request are cache hits.
+    const { profile } = await perf.measure('authSession', () => requireRole(['owner']), 2)
     const userOrgId = profile.org_id
     const userFullName = profile.full_name
 
-    // Fetch factory name for the sidebar
+    // Fetch org name + production_mode in parallel with the already-resolved auth.
+    // This runs concurrently instead of sequentially after requireRole().
     let factoryName = 'Weavly'
     let productionMode = normalizeProductionMode(null)
 
-    if (userOrgId) {
-        const supabase = await createClient()
-        const { data: org } = await supabase
+    const supabase = await createClient()
+    const { data: org } = await perf.measure(
+        'profileOrgTier',
+        () => supabase
             .from('organizations')
             .select('name, production_mode')
             .eq('id', userOrgId)
-            .single()
-        
-        if (org?.name) factoryName = org.name
-        productionMode = normalizeProductionMode(org?.production_mode)
-    }
+            .single(),
+        1
+    )
+
+    if (org?.name) factoryName = org.name
+    productionMode = normalizeProductionMode(org?.production_mode)
+    perf.log()
 
     return (
         <div className="relative isolate min-h-screen overflow-x-hidden bg-background">

@@ -1,13 +1,16 @@
-import { createClient } from '@/lib/supabase/server'
-import { getOrgTier, tierSatisfies, type SubscriptionTier } from '@/lib/subscription'
+import { getCachedSession } from '@/lib/auth'
+import { getCachedOrgTier, tierSatisfies, type SubscriptionTier } from '@/lib/subscription'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Lock, Zap, Star, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { createPerfTimer } from '@/lib/perf'
 
 interface AccessGateProps {
     /** Minimum tier needed to view this content */
     requiredTier: 'base' | 'premium'
+    /** Optional route label for performance logs. */
+    routeName?: string
     children: React.ReactNode
 }
 
@@ -17,22 +20,27 @@ interface AccessGateProps {
  * - If the user's tier meets `requiredTier` → renders children.
  * - If the user is 'none' (no subscription) → redirects to /owner/billing.
  * - If tier is 'base' but 'premium' is required → shows upgrade wall.
+ *
+ * Uses getCachedSession() and getCachedOrgTier() so that the auth + profiles
+ * and org_subscriptions queries are deduplicated per request. When the owner
+ * layout, AccessGate, and the page's own requireRole() all run within the same
+ * request, Supabase is contacted only once for each.
  */
-export default async function AccessGate({ requiredTier, children }: AccessGateProps) {
-    const supabase = await createClient()
+export default async function AccessGate({ requiredTier, routeName = '/owner/* access-gate', children }: AccessGateProps) {
+    const perf = createPerfTimer(routeName)
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) redirect('/login')
+    // getCachedSession() is a request-scoped cache: the getUser + profiles lookup
+    // is shared with OwnerLayout and any requireRole() calls on the same page.
+    const session = await perf.measure('authSession', () => getCachedSession(), 0)
+    if (!session) redirect('/login')
 
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('org_id')
-        .eq('id', user.id)
-        .single()
-
-    if (!profile?.org_id) redirect('/login')
-
-    const tier = await getOrgTier(profile.org_id)
+    // getCachedOrgTier() is similarly deduplicated within the request.
+    const tier = await perf.measure(
+        'profileOrgTier',
+        () => getCachedOrgTier(session.profile.org_id),
+        1
+    )
+    perf.log({ required_tier: requiredTier })
 
     // No subscription at all → send to billing
     if (tier === 'none') {

@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -77,23 +78,42 @@ export function getUserClaims(user: User): AuthClaims {
     }
 }
 
+// ─── Request-scoped cached auth helpers ────────────────────────────────────────
+//
+// React.cache() creates a per-request memoization store during server rendering.
+// The first call within a request executes the async function and stores the
+// result. Every subsequent call within the same request returns the memoized
+// result without any additional Supabase round-trips.
+//
+// This eliminates the duplicated getUser() + profiles queries that previously
+// happened independently in: OwnerLayout → AccessGate → page server actions.
+//
+// SECURITY: React.cache() is scoped to a single server request (one render
+// tree). There is no cross-user or cross-request data leakage.
+
 /**
- * requireRole — shared auth utility (ARCH-001 / F1 Auth Hardening)
+ * getCachedSession — request-scoped, deduplicated auth + profile lookup.
  *
- * Enforces role-level authorization by validating the Supabase-authenticated
- * user against the server-side profile row before any org-scoped data access.
+ * Combines supabase.auth.getUser() and the admin profiles row into a single
+ * cached result. Within one server request, no matter how many layouts,
+ * components, or server actions call this, Supabase is contacted only once.
  *
- * @param allowedRoles - array of roles permitted to call this action
- * @returns { user, profile: { role, org_id } } on success
- * @throws redirect to /login if user is not authenticated or unauthorized
+ * Returns null if the user is unauthenticated or their profile row is missing.
+ * Callers that require authentication MUST handle the null case.
  */
-export async function requireRole(allowedRoles: string[]) {
+export const getCachedSession = cache(async (): Promise<{
+    user: User
+    profile: { role: string; org_id: string; full_name: string | undefined }
+} | null> => {
+    if (process.env.NODE_ENV === 'development') {
+        // This log fires at most once per request — confirms deduplication is working.
+        console.log('[auth] getCachedSession: executing DB lookup (first call this request)')
+    }
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) {
-        redirect('/login')
-    }
+    if (!user) return null
 
     // Always validate authorization-critical claims against the profile row.
     // JWT app_metadata is useful for routing, but server actions/data loaders must
@@ -109,10 +129,35 @@ export async function requireRole(allowedRoles: string[]) {
     const org_id = dbProfile?.org_id ?? undefined
     const full_name = dbProfile?.full_name ?? undefined
 
-    // If still missing after DB check, the account is genuinely broken
-    if (!role || !org_id) {
+    // Account exists in auth but profile is missing/broken — treat as unauthenticated
+    if (!role || !org_id) return null
+
+    return { user, profile: { role, org_id, full_name } }
+})
+
+/**
+ * requireRole — shared auth utility (ARCH-001 / F1 Auth Hardening)
+ *
+ * Enforces role-level authorization by validating the Supabase-authenticated
+ * user against the server-side profile row before any org-scoped data access.
+ *
+ * Uses getCachedSession() for request-level deduplication: if the layout,
+ * AccessGate, and page action all call requireRole(), Supabase is only
+ * contacted once per request (subsequent calls are cache hits).
+ *
+ * @param allowedRoles - array of roles permitted to call this action
+ * @returns { user, profile: { role, org_id, full_name } } on success
+ * @throws redirect to /login if user is not authenticated or unauthorized
+ */
+export async function requireRole(allowedRoles: string[]) {
+    const session = await getCachedSession()
+
+    if (!session) {
         redirect('/login')
     }
+
+    const { user, profile } = session
+    const { role, org_id, full_name } = profile
 
     if (!allowedRoles.includes(role)) {
         redirect(getRoleHomePath(role))
@@ -152,24 +197,19 @@ export async function requireWritableOrg(allowedRoles: string[]) {
 /**
  * getAuthenticatedUser — lightweight check for any authenticated user.
  * Use when you need org_id + user.id without a role restriction.
+ *
+ * Reuses getCachedSession() for request-level deduplication.
  */
 export async function getAuthenticatedUser() {
+    const session = await getCachedSession()
+
+    if (!session) redirect('/login')
+
+    const { user, profile } = session
+    const { role, org_id } = profile
+
+    // Return a supabase client scoped to this user's session for RLS queries
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) redirect('/login')
-
-    const admin = createAdminClient()
-    const { data: dbProfile } = await admin
-        .from('profiles')
-        .select('role, org_id')
-        .eq('id', user.id)
-        .maybeSingle()
-
-    const role = dbProfile?.role ?? undefined
-    const org_id = dbProfile?.org_id ?? undefined
-
-    if (!role || !org_id) redirect('/login')
 
     return {
         user,

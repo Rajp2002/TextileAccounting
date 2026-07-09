@@ -2070,3 +2070,41 @@ Resolution status:
 - `SEC-017` and `AUTH-008` remain open.
 - `MASTER-002` and `MASTER-005` remain `code_verified/source-fixed`, not pass.
 - Matrix movement is fail -2 and `code_verified` +2: total 377, pass 195, fail 13, blocked 22, `code_verified` 146, `not_applicable` 1, `not_run` 0.
+
+## Runtime Proof Loop - PROD-029 Browser Copy Closeout
+
+Date/time: 2026-07-06 IST. Branch `codex/runtime-proof-loop-code-verified-to-pass`.
+
+Scope:
+
+- `PROD-029`
+
+Row promoted to `pass`:
+
+- `PROD-029`: QA-env browser/runtime proof confirmed public landing/pricing/FAQ copy and the authenticated supervisor production logging surface use shift-meter / shift-total terminology and do not claim raw opening/closing counter proof while the active production model stores synthetic opening/closing values from shift totals.
+
+Evidence:
+
+- Runtime proof artifact: `output/qa/runtime-proof-loop/GROUP_A-runtime-proof-20260706-PROD-029.json`.
+- Screenshots: `output/qa/runtime-proof-loop/PROD-029-landing.png`, `output/qa/runtime-proof-loop/PROD-029-pricing.png`, `output/qa/runtime-proof-loop/PROD-029-faq.png`, and `output/qa/runtime-proof-loop/PROD-029-supervisor-dashboard-loaded.png`.
+- Active matrix: `output/qa/PILOTQA-20260621-2058-8QIH/TEST_MATRIX.md`.
+
+Verification:
+
+- Supabase CLI guard `cat supabase/.temp/project-ref` printed the QA ref `eutycrtzzxmlkcpipgod`.
+- QA env file `.env.qa.local` contained the QA ref and did not contain the production ref by sentinel grep checks.
+- Local app was started with `.env.qa.local` explicitly sourced before `npm run dev`.
+- Browser console warning/error checks were clean on the exercised public and supervisor surfaces.
+- `jq empty output/qa/runtime-proof-loop/GROUP_A-runtime-proof-20260706-PROD-029.json` passed.
+- Sanitized artifact scan for secret-like URL/key/header/cookie/password patterns passed.
+
+Safety:
+
+- No production mutation occurred.
+- No production Supabase command, direct SQL, DB push, DB pull, migration repair, `--include-all`, npm audit, package install, lockfile change, or env-file staging was used.
+- No env values, secrets, auth headers, tokens, cookies, request bodies, service-role keys, Supabase keys, or DB URLs were printed or captured.
+- `PROD-013`, `PROD-023`, `PROD-022`, `SETUP-011`, `DASH-004`, `EST-017`, `PROD-002`, `PROD-004`, and all Group B rows remain unchanged.
+
+Resolution status:
+
+- Matrix movement is pass +1 and `code_verified` -1: total 377, pass 196, fail 13, blocked 22, `code_verified` 145, `not_applicable` 1, `not_run` 0.

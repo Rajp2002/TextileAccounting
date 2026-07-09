@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 /**
@@ -59,6 +60,15 @@ export async function getOrgTier(orgId: string): Promise<SubscriptionTier> {
 
     return (data.plan_tier as SubscriptionTier) ?? 'premium'
 }
+
+/**
+ * getCachedOrgTier — request-scoped, deduplicated subscription tier lookup.
+ *
+ * Wraps getOrgTier() with React.cache() so that multiple components within
+ * the same server request (e.g., AccessGate in nested layouts) share one
+ * org_subscriptions DB query.
+ */
+export const getCachedOrgTier = cache(getOrgTier)
 
 // ─── getSubscriptionDetail ────────────────────────────────────────────────────
 

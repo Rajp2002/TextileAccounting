@@ -1,5 +1,6 @@
 import CommercialsClient from './CommercialsClient'
 import { getCommercialsData, getCommercialReceivables, getCollectedThisMonth, getCommercialPartyInsights } from './actions'
+import { createPerfTimer } from '@/lib/perf'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,12 +10,18 @@ export const metadata = {
 }
 
 export default async function CommercialsPage() {
-    const [commercialsRes, receivablesRes, collectedRes, partyInsightsRes] = await Promise.all([
-        getCommercialsData(),
-        getCommercialReceivables(),
-        getCollectedThisMonth(),
-        getCommercialPartyInsights(),
-    ])
+    const perf = createPerfTimer('/owner/commercials')
+    const [commercialsRes, receivablesRes, collectedRes, partyInsightsRes] = await perf.measure(
+        'businessData',
+        () => Promise.all([
+            getCommercialsData(),
+            getCommercialReceivables(),
+            getCollectedThisMonth(),
+            getCommercialPartyInsights(),
+        ]),
+        7
+    )
+    perf.log({ note: 'business call count includes conditional receivables enrichment query' })
 
     if ('error' in commercialsRes) {
         return (
